@@ -1,0 +1,116 @@
+import SwiftUI
+
+struct ArticleRowView: View {
+    let item: ArticleViewItem
+    let onTap: () -> Void
+    let onBookmark: () -> Void
+    let onShare: () -> Void
+
+    var body: some View {
+        Button(action: onTap) {
+            HStack(alignment: .top, spacing: 12) {
+                VStack(alignment: .leading, spacing: 6) {
+                    if let category = item.category {
+                        Text(category.displayName)
+                            .font(.caption)
+                            .fontWeight(.semibold)
+                            .foregroundStyle(category.color)
+                    }
+
+                    Text(item.title)
+                        .font(.headline)
+                        .lineLimit(3)
+                        .multilineTextAlignment(.leading)
+                        .foregroundStyle(.primary)
+
+                    if let description = item.description {
+                        Text(description)
+                            .font(.subheadline)
+                            .foregroundStyle(.secondary)
+                            .lineLimit(2)
+                    }
+
+                    HStack {
+                        Text(item.sourceName)
+                            .font(.caption)
+                            .fontWeight(.medium)
+
+                        Text("•")
+                            .font(.caption)
+
+                        Text(item.formattedDate)
+                            .font(.caption)
+                    }
+                    .foregroundStyle(.secondary)
+                }
+
+                Spacer()
+
+                if let imageURL = item.imageURL {
+                    AsyncImage(url: imageURL) { phase in
+                        switch phase {
+                        case .empty:
+                            Rectangle()
+                                .fill(.quaternary)
+                                .overlay {
+                                    ProgressView()
+                                }
+                        case let .success(image):
+                            image
+                                .resizable()
+                                .aspectRatio(contentMode: .fill)
+                        case .failure:
+                            Rectangle()
+                                .fill(.quaternary)
+                                .overlay {
+                                    Image(systemName: "photo")
+                                        .foregroundStyle(.secondary)
+                                }
+                        @unknown default:
+                            EmptyView()
+                        }
+                    }
+                    .frame(width: 100, height: 100)
+                    .clipShape(RoundedRectangle(cornerRadius: 8))
+                }
+            }
+            .padding()
+        }
+        .buttonStyle(.plain)
+        .contextMenu {
+            Button {
+                onBookmark()
+            } label: {
+                Label("Bookmark", systemImage: "bookmark")
+            }
+
+            Button {
+                onShare()
+            } label: {
+                Label("Share", systemImage: "square.and.arrow.up")
+            }
+        }
+
+        Divider()
+            .padding(.leading)
+    }
+}
+
+#Preview {
+    ArticleRowView(
+        item: ArticleViewItem(
+            from: Article(
+                title: "Sample Article Title That Might Be Quite Long",
+                description: "This is a sample description for the article.",
+                source: ArticleSource(id: nil, name: "Sample Source"),
+                url: "https://example.com",
+                imageURL: "https://picsum.photos/200",
+                publishedAt: Date(),
+                category: .technology
+            )
+        ),
+        onTap: {},
+        onBookmark: {},
+        onShare: {}
+    )
+}

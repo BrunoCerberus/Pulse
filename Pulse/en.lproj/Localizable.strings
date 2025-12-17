@@ -1,0 +1,26 @@
+/* Home Tab */
+"Home" = "Home";
+
+/* For You Tab */
+"For You" = "For You";
+
+/* Categories Tab */
+"Categories" = "Categories";
+
+/* Search Tab */
+"Search" = "Search";
+
+/* Bookmarks Tab */
+"Bookmarks" = "Bookmarks";
+
+/* Settings Tab */
+"Settings" = "Settings";
+
+/* Categories */
+"World" = "World";
+"Business" = "Business";
+"Technology" = "Technology";
+"Science" = "Science";
+"Health" = "Health";
+"Sports" = "Sports";
+"Entertainment" = "Entertainment";

@@ -1,0 +1,63 @@
+# Xcode
+*.xcodeproj
+*.xcworkspace
+xcuserdata/
+*.xcuserstate
+*.xccheckout
+*.xcscmblueprint
+
+# Build
+build/
+DerivedData/
+*.ipa
+*.dSYM.zip
+*.dSYM
+
+# Dependencies
+.build/
+Packages/
+Package.resolved
+
+# Test Results
+*.xcresult
+TestResults.xcresult
+
+# Coverage
+coverage/
+*.coverage
+
+# Generated
+Pulse.xcodeproj
+
+# macOS
+.DS_Store
+.AppleDouble
+.LSOverride
+._*
+
+# IDE
+.idea/
+*.swp
+*.swo
+*~
+
+# Environment
+.env
+.env.local
+
+# Secrets
+*.pem
+*.p12
+*.mobileprovision
+Credentials.swift
+
+# Archives
+*.zip
+*.tar.gz
+
+# Logs
+*.log
+
+# Temporary
+*.tmp
+*.temp

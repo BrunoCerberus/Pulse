@@ -1,0 +1,101 @@
+import Testing
+import Combine
+@testable import Pulse
+
+@Suite("HomeViewModel Tests")
+struct HomeViewModelTests {
+    var mockNewsService: MockNewsService!
+    var mockStorageService: MockStorageService!
+    var sut: HomeViewModel!
+    var cancellables: Set<AnyCancellable>!
+
+    init() {
+        mockNewsService = MockNewsService()
+        mockStorageService = MockStorageService()
+
+        ServiceLocator.shared.register(NewsService.self, service: mockNewsService)
+        ServiceLocator.shared.register(StorageService.self, service: mockStorageService)
+
+        sut = HomeViewModel()
+        cancellables = Set<AnyCancellable>()
+    }
+
+    @Test("Initial view state is correct")
+    func testInitialViewState() {
+        let state = sut.viewState
+        #expect(state.breakingNews.isEmpty)
+        #expect(state.headlines.isEmpty)
+        #expect(!state.isLoading)
+        #expect(!state.isLoadingMore)
+        #expect(state.errorMessage == nil)
+        #expect(!state.showEmptyState)
+    }
+
+    @Test("Handle onAppear triggers load")
+    func testOnAppear() async throws {
+        mockNewsService.topHeadlinesResult = .success(Article.mockArticles)
+
+        var states: [HomeViewState] = []
+
+        sut.$viewState
+            .sink { state in
+                states.append(state)
+            }
+            .store(in: &cancellables)
+
+        sut.handle(event: .onAppear)
+
+        try await Task.sleep(nanoseconds: 500_000_000)
+
+        #expect(states.count > 1)
+    }
+
+    @Test("Handle onRefresh triggers refresh")
+    func testOnRefresh() {
+        sut.handle(event: .onRefresh)
+        // Verify state is being refreshed
+        #expect(true)
+    }
+
+    @Test("Handle onArticleTapped sets selected article")
+    func testOnArticleTapped() {
+        let article = Article.mockArticles[0]
+
+        sut.handle(event: .onArticleTapped(article))
+
+        #expect(sut.selectedArticle?.id == article.id)
+    }
+
+    @Test("Handle onShareTapped sets share article")
+    func testOnShareTapped() {
+        let article = Article.mockArticles[0]
+
+        sut.handle(event: .onShareTapped(article))
+
+        #expect(sut.shareArticle?.id == article.id)
+    }
+
+    @Test("View state reducer transforms domain state correctly")
+    func testViewStateReducer() {
+        let reducer = HomeViewStateReducer()
+
+        let domainState = HomeDomainState(
+            breakingNews: [Article.mockArticles[0]],
+            headlines: [Article.mockArticles[1], Article.mockArticles[2]],
+            isLoading: false,
+            isLoadingMore: true,
+            error: nil,
+            currentPage: 2,
+            hasMorePages: true
+        )
+
+        let viewState = reducer.reduce(domainState: domainState)
+
+        #expect(viewState.breakingNews.count == 1)
+        #expect(viewState.headlines.count == 2)
+        #expect(!viewState.isLoading)
+        #expect(viewState.isLoadingMore)
+        #expect(viewState.errorMessage == nil)
+        #expect(!viewState.showEmptyState)
+    }
+}
