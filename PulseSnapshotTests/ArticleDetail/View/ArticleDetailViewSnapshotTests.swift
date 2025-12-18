@@ -3,6 +3,7 @@ import SnapshotTesting
 import SwiftUI
 import XCTest
 
+@MainActor
 final class ArticleDetailViewSnapshotTests: XCTestCase {
     private var serviceLocator: ServiceLocator!
 
@@ -19,16 +20,31 @@ final class ArticleDetailViewSnapshotTests: XCTestCase {
         serviceLocator.register(StorageService.self, instance: MockStorageService())
     }
 
+    // Fixed date for snapshot stability (Jan 1, 2023 - will always show "2 yr ago" or similar)
+    private var snapshotArticle: Article {
+        Article(
+            id: "snapshot-1",
+            title: "SwiftUI 6.0 Brings Revolutionary New Features",
+            description: "Apple announces major updates to SwiftUI at WWDC 2024",
+            content: "Full article content here...",
+            author: "John Appleseed",
+            source: ArticleSource(id: "techcrunch", name: "TechCrunch"),
+            url: "https://example.com/1",
+            imageURL: "https://picsum.photos/400/300",
+            publishedAt: Date(timeIntervalSince1970: 1_672_531_200), // Jan 1, 2023 00:00:00 UTC
+            category: .technology
+        )
+    }
+
     func testArticleDetailView() {
-        let article = Article.mockArticles[0]
         let view = NavigationStack {
-            ArticleDetailView(article: article, serviceLocator: serviceLocator)
+            ArticleDetailView(article: snapshotArticle, serviceLocator: serviceLocator)
         }
         let controller = UIHostingController(rootView: view)
 
         assertSnapshot(
             of: controller,
-            as: .wait(for: 0.5, on: .image(on: iPhoneAirConfig, precision: 0.98)),
+            as: .wait(for: 1.0, on: .image(on: iPhoneAirConfig, precision: 0.98)),
             record: false
         )
     }

@@ -3,6 +3,7 @@ import SnapshotTesting
 import SwiftUI
 import XCTest
 
+@MainActor
 final class HomeViewSnapshotTests: XCTestCase {
     private var serviceLocator: ServiceLocator!
 
@@ -12,6 +13,22 @@ final class HomeViewSnapshotTests: XCTestCase {
         size: CGSize(width: 393, height: 852),
         traits: UITraitCollection()
     )
+
+    // Fixed date article for snapshot stability (Jan 1, 2023 - will always show consistent relative time)
+    private var snapshotArticle: Article {
+        Article(
+            id: "snapshot-1",
+            title: "SwiftUI 6.0 Brings Revolutionary New Features",
+            description: "Apple announces major updates to SwiftUI at WWDC 2024",
+            content: "Full article content here...",
+            author: "John Appleseed",
+            source: ArticleSource(id: "techcrunch", name: "TechCrunch"),
+            url: "https://example.com/1",
+            imageURL: "https://picsum.photos/400/300",
+            publishedAt: Date(timeIntervalSince1970: 1_672_531_200), // Jan 1, 2023 00:00:00 UTC
+            category: .technology
+        )
+    }
 
     override func setUp() {
         super.setUp()
@@ -26,13 +43,13 @@ final class HomeViewSnapshotTests: XCTestCase {
 
         assertSnapshot(
             of: controller,
-            as: .wait(for: 0.5, on: .image(on: iPhoneAirConfig, precision: 0.98)),
+            as: .wait(for: 1.0, on: .image(on: iPhoneAirConfig, precision: 0.98)),
             record: false
         )
     }
 
     func testArticleRowView() {
-        let item = ArticleViewItem(from: Article.mockArticles[0])
+        let item = ArticleViewItem(from: snapshotArticle)
         let view = ArticleRowView(
             item: item,
             onTap: {},
@@ -45,13 +62,13 @@ final class HomeViewSnapshotTests: XCTestCase {
 
         assertSnapshot(
             of: controller,
-            as: .wait(for: 0.5, on: .image(on: iPhoneAirConfig, precision: 0.98)),
+            as: .wait(for: 1.0, on: .image(on: iPhoneAirConfig, precision: 0.98)),
             record: false
         )
     }
 
     func testBreakingNewsCard() {
-        let item = ArticleViewItem(from: Article.mockArticles[0])
+        let item = ArticleViewItem(from: snapshotArticle)
         let view = BreakingNewsCard(item: item, onTap: {})
             .padding()
 
@@ -59,7 +76,7 @@ final class HomeViewSnapshotTests: XCTestCase {
 
         assertSnapshot(
             of: controller,
-            as: .wait(for: 0.5, on: .image(on: iPhoneAirConfig, precision: 0.98)),
+            as: .wait(for: 1.0, on: .image(on: iPhoneAirConfig, precision: 0.98)),
             record: false
         )
     }
@@ -72,7 +89,7 @@ final class HomeViewSnapshotTests: XCTestCase {
 
         assertSnapshot(
             of: controller,
-            as: .wait(for: 0.5, on: .image(on: iPhoneAirConfig, precision: 0.98)),
+            as: .wait(for: 1.0, on: .image(on: iPhoneAirConfig, precision: 0.98)),
             record: false
         )
     }

@@ -3,6 +3,7 @@ import SnapshotTesting
 import SwiftUI
 import XCTest
 
+@MainActor
 final class SearchViewSnapshotTests: XCTestCase {
     private var serviceLocator: ServiceLocator!
 
@@ -26,7 +27,7 @@ final class SearchViewSnapshotTests: XCTestCase {
 
         assertSnapshot(
             of: controller,
-            as: .wait(for: 0.5, on: .image(on: iPhoneAirConfig, precision: 0.98)),
+            as: .wait(for: 1.0, on: .image(on: iPhoneAirConfig, precision: 0.98)),
             record: false
         )
     }
