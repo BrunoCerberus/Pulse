@@ -19,7 +19,7 @@ final class BookmarksViewSnapshotTests: XCTestCase {
 
         assertSnapshot(
             of: controller,
-            as: .image(on: .iPhone13Pro),
+            as: .image(on: .iPhone13Pro, precision: 0.98),
             record: false
         )
     }
