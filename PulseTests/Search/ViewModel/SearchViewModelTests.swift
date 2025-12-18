@@ -72,8 +72,11 @@ struct SearchViewModelTests {
     }
 
     @Test("Sort change updates sort option")
-    func sortChange() {
+    func sortChange() async throws {
         sut.handle(event: .onSortChanged(.publishedAt))
+
+        // Wait for main queue binding to propagate state change
+        try await Task.sleep(nanoseconds: 100_000_000)
 
         #expect(sut.viewState.sortOption == .publishedAt)
     }

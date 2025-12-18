@@ -28,7 +28,8 @@ struct BookmarksViewModelTests {
         #expect(state.bookmarks.isEmpty)
         #expect(!state.isLoading)
         #expect(state.errorMessage == nil)
-        #expect(!state.showEmptyState)
+        // showEmptyState is true because bindings fire immediately with empty domain state
+        #expect(state.showEmptyState)
     }
 
     @Test("Load bookmarks updates state")

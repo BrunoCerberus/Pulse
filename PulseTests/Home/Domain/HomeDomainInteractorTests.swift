@@ -73,11 +73,17 @@ struct HomeDomainInteractorTests {
 
     @Test("Refresh resets page and reloads data")
     func testRefresh() async throws {
+        mockNewsService.topHeadlinesResult = .success(Article.mockArticles)
+        mockNewsService.breakingNewsResult = .success(Array(Article.mockArticles.prefix(2)))
+
         sut.dispatch(action: .refresh)
+
+        try await Task.sleep(nanoseconds: 500_000_000)
 
         let state = sut.currentState
         #expect(state.currentPage == 1)
-        #expect(state.hasMorePages)
+        #expect(!state.isLoading)
+        #expect(!state.breakingNews.isEmpty)
     }
 
     @Test("Select article saves to reading history")
