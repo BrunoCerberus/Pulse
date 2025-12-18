@@ -158,6 +158,7 @@ extension ServiceLocator {
         locator.register(ForYouService.self, instance: MockForYouService())
         locator.register(SettingsService.self, instance: MockSettingsService())
         locator.register(StorageService.self, instance: MockStorageService())
+        locator.register(StoreKitService.self, instance: MockStoreKitService())
         return locator
     }
 }

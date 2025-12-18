@@ -78,6 +78,9 @@ final class PulseSettingsUITests: XCTestCase {
     func testDarkModeToggleExists() throws {
         navigateToSettings()
 
+        // Scroll to find the toggle since premium section is at top
+        app.swipeUp()
+
         let systemThemeToggle = app.switches["Use System Theme"]
         XCTAssertTrue(systemThemeToggle.waitForExistence(timeout: 5))
     }
