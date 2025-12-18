@@ -3,6 +3,7 @@ import SwiftUI
 struct HomeView: View {
     @StateObject private var viewModel: HomeViewModel
     @State private var showArticleDetail = false
+    @State private var showSettings = false
 
     init(viewModel: HomeViewModel = HomeViewModel()) {
         _viewModel = StateObject(wrappedValue: viewModel)
@@ -12,10 +13,22 @@ struct HomeView: View {
         NavigationStack {
             content
                 .navigationTitle("Pulse")
+                .toolbar {
+                    ToolbarItem(placement: .topBarTrailing) {
+                        Button {
+                            showSettings = true
+                        } label: {
+                            Image(systemName: "gearshape")
+                        }
+                    }
+                }
                 .navigationDestination(isPresented: $showArticleDetail) {
                     if let article = viewModel.selectedArticle {
                         ArticleDetailView(article: article)
                     }
+                }
+                .navigationDestination(isPresented: $showSettings) {
+                    SettingsView()
                 }
                 .refreshable {
                     viewModel.handle(event: .onRefresh)

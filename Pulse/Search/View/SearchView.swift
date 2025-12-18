@@ -40,12 +40,22 @@ struct SearchView: View {
                 .frame(maxWidth: .infinity, maxHeight: .infinity)
         } else if let error = viewModel.viewState.errorMessage {
             errorView(error)
-        } else if viewModel.viewState.showEmptyState {
-            emptyStateView
+        } else if !viewModel.viewState.hasSearched {
+            initialEmptyStateView
+        } else if viewModel.viewState.showNoResults {
+            noResultsView
         } else if viewModel.viewState.results.isEmpty {
             suggestionsView
         } else {
             resultsList
+        }
+    }
+
+    private var initialEmptyStateView: some View {
+        ContentUnavailableView {
+            Label("Search for News", systemImage: "magnifyingglass")
+        } description: {
+            Text("Find articles from thousands of sources worldwide")
         }
     }
 
@@ -80,7 +90,8 @@ struct SearchView: View {
 
     private func errorView(_ message: String) -> some View {
         ContentUnavailableView {
-            Label("Search Failed", systemImage: "exclamationmark.magnifyingglass")
+            Label("Search Failed", systemImage: "exclamationmark.triangle.fill")
+                .foregroundStyle(.red)
         } description: {
             Text(message)
         } actions: {
@@ -91,9 +102,9 @@ struct SearchView: View {
         }
     }
 
-    private var emptyStateView: some View {
+    private var noResultsView: some View {
         ContentUnavailableView {
-            Label("No Results", systemImage: "magnifyingglass")
+            Label("No Results Found", systemImage: "doc.text.magnifyingglass")
         } description: {
             Text("No articles found for \"\(viewModel.viewState.query)\"")
         }

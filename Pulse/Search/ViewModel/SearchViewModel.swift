@@ -10,6 +10,7 @@ final class SearchViewModel: CombineViewModel, ObservableObject {
 
     private let interactor: SearchDomainInteractor
     private var cancellables = Set<AnyCancellable>()
+    private var searchWorkItem: DispatchWorkItem?
 
     init(interactor: SearchDomainInteractor = SearchDomainInteractor()) {
         self.interactor = interactor
@@ -20,11 +21,14 @@ final class SearchViewModel: CombineViewModel, ObservableObject {
         switch event {
         case let .onQueryChanged(query):
             interactor.dispatch(action: .updateQuery(query))
+            debounceSearch(query: query)
         case .onSearch:
+            searchWorkItem?.cancel()
             interactor.dispatch(action: .search)
         case .onLoadMore:
             interactor.dispatch(action: .loadMore)
         case .onClear:
+            searchWorkItem?.cancel()
             interactor.dispatch(action: .clearResults)
         case let .onSortChanged(option):
             interactor.dispatch(action: .setSortOption(option))
@@ -32,9 +36,23 @@ final class SearchViewModel: CombineViewModel, ObservableObject {
             selectedArticle = article
             interactor.dispatch(action: .selectArticle(article))
         case let .onSuggestionTapped(suggestion):
+            searchWorkItem?.cancel()
             interactor.dispatch(action: .updateQuery(suggestion))
             interactor.dispatch(action: .search)
         }
+    }
+
+    private func debounceSearch(query: String) {
+        searchWorkItem?.cancel()
+
+        guard !query.isEmpty else { return }
+
+        let workItem = DispatchWorkItem { [weak self] in
+            self?.interactor.dispatch(action: .search)
+        }
+
+        searchWorkItem = workItem
+        DispatchQueue.main.asyncAfter(deadline: .now() + 0.3, execute: workItem)
     }
 
     private func setupBindings() {
@@ -47,7 +65,8 @@ final class SearchViewModel: CombineViewModel, ObservableObject {
                     isLoading: state.isLoading,
                     isLoadingMore: state.isLoadingMore,
                     errorMessage: state.error,
-                    showEmptyState: !state.isLoading && state.results.isEmpty && !state.query.isEmpty,
+                    showNoResults: state.hasSearched && !state.isLoading && state.results.isEmpty,
+                    hasSearched: state.hasSearched,
                     sortOption: state.sortBy
                 )
             }

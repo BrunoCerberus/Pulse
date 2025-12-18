@@ -10,6 +10,7 @@ struct SearchDomainState: Equatable {
     var currentPage: Int
     var hasMorePages: Bool
     var sortBy: SearchSortOption
+    var hasSearched: Bool
 
     static var initial: SearchDomainState {
         SearchDomainState(
@@ -21,7 +22,8 @@ struct SearchDomainState: Equatable {
             error: nil,
             currentPage: 1,
             hasMorePages: true,
-            sortBy: .relevancy
+            sortBy: .relevancy,
+            hasSearched: false
         )
     }
 }

@@ -7,7 +7,8 @@ struct SearchViewState: Equatable {
     var isLoading: Bool
     var isLoadingMore: Bool
     var errorMessage: String?
-    var showEmptyState: Bool
+    var showNoResults: Bool
+    var hasSearched: Bool
     var sortOption: SearchSortOption
 
     static var initial: SearchViewState {
@@ -18,7 +19,8 @@ struct SearchViewState: Equatable {
             isLoading: false,
             isLoadingMore: false,
             errorMessage: nil,
-            showEmptyState: false,
+            showNoResults: false,
+            hasSearched: false,
             sortOption: .relevancy
         )
     }

@@ -78,6 +78,7 @@ final class SearchDomainInteractor: CombineInteractor {
             state.error = nil
             state.currentPage = 1
             state.results = []
+            state.hasSearched = true
         }
 
         searchCancellable = searchService.search(
@@ -140,6 +141,7 @@ final class SearchDomainInteractor: CombineInteractor {
             state.results = []
             state.suggestions = []
             state.error = nil
+            state.hasSearched = false
         }
     }
 
