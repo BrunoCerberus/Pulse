@@ -4,6 +4,7 @@ import Foundation
 @testable import Pulse
 
 @Suite("SearchViewModel Tests")
+@MainActor
 struct SearchViewModelTests {
     let mockSearchService: MockSearchService
     let mockStorageService: MockStorageService

@@ -4,6 +4,7 @@ import Foundation
 @testable import Pulse
 
 @Suite("SettingsViewModel Tests")
+@MainActor
 struct SettingsViewModelTests {
     let mockSettingsService: MockSettingsService
     let serviceLocator: ServiceLocator

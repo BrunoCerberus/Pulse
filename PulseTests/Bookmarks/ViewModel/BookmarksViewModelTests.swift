@@ -4,6 +4,7 @@ import Foundation
 @testable import Pulse
 
 @Suite("BookmarksViewModel Tests")
+@MainActor
 struct BookmarksViewModelTests {
     let mockBookmarksService: MockBookmarksService
     let mockStorageService: MockStorageService

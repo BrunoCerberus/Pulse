@@ -4,6 +4,7 @@ import Foundation
 @testable import Pulse
 
 @Suite("HomeDomainInteractor Tests")
+@MainActor
 struct HomeDomainInteractorTests {
     let mockNewsService: MockNewsService
     let mockStorageService: MockStorageService
