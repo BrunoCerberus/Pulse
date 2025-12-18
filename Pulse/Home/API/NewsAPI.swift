@@ -7,60 +7,64 @@ enum NewsAPI: APIFetcher {
     case everything(query: String, page: Int, sortBy: String)
     case sources(category: String?, country: String?)
 
-    var baseURL: String {
+    private var baseURL: String {
         BaseURLs.newsAPI
     }
 
+    private var apiKey: String {
+        APIKeysProvider.newsAPIKey
+    }
+
     var path: String {
-        switch self {
-        case .topHeadlines:
-            return "/top-headlines"
-        case .topHeadlinesByCategory:
-            return "/top-headlines"
-        case .everything:
-            return "/everything"
-        case .sources:
-            return "/top-headlines/sources"
+        guard var components = URLComponents(string: baseURL) else {
+            fatalError("Invalid base URL: \(baseURL)")
         }
+
+        var queryItems: [URLQueryItem] = []
+
+        switch self {
+        case let .topHeadlines(country, page):
+            components.path += "/top-headlines"
+            queryItems.append(URLQueryItem(name: "country", value: country))
+            queryItems.append(URLQueryItem(name: "page", value: String(page)))
+            queryItems.append(URLQueryItem(name: "pageSize", value: "20"))
+
+        case let .topHeadlinesByCategory(category, country, page):
+            components.path += "/top-headlines"
+            queryItems.append(URLQueryItem(name: "country", value: country))
+            queryItems.append(URLQueryItem(name: "category", value: category.apiParameter))
+            queryItems.append(URLQueryItem(name: "page", value: String(page)))
+            queryItems.append(URLQueryItem(name: "pageSize", value: "20"))
+
+        case let .everything(query, page, sortBy):
+            components.path += "/everything"
+            queryItems.append(URLQueryItem(name: "q", value: query))
+            queryItems.append(URLQueryItem(name: "page", value: String(page)))
+            queryItems.append(URLQueryItem(name: "pageSize", value: "20"))
+            queryItems.append(URLQueryItem(name: "sortBy", value: sortBy))
+
+        case let .sources(category, country):
+            components.path += "/top-headlines/sources"
+            if let category = category {
+                queryItems.append(URLQueryItem(name: "category", value: category))
+            }
+            if let country = country {
+                queryItems.append(URLQueryItem(name: "country", value: country))
+            }
+        }
+
+        queryItems.append(URLQueryItem(name: "apiKey", value: apiKey))
+        components.queryItems = queryItems
+
+        guard let urlString = components.string else {
+            fatalError("Failed to construct URL from components")
+        }
+
+        return urlString
     }
 
     var method: HTTPMethod {
         .GET
-    }
-
-    var queryItems: [URLQueryItem]? {
-        var items: [URLQueryItem] = [
-            URLQueryItem(name: "apiKey", value: APIKeysProvider.newsAPIKey)
-        ]
-
-        switch self {
-        case let .topHeadlines(country, page):
-            items.append(URLQueryItem(name: "country", value: country))
-            items.append(URLQueryItem(name: "page", value: String(page)))
-            items.append(URLQueryItem(name: "pageSize", value: "20"))
-
-        case let .topHeadlinesByCategory(category, country, page):
-            items.append(URLQueryItem(name: "country", value: country))
-            items.append(URLQueryItem(name: "category", value: category.apiParameter))
-            items.append(URLQueryItem(name: "page", value: String(page)))
-            items.append(URLQueryItem(name: "pageSize", value: "20"))
-
-        case let .everything(query, page, sortBy):
-            items.append(URLQueryItem(name: "q", value: query))
-            items.append(URLQueryItem(name: "page", value: String(page)))
-            items.append(URLQueryItem(name: "pageSize", value: "20"))
-            items.append(URLQueryItem(name: "sortBy", value: sortBy))
-
-        case let .sources(category, country):
-            if let category = category {
-                items.append(URLQueryItem(name: "category", value: category))
-            }
-            if let country = country {
-                items.append(URLQueryItem(name: "country", value: country))
-            }
-        }
-
-        return items
     }
 
     var task: (any Codable)? { nil }
