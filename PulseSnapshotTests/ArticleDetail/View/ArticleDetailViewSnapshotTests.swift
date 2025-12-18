@@ -6,6 +6,13 @@ import XCTest
 final class ArticleDetailViewSnapshotTests: XCTestCase {
     private var serviceLocator: ServiceLocator!
 
+    // Custom device config matching CI's iPhone Air simulator
+    private let iPhoneAirConfig = ViewImageConfig(
+        safeArea: UIEdgeInsets(top: 59, left: 0, bottom: 34, right: 0),
+        size: CGSize(width: 393, height: 852),
+        traits: UITraitCollection()
+    )
+
     override func setUp() {
         super.setUp()
         serviceLocator = ServiceLocator()
@@ -21,7 +28,7 @@ final class ArticleDetailViewSnapshotTests: XCTestCase {
 
         assertSnapshot(
             of: controller,
-            as: .image(on: .iPhone13Pro, precision: 0.98),
+            as: .wait(for: 0.5, on: .image(on: iPhoneAirConfig, precision: 0.98)),
             record: false
         )
     }
