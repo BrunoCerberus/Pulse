@@ -2,7 +2,7 @@ import Foundation
 
 enum APIKeysProvider {
     static var newsAPIKey: String {
-        ProcessInfo.processInfo.environment["NEWS_API_KEY"] ?? ""
+        ProcessInfo.processInfo.environment["NEWS_API_KEY"] ?? "23883adcb2784b0f818397b307401ae3"
     }
 
     static var guardianAPIKey: String {
