@@ -82,9 +82,8 @@ jobs:
         xcodebuild build-for-testing \
           -project Pulse.xcodeproj \
           -scheme PulseDev \
-          -destination 'platform=iOS Simulator,name=iPhone Air,OS=26.1' \
-          -derivedDataPath ./DerivedData \
-          CODE_SIGNING_ALLOWED=NO
+          -destination 'platform=iOS Simulator,name=iPhone Air' \
+          -derivedDataPath ./DerivedData
 
     - name: Build for testing (PulseSnapshotTests)
       run: |
@@ -92,9 +91,8 @@ jobs:
         xcodebuild build-for-testing \
           -project Pulse.xcodeproj \
           -scheme PulseSnapshotTests \
-          -destination 'platform=iOS Simulator,name=iPhone Air,OS=26.1' \
-          -derivedDataPath ./DerivedData \
-          CODE_SIGNING_ALLOWED=NO
+          -destination 'platform=iOS Simulator,name=iPhone Air' \
+          -derivedDataPath ./DerivedData
 
     - name: Upload build artifacts
       uses: actions/upload-artifact@v4
@@ -183,12 +181,11 @@ jobs:
           -project Pulse.xcodeproj \
           -scheme ${{ matrix.scheme }} \
           -only-testing:${{ matrix.test-target }} \
-          -destination 'platform=iOS Simulator,name=iPhone Air,OS=26.1' \
+          -destination 'platform=iOS Simulator,name=iPhone Air' \
           -derivedDataPath ./DerivedData \
           -resultBundlePath test-results/${{ matrix.artifact-name }}.xcresult \
           -disableAutomaticPackageResolution \
           -retry-tests-on-failure \
-          CODE_SIGNING_ALLOWED=NO \
           | tee /tmp/test_output.log
         TEST_EXIT_CODE=$?
         grep -E "(Test run.*passed|Test run.*failed)" /tmp/test_output.log | tail -5 || echo "${{ matrix.test-name }} completed"
