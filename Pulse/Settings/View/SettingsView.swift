@@ -184,6 +184,12 @@ struct SettingsView: View {
     }
 }
 
+#Preview {
+    NavigationStack {
+        SettingsView(serviceLocator: .preview)
+    }
+}
+
 struct SettingsCoordinator {
     static func start(serviceLocator: ServiceLocator) -> some View {
         SettingsView(serviceLocator: serviceLocator)

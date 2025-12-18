@@ -156,6 +156,10 @@ struct ForYouView: View {
     }
 }
 
+#Preview {
+    ForYouView(serviceLocator: .preview)
+}
+
 struct ForYouCoordinator {
     static func start(serviceLocator: ServiceLocator) -> some View {
         ForYouView(serviceLocator: serviceLocator)

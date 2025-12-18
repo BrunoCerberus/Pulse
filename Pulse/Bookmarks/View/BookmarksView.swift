@@ -89,6 +89,10 @@ struct BookmarksView: View {
     }
 }
 
+#Preview {
+    BookmarksView(serviceLocator: .preview)
+}
+
 struct BookmarksCoordinator {
     static func start(serviceLocator: ServiceLocator) -> some View {
         BookmarksView(serviceLocator: serviceLocator)

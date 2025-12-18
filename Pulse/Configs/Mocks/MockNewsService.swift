@@ -148,6 +148,20 @@ final class MockStorageService: StorageService {
     }
 }
 
+extension ServiceLocator {
+    static var preview: ServiceLocator {
+        let locator = ServiceLocator()
+        locator.register(NewsService.self, instance: MockNewsService())
+        locator.register(SearchService.self, instance: MockSearchService())
+        locator.register(BookmarksService.self, instance: MockBookmarksService())
+        locator.register(CategoriesService.self, instance: MockCategoriesService())
+        locator.register(ForYouService.self, instance: MockForYouService())
+        locator.register(SettingsService.self, instance: MockSettingsService())
+        locator.register(StorageService.self, instance: MockStorageService())
+        return locator
+    }
+}
+
 extension Article {
     static var mockArticles: [Article] {
         [

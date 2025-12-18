@@ -159,6 +159,10 @@ struct SearchView: View {
     }
 }
 
+#Preview {
+    SearchView(serviceLocator: .preview)
+}
+
 struct SearchCoordinator {
     static func start(serviceLocator: ServiceLocator) -> some View {
         SearchView(serviceLocator: serviceLocator)

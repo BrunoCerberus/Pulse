@@ -133,3 +133,12 @@ struct ArticleDetailView: View {
         }
     }
 }
+
+#Preview {
+    NavigationStack {
+        ArticleDetailView(
+            article: Article.mockArticles[0],
+            serviceLocator: .preview
+        )
+    }
+}

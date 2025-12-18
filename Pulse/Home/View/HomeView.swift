@@ -48,6 +48,8 @@ struct HomeView: View {
         }
     }
 
+    // MARK: - Content Views
+
     @ViewBuilder
     private var content: some View {
         if viewModel.viewState.isLoading && viewModel.viewState.headlines.isEmpty {
@@ -157,4 +159,8 @@ struct HomeView: View {
         .padding(.vertical, 8)
         .background(.ultraThinMaterial)
     }
+}
+
+#Preview {
+    HomeView(serviceLocator: .preview)
 }

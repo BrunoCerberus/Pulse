@@ -129,6 +129,18 @@ struct CategoryCard: View {
     }
 }
 
+#Preview {
+    CategoriesView(serviceLocator: .preview)
+}
+
+#Preview("CategoryCard") {
+    CategoryCard(category: .technology, isSelected: false) {}
+}
+
+#Preview("CategoryCard Selected") {
+    CategoryCard(category: .technology, isSelected: true) {}
+}
+
 struct CategoriesCoordinator {
     static func start(serviceLocator: ServiceLocator) -> some View {
         CategoriesView(serviceLocator: serviceLocator)
