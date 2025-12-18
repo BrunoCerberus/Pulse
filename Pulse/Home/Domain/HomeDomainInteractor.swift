@@ -51,7 +51,8 @@ final class HomeDomainInteractor: CombineInteractor {
             state.error = nil
         }
 
-        let country = Locale.current.region?.identifier.lowercased() ?? "us"
+        // NewsAPI free tier has best coverage for US
+        let country = "us"
 
         Publishers.Zip(
             newsService.fetchBreakingNews(country: country),
@@ -83,7 +84,8 @@ final class HomeDomainInteractor: CombineInteractor {
             state.isLoadingMore = true
         }
 
-        let country = Locale.current.region?.identifier.lowercased() ?? "us"
+        // NewsAPI free tier has best coverage for US
+        let country = "us"
         let nextPage = currentState.currentPage + 1
 
         newsService.fetchTopHeadlines(country: country, page: nextPage)

@@ -8,7 +8,8 @@ protocol CategoriesService {
 
 final class LiveCategoriesService: APIRequest, CategoriesService {
     func fetchArticles(for category: NewsCategory, page: Int) -> AnyPublisher<[Article], Error> {
-        let country = Locale.current.region?.identifier.lowercased() ?? "us"
+        // NewsAPI free tier has best coverage for US
+        let country = "us"
 
         return fetchRequest(
             target: NewsAPI.topHeadlinesByCategory(category: category, country: country, page: page),

@@ -15,7 +15,8 @@ final class LiveForYouService: APIRequest, ForYouService {
 
     func fetchPersonalizedFeed(preferences: UserPreferences, page: Int) -> AnyPublisher<[Article], Error> {
         let topics = preferences.followedTopics
-        let country = Locale.current.region?.identifier.lowercased() ?? "us"
+        // NewsAPI free tier has best coverage for US
+        let country = "us"
 
         if topics.isEmpty {
             return fetchRequest(
