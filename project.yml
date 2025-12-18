@@ -60,16 +60,6 @@ targets:
     dependencies:
       - package: EntropyCore
       - package: Lottie
-      - framework: Foundation.framework
-        implicit: true
-      - framework: UIKit.framework
-        implicit: true
-      - framework: Combine.framework
-        implicit: true
-      - framework: SwiftUI.framework
-        implicit: true
-      - framework: UserNotifications.framework
-        implicit: true
 
   PulseTests:
     type: bundle.unit-test
@@ -87,8 +77,6 @@ targets:
         BUNDLE_LOADER: "$(TEST_HOST)"
     dependencies:
       - target: Pulse
-      - framework: XCTest.framework
-        implicit: true
 
   PulseUITests:
     type: bundle.ui-testing
@@ -105,8 +93,6 @@ targets:
         TEST_TARGET_NAME: Pulse
     dependencies:
       - target: Pulse
-      - framework: XCTest.framework
-        implicit: true
 
   PulseSnapshotTests:
     type: bundle.unit-test
@@ -125,8 +111,6 @@ targets:
     dependencies:
       - target: Pulse
       - package: SnapshotTesting
-      - framework: XCTest.framework
-        implicit: true
 
 schemes:
   PulseDev:

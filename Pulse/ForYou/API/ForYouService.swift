@@ -40,7 +40,7 @@ final class LiveForYouService: APIRequest, ForYouService {
             .map { response in
                 response.articles.compactMap { $0.toArticle(category: category) }
             }
-            .catch { _ in Just([Article]()) }
+            .catch { _ in Just([Article]()).setFailureType(to: Error.self) }
             .eraseToAnyPublisher()
         }
 
