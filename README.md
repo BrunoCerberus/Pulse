@@ -4,12 +4,14 @@ A modern iOS news aggregation app built with Clean Architecture, SwiftUI, and Co
 
 ## Features
 
-- **Home Feed**: Breaking news carousel and top headlines with infinite scrolling
+- **Home Feed**: Breaking news carousel and top headlines with infinite scrolling (settings accessible via gear icon)
 - **For You**: Personalized feed based on followed topics and reading history
 - **Categories**: Browse news by World, Business, Technology, Science, Health, Sports, Entertainment
-- **Search**: Full-text search with suggestions, recent searches, and sort options
+- **Search**: Full-text search with 300ms debounce, suggestions, recent searches, and sort options
 - **Bookmarks**: Save articles for offline reading with SwiftData persistence
-- **Settings**: Customize topics, notifications, theme, and content filters
+- **Settings**: Customize topics, notifications, theme, and content filters (accessed from Home navigation bar)
+
+The app uses iOS 26's liquid glass TabView style with tabs: Home, For You, Categories, Bookmarks, and Search.
 
 ## Architecture
 

@@ -64,12 +64,12 @@ Pulse/
 
 | Feature | Description |
 |---------|-------------|
-| **Home** | Breaking news carousel, top headlines with infinite scroll |
+| **Home** | Breaking news carousel, top headlines with infinite scroll, settings access via gear icon |
 | **For You** | Personalized feed based on followed topics |
 | **Categories** | Browse by World, Business, Tech, Science, Health, Sports, Entertainment |
-| **Search** | Full-text search with suggestions and sort options |
+| **Search** | Full-text search with 300ms debounce, suggestions, and sort options (last tab with liquid glass style) |
 | **Bookmarks** | Save articles for offline reading (SwiftData) |
-| **Settings** | Topics, notifications, theme, muted content |
+| **Settings** | Topics, notifications, theme, muted content (accessed from Home navigation bar) |
 
 ## Development Commands
 
