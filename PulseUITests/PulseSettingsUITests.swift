@@ -33,7 +33,7 @@ final class PulseSettingsUITests: XCTestCase {
     private func navigateToSettings() {
         // Ensure we're on Home tab first
         let homeTab = app.tabBars.buttons["Home"]
-        if homeTab.exists && !homeTab.isSelected {
+        if homeTab.exists, !homeTab.isSelected {
             homeTab.tap()
         }
 
