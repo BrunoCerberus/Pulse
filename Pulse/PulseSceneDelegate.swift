@@ -152,6 +152,7 @@ final class PulseSceneDelegate: UIResponder, UIWindowSceneDelegate {
                 serviceLocator.register(SettingsService.self, instance: MockSettingsService())
                 serviceLocator.register(CategoriesService.self, instance: MockCategoriesService())
                 serviceLocator.register(ForYouService.self, instance: MockForYouService())
+                serviceLocator.register(StoreKitService.self, instance: MockStoreKitService())
             } else {
                 // Use real services for debug builds
                 registerLiveServices()
@@ -176,6 +177,7 @@ final class PulseSceneDelegate: UIResponder, UIWindowSceneDelegate {
         serviceLocator.register(NewsService.self, instance: LiveNewsService())
         serviceLocator.register(SearchService.self, instance: LiveSearchService())
         serviceLocator.register(CategoriesService.self, instance: LiveCategoriesService())
+        serviceLocator.register(StoreKitService.self, instance: LiveStoreKitService())
 
         // Register services that depend on StorageService
         serviceLocator.register(BookmarksService.self, instance: LiveBookmarksService(storageService: storageService))

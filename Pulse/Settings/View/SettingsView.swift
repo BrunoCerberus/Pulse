@@ -5,6 +5,12 @@ struct SettingsView: View {
 
     private let serviceLocator: ServiceLocator
 
+    /// Whether the paywall sheet is presented
+    @State private var isPaywallPresented = false
+
+    /// Whether the user has an active premium subscription
+    @State private var isPremium = false
+
     init(serviceLocator: ServiceLocator) {
         self.serviceLocator = serviceLocator
         _viewModel = StateObject(wrappedValue: SettingsViewModel(serviceLocator: serviceLocator))
@@ -12,6 +18,7 @@ struct SettingsView: View {
 
     var body: some View {
         List {
+            premiumSection
             topicsSection
             notificationsSection
             appearanceSection
@@ -35,6 +42,22 @@ struct SettingsView: View {
         }
         .onAppear {
             viewModel.handle(event: .onAppear)
+            checkPremiumStatus()
+        }
+        .sheet(
+            isPresented: $isPaywallPresented,
+            onDismiss: { checkPremiumStatus() },
+            content: { PaywallView(viewModel: PaywallViewModel(serviceLocator: serviceLocator)) }
+        )
+    }
+
+    /// Check premium subscription status
+    private func checkPremiumStatus() {
+        do {
+            let storeKitService = try serviceLocator.retrieve(StoreKitService.self)
+            isPremium = storeKitService.isPremium
+        } catch {
+            isPremium = false
         }
     }
 
@@ -165,6 +188,46 @@ struct SettingsView: View {
             } label: {
                 Label("Clear Reading History", systemImage: "trash")
             }
+        }
+    }
+
+    private var premiumSection: some View {
+        Section {
+            Button {
+                if !isPremium {
+                    isPaywallPresented = true
+                }
+            } label: {
+                HStack {
+                    Image(systemName: isPremium ? "crown.fill" : "crown")
+                        .foregroundColor(isPremium ? .yellow : .orange)
+                        .font(.title2)
+
+                    VStack(alignment: .leading, spacing: 2) {
+                        Text(isPremium ? Localizable.paywall.premiumActive : Localizable.paywall.goPremium)
+                            .foregroundStyle(.primary)
+
+                        Text(isPremium ? Localizable.paywall.fullAccess : Localizable.paywall.unlockFeatures)
+                            .font(.caption)
+                            .foregroundStyle(.secondary)
+                    }
+
+                    Spacer()
+
+                    if isPremium {
+                        Image(systemName: "checkmark.circle.fill")
+                            .foregroundColor(.green)
+                    } else {
+                        Image(systemName: "chevron.right")
+                            .font(.caption)
+                            .foregroundStyle(.secondary)
+                    }
+                }
+            }
+            .buttonStyle(.plain)
+            .disabled(isPremium)
+        } header: {
+            Text("Subscription")
         }
     }
 
