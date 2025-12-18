@@ -225,10 +225,10 @@ schemes:
         - Pulse
       targets:
         - name: PulseTests
-          parallelizable: true
+          parallelizable: false
           randomExecutionOrder: true
         - name: PulseUITests
-          parallelizable: true
+          parallelizable: false
           randomExecutionOrder: true
       environmentVariables: {}
     profile:
@@ -255,10 +255,10 @@ schemes:
         - Pulse
       targets:
         - name: PulseTests
-          parallelizable: true
+          parallelizable: false
           randomExecutionOrder: true
         - name: PulseUITests
-          parallelizable: true
+          parallelizable: false
           randomExecutionOrder: true
       environmentVariables: {}
     profile:
@@ -282,7 +282,7 @@ schemes:
         - Pulse
       targets:
         - name: PulseTests
-          parallelizable: true
+          parallelizable: false
           randomExecutionOrder: true
       environmentVariables: {}
 
@@ -294,7 +294,7 @@ schemes:
       config: Debug
       targets:
         - name: PulseUITests
-          parallelizable: true
+          parallelizable: false
           randomExecutionOrder: true
       environmentVariables: {}
 
@@ -306,6 +306,6 @@ schemes:
       config: Debug
       targets:
         - name: PulseSnapshotTests
-          parallelizable: true
+          parallelizable: false
           randomExecutionOrder: true
       environmentVariables: {}
