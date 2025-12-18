@@ -16,7 +16,6 @@ DerivedData/
 # Dependencies
 .build/
 Packages/
-Package.resolved
 
 # Test Results
 *.xcresult
@@ -26,8 +25,14 @@ TestResults.xcresult
 coverage/
 *.coverage
 
-# Generated
-Pulse.xcodeproj
+# XcodeGen generated project
+Pulse.xcodeproj/
+
+# Exception: Commit Package.resolved for deterministic CI builds
+!Pulse.xcodeproj/project.xcworkspace/
+!Pulse.xcodeproj/project.xcworkspace/xcshareddata/
+!Pulse.xcodeproj/project.xcworkspace/xcshareddata/swiftpm/
+!Pulse.xcodeproj/project.xcworkspace/xcshareddata/swiftpm/Package.resolved
 
 # macOS
 .DS_Store
