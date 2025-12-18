@@ -1,33 +1,164 @@
-import UIKit
 import SwiftUI
+import UIKit
 
+/**
+ * Scene delegate responsible for managing the app's window and scene lifecycle.
+ *
+ * This delegate handles the creation and configuration of the app's main window
+ * and sets up the root view controller with SwiftUI integration.
+ * It also initializes the ServiceLocator with appropriate services based on
+ * the current environment (debug/release, test/production).
+ *
+ * Note: This implementation prevents scene delegate execution during unit tests
+ * to avoid conflicts with test environments.
+ */
 final class PulseSceneDelegate: UIResponder, UIWindowSceneDelegate {
+    /// The main window of the application
     var window: UIWindow?
 
+    /// Tracks whether splash screen has been shown
+    private var hasSplashBeenShown = false
+
+    /**
+     * Called when a scene is being created and connected to the app.
+     *
+     * This method sets up the main window and configures the root view controller
+     * with the app's main content view. It also applies the theme preference
+     * and initializes the ServiceLocator with appropriate services.
+     *
+     * - Parameter scene: The scene being connected
+     * - Parameter session: The session that the scene will connect to
+     * - Parameter connectionOptions: Additional options for the scene connection
+     */
     func scene(
         _ scene: UIScene,
         willConnectTo session: UISceneSession,
         options connectionOptions: UIScene.ConnectionOptions
     ) {
-        registerServices()
+        // Prevent scene delegate execution during unit tests to avoid conflicts
+        guard ProcessInfo.processInfo.environment["IS_RUNNING_UNIT_TESTS"] != "YES" else { return }
 
+        // Initialize services in ServiceLocator
+        setupServices()
+
+        // Ensure we have a valid window scene
         guard let windowScene = scene as? UIWindowScene else { return }
 
-        window = UIWindow(windowScene: windowScene)
-        window?.rootViewController = UIHostingController(rootView: ContentView())
-        window?.makeKeyAndVisible()
+        // Create and configure the main window
+        let window = UIWindow(windowScene: windowScene)
+        self.window = window
 
+        // Skip splash screen during UI tests for faster test execution
+        if isRunningUITests() {
+            showMainApp(in: window)
+        } else {
+            // Show splash screen first, then transition to main app
+            showSplashScreen(in: window)
+        }
+
+        // Make the window visible and set it as the key window
+        window.makeKeyAndVisible()
+
+        // Handle any deeplinks from launch
         if let urlContext = connectionOptions.urlContexts.first {
             handleDeeplink(urlContext.url)
         }
     }
 
-    func scene(_ scene: UIScene, openURLContexts URLContexts: Set<UIOpenURLContext>) {
-        guard let url = URLContexts.first?.url else { return }
-        handleDeeplink(url)
+    /**
+     * Checks if the app is running in UI test mode.
+     *
+     * - Returns: `true` if running UI tests, `false` otherwise
+     */
+    private func isRunningUITests() -> Bool {
+        ProcessInfo.processInfo.environment["XCTestConfigurationFilePath"] == "UI"
     }
 
-    private func registerServices() {
+    /**
+     * Shows the main app directly without splash screen.
+     *
+     * Used during UI tests to skip the splash animation.
+     *
+     * - Parameter window: The main window to display content in
+     */
+    private func showMainApp(in window: UIWindow) {
+        let rootView = UIHostingController(rootView: ContentView())
+        rootView.overrideUserInterfaceStyle = ThemeManager.shared.colorScheme == .dark ? .dark : .light
+        window.rootViewController = rootView
+    }
+
+    /**
+     * Shows the splash screen with animation.
+     *
+     * After the animation completes, transitions to the main app content.
+     *
+     * - Parameter window: The main window to display content in
+     */
+    private func showSplashScreen(in window: UIWindow) {
+        let splashView = SplashScreenView { [weak self] in
+            self?.transitionToMainApp(in: window)
+        }
+
+        let splashViewController = UIHostingController(rootView: splashView)
+        splashViewController.overrideUserInterfaceStyle = ThemeManager.shared.colorScheme == .dark ? .dark : .light
+        window.rootViewController = splashViewController
+    }
+
+    /**
+     * Transitions from splash screen to the main app content.
+     *
+     * - Parameter window: The main window to update
+     */
+    private func transitionToMainApp(in window: UIWindow) {
+        let rootView = UIHostingController(rootView: ContentView())
+        rootView.overrideUserInterfaceStyle = ThemeManager.shared.colorScheme == .dark ? .dark : .light
+
+        // Animate transition from splash to main app
+        UIView.transition(
+            with: window,
+            duration: 0.3,
+            options: .transitionCrossDissolve,
+            animations: {
+                window.rootViewController = rootView
+            },
+            completion: { [weak self] _ in
+                self?.hasSplashBeenShown = true
+            }
+        )
+    }
+
+    /**
+     * Setup services in the ServiceLocator based on current environment.
+     *
+     * This method registers the appropriate services (real or mock) based on
+     * the current build configuration and test environment detection.
+     */
+    private func setupServices() {
+        #if DEBUG
+            // Check if running in test environment
+            if ProcessInfo.processInfo.environment["XCTestConfigurationFilePath"] != nil {
+                // Use mock services for tests
+                ServiceLocator.shared.register(StorageService.self, service: MockStorageService())
+                ServiceLocator.shared.register(NewsService.self, service: MockNewsService())
+                ServiceLocator.shared.register(SearchService.self, service: MockSearchService())
+                ServiceLocator.shared.register(BookmarksService.self, service: MockBookmarksService())
+                ServiceLocator.shared.register(SettingsService.self, service: MockSettingsService())
+                ServiceLocator.shared.register(CategoriesService.self, service: MockCategoriesService())
+                ServiceLocator.shared.register(ForYouService.self, service: MockForYouService())
+            } else {
+                // Use real services for debug builds
+                registerLiveServices()
+            }
+        #else
+            // Use real services for release builds
+            registerLiveServices()
+        #endif
+    }
+
+    /**
+     * Register all live services for production use.
+     */
+    private func registerLiveServices() {
         ServiceLocator.shared.register(StorageService.self, service: LiveStorageService())
         ServiceLocator.shared.register(NewsService.self, service: LiveNewsService())
         ServiceLocator.shared.register(SearchService.self, service: LiveSearchService())
@@ -37,6 +168,44 @@ final class PulseSceneDelegate: UIResponder, UIWindowSceneDelegate {
         ServiceLocator.shared.register(ForYouService.self, service: LiveForYouService())
     }
 
+    /**
+     * Handle URL opening for the scene.
+     *
+     * This method is called when the app is opened via a custom URL scheme
+     * while the app is running in the foreground.
+     *
+     * - Parameter scene: The scene that received the URL
+     * - Parameter urlContexts: The URL contexts that were opened
+     */
+    func scene(_ scene: UIScene, openURLContexts URLContexts: Set<UIOpenURLContext>) {
+        guard let url = URLContexts.first?.url else { return }
+        handleDeeplink(url)
+    }
+
+    /**
+     * Handle universal links when the app is being activated.
+     *
+     * This method is called when the app is opened via a universal link.
+     * Universal links use HTTPS URLs and are handled differently from custom schemes.
+     *
+     * - Parameter scene: The scene that received the activity
+     * - Parameter userActivity: The user activity containing the universal link
+     */
+    func scene(_ scene: UIScene, continue userActivity: NSUserActivity) {
+        guard userActivity.activityType == NSUserActivityTypeBrowsingWeb,
+              let url = userActivity.webpageURL
+        else {
+            return
+        }
+
+        handleDeeplink(url)
+    }
+
+    /**
+     * Process a deeplink URL.
+     *
+     * - Parameter url: The URL to process
+     */
     private func handleDeeplink(_ url: URL) {
         DeeplinkManager.shared.parse(url: url)
     }
