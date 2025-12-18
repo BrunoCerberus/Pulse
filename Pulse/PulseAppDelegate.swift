@@ -26,6 +26,10 @@ final class PulseAppDelegate: UIResponder, UIApplicationDelegate {
         _ application: UIApplication,
         didFinishLaunchingWithOptions launchOptions: [UIApplication.LaunchOptionsKey: Any]? = nil
     ) -> Bool {
+        // Skip notification configuration during tests to prevent hanging
+        guard ProcessInfo.processInfo.environment["XCTestConfigurationFilePath"] == nil else {
+            return true
+        }
         configureNotifications(application)
         return true
     }

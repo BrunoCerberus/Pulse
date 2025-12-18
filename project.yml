@@ -220,16 +220,9 @@ schemes:
       environmentVariables: {}
     test:
       config: Debug
-      gatherCoverageData: true
-      coverageTargets:
-        - Pulse
       targets:
-        - name: PulseTests
-          parallelizable: false
-          randomExecutionOrder: true
-        - name: PulseUITests
-          parallelizable: false
-          randomExecutionOrder: true
+        - PulseTests
+        - PulseUITests
       environmentVariables: {}
     profile:
       config: Release
@@ -250,16 +243,9 @@ schemes:
       environmentVariables: {}
     test:
       config: Release
-      gatherCoverageData: true
-      coverageTargets:
-        - Pulse
       targets:
-        - name: PulseTests
-          parallelizable: false
-          randomExecutionOrder: true
-        - name: PulseUITests
-          parallelizable: false
-          randomExecutionOrder: true
+        - PulseTests
+        - PulseUITests
       environmentVariables: {}
     profile:
       config: Release
@@ -277,13 +263,8 @@ schemes:
         PulseTests: all
     test:
       config: Debug
-      gatherCoverageData: true
-      coverageTargets:
-        - Pulse
       targets:
-        - name: PulseTests
-          parallelizable: false
-          randomExecutionOrder: true
+        - PulseTests
       environmentVariables: {}
 
   PulseUITests:
@@ -293,9 +274,7 @@ schemes:
     test:
       config: Debug
       targets:
-        - name: PulseUITests
-          parallelizable: false
-          randomExecutionOrder: true
+        - PulseUITests
       environmentVariables: {}
 
   PulseSnapshotTests:
@@ -305,7 +284,5 @@ schemes:
     test:
       config: Debug
       targets:
-        - name: PulseSnapshotTests
-          parallelizable: false
-          randomExecutionOrder: true
+        - PulseSnapshotTests
       environmentVariables: {}
