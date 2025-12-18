@@ -190,7 +190,7 @@ struct SettingsView: View {
     }
 }
 
-struct SettingsCoordinator {
+enum SettingsCoordinator {
     static func start(serviceLocator: ServiceLocator) -> some View {
         SettingsView(serviceLocator: serviceLocator)
     }

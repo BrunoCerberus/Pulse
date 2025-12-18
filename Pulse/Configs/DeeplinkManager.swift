@@ -1,5 +1,5 @@
-import Foundation
 import Combine
+import Foundation
 
 enum Deeplink: Equatable {
     case home
@@ -24,7 +24,8 @@ final class DeeplinkManager: ObservableObject {
 
     func parse(url: URL) {
         guard let components = URLComponents(url: url, resolvingAgainstBaseURL: true),
-              components.scheme == "pulse" else {
+              components.scheme == "pulse"
+        else {
             return
         }
 

@@ -123,15 +123,13 @@ struct SearchView: View {
                 ForEach(viewModel.viewState.results) { item in
                     ArticleRowView(item: item) {
                         viewModel.handle(event: .onArticleTapped(item.article))
-                    } onBookmark: {
-                    } onShare: {
-                    }
-                    .listRowInsets(EdgeInsets())
-                    .onAppear {
-                        if item == viewModel.viewState.results.last {
-                            viewModel.handle(event: .onLoadMore)
+                    } onBookmark: {} onShare: {}
+                        .listRowInsets(EdgeInsets())
+                        .onAppear {
+                            if item == viewModel.viewState.results.last {
+                                viewModel.handle(event: .onLoadMore)
+                            }
                         }
-                    }
                 }
 
                 if viewModel.viewState.isLoadingMore {
@@ -163,7 +161,7 @@ struct SearchView: View {
     SearchView(serviceLocator: .preview)
 }
 
-struct SearchCoordinator {
+enum SearchCoordinator {
     static func start(serviceLocator: ServiceLocator) -> some View {
         SearchView(serviceLocator: serviceLocator)
     }

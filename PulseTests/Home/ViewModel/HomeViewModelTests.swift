@@ -1,7 +1,7 @@
-import Testing
 import Combine
 import Foundation
 @testable import Pulse
+import Testing
 
 @Suite("HomeViewModel Tests")
 @MainActor
@@ -23,7 +23,7 @@ struct HomeViewModelTests {
     }
 
     @Test("Initial view state is correct")
-    func testInitialViewState() {
+    func initialViewState() {
         let state = sut.viewState
         #expect(state.breakingNews.isEmpty)
         #expect(state.headlines.isEmpty)
@@ -79,7 +79,7 @@ struct HomeViewModelTests {
     }
 
     @Test("View state reducer transforms domain state correctly")
-    func testViewStateReducer() {
+    func viewStateReducer() {
         let reducer = HomeViewStateReducer()
 
         let domainState = HomeDomainState(

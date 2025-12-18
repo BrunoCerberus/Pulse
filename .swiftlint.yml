@@ -1,0 +1,12 @@
+# SwiftLint Configuration
+# Disable rules that conflict with SwiftFormat
+
+disabled_rules:
+  - trailing_comma          # SwiftFormat uses trailingCommas rule with opposite behavior
+  - opening_brace           # SwiftFormat uses wrapMultilineStatementBraces rule
+
+# Exclude generated/external code
+excluded:
+  - Pods
+  - .build
+  - DerivedData

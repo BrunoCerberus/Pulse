@@ -24,7 +24,7 @@ final class PulseAppDelegate: UIResponder, UIApplicationDelegate {
      */
     func application(
         _ application: UIApplication,
-        didFinishLaunchingWithOptions launchOptions: [UIApplication.LaunchOptionsKey: Any]? = nil
+        didFinishLaunchingWithOptions _: [UIApplication.LaunchOptionsKey: Any]? = nil
     ) -> Bool {
         // Skip notification configuration during tests to prevent hanging
         guard ProcessInfo.processInfo.environment["XCTestConfigurationFilePath"] == nil else {
@@ -45,7 +45,7 @@ final class PulseAppDelegate: UIResponder, UIApplicationDelegate {
      * - Returns: True if the URL was handled successfully
      */
     func application(
-        _ application: UIApplication,
+        _: UIApplication,
         open url: URL
     ) -> Bool {
         // For iOS 13+, this is handled by the scene delegate
@@ -66,9 +66,9 @@ final class PulseAppDelegate: UIResponder, UIApplicationDelegate {
      * - Returns: A configuration object for the new scene
      */
     func application(
-        _ application: UIApplication,
+        _: UIApplication,
         configurationForConnecting connectingSceneSession: UISceneSession,
-        options: UIScene.ConnectionOptions
+        options _: UIScene.ConnectionOptions
     ) -> UISceneConfiguration {
         // Return the default scene configuration
         UISceneConfiguration(name: "Default Configuration", sessionRole: connectingSceneSession.role)
@@ -84,15 +84,15 @@ final class PulseAppDelegate: UIResponder, UIApplicationDelegate {
 
 extension PulseAppDelegate: UNUserNotificationCenterDelegate {
     func userNotificationCenter(
-        _ center: UNUserNotificationCenter,
-        willPresent notification: UNNotification,
+        _: UNUserNotificationCenter,
+        willPresent _: UNNotification,
         withCompletionHandler completionHandler: @escaping (UNNotificationPresentationOptions) -> Void
     ) {
         completionHandler([.banner, .sound, .badge])
     }
 
     func userNotificationCenter(
-        _ center: UNUserNotificationCenter,
+        _: UNUserNotificationCenter,
         didReceive response: UNNotificationResponse,
         withCompletionHandler completionHandler: @escaping () -> Void
     ) {
@@ -104,7 +104,7 @@ extension PulseAppDelegate: UNUserNotificationCenterDelegate {
     }
 
     func application(
-        _ application: UIApplication,
+        _: UIApplication,
         didRegisterForRemoteNotificationsWithDeviceToken deviceToken: Data
     ) {
         let token = deviceToken.map { String(format: "%02.2hhx", $0) }.joined()
@@ -112,7 +112,7 @@ extension PulseAppDelegate: UNUserNotificationCenterDelegate {
     }
 
     func application(
-        _ application: UIApplication,
+        _: UIApplication,
         didFailToRegisterForRemoteNotificationsWithError error: Error
     ) {
         Logger.shared.network("Failed to register for notifications: \(error.localizedDescription)", level: .warning)

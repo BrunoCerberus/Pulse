@@ -1,6 +1,6 @@
+import Combine
 import Foundation
 import SwiftData
-import Combine
 
 protocol StorageService {
     func saveArticle(_ article: Article) async throws
@@ -22,10 +22,10 @@ final class LiveStorageService: StorageService {
             let schema = Schema([
                 BookmarkedArticle.self,
                 ReadingHistoryEntry.self,
-                UserPreferencesModel.self
+                UserPreferencesModel.self,
             ])
             let modelConfiguration = ModelConfiguration(schema: schema, isStoredInMemoryOnly: false)
-            self.modelContainer = try ModelContainer(for: schema, configurations: [modelConfiguration])
+            modelContainer = try ModelContainer(for: schema, configurations: [modelConfiguration])
         } catch {
             fatalError("Failed to create ModelContainer: \(error)")
         }

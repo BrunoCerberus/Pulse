@@ -35,7 +35,7 @@ final class PulseSceneDelegate: UIResponder, UIWindowSceneDelegate {
      */
     func scene(
         _ scene: UIScene,
-        willConnectTo session: UISceneSession,
+        willConnectTo _: UISceneSession,
         options connectionOptions: UIScene.ConnectionOptions
     ) {
         // Prevent scene delegate execution during unit tests to avoid conflicts
@@ -192,7 +192,7 @@ final class PulseSceneDelegate: UIResponder, UIWindowSceneDelegate {
      * - Parameter scene: The scene that received the URL
      * - Parameter urlContexts: The URL contexts that were opened
      */
-    func scene(_ scene: UIScene, openURLContexts URLContexts: Set<UIOpenURLContext>) {
+    func scene(_: UIScene, openURLContexts URLContexts: Set<UIOpenURLContext>) {
         guard let url = URLContexts.first?.url else { return }
         handleDeeplink(url)
     }
@@ -206,7 +206,7 @@ final class PulseSceneDelegate: UIResponder, UIWindowSceneDelegate {
      * - Parameter scene: The scene that received the activity
      * - Parameter userActivity: The user activity containing the universal link
      */
-    func scene(_ scene: UIScene, continue userActivity: NSUserActivity) {
+    func scene(_: UIScene, continue userActivity: NSUserActivity) {
         guard userActivity.activityType == NSUserActivityTypeBrowsingWeb,
               let url = userActivity.webpageURL
         else {

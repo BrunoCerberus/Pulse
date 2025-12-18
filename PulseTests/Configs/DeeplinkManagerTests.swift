@@ -1,7 +1,7 @@
-import Testing
 import Combine
 import Foundation
 @testable import Pulse
+import Testing
 
 @Suite("DeeplinkManager Tests")
 struct DeeplinkManagerTests {
@@ -13,7 +13,7 @@ struct DeeplinkManagerTests {
     }
 
     @Test("Parse home deeplink")
-    func testParseHomeDeeplink() {
+    func parseHomeDeeplink() {
         let url = URL(string: "pulse://home")!
 
         sut.parse(url: url)
@@ -22,7 +22,7 @@ struct DeeplinkManagerTests {
     }
 
     @Test("Parse search deeplink with query")
-    func testParseSearchDeeplinkWithQuery() {
+    func parseSearchDeeplinkWithQuery() {
         let url = URL(string: "pulse://search?q=swift")!
 
         sut.parse(url: url)
@@ -31,7 +31,7 @@ struct DeeplinkManagerTests {
     }
 
     @Test("Parse search deeplink without query")
-    func testParseSearchDeeplinkWithoutQuery() {
+    func parseSearchDeeplinkWithoutQuery() {
         let url = URL(string: "pulse://search")!
 
         sut.parse(url: url)
@@ -40,7 +40,7 @@ struct DeeplinkManagerTests {
     }
 
     @Test("Parse bookmarks deeplink")
-    func testParseBookmarksDeeplink() {
+    func parseBookmarksDeeplink() {
         let url = URL(string: "pulse://bookmarks")!
 
         sut.parse(url: url)
@@ -49,7 +49,7 @@ struct DeeplinkManagerTests {
     }
 
     @Test("Parse settings deeplink")
-    func testParseSettingsDeeplink() {
+    func parseSettingsDeeplink() {
         let url = URL(string: "pulse://settings")!
 
         sut.parse(url: url)
@@ -58,7 +58,7 @@ struct DeeplinkManagerTests {
     }
 
     @Test("Parse article deeplink")
-    func testParseArticleDeeplink() {
+    func parseArticleDeeplink() {
         let url = URL(string: "pulse://article?id=123")!
 
         sut.parse(url: url)
@@ -67,7 +67,7 @@ struct DeeplinkManagerTests {
     }
 
     @Test("Parse category deeplink")
-    func testParseCategoryDeeplink() {
+    func parseCategoryDeeplink() {
         let url = URL(string: "pulse://category?name=technology")!
 
         sut.parse(url: url)
@@ -76,7 +76,7 @@ struct DeeplinkManagerTests {
     }
 
     @Test("Invalid scheme is ignored")
-    func testInvalidSchemeIsIgnored() {
+    func invalidSchemeIsIgnored() {
         let url = URL(string: "invalid://home")!
 
         sut.parse(url: url)
@@ -85,7 +85,7 @@ struct DeeplinkManagerTests {
     }
 
     @Test("Handle deeplink publishes to publisher")
-    func testHandleDeeplinkPublishes() async throws {
+    func handleDeeplinkPublishes() async throws {
         var cancellables = Set<AnyCancellable>()
         var receivedDeeplinks: [Deeplink] = []
 

@@ -1,6 +1,6 @@
-import Foundation
 import Combine
 import EntropyCore
+import Foundation
 
 protocol CategoriesService {
     func fetchArticles(for category: NewsCategory, page: Int) -> AnyPublisher<[Article], Error>

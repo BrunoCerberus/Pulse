@@ -1,6 +1,6 @@
-import Foundation
 import Combine
 import EntropyCore
+import Foundation
 
 protocol NewsService {
     func fetchTopHeadlines(country: String, page: Int) -> AnyPublisher<[Article], Error>

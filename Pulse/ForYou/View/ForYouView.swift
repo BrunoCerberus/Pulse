@@ -117,14 +117,12 @@ struct ForYouView: View {
                 ForEach(viewModel.viewState.articles) { item in
                     ArticleRowView(item: item) {
                         viewModel.handle(event: .onArticleTapped(item.article))
-                    } onBookmark: {
-                    } onShare: {
-                    }
-                    .onAppear {
-                        if item == viewModel.viewState.articles.last {
-                            viewModel.handle(event: .onLoadMore)
+                    } onBookmark: {} onShare: {}
+                        .onAppear {
+                            if item == viewModel.viewState.articles.last {
+                                viewModel.handle(event: .onLoadMore)
+                            }
                         }
-                    }
                 }
 
                 if viewModel.viewState.isLoadingMore {
@@ -160,7 +158,7 @@ struct ForYouView: View {
     ForYouView(serviceLocator: .preview)
 }
 
-struct ForYouCoordinator {
+enum ForYouCoordinator {
     static func start(serviceLocator: ServiceLocator) -> some View {
         ForYouView(serviceLocator: serviceLocator)
     }

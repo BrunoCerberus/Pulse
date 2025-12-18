@@ -31,13 +31,13 @@ struct ArticleViewItem: Identifiable, Equatable {
     let article: Article
 
     init(from article: Article) {
-        self.id = article.id
-        self.title = article.title
-        self.description = article.description
-        self.sourceName = article.source.name
-        self.imageURL = article.imageURL.flatMap { URL(string: $0) }
-        self.formattedDate = article.formattedDate
-        self.category = article.category
+        id = article.id
+        title = article.title
+        description = article.description
+        sourceName = article.source.name
+        imageURL = article.imageURL.flatMap { URL(string: $0) }
+        formattedDate = article.formattedDate
+        category = article.category
         self.article = article
     }
 }

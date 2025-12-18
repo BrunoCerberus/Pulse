@@ -1,7 +1,7 @@
-import Testing
 import Combine
 import Foundation
 @testable import Pulse
+import Testing
 
 @Suite("SearchViewModel Tests")
 @MainActor
@@ -23,7 +23,7 @@ struct SearchViewModelTests {
     }
 
     @Test("Initial view state is correct")
-    func testInitialViewState() {
+    func initialViewState() {
         let state = sut.viewState
         #expect(state.query.isEmpty)
         #expect(state.results.isEmpty)
@@ -33,7 +33,7 @@ struct SearchViewModelTests {
     }
 
     @Test("Query change updates state")
-    func testQueryChange() async throws {
+    func queryChange() async throws {
         sut.handle(event: .onQueryChanged("test"))
 
         try await Task.sleep(nanoseconds: 100_000_000)
@@ -42,7 +42,7 @@ struct SearchViewModelTests {
     }
 
     @Test("Search triggers loading")
-    func testSearch() async throws {
+    func search() async throws {
         mockSearchService.searchResult = .success(Article.mockArticles)
 
         sut.handle(event: .onQueryChanged("swift"))
@@ -54,7 +54,7 @@ struct SearchViewModelTests {
     }
 
     @Test("Clear results resets state")
-    func testClearResults() {
+    func clearResults() {
         sut.handle(event: .onQueryChanged("test"))
         sut.handle(event: .onClear)
 
@@ -63,7 +63,7 @@ struct SearchViewModelTests {
     }
 
     @Test("Article tap sets selected article")
-    func testArticleTap() {
+    func articleTap() {
         let article = Article.mockArticles[0]
 
         sut.handle(event: .onArticleTapped(article))
@@ -72,7 +72,7 @@ struct SearchViewModelTests {
     }
 
     @Test("Sort change updates sort option")
-    func testSortChange() {
+    func sortChange() {
         sut.handle(event: .onSortChanged(.publishedAt))
 
         #expect(sut.viewState.sortOption == .publishedAt)

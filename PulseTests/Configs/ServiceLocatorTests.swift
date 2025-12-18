@@ -1,11 +1,11 @@
-import Testing
 import Foundation
 @testable import Pulse
+import Testing
 
 @Suite("ServiceLocator Tests")
 struct ServiceLocatorTests {
     @Test("Register and retrieve service")
-    func testRegisterAndRetrieve() throws {
+    func registerAndRetrieve() throws {
         let serviceLocator = ServiceLocator()
         let mockService = MockNewsService()
         serviceLocator.register(NewsService.self, instance: mockService)
@@ -15,7 +15,7 @@ struct ServiceLocatorTests {
     }
 
     @Test("Retrieve throws for unregistered service")
-    func testRetrieveThrows() {
+    func retrieveThrows() {
         let serviceLocator = ServiceLocator()
 
         #expect(throws: ServiceLocatorError.self) {
@@ -46,7 +46,7 @@ struct ServiceLocatorTests {
     }
 
     @Test("Register overwrites existing service")
-    func testOverwrite() throws {
+    func overwrite() throws {
         let serviceLocator = ServiceLocator()
         let firstService = MockNewsService()
         let secondService = MockNewsService()
@@ -77,7 +77,7 @@ struct ServiceLocatorTests {
     }
 
     @Test("Factory registration creates new instances")
-    func testFactoryRegistration() throws {
+    func factoryRegistration() throws {
         let serviceLocator = ServiceLocator()
         var callCount = 0
 

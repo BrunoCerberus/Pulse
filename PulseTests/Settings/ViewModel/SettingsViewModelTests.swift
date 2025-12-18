@@ -1,7 +1,7 @@
-import Testing
 import Combine
 import Foundation
 @testable import Pulse
+import Testing
 
 @Suite("SettingsViewModel Tests")
 @MainActor
@@ -20,7 +20,7 @@ struct SettingsViewModelTests {
     }
 
     @Test("Initial view state is correct")
-    func testInitialViewState() {
+    func initialViewState() {
         let state = sut.viewState
         #expect(state.followedTopics.isEmpty)
         #expect(state.allTopics == NewsCategory.allCases)
@@ -30,7 +30,7 @@ struct SettingsViewModelTests {
     }
 
     @Test("Load preferences updates state")
-    func testLoadPreferences() async throws {
+    func loadPreferences() async throws {
         mockSettingsService.preferences = UserPreferences(
             followedTopics: [.technology, .science],
             followedSources: [],
@@ -50,7 +50,7 @@ struct SettingsViewModelTests {
     }
 
     @Test("Toggle topic adds/removes topic")
-    func testToggleTopic() async throws {
+    func toggleTopic() async throws {
         sut.handle(event: .onAppear)
         try await Task.sleep(nanoseconds: 300_000_000)
 
@@ -61,7 +61,7 @@ struct SettingsViewModelTests {
     }
 
     @Test("Toggle notifications updates state")
-    func testToggleNotifications() async throws {
+    func toggleNotifications() async throws {
         sut.handle(event: .onAppear)
         try await Task.sleep(nanoseconds: 300_000_000)
 
@@ -72,7 +72,7 @@ struct SettingsViewModelTests {
     }
 
     @Test("Add muted source works correctly")
-    func testAddMutedSource() async throws {
+    func addMutedSource() async throws {
         sut.handle(event: .onAppear)
         try await Task.sleep(nanoseconds: 300_000_000)
 
@@ -85,7 +85,7 @@ struct SettingsViewModelTests {
     }
 
     @Test("Add muted keyword works correctly")
-    func testAddMutedKeyword() async throws {
+    func addMutedKeyword() async throws {
         sut.handle(event: .onAppear)
         try await Task.sleep(nanoseconds: 300_000_000)
 

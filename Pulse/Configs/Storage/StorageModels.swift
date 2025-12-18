@@ -17,18 +17,18 @@ final class BookmarkedArticle {
     var category: String?
 
     init(from article: Article) {
-        self.articleID = article.id
-        self.title = article.title
-        self.articleDescription = article.description
-        self.content = article.content
-        self.author = article.author
-        self.sourceName = article.source.name
-        self.sourceID = article.source.id
-        self.url = article.url
-        self.imageURL = article.imageURL
-        self.publishedAt = article.publishedAt
-        self.savedAt = Date()
-        self.category = article.category?.rawValue
+        articleID = article.id
+        title = article.title
+        articleDescription = article.description
+        content = article.content
+        author = article.author
+        sourceName = article.source.name
+        sourceID = article.source.id
+        url = article.url
+        imageURL = article.imageURL
+        publishedAt = article.publishedAt
+        savedAt = Date()
+        category = article.category?.rawValue
     }
 
     func toArticle() -> Article {
@@ -61,16 +61,16 @@ final class ReadingHistoryEntry {
     var category: String?
 
     init(from article: Article) {
-        self.articleID = article.id
-        self.title = article.title
-        self.articleDescription = article.description
-        self.sourceName = article.source.name
-        self.sourceID = article.source.id
-        self.url = article.url
-        self.imageURL = article.imageURL
-        self.publishedAt = article.publishedAt
-        self.readAt = Date()
-        self.category = article.category?.rawValue
+        articleID = article.id
+        title = article.title
+        articleDescription = article.description
+        sourceName = article.source.name
+        sourceID = article.source.id
+        url = article.url
+        imageURL = article.imageURL
+        publishedAt = article.publishedAt
+        readAt = Date()
+        category = article.category?.rawValue
     }
 
     func toArticle() -> Article {
@@ -100,13 +100,13 @@ final class UserPreferencesModel {
     var breakingNewsNotifications: Bool
 
     init(from preferences: UserPreferences) {
-        self.followedTopics = preferences.followedTopics.map { $0.rawValue }
-        self.followedSources = preferences.followedSources
-        self.mutedSources = preferences.mutedSources
-        self.mutedKeywords = preferences.mutedKeywords
-        self.preferredLanguage = preferences.preferredLanguage
-        self.notificationsEnabled = preferences.notificationsEnabled
-        self.breakingNewsNotifications = preferences.breakingNewsNotifications
+        followedTopics = preferences.followedTopics.map { $0.rawValue }
+        followedSources = preferences.followedSources
+        mutedSources = preferences.mutedSources
+        mutedKeywords = preferences.mutedKeywords
+        preferredLanguage = preferences.preferredLanguage
+        notificationsEnabled = preferences.notificationsEnabled
+        breakingNewsNotifications = preferences.breakingNewsNotifications
     }
 
     func toPreferences() -> UserPreferences {

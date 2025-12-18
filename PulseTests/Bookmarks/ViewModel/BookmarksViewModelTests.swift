@@ -1,7 +1,7 @@
-import Testing
 import Combine
 import Foundation
 @testable import Pulse
+import Testing
 
 @Suite("BookmarksViewModel Tests")
 @MainActor
@@ -23,7 +23,7 @@ struct BookmarksViewModelTests {
     }
 
     @Test("Initial view state is correct")
-    func testInitialViewState() {
+    func initialViewState() {
         let state = sut.viewState
         #expect(state.bookmarks.isEmpty)
         #expect(!state.isLoading)
@@ -32,7 +32,7 @@ struct BookmarksViewModelTests {
     }
 
     @Test("Load bookmarks updates state")
-    func testLoadBookmarks() async throws {
+    func loadBookmarks() async throws {
         mockBookmarksService.bookmarks = Article.mockArticles
 
         sut.handle(event: .onAppear)
@@ -43,7 +43,7 @@ struct BookmarksViewModelTests {
     }
 
     @Test("Empty bookmarks shows empty state")
-    func testEmptyBookmarks() async throws {
+    func emptyBookmarks() async throws {
         mockBookmarksService.bookmarks = []
 
         sut.handle(event: .onAppear)
@@ -54,7 +54,7 @@ struct BookmarksViewModelTests {
     }
 
     @Test("Remove bookmark updates list")
-    func testRemoveBookmark() async throws {
+    func removeBookmark() async throws {
         let article = Article.mockArticles[0]
         mockBookmarksService.bookmarks = [article]
 
@@ -68,7 +68,7 @@ struct BookmarksViewModelTests {
     }
 
     @Test("Article tap sets selected article")
-    func testArticleTap() {
+    func articleTap() {
         let article = Article.mockArticles[0]
 
         sut.handle(event: .onArticleTapped(article))

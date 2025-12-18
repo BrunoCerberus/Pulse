@@ -80,14 +80,12 @@ struct CategoriesView: View {
                     ForEach(viewModel.viewState.articles) { item in
                         ArticleRowView(item: item) {
                             viewModel.handle(event: .onArticleTapped(item.article))
-                        } onBookmark: {
-                        } onShare: {
-                        }
-                        .onAppear {
-                            if item == viewModel.viewState.articles.last {
-                                viewModel.handle(event: .onLoadMore)
+                        } onBookmark: {} onShare: {}
+                            .onAppear {
+                                if item == viewModel.viewState.articles.last {
+                                    viewModel.handle(event: .onLoadMore)
+                                }
                             }
-                        }
                     }
 
                     if viewModel.viewState.isLoadingMore {
@@ -141,7 +139,7 @@ struct CategoryCard: View {
     CategoryCard(category: .technology, isSelected: true) {}
 }
 
-struct CategoriesCoordinator {
+enum CategoriesCoordinator {
     static func start(serviceLocator: ServiceLocator) -> some View {
         CategoriesView(serviceLocator: serviceLocator)
     }

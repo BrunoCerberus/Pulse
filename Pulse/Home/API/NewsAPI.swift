@@ -1,5 +1,5 @@
-import Foundation
 import EntropyCore
+import Foundation
 
 enum NewsAPI: APIFetcher {
     case topHeadlines(country: String, page: Int)
@@ -73,9 +73,9 @@ enum NewsAPI: APIFetcher {
 
     var debug: Bool {
         #if DEBUG
-        return true
+            return true
         #else
-        return false
+            return false
         #endif
     }
 }

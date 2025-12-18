@@ -1,15 +1,15 @@
-import Foundation
 import Combine
+import Foundation
 
 final class MockNewsService: NewsService {
     var topHeadlinesResult: Result<[Article], Error> = .success(Article.mockArticles)
     var breakingNewsResult: Result<[Article], Error> = .success(Array(Article.mockArticles.prefix(3)))
 
-    func fetchTopHeadlines(country: String, page: Int) -> AnyPublisher<[Article], Error> {
+    func fetchTopHeadlines(country _: String, page _: Int) -> AnyPublisher<[Article], Error> {
         topHeadlinesResult.publisher.eraseToAnyPublisher()
     }
 
-    func fetchTopHeadlines(category: NewsCategory, country: String, page: Int) -> AnyPublisher<[Article], Error> {
+    func fetchTopHeadlines(category: NewsCategory, country _: String, page _: Int) -> AnyPublisher<[Article], Error> {
         topHeadlinesResult.publisher
             .map { articles in
                 articles.map { article in
@@ -30,7 +30,7 @@ final class MockNewsService: NewsService {
             .eraseToAnyPublisher()
     }
 
-    func fetchBreakingNews(country: String) -> AnyPublisher<[Article], Error> {
+    func fetchBreakingNews(country _: String) -> AnyPublisher<[Article], Error> {
         breakingNewsResult.publisher.eraseToAnyPublisher()
     }
 }
@@ -39,7 +39,7 @@ final class MockSearchService: SearchService {
     var searchResult: Result<[Article], Error> = .success(Article.mockArticles)
     var suggestionsResult: [String] = ["Swift", "iOS", "Apple", "Technology"]
 
-    func search(query: String, page: Int, sortBy: String) -> AnyPublisher<[Article], Error> {
+    func search(query _: String, page _: Int, sortBy _: String) -> AnyPublisher<[Article], Error> {
         searchResult.publisher.eraseToAnyPublisher()
     }
 
@@ -69,7 +69,7 @@ final class MockBookmarksService: BookmarksService {
 final class MockCategoriesService: CategoriesService {
     var articlesResult: Result<[Article], Error> = .success(Article.mockArticles)
 
-    func fetchArticles(for category: NewsCategory, page: Int) -> AnyPublisher<[Article], Error> {
+    func fetchArticles(for _: NewsCategory, page _: Int) -> AnyPublisher<[Article], Error> {
         articlesResult.publisher.eraseToAnyPublisher()
     }
 }
@@ -77,7 +77,7 @@ final class MockCategoriesService: CategoriesService {
 final class MockForYouService: ForYouService {
     var feedResult: Result<[Article], Error> = .success(Article.mockArticles)
 
-    func fetchPersonalizedFeed(preferences: UserPreferences, page: Int) -> AnyPublisher<[Article], Error> {
+    func fetchPersonalizedFeed(preferences _: UserPreferences, page _: Int) -> AnyPublisher<[Article], Error> {
         feedResult.publisher.eraseToAnyPublisher()
     }
 }
@@ -224,7 +224,7 @@ extension Article {
                 imageURL: "https://picsum.photos/400/304",
                 publishedAt: Date().addingTimeInterval(-14400),
                 category: .science
-            )
+            ),
         ]
     }
 }

@@ -58,7 +58,7 @@ lint:
 	@echo "SwiftFormat check passed"
 	@echo ""
 	@echo "Running SwiftLint..."
-	@swiftlint lint --path Pulse --path PulseTests
+	@swiftlint lint Pulse PulseTests
 	@echo "SwiftLint check passed"
 
 # Auto-fix formatting with SwiftFormat

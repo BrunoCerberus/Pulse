@@ -1,5 +1,5 @@
-import SwiftUI
 import Combine
+import SwiftUI
 
 final class ThemeManager: ObservableObject {
     static let shared = ThemeManager()
@@ -26,13 +26,13 @@ final class ThemeManager: ObservableObject {
     }
 
     private init() {
-        self.useSystemTheme = UserDefaults.standard.bool(forKey: Keys.useSystemTheme)
-        self.isDarkMode = UserDefaults.standard.bool(forKey: Keys.isDarkMode)
+        useSystemTheme = UserDefaults.standard.bool(forKey: Keys.useSystemTheme)
+        isDarkMode = UserDefaults.standard.bool(forKey: Keys.isDarkMode)
 
         if !UserDefaults.standard.bool(forKey: "pulse.hasLaunched") {
             UserDefaults.standard.set(true, forKey: "pulse.hasLaunched")
             UserDefaults.standard.set(true, forKey: Keys.useSystemTheme)
-            self.useSystemTheme = true
+            useSystemTheme = true
         }
     }
 

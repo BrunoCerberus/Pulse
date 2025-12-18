@@ -74,12 +74,11 @@ struct BookmarksView: View {
                     viewModel.handle(event: .onArticleTapped(item.article))
                 } onBookmark: {
                     viewModel.handle(event: .onRemoveBookmark(item.article))
-                } onShare: {
-                }
-                .listRowInsets(EdgeInsets())
+                } onShare: {}
+                    .listRowInsets(EdgeInsets())
             }
             .onDelete { indexSet in
-                indexSet.forEach { index in
+                for index in indexSet {
                     let article = viewModel.viewState.bookmarks[index].article
                     viewModel.handle(event: .onRemoveBookmark(article))
                 }
@@ -93,7 +92,7 @@ struct BookmarksView: View {
     BookmarksView(serviceLocator: .preview)
 }
 
-struct BookmarksCoordinator {
+enum BookmarksCoordinator {
     static func start(serviceLocator: ServiceLocator) -> some View {
         BookmarksView(serviceLocator: serviceLocator)
     }

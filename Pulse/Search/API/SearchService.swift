@@ -1,6 +1,6 @@
-import Foundation
 import Combine
 import EntropyCore
+import Foundation
 
 protocol SearchService {
     func search(query: String, page: Int, sortBy: String) -> AnyPublisher<[Article], Error>

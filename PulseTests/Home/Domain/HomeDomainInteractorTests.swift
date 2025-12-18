@@ -1,7 +1,7 @@
-import Testing
 import Combine
 import Foundation
 @testable import Pulse
+import Testing
 
 @Suite("HomeDomainInteractor Tests")
 @MainActor
@@ -23,7 +23,7 @@ struct HomeDomainInteractorTests {
     }
 
     @Test("Initial state is correct")
-    func testInitialState() {
+    func initialState() {
         let state = sut.currentState
         #expect(state.breakingNews.isEmpty)
         #expect(state.headlines.isEmpty)
@@ -58,7 +58,7 @@ struct HomeDomainInteractorTests {
     }
 
     @Test("Error handling works correctly")
-    func testErrorHandling() async throws {
+    func errorHandling() async throws {
         let testError = NSError(domain: "test", code: 1, userInfo: [NSLocalizedDescriptionKey: "Test error"])
         mockNewsService.topHeadlinesResult = .failure(testError)
 

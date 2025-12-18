@@ -1,7 +1,7 @@
-import XCTest
+@testable import Pulse
 import SnapshotTesting
 import SwiftUI
-@testable import Pulse
+import XCTest
 
 final class SearchViewSnapshotTests: XCTestCase {
     private var serviceLocator: ServiceLocator!
