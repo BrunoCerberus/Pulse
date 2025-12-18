@@ -14,7 +14,7 @@ help:
 	@echo "  build-release     - Build for release"
 	@echo "  lint              - Run SwiftLint and SwiftFormat checks"
 	@echo "  format            - Auto-fix formatting with SwiftFormat"
-	@echo "  test              - Run all tests on iOS 26.1 iPhone Air"
+	@echo "  test              - Run all tests on iOS 26.2 iPhone Air"
 	@echo "  test-unit         - Run only unit tests"
 	@echo "  test-ui           - Run only UI tests"
 	@echo "  test-snapshot     - Run only snapshot tests"
@@ -96,7 +96,7 @@ build:
 	@xcodebuild build \
 		-project Pulse.xcodeproj \
 		-scheme PulseDev \
-		-destination 'platform=iOS Simulator,name=iPhone Air,OS=26.1' \
+		-destination 'platform=iOS Simulator,name=iPhone Air,OS=26.2' \
 		-configuration Debug \
 		CODE_SIGNING_ALLOWED=NO
 
@@ -105,15 +105,15 @@ build-release:
 	@xcodebuild build \
 		-project Pulse.xcodeproj \
 		-scheme PulseProd \
-		-destination 'platform=iOS Simulator,name=iPhone Air,OS=26.1' \
+		-destination 'platform=iOS Simulator,name=iPhone Air,OS=26.2' \
 		-configuration Release \
 		CODE_SIGNING_ALLOWED=NO
 
 # Run all tests
 test:
-	@echo "Running all tests on iOS 26.1 iPhone Air..."
+	@echo "Running all tests on iOS 26.2 iPhone Air..."
 	@make clean-packages
-	@if xcodebuild clean test -project Pulse.xcodeproj -scheme PulseDev -destination 'platform=iOS Simulator,name=iPhone Air,OS=26.1' CODE_SIGNING_ALLOWED=NO 2>&1 | tee /tmp/test_output.log; then \
+	@if xcodebuild clean test -project Pulse.xcodeproj -scheme PulseDev -destination 'platform=iOS Simulator,name=iPhone Air,OS=26.2' CODE_SIGNING_ALLOWED=NO 2>&1 | tee /tmp/test_output.log; then \
 		echo "All tests completed successfully!"; \
 		grep -E "(Test run.*passed|Test run.*failed)" /tmp/test_output.log | tail -2; \
 	else \
@@ -127,9 +127,9 @@ test:
 
 # Run tests with coverage and print app target percent
 coverage:
-	@echo "Running tests with coverage on iOS 26.1 iPhone Air..."
+	@echo "Running tests with coverage on iOS 26.2 iPhone Air..."
 	@rm -rf build/TestResults.xcresult
-	@xcodebuild clean test -project Pulse.xcodeproj -scheme PulseDev -destination 'platform=iOS Simulator,name=iPhone Air,OS=26.1' -enableCodeCoverage YES -resultBundlePath build/TestResults.xcresult CODE_SIGNING_ALLOWED=NO 2>&1 | tee /tmp/coverage_output.log | grep -E '(Testing|Test Suite|Test Case|passed|failed)' || true
+	@xcodebuild clean test -project Pulse.xcodeproj -scheme PulseDev -destination 'platform=iOS Simulator,name=iPhone Air,OS=26.2' -enableCodeCoverage YES -resultBundlePath build/TestResults.xcresult CODE_SIGNING_ALLOWED=NO 2>&1 | tee /tmp/coverage_output.log | grep -E '(Testing|Test Suite|Test Case|passed|failed)' || true
 	@echo ""
 	@if grep -E "Executed .* tests, with [1-9][0-9]* failures" /tmp/coverage_output.log > /dev/null; then \
 		echo "Tests failed! Coverage report may be incomplete."; \
@@ -165,9 +165,9 @@ coverage-badge:
 
 # Run only unit tests
 test-unit:
-	@echo "Running unit tests on iOS 26.1 iPhone Air..."
+	@echo "Running unit tests on iOS 26.2 iPhone Air..."
 	@make clean-packages
-	@if xcodebuild clean test -project Pulse.xcodeproj -scheme PulseDev -only-testing:PulseTests -destination 'platform=iOS Simulator,name=iPhone Air,OS=26.1' CODE_SIGNING_ALLOWED=NO 2>&1 | tee /tmp/test_output.log; then \
+	@if xcodebuild clean test -project Pulse.xcodeproj -scheme PulseDev -only-testing:PulseTests -destination 'platform=iOS Simulator,name=iPhone Air,OS=26.2' CODE_SIGNING_ALLOWED=NO 2>&1 | tee /tmp/test_output.log; then \
 		echo "Unit tests completed successfully!"; \
 		grep -E "(Test run.*passed|Test run.*failed)" /tmp/test_output.log | tail -5; \
 	else \
@@ -181,9 +181,9 @@ test-unit:
 
 # Run only UI tests
 test-ui:
-	@echo "Running UI tests on iOS 26.1 iPhone Air..."
+	@echo "Running UI tests on iOS 26.2 iPhone Air..."
 	@make clean-packages
-	@if xcodebuild clean test -project Pulse.xcodeproj -scheme PulseDev -only-testing:PulseUITests -destination 'platform=iOS Simulator,name=iPhone Air,OS=26.1' CODE_SIGNING_ALLOWED=NO 2>&1 | tee /tmp/test_output.log; then \
+	@if xcodebuild clean test -project Pulse.xcodeproj -scheme PulseDev -only-testing:PulseUITests -destination 'platform=iOS Simulator,name=iPhone Air,OS=26.2' CODE_SIGNING_ALLOWED=NO 2>&1 | tee /tmp/test_output.log; then \
 		echo "UI tests completed successfully!"; \
 		grep -E "(Test run.*passed|Test run.*failed)" /tmp/test_output.log | tail -1; \
 	else \
@@ -197,9 +197,9 @@ test-ui:
 
 # Run only snapshot tests
 test-snapshot:
-	@echo "Running snapshot tests on iOS 26.1 iPhone Air..."
+	@echo "Running snapshot tests on iOS 26.2 iPhone Air..."
 	@make clean-packages
-	@if xcodebuild clean test -project Pulse.xcodeproj -scheme PulseSnapshotTests -destination 'platform=iOS Simulator,name=iPhone Air,OS=26.1' CODE_SIGNING_ALLOWED=NO 2>&1 | tee /tmp/test_output.log; then \
+	@if xcodebuild clean test -project Pulse.xcodeproj -scheme PulseSnapshotTests -destination 'platform=iOS Simulator,name=iPhone Air,OS=26.2' CODE_SIGNING_ALLOWED=NO 2>&1 | tee /tmp/test_output.log; then \
 		echo "Snapshot tests completed successfully!"; \
 		grep -E "(Test run.*passed|Test run.*failed)" /tmp/test_output.log | tail -1; \
 	else \
@@ -216,7 +216,7 @@ test-debug:
 	@echo "Running unit tests with full verbose output for debugging..."
 	@echo "This will show all test output including passing tests"
 	@make clean-packages
-	@xcodebuild clean test -project Pulse.xcodeproj -scheme PulseDev -only-testing:PulseTests -destination 'platform=iOS Simulator,name=iPhone Air,OS=26.1' CODE_SIGNING_ALLOWED=NO 2>&1 | tee /tmp/test_debug.log
+	@xcodebuild clean test -project Pulse.xcodeproj -scheme PulseDev -only-testing:PulseTests -destination 'platform=iOS Simulator,name=iPhone Air,OS=26.2' CODE_SIGNING_ALLOWED=NO 2>&1 | tee /tmp/test_debug.log
 	@echo ""
 	@echo "Full debug output saved to /tmp/test_debug.log"
 
@@ -224,7 +224,7 @@ test-debug:
 deeplink-test:
 	@echo "Testing deeplink functionality..."
 	@make clean-packages
-	@xcodebuild clean test -project Pulse.xcodeproj -scheme PulseDev -only-testing:PulseTests/DeeplinkManagerTests -destination 'platform=iOS Simulator,name=iPhone Air,OS=26.1' CODE_SIGNING_ALLOWED=NO
+	@xcodebuild clean test -project Pulse.xcodeproj -scheme PulseDev -only-testing:PulseTests/DeeplinkManagerTests -destination 'platform=iOS Simulator,name=iPhone Air,OS=26.2' CODE_SIGNING_ALLOWED=NO
 	@echo "Deeplink tests completed!"
 
 # Clean generated files

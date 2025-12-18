@@ -2,8 +2,8 @@ name: Pulse
 options:
   bundleIdPrefix: com.bruno
   deploymentTarget:
-    iOS: "26.1"
-  xcodeVersion: "26.0.1"
+    iOS: "26.2"
+  xcodeVersion: "26.2"
   groupSortPosition: top
   generateEmptyDirectories: true
   fileTypes:
@@ -29,7 +29,7 @@ settings:
     CURRENT_PROJECT_VERSION: "1"
     DEVELOPMENT_TEAM: RDTR6557FX
     CODE_SIGN_STYLE: Automatic
-    IPHONEOS_DEPLOYMENT_TARGET: 26.1
+    IPHONEOS_DEPLOYMENT_TARGET: 26.2
     SWIFT_VERSION: 5.0
     TARGETED_DEVICE_FAMILY: 1,2
     SUPPORTED_PLATFORMS: iphoneos iphonesimulator
@@ -64,7 +64,7 @@ targets:
   Pulse:
     type: application
     platform: iOS
-    deploymentTarget: "26.1"
+    deploymentTarget: "26.2"
     sources:
       - path: Pulse
         excludes:
@@ -124,7 +124,7 @@ targets:
   PulseTests:
     type: bundle.unit-test
     platform: iOS
-    deploymentTarget: "26.1"
+    deploymentTarget: "26.2"
     sources:
       - path: PulseTests
     settings:
@@ -150,7 +150,7 @@ targets:
   PulseUITests:
     type: bundle.ui-testing
     platform: iOS
-    deploymentTarget: "26.1"
+    deploymentTarget: "26.2"
     sources:
       - path: PulseUITests
     settings:
@@ -174,7 +174,7 @@ targets:
   PulseSnapshotTests:
     type: bundle.unit-test
     platform: iOS
-    deploymentTarget: "26.1"
+    deploymentTarget: "26.2"
     sources:
       - path: PulseSnapshotTests
     settings:
