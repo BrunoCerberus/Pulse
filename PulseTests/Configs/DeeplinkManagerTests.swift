@@ -1,15 +1,14 @@
 import Testing
 import Combine
+import Foundation
 @testable import Pulse
 
 @Suite("DeeplinkManager Tests")
 struct DeeplinkManagerTests {
-    var sut: DeeplinkManager!
-    var cancellables: Set<AnyCancellable>!
+    let sut: DeeplinkManager
 
     init() {
         sut = DeeplinkManager.shared
-        cancellables = Set<AnyCancellable>()
         sut.clearDeeplink()
     }
 
@@ -87,6 +86,7 @@ struct DeeplinkManagerTests {
 
     @Test("Handle deeplink publishes to publisher")
     func testHandleDeeplinkPublishes() async throws {
+        var cancellables = Set<AnyCancellable>()
         var receivedDeeplinks: [Deeplink] = []
 
         sut.deeplinkPublisher

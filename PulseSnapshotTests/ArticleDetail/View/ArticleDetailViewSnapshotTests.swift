@@ -4,15 +4,18 @@ import SwiftUI
 @testable import Pulse
 
 final class ArticleDetailViewSnapshotTests: XCTestCase {
+    private var serviceLocator: ServiceLocator!
+
     override func setUp() {
         super.setUp()
-        ServiceLocator.shared.register(StorageService.self, service: MockStorageService())
+        serviceLocator = ServiceLocator()
+        serviceLocator.register(StorageService.self, instance: MockStorageService())
     }
 
     func testArticleDetailView() {
         let article = Article.mockArticles[0]
         let view = NavigationStack {
-            ArticleDetailView(article: article)
+            ArticleDetailView(article: article, serviceLocator: serviceLocator)
         }
         let controller = UIHostingController(rootView: view)
 

@@ -1,5 +1,5 @@
-import Foundation
 import Combine
+import Foundation
 
 protocol SettingsService {
     func fetchPreferences() -> AnyPublisher<UserPreferences, Error>
@@ -10,7 +10,7 @@ protocol SettingsService {
 final class LiveSettingsService: SettingsService {
     private let storageService: StorageService
 
-    init(storageService: StorageService = ServiceLocator.shared.resolve(StorageService.self)) {
+    init(storageService: StorageService) {
         self.storageService = storageService
     }
 

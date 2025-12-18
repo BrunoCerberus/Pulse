@@ -1,5 +1,5 @@
-import Foundation
 import Combine
+import Foundation
 
 final class SearchViewModel: CombineViewModel, ObservableObject {
     typealias ViewState = SearchViewState
@@ -8,12 +8,14 @@ final class SearchViewModel: CombineViewModel, ObservableObject {
     @Published private(set) var viewState: SearchViewState = .initial
     @Published var selectedArticle: Article?
 
+    private let serviceLocator: ServiceLocator
     private let interactor: SearchDomainInteractor
     private var cancellables = Set<AnyCancellable>()
     private var searchWorkItem: DispatchWorkItem?
 
-    init(interactor: SearchDomainInteractor = SearchDomainInteractor()) {
-        self.interactor = interactor
+    init(serviceLocator: ServiceLocator) {
+        self.serviceLocator = serviceLocator
+        interactor = SearchDomainInteractor(serviceLocator: serviceLocator)
         setupBindings()
     }
 

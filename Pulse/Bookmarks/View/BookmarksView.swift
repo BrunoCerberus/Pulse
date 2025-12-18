@@ -4,8 +4,11 @@ struct BookmarksView: View {
     @StateObject private var viewModel: BookmarksViewModel
     @State private var showArticleDetail = false
 
-    init(viewModel: BookmarksViewModel = BookmarksViewModel()) {
-        _viewModel = StateObject(wrappedValue: viewModel)
+    private let serviceLocator: ServiceLocator
+
+    init(serviceLocator: ServiceLocator) {
+        self.serviceLocator = serviceLocator
+        _viewModel = StateObject(wrappedValue: BookmarksViewModel(serviceLocator: serviceLocator))
     }
 
     var body: some View {
@@ -14,7 +17,7 @@ struct BookmarksView: View {
                 .navigationTitle("Bookmarks")
                 .navigationDestination(isPresented: $showArticleDetail) {
                     if let article = viewModel.selectedArticle {
-                        ArticleDetailView(article: article)
+                        ArticleDetailView(article: article, serviceLocator: serviceLocator)
                     }
                 }
                 .refreshable {
@@ -87,11 +90,7 @@ struct BookmarksView: View {
 }
 
 struct BookmarksCoordinator {
-    static func start() -> some View {
-        BookmarksView()
+    static func start(serviceLocator: ServiceLocator) -> some View {
+        BookmarksView(serviceLocator: serviceLocator)
     }
-}
-
-#Preview {
-    BookmarksView()
 }

@@ -1,5 +1,5 @@
-import Foundation
 import Combine
+import Foundation
 
 final class SearchDomainInteractor: CombineInteractor {
     typealias DomainState = SearchDomainState
@@ -19,12 +19,20 @@ final class SearchDomainInteractor: CombineInteractor {
         stateSubject.value
     }
 
-    init(
-        searchService: SearchService = ServiceLocator.shared.resolve(SearchService.self),
-        storageService: StorageService = ServiceLocator.shared.resolve(StorageService.self)
-    ) {
-        self.searchService = searchService
-        self.storageService = storageService
+    init(serviceLocator: ServiceLocator) {
+        do {
+            searchService = try serviceLocator.retrieve(SearchService.self)
+        } catch {
+            Logger.shared.service("Failed to retrieve SearchService: \(error)", level: .warning)
+            searchService = LiveSearchService()
+        }
+
+        do {
+            storageService = try serviceLocator.retrieve(StorageService.self)
+        } catch {
+            Logger.shared.service("Failed to retrieve StorageService: \(error)", level: .warning)
+            storageService = LiveStorageService()
+        }
     }
 
     func dispatch(action: SearchDomainAction) {

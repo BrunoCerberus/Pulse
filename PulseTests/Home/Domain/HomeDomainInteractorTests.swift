@@ -1,23 +1,24 @@
 import Testing
 import Combine
+import Foundation
 @testable import Pulse
 
 @Suite("HomeDomainInteractor Tests")
 struct HomeDomainInteractorTests {
-    var mockNewsService: MockNewsService!
-    var mockStorageService: MockStorageService!
-    var sut: HomeDomainInteractor!
-    var cancellables: Set<AnyCancellable>!
+    let mockNewsService: MockNewsService
+    let mockStorageService: MockStorageService
+    let serviceLocator: ServiceLocator
+    let sut: HomeDomainInteractor
 
     init() {
         mockNewsService = MockNewsService()
         mockStorageService = MockStorageService()
+        serviceLocator = ServiceLocator()
 
-        ServiceLocator.shared.register(NewsService.self, service: mockNewsService)
-        ServiceLocator.shared.register(StorageService.self, service: mockStorageService)
+        serviceLocator.register(NewsService.self, instance: mockNewsService)
+        serviceLocator.register(StorageService.self, instance: mockStorageService)
 
-        sut = HomeDomainInteractor()
-        cancellables = Set<AnyCancellable>()
+        sut = HomeDomainInteractor(serviceLocator: serviceLocator)
     }
 
     @Test("Initial state is correct")
@@ -37,6 +38,7 @@ struct HomeDomainInteractorTests {
         mockNewsService.topHeadlinesResult = .success(Article.mockArticles)
         mockNewsService.breakingNewsResult = .success(Array(Article.mockArticles.prefix(2)))
 
+        var cancellables = Set<AnyCancellable>()
         var states: [HomeDomainState] = []
 
         sut.statePublisher

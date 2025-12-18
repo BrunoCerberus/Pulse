@@ -1,5 +1,5 @@
-import Foundation
 import Combine
+import Foundation
 
 final class HomeDomainInteractor: CombineInteractor {
     typealias DomainState = HomeDomainState
@@ -18,12 +18,20 @@ final class HomeDomainInteractor: CombineInteractor {
         stateSubject.value
     }
 
-    init(
-        newsService: NewsService = ServiceLocator.shared.resolve(NewsService.self),
-        storageService: StorageService = ServiceLocator.shared.resolve(StorageService.self)
-    ) {
-        self.newsService = newsService
-        self.storageService = storageService
+    init(serviceLocator: ServiceLocator) {
+        do {
+            newsService = try serviceLocator.retrieve(NewsService.self)
+        } catch {
+            Logger.shared.service("Failed to retrieve NewsService: \(error)", level: .warning)
+            newsService = LiveNewsService()
+        }
+
+        do {
+            storageService = try serviceLocator.retrieve(StorageService.self)
+        } catch {
+            Logger.shared.service("Failed to retrieve StorageService: \(error)", level: .warning)
+            storageService = LiveStorageService()
+        }
     }
 
     func dispatch(action: HomeDomainAction) {

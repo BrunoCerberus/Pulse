@@ -5,8 +5,11 @@ struct HomeView: View {
     @State private var showArticleDetail = false
     @State private var showSettings = false
 
-    init(viewModel: HomeViewModel = HomeViewModel()) {
-        _viewModel = StateObject(wrappedValue: viewModel)
+    private let serviceLocator: ServiceLocator
+
+    init(serviceLocator: ServiceLocator) {
+        self.serviceLocator = serviceLocator
+        _viewModel = StateObject(wrappedValue: HomeViewModel(serviceLocator: serviceLocator))
     }
 
     var body: some View {
@@ -24,11 +27,11 @@ struct HomeView: View {
                 }
                 .navigationDestination(isPresented: $showArticleDetail) {
                     if let article = viewModel.selectedArticle {
-                        ArticleDetailView(article: article)
+                        ArticleDetailView(article: article, serviceLocator: serviceLocator)
                     }
                 }
                 .navigationDestination(isPresented: $showSettings) {
-                    SettingsView()
+                    SettingsView(serviceLocator: serviceLocator)
                 }
                 .refreshable {
                     viewModel.handle(event: .onRefresh)
@@ -154,8 +157,4 @@ struct HomeView: View {
         .padding(.vertical, 8)
         .background(.ultraThinMaterial)
     }
-}
-
-#Preview {
-    HomeView()
 }

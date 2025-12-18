@@ -4,8 +4,11 @@ struct ForYouView: View {
     @StateObject private var viewModel: ForYouViewModel
     @State private var showArticleDetail = false
 
-    init(viewModel: ForYouViewModel = ForYouViewModel()) {
-        _viewModel = StateObject(wrappedValue: viewModel)
+    private let serviceLocator: ServiceLocator
+
+    init(serviceLocator: ServiceLocator) {
+        self.serviceLocator = serviceLocator
+        _viewModel = StateObject(wrappedValue: ForYouViewModel(serviceLocator: serviceLocator))
     }
 
     var body: some View {
@@ -14,7 +17,7 @@ struct ForYouView: View {
                 .navigationTitle("For You")
                 .navigationDestination(isPresented: $showArticleDetail) {
                     if let article = viewModel.selectedArticle {
-                        ArticleDetailView(article: article)
+                        ArticleDetailView(article: article, serviceLocator: serviceLocator)
                     }
                 }
                 .refreshable {
@@ -85,7 +88,7 @@ struct ForYouView: View {
                 .padding(.horizontal)
 
             NavigationLink {
-                SettingsView()
+                SettingsView(serviceLocator: serviceLocator)
             } label: {
                 Label("Set Preferences", systemImage: "gearshape")
                     .frame(maxWidth: .infinity)
@@ -154,11 +157,7 @@ struct ForYouView: View {
 }
 
 struct ForYouCoordinator {
-    static func start() -> some View {
-        ForYouView()
+    static func start(serviceLocator: ServiceLocator) -> some View {
+        ForYouView(serviceLocator: serviceLocator)
     }
-}
-
-#Preview {
-    ForYouView()
 }

@@ -4,13 +4,16 @@ import SwiftUI
 @testable import Pulse
 
 final class SettingsViewSnapshotTests: XCTestCase {
+    private var serviceLocator: ServiceLocator!
+
     override func setUp() {
         super.setUp()
-        ServiceLocator.shared.register(SettingsService.self, service: MockSettingsService())
+        serviceLocator = ServiceLocator()
+        serviceLocator.register(SettingsService.self, instance: MockSettingsService())
     }
 
     func testSettingsViewInitial() {
-        let view = SettingsView()
+        let view = SettingsView(serviceLocator: serviceLocator)
         let controller = UIHostingController(rootView: view)
 
         assertSnapshot(

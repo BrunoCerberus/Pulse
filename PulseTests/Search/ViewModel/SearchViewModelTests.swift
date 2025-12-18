@@ -1,23 +1,24 @@
 import Testing
 import Combine
+import Foundation
 @testable import Pulse
 
 @Suite("SearchViewModel Tests")
 struct SearchViewModelTests {
-    var mockSearchService: MockSearchService!
-    var mockStorageService: MockStorageService!
-    var sut: SearchViewModel!
-    var cancellables: Set<AnyCancellable>!
+    let mockSearchService: MockSearchService
+    let mockStorageService: MockStorageService
+    let serviceLocator: ServiceLocator
+    let sut: SearchViewModel
 
     init() {
         mockSearchService = MockSearchService()
         mockStorageService = MockStorageService()
+        serviceLocator = ServiceLocator()
 
-        ServiceLocator.shared.register(SearchService.self, service: mockSearchService)
-        ServiceLocator.shared.register(StorageService.self, service: mockStorageService)
+        serviceLocator.register(SearchService.self, instance: mockSearchService)
+        serviceLocator.register(StorageService.self, instance: mockStorageService)
 
-        sut = SearchViewModel()
-        cancellables = Set<AnyCancellable>()
+        sut = SearchViewModel(serviceLocator: serviceLocator)
     }
 
     @Test("Initial view state is correct")
@@ -27,7 +28,7 @@ struct SearchViewModelTests {
         #expect(state.results.isEmpty)
         #expect(state.suggestions.isEmpty)
         #expect(!state.isLoading)
-        #expect(!state.showEmptyState)
+        #expect(!state.showNoResults)
     }
 
     @Test("Query change updates state")

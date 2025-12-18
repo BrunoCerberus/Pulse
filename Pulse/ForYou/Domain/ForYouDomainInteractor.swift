@@ -1,5 +1,5 @@
-import Foundation
 import Combine
+import Foundation
 
 final class ForYouDomainInteractor: CombineInteractor {
     typealias DomainState = ForYouDomainState
@@ -18,12 +18,20 @@ final class ForYouDomainInteractor: CombineInteractor {
         stateSubject.value
     }
 
-    init(
-        forYouService: ForYouService = ServiceLocator.shared.resolve(ForYouService.self),
-        storageService: StorageService = ServiceLocator.shared.resolve(StorageService.self)
-    ) {
-        self.forYouService = forYouService
-        self.storageService = storageService
+    init(serviceLocator: ServiceLocator) {
+        do {
+            forYouService = try serviceLocator.retrieve(ForYouService.self)
+        } catch {
+            Logger.shared.service("Failed to retrieve ForYouService: \(error)", level: .warning)
+            forYouService = LiveForYouService(storageService: LiveStorageService())
+        }
+
+        do {
+            storageService = try serviceLocator.retrieve(StorageService.self)
+        } catch {
+            Logger.shared.service("Failed to retrieve StorageService: \(error)", level: .warning)
+            storageService = LiveStorageService()
+        }
     }
 
     func dispatch(action: ForYouDomainAction) {

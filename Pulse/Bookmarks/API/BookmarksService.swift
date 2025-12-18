@@ -1,5 +1,5 @@
-import Foundation
 import Combine
+import Foundation
 
 protocol BookmarksService {
     func fetchBookmarks() -> AnyPublisher<[Article], Error>
@@ -9,7 +9,7 @@ protocol BookmarksService {
 final class LiveBookmarksService: BookmarksService {
     private let storageService: StorageService
 
-    init(storageService: StorageService = ServiceLocator.shared.resolve(StorageService.self)) {
+    init(storageService: StorageService) {
         self.storageService = storageService
     }
 

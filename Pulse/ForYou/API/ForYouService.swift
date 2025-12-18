@@ -1,6 +1,6 @@
-import Foundation
 import Combine
 import EntropyCore
+import Foundation
 
 protocol ForYouService {
     func fetchPersonalizedFeed(preferences: UserPreferences, page: Int) -> AnyPublisher<[Article], Error>
@@ -9,7 +9,7 @@ protocol ForYouService {
 final class LiveForYouService: APIRequest, ForYouService {
     private let storageService: StorageService
 
-    init(storageService: StorageService = ServiceLocator.shared.resolve(StorageService.self)) {
+    init(storageService: StorageService) {
         self.storageService = storageService
     }
 

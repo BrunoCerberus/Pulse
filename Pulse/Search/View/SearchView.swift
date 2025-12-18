@@ -4,8 +4,11 @@ struct SearchView: View {
     @StateObject private var viewModel: SearchViewModel
     @State private var showArticleDetail = false
 
-    init(viewModel: SearchViewModel = SearchViewModel()) {
-        _viewModel = StateObject(wrappedValue: viewModel)
+    private let serviceLocator: ServiceLocator
+
+    init(serviceLocator: ServiceLocator) {
+        self.serviceLocator = serviceLocator
+        _viewModel = StateObject(wrappedValue: SearchViewModel(serviceLocator: serviceLocator))
     }
 
     var body: some View {
@@ -24,7 +27,7 @@ struct SearchView: View {
                 }
                 .navigationDestination(isPresented: $showArticleDetail) {
                     if let article = viewModel.selectedArticle {
-                        ArticleDetailView(article: article)
+                        ArticleDetailView(article: article, serviceLocator: serviceLocator)
                     }
                 }
         }
@@ -157,11 +160,7 @@ struct SearchView: View {
 }
 
 struct SearchCoordinator {
-    static func start() -> some View {
-        SearchView()
+    static func start(serviceLocator: ServiceLocator) -> some View {
+        SearchView(serviceLocator: serviceLocator)
     }
-}
-
-#Preview {
-    SearchView()
 }

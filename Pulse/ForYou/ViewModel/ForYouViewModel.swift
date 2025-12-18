@@ -1,5 +1,5 @@
-import Foundation
 import Combine
+import Foundation
 
 final class ForYouViewModel: CombineViewModel, ObservableObject {
     typealias ViewState = ForYouViewState
@@ -8,11 +8,13 @@ final class ForYouViewModel: CombineViewModel, ObservableObject {
     @Published private(set) var viewState: ForYouViewState = .initial
     @Published var selectedArticle: Article?
 
+    private let serviceLocator: ServiceLocator
     private let interactor: ForYouDomainInteractor
     private var cancellables = Set<AnyCancellable>()
 
-    init(interactor: ForYouDomainInteractor = ForYouDomainInteractor()) {
-        self.interactor = interactor
+    init(serviceLocator: ServiceLocator) {
+        self.serviceLocator = serviceLocator
+        interactor = ForYouDomainInteractor(serviceLocator: serviceLocator)
         setupBindings()
     }
 

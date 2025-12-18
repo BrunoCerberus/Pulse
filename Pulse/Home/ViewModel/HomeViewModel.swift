@@ -1,5 +1,5 @@
-import Foundation
 import Combine
+import Foundation
 
 final class HomeViewModel: CombineViewModel, ObservableObject {
     typealias ViewState = HomeViewState
@@ -9,17 +9,19 @@ final class HomeViewModel: CombineViewModel, ObservableObject {
     @Published var selectedArticle: Article?
     @Published var shareArticle: Article?
 
+    private let serviceLocator: ServiceLocator
     private let interactor: HomeDomainInteractor
     private let reducer: HomeViewStateReducer
     private let eventMap: HomeEventActionMap
     private var cancellables = Set<AnyCancellable>()
 
     init(
-        interactor: HomeDomainInteractor = HomeDomainInteractor(),
+        serviceLocator: ServiceLocator,
         reducer: HomeViewStateReducer = HomeViewStateReducer(),
         eventMap: HomeEventActionMap = HomeEventActionMap()
     ) {
-        self.interactor = interactor
+        self.serviceLocator = serviceLocator
+        interactor = HomeDomainInteractor(serviceLocator: serviceLocator)
         self.reducer = reducer
         self.eventMap = eventMap
 

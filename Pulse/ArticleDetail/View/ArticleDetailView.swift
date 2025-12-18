@@ -5,9 +5,12 @@ struct ArticleDetailView: View {
     @StateObject private var viewModel: ArticleDetailViewModel
     @Environment(\.dismiss) private var dismiss
 
-    init(article: Article) {
+    private let serviceLocator: ServiceLocator
+
+    init(article: Article, serviceLocator: ServiceLocator) {
         self.article = article
-        _viewModel = StateObject(wrappedValue: ArticleDetailViewModel(article: article))
+        self.serviceLocator = serviceLocator
+        _viewModel = StateObject(wrappedValue: ArticleDetailViewModel(article: article, serviceLocator: serviceLocator))
     }
 
     var body: some View {
@@ -128,23 +131,5 @@ struct ArticleDetailView: View {
         .onAppear {
             viewModel.onAppear()
         }
-    }
-}
-
-#Preview {
-    NavigationStack {
-        ArticleDetailView(
-            article: Article(
-                title: "Sample Article Title",
-                description: "This is a sample description for the article that provides more context.",
-                content: "This is the full content of the article...",
-                author: "John Doe",
-                source: ArticleSource(id: nil, name: "Sample Source"),
-                url: "https://example.com",
-                imageURL: "https://picsum.photos/400/300",
-                publishedAt: Date(),
-                category: .technology
-            )
-        )
     }
 }

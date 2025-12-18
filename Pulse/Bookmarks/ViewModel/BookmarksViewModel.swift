@@ -1,5 +1,5 @@
-import Foundation
 import Combine
+import Foundation
 
 final class BookmarksViewModel: CombineViewModel, ObservableObject {
     typealias ViewState = BookmarksViewState
@@ -8,11 +8,13 @@ final class BookmarksViewModel: CombineViewModel, ObservableObject {
     @Published private(set) var viewState: BookmarksViewState = .initial
     @Published var selectedArticle: Article?
 
+    private let serviceLocator: ServiceLocator
     private let interactor: BookmarksDomainInteractor
     private var cancellables = Set<AnyCancellable>()
 
-    init(interactor: BookmarksDomainInteractor = BookmarksDomainInteractor()) {
-        self.interactor = interactor
+    init(serviceLocator: ServiceLocator) {
+        self.serviceLocator = serviceLocator
+        interactor = BookmarksDomainInteractor(serviceLocator: serviceLocator)
         setupBindings()
     }
 

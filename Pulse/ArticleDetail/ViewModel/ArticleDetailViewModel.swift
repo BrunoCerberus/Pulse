@@ -1,5 +1,5 @@
-import Foundation
 import Combine
+import Foundation
 import UIKit
 
 final class ArticleDetailViewModel: ObservableObject {
@@ -9,12 +9,14 @@ final class ArticleDetailViewModel: ObservableObject {
     private let article: Article
     private let storageService: StorageService
 
-    init(
-        article: Article,
-        storageService: StorageService = ServiceLocator.shared.resolve(StorageService.self)
-    ) {
+    init(article: Article, serviceLocator: ServiceLocator) {
         self.article = article
-        self.storageService = storageService
+        do {
+            storageService = try serviceLocator.retrieve(StorageService.self)
+        } catch {
+            Logger.shared.service("Failed to retrieve StorageService: \(error)", level: .warning)
+            storageService = LiveStorageService()
+        }
     }
 
     func onAppear() {

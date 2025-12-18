@@ -4,8 +4,11 @@ struct CategoriesView: View {
     @StateObject private var viewModel: CategoriesViewModel
     @State private var showArticleDetail = false
 
-    init(viewModel: CategoriesViewModel = CategoriesViewModel()) {
-        _viewModel = StateObject(wrappedValue: viewModel)
+    private let serviceLocator: ServiceLocator
+
+    init(serviceLocator: ServiceLocator) {
+        self.serviceLocator = serviceLocator
+        _viewModel = StateObject(wrappedValue: CategoriesViewModel(serviceLocator: serviceLocator))
     }
 
     var body: some View {
@@ -21,7 +24,7 @@ struct CategoriesView: View {
             .navigationTitle("Categories")
             .navigationDestination(isPresented: $showArticleDetail) {
                 if let article = viewModel.selectedArticle {
-                    ArticleDetailView(article: article)
+                    ArticleDetailView(article: article, serviceLocator: serviceLocator)
                 }
             }
         }
@@ -127,11 +130,7 @@ struct CategoryCard: View {
 }
 
 struct CategoriesCoordinator {
-    static func start() -> some View {
-        CategoriesView()
+    static func start(serviceLocator: ServiceLocator) -> some View {
+        CategoriesView(serviceLocator: serviceLocator)
     }
-}
-
-#Preview {
-    CategoriesView()
 }

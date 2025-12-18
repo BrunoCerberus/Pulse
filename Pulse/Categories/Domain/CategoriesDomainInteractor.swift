@@ -1,5 +1,5 @@
-import Foundation
 import Combine
+import Foundation
 
 final class CategoriesDomainInteractor: CombineInteractor {
     typealias DomainState = CategoriesDomainState
@@ -18,12 +18,20 @@ final class CategoriesDomainInteractor: CombineInteractor {
         stateSubject.value
     }
 
-    init(
-        categoriesService: CategoriesService = ServiceLocator.shared.resolve(CategoriesService.self),
-        storageService: StorageService = ServiceLocator.shared.resolve(StorageService.self)
-    ) {
-        self.categoriesService = categoriesService
-        self.storageService = storageService
+    init(serviceLocator: ServiceLocator) {
+        do {
+            categoriesService = try serviceLocator.retrieve(CategoriesService.self)
+        } catch {
+            Logger.shared.service("Failed to retrieve CategoriesService: \(error)", level: .warning)
+            categoriesService = LiveCategoriesService()
+        }
+
+        do {
+            storageService = try serviceLocator.retrieve(StorageService.self)
+        } catch {
+            Logger.shared.service("Failed to retrieve StorageService: \(error)", level: .warning)
+            storageService = LiveStorageService()
+        }
     }
 
     func dispatch(action: CategoriesDomainAction) {

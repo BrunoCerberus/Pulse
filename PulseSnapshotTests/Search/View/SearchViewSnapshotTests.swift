@@ -4,14 +4,17 @@ import SwiftUI
 @testable import Pulse
 
 final class SearchViewSnapshotTests: XCTestCase {
+    private var serviceLocator: ServiceLocator!
+
     override func setUp() {
         super.setUp()
-        ServiceLocator.shared.register(SearchService.self, service: MockSearchService())
-        ServiceLocator.shared.register(StorageService.self, service: MockStorageService())
+        serviceLocator = ServiceLocator()
+        serviceLocator.register(SearchService.self, instance: MockSearchService())
+        serviceLocator.register(StorageService.self, instance: MockStorageService())
     }
 
     func testSearchViewInitial() {
-        let view = SearchView()
+        let view = SearchView(serviceLocator: serviceLocator)
         let controller = UIHostingController(rootView: view)
 
         assertSnapshot(

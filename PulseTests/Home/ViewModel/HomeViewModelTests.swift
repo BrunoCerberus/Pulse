@@ -1,23 +1,24 @@
 import Testing
 import Combine
+import Foundation
 @testable import Pulse
 
 @Suite("HomeViewModel Tests")
 struct HomeViewModelTests {
-    var mockNewsService: MockNewsService!
-    var mockStorageService: MockStorageService!
-    var sut: HomeViewModel!
-    var cancellables: Set<AnyCancellable>!
+    let mockNewsService: MockNewsService
+    let mockStorageService: MockStorageService
+    let serviceLocator: ServiceLocator
+    let sut: HomeViewModel
 
     init() {
         mockNewsService = MockNewsService()
         mockStorageService = MockStorageService()
+        serviceLocator = ServiceLocator()
 
-        ServiceLocator.shared.register(NewsService.self, service: mockNewsService)
-        ServiceLocator.shared.register(StorageService.self, service: mockStorageService)
+        serviceLocator.register(NewsService.self, instance: mockNewsService)
+        serviceLocator.register(StorageService.self, instance: mockStorageService)
 
-        sut = HomeViewModel()
-        cancellables = Set<AnyCancellable>()
+        sut = HomeViewModel(serviceLocator: serviceLocator)
     }
 
     @Test("Initial view state is correct")
@@ -35,6 +36,7 @@ struct HomeViewModelTests {
     func testOnAppear() async throws {
         mockNewsService.topHeadlinesResult = .success(Article.mockArticles)
 
+        var cancellables = Set<AnyCancellable>()
         var states: [HomeViewState] = []
 
         sut.$viewState

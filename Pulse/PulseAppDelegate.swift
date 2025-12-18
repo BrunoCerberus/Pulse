@@ -1,7 +1,27 @@
 import UIKit
 import UserNotifications
 
-final class PulseAppDelegate: NSObject, UIApplicationDelegate {
+/**
+ * Main application delegate responsible for handling application lifecycle events.
+ *
+ * This delegate manages the app's initialization and scene configuration.
+ * It's the entry point for the application and handles core setup tasks.
+ */
+@main
+final class PulseAppDelegate: UIResponder, UIApplicationDelegate {
+    /// Deeplink manager for handling URL schemes
+    private let deeplinkManager = DeeplinkManager.shared
+
+    /**
+     * Called when the application has finished launching.
+     *
+     * This is the first method called after the app is launched.
+     * Use this method to perform any final initialization of your application.
+     *
+     * - Parameter application: The singleton app object
+     * - Parameter launchOptions: A dictionary indicating the reason the app was launched
+     * - Returns: `true` if the app launch was successful, `false` otherwise
+     */
     func application(
         _ application: UIApplication,
         didFinishLaunchingWithOptions launchOptions: [UIApplication.LaunchOptionsKey: Any]? = nil
@@ -10,14 +30,44 @@ final class PulseAppDelegate: NSObject, UIApplicationDelegate {
         return true
     }
 
+    /**
+     * Handle URL scheme opening for iOS versions prior to iOS 13.
+     *
+     * This method is called when the app is opened via a custom URL scheme.
+     * For iOS 13+, this is handled by the scene delegate.
+     *
+     * - Parameter application: The singleton app object
+     * - Parameter url: The URL that was opened
+     * - Returns: True if the URL was handled successfully
+     */
+    func application(
+        _ application: UIApplication,
+        open url: URL
+    ) -> Bool {
+        // For iOS 13+, this is handled by the scene delegate
+        // This method is kept for backward compatibility
+        deeplinkManager.parse(url: url)
+        return true
+    }
+
+    /**
+     * Called when a new scene session is being created.
+     *
+     * This method is called when the system is creating a new scene session.
+     * Use this method to select a configuration to create the new scene with.
+     *
+     * - Parameter application: The singleton app object
+     * - Parameter connectingSceneSession: The scene session being created
+     * - Parameter options: Additional options for the scene connection
+     * - Returns: A configuration object for the new scene
+     */
     func application(
         _ application: UIApplication,
         configurationForConnecting connectingSceneSession: UISceneSession,
         options: UIScene.ConnectionOptions
     ) -> UISceneConfiguration {
-        let sceneConfig = UISceneConfiguration(name: nil, sessionRole: connectingSceneSession.role)
-        sceneConfig.delegateClass = PulseSceneDelegate.self
-        return sceneConfig
+        // Return the default scene configuration
+        UISceneConfiguration(name: "Default Configuration", sessionRole: connectingSceneSession.role)
     }
 
     private func configureNotifications(_ application: UIApplication) {
@@ -44,7 +94,7 @@ extension PulseAppDelegate: UNUserNotificationCenterDelegate {
     ) {
         let userInfo = response.notification.request.content.userInfo
         if let articleID = userInfo["articleID"] as? String {
-            DeeplinkManager.shared.handle(deeplink: .article(id: articleID))
+            deeplinkManager.handle(deeplink: .article(id: articleID))
         }
         completionHandler()
     }
@@ -54,13 +104,13 @@ extension PulseAppDelegate: UNUserNotificationCenterDelegate {
         didRegisterForRemoteNotificationsWithDeviceToken deviceToken: Data
     ) {
         let token = deviceToken.map { String(format: "%02.2hhx", $0) }.joined()
-        print("Device Token: \(token)")
+        Logger.shared.network("Device Token: \(token)", level: .info)
     }
 
     func application(
         _ application: UIApplication,
         didFailToRegisterForRemoteNotificationsWithError error: Error
     ) {
-        print("Failed to register for notifications: \(error.localizedDescription)")
+        Logger.shared.network("Failed to register for notifications: \(error.localizedDescription)", level: .warning)
     }
 }

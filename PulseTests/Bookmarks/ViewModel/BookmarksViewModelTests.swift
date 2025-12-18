@@ -1,23 +1,24 @@
 import Testing
 import Combine
+import Foundation
 @testable import Pulse
 
 @Suite("BookmarksViewModel Tests")
 struct BookmarksViewModelTests {
-    var mockBookmarksService: MockBookmarksService!
-    var mockStorageService: MockStorageService!
-    var sut: BookmarksViewModel!
-    var cancellables: Set<AnyCancellable>!
+    let mockBookmarksService: MockBookmarksService
+    let mockStorageService: MockStorageService
+    let serviceLocator: ServiceLocator
+    let sut: BookmarksViewModel
 
     init() {
         mockBookmarksService = MockBookmarksService()
         mockStorageService = MockStorageService()
+        serviceLocator = ServiceLocator()
 
-        ServiceLocator.shared.register(BookmarksService.self, service: mockBookmarksService)
-        ServiceLocator.shared.register(StorageService.self, service: mockStorageService)
+        serviceLocator.register(BookmarksService.self, instance: mockBookmarksService)
+        serviceLocator.register(StorageService.self, instance: mockStorageService)
 
-        sut = BookmarksViewModel()
-        cancellables = Set<AnyCancellable>()
+        sut = BookmarksViewModel(serviceLocator: serviceLocator)
     }
 
     @Test("Initial view state is correct")

@@ -1,5 +1,5 @@
-import Foundation
 import Combine
+import Foundation
 
 final class BookmarksDomainInteractor: CombineInteractor {
     typealias DomainState = BookmarksDomainState
@@ -18,12 +18,20 @@ final class BookmarksDomainInteractor: CombineInteractor {
         stateSubject.value
     }
 
-    init(
-        bookmarksService: BookmarksService = ServiceLocator.shared.resolve(BookmarksService.self),
-        storageService: StorageService = ServiceLocator.shared.resolve(StorageService.self)
-    ) {
-        self.bookmarksService = bookmarksService
-        self.storageService = storageService
+    init(serviceLocator: ServiceLocator) {
+        do {
+            bookmarksService = try serviceLocator.retrieve(BookmarksService.self)
+        } catch {
+            Logger.shared.service("Failed to retrieve BookmarksService: \(error)", level: .warning)
+            bookmarksService = LiveBookmarksService(storageService: LiveStorageService())
+        }
+
+        do {
+            storageService = try serviceLocator.retrieve(StorageService.self)
+        } catch {
+            Logger.shared.service("Failed to retrieve StorageService: \(error)", level: .warning)
+            storageService = LiveStorageService()
+        }
     }
 
     func dispatch(action: BookmarksDomainAction) {

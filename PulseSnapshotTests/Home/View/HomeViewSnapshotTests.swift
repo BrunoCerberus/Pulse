@@ -4,15 +4,17 @@ import SwiftUI
 @testable import Pulse
 
 final class HomeViewSnapshotTests: XCTestCase {
+    private var serviceLocator: ServiceLocator!
+
     override func setUp() {
         super.setUp()
-        // Register mock services
-        ServiceLocator.shared.register(NewsService.self, service: MockNewsService())
-        ServiceLocator.shared.register(StorageService.self, service: MockStorageService())
+        serviceLocator = ServiceLocator()
+        serviceLocator.register(NewsService.self, instance: MockNewsService())
+        serviceLocator.register(StorageService.self, instance: MockStorageService())
     }
 
     func testHomeViewLoading() {
-        let view = HomeView()
+        let view = HomeView(serviceLocator: serviceLocator)
         let controller = UIHostingController(rootView: view)
 
         assertSnapshot(

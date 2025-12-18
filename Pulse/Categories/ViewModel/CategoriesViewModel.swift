@@ -1,5 +1,5 @@
-import Foundation
 import Combine
+import Foundation
 
 final class CategoriesViewModel: CombineViewModel, ObservableObject {
     typealias ViewState = CategoriesViewState
@@ -8,11 +8,13 @@ final class CategoriesViewModel: CombineViewModel, ObservableObject {
     @Published private(set) var viewState: CategoriesViewState = .initial
     @Published var selectedArticle: Article?
 
+    private let serviceLocator: ServiceLocator
     private let interactor: CategoriesDomainInteractor
     private var cancellables = Set<AnyCancellable>()
 
-    init(interactor: CategoriesDomainInteractor = CategoriesDomainInteractor()) {
-        self.interactor = interactor
+    init(serviceLocator: ServiceLocator) {
+        self.serviceLocator = serviceLocator
+        interactor = CategoriesDomainInteractor(serviceLocator: serviceLocator)
         setupBindings()
     }
 

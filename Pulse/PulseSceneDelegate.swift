@@ -16,6 +16,9 @@ final class PulseSceneDelegate: UIResponder, UIWindowSceneDelegate {
     /// The main window of the application
     var window: UIWindow?
 
+    /// Service locator for dependency injection
+    private let serviceLocator: ServiceLocator = .init()
+
     /// Tracks whether splash screen has been shown
     private var hasSplashBeenShown = false
 
@@ -82,7 +85,9 @@ final class PulseSceneDelegate: UIResponder, UIWindowSceneDelegate {
      * - Parameter window: The main window to display content in
      */
     private func showMainApp(in window: UIWindow) {
-        let rootView = UIHostingController(rootView: ContentView())
+        let rootView = UIHostingController(
+            rootView: ContentView(serviceLocator: serviceLocator)
+        )
         rootView.overrideUserInterfaceStyle = ThemeManager.shared.colorScheme == .dark ? .dark : .light
         window.rootViewController = rootView
     }
@@ -110,7 +115,9 @@ final class PulseSceneDelegate: UIResponder, UIWindowSceneDelegate {
      * - Parameter window: The main window to update
      */
     private func transitionToMainApp(in window: UIWindow) {
-        let rootView = UIHostingController(rootView: ContentView())
+        let rootView = UIHostingController(
+            rootView: ContentView(serviceLocator: serviceLocator)
+        )
         rootView.overrideUserInterfaceStyle = ThemeManager.shared.colorScheme == .dark ? .dark : .light
 
         // Animate transition from splash to main app
@@ -138,13 +145,13 @@ final class PulseSceneDelegate: UIResponder, UIWindowSceneDelegate {
             // Check if running in test environment
             if ProcessInfo.processInfo.environment["XCTestConfigurationFilePath"] != nil {
                 // Use mock services for tests
-                ServiceLocator.shared.register(StorageService.self, service: MockStorageService())
-                ServiceLocator.shared.register(NewsService.self, service: MockNewsService())
-                ServiceLocator.shared.register(SearchService.self, service: MockSearchService())
-                ServiceLocator.shared.register(BookmarksService.self, service: MockBookmarksService())
-                ServiceLocator.shared.register(SettingsService.self, service: MockSettingsService())
-                ServiceLocator.shared.register(CategoriesService.self, service: MockCategoriesService())
-                ServiceLocator.shared.register(ForYouService.self, service: MockForYouService())
+                serviceLocator.register(StorageService.self, instance: MockStorageService())
+                serviceLocator.register(NewsService.self, instance: MockNewsService())
+                serviceLocator.register(SearchService.self, instance: MockSearchService())
+                serviceLocator.register(BookmarksService.self, instance: MockBookmarksService())
+                serviceLocator.register(SettingsService.self, instance: MockSettingsService())
+                serviceLocator.register(CategoriesService.self, instance: MockCategoriesService())
+                serviceLocator.register(ForYouService.self, instance: MockForYouService())
             } else {
                 // Use real services for debug builds
                 registerLiveServices()
@@ -157,15 +164,23 @@ final class PulseSceneDelegate: UIResponder, UIWindowSceneDelegate {
 
     /**
      * Register all live services for production use.
+     *
+     * Note: Services that depend on other services (like LiveSettingsService,
+     * LiveBookmarksService, LiveForYouService) receive their dependencies
+     * directly rather than through ServiceLocator.
      */
     private func registerLiveServices() {
-        ServiceLocator.shared.register(StorageService.self, service: LiveStorageService())
-        ServiceLocator.shared.register(NewsService.self, service: LiveNewsService())
-        ServiceLocator.shared.register(SearchService.self, service: LiveSearchService())
-        ServiceLocator.shared.register(BookmarksService.self, service: LiveBookmarksService())
-        ServiceLocator.shared.register(SettingsService.self, service: LiveSettingsService())
-        ServiceLocator.shared.register(CategoriesService.self, service: LiveCategoriesService())
-        ServiceLocator.shared.register(ForYouService.self, service: LiveForYouService())
+        // Register base services first
+        let storageService = LiveStorageService()
+        serviceLocator.register(StorageService.self, instance: storageService)
+        serviceLocator.register(NewsService.self, instance: LiveNewsService())
+        serviceLocator.register(SearchService.self, instance: LiveSearchService())
+        serviceLocator.register(CategoriesService.self, instance: LiveCategoriesService())
+
+        // Register services that depend on StorageService
+        serviceLocator.register(BookmarksService.self, instance: LiveBookmarksService(storageService: storageService))
+        serviceLocator.register(SettingsService.self, instance: LiveSettingsService(storageService: storageService))
+        serviceLocator.register(ForYouService.self, instance: LiveForYouService(storageService: storageService))
     }
 
     /**

@@ -1,5 +1,5 @@
-import Foundation
 import Combine
+import Foundation
 
 final class SettingsViewModel: CombineViewModel, ObservableObject {
     typealias ViewState = SettingsViewState
@@ -9,15 +9,17 @@ final class SettingsViewModel: CombineViewModel, ObservableObject {
     @Published var newMutedSource: String = ""
     @Published var newMutedKeyword: String = ""
 
+    private let serviceLocator: ServiceLocator
     private let interactor: SettingsDomainInteractor
     private let themeManager: ThemeManager
     private var cancellables = Set<AnyCancellable>()
 
     init(
-        interactor: SettingsDomainInteractor = SettingsDomainInteractor(),
+        serviceLocator: ServiceLocator,
         themeManager: ThemeManager = .shared
     ) {
-        self.interactor = interactor
+        self.serviceLocator = serviceLocator
+        interactor = SettingsDomainInteractor(serviceLocator: serviceLocator)
         self.themeManager = themeManager
         setupBindings()
     }

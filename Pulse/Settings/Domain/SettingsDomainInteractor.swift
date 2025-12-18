@@ -1,5 +1,5 @@
-import Foundation
 import Combine
+import Foundation
 
 final class SettingsDomainInteractor: CombineInteractor {
     typealias DomainState = SettingsDomainState
@@ -17,8 +17,13 @@ final class SettingsDomainInteractor: CombineInteractor {
         stateSubject.value
     }
 
-    init(settingsService: SettingsService = ServiceLocator.shared.resolve(SettingsService.self)) {
-        self.settingsService = settingsService
+    init(serviceLocator: ServiceLocator) {
+        do {
+            settingsService = try serviceLocator.retrieve(SettingsService.self)
+        } catch {
+            Logger.shared.service("Failed to retrieve SettingsService: \(error)", level: .warning)
+            settingsService = LiveSettingsService(storageService: LiveStorageService())
+        }
     }
 
     func dispatch(action: SettingsDomainAction) {

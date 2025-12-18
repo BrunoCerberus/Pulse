@@ -26,11 +26,33 @@ Network Layer (EntropyCore)
    - **Domain Layer**: Interactors implementing `CombineInteractor`
    - **Service Layer**: Protocol-based services with Live/Mock implementations
 
-2. **ServiceLocator**: Centralized dependency injection
+2. **ServiceLocator**: Instance-based dependency injection (passed through initializers)
    ```swift
-   ServiceLocator.shared.register(NewsService.self, service: LiveNewsService())
-   let service = ServiceLocator.shared.resolve(NewsService.self)
+   // Service Registration (PulseSceneDelegate.swift)
+   let serviceLocator = ServiceLocator()
+   serviceLocator.register(NewsService.self, instance: LiveNewsService())
+   serviceLocator.register(StorageService.self, instance: LiveStorageService())
+
+   // Component Initialization
+   class HomeDomainInteractor {
+       init(serviceLocator: ServiceLocator) {
+           self.newsService = try serviceLocator.retrieve(NewsService.self)
+       }
+   }
+
+   // Test Setup
+   private func createTestServiceLocator() -> ServiceLocator {
+       let serviceLocator = ServiceLocator()
+       serviceLocator.register(NewsService.self, instance: MockNewsService())
+       return serviceLocator
+   }
    ```
+
+   **Key Benefits:**
+   - **Single Dependency**: Components only accept ServiceLocator as constructor parameter
+   - **Centralized Registration**: All services registered in one place (PulseSceneDelegate)
+   - **Easy Testing**: Mock services automatically injected in test environments
+   - **Type Safety**: Compile-time service resolution with proper error handling
 
 3. **ViewStateReducing**: Transforms DomainState to ViewState
 4. **DomainEventActionMap**: Maps ViewEvents to DomainActions

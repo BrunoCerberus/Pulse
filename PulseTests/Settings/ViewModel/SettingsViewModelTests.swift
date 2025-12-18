@@ -1,20 +1,21 @@
 import Testing
 import Combine
+import Foundation
 @testable import Pulse
 
 @Suite("SettingsViewModel Tests")
 struct SettingsViewModelTests {
-    var mockSettingsService: MockSettingsService!
-    var sut: SettingsViewModel!
-    var cancellables: Set<AnyCancellable>!
+    let mockSettingsService: MockSettingsService
+    let serviceLocator: ServiceLocator
+    let sut: SettingsViewModel
 
     init() {
         mockSettingsService = MockSettingsService()
+        serviceLocator = ServiceLocator()
 
-        ServiceLocator.shared.register(SettingsService.self, service: mockSettingsService)
+        serviceLocator.register(SettingsService.self, instance: mockSettingsService)
 
-        sut = SettingsViewModel()
-        cancellables = Set<AnyCancellable>()
+        sut = SettingsViewModel(serviceLocator: serviceLocator)
     }
 
     @Test("Initial view state is correct")

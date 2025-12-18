@@ -3,34 +3,35 @@ import SwiftUI
 struct SettingsView: View {
     @StateObject private var viewModel: SettingsViewModel
 
-    init(viewModel: SettingsViewModel = SettingsViewModel()) {
-        _viewModel = StateObject(wrappedValue: viewModel)
+    private let serviceLocator: ServiceLocator
+
+    init(serviceLocator: ServiceLocator) {
+        self.serviceLocator = serviceLocator
+        _viewModel = StateObject(wrappedValue: SettingsViewModel(serviceLocator: serviceLocator))
     }
 
     var body: some View {
-        NavigationStack {
-            List {
-                topicsSection
-                notificationsSection
-                appearanceSection
-                mutedContentSection
-                dataSection
-                aboutSection
+        List {
+            topicsSection
+            notificationsSection
+            appearanceSection
+            mutedContentSection
+            dataSection
+            aboutSection
+        }
+        .navigationTitle("Settings")
+        .alert("Clear Reading History?", isPresented: Binding(
+            get: { viewModel.viewState.showClearHistoryConfirmation },
+            set: { _ in viewModel.handle(event: .onCancelClearHistory) }
+        )) {
+            Button("Cancel", role: .cancel) {
+                viewModel.handle(event: .onCancelClearHistory)
             }
-            .navigationTitle("Settings")
-            .alert("Clear Reading History?", isPresented: Binding(
-                get: { viewModel.viewState.showClearHistoryConfirmation },
-                set: { _ in viewModel.handle(event: .onCancelClearHistory) }
-            )) {
-                Button("Cancel", role: .cancel) {
-                    viewModel.handle(event: .onCancelClearHistory)
-                }
-                Button("Clear", role: .destructive) {
-                    viewModel.handle(event: .onConfirmClearHistory)
-                }
-            } message: {
-                Text("This will remove all articles from your reading history. This action cannot be undone.")
+            Button("Clear", role: .destructive) {
+                viewModel.handle(event: .onConfirmClearHistory)
             }
+        } message: {
+            Text("This will remove all articles from your reading history. This action cannot be undone.")
         }
         .onAppear {
             viewModel.handle(event: .onAppear)
@@ -184,11 +185,7 @@ struct SettingsView: View {
 }
 
 struct SettingsCoordinator {
-    static func start() -> some View {
-        SettingsView()
+    static func start(serviceLocator: ServiceLocator) -> some View {
+        SettingsView(serviceLocator: serviceLocator)
     }
-}
-
-#Preview {
-    SettingsView()
 }
