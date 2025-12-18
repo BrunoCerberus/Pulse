@@ -1,193 +1,235 @@
 # Pulse Makefile
 # Build, test, and development automation
 
-# Configuration
-SCHEME_DEV = PulseDev
-SCHEME_PROD = PulseProd
-SCHEME_TESTS = PulseTests
-SCHEME_UI_TESTS = PulseUITests
-SCHEME_SNAPSHOT_TESTS = PulseSnapshotTests
-DESTINATION = platform=iOS Simulator,name=iPhone Air,OS=26.1
-PROJECT = Pulse.xcodeproj
+.PHONY: help init install-xcodegen generate setup test test-unit test-ui test-snapshot test-debug clean clean-packages coverage coverage-report coverage-badge deeplink-test lint format build build-release
 
-# Colors for output
-GREEN = \033[0;32m
-YELLOW = \033[0;33m
-RED = \033[0;31m
-NC = \033[0m # No Color
-
-.PHONY: help init install-xcodegen generate setup test test-unit test-ui test-snapshot test-debug coverage coverage-report coverage-badge lint format clean clean-packages build build-release
-
+# Default target
 help:
-	@echo "$(GREEN)Pulse - Available Commands$(NC)"
-	@echo ""
-	@echo "$(YELLOW)Setup:$(NC)"
-	@echo "  make init              - Setup Mint, SwiftFormat, SwiftLint, git hooks"
-	@echo "  make install-xcodegen  - Install XcodeGen via Homebrew"
-	@echo "  make generate          - Generate Xcode project from project.yml"
-	@echo "  make setup             - install-xcodegen + generate"
-	@echo ""
-	@echo "$(YELLOW)Build:$(NC)"
-	@echo "  make build             - Build for development (Debug)"
-	@echo "  make build-release     - Build for release"
-	@echo ""
-	@echo "$(YELLOW)Testing:$(NC)"
-	@echo "  make test              - Run all tests"
-	@echo "  make test-unit         - Run unit tests only"
-	@echo "  make test-ui           - Run UI tests only"
-	@echo "  make test-snapshot     - Run snapshot tests only"
-	@echo "  make test-debug        - Run tests with verbose output"
-	@echo ""
-	@echo "$(YELLOW)Coverage:$(NC)"
-	@echo "  make coverage          - Run tests with coverage report"
-	@echo "  make coverage-report   - Show detailed per-file coverage"
-	@echo "  make coverage-badge    - Generate SVG badge"
-	@echo ""
-	@echo "$(YELLOW)Code Quality:$(NC)"
-	@echo "  make lint              - Run SwiftFormat + SwiftLint checks"
-	@echo "  make format            - Auto-fix formatting with SwiftFormat"
-	@echo ""
-	@echo "$(YELLOW)Cleanup:$(NC)"
-	@echo "  make clean             - Remove generated Xcode project"
-	@echo "  make clean-packages    - Clean SPM dependencies"
+	@echo "Available commands:"
+	@echo "  init              - Setup Mint, SwiftFormat, and SwiftLint"
+	@echo "  install-xcodegen  - Install XcodeGen using Homebrew"
+	@echo "  generate          - Generate Xcode project from project.yml"
+	@echo "  setup             - install-xcodegen + generate"
+	@echo "  build             - Build for development (Debug)"
+	@echo "  build-release     - Build for release"
+	@echo "  lint              - Run SwiftLint and SwiftFormat checks"
+	@echo "  format            - Auto-fix formatting with SwiftFormat"
+	@echo "  test              - Run all tests on iOS 26.1 iPhone Air"
+	@echo "  test-unit         - Run only unit tests"
+	@echo "  test-ui           - Run only UI tests"
+	@echo "  test-snapshot     - Run only snapshot tests"
+	@echo "  test-debug        - Run tests with full verbose output for debugging"
+	@echo "  clean             - Remove generated Xcode project"
+	@echo "  clean-packages    - Clean Swift Package Manager dependencies"
+	@echo "  coverage          - Run tests with coverage and show app %"
+	@echo "  coverage-report   - Show detailed per-file coverage report"
+	@echo "  coverage-badge    - Generate SVG badge at badges/coverage.svg"
+	@echo "  deeplink-test     - Test deeplink functionality specifically"
+	@echo "  help              - Show this help message"
 
-# Setup commands
+# Setup Mint, SwiftFormat, and SwiftLint
 init:
-	@echo "$(GREEN)Setting up development environment...$(NC)"
-	@which mint > /dev/null || brew install mint
-	@mint bootstrap
+	@echo "Setting up development environment..."
+	@echo "Checking for Homebrew..."
+	@if ! command -v brew &> /dev/null; then \
+		echo "Installing Homebrew..."; \
+		/bin/bash -c "$$(curl -fsSL https://raw.githubusercontent.com/Homebrew/install/HEAD/install.sh)"; \
+	else \
+		echo "Homebrew already installed"; \
+	fi
+	@echo "Installing XcodeGen..."
+	@brew install xcodegen || true
+	@echo "Installing Mint..."
+	@brew install mint || true
+	@echo "Installing SwiftLint..."
+	@brew install swiftlint || true
+	@echo "Installing SwiftFormat via Mint..."
 	@mint install nicklockwood/SwiftFormat
-	@mint install realm/SwiftLint
-	@echo "$(GREEN)Installing git hooks...$(NC)"
+	@echo "Setting up git hooks..."
 	@mkdir -p .git/hooks
 	@echo '#!/bin/sh\nmake lint' > .git/hooks/pre-commit
 	@chmod +x .git/hooks/pre-commit
-	@echo "$(GREEN)Setup complete!$(NC)"
+	@echo "Development environment setup complete!"
 
+# Run linting checks (SwiftFormat + SwiftLint)
+lint:
+	@echo "Running SwiftFormat lint check..."
+	@mint run swiftformat Pulse PulseTests --lint
+	@echo "SwiftFormat check passed"
+	@echo ""
+	@echo "Running SwiftLint..."
+	@swiftlint lint --path Pulse --path PulseTests
+	@echo "SwiftLint check passed"
+
+# Auto-fix formatting with SwiftFormat
+format:
+	@echo "Running SwiftFormat..."
+	@mint run swiftformat Pulse PulseTests
+	@echo "Formatting complete!"
+
+# Install XcodeGen
 install-xcodegen:
-	@echo "$(GREEN)Installing XcodeGen...$(NC)"
-	@which xcodegen > /dev/null || brew install xcodegen
-	@echo "$(GREEN)XcodeGen installed!$(NC)"
+	@echo "Installing XcodeGen..."
+	@brew install xcodegen
 
+# Generate Xcode project
 generate:
-	@echo "$(GREEN)Generating Xcode project...$(NC)"
+	@echo "Generating Xcode project..."
 	@xcodegen generate
-	@echo "$(GREEN)Project generated!$(NC)"
+	@echo "Project generated successfully!"
 
+# Install and generate in one command
 setup: install-xcodegen generate
+	@echo "Setup complete!"
+
+# Clean Swift Package Manager dependencies
+clean-packages:
+	@echo "Cleaning Swift Package Manager dependencies..."
+	@rm -rf Pulse.xcodeproj/project.xcworkspace/xcshareddata/swiftpm/Package.resolved
+	@rm -rf Pulse.xcodeproj/project.xcworkspace/xcshareddata/swiftpm/configuration
+	@rm -rf Pulse.xcodeproj/project.xcworkspace/xcshareddata/swiftpm/artifacts
+	@echo "Package dependencies cleaned!"
 
 # Build commands
 build:
-	@echo "$(GREEN)Building Pulse (Debug)...$(NC)"
+	@echo "Building Pulse (Debug)..."
 	@xcodebuild build \
-		-project $(PROJECT) \
-		-scheme $(SCHEME_DEV) \
-		-destination "$(DESTINATION)" \
+		-project Pulse.xcodeproj \
+		-scheme PulseDev \
+		-destination 'platform=iOS Simulator,name=iPhone Air,OS=26.1' \
 		-configuration Debug \
-		CODE_SIGNING_ALLOWED=NO \
-		| xcpretty
-
-build-release:
-	@echo "$(GREEN)Building Pulse (Release)...$(NC)"
-	@xcodebuild build \
-		-project $(PROJECT) \
-		-scheme $(SCHEME_PROD) \
-		-destination "$(DESTINATION)" \
-		-configuration Release \
-		CODE_SIGNING_ALLOWED=NO \
-		| xcpretty
-
-# Test commands
-test:
-	@echo "$(GREEN)Running all tests...$(NC)"
-	@xcodebuild test \
-		-project $(PROJECT) \
-		-scheme $(SCHEME_DEV) \
-		-destination "$(DESTINATION)" \
-		-retry-tests-on-failure \
-		CODE_SIGNING_ALLOWED=NO \
-		| xcpretty
-
-test-unit:
-	@echo "$(GREEN)Running unit tests...$(NC)"
-	@xcodebuild test \
-		-project $(PROJECT) \
-		-scheme $(SCHEME_TESTS) \
-		-destination "$(DESTINATION)" \
-		-retry-tests-on-failure \
-		CODE_SIGNING_ALLOWED=NO \
-		| xcpretty
-
-test-ui:
-	@echo "$(GREEN)Running UI tests...$(NC)"
-	@xcodebuild test \
-		-project $(PROJECT) \
-		-scheme $(SCHEME_UI_TESTS) \
-		-destination "$(DESTINATION)" \
-		-retry-tests-on-failure \
-		CODE_SIGNING_ALLOWED=NO \
-		| xcpretty
-
-test-snapshot:
-	@echo "$(GREEN)Running snapshot tests...$(NC)"
-	@xcodebuild test \
-		-project $(PROJECT) \
-		-scheme $(SCHEME_SNAPSHOT_TESTS) \
-		-destination "$(DESTINATION)" \
-		CODE_SIGNING_ALLOWED=NO \
-		| xcpretty
-
-test-debug:
-	@echo "$(GREEN)Running tests with verbose output...$(NC)"
-	@xcodebuild test \
-		-project $(PROJECT) \
-		-scheme $(SCHEME_DEV) \
-		-destination "$(DESTINATION)" \
-		-retry-tests-on-failure \
 		CODE_SIGNING_ALLOWED=NO
 
-# Coverage commands
+build-release:
+	@echo "Building Pulse (Release)..."
+	@xcodebuild build \
+		-project Pulse.xcodeproj \
+		-scheme PulseProd \
+		-destination 'platform=iOS Simulator,name=iPhone Air,OS=26.1' \
+		-configuration Release \
+		CODE_SIGNING_ALLOWED=NO
+
+# Run all tests
+test:
+	@echo "Running all tests on iOS 26.1 iPhone Air..."
+	@make clean-packages
+	@if xcodebuild clean test -project Pulse.xcodeproj -scheme PulseDev -destination 'platform=iOS Simulator,name=iPhone Air,OS=26.1' CODE_SIGNING_ALLOWED=NO 2>&1 | tee /tmp/test_output.log; then \
+		echo "All tests completed successfully!"; \
+		grep -E "(Test run.*passed|Test run.*failed)" /tmp/test_output.log | tail -2; \
+	else \
+		echo "Tests failed! Here are the failure details:"; \
+		echo ""; \
+		grep -E "(✘|failed|FAIL|Fatal error|error:|Expectation failed)" /tmp/test_output.log | head -20; \
+		echo ""; \
+		echo "Full output saved to /tmp/test_output.log"; \
+		exit 1; \
+	fi
+
+# Run tests with coverage and print app target percent
 coverage:
-	@echo "$(GREEN)Running tests with coverage...$(NC)"
-	@xcodebuild test \
-		-project $(PROJECT) \
-		-scheme $(SCHEME_DEV) \
-		-destination "$(DESTINATION)" \
-		-enableCodeCoverage YES \
-		-resultBundlePath ./TestResults.xcresult \
-		CODE_SIGNING_ALLOWED=NO \
-		| xcpretty
-	@echo "$(GREEN)Coverage report generated!$(NC)"
+	@echo "Running tests with coverage on iOS 26.1 iPhone Air..."
+	@rm -rf build/TestResults.xcresult
+	@xcodebuild clean test -project Pulse.xcodeproj -scheme PulseDev -destination 'platform=iOS Simulator,name=iPhone Air,OS=26.1' -enableCodeCoverage YES -resultBundlePath build/TestResults.xcresult CODE_SIGNING_ALLOWED=NO 2>&1 | tee /tmp/coverage_output.log | grep -E '(Testing|Test Suite|Test Case|passed|failed)' || true
+	@echo ""
+	@if grep -E "Executed .* tests, with [1-9][0-9]* failures" /tmp/coverage_output.log > /dev/null; then \
+		echo "Tests failed! Coverage report may be incomplete."; \
+		echo ""; \
+		echo "Failure details:"; \
+		grep -E "(✘|failed|FAIL|Fatal error|error:|Expectation failed)" /tmp/coverage_output.log | head -20; \
+		echo ""; \
+		echo "Full output saved to /tmp/coverage_output.log"; \
+		exit 1; \
+	elif grep -E "Executed .* tests, with 0 failures" /tmp/coverage_output.log > /dev/null; then \
+		echo "All tests passed!"; \
+		echo ""; \
+		echo "Coverage summary (Pulse.app):"; \
+		xcrun xccov view --report --only-targets build/TestResults.xcresult | awk '/Pulse.app/{print $$0}'; \
+		echo ""; \
+		echo "Use 'make coverage-report' for details."; \
+	else \
+		echo "Could not determine test status!"; \
+		echo ""; \
+		echo "Full output saved to /tmp/coverage_output.log"; \
+		exit 1; \
+	fi
 
+# Show full per-file coverage report
 coverage-report:
-	@echo "$(GREEN)Generating detailed coverage report...$(NC)"
-	@xcrun xccov view --report --files-for-target Pulse.app ./TestResults.xcresult
+	@test -d build/TestResults.xcresult || (echo "No xcresult found. Run 'make coverage' first." && exit 1)
+	@xcrun xccov view --report build/TestResults.xcresult
 
+# Generate a simple SVG badge with current app coverage
 coverage-badge:
-	@echo "$(GREEN)Generating coverage badge...$(NC)"
-	@./scripts/generate-coverage-badge.sh
+	@bash scripts/generate-coverage-badge.sh build/TestResults.xcresult
+	@echo "Badge generated at badges/coverage.svg"
 
-# Code quality commands
-lint:
-	@echo "$(GREEN)Running SwiftFormat check...$(NC)"
-	@swiftformat --lint Pulse PulseTests || true
-	@echo "$(GREEN)Running SwiftLint...$(NC)"
-	@swiftlint lint --path Pulse --path PulseTests || true
+# Run only unit tests
+test-unit:
+	@echo "Running unit tests on iOS 26.1 iPhone Air..."
+	@make clean-packages
+	@if xcodebuild clean test -project Pulse.xcodeproj -scheme PulseDev -only-testing:PulseTests -destination 'platform=iOS Simulator,name=iPhone Air,OS=26.1' CODE_SIGNING_ALLOWED=NO 2>&1 | tee /tmp/test_output.log; then \
+		echo "Unit tests completed successfully!"; \
+		grep -E "(Test run.*passed|Test run.*failed)" /tmp/test_output.log | tail -5; \
+	else \
+		echo "Unit tests failed! Here are the failure details:"; \
+		echo ""; \
+		grep -E "(✘|failed|FAIL|Fatal error|error:|Expectation failed)" /tmp/test_output.log | head -20; \
+		echo ""; \
+		echo "Full output saved to /tmp/test_output.log"; \
+		exit 1; \
+	fi
 
-format:
-	@echo "$(GREEN)Formatting code with SwiftFormat...$(NC)"
-	@swiftformat Pulse PulseTests
-	@echo "$(GREEN)Code formatted!$(NC)"
+# Run only UI tests
+test-ui:
+	@echo "Running UI tests on iOS 26.1 iPhone Air..."
+	@make clean-packages
+	@if xcodebuild clean test -project Pulse.xcodeproj -scheme PulseDev -only-testing:PulseUITests -destination 'platform=iOS Simulator,name=iPhone Air,OS=26.1' CODE_SIGNING_ALLOWED=NO 2>&1 | tee /tmp/test_output.log; then \
+		echo "UI tests completed successfully!"; \
+		grep -E "(Test run.*passed|Test run.*failed)" /tmp/test_output.log | tail -1; \
+	else \
+		echo "UI tests failed! Here are the failure details:"; \
+		echo ""; \
+		grep -E "(✘|failed|FAIL|Fatal error|error:|Expectation failed)" /tmp/test_output.log | head -20; \
+		echo ""; \
+		echo "Full output saved to /tmp/test_output.log"; \
+		exit 1; \
+	fi
 
-# Cleanup commands
+# Run only snapshot tests
+test-snapshot:
+	@echo "Running snapshot tests on iOS 26.1 iPhone Air..."
+	@make clean-packages
+	@if xcodebuild clean test -project Pulse.xcodeproj -scheme PulseSnapshotTests -destination 'platform=iOS Simulator,name=iPhone Air,OS=26.1' CODE_SIGNING_ALLOWED=NO 2>&1 | tee /tmp/test_output.log; then \
+		echo "Snapshot tests completed successfully!"; \
+		grep -E "(Test run.*passed|Test run.*failed)" /tmp/test_output.log | tail -1; \
+	else \
+		echo "Snapshot tests failed! Here are the failure details:"; \
+		echo ""; \
+		grep -E "(✘|failed|FAIL|Fatal error|error:|Expectation failed)" /tmp/test_output.log | head -20; \
+		echo ""; \
+		echo "Full output saved to /tmp/test_output.log"; \
+		exit 1; \
+	fi
+
+# Run tests with full verbose output for debugging
+test-debug:
+	@echo "Running unit tests with full verbose output for debugging..."
+	@echo "This will show all test output including passing tests"
+	@make clean-packages
+	@xcodebuild clean test -project Pulse.xcodeproj -scheme PulseDev -only-testing:PulseTests -destination 'platform=iOS Simulator,name=iPhone Air,OS=26.1' CODE_SIGNING_ALLOWED=NO 2>&1 | tee /tmp/test_debug.log
+	@echo ""
+	@echo "Full debug output saved to /tmp/test_debug.log"
+
+# Test deeplink functionality specifically
+deeplink-test:
+	@echo "Testing deeplink functionality..."
+	@make clean-packages
+	@xcodebuild clean test -project Pulse.xcodeproj -scheme PulseDev -only-testing:PulseTests/DeeplinkManagerTests -destination 'platform=iOS Simulator,name=iPhone Air,OS=26.1' CODE_SIGNING_ALLOWED=NO
+	@echo "Deeplink tests completed!"
+
+# Clean generated files
 clean:
-	@echo "$(YELLOW)Removing generated Xcode project...$(NC)"
-	@rm -rf $(PROJECT)
-	@rm -rf TestResults.xcresult
-	@echo "$(GREEN)Clean complete!$(NC)"
-
-clean-packages:
-	@echo "$(YELLOW)Cleaning SPM dependencies...$(NC)"
-	@rm -rf ~/Library/Developer/Xcode/DerivedData/Pulse-*
-	@rm -rf .build
-	@echo "$(GREEN)Packages cleaned!$(NC)"
+	@echo "Cleaning generated files..."
+	@rm -rf Pulse.xcodeproj
+	@rm -rf build/TestResults.xcresult
+	@echo "Cleaned!"

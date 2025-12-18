@@ -2,161 +2,300 @@ name: Scheduled Tests
 
 on:
   schedule:
-    - cron: '0 2 * * *' # Daily at 2 AM UTC
-  workflow_dispatch:
-
-env:
-  DEVELOPER_DIR: /Applications/Xcode_26.0.1.app/Contents/Developer
-  DESTINATION: "platform=iOS Simulator,name=iPhone Air,OS=26.1"
+    # Run daily at 2 AM UTC
+    - cron: '0 2 * * *'
+  workflow_dispatch: # Allow manual triggering
 
 jobs:
-  code-quality:
-    name: Code Quality
-    runs-on: macos-15
-    steps:
-      - name: Checkout
-        uses: actions/checkout@v4
-
-      - name: Setup Xcode
-        uses: maxim-lobanov/setup-xcode@v1
-        with:
-          xcode-version: '26.0.1'
-
-      - name: Cache Homebrew
-        uses: actions/cache@v4
-        with:
-          path: |
-            ~/Library/Caches/Homebrew
-            /usr/local/Cellar
-          key: homebrew-v1
-
-      - name: Cache Mint
-        uses: actions/cache@v4
-        with:
-          path: ~/.mint
-          key: mint-v1
-
-      - name: Install Tools
-        run: |
-          brew install mint swiftformat swiftlint xcodegen || true
-          mint bootstrap || true
-
-      - name: SwiftFormat Check
-        run: swiftformat --lint Pulse PulseTests --reporter github-actions-log
-
-      - name: SwiftLint
-        run: swiftlint lint --path Pulse --path PulseTests --reporter github-actions-logging
-
   build:
-    name: Build
-    runs-on: macos-15
-    needs: code-quality
+    name: Build Project
+    runs-on: macos-latest
+
     steps:
-      - name: Checkout
-        uses: actions/checkout@v4
+    - name: Checkout code
+      uses: actions/checkout@v4
 
-      - name: Setup Xcode
-        uses: maxim-lobanov/setup-xcode@v1
-        with:
-          xcode-version: '26.0.1'
+    - name: Setup Xcode
+      uses: maxim-lobanov/setup-xcode@v1
+      with:
+        xcode-version: '26.0.1'
 
-      - name: Cache SPM
-        uses: actions/cache@v4
-        with:
-          path: |
-            ~/Library/Developer/Xcode/DerivedData/Pulse-*/SourcePackages
-            .build
-          key: spm-v1
+    # Cache Homebrew packages
+    # Note: Static version key (brew-v1) - increment manually when brew dependencies change
+    - name: Cache Homebrew packages
+      uses: actions/cache@v4
+      with:
+        path: |
+          ~/Library/Caches/Homebrew
+          /usr/local/Homebrew
+        key: ${{ runner.os }}-brew-v1
+        restore-keys: |
+          ${{ runner.os }}-brew-
 
-      - name: Install XcodeGen
-        run: brew install xcodegen || true
+    # Cache SPM dependencies
+    # Note: Using static version key (spm-v1) due to hashFiles() limitations in this CI environment
+    # Manually increment version (v1 -> v2) when project.yml package dependencies change
+    # IMPORTANT: Do NOT use broad restore-keys fallback - it can restore stale package versions
+    - name: Cache SPM dependencies
+      uses: actions/cache@v4
+      with:
+        path: |
+          Pulse.xcodeproj/project.xcworkspace/xcshareddata/swiftpm
+        key: ${{ runner.os }}-spm-v1
 
-      - name: Generate Project
-        run: xcodegen generate
+    - name: Install XcodeGen
+      run: |
+        brew install xcodegen
 
-      - name: Build for Testing
-        run: |
-          xcodebuild build-for-testing \
-            -project Pulse.xcodeproj \
-            -scheme PulseDev \
-            -destination "$DESTINATION" \
-            CODE_SIGNING_ALLOWED=NO \
-            | xcpretty
+    - name: Generate Xcode project
+      run: |
+        make generate
+
+    - name: Debug Package Dependencies
+      run: |
+        echo "Checking package dependencies..."
+        if [ -d "Pulse.xcodeproj/project.xcworkspace/xcshareddata/swiftpm/" ]; then
+          ls -la Pulse.xcodeproj/project.xcworkspace/xcshareddata/swiftpm/
+          echo "Package.resolved content:"
+          cat Pulse.xcodeproj/project.xcworkspace/xcshareddata/swiftpm/Package.resolved || echo "Package.resolved not found"
+        else
+          echo "Swift PM directory not found (this is normal for a fresh project generation)"
+        fi
+
+    - name: Resolve Package Dependencies
+      run: |
+        echo "Explicitly resolving Swift Package Manager dependencies..."
+        xcodebuild -resolvePackageDependencies \
+          -project Pulse.xcodeproj \
+          -scheme PulseDev \
+          -onlyUsePackageVersionsFromResolvedFile
+        echo "Package dependencies resolved successfully"
+
+    - name: Pre-boot simulator
+      run: |
+        echo "Pre-booting simulator..."
+        xcrun simctl boot "iPhone Air" || echo "Simulator already booted or unavailable"
+
+    - name: Build for testing (PulseDev)
+      run: |
+        echo "Building PulseDev scheme for testing..."
+        xcodebuild build-for-testing \
+          -project Pulse.xcodeproj \
+          -scheme PulseDev \
+          -destination 'platform=iOS Simulator,name=iPhone Air,OS=26.1' \
+          -derivedDataPath ./DerivedData \
+          CODE_SIGNING_ALLOWED=NO
+
+    - name: Build for testing (PulseSnapshotTests)
+      run: |
+        echo "Building PulseSnapshotTests scheme for testing..."
+        xcodebuild build-for-testing \
+          -project Pulse.xcodeproj \
+          -scheme PulseSnapshotTests \
+          -destination 'platform=iOS Simulator,name=iPhone Air,OS=26.1' \
+          -derivedDataPath ./DerivedData \
+          CODE_SIGNING_ALLOWED=NO
+
+    - name: Upload build artifacts
+      uses: actions/upload-artifact@v4
+      with:
+        name: scheduled-build-products
+        path: ./DerivedData
+        retention-days: 1
 
   tests:
-    name: Tests (${{ matrix.test-type }})
-    runs-on: macos-15
+    name: ${{ matrix.test-name }}
+    runs-on: macos-latest
     needs: build
     strategy:
       fail-fast: false
       matrix:
         include:
-          - test-type: Unit
-            scheme: PulseTests
-            result-bundle: UnitTestResults
-          - test-type: UI
-            scheme: PulseUITests
-            result-bundle: UITestResults
-          - test-type: Snapshot
+          - test-target: PulseTests
+            test-name: Unit Tests
+            scheme: PulseDev
+            artifact-name: scheduled-unit-test-results
+          - test-target: PulseUITests
+            test-name: UI Tests
+            scheme: PulseDev
+            artifact-name: scheduled-ui-test-results
+          - test-target: PulseSnapshotTests
+            test-name: Snapshot Tests
             scheme: PulseSnapshotTests
-            result-bundle: SnapshotTestResults
+            artifact-name: scheduled-snapshot-test-results
 
     steps:
-      - name: Checkout
-        uses: actions/checkout@v4
+    - name: Checkout code
+      uses: actions/checkout@v4
 
-      - name: Setup Xcode
-        uses: maxim-lobanov/setup-xcode@v1
-        with:
-          xcode-version: '26.0.1'
+    - name: Setup Xcode
+      uses: maxim-lobanov/setup-xcode@v1
+      with:
+        xcode-version: '26.0.1'
 
-      - name: Cache SPM
-        uses: actions/cache@v4
-        with:
-          path: |
-            ~/Library/Developer/Xcode/DerivedData/Pulse-*/SourcePackages
-            .build
-          key: spm-v1
+    # Cache Homebrew packages
+    # Note: Static version key (brew-v1) - increment manually when brew dependencies change
+    - name: Cache Homebrew packages
+      uses: actions/cache@v4
+      with:
+        path: |
+          ~/Library/Caches/Homebrew
+          /usr/local/Homebrew
+        key: ${{ runner.os }}-brew-v1
+        restore-keys: |
+          ${{ runner.os }}-brew-
 
-      - name: Install XcodeGen
-        run: brew install xcodegen || true
+    # Cache SPM dependencies
+    # Note: Using static version key (spm-v1) due to hashFiles() limitations in this CI environment
+    # Manually increment version (v1 -> v2) when project.yml package dependencies change
+    # IMPORTANT: Do NOT use broad restore-keys fallback - it can restore stale package versions
+    - name: Cache SPM dependencies
+      uses: actions/cache@v4
+      with:
+        path: |
+          Pulse.xcodeproj/project.xcworkspace/xcshareddata/swiftpm
+        key: ${{ runner.os }}-spm-v1
 
-      - name: Generate Project
-        run: xcodegen generate
+    - name: Install XcodeGen
+      run: |
+        brew install xcodegen
 
-      - name: Run ${{ matrix.test-type }} Tests
-        run: |
-          xcodebuild test \
-            -project Pulse.xcodeproj \
-            -scheme ${{ matrix.scheme }} \
-            -destination "$DESTINATION" \
-            -resultBundlePath ${{ matrix.result-bundle }}.xcresult \
-            -retry-tests-on-failure \
-            CODE_SIGNING_ALLOWED=NO \
-            | xcpretty
+    - name: Generate Xcode project
+      run: |
+        make generate
 
-      - name: Upload Test Results
-        if: always()
-        uses: actions/upload-artifact@v4
-        with:
-          name: ${{ matrix.result-bundle }}
-          path: ${{ matrix.result-bundle }}.xcresult
-          retention-days: 5
+    - name: Download build artifacts
+      uses: actions/download-artifact@v4
+      with:
+        name: scheduled-build-products
+        path: ./DerivedData
+
+    - name: Pre-boot simulator
+      run: |
+        echo "Pre-booting simulator..."
+        xcrun simctl boot "iPhone Air" || echo "Simulator already booted or unavailable"
+
+    - name: Run ${{ matrix.test-name }}
+      run: |
+        mkdir -p test-results
+        set -o pipefail
+        xcodebuild test-without-building \
+          -project Pulse.xcodeproj \
+          -scheme ${{ matrix.scheme }} \
+          -only-testing:${{ matrix.test-target }} \
+          -destination 'platform=iOS Simulator,name=iPhone Air,OS=26.1' \
+          -derivedDataPath ./DerivedData \
+          -resultBundlePath test-results/${{ matrix.artifact-name }}.xcresult \
+          -disableAutomaticPackageResolution \
+          -retry-tests-on-failure \
+          CODE_SIGNING_ALLOWED=NO \
+          | tee /tmp/test_output.log
+        TEST_EXIT_CODE=$?
+        grep -E "(Test run.*passed|Test run.*failed)" /tmp/test_output.log | tail -5 || echo "${{ matrix.test-name }} completed"
+        exit $TEST_EXIT_CODE
+
+    - name: Upload test results
+      uses: actions/upload-artifact@v4
+      if: always()
+      with:
+        name: ${{ matrix.artifact-name }}
+        path: test-results/${{ matrix.artifact-name }}.xcresult
+        if-no-files-found: warn
+        retention-days: 5
 
   test-results:
     name: Test Results Summary
-    runs-on: macos-15
-    needs: tests
+    runs-on: macos-latest
+    needs: [tests]
     if: always()
-    steps:
-      - name: Download All Results
-        uses: actions/download-artifact@v4
-        with:
-          path: ./results
-        continue-on-error: true
 
-      - name: Generate Summary
-        run: |
-          echo "## Scheduled Test Results - $(date +'%Y-%m-%d')" >> $GITHUB_STEP_SUMMARY
-          echo "" >> $GITHUB_STEP_SUMMARY
-          echo "Test results are available in the artifacts section." >> $GITHUB_STEP_SUMMARY
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v4
+
+    - name: Download unit test results
+      uses: actions/download-artifact@v4
+      continue-on-error: true
+      with:
+        name: scheduled-unit-test-results
+        path: unit-test-results
+
+    - name: Download UI test results
+      uses: actions/download-artifact@v4
+      continue-on-error: true
+      with:
+        name: scheduled-ui-test-results
+        path: ui-test-results
+
+    - name: Download snapshot test results
+      uses: actions/download-artifact@v4
+      continue-on-error: true
+      with:
+        name: scheduled-snapshot-test-results
+        path: snapshot-test-results
+
+    - name: Check test job results
+      id: check-results
+      run: |
+        # Check the outcome of the tests job
+        TEST_RESULT="${{ needs.tests.result }}"
+        echo "Tests job result: $TEST_RESULT"
+
+        if [ "$TEST_RESULT" == "success" ]; then
+          echo "status=success" >> $GITHUB_OUTPUT
+        else
+          echo "status=failure" >> $GITHUB_OUTPUT
+        fi
+
+    - name: Display Test Results Summary
+      run: |
+        echo "Scheduled Test Results Summary"
+        echo "==============================="
+        echo ""
+
+        # Check if artifacts exist and display status
+        UNIT_STATUS="Unknown"
+        UI_STATUS="Unknown"
+        SNAPSHOT_STATUS="Unknown"
+
+        if [ -d "unit-test-results" ]; then
+          UNIT_STATUS="Completed"
+        else
+          UNIT_STATUS="Failed or Missing"
+        fi
+
+        if [ -d "ui-test-results" ]; then
+          UI_STATUS="Completed"
+        else
+          UI_STATUS="Failed or Missing"
+        fi
+
+        if [ -d "snapshot-test-results" ]; then
+          SNAPSHOT_STATUS="Completed"
+        else
+          SNAPSHOT_STATUS="Failed or Missing"
+        fi
+
+        echo "Unit Tests: $UNIT_STATUS"
+        echo "UI Tests: $UI_STATUS"
+        echo "Snapshot Tests: $SNAPSHOT_STATUS"
+        echo ""
+        echo "Test artifacts downloaded:"
+        ls -la unit-test-results/ 2>/dev/null || echo "  No unit test artifacts found"
+        ls -la ui-test-results/ 2>/dev/null || echo "  No UI test artifacts found"
+        ls -la snapshot-test-results/ 2>/dev/null || echo "  No snapshot test artifacts found"
+        echo ""
+
+        if [ "${{ steps.check-results.outputs.status }}" == "success" ]; then
+          echo "All scheduled tests completed successfully!"
+        else
+          echo "Some tests failed or were cancelled"
+        fi
+        echo ""
+        echo "Daily test run completed at $(date)"
+
+    - name: Fail if tests failed
+      if: steps.check-results.outputs.status == 'failure'
+      run: |
+        echo "::error::Test suite failed or was cancelled"
+        exit 1
