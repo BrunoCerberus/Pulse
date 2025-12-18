@@ -50,6 +50,7 @@ Pulse.xcodeproj
 *.p12
 *.mobileprovision
 Credentials.swift
+Secrets.plist
 
 # Archives
 *.zip
