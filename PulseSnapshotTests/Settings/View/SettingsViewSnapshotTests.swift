@@ -21,9 +21,14 @@ final class SettingsViewSnapshotTests: XCTestCase {
         serviceLocator.register(StoreKitService.self, instance: MockStoreKitService())
     }
 
-    func testSettingsViewInitial() throws {
-        // TODO: Re-record on CI - local snapshots don't match CI rendering
-        // The Settings view now includes a premium subscription section
-        throw XCTSkip("Settings snapshot needs re-recording on CI environment")
+    func testSettingsViewInitial() {
+        let view = SettingsView(serviceLocator: serviceLocator)
+        let controller = UIHostingController(rootView: view)
+
+        assertSnapshot(
+            of: controller,
+            as: .wait(for: 1.0, on: .image(on: iPhoneAirConfig, precision: 0.98)),
+            record: false
+        )
     }
 }
