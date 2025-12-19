@@ -1,12 +1,24 @@
 import SwiftUI
 
-struct SearchView: View {
+struct SearchView<R: SearchNavigationRouter>: View {
+    /// Router responsible for navigation actions
+    private var router: R
+
+    /// Backing ViewModel managing data and actions
     @ObservedObject var viewModel: SearchViewModel
-    let coordinator: Coordinator
+
+    /// Initial query for deeplink support
     var initialQuery: String?
 
-    private var router: SearchNavigationRouter {
-        SearchNavigationRouter(coordinator: coordinator)
+    /// Creates the view with a router and ViewModel.
+    /// - Parameters:
+    ///   - router: Navigation router for routing actions
+    ///   - viewModel: ViewModel for managing data and actions
+    ///   - initialQuery: Optional initial query for deeplinks
+    init(router: R, viewModel: SearchViewModel, initialQuery: String? = nil) {
+        self.router = router
+        self.viewModel = viewModel
+        self.initialQuery = initialQuery
     }
 
     var body: some View {
@@ -30,7 +42,7 @@ struct SearchView: View {
             }
             .onChange(of: viewModel.selectedArticle) { _, newValue in
                 if let article = newValue {
-                    router.route(event: .articleDetail(article))
+                    router.route(navigationEvent: .articleDetail(article))
                     viewModel.selectedArticle = nil
                 }
             }
@@ -160,8 +172,8 @@ struct SearchView: View {
 #Preview {
     NavigationStack {
         SearchView(
-            viewModel: SearchViewModel(serviceLocator: .preview),
-            coordinator: Coordinator(serviceLocator: .preview)
+            router: SearchNavigationRouter(),
+            viewModel: SearchViewModel(serviceLocator: .preview)
         )
     }
 }

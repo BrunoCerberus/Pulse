@@ -1,11 +1,19 @@
 import SwiftUI
 
-struct ForYouView: View {
-    @ObservedObject var viewModel: ForYouViewModel
-    let coordinator: Coordinator
+struct ForYouView<R: ForYouNavigationRouter>: View {
+    /// Router responsible for navigation actions
+    private var router: R
 
-    private var router: ForYouNavigationRouter {
-        ForYouNavigationRouter(coordinator: coordinator)
+    /// Backing ViewModel managing data and actions
+    @ObservedObject var viewModel: ForYouViewModel
+
+    /// Creates the view with a router and ViewModel.
+    /// - Parameters:
+    ///   - router: Navigation router for routing actions
+    ///   - viewModel: ViewModel for managing data and actions
+    init(router: R, viewModel: ForYouViewModel) {
+        self.router = router
+        self.viewModel = viewModel
     }
 
     var body: some View {
@@ -19,7 +27,7 @@ struct ForYouView: View {
             }
             .onChange(of: viewModel.selectedArticle) { _, newValue in
                 if let article = newValue {
-                    router.route(event: .articleDetail(article))
+                    router.route(navigationEvent: .articleDetail(article))
                     viewModel.selectedArticle = nil
                 }
             }
@@ -81,7 +89,7 @@ struct ForYouView: View {
                 .padding(.horizontal)
 
             Button {
-                router.route(event: .settings)
+                router.route(navigationEvent: .settings)
             } label: {
                 Label("Set Preferences", systemImage: "gearshape")
                     .frame(maxWidth: .infinity)
@@ -150,8 +158,8 @@ struct ForYouView: View {
 #Preview {
     NavigationStack {
         ForYouView(
-            viewModel: ForYouViewModel(serviceLocator: .preview),
-            coordinator: Coordinator(serviceLocator: .preview)
+            router: ForYouNavigationRouter(),
+            viewModel: ForYouViewModel(serviceLocator: .preview)
         )
     }
 }

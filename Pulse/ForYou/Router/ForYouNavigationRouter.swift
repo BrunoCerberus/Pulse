@@ -1,4 +1,6 @@
+import EntropyCore
 import Foundation
+import UIKit
 
 /// Navigation events that can be triggered from the For You screen.
 enum ForYouNavigationEvent {
@@ -9,27 +11,40 @@ enum ForYouNavigationEvent {
     case settings
 }
 
-/// Routes For You navigation events to the Coordinator.
+/// Router for For You module navigation.
+///
+/// @MainActor ensures all navigation operations happen on the main thread.
 @MainActor
-final class ForYouNavigationRouter {
-    private weak var coordinator: Coordinator?
+final class ForYouNavigationRouter: NavigationRouter, Equatable {
+    /// Optional UIKit navigation controller (required by NavigationRouter protocol)
+    nonisolated(unsafe) var navigation: UINavigationController?
+
+    /// SwiftUI coordinator for declarative navigation
+    private nonisolated(unsafe) weak var coordinator: Coordinator?
 
     /// Creates a router with a coordinator reference.
     /// - Parameter coordinator: The coordinator to route events through
-    init(coordinator: Coordinator?) {
+    init(coordinator: Coordinator? = nil) {
         self.coordinator = coordinator
     }
 
     /// Routes a navigation event to the appropriate destination.
-    /// - Parameter event: The navigation event to handle
-    func route(event: ForYouNavigationEvent) {
+    /// - Parameter navigationEvent: The navigation event to handle
+    func route(navigationEvent: ForYouNavigationEvent) {
         guard let coordinator else { return }
 
-        switch event {
+        switch navigationEvent {
         case let .articleDetail(article):
             coordinator.push(page: .articleDetail(article))
         case .settings:
             coordinator.push(page: .settings)
         }
+    }
+}
+
+extension ForYouNavigationRouter {
+    /// Compare routers by their underlying coordinator reference
+    nonisolated static func == (lhs: ForYouNavigationRouter, rhs: ForYouNavigationRouter) -> Bool {
+        lhs.coordinator === rhs.coordinator
     }
 }

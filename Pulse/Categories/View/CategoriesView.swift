@@ -1,11 +1,19 @@
 import SwiftUI
 
-struct CategoriesView: View {
-    @ObservedObject var viewModel: CategoriesViewModel
-    let coordinator: Coordinator
+struct CategoriesView<R: CategoriesNavigationRouter>: View {
+    /// Router responsible for navigation actions
+    private var router: R
 
-    private var router: CategoriesNavigationRouter {
-        CategoriesNavigationRouter(coordinator: coordinator)
+    /// Backing ViewModel managing data and actions
+    @ObservedObject var viewModel: CategoriesViewModel
+
+    /// Creates the view with a router and ViewModel.
+    /// - Parameters:
+    ///   - router: Navigation router for routing actions
+    ///   - viewModel: ViewModel for managing data and actions
+    init(router: R, viewModel: CategoriesViewModel) {
+        self.router = router
+        self.viewModel = viewModel
     }
 
     var body: some View {
@@ -20,7 +28,7 @@ struct CategoriesView: View {
         .navigationTitle("Categories")
         .onChange(of: viewModel.selectedArticle) { _, newValue in
             if let article = newValue {
-                router.route(event: .articleDetail(article))
+                router.route(navigationEvent: .articleDetail(article))
                 viewModel.selectedArticle = nil
             }
         }
@@ -123,8 +131,8 @@ struct CategoryCard: View {
 #Preview {
     NavigationStack {
         CategoriesView(
-            viewModel: CategoriesViewModel(serviceLocator: .preview),
-            coordinator: Coordinator(serviceLocator: .preview)
+            router: CategoriesNavigationRouter(),
+            viewModel: CategoriesViewModel(serviceLocator: .preview)
         )
     }
 }

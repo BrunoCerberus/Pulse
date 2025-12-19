@@ -1,11 +1,19 @@
 import SwiftUI
 
-struct HomeView: View {
-    @ObservedObject var viewModel: HomeViewModel
-    let coordinator: Coordinator
+struct HomeView<R: HomeNavigationRouter>: View {
+    /// Router responsible for navigation actions
+    private var router: R
 
-    private var router: HomeNavigationRouter {
-        HomeNavigationRouter(coordinator: coordinator)
+    /// Backing ViewModel managing data and actions
+    @ObservedObject var viewModel: HomeViewModel
+
+    /// Creates the view with a router and ViewModel.
+    /// - Parameters:
+    ///   - router: Navigation router for routing actions
+    ///   - viewModel: ViewModel for managing data and actions
+    init(router: R, viewModel: HomeViewModel) {
+        self.router = router
+        self.viewModel = viewModel
     }
 
     var body: some View {
@@ -14,7 +22,7 @@ struct HomeView: View {
             .toolbar {
                 ToolbarItem(placement: .topBarTrailing) {
                     Button {
-                        router.route(event: .settings)
+                        router.route(navigationEvent: .settings)
                     } label: {
                         Image(systemName: "gearshape")
                     }
@@ -31,7 +39,7 @@ struct HomeView: View {
             }
             .onChange(of: viewModel.selectedArticle) { _, newValue in
                 if let article = newValue {
-                    router.route(event: .articleDetail(article))
+                    router.route(navigationEvent: .articleDetail(article))
                     viewModel.selectedArticle = nil
                 }
             }
@@ -153,8 +161,8 @@ struct HomeView: View {
 #Preview {
     NavigationStack {
         HomeView(
-            viewModel: HomeViewModel(serviceLocator: .preview),
-            coordinator: Coordinator(serviceLocator: .preview)
+            router: HomeNavigationRouter(),
+            viewModel: HomeViewModel(serviceLocator: .preview)
         )
     }
 }

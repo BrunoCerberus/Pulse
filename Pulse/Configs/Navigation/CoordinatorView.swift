@@ -19,46 +19,61 @@ struct CoordinatorView: View {
         TabView(selection: $coordinator.selectedTab) {
             Tab("Home", systemImage: "newspaper", value: .home) {
                 NavigationStack(path: $coordinator.homePath) {
-                    HomeView(viewModel: coordinator.homeViewModel, coordinator: coordinator)
-                        .navigationDestination(for: Page.self) { page in
-                            coordinator.build(page: page)
-                        }
+                    HomeView(
+                        router: HomeNavigationRouter(coordinator: coordinator),
+                        viewModel: coordinator.homeViewModel
+                    )
+                    .navigationDestination(for: Page.self) { page in
+                        coordinator.build(page: page)
+                    }
                 }
             }
 
             Tab("For You", systemImage: "heart.text.square", value: .forYou) {
                 NavigationStack(path: $coordinator.forYouPath) {
-                    ForYouView(viewModel: coordinator.forYouViewModel, coordinator: coordinator)
-                        .navigationDestination(for: Page.self) { page in
-                            coordinator.build(page: page)
-                        }
+                    ForYouView(
+                        router: ForYouNavigationRouter(coordinator: coordinator),
+                        viewModel: coordinator.forYouViewModel
+                    )
+                    .navigationDestination(for: Page.self) { page in
+                        coordinator.build(page: page)
+                    }
                 }
             }
 
             Tab("Categories", systemImage: "square.grid.2x2", value: .categories) {
                 NavigationStack(path: $coordinator.categoriesPath) {
-                    CategoriesView(viewModel: coordinator.categoriesViewModel, coordinator: coordinator)
-                        .navigationDestination(for: Page.self) { page in
-                            coordinator.build(page: page)
-                        }
+                    CategoriesView(
+                        router: CategoriesNavigationRouter(coordinator: coordinator),
+                        viewModel: coordinator.categoriesViewModel
+                    )
+                    .navigationDestination(for: Page.self) { page in
+                        coordinator.build(page: page)
+                    }
                 }
             }
 
             Tab("Bookmarks", systemImage: "bookmark", value: .bookmarks) {
                 NavigationStack(path: $coordinator.bookmarksPath) {
-                    BookmarksView(viewModel: coordinator.bookmarksViewModel, coordinator: coordinator)
-                        .navigationDestination(for: Page.self) { page in
-                            coordinator.build(page: page)
-                        }
+                    BookmarksView(
+                        router: BookmarksNavigationRouter(coordinator: coordinator),
+                        viewModel: coordinator.bookmarksViewModel
+                    )
+                    .navigationDestination(for: Page.self) { page in
+                        coordinator.build(page: page)
+                    }
                 }
             }
 
             Tab("Search", systemImage: "magnifyingglass", value: .search, role: .search) {
                 NavigationStack(path: $coordinator.searchPath) {
-                    SearchView(viewModel: coordinator.searchViewModel, coordinator: coordinator)
-                        .navigationDestination(for: Page.self) { page in
-                            coordinator.build(page: page)
-                        }
+                    SearchView(
+                        router: SearchNavigationRouter(coordinator: coordinator),
+                        viewModel: coordinator.searchViewModel
+                    )
+                    .navigationDestination(for: Page.self) { page in
+                        coordinator.build(page: page)
+                    }
                 }
             }
         }

@@ -1,11 +1,19 @@
 import SwiftUI
 
-struct BookmarksView: View {
-    @ObservedObject var viewModel: BookmarksViewModel
-    let coordinator: Coordinator
+struct BookmarksView<R: BookmarksNavigationRouter>: View {
+    /// Router responsible for navigation actions
+    private var router: R
 
-    private var router: BookmarksNavigationRouter {
-        BookmarksNavigationRouter(coordinator: coordinator)
+    /// Backing ViewModel managing data and actions
+    @ObservedObject var viewModel: BookmarksViewModel
+
+    /// Creates the view with a router and ViewModel.
+    /// - Parameters:
+    ///   - router: Navigation router for routing actions
+    ///   - viewModel: ViewModel for managing data and actions
+    init(router: R, viewModel: BookmarksViewModel) {
+        self.router = router
+        self.viewModel = viewModel
     }
 
     var body: some View {
@@ -19,7 +27,7 @@ struct BookmarksView: View {
             }
             .onChange(of: viewModel.selectedArticle) { _, newValue in
                 if let article = newValue {
-                    router.route(event: .articleDetail(article))
+                    router.route(navigationEvent: .articleDetail(article))
                     viewModel.selectedArticle = nil
                 }
             }
@@ -84,8 +92,8 @@ struct BookmarksView: View {
 #Preview {
     NavigationStack {
         BookmarksView(
-            viewModel: BookmarksViewModel(serviceLocator: .preview),
-            coordinator: Coordinator(serviceLocator: .preview)
+            router: BookmarksNavigationRouter(),
+            viewModel: BookmarksViewModel(serviceLocator: .preview)
         )
     }
 }
