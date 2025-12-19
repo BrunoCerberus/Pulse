@@ -1,35 +1,36 @@
 import SwiftUI
 
-struct BookmarksView: View {
-    @StateObject private var viewModel: BookmarksViewModel
-    @State private var showArticleDetail = false
+struct BookmarksView<R: BookmarksNavigationRouter>: View {
+    /// Router responsible for navigation actions
+    private var router: R
 
-    private let serviceLocator: ServiceLocator
+    /// Backing ViewModel managing data and actions
+    @ObservedObject var viewModel: BookmarksViewModel
 
-    init(serviceLocator: ServiceLocator) {
-        self.serviceLocator = serviceLocator
-        _viewModel = StateObject(wrappedValue: BookmarksViewModel(serviceLocator: serviceLocator))
+    /// Creates the view with a router and ViewModel.
+    /// - Parameters:
+    ///   - router: Navigation router for routing actions
+    ///   - viewModel: ViewModel for managing data and actions
+    init(router: R, viewModel: BookmarksViewModel) {
+        self.router = router
+        self.viewModel = viewModel
     }
 
     var body: some View {
-        NavigationStack {
-            content
-                .navigationTitle("Bookmarks")
-                .navigationDestination(isPresented: $showArticleDetail) {
-                    if let article = viewModel.selectedArticle {
-                        ArticleDetailView(article: article, serviceLocator: serviceLocator)
-                    }
+        content
+            .navigationTitle("Bookmarks")
+            .refreshable {
+                viewModel.handle(event: .onRefresh)
+            }
+            .onAppear {
+                viewModel.handle(event: .onAppear)
+            }
+            .onChange(of: viewModel.selectedArticle) { _, newValue in
+                if let article = newValue {
+                    router.route(navigationEvent: .articleDetail(article))
+                    viewModel.selectedArticle = nil
                 }
-                .refreshable {
-                    viewModel.handle(event: .onRefresh)
-                }
-        }
-        .onAppear {
-            viewModel.handle(event: .onAppear)
-        }
-        .onChange(of: viewModel.selectedArticle) { _, newValue in
-            showArticleDetail = newValue != nil
-        }
+            }
     }
 
     @ViewBuilder
@@ -89,11 +90,10 @@ struct BookmarksView: View {
 }
 
 #Preview {
-    BookmarksView(serviceLocator: .preview)
-}
-
-enum BookmarksCoordinator {
-    static func start(serviceLocator: ServiceLocator) -> some View {
-        BookmarksView(serviceLocator: serviceLocator)
+    NavigationStack {
+        BookmarksView(
+            router: BookmarksNavigationRouter(),
+            viewModel: BookmarksViewModel(serviceLocator: .preview)
+        )
     }
 }

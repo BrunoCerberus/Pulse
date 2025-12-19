@@ -1,35 +1,36 @@
 import SwiftUI
 
-struct ForYouView: View {
-    @StateObject private var viewModel: ForYouViewModel
-    @State private var showArticleDetail = false
+struct ForYouView<R: ForYouNavigationRouter>: View {
+    /// Router responsible for navigation actions
+    private var router: R
 
-    private let serviceLocator: ServiceLocator
+    /// Backing ViewModel managing data and actions
+    @ObservedObject var viewModel: ForYouViewModel
 
-    init(serviceLocator: ServiceLocator) {
-        self.serviceLocator = serviceLocator
-        _viewModel = StateObject(wrappedValue: ForYouViewModel(serviceLocator: serviceLocator))
+    /// Creates the view with a router and ViewModel.
+    /// - Parameters:
+    ///   - router: Navigation router for routing actions
+    ///   - viewModel: ViewModel for managing data and actions
+    init(router: R, viewModel: ForYouViewModel) {
+        self.router = router
+        self.viewModel = viewModel
     }
 
     var body: some View {
-        NavigationStack {
-            content
-                .navigationTitle("For You")
-                .navigationDestination(isPresented: $showArticleDetail) {
-                    if let article = viewModel.selectedArticle {
-                        ArticleDetailView(article: article, serviceLocator: serviceLocator)
-                    }
+        content
+            .navigationTitle("For You")
+            .refreshable {
+                viewModel.handle(event: .onRefresh)
+            }
+            .onAppear {
+                viewModel.handle(event: .onAppear)
+            }
+            .onChange(of: viewModel.selectedArticle) { _, newValue in
+                if let article = newValue {
+                    router.route(navigationEvent: .articleDetail(article))
+                    viewModel.selectedArticle = nil
                 }
-                .refreshable {
-                    viewModel.handle(event: .onRefresh)
-                }
-        }
-        .onAppear {
-            viewModel.handle(event: .onAppear)
-        }
-        .onChange(of: viewModel.selectedArticle) { _, newValue in
-            showArticleDetail = newValue != nil
-        }
+            }
     }
 
     @ViewBuilder
@@ -87,8 +88,8 @@ struct ForYouView: View {
                 .multilineTextAlignment(.center)
                 .padding(.horizontal)
 
-            NavigationLink {
-                SettingsView(serviceLocator: serviceLocator)
+            Button {
+                router.route(navigationEvent: .settings)
             } label: {
                 Label("Set Preferences", systemImage: "gearshape")
                     .frame(maxWidth: .infinity)
@@ -155,11 +156,10 @@ struct ForYouView: View {
 }
 
 #Preview {
-    ForYouView(serviceLocator: .preview)
-}
-
-enum ForYouCoordinator {
-    static func start(serviceLocator: ServiceLocator) -> some View {
-        ForYouView(serviceLocator: serviceLocator)
+    NavigationStack {
+        ForYouView(
+            router: ForYouNavigationRouter(),
+            viewModel: ForYouViewModel(serviceLocator: .preview)
+        )
     }
 }

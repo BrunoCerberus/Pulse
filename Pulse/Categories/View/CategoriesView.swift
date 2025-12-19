@@ -1,35 +1,36 @@
 import SwiftUI
 
-struct CategoriesView: View {
-    @StateObject private var viewModel: CategoriesViewModel
-    @State private var showArticleDetail = false
+struct CategoriesView<R: CategoriesNavigationRouter>: View {
+    /// Router responsible for navigation actions
+    private var router: R
 
-    private let serviceLocator: ServiceLocator
+    /// Backing ViewModel managing data and actions
+    @ObservedObject var viewModel: CategoriesViewModel
 
-    init(serviceLocator: ServiceLocator) {
-        self.serviceLocator = serviceLocator
-        _viewModel = StateObject(wrappedValue: CategoriesViewModel(serviceLocator: serviceLocator))
+    /// Creates the view with a router and ViewModel.
+    /// - Parameters:
+    ///   - router: Navigation router for routing actions
+    ///   - viewModel: ViewModel for managing data and actions
+    init(router: R, viewModel: CategoriesViewModel) {
+        self.router = router
+        self.viewModel = viewModel
     }
 
     var body: some View {
-        NavigationStack {
-            VStack(spacing: 0) {
-                categoriesGrid
-                    .padding()
+        VStack(spacing: 0) {
+            categoriesGrid
+                .padding()
 
-                Divider()
+            Divider()
 
-                articlesList
-            }
-            .navigationTitle("Categories")
-            .navigationDestination(isPresented: $showArticleDetail) {
-                if let article = viewModel.selectedArticle {
-                    ArticleDetailView(article: article, serviceLocator: serviceLocator)
-                }
-            }
+            articlesList
         }
+        .navigationTitle("Categories")
         .onChange(of: viewModel.selectedArticle) { _, newValue in
-            showArticleDetail = newValue != nil
+            if let article = newValue {
+                router.route(navigationEvent: .articleDetail(article))
+                viewModel.selectedArticle = nil
+            }
         }
     }
 
@@ -128,7 +129,12 @@ struct CategoryCard: View {
 }
 
 #Preview {
-    CategoriesView(serviceLocator: .preview)
+    NavigationStack {
+        CategoriesView(
+            router: CategoriesNavigationRouter(),
+            viewModel: CategoriesViewModel(serviceLocator: .preview)
+        )
+    }
 }
 
 #Preview("CategoryCard") {
@@ -137,10 +143,4 @@ struct CategoryCard: View {
 
 #Preview("CategoryCard Selected") {
     CategoryCard(category: .technology, isSelected: true) {}
-}
-
-enum CategoriesCoordinator {
-    static func start(serviceLocator: ServiceLocator) -> some View {
-        CategoriesView(serviceLocator: serviceLocator)
-    }
 }

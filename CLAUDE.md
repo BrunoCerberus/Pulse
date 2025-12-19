@@ -57,6 +57,55 @@ Network Layer (EntropyCore)
 3. **ViewStateReducing**: Transforms DomainState to ViewState
 4. **DomainEventActionMap**: Maps ViewEvents to DomainActions
 
+5. **Coordinator + Router Navigation**: Centralized navigation with per-tab paths
+
+   ```
+   CoordinatorView (@StateObject Coordinator)
+          │
+      TabView (selection: $coordinator.selectedTab)
+          │
+      ┌───┴───┬───────┬─────────┬─────────┐
+    Home   ForYou  Categories Bookmarks Search
+      │       │        │          │        │
+   NavigationStack(path: $coordinator.homePath)
+          │
+   .navigationDestination(for: Page.self)
+          │
+   coordinator.build(page:)
+   ```
+
+   ```swift
+   // Coordinator manages all navigation paths
+   @MainActor
+   final class Coordinator: ObservableObject {
+       @Published var selectedTab: AppTab = .home
+       @Published var homePath = NavigationPath()
+       // ... other tab paths
+
+       func push(page: Page, in tab: AppTab? = nil) { ... }
+       func pop() { ... }
+       func popToRoot(in tab: AppTab? = nil) { ... }
+   }
+
+   // Views are generic over router type
+   struct HomeView<R: HomeNavigationRouter>: View {
+       private var router: R
+       @ObservedObject var viewModel: HomeViewModel
+   }
+
+   // Routers conform to NavigationRouter from EntropyCore
+   @MainActor
+   final class HomeNavigationRouter: NavigationRouter {
+       func route(navigationEvent: HomeNavigationEvent) { ... }
+   }
+   ```
+
+   **Key Benefits:**
+   - **Isolated Tab Navigation**: Each tab has its own NavigationPath
+   - **Type-Safe Routes**: Page enum defines all destinations
+   - **Testable Views**: Generic router type allows mock injection
+   - **Deeplink Support**: DeeplinkRouter coordinates with Coordinator
+
 ## Project Structure
 
 ```
@@ -65,9 +114,10 @@ Pulse/
 │   ├── API/                 # NewsAPI, NewsService
 │   ├── Domain/              # Interactor, State, Action, Reducers
 │   ├── ViewModel/           # HomeViewModel
-│   ├── View/                # SwiftUI views
+│   ├── View/                # SwiftUI views (generic over Router)
 │   ├── ViewEvents/          # HomeViewEvent
-│   └── ViewStates/          # HomeViewState
+│   ├── ViewStates/          # HomeViewState
+│   └── Router/              # HomeNavigationRouter
 ├── Search/                  # Search feature
 ├── Bookmarks/               # Offline reading
 ├── Categories/              # Category browsing
@@ -75,6 +125,7 @@ Pulse/
 ├── Settings/                # User preferences
 ├── ArticleDetail/           # Article view
 ├── Configs/
+│   ├── Navigation/          # Coordinator, Page, CoordinatorView, DeeplinkRouter
 │   ├── Storage/             # SwiftData persistence
 │   ├── Networking/          # API keys, base URLs
 │   ├── Extensions/          # Protocols
@@ -173,6 +224,11 @@ final class LiveNewsService: APIRequest, NewsService {
 
 | File | Purpose |
 |------|---------|
+| `Coordinator.swift` | Central navigation manager with per-tab paths |
+| `CoordinatorView.swift` | Root TabView with NavigationStacks |
+| `Page.swift` | Enum of all navigable destinations |
+| `DeeplinkRouter.swift` | Routes deeplinks to coordinator |
+| `*NavigationRouter.swift` | Feature-specific navigation routers |
 | `ServiceLocator.swift` | Dependency injection container |
 | `DeeplinkManager.swift` | URL scheme handling |
 | `ThemeManager.swift` | Dark/light mode management |

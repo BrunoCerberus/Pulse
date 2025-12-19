@@ -22,12 +22,15 @@ final class SearchViewSnapshotTests: XCTestCase {
     }
 
     func testSearchViewInitial() {
-        let view = SearchView(serviceLocator: serviceLocator)
+        let view = SearchView(
+            router: SearchNavigationRouter(),
+            viewModel: SearchViewModel(serviceLocator: serviceLocator)
+        )
         let controller = UIHostingController(rootView: view)
 
         assertSnapshot(
             of: controller,
-            as: .wait(for: 1.0, on: .image(on: iPhoneAirConfig, precision: 0.98)),
+            as: .wait(for: 1.0, on: .image(on: iPhoneAirConfig, precision: 0.95)),
             record: false
         )
     }

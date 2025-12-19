@@ -1,39 +1,51 @@
 import SwiftUI
 
-struct SearchView: View {
-    @StateObject private var viewModel: SearchViewModel
-    @State private var showArticleDetail = false
+struct SearchView<R: SearchNavigationRouter>: View {
+    /// Router responsible for navigation actions
+    private var router: R
 
-    private let serviceLocator: ServiceLocator
+    /// Backing ViewModel managing data and actions
+    @ObservedObject var viewModel: SearchViewModel
 
-    init(serviceLocator: ServiceLocator) {
-        self.serviceLocator = serviceLocator
-        _viewModel = StateObject(wrappedValue: SearchViewModel(serviceLocator: serviceLocator))
+    /// Initial query for deeplink support
+    var initialQuery: String?
+
+    /// Creates the view with a router and ViewModel.
+    /// - Parameters:
+    ///   - router: Navigation router for routing actions
+    ///   - viewModel: ViewModel for managing data and actions
+    ///   - initialQuery: Optional initial query for deeplinks
+    init(router: R, viewModel: SearchViewModel, initialQuery: String? = nil) {
+        self.router = router
+        self.viewModel = viewModel
+        self.initialQuery = initialQuery
     }
 
     var body: some View {
-        NavigationStack {
-            content
-                .navigationTitle("Search")
-                .searchable(
-                    text: Binding(
-                        get: { viewModel.viewState.query },
-                        set: { viewModel.handle(event: .onQueryChanged($0)) }
-                    ),
-                    prompt: "Search news..."
-                )
-                .onSubmit(of: .search) {
+        content
+            .navigationTitle("Search")
+            .searchable(
+                text: Binding(
+                    get: { viewModel.viewState.query },
+                    set: { viewModel.handle(event: .onQueryChanged($0)) }
+                ),
+                prompt: "Search news..."
+            )
+            .onSubmit(of: .search) {
+                viewModel.handle(event: .onSearch)
+            }
+            .onAppear {
+                if let query = initialQuery, !query.isEmpty {
+                    viewModel.handle(event: .onQueryChanged(query))
                     viewModel.handle(event: .onSearch)
                 }
-                .navigationDestination(isPresented: $showArticleDetail) {
-                    if let article = viewModel.selectedArticle {
-                        ArticleDetailView(article: article, serviceLocator: serviceLocator)
-                    }
+            }
+            .onChange(of: viewModel.selectedArticle) { _, newValue in
+                if let article = newValue {
+                    router.route(navigationEvent: .articleDetail(article))
+                    viewModel.selectedArticle = nil
                 }
-        }
-        .onChange(of: viewModel.selectedArticle) { _, newValue in
-            showArticleDetail = newValue != nil
-        }
+            }
     }
 
     @ViewBuilder
@@ -158,11 +170,10 @@ struct SearchView: View {
 }
 
 #Preview {
-    SearchView(serviceLocator: .preview)
-}
-
-enum SearchCoordinator {
-    static func start(serviceLocator: ServiceLocator) -> some View {
-        SearchView(serviceLocator: serviceLocator)
+    NavigationStack {
+        SearchView(
+            router: SearchNavigationRouter(),
+            viewModel: SearchViewModel(serviceLocator: .preview)
+        )
     }
 }
