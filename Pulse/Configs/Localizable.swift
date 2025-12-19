@@ -30,7 +30,11 @@ struct Localizable {
         private init() {}
 
         /// "Loading..." loading state message
-        static let loading = NSLocalizedString("paywall.loading", value: "Loading...", comment: "Loading paywall message")
+        static let loading = NSLocalizedString(
+            "paywall.loading",
+            value: "Loading...",
+            comment: "Loading paywall message"
+        )
 
         /// "Unlock Premium" title
         static let title = NSLocalizedString("paywall.title", value: "Unlock Premium", comment: "Paywall title")
@@ -98,7 +102,11 @@ struct Localizable {
         )
 
         /// "Go Premium" settings entry point title
-        static let goPremium = NSLocalizedString("paywall.go_premium", value: "Go Premium", comment: "Go premium button")
+        static let goPremium = NSLocalizedString(
+            "paywall.go_premium",
+            value: "Go Premium",
+            comment: "Go premium button"
+        )
 
         /// "Unlock all features" settings entry point description
         static let unlockFeatures = NSLocalizedString(

@@ -77,9 +77,8 @@ final class DeeplinkRouter {
             coordinator.push(page: .settings)
 
         case let .article(id):
-            // For article deeplinks, we would need to fetch the article by ID
-            // For now, just switch to home tab
-            // TODO: Implement article fetching by ID when needed
+            // Article deeplinks require fetching by ID from the API.
+            // Currently switches to home tab as article lookup is not yet implemented.
             coordinator.switchTab(to: .home, popToRoot: true)
             debugPrint("DeeplinkRouter: Article deeplink received with ID: \(id)")
 

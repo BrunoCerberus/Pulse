@@ -24,6 +24,7 @@ final class SettingsViewModel: CombineViewModel, ObservableObject {
         setupBindings()
     }
 
+    // swiftlint:disable:next cyclomatic_complexity
     func handle(event: SettingsViewEvent) {
         switch event {
         case .onAppear:
@@ -39,15 +40,11 @@ final class SettingsViewModel: CombineViewModel, ObservableObject {
         case let .onToggleSystemTheme(enabled):
             themeManager.useSystemTheme = enabled
         case .onAddMutedSource:
-            guard !newMutedSource.isEmpty else { return }
-            interactor.dispatch(action: .addMutedSource(newMutedSource))
-            newMutedSource = ""
+            handleAddMutedSource()
         case let .onRemoveMutedSource(source):
             interactor.dispatch(action: .removeMutedSource(source))
         case .onAddMutedKeyword:
-            guard !newMutedKeyword.isEmpty else { return }
-            interactor.dispatch(action: .addMutedKeyword(newMutedKeyword))
-            newMutedKeyword = ""
+            handleAddMutedKeyword()
         case let .onRemoveMutedKeyword(keyword):
             interactor.dispatch(action: .removeMutedKeyword(keyword))
         case .onClearReadingHistory:
@@ -57,6 +54,18 @@ final class SettingsViewModel: CombineViewModel, ObservableObject {
         case .onCancelClearHistory:
             interactor.dispatch(action: .setShowClearHistoryConfirmation(false))
         }
+    }
+
+    private func handleAddMutedSource() {
+        guard !newMutedSource.isEmpty else { return }
+        interactor.dispatch(action: .addMutedSource(newMutedSource))
+        newMutedSource = ""
+    }
+
+    private func handleAddMutedKeyword() {
+        guard !newMutedKeyword.isEmpty else { return }
+        interactor.dispatch(action: .addMutedKeyword(newMutedKeyword))
+        newMutedKeyword = ""
     }
 
     private func setupBindings() {
