@@ -38,7 +38,10 @@ final class HomeViewSnapshotTests: XCTestCase {
     }
 
     func testHomeViewLoading() {
-        let view = HomeView(serviceLocator: serviceLocator)
+        let view = HomeView(
+            router: HomeNavigationRouter(),
+            viewModel: HomeViewModel(serviceLocator: serviceLocator)
+        )
         let controller = UIHostingController(rootView: view)
 
         assertSnapshot(

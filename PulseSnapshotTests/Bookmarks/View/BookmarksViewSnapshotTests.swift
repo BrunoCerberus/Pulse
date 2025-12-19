@@ -22,7 +22,10 @@ final class BookmarksViewSnapshotTests: XCTestCase {
     }
 
     func testBookmarksViewEmpty() {
-        let view = BookmarksView(serviceLocator: serviceLocator)
+        let view = BookmarksView(
+            router: BookmarksNavigationRouter(),
+            viewModel: BookmarksViewModel(serviceLocator: serviceLocator)
+        )
         let controller = UIHostingController(rootView: view)
 
         assertSnapshot(
