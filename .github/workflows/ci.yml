@@ -293,6 +293,14 @@ jobs:
         path: test-results/${{ matrix.artifact-name }}.xcresult
         if-no-files-found: warn
 
+    - name: Upload recorded snapshots
+      uses: actions/upload-artifact@v4
+      if: always() && matrix.test-target == 'PulseSnapshotTests'
+      with:
+        name: recorded-snapshots
+        path: PulseSnapshotTests/**/__Snapshots__/**/*.png
+        if-no-files-found: ignore
+
   test-results:
     name: Test Results Summary
     runs-on: macos-latest
