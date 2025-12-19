@@ -13,10 +13,13 @@ Pulse/
 │   │   ├── API/                # Service layer
 │   │   ├── Domain/             # Business logic
 │   │   ├── ViewModel/          # Presentation
-│   │   ├── View/               # SwiftUI
+│   │   ├── View/               # SwiftUI views (generic over Router)
 │   │   ├── ViewEvents/         # Event definitions
-│   │   └── ViewStates/         # State definitions
-│   └── Configs/                # Shared infrastructure
+│   │   ├── ViewStates/         # State definitions
+│   │   └── Router/             # Navigation routers (NavigationRouter protocol)
+│   └── Configs/
+│       ├── Navigation/         # Coordinator, Page, CoordinatorView, DeeplinkRouter
+│       └── ...                 # Other shared infrastructure
 ├── PulseTests/                 # Unit tests (Swift Testing)
 ├── PulseUITests/               # UI tests (XCTest)
 ├── PulseSnapshotTests/         # Snapshot tests
@@ -124,6 +127,67 @@ struct FeatureViewModelTests {
 2. **ViewModels never directly access APIs** - always through Interactors
 3. **Domain layer is UI-agnostic** - no SwiftUI imports
 4. **All dependencies injected via ServiceLocator**
+
+## Navigation Architecture
+
+Pulse uses a **Coordinator + Router** pattern with per-tab NavigationPaths:
+
+```
+CoordinatorView (@StateObject Coordinator)
+       │
+   TabView (selection: $coordinator.selectedTab)
+       │
+   ┌───┴───┬───────┬─────────┬─────────┐
+ Home   ForYou  Categories Bookmarks Search
+   │       │        │          │        │
+NavigationStack(path: $coordinator.homePath)
+       │
+.navigationDestination(for: Page.self)
+       │
+coordinator.build(page:)
+```
+
+### Key Components
+
+| Component | Purpose |
+|-----------|---------|
+| `Page` | Enum of all navigable destinations |
+| `Coordinator` | Central navigation manager with per-tab paths |
+| `CoordinatorView` | Root view hosting TabView + NavigationStacks |
+| `DeeplinkRouter` | Routes deeplinks to coordinator actions |
+| `*NavigationRouter` | Feature-specific routers conforming to `NavigationRouter` |
+
+### View Pattern
+Views are generic over their router type for testability:
+```swift
+struct HomeView<R: HomeNavigationRouter>: View {
+    private var router: R
+    @ObservedObject var viewModel: HomeViewModel
+
+    init(router: R, viewModel: HomeViewModel) {
+        self.router = router
+        self.viewModel = viewModel
+    }
+}
+```
+
+### Router Pattern
+Routers conform to `NavigationRouter` from EntropyCore:
+```swift
+@MainActor
+final class HomeNavigationRouter: NavigationRouter {
+    private weak var coordinator: Coordinator?
+
+    func route(navigationEvent: HomeNavigationEvent) {
+        switch navigationEvent {
+        case .articleDetail(let article):
+            coordinator?.push(page: .articleDetail(article))
+        case .settings:
+            coordinator?.push(page: .settings)
+        }
+    }
+}
+```
 
 ## Data Flow
 

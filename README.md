@@ -44,6 +44,18 @@ Pulse follows **Clean Architecture** with **MVVM** presentation layer:
 └─────────────────────────────────────────────────────────────┘
 ```
 
+### Navigation
+
+The app uses a **Coordinator + Router** pattern with per-tab NavigationPaths:
+
+- **Coordinator**: Central navigation manager owning all tab paths
+- **CoordinatorView**: Root TabView with NavigationStacks per tab
+- **Page**: Type-safe enum of all navigable destinations
+- **NavigationRouter**: Feature-specific routers (conforming to EntropyCore protocol)
+- **DeeplinkRouter**: Routes URL schemes through the Coordinator
+
+Views are generic over their router type (`HomeView<R: HomeNavigationRouter>`) for testability.
+
 ## Requirements
 
 - Xcode 26.0.1+
@@ -100,14 +112,16 @@ export GNEWS_API_KEY="your_gnews_key"
 ```
 Pulse/
 ├── Pulse/
-│   ├── Home/           # Home feed feature
+│   ├── Home/           # Home feed feature (includes Router/)
 │   ├── ForYou/         # Personalized feed
 │   ├── Categories/     # Category browsing
 │   ├── Search/         # Search functionality
 │   ├── Bookmarks/      # Saved articles
 │   ├── Settings/       # User preferences
 │   ├── ArticleDetail/  # Article view
-│   ├── Configs/        # Infrastructure
+│   ├── Configs/
+│   │   ├── Navigation/ # Coordinator, Page, CoordinatorView, DeeplinkRouter
+│   │   └── ...         # Other infrastructure
 │   └── SplashScreen/   # Launch screen
 ├── PulseTests/         # Unit tests
 ├── PulseUITests/       # UI tests
