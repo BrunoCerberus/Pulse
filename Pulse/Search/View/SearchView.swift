@@ -1,39 +1,39 @@
 import SwiftUI
 
 struct SearchView: View {
-    @StateObject private var viewModel: SearchViewModel
-    @State private var showArticleDetail = false
+    @ObservedObject var viewModel: SearchViewModel
+    let coordinator: Coordinator
+    var initialQuery: String?
 
-    private let serviceLocator: ServiceLocator
-
-    init(serviceLocator: ServiceLocator) {
-        self.serviceLocator = serviceLocator
-        _viewModel = StateObject(wrappedValue: SearchViewModel(serviceLocator: serviceLocator))
+    private var router: SearchNavigationRouter {
+        SearchNavigationRouter(coordinator: coordinator)
     }
 
     var body: some View {
-        NavigationStack {
-            content
-                .navigationTitle("Search")
-                .searchable(
-                    text: Binding(
-                        get: { viewModel.viewState.query },
-                        set: { viewModel.handle(event: .onQueryChanged($0)) }
-                    ),
-                    prompt: "Search news..."
-                )
-                .onSubmit(of: .search) {
+        content
+            .navigationTitle("Search")
+            .searchable(
+                text: Binding(
+                    get: { viewModel.viewState.query },
+                    set: { viewModel.handle(event: .onQueryChanged($0)) }
+                ),
+                prompt: "Search news..."
+            )
+            .onSubmit(of: .search) {
+                viewModel.handle(event: .onSearch)
+            }
+            .onAppear {
+                if let query = initialQuery, !query.isEmpty {
+                    viewModel.handle(event: .onQueryChanged(query))
                     viewModel.handle(event: .onSearch)
                 }
-                .navigationDestination(isPresented: $showArticleDetail) {
-                    if let article = viewModel.selectedArticle {
-                        ArticleDetailView(article: article, serviceLocator: serviceLocator)
-                    }
+            }
+            .onChange(of: viewModel.selectedArticle) { _, newValue in
+                if let article = newValue {
+                    router.route(event: .articleDetail(article))
+                    viewModel.selectedArticle = nil
                 }
-        }
-        .onChange(of: viewModel.selectedArticle) { _, newValue in
-            showArticleDetail = newValue != nil
-        }
+            }
     }
 
     @ViewBuilder
@@ -158,11 +158,10 @@ struct SearchView: View {
 }
 
 #Preview {
-    SearchView(serviceLocator: .preview)
-}
-
-enum SearchCoordinator {
-    static func start(serviceLocator: ServiceLocator) -> some View {
-        SearchView(serviceLocator: serviceLocator)
+    NavigationStack {
+        SearchView(
+            viewModel: SearchViewModel(serviceLocator: .preview),
+            coordinator: Coordinator(serviceLocator: .preview)
+        )
     }
 }

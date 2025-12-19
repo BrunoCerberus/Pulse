@@ -1,51 +1,40 @@
 import SwiftUI
 
 struct HomeView: View {
-    @StateObject private var viewModel: HomeViewModel
-    @State private var showArticleDetail = false
-    @State private var showSettings = false
+    @ObservedObject var viewModel: HomeViewModel
+    let coordinator: Coordinator
 
-    private let serviceLocator: ServiceLocator
-
-    init(serviceLocator: ServiceLocator) {
-        self.serviceLocator = serviceLocator
-        _viewModel = StateObject(wrappedValue: HomeViewModel(serviceLocator: serviceLocator))
+    private var router: HomeNavigationRouter {
+        HomeNavigationRouter(coordinator: coordinator)
     }
 
     var body: some View {
-        NavigationStack {
-            content
-                .navigationTitle("Pulse")
-                .toolbar {
-                    ToolbarItem(placement: .topBarTrailing) {
-                        Button {
-                            showSettings = true
-                        } label: {
-                            Image(systemName: "gearshape")
-                        }
+        content
+            .navigationTitle("Pulse")
+            .toolbar {
+                ToolbarItem(placement: .topBarTrailing) {
+                    Button {
+                        router.route(event: .settings)
+                    } label: {
+                        Image(systemName: "gearshape")
                     }
                 }
-                .navigationDestination(isPresented: $showArticleDetail) {
-                    if let article = viewModel.selectedArticle {
-                        ArticleDetailView(article: article, serviceLocator: serviceLocator)
-                    }
+            }
+            .refreshable {
+                viewModel.handle(event: .onRefresh)
+            }
+            .sheet(item: $viewModel.shareArticle) { article in
+                ShareSheet(activityItems: [URL(string: article.url) ?? article.title])
+            }
+            .onAppear {
+                viewModel.handle(event: .onAppear)
+            }
+            .onChange(of: viewModel.selectedArticle) { _, newValue in
+                if let article = newValue {
+                    router.route(event: .articleDetail(article))
+                    viewModel.selectedArticle = nil
                 }
-                .navigationDestination(isPresented: $showSettings) {
-                    SettingsView(serviceLocator: serviceLocator)
-                }
-                .refreshable {
-                    viewModel.handle(event: .onRefresh)
-                }
-                .sheet(item: $viewModel.shareArticle) { article in
-                    ShareSheet(activityItems: [URL(string: article.url) ?? article.title])
-                }
-        }
-        .onAppear {
-            viewModel.handle(event: .onAppear)
-        }
-        .onChange(of: viewModel.selectedArticle) { _, newValue in
-            showArticleDetail = newValue != nil
-        }
+            }
     }
 
     // MARK: - Content Views
@@ -162,5 +151,10 @@ struct HomeView: View {
 }
 
 #Preview {
-    HomeView(serviceLocator: .preview)
+    NavigationStack {
+        HomeView(
+            viewModel: HomeViewModel(serviceLocator: .preview),
+            coordinator: Coordinator(serviceLocator: .preview)
+        )
+    }
 }

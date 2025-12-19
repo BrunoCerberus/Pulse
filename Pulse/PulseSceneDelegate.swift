@@ -19,6 +19,9 @@ final class PulseSceneDelegate: UIResponder, UIWindowSceneDelegate {
     /// Service locator for dependency injection
     private let serviceLocator: ServiceLocator = .init()
 
+    /// Deeplink router for handling navigation from deeplinks
+    private var deeplinkRouter: DeeplinkRouter?
+
     /// Tracks whether splash screen has been shown
     private var hasSplashBeenShown = false
 
@@ -43,6 +46,9 @@ final class PulseSceneDelegate: UIResponder, UIWindowSceneDelegate {
 
         // Initialize services in ServiceLocator
         setupServices()
+
+        // Initialize deeplink router for coordinator-based navigation
+        deeplinkRouter = DeeplinkRouter()
 
         // Ensure we have a valid window scene
         guard let windowScene = scene as? UIWindowScene else { return }
@@ -86,7 +92,7 @@ final class PulseSceneDelegate: UIResponder, UIWindowSceneDelegate {
      */
     private func showMainApp(in window: UIWindow) {
         let rootView = UIHostingController(
-            rootView: ContentView(serviceLocator: serviceLocator)
+            rootView: CoordinatorView(serviceLocator: serviceLocator)
         )
         rootView.overrideUserInterfaceStyle = ThemeManager.shared.colorScheme == .dark ? .dark : .light
         window.rootViewController = rootView
@@ -116,7 +122,7 @@ final class PulseSceneDelegate: UIResponder, UIWindowSceneDelegate {
      */
     private func transitionToMainApp(in window: UIWindow) {
         let rootView = UIHostingController(
-            rootView: ContentView(serviceLocator: serviceLocator)
+            rootView: CoordinatorView(serviceLocator: serviceLocator)
         )
         rootView.overrideUserInterfaceStyle = ThemeManager.shared.colorScheme == .dark ? .dark : .light
 

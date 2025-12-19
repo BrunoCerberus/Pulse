@@ -1,35 +1,28 @@
 import SwiftUI
 
 struct CategoriesView: View {
-    @StateObject private var viewModel: CategoriesViewModel
-    @State private var showArticleDetail = false
+    @ObservedObject var viewModel: CategoriesViewModel
+    let coordinator: Coordinator
 
-    private let serviceLocator: ServiceLocator
-
-    init(serviceLocator: ServiceLocator) {
-        self.serviceLocator = serviceLocator
-        _viewModel = StateObject(wrappedValue: CategoriesViewModel(serviceLocator: serviceLocator))
+    private var router: CategoriesNavigationRouter {
+        CategoriesNavigationRouter(coordinator: coordinator)
     }
 
     var body: some View {
-        NavigationStack {
-            VStack(spacing: 0) {
-                categoriesGrid
-                    .padding()
+        VStack(spacing: 0) {
+            categoriesGrid
+                .padding()
 
-                Divider()
+            Divider()
 
-                articlesList
-            }
-            .navigationTitle("Categories")
-            .navigationDestination(isPresented: $showArticleDetail) {
-                if let article = viewModel.selectedArticle {
-                    ArticleDetailView(article: article, serviceLocator: serviceLocator)
-                }
-            }
+            articlesList
         }
+        .navigationTitle("Categories")
         .onChange(of: viewModel.selectedArticle) { _, newValue in
-            showArticleDetail = newValue != nil
+            if let article = newValue {
+                router.route(event: .articleDetail(article))
+                viewModel.selectedArticle = nil
+            }
         }
     }
 
@@ -128,7 +121,12 @@ struct CategoryCard: View {
 }
 
 #Preview {
-    CategoriesView(serviceLocator: .preview)
+    NavigationStack {
+        CategoriesView(
+            viewModel: CategoriesViewModel(serviceLocator: .preview),
+            coordinator: Coordinator(serviceLocator: .preview)
+        )
+    }
 }
 
 #Preview("CategoryCard") {
@@ -137,10 +135,4 @@ struct CategoryCard: View {
 
 #Preview("CategoryCard Selected") {
     CategoryCard(category: .technology, isSelected: true) {}
-}
-
-enum CategoriesCoordinator {
-    static func start(serviceLocator: ServiceLocator) -> some View {
-        CategoriesView(serviceLocator: serviceLocator)
-    }
 }

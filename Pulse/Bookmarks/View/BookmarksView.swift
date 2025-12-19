@@ -1,35 +1,28 @@
 import SwiftUI
 
 struct BookmarksView: View {
-    @StateObject private var viewModel: BookmarksViewModel
-    @State private var showArticleDetail = false
+    @ObservedObject var viewModel: BookmarksViewModel
+    let coordinator: Coordinator
 
-    private let serviceLocator: ServiceLocator
-
-    init(serviceLocator: ServiceLocator) {
-        self.serviceLocator = serviceLocator
-        _viewModel = StateObject(wrappedValue: BookmarksViewModel(serviceLocator: serviceLocator))
+    private var router: BookmarksNavigationRouter {
+        BookmarksNavigationRouter(coordinator: coordinator)
     }
 
     var body: some View {
-        NavigationStack {
-            content
-                .navigationTitle("Bookmarks")
-                .navigationDestination(isPresented: $showArticleDetail) {
-                    if let article = viewModel.selectedArticle {
-                        ArticleDetailView(article: article, serviceLocator: serviceLocator)
-                    }
+        content
+            .navigationTitle("Bookmarks")
+            .refreshable {
+                viewModel.handle(event: .onRefresh)
+            }
+            .onAppear {
+                viewModel.handle(event: .onAppear)
+            }
+            .onChange(of: viewModel.selectedArticle) { _, newValue in
+                if let article = newValue {
+                    router.route(event: .articleDetail(article))
+                    viewModel.selectedArticle = nil
                 }
-                .refreshable {
-                    viewModel.handle(event: .onRefresh)
-                }
-        }
-        .onAppear {
-            viewModel.handle(event: .onAppear)
-        }
-        .onChange(of: viewModel.selectedArticle) { _, newValue in
-            showArticleDetail = newValue != nil
-        }
+            }
     }
 
     @ViewBuilder
@@ -89,11 +82,10 @@ struct BookmarksView: View {
 }
 
 #Preview {
-    BookmarksView(serviceLocator: .preview)
-}
-
-enum BookmarksCoordinator {
-    static func start(serviceLocator: ServiceLocator) -> some View {
-        BookmarksView(serviceLocator: serviceLocator)
+    NavigationStack {
+        BookmarksView(
+            viewModel: BookmarksViewModel(serviceLocator: .preview),
+            coordinator: Coordinator(serviceLocator: .preview)
+        )
     }
 }

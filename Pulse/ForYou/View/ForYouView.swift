@@ -1,35 +1,28 @@
 import SwiftUI
 
 struct ForYouView: View {
-    @StateObject private var viewModel: ForYouViewModel
-    @State private var showArticleDetail = false
+    @ObservedObject var viewModel: ForYouViewModel
+    let coordinator: Coordinator
 
-    private let serviceLocator: ServiceLocator
-
-    init(serviceLocator: ServiceLocator) {
-        self.serviceLocator = serviceLocator
-        _viewModel = StateObject(wrappedValue: ForYouViewModel(serviceLocator: serviceLocator))
+    private var router: ForYouNavigationRouter {
+        ForYouNavigationRouter(coordinator: coordinator)
     }
 
     var body: some View {
-        NavigationStack {
-            content
-                .navigationTitle("For You")
-                .navigationDestination(isPresented: $showArticleDetail) {
-                    if let article = viewModel.selectedArticle {
-                        ArticleDetailView(article: article, serviceLocator: serviceLocator)
-                    }
+        content
+            .navigationTitle("For You")
+            .refreshable {
+                viewModel.handle(event: .onRefresh)
+            }
+            .onAppear {
+                viewModel.handle(event: .onAppear)
+            }
+            .onChange(of: viewModel.selectedArticle) { _, newValue in
+                if let article = newValue {
+                    router.route(event: .articleDetail(article))
+                    viewModel.selectedArticle = nil
                 }
-                .refreshable {
-                    viewModel.handle(event: .onRefresh)
-                }
-        }
-        .onAppear {
-            viewModel.handle(event: .onAppear)
-        }
-        .onChange(of: viewModel.selectedArticle) { _, newValue in
-            showArticleDetail = newValue != nil
-        }
+            }
     }
 
     @ViewBuilder
@@ -87,8 +80,8 @@ struct ForYouView: View {
                 .multilineTextAlignment(.center)
                 .padding(.horizontal)
 
-            NavigationLink {
-                SettingsView(serviceLocator: serviceLocator)
+            Button {
+                router.route(event: .settings)
             } label: {
                 Label("Set Preferences", systemImage: "gearshape")
                     .frame(maxWidth: .infinity)
@@ -155,11 +148,10 @@ struct ForYouView: View {
 }
 
 #Preview {
-    ForYouView(serviceLocator: .preview)
-}
-
-enum ForYouCoordinator {
-    static func start(serviceLocator: ServiceLocator) -> some View {
-        ForYouView(serviceLocator: serviceLocator)
+    NavigationStack {
+        ForYouView(
+            viewModel: ForYouViewModel(serviceLocator: .preview),
+            coordinator: Coordinator(serviceLocator: .preview)
+        )
     }
 }
