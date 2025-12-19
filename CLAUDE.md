@@ -58,6 +58,22 @@ Network Layer (EntropyCore)
 4. **DomainEventActionMap**: Maps ViewEvents to DomainActions
 
 5. **Coordinator + Router Navigation**: Centralized navigation with per-tab paths
+
+   ```
+   CoordinatorView (@StateObject Coordinator)
+          │
+      TabView (selection: $coordinator.selectedTab)
+          │
+      ┌───┴───┬───────┬─────────┬─────────┐
+    Home   ForYou  Categories Bookmarks Search
+      │       │        │          │        │
+   NavigationStack(path: $coordinator.homePath)
+          │
+   .navigationDestination(for: Page.self)
+          │
+   coordinator.build(page:)
+   ```
+
    ```swift
    // Coordinator manages all navigation paths
    @MainActor

@@ -48,6 +48,21 @@ Pulse follows **Clean Architecture** with **MVVM** presentation layer:
 
 The app uses a **Coordinator + Router** pattern with per-tab NavigationPaths:
 
+```
+CoordinatorView (@StateObject Coordinator)
+       │
+   TabView (selection: $coordinator.selectedTab)
+       │
+   ┌───┴───┬───────┬─────────┬─────────┐
+ Home   ForYou  Categories Bookmarks Search
+   │       │        │          │        │
+NavigationStack(path: $coordinator.homePath)
+       │
+.navigationDestination(for: Page.self)
+       │
+coordinator.build(page:)
+```
+
 - **Coordinator**: Central navigation manager owning all tab paths
 - **CoordinatorView**: Root TabView with NavigationStacks per tab
 - **Page**: Type-safe enum of all navigable destinations
