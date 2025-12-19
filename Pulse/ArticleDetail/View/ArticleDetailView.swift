@@ -28,7 +28,7 @@ struct ArticleDetailView: View {
                             image
                                 .resizable()
                                 .aspectRatio(contentMode: .fill)
-                                .frame(maxHeight: 250)
+                                .frame(maxWidth: .infinity, maxHeight: 250)
                                 .clipped()
                         case .failure:
                             Rectangle()
@@ -61,19 +61,25 @@ struct ArticleDetailView: View {
                         .font(.title2)
                         .fontWeight(.bold)
 
-                    HStack {
+                    HStack(spacing: 4) {
                         if let author = article.author {
                             Text("By \(author)")
                                 .fontWeight(.medium)
+                                .lineLimit(1)
+                                .truncationMode(.tail)
+                                .layoutPriority(-1)
                         }
 
                         Text("•")
 
                         Text(article.source.name)
+                            .lineLimit(1)
 
                         Text("•")
 
                         Text(article.formattedDate)
+                            .lineLimit(1)
+                            .layoutPriority(1)
                     }
                     .font(.subheadline)
                     .foregroundStyle(.secondary)

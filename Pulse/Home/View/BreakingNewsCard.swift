@@ -20,6 +20,8 @@ struct BreakingNewsCard: View {
                             image
                                 .resizable()
                                 .aspectRatio(contentMode: .fill)
+                                .frame(width: 280, height: 200)
+                                .clipped()
                         case .failure:
                             Rectangle()
                                 .fill(.quaternary)
