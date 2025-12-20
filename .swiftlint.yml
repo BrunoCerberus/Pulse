@@ -5,8 +5,19 @@ disabled_rules:
   - trailing_comma          # SwiftFormat uses trailingCommas rule with opposite behavior
   - opening_brace           # SwiftFormat uses wrapMultilineStatementBraces rule
 
+# Configure identifier_name to allow standard design token abbreviations
+identifier_name:
+  excluded:
+    - xs    # Extra small (design tokens)
+    - sm    # Small (design tokens)
+    - md    # Medium (design tokens)
+    - lg    # Large (design tokens)
+    - xl    # Extra large (design tokens)
+    - id    # Common SwiftUI identifier
+
 # Exclude generated/external code
 excluded:
   - Pods
   - .build
+  - build
   - DerivedData
