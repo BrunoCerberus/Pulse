@@ -44,10 +44,29 @@ struct ArticleDetailView: View {
                 }
             }
             .ignoresSafeArea(.container, edges: .top)
-
-            overlayButtons
         }
-        .navigationBarHidden(true)
+        .navigationBarTitleDisplayMode(.inline)
+        .navigationBarBackButtonHidden(true)
+        .toolbarBackground(.hidden, for: .navigationBar)
+        .toolbar {
+            ToolbarItem(placement: .topBarLeading) {
+                Button("", systemImage: "chevron.left") {
+                    dismiss()
+                }
+            }
+
+            ToolbarItem(placement: .topBarTrailing) {
+                HStack(spacing: Spacing.sm) {
+                    Button("", systemImage: viewModel.isBookmarked ? "bookmark.fill" : "bookmark") {
+                        viewModel.toggleBookmark()
+                    }
+
+                    Button("", systemImage: "square.and.arrow.up") {
+                        viewModel.share()
+                    }
+                }
+            }
+        }
         .sheet(isPresented: $viewModel.showShareSheet) {
             if let url = URL(string: article.url) {
                 ShareSheet(activityItems: [url])
@@ -55,59 +74,6 @@ struct ArticleDetailView: View {
         }
         .onAppear {
             viewModel.onAppear()
-        }
-    }
-
-    private var overlayButtons: some View {
-        GeometryReader { _ in
-            HStack {
-                Button {
-                    HapticManager.shared.tap()
-                    dismiss()
-                } label: {
-                    Image(systemName: "chevron.left")
-                        .font(.system(size: IconSize.sm, weight: .semibold))
-                        .foregroundStyle(.white)
-                        .frame(width: 40, height: 40)
-                        .background(.ultraThinMaterial.opacity(0.8))
-                        .clipShape(Circle())
-                        .shadow(color: .black.opacity(0.2), radius: 4, y: 2)
-                }
-
-                Spacer()
-
-                HStack(spacing: Spacing.sm) {
-                    Button {
-                        HapticManager.shared.tap()
-                        viewModel.toggleBookmark()
-                    } label: {
-                        Image(systemName: viewModel.isBookmarked ? "bookmark.fill" : "bookmark")
-                            .font(.system(size: IconSize.sm))
-                            .foregroundStyle(viewModel.isBookmarked ? Color.Accent.primary : .white)
-                            .symbolEffect(.bounce, value: viewModel.isBookmarked)
-                            .frame(width: 40, height: 40)
-                            .background(.ultraThinMaterial.opacity(0.8))
-                            .clipShape(Circle())
-                            .shadow(color: .black.opacity(0.2), radius: 4, y: 2)
-                    }
-
-                    Button {
-                        HapticManager.shared.tap()
-                        viewModel.share()
-                    } label: {
-                        Image(systemName: "square.and.arrow.up")
-                            .font(.system(size: IconSize.sm))
-                            .foregroundStyle(.white)
-                            .frame(width: 40, height: 40)
-                            .background(.ultraThinMaterial.opacity(0.8))
-                            .clipShape(Circle())
-                            .shadow(color: .black.opacity(0.2), radius: 4, y: 2)
-                    }
-                }
-            }
-            .padding(.horizontal, Spacing.md)
-            .padding(.top, Spacing.xxl)
-            .ignoresSafeArea()
         }
     }
 
