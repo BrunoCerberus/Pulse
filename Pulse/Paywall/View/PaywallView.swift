@@ -27,16 +27,17 @@ struct PaywallView: View {
         NavigationView {
             content
                 .navigationBarTitleDisplayMode(.inline)
+                .toolbarBackground(.ultraThinMaterial, for: .navigationBar)
                 .toolbar {
                     ToolbarItem(placement: .topBarLeading) {
-                        Button(
-                            action: { dismiss() },
-                            label: {
-                                Image(systemName: "xmark.circle.fill")
-                                    .font(.title2)
-                                    .foregroundStyle(.secondary)
-                            }
-                        )
+                        Button {
+                            HapticManager.shared.tap()
+                            dismiss()
+                        } label: {
+                            Image(systemName: "xmark.circle.fill")
+                                .font(.system(size: IconSize.lg))
+                                .foregroundStyle(.secondary)
+                        }
                     }
                 }
         }
@@ -45,6 +46,7 @@ struct PaywallView: View {
         }
         .onChange(of: viewModel.shouldDismiss) { _, shouldDismiss in
             if shouldDismiss {
+                HapticManager.shared.success()
                 dismiss()
             }
         }
@@ -65,41 +67,49 @@ struct PaywallView: View {
     }
 
     private var loadingView: some View {
-        VStack(spacing: 16) {
+        VStack(spacing: Spacing.lg) {
             ProgressView()
-                .progressViewStyle(CircularProgressViewStyle())
                 .scaleEffect(1.5)
 
             Text(Localizable.paywall.loading)
-                .font(.caption)
-                .foregroundColor(.secondary)
+                .font(Typography.captionLarge)
+                .foregroundStyle(.secondary)
         }
         .frame(maxWidth: .infinity, maxHeight: .infinity)
         .background(backgroundGradient)
     }
 
     private func errorView(_ message: String) -> some View {
-        VStack(spacing: 16) {
-            Image(systemName: "exclamationmark.triangle.fill")
-                .font(.system(size: 48))
-                .foregroundColor(.orange)
+        GlassCard(style: .regular, shadowStyle: .elevated, padding: Spacing.xl) {
+            VStack(spacing: Spacing.lg) {
+                Image(systemName: "exclamationmark.triangle.fill")
+                    .font(.system(size: IconSize.xxl))
+                    .foregroundStyle(Color.Semantic.warning)
 
-            Text(Localizable.paywall.errorTitle)
-                .font(.title2)
-                .fontWeight(.semibold)
+                Text(Localizable.paywall.errorTitle)
+                    .font(Typography.titleMedium)
 
-            Text(message)
-                .font(.body)
-                .foregroundColor(.secondary)
-                .multilineTextAlignment(.center)
-                .padding(.horizontal)
+                Text(message)
+                    .font(Typography.bodyMedium)
+                    .foregroundStyle(.secondary)
+                    .multilineTextAlignment(.center)
 
-            Button(Localizable.paywall.retry) {
-                viewModel.handle(event: .viewDidAppear)
+                Button {
+                    HapticManager.shared.tap()
+                    viewModel.handle(event: .viewDidAppear)
+                } label: {
+                    Text(Localizable.paywall.retry)
+                        .font(Typography.labelLarge)
+                        .foregroundStyle(.white)
+                        .padding(.horizontal, Spacing.xl)
+                        .padding(.vertical, Spacing.sm)
+                        .background(Color.Accent.primary)
+                        .clipShape(Capsule())
+                }
+                .pressEffect()
             }
-            .buttonStyle(.bordered)
-            .controlSize(.large)
         }
+        .padding(Spacing.lg)
         .frame(maxWidth: .infinity, maxHeight: .infinity)
         .background(backgroundGradient)
     }
@@ -135,44 +145,34 @@ struct PaywallView: View {
 
     @ViewBuilder
     private var paywallMarketingContent: some View {
-        VStack(spacing: 24) {
+        VStack(spacing: Spacing.lg) {
             // Premium Icon
             ZStack {
                 Circle()
-                    .fill(
-                        LinearGradient(
-                            gradient: Gradient(colors: [
-                                Color.yellow.opacity(0.8),
-                                Color.orange.opacity(0.8),
-                            ]),
-                            startPoint: .topLeading,
-                            endPoint: .bottomTrailing
-                        )
-                    )
+                    .fill(Color.Accent.warmGradient)
                     .frame(width: 100, height: 100)
-                    .shadow(color: .orange.opacity(0.3), radius: 10, x: 0, y: 5)
 
                 Image(systemName: "crown.fill")
-                    .font(.system(size: 44))
+                    .font(.system(size: IconSize.xxl))
                     .foregroundStyle(.white)
             }
-            .padding(.top, 20)
+            .glowEffect(color: .orange, radius: 16)
+            .padding(.top, Spacing.lg)
 
             // Title
             Text(Localizable.paywall.title)
-                .font(.largeTitle)
-                .fontWeight(.bold)
+                .font(Typography.displayMedium)
                 .multilineTextAlignment(.center)
 
             // Subtitle
             Text(Localizable.paywall.subtitle)
-                .font(.subheadline)
-                .foregroundColor(.secondary)
+                .font(Typography.bodyMedium)
+                .foregroundStyle(.secondary)
                 .multilineTextAlignment(.center)
-                .padding(.horizontal)
+                .padding(.horizontal, Spacing.md)
 
             // Features List
-            VStack(alignment: .leading, spacing: 16) {
+            VStack(alignment: .leading, spacing: Spacing.md) {
                 FeatureRow(
                     icon: "newspaper.fill",
                     iconColor: .blue,
@@ -194,8 +194,8 @@ struct PaywallView: View {
                     description: Localizable.paywall.feature3Description
                 )
             }
-            .padding(.horizontal, 20)
-            .padding(.vertical, 10)
+            .padding(.horizontal, Spacing.lg)
+            .padding(.vertical, Spacing.sm)
         }
     }
 
@@ -265,20 +265,25 @@ private struct FeatureRow: View {
     let description: String
 
     var body: some View {
-        HStack(alignment: .top, spacing: 16) {
-            Image(systemName: icon)
-                .font(.title2)
-                .foregroundColor(iconColor)
-                .frame(width: 32)
+        HStack(alignment: .top, spacing: Spacing.md) {
+            ZStack {
+                Circle()
+                    .fill(iconColor.opacity(0.15))
+                    .frame(width: 40, height: 40)
 
-            VStack(alignment: .leading, spacing: 4) {
+                Image(systemName: icon)
+                    .font(.system(size: IconSize.md))
+                    .foregroundStyle(iconColor)
+            }
+
+            VStack(alignment: .leading, spacing: Spacing.xxs) {
                 Text(title)
-                    .font(.headline)
-                    .foregroundColor(.primary)
+                    .font(Typography.headlineMedium)
+                    .foregroundStyle(.primary)
 
                 Text(description)
-                    .font(.subheadline)
-                    .foregroundColor(.secondary)
+                    .font(Typography.bodySmall)
+                    .foregroundStyle(.secondary)
             }
         }
     }
@@ -292,45 +297,51 @@ private struct ProductButton: View {
     let onSelect: () -> Void
     let onPurchase: () -> Void
 
+    @Environment(\.colorScheme) private var colorScheme
+
     var body: some View {
-        Button(action: onSelect) {
+        Button {
+            HapticManager.shared.selectionChanged()
+            onSelect()
+        } label: {
             HStack {
-                VStack(alignment: .leading, spacing: 4) {
+                VStack(alignment: .leading, spacing: Spacing.xxs) {
                     Text(product.displayName)
-                        .font(.headline)
-                        .foregroundColor(.primary)
+                        .font(Typography.headlineMedium)
+                        .foregroundStyle(.primary)
 
                     Text(product.description)
-                        .font(.caption)
-                        .foregroundColor(.secondary)
+                        .font(Typography.captionMedium)
+                        .foregroundStyle(.secondary)
                 }
 
                 Spacer()
 
-                VStack(alignment: .trailing, spacing: 4) {
+                VStack(alignment: .trailing, spacing: Spacing.xxs) {
                     Text(product.displayPrice)
-                        .font(.headline)
-                        .foregroundColor(.blue)
+                        .font(Typography.headlineLarge)
+                        .foregroundStyle(Color.Accent.primary)
 
                     if let subscription = product.subscription {
                         Text(subscription.subscriptionPeriod.debugDescription)
-                            .font(.caption2)
-                            .foregroundColor(.secondary)
+                            .font(Typography.captionSmall)
+                            .foregroundStyle(.secondary)
                     }
                 }
             }
-            .padding()
-            .background(
-                RoundedRectangle(cornerRadius: 12)
-                    .fill(Color(.systemBackground))
-                    .shadow(color: .black.opacity(0.05), radius: 8, x: 0, y: 4)
-            )
+            .padding(Spacing.md)
+            .background(isSelected ? GlassStyle.regular.material : GlassStyle.thin.material)
+            .clipShape(RoundedRectangle(cornerRadius: CornerRadius.lg, style: .continuous))
             .overlay(
-                RoundedRectangle(cornerRadius: 12)
-                    .stroke(isSelected ? Color.blue : Color(.systemGray5), lineWidth: isSelected ? 2 : 1)
+                RoundedRectangle(cornerRadius: CornerRadius.lg, style: .continuous)
+                    .stroke(
+                        isSelected ? Color.Accent.primary : Color.Border.adaptive(for: colorScheme),
+                        lineWidth: isSelected ? 2 : 0.5
+                    )
             )
+            .depthShadow(isSelected ? .medium : .subtle)
         }
-        .buttonStyle(PlainButtonStyle())
+        .pressEffect()
     }
 }
 

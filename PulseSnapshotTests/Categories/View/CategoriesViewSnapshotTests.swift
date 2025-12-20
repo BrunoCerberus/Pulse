@@ -4,7 +4,7 @@ import SwiftUI
 import XCTest
 
 @MainActor
-final class SettingsViewSnapshotTests: XCTestCase {
+final class CategoriesViewSnapshotTests: XCTestCase {
     private var serviceLocator: ServiceLocator!
 
     // Custom device config matching CI's iPhone Air simulator
@@ -17,12 +17,15 @@ final class SettingsViewSnapshotTests: XCTestCase {
     override func setUp() {
         super.setUp()
         serviceLocator = ServiceLocator()
-        serviceLocator.register(SettingsService.self, instance: MockSettingsService())
-        serviceLocator.register(StoreKitService.self, instance: MockStoreKitService())
+        serviceLocator.register(NewsService.self, instance: MockNewsService())
+        serviceLocator.register(StorageService.self, instance: MockStorageService())
     }
 
-    func testSettingsViewInitial() {
-        let view = SettingsView(serviceLocator: serviceLocator)
+    func testCategoriesViewInitial() {
+        let view = CategoriesView(
+            router: CategoriesNavigationRouter(),
+            viewModel: CategoriesViewModel(serviceLocator: serviceLocator)
+        )
         let controller = UIHostingController(rootView: view)
 
         assertSnapshot(

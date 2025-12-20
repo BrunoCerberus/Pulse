@@ -13,6 +13,7 @@ struct CoordinatorView: View {
     /// - Parameter serviceLocator: Shared dependency resolver for the app
     init(serviceLocator: ServiceLocator) {
         _coordinator = StateObject(wrappedValue: Coordinator(serviceLocator: serviceLocator))
+        configureTabBarAppearance()
     }
 
     var body: some View {
@@ -79,6 +80,9 @@ struct CoordinatorView: View {
         }
         .tabViewStyle(.sidebarAdaptable)
         .preferredColorScheme(themeManager.colorScheme)
+        .onChange(of: coordinator.selectedTab) { _, _ in
+            HapticManager.shared.tabChange()
+        }
         .onAppear {
             setupDeeplinkRouter()
         }
@@ -90,6 +94,17 @@ struct CoordinatorView: View {
             name: .coordinatorDidBecomeAvailable,
             object: coordinator
         )
+    }
+
+    /// Configures the tab bar appearance for glass morphism styling.
+    private func configureTabBarAppearance() {
+        let appearance = UITabBarAppearance()
+        appearance.configureWithDefaultBackground()
+        appearance.backgroundEffect = UIBlurEffect(style: .systemThinMaterial)
+        appearance.backgroundColor = UIColor.systemBackground.withAlphaComponent(0.1)
+
+        UITabBar.appearance().standardAppearance = appearance
+        UITabBar.appearance().scrollEdgeAppearance = appearance
     }
 }
 

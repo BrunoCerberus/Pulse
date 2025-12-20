@@ -17,20 +17,27 @@ struct ForYouView<R: ForYouNavigationRouter>: View {
     }
 
     var body: some View {
-        content
-            .navigationTitle("For You")
-            .refreshable {
-                viewModel.handle(event: .onRefresh)
+        ZStack {
+            LinearGradient.subtleBackground
+                .ignoresSafeArea()
+
+            content
+        }
+        .navigationTitle("For You")
+        .toolbarBackground(.ultraThinMaterial, for: .navigationBar)
+        .refreshable {
+            HapticManager.shared.refresh()
+            viewModel.handle(event: .onRefresh)
+        }
+        .onAppear {
+            viewModel.handle(event: .onAppear)
+        }
+        .onChange(of: viewModel.selectedArticle) { _, newValue in
+            if let article = newValue {
+                router.route(navigationEvent: .articleDetail(article))
+                viewModel.selectedArticle = nil
             }
-            .onAppear {
-                viewModel.handle(event: .onAppear)
-            }
-            .onChange(of: viewModel.selectedArticle) { _, newValue in
-                if let article = newValue {
-                    router.route(navigationEvent: .articleDetail(article))
-                    viewModel.selectedArticle = nil
-                }
-            }
+        }
     }
 
     @ViewBuilder
@@ -50,85 +57,150 @@ struct ForYouView<R: ForYouNavigationRouter>: View {
 
     private var loadingView: some View {
         ScrollView {
-            VStack(spacing: 16) {
-                ForEach(0 ..< 5, id: \.self) { _ in
-                    ArticleSkeletonView()
-                }
+            VStack(spacing: Spacing.lg) {
+                GlassSectionHeader("For You")
+
+                ArticleListSkeleton(count: 5)
             }
-            .padding()
         }
     }
 
     private func errorView(_ message: String) -> some View {
-        ContentUnavailableView {
-            Label("Unable to Load Feed", systemImage: "exclamationmark.triangle")
-        } description: {
-            Text(message)
-        } actions: {
-            Button("Try Again") {
-                viewModel.handle(event: .onRefresh)
+        GlassCard(style: .thin, shadowStyle: .medium, padding: Spacing.xl) {
+            VStack(spacing: Spacing.md) {
+                Image(systemName: "exclamationmark.triangle.fill")
+                    .font(.system(size: IconSize.xxl))
+                    .foregroundStyle(Color.Semantic.warning)
+
+                Text("Unable to Load Feed")
+                    .font(Typography.titleMedium)
+
+                Text(message)
+                    .font(Typography.bodyMedium)
+                    .foregroundStyle(.secondary)
+                    .multilineTextAlignment(.center)
+
+                Button {
+                    HapticManager.shared.tap()
+                    viewModel.handle(event: .onRefresh)
+                } label: {
+                    Text("Try Again")
+                        .font(Typography.labelLarge)
+                        .foregroundStyle(.white)
+                        .padding(.horizontal, Spacing.lg)
+                        .padding(.vertical, Spacing.sm)
+                        .background(Color.Accent.primary)
+                        .clipShape(Capsule())
+                }
+                .buttonStyle(.plain)
+                .pressEffect()
             }
-            .buttonStyle(.borderedProminent)
         }
+        .padding(Spacing.lg)
     }
 
     private var onboardingView: some View {
-        VStack(spacing: 24) {
-            Image(systemName: "heart.text.square")
-                .font(.system(size: 64))
-                .foregroundStyle(.secondary)
+        GlassCard(style: .regular, shadowStyle: .elevated, padding: Spacing.xl) {
+            VStack(spacing: Spacing.lg) {
+                ZStack {
+                    Circle()
+                        .fill(Color.Accent.gradient)
+                        .frame(width: 100, height: 100)
 
-            Text("Personalize Your Feed")
-                .font(.title2)
-                .fontWeight(.bold)
+                    Image(systemName: "heart.text.square.fill")
+                        .font(.system(size: IconSize.xxl))
+                        .foregroundStyle(.white)
+                }
+                .glowEffect(color: Color.Accent.primary, radius: 16)
 
-            Text("Follow topics and sources to see articles tailored to your interests.")
-                .font(.body)
-                .foregroundStyle(.secondary)
-                .multilineTextAlignment(.center)
-                .padding(.horizontal)
+                Text("Personalize Your Feed")
+                    .font(Typography.displaySmall)
 
-            Button {
-                router.route(navigationEvent: .settings)
-            } label: {
-                Label("Set Preferences", systemImage: "gearshape")
+                Text("Follow topics and sources to see articles tailored to your interests.")
+                    .font(Typography.bodyMedium)
+                    .foregroundStyle(.secondary)
+                    .multilineTextAlignment(.center)
+
+                Button {
+                    HapticManager.shared.buttonPress()
+                    router.route(navigationEvent: .settings)
+                } label: {
+                    HStack(spacing: Spacing.xs) {
+                        Image(systemName: "gearshape.fill")
+                        Text("Set Preferences")
+                    }
+                    .font(Typography.labelLarge)
+                    .foregroundStyle(.white)
                     .frame(maxWidth: .infinity)
+                    .padding(.vertical, Spacing.md)
+                    .background(Color.Accent.gradient)
+                    .clipShape(Capsule())
+                }
+                .buttonStyle(.plain)
+                .pressEffect()
             }
-            .buttonStyle(.borderedProminent)
-            .padding(.horizontal, 40)
         }
-        .frame(maxWidth: .infinity, maxHeight: .infinity)
+        .padding(Spacing.lg)
     }
 
     private var emptyStateView: some View {
-        ContentUnavailableView {
-            Label("No Articles", systemImage: "newspaper")
-        } description: {
-            Text("No articles found based on your preferences.")
+        GlassCard(style: .thin, shadowStyle: .medium, padding: Spacing.xl) {
+            VStack(spacing: Spacing.md) {
+                Image(systemName: "newspaper")
+                    .font(.system(size: IconSize.xxl))
+                    .foregroundStyle(.secondary)
+
+                Text("No Articles")
+                    .font(Typography.titleMedium)
+
+                Text("No articles found based on your preferences.")
+                    .font(Typography.bodyMedium)
+                    .foregroundStyle(.secondary)
+                    .multilineTextAlignment(.center)
+            }
         }
+        .padding(Spacing.lg)
     }
 
     private var articlesList: some View {
         ScrollView {
-            LazyVStack(spacing: 0) {
+            LazyVStack(spacing: 0, pinnedViews: [.sectionHeaders]) {
                 if !viewModel.viewState.followedTopics.isEmpty {
-                    followedTopicsBar
-                }
-
-                ForEach(viewModel.viewState.articles) { item in
-                    ArticleRowView(item: item) {
-                        viewModel.handle(event: .onArticleTapped(item.article))
-                    } onBookmark: {} onShare: {}
-                        .onAppear {
-                            if item == viewModel.viewState.articles.last {
-                                viewModel.handle(event: .onLoadMore)
+                    Section {
+                        VStack(spacing: Spacing.sm) {
+                            ForEach(Array(viewModel.viewState.articles.enumerated()), id: \.element.id) { index, item in
+                                GlassArticleCard(
+                                    item: item,
+                                    onTap: {
+                                        viewModel.handle(event: .onArticleTapped(item.article))
+                                    },
+                                    onBookmark: {},
+                                    onShare: {}
+                                )
+                                .fadeIn(delay: Double(index) * 0.03)
+                                .onAppear {
+                                    if item == viewModel.viewState.articles.last {
+                                        viewModel.handle(event: .onLoadMore)
+                                    }
+                                }
                             }
                         }
-                }
+                        .padding(.horizontal, Spacing.md)
+                        .padding(.top, Spacing.sm)
 
-                if viewModel.viewState.isLoadingMore {
-                    ProgressView()
-                        .padding()
+                        if viewModel.viewState.isLoadingMore {
+                            HStack {
+                                ProgressView()
+                                    .tint(.secondary)
+                                Text("Loading more...")
+                                    .font(Typography.captionLarge)
+                                    .foregroundStyle(.secondary)
+                            }
+                            .padding(Spacing.lg)
+                        }
+                    } header: {
+                        followedTopicsBar
+                    }
                 }
             }
         }
@@ -136,20 +208,17 @@ struct ForYouView<R: ForYouNavigationRouter>: View {
 
     private var followedTopicsBar: some View {
         ScrollView(.horizontal, showsIndicators: false) {
-            HStack(spacing: 8) {
+            HStack(spacing: Spacing.sm) {
                 ForEach(viewModel.viewState.followedTopics) { topic in
-                    Text(topic.displayName)
-                        .font(.caption)
-                        .fontWeight(.medium)
-                        .padding(.horizontal, 12)
-                        .padding(.vertical, 6)
-                        .background(topic.color.opacity(0.1))
-                        .foregroundStyle(topic.color)
-                        .clipShape(Capsule())
+                    GlassTopicChip(
+                        topic: topic.displayName,
+                        isSelected: true,
+                        color: topic.color
+                    ) {}
                 }
             }
-            .padding(.horizontal)
-            .padding(.vertical, 8)
+            .padding(.horizontal, Spacing.md)
+            .padding(.vertical, Spacing.sm)
         }
         .background(.ultraThinMaterial)
     }

@@ -1,0 +1,287 @@
+import SwiftUI
+
+// MARK: - Hero News Card
+
+struct HeroNewsCard: View {
+    let item: ArticleViewItem
+    let onTap: () -> Void
+
+    @State private var isPulsing = false
+    @Environment(\.colorScheme) private var colorScheme
+
+    private let cardWidth: CGFloat = 300
+    private let cardHeight: CGFloat = 200
+
+    var body: some View {
+        Button {
+            HapticManager.shared.tap()
+            onTap()
+        } label: {
+            ZStack(alignment: .bottomLeading) {
+                imageBackground
+
+                LinearGradient.heroOverlay
+
+                contentOverlay
+            }
+            .frame(width: cardWidth, height: cardHeight)
+            .clipShape(RoundedRectangle(cornerRadius: CornerRadius.lg, style: .continuous))
+            .overlay(
+                RoundedRectangle(cornerRadius: CornerRadius.lg, style: .continuous)
+                    .stroke(Color.Border.glass, lineWidth: 0.5)
+            )
+            .depthShadow(.elevated)
+        }
+        .pressEffect()
+        .onAppear {
+            startPulseAnimation()
+        }
+    }
+
+    @ViewBuilder
+    private var imageBackground: some View {
+        if let imageURL = item.imageURL {
+            AsyncImage(url: imageURL) { phase in
+                switch phase {
+                case .empty:
+                    placeholderBackground
+                        .overlay {
+                            ProgressView()
+                                .tint(.white)
+                        }
+                case let .success(image):
+                    image
+                        .resizable()
+                        .aspectRatio(contentMode: .fill)
+                        .frame(width: cardWidth, height: cardHeight)
+                        .clipped()
+                case .failure:
+                    placeholderBackground
+                        .overlay {
+                            Image(systemName: "newspaper.fill")
+                                .font(.system(size: IconSize.xxl))
+                                .foregroundStyle(.white.opacity(0.5))
+                        }
+                @unknown default:
+                    EmptyView()
+                }
+            }
+        } else {
+            placeholderBackground
+                .overlay {
+                    Image(systemName: "newspaper.fill")
+                        .font(.system(size: IconSize.xxl))
+                        .foregroundStyle(.white.opacity(0.5))
+                }
+        }
+    }
+
+    private var placeholderBackground: some View {
+        LinearGradient(
+            colors: [
+                Color.purple.opacity(0.6),
+                Color.blue.opacity(0.4),
+            ],
+            startPoint: .topLeading,
+            endPoint: .bottomTrailing
+        )
+    }
+
+    private var contentOverlay: some View {
+        VStack(alignment: .leading, spacing: Spacing.xs) {
+            Spacer()
+
+            breakingBadge
+
+            Text(item.title)
+                .font(Typography.headlineLarge)
+                .fontWeight(.bold)
+                .foregroundStyle(.white)
+                .lineLimit(3)
+                .multilineTextAlignment(.leading)
+
+            metadataRow
+        }
+        .padding(Spacing.md)
+        .frame(maxWidth: .infinity, alignment: .leading)
+        .background(
+            LinearGradient(
+                colors: [.clear, .black.opacity(0.3)],
+                startPoint: .top,
+                endPoint: .bottom
+            )
+        )
+        .background(.ultraThinMaterial.opacity(0.3))
+    }
+
+    private var breakingBadge: some View {
+        HStack(spacing: Spacing.xxs) {
+            Circle()
+                .fill(.white)
+                .frame(width: 6, height: 6)
+                .scaleEffect(isPulsing ? 1.2 : 1.0)
+                .opacity(isPulsing ? 0.5 : 1.0)
+
+            Text("BREAKING")
+                .font(Typography.labelSmall)
+                .fontWeight(.bold)
+        }
+        .foregroundStyle(.white)
+        .padding(.horizontal, Spacing.xs)
+        .padding(.vertical, Spacing.xxs)
+        .background(
+            Capsule()
+                .fill(.red)
+        )
+        .glowEffect(color: .red, radius: isPulsing ? 8 : 4)
+    }
+
+    private var metadataRow: some View {
+        HStack(spacing: Spacing.xs) {
+            Text(item.sourceName)
+                .font(Typography.captionMedium)
+                .fontWeight(.medium)
+
+            Circle()
+                .fill(.white.opacity(0.6))
+                .frame(width: 3, height: 3)
+
+            Text(item.formattedDate)
+                .font(Typography.captionMedium)
+        }
+        .foregroundStyle(.white.opacity(0.9))
+    }
+
+    private func startPulseAnimation() {
+        withAnimation(
+            .easeInOut(duration: 1.0)
+                .repeatForever(autoreverses: true)
+        ) {
+            isPulsing = true
+        }
+    }
+}
+
+// MARK: - Featured Article Card (Larger variant)
+
+struct FeaturedArticleCard: View {
+    let item: ArticleViewItem
+    let onTap: () -> Void
+
+    @Environment(\.colorScheme) private var colorScheme
+
+    var body: some View {
+        Button {
+            HapticManager.shared.tap()
+            onTap()
+        } label: {
+            VStack(alignment: .leading, spacing: 0) {
+                imageSection
+                    .frame(height: 180)
+
+                contentSection
+            }
+            .glassBackground(style: .thin, cornerRadius: CornerRadius.lg)
+            .depthShadow(.medium)
+        }
+        .pressEffect()
+    }
+
+    @ViewBuilder
+    private var imageSection: some View {
+        if let imageURL = item.imageURL {
+            AsyncImage(url: imageURL) { phase in
+                switch phase {
+                case let .success(image):
+                    image
+                        .resizable()
+                        .aspectRatio(contentMode: .fill)
+                        .frame(height: 180)
+                        .clipped()
+                default:
+                    Color.primary.opacity(0.05)
+                        .frame(height: 180)
+                }
+            }
+        } else {
+            Color.primary.opacity(0.05)
+                .frame(height: 180)
+        }
+    }
+
+    private var contentSection: some View {
+        VStack(alignment: .leading, spacing: Spacing.xs) {
+            if let category = item.category {
+                GlassCategoryChip(category: category, style: .small)
+            }
+
+            Text(item.title)
+                .font(Typography.titleSmall)
+                .foregroundStyle(.primary)
+                .lineLimit(2)
+                .multilineTextAlignment(.leading)
+
+            if let description = item.description {
+                Text(description)
+                    .font(Typography.bodySmall)
+                    .foregroundStyle(.secondary)
+                    .lineLimit(2)
+            }
+
+            HStack(spacing: Spacing.xs) {
+                Text(item.sourceName)
+                    .font(Typography.captionLarge)
+                    .fontWeight(.medium)
+
+                Circle()
+                    .fill(.secondary)
+                    .frame(width: 3, height: 3)
+
+                Text(item.formattedDate)
+                    .font(Typography.captionLarge)
+            }
+            .foregroundStyle(.secondary)
+        }
+        .padding(Spacing.md)
+    }
+}
+
+// MARK: - Previews
+
+#Preview("Hero News Card") {
+    ZStack {
+        LinearGradient.meshFallback
+            .ignoresSafeArea()
+
+        ScrollView(.horizontal, showsIndicators: false) {
+            HStack(spacing: Spacing.md) {
+                HeroNewsCard(
+                    item: ArticleViewItem(
+                        from: Article(
+                            title: "Breaking: Major Climate Summit Reaches Historic Agreement",
+                            source: ArticleSource(id: nil, name: "Reuters"),
+                            url: "https://example.com",
+                            imageURL: "https://picsum.photos/400/300",
+                            publishedAt: Date()
+                        )
+                    ),
+                    onTap: {}
+                )
+
+                HeroNewsCard(
+                    item: ArticleViewItem(
+                        from: Article(
+                            title: "Tech Giants Face New Regulations",
+                            source: ArticleSource(id: nil, name: "TechCrunch"),
+                            url: "https://example.com",
+                            imageURL: nil,
+                            publishedAt: Date()
+                        )
+                    ),
+                    onTap: {}
+                )
+            }
+            .padding()
+        }
+    }
+}

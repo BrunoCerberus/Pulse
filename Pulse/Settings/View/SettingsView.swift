@@ -17,24 +17,33 @@ struct SettingsView: View {
     }
 
     var body: some View {
-        List {
-            premiumSection
-            topicsSection
-            notificationsSection
-            appearanceSection
-            mutedContentSection
-            dataSection
-            aboutSection
+        ZStack {
+            LinearGradient.subtleBackground
+                .ignoresSafeArea()
+
+            List {
+                premiumSection
+                topicsSection
+                notificationsSection
+                appearanceSection
+                mutedContentSection
+                dataSection
+                aboutSection
+            }
+            .scrollContentBackground(.hidden)
         }
         .navigationTitle("Settings")
+        .toolbarBackground(.ultraThinMaterial, for: .navigationBar)
         .alert("Clear Reading History?", isPresented: Binding(
             get: { viewModel.viewState.showClearHistoryConfirmation },
             set: { _ in viewModel.handle(event: .onCancelClearHistory) }
         )) {
             Button("Cancel", role: .cancel) {
+                HapticManager.shared.tap()
                 viewModel.handle(event: .onCancelClearHistory)
             }
             Button("Clear", role: .destructive) {
+                HapticManager.shared.notification(.warning)
                 viewModel.handle(event: .onConfirmClearHistory)
             }
         } message: {
@@ -195,20 +204,29 @@ struct SettingsView: View {
         Section {
             Button {
                 if !isPremium {
+                    HapticManager.shared.buttonPress()
                     isPaywallPresented = true
                 }
             } label: {
-                HStack {
-                    Image(systemName: isPremium ? "crown.fill" : "crown")
-                        .foregroundColor(isPremium ? .yellow : .orange)
-                        .font(.title2)
+                HStack(spacing: Spacing.md) {
+                    ZStack {
+                        Circle()
+                            .fill(isPremium ? Color.yellow.opacity(0.2) : Color.orange.opacity(0.15))
+                            .frame(width: 44, height: 44)
 
-                    VStack(alignment: .leading, spacing: 2) {
+                        Image(systemName: isPremium ? "crown.fill" : "crown")
+                            .font(.system(size: IconSize.lg))
+                            .foregroundStyle(isPremium ? .yellow : .orange)
+                    }
+                    .glowEffect(color: isPremium ? .yellow : .clear, radius: 8)
+
+                    VStack(alignment: .leading, spacing: Spacing.xxs) {
                         Text(isPremium ? Localizable.paywall.premiumActive : Localizable.paywall.goPremium)
+                            .font(Typography.headlineMedium)
                             .foregroundStyle(.primary)
 
                         Text(isPremium ? Localizable.paywall.fullAccess : Localizable.paywall.unlockFeatures)
-                            .font(.caption)
+                            .font(Typography.captionLarge)
                             .foregroundStyle(.secondary)
                     }
 
@@ -216,18 +234,21 @@ struct SettingsView: View {
 
                     if isPremium {
                         Image(systemName: "checkmark.circle.fill")
-                            .foregroundColor(.green)
+                            .font(.system(size: IconSize.lg))
+                            .foregroundStyle(Color.Semantic.success)
                     } else {
                         Image(systemName: "chevron.right")
-                            .font(.caption)
+                            .font(Typography.captionLarge)
                             .foregroundStyle(.secondary)
                     }
                 }
+                .padding(.vertical, Spacing.xs)
             }
             .buttonStyle(.plain)
             .disabled(isPremium)
         } header: {
             Text("Subscription")
+                .font(Typography.captionLarge)
         }
     }
 
