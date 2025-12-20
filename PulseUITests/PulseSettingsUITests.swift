@@ -71,6 +71,9 @@ final class PulseSettingsUITests: XCTestCase {
     func testAppearanceSectionExists() throws {
         navigateToSettings()
 
+        // Scroll to find the section since premium section is at top
+        app.swipeUp()
+
         let appearanceSection = app.staticTexts["Appearance"]
         XCTAssertTrue(appearanceSection.waitForExistence(timeout: 5))
     }
