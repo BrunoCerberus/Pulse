@@ -120,7 +120,7 @@ struct ArticleDetailView: View {
     @ViewBuilder
     private func stickyHeroImage(stretchAmount: CGFloat) -> some View {
         if let imageURL = article.imageURL, let url = URL(string: imageURL) {
-            let scale = 1 + (stretchAmount / heroBaseHeight)
+            let scale = 1 + (stretchAmount / heroBaseHeight) * 0.5
 
             ZStack(alignment: .bottom) {
                 AsyncImage(url: url) { phase in
@@ -133,6 +133,7 @@ struct ArticleDetailView: View {
                         image
                             .resizable()
                             .scaledToFill()
+                            .frame(height: heroBaseHeight)
                             .scaleEffect(scale)
                     case .failure:
                         Rectangle()
@@ -147,7 +148,6 @@ struct ArticleDetailView: View {
                             .fill(Color.primary.opacity(0.05))
                     }
                 }
-                .frame(height: heroBaseHeight + stretchAmount)
                 .frame(maxWidth: .infinity)
 
                 LinearGradient.heroOverlay
