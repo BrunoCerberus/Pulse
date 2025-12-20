@@ -10,8 +10,18 @@ struct GlassTabItem: Identifiable {
 
     static let items: [GlassTabItem] = [
         GlassTabItem(id: .home, title: "Home", icon: "newspaper", selectedIcon: "newspaper.fill"),
-        GlassTabItem(id: .forYou, title: "For You", icon: "heart.text.square", selectedIcon: "heart.text.square.fill"),
-        GlassTabItem(id: .categories, title: "Categories", icon: "square.grid.2x2", selectedIcon: "square.grid.2x2.fill"),
+        GlassTabItem(
+            id: .forYou,
+            title: "For You",
+            icon: "heart.text.square",
+            selectedIcon: "heart.text.square.fill"
+        ),
+        GlassTabItem(
+            id: .categories,
+            title: "Categories",
+            icon: "square.grid.2x2",
+            selectedIcon: "square.grid.2x2.fill"
+        ),
         GlassTabItem(id: .bookmarks, title: "Bookmarks", icon: "bookmark", selectedIcon: "bookmark.fill"),
         GlassTabItem(id: .search, title: "Search", icon: "magnifyingglass", selectedIcon: "magnifyingglass"),
     ]
