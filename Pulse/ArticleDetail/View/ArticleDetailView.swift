@@ -120,42 +120,42 @@ struct ArticleDetailView: View {
     @ViewBuilder
     private func stickyHeroImage(stretchAmount: CGFloat) -> some View {
         if let imageURL = article.imageURL, let url = URL(string: imageURL) {
-            let scale = 1 + (stretchAmount / heroBaseHeight) * 0.5
+            let height = heroBaseHeight + stretchAmount
 
-            ZStack(alignment: .bottom) {
-                AsyncImage(url: url) { phase in
-                    switch phase {
-                    case .empty:
-                        Rectangle()
-                            .fill(Color.primary.opacity(0.05))
-                            .overlay { ProgressView() }
-                    case let .success(image):
-                        image
-                            .resizable()
-                            .scaledToFill()
-                            .frame(height: heroBaseHeight)
-                            .scaleEffect(scale)
-                    case .failure:
-                        Rectangle()
-                            .fill(Color.primary.opacity(0.05))
-                            .overlay {
-                                Image(systemName: "photo")
-                                    .font(.system(size: IconSize.xxl))
-                                    .foregroundStyle(.secondary)
-                            }
-                    @unknown default:
-                        Rectangle()
-                            .fill(Color.primary.opacity(0.05))
+            GeometryReader { geo in
+                ZStack(alignment: .bottom) {
+                    AsyncImage(url: url) { phase in
+                        switch phase {
+                        case .empty:
+                            Rectangle()
+                                .fill(Color.primary.opacity(0.05))
+                                .overlay { ProgressView() }
+                        case let .success(image):
+                            image
+                                .resizable()
+                                .scaledToFill()
+                                .frame(width: geo.size.width, height: height)
+                                .clipped()
+                        case .failure:
+                            Rectangle()
+                                .fill(Color.primary.opacity(0.05))
+                                .overlay {
+                                    Image(systemName: "photo")
+                                        .font(.system(size: IconSize.xxl))
+                                        .foregroundStyle(.secondary)
+                                }
+                        @unknown default:
+                            Rectangle()
+                                .fill(Color.primary.opacity(0.05))
+                        }
                     }
-                }
-                .frame(maxWidth: .infinity)
 
-                LinearGradient.heroOverlay
-                    .frame(height: 120)
+                    LinearGradient.heroOverlay
+                        .frame(height: 120)
+                }
+                .frame(width: geo.size.width, height: height)
             }
-            .frame(height: heroBaseHeight + stretchAmount)
-            .frame(maxWidth: .infinity)
-            .clipped()
+            .frame(height: height)
         }
     }
 
