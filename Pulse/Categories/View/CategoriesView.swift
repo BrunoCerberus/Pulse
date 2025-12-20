@@ -17,18 +17,26 @@ struct CategoriesView<R: CategoriesNavigationRouter>: View {
     }
 
     var body: some View {
-        ZStack {
-            categoryBackground
-                .ignoresSafeArea()
-
-            VStack(spacing: 0) {
-                categoriesGrid
-                    .padding(Spacing.md)
-
-                articlesList
+        ScrollView {
+            LazyVStack(spacing: 0, pinnedViews: [.sectionHeaders]) {
+                Section {
+                    articlesList
+                        .padding(.top, Spacing.sm)
+                } header: {
+                    categoryChipsRow
+                }
             }
         }
+        .refreshable {
+            HapticManager.shared.refresh()
+            viewModel.handle(event: .onRefresh)
+        }
+        .background {
+            categoryBackground
+                .ignoresSafeArea()
+        }
         .navigationTitle("Categories")
+        .navigationBarTitleDisplayMode(.large)
         .toolbarBackground(.ultraThinMaterial, for: .navigationBar)
         .onChange(of: viewModel.selectedArticle) { _, newValue in
             if let article = newValue {
@@ -56,17 +64,29 @@ struct CategoriesView<R: CategoriesNavigationRouter>: View {
         .animation(.easeInOut(duration: AnimationTiming.normal), value: viewModel.viewState.selectedCategory)
     }
 
-    private var categoriesGrid: some View {
-        LazyVGrid(columns: [GridItem(.adaptive(minimum: 100))], spacing: Spacing.sm) {
-            ForEach(viewModel.viewState.categories) { category in
-                GlassCategoryButton(
-                    category: category,
-                    isSelected: category == viewModel.viewState.selectedCategory
-                ) {
-                    viewModel.handle(event: .onCategorySelected(category))
+    private var categoryChipsRow: some View {
+        ScrollView(.horizontal, showsIndicators: false) {
+            HStack(spacing: Spacing.sm) {
+                ForEach(viewModel.viewState.categories) { category in
+                    Button {
+                        HapticManager.shared.selectionChanged()
+                        viewModel.handle(event: .onCategorySelected(category))
+                    } label: {
+                        GlassCategoryChip(
+                            category: category,
+                            style: .medium,
+                            isSelected: category == viewModel.viewState.selectedCategory,
+                            showIcon: true
+                        )
+                    }
+                    .buttonStyle(.plain)
+                    .pressEffect(scale: 0.95)
                 }
             }
+            .padding(.horizontal, Spacing.md)
         }
+        .padding(.vertical, Spacing.sm)
+        .background(.ultraThinMaterial)
     }
 
     @ViewBuilder
@@ -81,7 +101,10 @@ struct CategoriesView<R: CategoriesNavigationRouter>: View {
                     .font(Typography.bodyMedium)
                     .foregroundStyle(.secondary)
             }
-            .frame(maxWidth: .infinity, maxHeight: .infinity)
+            .frame(maxWidth: .infinity)
+            .containerRelativeFrame(.vertical) { height, _ in
+                height * 0.6
+            }
         } else if let error = viewModel.viewState.errorMessage {
             errorView(error)
         } else if viewModel.viewState.showEmptyState {
@@ -107,7 +130,11 @@ struct CategoriesView<R: CategoriesNavigationRouter>: View {
                     .multilineTextAlignment(.center)
             }
         }
-        .padding(Spacing.lg)
+        .frame(maxWidth: .infinity)
+        .padding(.horizontal, Spacing.lg)
+        .containerRelativeFrame(.vertical) { height, _ in
+            height * 0.6
+        }
     }
 
     private func errorView(_ message: String) -> some View {
@@ -141,7 +168,11 @@ struct CategoriesView<R: CategoriesNavigationRouter>: View {
                 .pressEffect()
             }
         }
-        .padding(Spacing.lg)
+        .frame(maxWidth: .infinity)
+        .padding(.horizontal, Spacing.lg)
+        .containerRelativeFrame(.vertical) { height, _ in
+            height * 0.6
+        }
     }
 
     private var emptyStateView: some View {
@@ -160,59 +191,55 @@ struct CategoriesView<R: CategoriesNavigationRouter>: View {
                     .multilineTextAlignment(.center)
             }
         }
-        .padding(Spacing.lg)
+        .frame(maxWidth: .infinity)
+        .padding(.horizontal, Spacing.lg)
+        .containerRelativeFrame(.vertical) { height, _ in
+            height * 0.6
+        }
     }
 
     private var articlesScrollView: some View {
-        ScrollView {
-            VStack(spacing: Spacing.sm) {
-                if let category = viewModel.viewState.selectedCategory {
-                    HStack {
-                        GlassCategoryChip(category: category, style: .medium, isSelected: true, showIcon: true)
-                        Spacer()
-                        Text("\(viewModel.viewState.articles.count) articles")
-                            .font(Typography.captionLarge)
-                            .foregroundStyle(.secondary)
-                    }
-                    .padding(.horizontal, Spacing.md)
-                    .padding(.bottom, Spacing.xs)
+        LazyVStack(spacing: Spacing.sm) {
+            if viewModel.viewState.selectedCategory != nil {
+                HStack {
+                    Text("\(viewModel.viewState.articles.count) articles")
+                        .font(Typography.captionLarge)
+                        .foregroundStyle(.secondary)
+                    Spacer()
                 }
+                .padding(.horizontal, Spacing.md)
+                .padding(.bottom, Spacing.xs)
+            }
 
-                ForEach(Array(viewModel.viewState.articles.enumerated()), id: \.element.id) { index, item in
-                    GlassArticleCard(
-                        item: item,
-                        onTap: {
-                            viewModel.handle(event: .onArticleTapped(item.article))
-                        },
-                        onBookmark: {},
-                        onShare: {}
-                    )
-                    .fadeIn(delay: Double(index) * 0.03)
-                    .onAppear {
-                        if item == viewModel.viewState.articles.last {
-                            viewModel.handle(event: .onLoadMore)
-                        }
+            ForEach(Array(viewModel.viewState.articles.enumerated()), id: \.element.id) { index, item in
+                GlassArticleCard(
+                    item: item,
+                    onTap: {
+                        viewModel.handle(event: .onArticleTapped(item.article))
+                    },
+                    onBookmark: {},
+                    onShare: {}
+                )
+                .fadeIn(delay: Double(index) * 0.03)
+                .onAppear {
+                    if item == viewModel.viewState.articles.last {
+                        viewModel.handle(event: .onLoadMore)
                     }
-                }
-
-                if viewModel.viewState.isLoadingMore {
-                    HStack {
-                        ProgressView()
-                            .tint(.secondary)
-                        Text("Loading more...")
-                            .font(Typography.captionLarge)
-                            .foregroundStyle(.secondary)
-                    }
-                    .padding(Spacing.lg)
                 }
             }
-            .padding(.horizontal, Spacing.md)
-            .padding(.top, Spacing.sm)
+
+            if viewModel.viewState.isLoadingMore {
+                HStack {
+                    ProgressView()
+                        .tint(.secondary)
+                    Text("Loading more...")
+                        .font(Typography.captionLarge)
+                        .foregroundStyle(.secondary)
+                }
+                .padding(Spacing.lg)
+            }
         }
-        .refreshable {
-            HapticManager.shared.refresh()
-            viewModel.handle(event: .onRefresh)
-        }
+        .padding(.horizontal, Spacing.md)
     }
 }
 
