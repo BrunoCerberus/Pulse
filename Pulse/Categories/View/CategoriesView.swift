@@ -22,8 +22,7 @@ struct CategoriesView<R: CategoriesNavigationRouter>: View {
                 .ignoresSafeArea()
 
             VStack(spacing: 0) {
-                categoriesGrid
-                    .padding(Spacing.md)
+                categoryChipsRow
 
                 articlesList
             }
@@ -56,17 +55,29 @@ struct CategoriesView<R: CategoriesNavigationRouter>: View {
         .animation(.easeInOut(duration: AnimationTiming.normal), value: viewModel.viewState.selectedCategory)
     }
 
-    private var categoriesGrid: some View {
-        LazyVGrid(columns: [GridItem(.adaptive(minimum: 100))], spacing: Spacing.sm) {
-            ForEach(viewModel.viewState.categories) { category in
-                GlassCategoryButton(
-                    category: category,
-                    isSelected: category == viewModel.viewState.selectedCategory
-                ) {
-                    viewModel.handle(event: .onCategorySelected(category))
+    private var categoryChipsRow: some View {
+        ScrollView(.horizontal, showsIndicators: false) {
+            HStack(spacing: Spacing.sm) {
+                ForEach(viewModel.viewState.categories) { category in
+                    Button {
+                        HapticManager.shared.selectionChanged()
+                        viewModel.handle(event: .onCategorySelected(category))
+                    } label: {
+                        GlassCategoryChip(
+                            category: category,
+                            style: .medium,
+                            isSelected: category == viewModel.viewState.selectedCategory,
+                            showIcon: true
+                        )
+                    }
+                    .buttonStyle(.plain)
+                    .pressEffect(scale: 0.95)
                 }
             }
+            .padding(.horizontal, Spacing.md)
         }
+        .padding(.vertical, Spacing.sm)
+        .background(.ultraThinMaterial)
     }
 
     @ViewBuilder
@@ -92,87 +103,101 @@ struct CategoriesView<R: CategoriesNavigationRouter>: View {
     }
 
     private var selectCategoryPrompt: some View {
-        GlassCard(style: .thin, shadowStyle: .medium, padding: Spacing.xl) {
-            VStack(spacing: Spacing.md) {
-                Image(systemName: "square.grid.2x2")
-                    .font(.system(size: IconSize.xxl))
-                    .foregroundStyle(Color.Accent.primary)
+        VStack {
+            Spacer()
+            GlassCard(style: .thin, shadowStyle: .medium, padding: Spacing.xl) {
+                VStack(spacing: Spacing.md) {
+                    Image(systemName: "square.grid.2x2")
+                        .font(.system(size: IconSize.xxl))
+                        .foregroundStyle(Color.Accent.primary)
 
-                Text("Select a Category")
-                    .font(Typography.titleMedium)
+                    Text("Select a Category")
+                        .font(Typography.titleMedium)
 
-                Text("Choose a category above to see related articles.")
-                    .font(Typography.bodyMedium)
-                    .foregroundStyle(.secondary)
-                    .multilineTextAlignment(.center)
+                    Text("Choose a category above to see related articles.")
+                        .font(Typography.bodyMedium)
+                        .foregroundStyle(.secondary)
+                        .multilineTextAlignment(.center)
+                }
             }
+            .padding(Spacing.lg)
+            Spacer()
         }
-        .padding(Spacing.lg)
+        .frame(maxWidth: .infinity, maxHeight: .infinity)
     }
 
     private func errorView(_ message: String) -> some View {
-        GlassCard(style: .thin, shadowStyle: .medium, padding: Spacing.xl) {
-            VStack(spacing: Spacing.md) {
-                Image(systemName: "exclamationmark.triangle.fill")
-                    .font(.system(size: IconSize.xxl))
-                    .foregroundStyle(Color.Semantic.warning)
+        VStack {
+            Spacer()
+            GlassCard(style: .thin, shadowStyle: .medium, padding: Spacing.xl) {
+                VStack(spacing: Spacing.md) {
+                    Image(systemName: "exclamationmark.triangle.fill")
+                        .font(.system(size: IconSize.xxl))
+                        .foregroundStyle(Color.Semantic.warning)
 
-                Text("Error")
-                    .font(Typography.titleMedium)
+                    Text("Error")
+                        .font(Typography.titleMedium)
 
-                Text(message)
-                    .font(Typography.bodyMedium)
-                    .foregroundStyle(.secondary)
-                    .multilineTextAlignment(.center)
+                    Text(message)
+                        .font(Typography.bodyMedium)
+                        .foregroundStyle(.secondary)
+                        .multilineTextAlignment(.center)
 
-                Button {
-                    HapticManager.shared.tap()
-                    viewModel.handle(event: .onRefresh)
-                } label: {
-                    Text("Try Again")
-                        .font(Typography.labelLarge)
-                        .foregroundStyle(.white)
-                        .padding(.horizontal, Spacing.lg)
-                        .padding(.vertical, Spacing.sm)
-                        .background(Color.Accent.primary)
-                        .clipShape(Capsule())
+                    Button {
+                        HapticManager.shared.tap()
+                        viewModel.handle(event: .onRefresh)
+                    } label: {
+                        Text("Try Again")
+                            .font(Typography.labelLarge)
+                            .foregroundStyle(.white)
+                            .padding(.horizontal, Spacing.lg)
+                            .padding(.vertical, Spacing.sm)
+                            .background(Color.Accent.primary)
+                            .clipShape(Capsule())
+                    }
+                    .buttonStyle(.plain)
+                    .pressEffect()
                 }
-                .buttonStyle(.plain)
-                .pressEffect()
             }
+            .padding(Spacing.lg)
+            Spacer()
         }
-        .padding(Spacing.lg)
+        .frame(maxWidth: .infinity, maxHeight: .infinity)
     }
 
     private var emptyStateView: some View {
-        GlassCard(style: .thin, shadowStyle: .medium, padding: Spacing.xl) {
-            VStack(spacing: Spacing.md) {
-                Image(systemName: "newspaper")
-                    .font(.system(size: IconSize.xxl))
-                    .foregroundStyle(.secondary)
+        VStack {
+            Spacer()
+            GlassCard(style: .thin, shadowStyle: .medium, padding: Spacing.xl) {
+                VStack(spacing: Spacing.md) {
+                    Image(systemName: "newspaper")
+                        .font(.system(size: IconSize.xxl))
+                        .foregroundStyle(.secondary)
 
-                Text("No Articles")
-                    .font(Typography.titleMedium)
+                    Text("No Articles")
+                        .font(Typography.titleMedium)
 
-                Text("No articles found in this category.")
-                    .font(Typography.bodyMedium)
-                    .foregroundStyle(.secondary)
-                    .multilineTextAlignment(.center)
+                    Text("No articles found in this category.")
+                        .font(Typography.bodyMedium)
+                        .foregroundStyle(.secondary)
+                        .multilineTextAlignment(.center)
+                }
             }
+            .padding(Spacing.lg)
+            Spacer()
         }
-        .padding(Spacing.lg)
+        .frame(maxWidth: .infinity, maxHeight: .infinity)
     }
 
     private var articlesScrollView: some View {
         ScrollView {
-            VStack(spacing: Spacing.sm) {
-                if let category = viewModel.viewState.selectedCategory {
+            LazyVStack(spacing: Spacing.sm) {
+                if viewModel.viewState.selectedCategory != nil {
                     HStack {
-                        GlassCategoryChip(category: category, style: .medium, isSelected: true, showIcon: true)
-                        Spacer()
                         Text("\(viewModel.viewState.articles.count) articles")
                             .font(Typography.captionLarge)
                             .foregroundStyle(.secondary)
+                        Spacer()
                     }
                     .padding(.horizontal, Spacing.md)
                     .padding(.bottom, Spacing.xs)
