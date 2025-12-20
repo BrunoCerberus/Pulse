@@ -36,20 +36,14 @@ struct ArticleDetailView: View {
 
             ScrollView {
                 VStack(alignment: .leading, spacing: 0) {
-                    GeometryReader { proxy in
-                        let minY = proxy.frame(in: .global).minY
-                        let stretchAmount = max(0, minY)
-
-                        stickyHeroImage(stretchAmount: stretchAmount)
-                            .offset(y: -minY)
+                    if let imageURL = article.imageURL, let url = URL(string: imageURL) {
+                        StretchyAsyncImage(url: url, baseHeight: heroBaseHeight)
                     }
-                    .frame(height: heroBaseHeight)
 
                     contentCard
                 }
             }
             .ignoresSafeArea(.container, edges: .top)
-            .coordinateSpace(name: "articleDetailScroll")
 
             overlayButtons
         }
@@ -114,48 +108,6 @@ struct ArticleDetailView: View {
             .padding(.horizontal, Spacing.md)
             .padding(.top, Spacing.xxl)
             .ignoresSafeArea()
-        }
-    }
-
-    @ViewBuilder
-    private func stickyHeroImage(stretchAmount: CGFloat) -> some View {
-        if let imageURL = article.imageURL, let url = URL(string: imageURL) {
-            let height = heroBaseHeight + stretchAmount
-
-            GeometryReader { geo in
-                ZStack(alignment: .bottom) {
-                    AsyncImage(url: url) { phase in
-                        switch phase {
-                        case .empty:
-                            Rectangle()
-                                .fill(Color.primary.opacity(0.05))
-                                .overlay { ProgressView() }
-                        case let .success(image):
-                            image
-                                .resizable()
-                                .scaledToFill()
-                                .frame(width: geo.size.width, height: height)
-                                .clipped()
-                        case .failure:
-                            Rectangle()
-                                .fill(Color.primary.opacity(0.05))
-                                .overlay {
-                                    Image(systemName: "photo")
-                                        .font(.system(size: IconSize.xxl))
-                                        .foregroundStyle(.secondary)
-                                }
-                        @unknown default:
-                            Rectangle()
-                                .fill(Color.primary.opacity(0.05))
-                        }
-                    }
-
-                    LinearGradient.heroOverlay
-                        .frame(height: 120)
-                }
-                .frame(width: geo.size.width, height: height)
-            }
-            .frame(height: height)
         }
     }
 
