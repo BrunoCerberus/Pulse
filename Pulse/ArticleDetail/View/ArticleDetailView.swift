@@ -6,9 +6,9 @@ struct ArticleDetailView: View {
     @Environment(\.dismiss) private var dismiss
     @Environment(\.colorScheme) private var colorScheme
     @State private var isContentExpanded = false
-    @State private var scrollOffset: CGFloat = 0
 
     private let serviceLocator: ServiceLocator
+    private let heroBaseHeight: CGFloat = 280
 
     /// Strips the "[+XXX chars]" truncation marker from API content
     private var cleanedContent: String? {
@@ -41,6 +41,7 @@ struct ArticleDetailView: View {
                     contentCard
                 }
             }
+            .coordinateSpace(name: "articleDetailScroll")
         }
         .navigationBarTitleDisplayMode(.inline)
         .toolbarBackground(.ultraThinMaterial, for: .navigationBar)
@@ -80,37 +81,44 @@ struct ArticleDetailView: View {
     @ViewBuilder
     private var heroImage: some View {
         if let imageURL = article.imageURL, let url = URL(string: imageURL) {
-            ZStack(alignment: .bottom) {
-                AsyncImage(url: url) { phase in
-                    switch phase {
-                    case .empty:
-                        Rectangle()
-                            .fill(Color.primary.opacity(0.05))
-                            .aspectRatio(16 / 9, contentMode: .fit)
-                            .overlay { ProgressView() }
-                    case let .success(image):
-                        image
-                            .resizable()
-                            .aspectRatio(contentMode: .fill)
-                            .frame(maxWidth: .infinity, maxHeight: 280)
-                            .clipped()
-                    case .failure:
-                        Rectangle()
-                            .fill(Color.primary.opacity(0.05))
-                            .aspectRatio(16 / 9, contentMode: .fit)
-                            .overlay {
-                                Image(systemName: "photo")
-                                    .font(.system(size: IconSize.xxl))
-                                    .foregroundStyle(.secondary)
-                            }
-                    @unknown default:
-                        EmptyView()
-                    }
-                }
+            GeometryReader { proxy in
+                let minY = proxy.frame(in: .named("articleDetailScroll")).minY
+                let stretchAmount = max(0, minY)
+                let height = heroBaseHeight + stretchAmount
 
-                LinearGradient.heroOverlay
-                    .frame(height: 120)
+                ZStack(alignment: .bottom) {
+                    AsyncImage(url: url) { phase in
+                        switch phase {
+                        case .empty:
+                            Rectangle()
+                                .fill(Color.primary.opacity(0.05))
+                                .overlay { ProgressView() }
+                        case let .success(image):
+                            image
+                                .resizable()
+                                .scaledToFill()
+                        case .failure:
+                            Rectangle()
+                                .fill(Color.primary.opacity(0.05))
+                                .overlay {
+                                    Image(systemName: "photo")
+                                        .font(.system(size: IconSize.xxl))
+                                        .foregroundStyle(.secondary)
+                                }
+                        @unknown default:
+                            Rectangle()
+                                .fill(Color.primary.opacity(0.05))
+                        }
+                    }
+
+                    LinearGradient.heroOverlay
+                        .frame(height: 120)
+                }
+                .frame(width: proxy.size.width, height: height)
+                .clipped()
+                .offset(y: stretchAmount > 0 ? -stretchAmount : 0)
             }
+            .frame(height: heroBaseHeight)
         }
     }
 
