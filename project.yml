@@ -24,7 +24,7 @@ packages:
 
 settings:
   base:
-    PRODUCT_BUNDLE_IDENTIFIER: com.bruno.Pulse
+    PRODUCT_BUNDLE_IDENTIFIER: com.bruno.Pulse-News
     MARKETING_VERSION: "1.0.0"
     CURRENT_PROJECT_VERSION: "1"
     DEVELOPMENT_TEAM: ""
@@ -72,7 +72,7 @@ targets:
     settings:
       base:
         INFOPLIST_FILE: Pulse/Info.plist
-        PRODUCT_BUNDLE_IDENTIFIER: com.bruno.Pulse
+        PRODUCT_BUNDLE_IDENTIFIER: com.bruno.Pulse-News
         MARKETING_VERSION: "1.0.0"
         CURRENT_PROJECT_VERSION: "1"
         ASSETCATALOG_COMPILER_APPICON_NAME: AppIcon
@@ -84,6 +84,8 @@ targets:
         SUPPORTS_MACCATALYST: false
         SUPPORTS_MAC_DESIGNED_FOR_IPHONE_IPAD: false
         ENABLE_PREVIEWS: YES
+        CODE_SIGN_ENTITLEMENTS: Pulse/Pulse.entitlements
+        CODE_SIGN_ALLOW_ENTITLEMENTS_MODIFICATION: YES
       configs:
         Debug:
           ENABLE_TESTABILITY: YES
@@ -92,7 +94,7 @@ targets:
       path: Pulse/Info.plist
       properties:
         CFBundleDisplayName: Pulse
-        CFBundleIdentifier: com.bruno.Pulse
+        CFBundleIdentifier: com.bruno.Pulse-News
         CFBundleName: Pulse
         CFBundlePackageType: APPL
         CFBundleShortVersionString: "1.0.0"
@@ -116,6 +118,8 @@ targets:
       - sdk: Combine.framework
       - package: EntropyCore
       - package: Lottie
+      - target: PulseWidgetExtension
+        embed: true
 
   PulseTests:
     type: bundle.unit-test
@@ -193,11 +197,51 @@ targets:
         CFBundleShortVersionString: "1.0.0"
         CFBundleVersion: "1"
 
+  PulseWidgetExtension:
+    type: app-extension
+    platform: iOS
+    deploymentTarget: "26.1"
+    settings:
+      base:
+        PRODUCT_BUNDLE_IDENTIFIER: com.bruno.Pulse-News.widget
+        PRODUCT_NAME: PulseWidgetExtension
+        CODE_SIGN_STYLE: Automatic
+        DEVELOPMENT_TEAM: ""
+        TARGETED_DEVICE_FAMILY: 1,2
+        SUPPORTED_PLATFORMS: iphoneos iphonesimulator
+        SKIP_INSTALL: YES
+        SWIFT_VERSION: 5.0
+        INFOPLIST_FILE: PulseWidgetExtension/Info.plist
+        CODE_SIGN_ENTITLEMENTS: PulseWidgetExtension/PulseWidgetExtension.entitlements
+        CODE_SIGN_ALLOW_ENTITLEMENTS_MODIFICATION: YES
+        ASSETCATALOG_COMPILER_APPICON_NAME: AppIcon
+        ASSETCATALOG_COMPILER_GLOBAL_ACCENT_COLOR_NAME: AccentColor
+    sources:
+      - path: PulseWidgetExtension
+    dependencies:
+      - sdk: Foundation.framework
+      - sdk: UIKit.framework
+      - sdk: WidgetKit.framework
+      - sdk: SwiftUI.framework
+    info:
+      path: PulseWidgetExtension/Info.plist
+      properties:
+        CFBundleDisplayName: "Pulse News Widget"
+        CFBundleName: PulseWidgetExtension
+        CFBundleIdentifier: com.bruno.Pulse-News.widget
+        CFBundlePackageType: XPC!
+        CFBundleShortVersionString: "1.0.0"
+        CFBundleVersion: "1"
+        NSExtension:
+          NSExtensionPointIdentifier: com.apple.widgetkit-extension
+        NSSupportsLiveActivities: false
+
 schemes:
   PulseDev:
     build:
       targets:
         Pulse: all
+        PulseWidgetExtension: all
       buildSettings:
         COMPILER_INDEX_STORE_ENABLE: NO
         ENABLE_BITCODE: NO
@@ -238,6 +282,7 @@ schemes:
     build:
       targets:
         Pulse: all
+        PulseWidgetExtension: all
     run:
       config: Release
       environmentVariables: {}
