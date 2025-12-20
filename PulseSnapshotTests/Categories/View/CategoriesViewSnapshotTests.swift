@@ -11,7 +11,7 @@ final class CategoriesViewSnapshotTests: XCTestCase {
     private let iPhoneAirConfig = ViewImageConfig(
         safeArea: UIEdgeInsets(top: 59, left: 0, bottom: 34, right: 0),
         size: CGSize(width: 393, height: 852),
-        traits: UITraitCollection()
+        traits: UITraitCollection(userInterfaceStyle: .dark)
     )
 
     override func setUp() {
