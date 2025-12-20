@@ -261,9 +261,11 @@ schemes:
         INDEX_ENABLE_DATA_STORE: NO
     run:
       config: Debug
+      storeKitConfiguration: Pulse/StoreKit.storekit
       environmentVariables: {}
     test:
       config: Debug
+      storeKitConfiguration: Pulse/StoreKit.storekit
       targets:
         - PulseTests
         - PulseUITests
@@ -285,9 +287,11 @@ schemes:
         PulseWidgetExtension: all
     run:
       config: Release
+      storeKitConfiguration: Pulse/StoreKit.storekit
       environmentVariables: {}
     test:
       config: Release
+      storeKitConfiguration: Pulse/StoreKit.storekit
       targets:
         - PulseTests
         - PulseUITests
@@ -308,6 +312,7 @@ schemes:
         PulseTests: all
     test:
       config: Debug
+      storeKitConfiguration: Pulse/StoreKit.storekit
       targets:
         - PulseTests
       environmentVariables: {}
