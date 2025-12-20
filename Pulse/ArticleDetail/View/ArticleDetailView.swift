@@ -4,8 +4,22 @@ struct ArticleDetailView: View {
     let article: Article
     @StateObject private var viewModel: ArticleDetailViewModel
     @Environment(\.dismiss) private var dismiss
+    @State private var isContentExpanded = false
 
     private let serviceLocator: ServiceLocator
+
+    /// Strips the "[+XXX chars]" truncation marker from API content
+    private var cleanedContent: String? {
+        guard let content = article.content else { return nil }
+        let pattern = #"\s*\[\+\d+ chars\]$"#
+        return content.replacingOccurrences(of: pattern, with: "", options: .regularExpression)
+    }
+
+    /// Checks if the content was truncated by the API
+    private var isContentTruncated: Bool {
+        guard let content = article.content else { return false }
+        return content.contains(#/\[\+\d+ chars\]/#)
+    }
 
     init(article: Article, serviceLocator: ServiceLocator) {
         self.article = article
@@ -28,7 +42,7 @@ struct ArticleDetailView: View {
                             image
                                 .resizable()
                                 .aspectRatio(contentMode: .fill)
-                                .frame(maxHeight: 250)
+                                .frame(maxWidth: .infinity, maxHeight: 250)
                                 .clipped()
                         case .failure:
                             Rectangle()
@@ -61,19 +75,25 @@ struct ArticleDetailView: View {
                         .font(.title2)
                         .fontWeight(.bold)
 
-                    HStack {
+                    HStack(spacing: 4) {
                         if let author = article.author {
                             Text("By \(author)")
                                 .fontWeight(.medium)
+                                .lineLimit(1)
+                                .truncationMode(.tail)
+                                .layoutPriority(-1)
                         }
 
                         Text("•")
 
                         Text(article.source.name)
+                            .lineLimit(1)
 
                         Text("•")
 
                         Text(article.formattedDate)
+                            .lineLimit(1)
+                            .layoutPriority(1)
                     }
                     .font(.subheadline)
                     .foregroundStyle(.secondary)
@@ -86,10 +106,25 @@ struct ArticleDetailView: View {
                             .foregroundStyle(.primary)
                     }
 
-                    if let content = article.content {
-                        Text(content)
-                            .font(.body)
-                            .foregroundStyle(.primary)
+                    if let content = cleanedContent {
+                        VStack(alignment: .leading, spacing: 8) {
+                            Text(content)
+                                .font(.body)
+                                .foregroundStyle(.primary)
+                                .lineLimit(isContentExpanded ? nil : 4)
+
+                            if isContentTruncated {
+                                Button {
+                                    withAnimation(.easeInOut(duration: 0.3)) {
+                                        isContentExpanded.toggle()
+                                    }
+                                } label: {
+                                    Text(isContentExpanded ? "Show less" : "Show more")
+                                        .font(.subheadline)
+                                        .fontWeight(.medium)
+                                }
+                            }
+                        }
                     }
 
                     Divider()

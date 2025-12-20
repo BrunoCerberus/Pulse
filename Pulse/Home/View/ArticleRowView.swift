@@ -59,6 +59,8 @@ struct ArticleRowView: View {
                             image
                                 .resizable()
                                 .aspectRatio(contentMode: .fill)
+                                .frame(width: 100, height: 100)
+                                .clipped()
                         case .failure:
                             Rectangle()
                                 .fill(.quaternary)
