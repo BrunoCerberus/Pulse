@@ -17,27 +17,40 @@ struct BookmarksView<R: BookmarksNavigationRouter>: View {
     }
 
     var body: some View {
-        content
-            .navigationTitle("Bookmarks")
-            .refreshable {
-                viewModel.handle(event: .onRefresh)
+        ZStack {
+            LinearGradient.subtleBackground
+                .ignoresSafeArea()
+
+            content
+        }
+        .navigationTitle("Bookmarks")
+        .toolbarBackground(.ultraThinMaterial, for: .navigationBar)
+        .refreshable {
+            HapticManager.shared.refresh()
+            viewModel.handle(event: .onRefresh)
+        }
+        .onAppear {
+            viewModel.handle(event: .onAppear)
+        }
+        .onChange(of: viewModel.selectedArticle) { _, newValue in
+            if let article = newValue {
+                router.route(navigationEvent: .articleDetail(article))
+                viewModel.selectedArticle = nil
             }
-            .onAppear {
-                viewModel.handle(event: .onAppear)
-            }
-            .onChange(of: viewModel.selectedArticle) { _, newValue in
-                if let article = newValue {
-                    router.route(navigationEvent: .articleDetail(article))
-                    viewModel.selectedArticle = nil
-                }
-            }
+        }
     }
 
     @ViewBuilder
     private var content: some View {
         if viewModel.viewState.isLoading {
-            ProgressView()
-                .frame(maxWidth: .infinity, maxHeight: .infinity)
+            VStack(spacing: Spacing.md) {
+                ProgressView()
+                    .scaleEffect(1.2)
+                Text("Loading bookmarks...")
+                    .font(Typography.bodyMedium)
+                    .foregroundStyle(.secondary)
+            }
+            .frame(maxWidth: .infinity, maxHeight: .infinity)
         } else if let error = viewModel.viewState.errorMessage {
             errorView(error)
         } else if viewModel.viewState.showEmptyState {
@@ -48,44 +61,95 @@ struct BookmarksView<R: BookmarksNavigationRouter>: View {
     }
 
     private func errorView(_ message: String) -> some View {
-        ContentUnavailableView {
-            Label("Unable to Load Bookmarks", systemImage: "exclamationmark.triangle")
-        } description: {
-            Text(message)
-        } actions: {
-            Button("Try Again") {
-                viewModel.handle(event: .onRefresh)
+        GlassCard(style: .thin, shadowStyle: .medium, padding: Spacing.xl) {
+            VStack(spacing: Spacing.md) {
+                Image(systemName: "exclamationmark.triangle.fill")
+                    .font(.system(size: IconSize.xxl))
+                    .foregroundStyle(Color.Semantic.warning)
+
+                Text("Unable to Load Bookmarks")
+                    .font(Typography.titleMedium)
+
+                Text(message)
+                    .font(Typography.bodyMedium)
+                    .foregroundStyle(.secondary)
+                    .multilineTextAlignment(.center)
+
+                Button {
+                    HapticManager.shared.tap()
+                    viewModel.handle(event: .onRefresh)
+                } label: {
+                    Text("Try Again")
+                        .font(Typography.labelLarge)
+                        .foregroundStyle(.white)
+                        .padding(.horizontal, Spacing.lg)
+                        .padding(.vertical, Spacing.sm)
+                        .background(Color.Accent.primary)
+                        .clipShape(Capsule())
+                }
+                .buttonStyle(.plain)
+                .pressEffect()
             }
-            .buttonStyle(.borderedProminent)
         }
+        .padding(Spacing.lg)
     }
 
     private var emptyStateView: some View {
-        ContentUnavailableView {
-            Label("No Bookmarks", systemImage: "bookmark")
-        } description: {
-            Text("Articles you bookmark will appear here for offline reading.")
+        GlassCard(style: .thin, shadowStyle: .medium, padding: Spacing.xl) {
+            VStack(spacing: Spacing.md) {
+                Image(systemName: "bookmark")
+                    .font(.system(size: IconSize.xxl))
+                    .foregroundStyle(Color.Accent.primary)
+
+                Text("No Bookmarks")
+                    .font(Typography.titleMedium)
+
+                Text("Articles you bookmark will appear here for offline reading.")
+                    .font(Typography.bodyMedium)
+                    .foregroundStyle(.secondary)
+                    .multilineTextAlignment(.center)
+            }
         }
+        .padding(Spacing.lg)
     }
 
     private var bookmarksList: some View {
-        List {
-            ForEach(viewModel.viewState.bookmarks) { item in
-                ArticleRowView(item: item) {
-                    viewModel.handle(event: .onArticleTapped(item.article))
-                } onBookmark: {
-                    viewModel.handle(event: .onRemoveBookmark(item.article))
-                } onShare: {}
-                    .listRowInsets(EdgeInsets())
-            }
-            .onDelete { indexSet in
-                for index in indexSet {
-                    let article = viewModel.viewState.bookmarks[index].article
-                    viewModel.handle(event: .onRemoveBookmark(article))
+        ScrollView {
+            VStack(spacing: Spacing.sm) {
+                bookmarkCountHeader
+
+                ForEach(Array(viewModel.viewState.bookmarks.enumerated()), id: \.element.id) { index, item in
+                    GlassArticleCard(
+                        item: item,
+                        isBookmarked: true,
+                        onTap: {
+                            viewModel.handle(event: .onArticleTapped(item.article))
+                        },
+                        onBookmark: {
+                            HapticManager.shared.notification(.warning)
+                            viewModel.handle(event: .onRemoveBookmark(item.article))
+                        },
+                        onShare: {}
+                    )
+                    .fadeIn(delay: Double(index) * 0.03)
                 }
             }
+            .padding(.horizontal, Spacing.md)
+            .padding(.top, Spacing.sm)
         }
-        .listStyle(.plain)
+    }
+
+    private var bookmarkCountHeader: some View {
+        HStack {
+            Image(systemName: "bookmark.fill")
+                .foregroundStyle(Color.Accent.primary)
+            Text("\(viewModel.viewState.bookmarks.count) saved articles")
+                .font(Typography.captionLarge)
+                .foregroundStyle(.secondary)
+            Spacer()
+        }
+        .padding(.horizontal, Spacing.xs)
+        .padding(.bottom, Spacing.xs)
     }
 }
 

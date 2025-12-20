@@ -17,15 +17,19 @@ struct CategoriesView<R: CategoriesNavigationRouter>: View {
     }
 
     var body: some View {
-        VStack(spacing: 0) {
-            categoriesGrid
-                .padding()
+        ZStack {
+            categoryBackground
+                .ignoresSafeArea()
 
-            Divider()
+            VStack(spacing: 0) {
+                categoriesGrid
+                    .padding(Spacing.md)
 
-            articlesList
+                articlesList
+            }
         }
         .navigationTitle("Categories")
+        .toolbarBackground(.ultraThinMaterial, for: .navigationBar)
         .onChange(of: viewModel.selectedArticle) { _, newValue in
             if let article = newValue {
                 router.route(navigationEvent: .articleDetail(article))
@@ -34,10 +38,28 @@ struct CategoriesView<R: CategoriesNavigationRouter>: View {
         }
     }
 
+    private var categoryBackground: some View {
+        Group {
+            if let category = viewModel.viewState.selectedCategory {
+                LinearGradient(
+                    colors: [
+                        category.color.opacity(0.1),
+                        Color(.systemBackground),
+                    ],
+                    startPoint: .top,
+                    endPoint: .center
+                )
+            } else {
+                LinearGradient.subtleBackground
+            }
+        }
+        .animation(.easeInOut(duration: AnimationTiming.normal), value: viewModel.viewState.selectedCategory)
+    }
+
     private var categoriesGrid: some View {
-        LazyVGrid(columns: [GridItem(.adaptive(minimum: 100))], spacing: 12) {
+        LazyVGrid(columns: [GridItem(.adaptive(minimum: 100))], spacing: Spacing.sm) {
             ForEach(viewModel.viewState.categories) { category in
-                CategoryCard(
+                GlassCategoryButton(
                     category: category,
                     isSelected: category == viewModel.viewState.selectedCategory
                 ) {
@@ -50,81 +72,147 @@ struct CategoriesView<R: CategoriesNavigationRouter>: View {
     @ViewBuilder
     private var articlesList: some View {
         if viewModel.viewState.selectedCategory == nil {
-            ContentUnavailableView {
-                Label("Select a Category", systemImage: "square.grid.2x2")
-            } description: {
-                Text("Choose a category above to see related articles.")
-            }
+            selectCategoryPrompt
         } else if viewModel.viewState.isLoading {
-            ProgressView()
-                .frame(maxWidth: .infinity, maxHeight: .infinity)
+            VStack(spacing: Spacing.md) {
+                ProgressView()
+                    .scaleEffect(1.2)
+                Text("Loading articles...")
+                    .font(Typography.bodyMedium)
+                    .foregroundStyle(.secondary)
+            }
+            .frame(maxWidth: .infinity, maxHeight: .infinity)
         } else if let error = viewModel.viewState.errorMessage {
-            ContentUnavailableView {
-                Label("Error", systemImage: "exclamationmark.triangle")
-            } description: {
-                Text(error)
-            } actions: {
-                Button("Try Again") {
-                    viewModel.handle(event: .onRefresh)
-                }
-                .buttonStyle(.borderedProminent)
-            }
+            errorView(error)
         } else if viewModel.viewState.showEmptyState {
-            ContentUnavailableView {
-                Label("No Articles", systemImage: "newspaper")
-            } description: {
-                Text("No articles found in this category.")
-            }
+            emptyStateView
         } else {
-            ScrollView {
-                LazyVStack(spacing: 0) {
-                    ForEach(viewModel.viewState.articles) { item in
-                        ArticleRowView(item: item) {
-                            viewModel.handle(event: .onArticleTapped(item.article))
-                        } onBookmark: {} onShare: {}
-                            .onAppear {
-                                if item == viewModel.viewState.articles.last {
-                                    viewModel.handle(event: .onLoadMore)
-                                }
-                            }
-                    }
-
-                    if viewModel.viewState.isLoadingMore {
-                        ProgressView()
-                            .padding()
-                    }
-                }
-            }
-            .refreshable {
-                viewModel.handle(event: .onRefresh)
-            }
+            articlesScrollView
         }
     }
-}
 
-struct CategoryCard: View {
-    let category: NewsCategory
-    let isSelected: Bool
-    let onTap: () -> Void
+    private var selectCategoryPrompt: some View {
+        GlassCard(style: .thin, shadowStyle: .medium, padding: Spacing.xl) {
+            VStack(spacing: Spacing.md) {
+                Image(systemName: "square.grid.2x2")
+                    .font(.system(size: IconSize.xxl))
+                    .foregroundStyle(Color.Accent.primary)
 
-    var body: some View {
-        Button(action: onTap) {
-            VStack(spacing: 8) {
-                Image(systemName: category.icon)
-                    .font(.title2)
-                    .foregroundStyle(isSelected ? .white : category.color)
+                Text("Select a Category")
+                    .font(Typography.titleMedium)
 
-                Text(category.displayName)
-                    .font(.caption)
-                    .fontWeight(.medium)
-                    .foregroundStyle(isSelected ? .white : .primary)
+                Text("Choose a category above to see related articles.")
+                    .font(Typography.bodyMedium)
+                    .foregroundStyle(.secondary)
+                    .multilineTextAlignment(.center)
             }
-            .frame(maxWidth: .infinity)
-            .padding(.vertical, 12)
-            .background(isSelected ? category.color : category.color.opacity(0.1))
-            .clipShape(RoundedRectangle(cornerRadius: 12))
         }
-        .buttonStyle(.plain)
+        .padding(Spacing.lg)
+    }
+
+    private func errorView(_ message: String) -> some View {
+        GlassCard(style: .thin, shadowStyle: .medium, padding: Spacing.xl) {
+            VStack(spacing: Spacing.md) {
+                Image(systemName: "exclamationmark.triangle.fill")
+                    .font(.system(size: IconSize.xxl))
+                    .foregroundStyle(Color.Semantic.warning)
+
+                Text("Error")
+                    .font(Typography.titleMedium)
+
+                Text(message)
+                    .font(Typography.bodyMedium)
+                    .foregroundStyle(.secondary)
+                    .multilineTextAlignment(.center)
+
+                Button {
+                    HapticManager.shared.tap()
+                    viewModel.handle(event: .onRefresh)
+                } label: {
+                    Text("Try Again")
+                        .font(Typography.labelLarge)
+                        .foregroundStyle(.white)
+                        .padding(.horizontal, Spacing.lg)
+                        .padding(.vertical, Spacing.sm)
+                        .background(Color.Accent.primary)
+                        .clipShape(Capsule())
+                }
+                .buttonStyle(.plain)
+                .pressEffect()
+            }
+        }
+        .padding(Spacing.lg)
+    }
+
+    private var emptyStateView: some View {
+        GlassCard(style: .thin, shadowStyle: .medium, padding: Spacing.xl) {
+            VStack(spacing: Spacing.md) {
+                Image(systemName: "newspaper")
+                    .font(.system(size: IconSize.xxl))
+                    .foregroundStyle(.secondary)
+
+                Text("No Articles")
+                    .font(Typography.titleMedium)
+
+                Text("No articles found in this category.")
+                    .font(Typography.bodyMedium)
+                    .foregroundStyle(.secondary)
+                    .multilineTextAlignment(.center)
+            }
+        }
+        .padding(Spacing.lg)
+    }
+
+    private var articlesScrollView: some View {
+        ScrollView {
+            VStack(spacing: Spacing.sm) {
+                if let category = viewModel.viewState.selectedCategory {
+                    HStack {
+                        GlassCategoryChip(category: category, style: .medium, isSelected: true, showIcon: true)
+                        Spacer()
+                        Text("\(viewModel.viewState.articles.count) articles")
+                            .font(Typography.captionLarge)
+                            .foregroundStyle(.secondary)
+                    }
+                    .padding(.horizontal, Spacing.md)
+                    .padding(.bottom, Spacing.xs)
+                }
+
+                ForEach(Array(viewModel.viewState.articles.enumerated()), id: \.element.id) { index, item in
+                    GlassArticleCard(
+                        item: item,
+                        onTap: {
+                            viewModel.handle(event: .onArticleTapped(item.article))
+                        },
+                        onBookmark: {},
+                        onShare: {}
+                    )
+                    .fadeIn(delay: Double(index) * 0.03)
+                    .onAppear {
+                        if item == viewModel.viewState.articles.last {
+                            viewModel.handle(event: .onLoadMore)
+                        }
+                    }
+                }
+
+                if viewModel.viewState.isLoadingMore {
+                    HStack {
+                        ProgressView()
+                            .tint(.secondary)
+                        Text("Loading more...")
+                            .font(Typography.captionLarge)
+                            .foregroundStyle(.secondary)
+                    }
+                    .padding(Spacing.lg)
+                }
+            }
+            .padding(.horizontal, Spacing.md)
+            .padding(.top, Spacing.sm)
+        }
+        .refreshable {
+            HapticManager.shared.refresh()
+            viewModel.handle(event: .onRefresh)
+        }
     }
 }
 
@@ -135,12 +223,4 @@ struct CategoryCard: View {
             viewModel: CategoriesViewModel(serviceLocator: .preview)
         )
     }
-}
-
-#Preview("CategoryCard") {
-    CategoryCard(category: .technology, isSelected: false) {}
-}
-
-#Preview("CategoryCard Selected") {
-    CategoryCard(category: .technology, isSelected: true) {}
 }

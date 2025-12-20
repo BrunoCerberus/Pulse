@@ -17,32 +17,48 @@ struct HomeView<R: HomeNavigationRouter>: View {
     }
 
     var body: some View {
-        content
-            .navigationTitle("Pulse")
-            .toolbar {
-                ToolbarItem(placement: .topBarTrailing) {
-                    Button {
-                        router.route(navigationEvent: .settings)
-                    } label: {
-                        Image(systemName: "gearshape")
-                    }
+        ZStack {
+            backgroundGradient
+                .ignoresSafeArea()
+
+            content
+        }
+        .navigationTitle("Pulse")
+        .toolbarBackground(.ultraThinMaterial, for: .navigationBar)
+        .toolbar {
+            ToolbarItem(placement: .topBarTrailing) {
+                Button {
+                    HapticManager.shared.tap()
+                    router.route(navigationEvent: .settings)
+                } label: {
+                    Image(systemName: "gearshape")
+                        .font(.system(size: IconSize.md))
+                        .foregroundStyle(.primary)
                 }
             }
-            .refreshable {
-                viewModel.handle(event: .onRefresh)
+        }
+        .refreshable {
+            HapticManager.shared.refresh()
+            viewModel.handle(event: .onRefresh)
+        }
+        .sheet(item: $viewModel.shareArticle) { article in
+            ShareSheet(activityItems: [URL(string: article.url) ?? article.title])
+        }
+        .onAppear {
+            viewModel.handle(event: .onAppear)
+        }
+        .onChange(of: viewModel.selectedArticle) { _, newValue in
+            if let article = newValue {
+                router.route(navigationEvent: .articleDetail(article))
+                viewModel.selectedArticle = nil
             }
-            .sheet(item: $viewModel.shareArticle) { article in
-                ShareSheet(activityItems: [URL(string: article.url) ?? article.title])
-            }
-            .onAppear {
-                viewModel.handle(event: .onAppear)
-            }
-            .onChange(of: viewModel.selectedArticle) { _, newValue in
-                if let article = newValue {
-                    router.route(navigationEvent: .articleDetail(article))
-                    viewModel.selectedArticle = nil
-                }
-            }
+        }
+    }
+
+    // MARK: - Background
+
+    private var backgroundGradient: some View {
+        LinearGradient.subtleBackground
     }
 
     // MARK: - Content Views
@@ -62,34 +78,69 @@ struct HomeView<R: HomeNavigationRouter>: View {
 
     private var loadingView: some View {
         ScrollView {
-            VStack(spacing: 16) {
-                ForEach(0 ..< 5, id: \.self) { _ in
-                    ArticleSkeletonView()
-                }
+            VStack(spacing: Spacing.lg) {
+                GlassSectionHeader("Breaking News")
+
+                HeroCarouselSkeleton()
+
+                GlassSectionHeader("Top Headlines")
+
+                ArticleListSkeleton(count: 5)
             }
-            .padding()
         }
     }
 
     private func errorView(_ message: String) -> some View {
-        ContentUnavailableView {
-            Label("Unable to Load News", systemImage: "exclamationmark.triangle")
-        } description: {
-            Text(message)
-        } actions: {
-            Button("Try Again") {
-                viewModel.handle(event: .onRefresh)
+        GlassCard(style: .thin, shadowStyle: .medium, padding: Spacing.xl) {
+            VStack(spacing: Spacing.md) {
+                Image(systemName: "exclamationmark.triangle.fill")
+                    .font(.system(size: IconSize.xxl))
+                    .foregroundStyle(Color.Semantic.warning)
+
+                Text("Unable to Load News")
+                    .font(Typography.titleMedium)
+
+                Text(message)
+                    .font(Typography.bodyMedium)
+                    .foregroundStyle(.secondary)
+                    .multilineTextAlignment(.center)
+
+                Button {
+                    HapticManager.shared.tap()
+                    viewModel.handle(event: .onRefresh)
+                } label: {
+                    Text("Try Again")
+                        .font(Typography.labelLarge)
+                        .foregroundStyle(.white)
+                        .padding(.horizontal, Spacing.lg)
+                        .padding(.vertical, Spacing.sm)
+                        .background(Color.Accent.primary)
+                        .clipShape(Capsule())
+                }
+                .buttonStyle(.plain)
+                .pressEffect()
             }
-            .buttonStyle(.borderedProminent)
         }
+        .padding(Spacing.lg)
     }
 
     private var emptyStateView: some View {
-        ContentUnavailableView {
-            Label("No News Available", systemImage: "newspaper")
-        } description: {
-            Text("Check back later for the latest headlines.")
+        GlassCard(style: .thin, shadowStyle: .medium, padding: Spacing.xl) {
+            VStack(spacing: Spacing.md) {
+                Image(systemName: "newspaper")
+                    .font(.system(size: IconSize.xxl))
+                    .foregroundStyle(.secondary)
+
+                Text("No News Available")
+                    .font(Typography.titleMedium)
+
+                Text("Check back later for the latest headlines.")
+                    .font(Typography.bodyMedium)
+                    .foregroundStyle(.secondary)
+                    .multilineTextAlignment(.center)
+            }
         }
+        .padding(Spacing.lg)
     }
 
     private var articlesList: some View {
@@ -99,33 +150,49 @@ struct HomeView<R: HomeNavigationRouter>: View {
                     Section {
                         breakingNewsCarousel
                     } header: {
-                        sectionHeader("Breaking News")
+                        GlassSectionHeader("Breaking News")
                     }
                 }
 
                 Section {
-                    ForEach(viewModel.viewState.headlines) { item in
-                        ArticleRowView(item: item) {
-                            viewModel.handle(event: .onArticleTapped(item.article))
-                        } onBookmark: {
-                            viewModel.handle(event: .onBookmarkTapped(item.article))
-                        } onShare: {
-                            viewModel.handle(event: .onShareTapped(item.article))
-                        }
-                        .onAppear {
-                            if item == viewModel.viewState.headlines.last {
-                                viewModel.handle(event: .onLoadMore)
+                    VStack(spacing: Spacing.sm) {
+                        ForEach(Array(viewModel.viewState.headlines.enumerated()), id: \.element.id) { index, item in
+                            GlassArticleCard(
+                                item: item,
+                                onTap: {
+                                    viewModel.handle(event: .onArticleTapped(item.article))
+                                },
+                                onBookmark: {
+                                    viewModel.handle(event: .onBookmarkTapped(item.article))
+                                },
+                                onShare: {
+                                    viewModel.handle(event: .onShareTapped(item.article))
+                                }
+                            )
+                            .fadeIn(delay: Double(index) * 0.03)
+                            .onAppear {
+                                if item == viewModel.viewState.headlines.last {
+                                    viewModel.handle(event: .onLoadMore)
+                                }
                             }
                         }
                     }
+                    .padding(.horizontal, Spacing.md)
+                    .padding(.top, Spacing.sm)
 
                     if viewModel.viewState.isLoadingMore {
-                        ProgressView()
-                            .frame(maxWidth: .infinity)
-                            .padding()
+                        HStack {
+                            ProgressView()
+                                .tint(.secondary)
+                            Text("Loading more...")
+                                .font(Typography.captionLarge)
+                                .foregroundStyle(.secondary)
+                        }
+                        .frame(maxWidth: .infinity)
+                        .padding(Spacing.lg)
                     }
                 } header: {
-                    sectionHeader("Top Headlines")
+                    GlassSectionHeader("Top Headlines")
                 }
             }
         }
@@ -133,28 +200,17 @@ struct HomeView<R: HomeNavigationRouter>: View {
 
     private var breakingNewsCarousel: some View {
         ScrollView(.horizontal, showsIndicators: false) {
-            LazyHStack(spacing: 16) {
-                ForEach(viewModel.viewState.breakingNews) { item in
-                    BreakingNewsCard(item: item) {
+            LazyHStack(spacing: Spacing.md) {
+                ForEach(Array(viewModel.viewState.breakingNews.enumerated()), id: \.element.id) { index, item in
+                    HeroNewsCard(item: item) {
                         viewModel.handle(event: .onArticleTapped(item.article))
                     }
+                    .fadeIn(delay: Double(index) * 0.1)
                 }
             }
-            .padding(.horizontal)
-            .padding(.vertical, 8)
+            .padding(.horizontal, Spacing.md)
+            .padding(.vertical, Spacing.sm)
         }
-    }
-
-    private func sectionHeader(_ title: String) -> some View {
-        HStack {
-            Text(title)
-                .font(.headline)
-                .fontWeight(.bold)
-            Spacer()
-        }
-        .padding(.horizontal)
-        .padding(.vertical, 8)
-        .background(.ultraThinMaterial)
     }
 }
 

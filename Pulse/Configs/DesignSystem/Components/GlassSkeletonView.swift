@@ -1,0 +1,170 @@
+import SwiftUI
+
+// MARK: - Skeleton Shape
+
+struct SkeletonShape: View {
+    var width: CGFloat?
+    var height: CGFloat
+    var cornerRadius: CGFloat
+
+    init(
+        width: CGFloat? = nil,
+        height: CGFloat = 16,
+        cornerRadius: CGFloat = CornerRadius.xs
+    ) {
+        self.width = width
+        self.height = height
+        self.cornerRadius = cornerRadius
+    }
+
+    var body: some View {
+        RoundedRectangle(cornerRadius: cornerRadius, style: .continuous)
+            .fill(Color.primary.opacity(0.1))
+            .frame(width: width, height: height)
+    }
+}
+
+// MARK: - Glass Article Skeleton
+
+struct GlassArticleSkeleton: View {
+    @State private var isAnimating = false
+
+    var body: some View {
+        HStack(alignment: .top, spacing: Spacing.sm) {
+            VStack(alignment: .leading, spacing: Spacing.xs) {
+                SkeletonShape(width: 60, height: 12)
+
+                SkeletonShape(height: 18)
+                SkeletonShape(width: 200, height: 18)
+
+                SkeletonShape(height: 14)
+                SkeletonShape(width: 150, height: 14)
+
+                HStack(spacing: Spacing.xs) {
+                    SkeletonShape(width: 80, height: 12)
+                    SkeletonShape(width: 60, height: 12)
+                }
+            }
+
+            Spacer()
+
+            SkeletonShape(width: 100, height: 100, cornerRadius: CornerRadius.sm)
+        }
+        .padding(Spacing.md)
+        .glassBackground(style: .thin, cornerRadius: CornerRadius.lg)
+        .shimmer(isActive: isAnimating)
+        .onAppear {
+            isAnimating = true
+        }
+    }
+}
+
+// MARK: - Glass Hero Skeleton
+
+struct GlassHeroSkeleton: View {
+    @State private var isAnimating = false
+
+    var body: some View {
+        VStack(alignment: .leading, spacing: 0) {
+            Spacer()
+
+            VStack(alignment: .leading, spacing: Spacing.xs) {
+                SkeletonShape(width: 80, height: 14)
+                SkeletonShape(height: 20)
+                SkeletonShape(width: 200, height: 20)
+
+                HStack(spacing: Spacing.xs) {
+                    SkeletonShape(width: 60, height: 12)
+                    SkeletonShape(width: 80, height: 12)
+                }
+            }
+            .padding(Spacing.md)
+            .frame(maxWidth: .infinity, alignment: .leading)
+            .background(.ultraThinMaterial)
+        }
+        .frame(width: 300, height: 200)
+        .background(Color.primary.opacity(0.05))
+        .clipShape(RoundedRectangle(cornerRadius: CornerRadius.lg, style: .continuous))
+        .shimmer(isActive: isAnimating)
+        .onAppear {
+            isAnimating = true
+        }
+    }
+}
+
+// MARK: - Glass Category Skeleton
+
+struct GlassCategorySkeleton: View {
+    @State private var isAnimating = false
+
+    var body: some View {
+        VStack(spacing: Spacing.xs) {
+            SkeletonShape(width: 40, height: 40, cornerRadius: CornerRadius.sm)
+            SkeletonShape(width: 60, height: 12)
+        }
+        .padding(Spacing.md)
+        .frame(minWidth: 100)
+        .glassBackground(style: .thin, cornerRadius: CornerRadius.md)
+        .shimmer(isActive: isAnimating)
+        .onAppear {
+            isAnimating = true
+        }
+    }
+}
+
+// MARK: - Article List Skeleton
+
+struct ArticleListSkeleton: View {
+    let count: Int
+
+    init(count: Int = 5) {
+        self.count = count
+    }
+
+    var body: some View {
+        LazyVStack(spacing: Spacing.sm) {
+            ForEach(0 ..< count, id: \.self) { index in
+                GlassArticleSkeleton()
+                    .fadeIn(delay: Double(index) * 0.05)
+            }
+        }
+        .padding(.horizontal, Spacing.md)
+    }
+}
+
+// MARK: - Hero Carousel Skeleton
+
+struct HeroCarouselSkeleton: View {
+    var body: some View {
+        ScrollView(.horizontal, showsIndicators: false) {
+            HStack(spacing: Spacing.md) {
+                ForEach(0 ..< 3, id: \.self) { index in
+                    GlassHeroSkeleton()
+                        .fadeIn(delay: Double(index) * 0.1)
+                }
+            }
+            .padding(.horizontal, Spacing.md)
+        }
+    }
+}
+
+// MARK: - Previews
+
+#Preview("Skeletons") {
+    ZStack {
+        LinearGradient.meshFallback
+            .ignoresSafeArea()
+
+        ScrollView {
+            VStack(spacing: Spacing.lg) {
+                GlassSectionHeader("Breaking News")
+
+                HeroCarouselSkeleton()
+
+                GlassSectionHeader("Top Stories")
+
+                ArticleListSkeleton(count: 3)
+            }
+        }
+    }
+}
