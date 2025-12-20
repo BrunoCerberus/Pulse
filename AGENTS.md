@@ -2,27 +2,32 @@
 
 ## Repository Overview
 
-Pulse is an iOS news aggregation app built with Clean Architecture. This document provides guidelines for AI agents and contributors working on the codebase.
+Pulse is an iOS news aggregation app built with **Unidirectional Data Flow Architecture** based on Clean Architecture principles, using **Combine** for reactive data binding. This document provides guidelines for AI agents and contributors working on the codebase.
 
 ## Project Structure
 
 ```
 Pulse/
 ├── Pulse/                      # Main app source
-│   ├── [Feature]/              # Feature modules
-│   │   ├── API/                # Service layer
-│   │   ├── Domain/             # Business logic
-│   │   ├── ViewModel/          # Presentation
+│   ├── [Feature]/              # Feature modules (Home, ForYou, Categories, etc.)
+│   │   ├── API/                # Service protocols + implementations
+│   │   ├── Domain/             # Interactor, State, Action, Reducer, EventActionMap
+│   │   ├── ViewModel/          # CombineViewModel implementation
 │   │   ├── View/               # SwiftUI views (generic over Router)
-│   │   ├── ViewEvents/         # Event definitions
-│   │   ├── ViewStates/         # State definitions
+│   │   ├── ViewEvents/         # User interaction events
+│   │   ├── ViewStates/         # Presentation-layer state
 │   │   └── Router/             # Navigation routers (NavigationRouter protocol)
 │   └── Configs/
 │       ├── Navigation/         # Coordinator, Page, CoordinatorView, DeeplinkRouter
+│       ├── Extensions/         # CombineViewModel, CombineInteractor, ViewStateReducing
+│       ├── DesignSystem/       # ColorSystem, Typography, Components
+│       ├── Models/             # Article, NewsCategory, UserPreferences
+│       ├── Storage/            # StorageService (SwiftData)
+│       ├── Mocks/              # Mock services for testing
 │       └── ...                 # Other shared infrastructure
 ├── PulseTests/                 # Unit tests (Swift Testing)
 ├── PulseUITests/               # UI tests (XCTest)
-├── PulseSnapshotTests/         # Snapshot tests
+├── PulseSnapshotTests/         # Snapshot tests (SnapshotTesting)
 ├── .github/workflows/          # CI/CD
 └── .claude/commands/           # Claude slash commands
 ```
@@ -53,29 +58,40 @@ make coverage       # Test with coverage
 import SwiftUI
 import Combine
 
-// 2. Type definition
+// 2. Type definition - ViewModel pattern
 final class HomeViewModel: CombineViewModel, ObservableObject {
-    // 3. Type aliases
+    // 3. Type aliases (required by CombineViewModel protocol)
     typealias ViewState = HomeViewState
+    typealias ViewEvent = HomeViewEvent
 
     // 4. Published properties
     @Published private(set) var viewState: HomeViewState = .initial
 
     // 5. Private properties
     private let interactor: HomeDomainInteractor
+    private let eventMap = HomeEventActionMap()
+    private let reducer = HomeViewStateReducer()
     private var cancellables = Set<AnyCancellable>()
 
     // 6. Initializer
-    init(interactor: HomeDomainInteractor = HomeDomainInteractor()) {
+    init(interactor: HomeDomainInteractor) {
         self.interactor = interactor
         setupBindings()
     }
 
-    // 7. Public methods
-    func handle(event: HomeViewEvent) { ... }
+    // 7. Public methods (CombineViewModel protocol)
+    func handle(event: HomeViewEvent) {
+        guard let action = eventMap.map(event: event) else { return }
+        interactor.dispatch(action: action)
+    }
 
-    // 8. Private methods
-    private func setupBindings() { ... }
+    // 8. Private methods - Combine bindings
+    private func setupBindings() {
+        interactor.statePublisher
+            .map { [reducer] state in reducer.reduce(domainState: state) }
+            .receive(on: DispatchQueue.main)
+            .assign(to: &$viewState)
+    }
 }
 ```
 
@@ -98,35 +114,59 @@ struct HomeView: View {
 
 ### Unit Tests (Swift Testing)
 ```swift
-@Suite("FeatureViewModel Tests")
-struct FeatureViewModelTests {
-    var mockService: MockFeatureService!
-    var sut: FeatureViewModel!
+@Suite
+@MainActor
+struct HomeDomainInteractorTests {
+    let mockNewsService: MockNewsService
+    let mockStorageService: MockStorageService
+    let serviceLocator: ServiceLocator
+    let sut: HomeDomainInteractor  // System Under Test
 
     init() {
-        mockService = MockFeatureService()
-        ServiceLocator.shared.register(FeatureService.self, service: mockService)
-        sut = FeatureViewModel()
+        mockNewsService = MockNewsService()
+        mockStorageService = MockStorageService()
+        serviceLocator = ServiceLocator()
+
+        // Wire mocks into locator
+        serviceLocator.register(NewsService.self, instance: mockNewsService)
+        serviceLocator.register(StorageService.self, instance: mockStorageService)
+
+        sut = HomeDomainInteractor(serviceLocator: serviceLocator)
     }
 
     @Test("Initial state is correct")
     func testInitialState() {
-        #expect(sut.viewState == .initial)
+        #expect(sut.statePublisher.value == HomeDomainState.initial)
+    }
+
+    @Test("Load initial data updates state")
+    func testLoadInitialData() async {
+        // Arrange
+        mockNewsService.breakingNewsResult = .success([Article.mock()])
+
+        // Act
+        sut.dispatch(action: .loadInitialData)
+
+        // Assert - wait for Combine pipeline
+        try? await Task.sleep(nanoseconds: 100_000_000)
+        #expect(!sut.statePublisher.value.isLoading)
     }
 }
 ```
 
 ### Mock Services
 - All services have mock implementations in `Configs/Mocks/`
-- Register mocks via ServiceLocator before testing
-- Mocks expose result properties for test control
+- Create fresh ServiceLocator per test (not shared)
+- Mocks expose `Result` properties for controlling success/failure paths
 
 ## Architecture Rules
 
-1. **Views never directly access Services** - always through ViewModels
-2. **ViewModels never directly access APIs** - always through Interactors
-3. **Domain layer is UI-agnostic** - no SwiftUI imports
-4. **All dependencies injected via ServiceLocator**
+1. **Unidirectional Data Flow**: Data flows in one direction through the layers
+2. **Views never directly access Services** - always through ViewModels
+3. **ViewModels never directly access APIs** - always through Interactors
+4. **Domain layer is UI-agnostic** - no SwiftUI imports
+5. **All dependencies injected via ServiceLocator**
+6. **State is immutable** - use Equatable structs for DomainState and ViewState
 
 ## Navigation Architecture
 
@@ -189,27 +229,53 @@ final class HomeNavigationRouter: NavigationRouter {
 }
 ```
 
-## Data Flow
+## Unidirectional Data Flow
 
 ```
-User Interaction
-      ↓
-View.handle(event:)
-      ↓
-ViewModel.handle(event:)
-      ↓
-EventActionMap.map(event:) → DomainAction
-      ↓
-Interactor.dispatch(action:)
-      ↓
-Service method call
-      ↓
-DomainState update
-      ↓
-ViewStateReducer.reduce(domainState:) → ViewState
-      ↓
-View re-renders
+┌─────────────────────────────────────────────────────────────┐
+│  User Interaction (tap, scroll, etc.)                       │
+└─────────────────────────────────────────────────────────────┘
+                              ↓
+┌─────────────────────────────────────────────────────────────┐
+│  View.handle(event: ViewEvent)                              │
+│  - HomeView calls viewModel.handle(event: .onAppear)        │
+└─────────────────────────────────────────────────────────────┘
+                              ↓
+┌─────────────────────────────────────────────────────────────┐
+│  ViewModel.handle(event:)                                   │
+│  - EventActionMap.map(event:) → DomainAction                │
+│  - interactor.dispatch(action:)                             │
+└─────────────────────────────────────────────────────────────┘
+                              ↓
+┌─────────────────────────────────────────────────────────────┐
+│  Interactor.dispatch(action:)                               │
+│  - Executes business logic                                  │
+│  - Calls services (NewsService, StorageService, etc.)       │
+│  - Updates DomainState via CurrentValueSubject              │
+└─────────────────────────────────────────────────────────────┘
+                              ↓
+┌─────────────────────────────────────────────────────────────┐
+│  statePublisher emits new DomainState                       │
+│  - ViewModel subscribes via Combine                         │
+│  - ViewStateReducer.reduce(domainState:) → ViewState        │
+│  - Assigns to @Published viewState                          │
+└─────────────────────────────────────────────────────────────┘
+                              ↓
+┌─────────────────────────────────────────────────────────────┐
+│  View re-renders with new ViewState                         │
+│  - SwiftUI observes @Published changes                      │
+│  - UI updates reactively                                    │
+└─────────────────────────────────────────────────────────────┘
 ```
+
+### Key Protocols
+
+| Protocol | Purpose | Location |
+|----------|---------|----------|
+| `CombineViewModel` | Base for ViewModels with `viewState` and `handle(event:)` | `Configs/Extensions/` |
+| `CombineInteractor` | Base for Interactors with `statePublisher` and `dispatch(action:)` | `Configs/Extensions/` |
+| `ViewStateReducing` | Transforms DomainState → ViewState | `Configs/Extensions/` |
+| `DomainEventActionMap` | Maps ViewEvent → DomainAction | `Configs/Extensions/` |
 
 ## Commit Guidelines
 
