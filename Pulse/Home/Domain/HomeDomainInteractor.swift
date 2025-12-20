@@ -81,6 +81,9 @@ final class HomeDomainInteractor: CombineInteractor {
                 state.currentPage = 1
                 state.hasMorePages = headlines.count >= 20
             }
+            // Update widget with latest headlines
+            let allArticles = breaking + headlines
+            WidgetDataManager.shared.saveArticlesForWidget(allArticles)
         }
         .store(in: &cancellables)
     }
