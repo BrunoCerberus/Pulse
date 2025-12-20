@@ -27,7 +27,7 @@ settings:
     PRODUCT_BUNDLE_IDENTIFIER: com.bruno.Pulse-News
     MARKETING_VERSION: "1.0.0"
     CURRENT_PROJECT_VERSION: "1"
-    DEVELOPMENT_TEAM: ""
+    DEVELOPMENT_TEAM: RDTR6557FX
     CODE_SIGN_STYLE: Automatic
     IPHONEOS_DEPLOYMENT_TARGET: 26.1
     SWIFT_VERSION: 5.0
@@ -78,7 +78,7 @@ targets:
         ASSETCATALOG_COMPILER_APPICON_NAME: AppIcon
         ASSETCATALOG_COMPILER_GLOBAL_ACCENT_COLOR_NAME: AccentColor
         CODE_SIGN_STYLE: Automatic
-        DEVELOPMENT_TEAM: ""
+        DEVELOPMENT_TEAM: RDTR6557FX
         TARGETED_DEVICE_FAMILY: 1,2
         SUPPORTED_PLATFORMS: iphoneos iphonesimulator
         SUPPORTS_MACCATALYST: false
@@ -133,7 +133,7 @@ targets:
         TEST_HOST: "$(BUILT_PRODUCTS_DIR)/Pulse.app/Pulse"
         BUNDLE_LOADER: $(TEST_HOST)
         CODE_SIGN_STYLE: Automatic
-        DEVELOPMENT_TEAM: ""
+        DEVELOPMENT_TEAM: RDTR6557FX
     dependencies:
       - target: Pulse
       - sdk: XCTest.framework
@@ -158,7 +158,7 @@ targets:
         PRODUCT_BUNDLE_IDENTIFIER: com.bruno.PulseUITests
         TEST_TARGET_NAME: Pulse
         CODE_SIGN_STYLE: Automatic
-        DEVELOPMENT_TEAM: ""
+        DEVELOPMENT_TEAM: RDTR6557FX
     dependencies:
       - target: Pulse
       - sdk: XCTest.framework
@@ -183,7 +183,7 @@ targets:
         TEST_HOST: "$(BUILT_PRODUCTS_DIR)/Pulse.app/Pulse"
         BUNDLE_LOADER: $(TEST_HOST)
         CODE_SIGN_STYLE: Automatic
-        DEVELOPMENT_TEAM: ""
+        DEVELOPMENT_TEAM: RDTR6557FX
     dependencies:
       - target: Pulse
       - sdk: XCTest.framework
@@ -206,7 +206,7 @@ targets:
         PRODUCT_BUNDLE_IDENTIFIER: com.bruno.Pulse-News.widget
         PRODUCT_NAME: PulseWidgetExtension
         CODE_SIGN_STYLE: Automatic
-        DEVELOPMENT_TEAM: ""
+        DEVELOPMENT_TEAM: RDTR6557FX
         TARGETED_DEVICE_FAMILY: 1,2
         SUPPORTED_PLATFORMS: iphoneos iphonesimulator
         SKIP_INSTALL: YES
