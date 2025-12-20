@@ -129,7 +129,10 @@ struct GlassCategoryButton: View {
                 Text(category.displayName)
                     .font(Typography.captionMedium)
                     .foregroundStyle(isSelected ? .primary : .secondary)
+                    .lineLimit(1)
+                    .minimumScaleFactor(0.8)
             }
+            .frame(width: 90)
             .padding(Spacing.sm)
             .glassBackground(
                 style: isSelected ? .regular : .ultraThin,
