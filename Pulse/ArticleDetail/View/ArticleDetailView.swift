@@ -43,7 +43,6 @@ struct ArticleDetailView: View {
                     contentCard
                 }
             }
-            .ignoresSafeArea(.container, edges: .top)
         }
         .navigationBarTitleDisplayMode(.inline)
         .navigationBarBackButtonHidden(true)
