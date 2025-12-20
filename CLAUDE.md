@@ -2,31 +2,85 @@
 
 ## Project Overview
 
-Pulse is an iOS news aggregation app built with **Clean Architecture**, **MVVM**, and **Combine**. The app fetches news from public APIs (NewsAPI, Guardian API, GNews) and provides a personalized reading experience.
+Pulse is an iOS news aggregation app built with **Unidirectional Data Flow Architecture** based on Clean Architecture principles, using **Combine** for reactive data binding. The app fetches news from public APIs (NewsAPI, Guardian API, GNews) and provides a personalized reading experience.
 
 ## Architecture
 
 ```
-View (SwiftUI)
-    ↓ ViewEvent
-ViewModel (@Published viewState)
-    ↓ DomainAction
-DomainInteractor (Combine publishers)
-    ↓
-Service Layer (Protocol-based)
-    ↓
-Network Layer (EntropyCore)
+┌─────────────────────────────────────────────────────────────┐
+│  View (SwiftUI)                                             │
+│  @ObservedObject viewModel                                  │
+└─────────────────────────────────────────────────────────────┘
+       │ handle(event: ViewEvent)           ↑ @Published viewState
+       ↓                                    │
+┌─────────────────────────────────────────────────────────────┐
+│  ViewModel (CombineViewModel)                               │
+│  - EventActionMap: ViewEvent → DomainAction                 │
+│  - Reducer: DomainState → ViewState                         │
+└─────────────────────────────────────────────────────────────┘
+       │ dispatch(action:)                  ↑ statePublisher
+       ↓                                    │
+┌─────────────────────────────────────────────────────────────┐
+│  DomainInteractor (CombineInteractor)                       │
+│  - CurrentValueSubject<DomainState, Never>                  │
+│  - Business logic + state mutations                         │
+└─────────────────────────────────────────────────────────────┘
+       │                                    ↑
+       ↓                                    │
+┌─────────────────────────────────────────────────────────────┐
+│  Service Layer (Protocol-based)                             │
+│  - Live implementations for production                      │
+│  - Mock implementations for testing                         │
+└─────────────────────────────────────────────────────────────┘
+       │                                    ↑
+       ↓                                    │
+┌─────────────────────────────────────────────────────────────┐
+│  Network Layer (EntropyCore) + Storage (SwiftData)          │
+└─────────────────────────────────────────────────────────────┘
 ```
 
 ### Key Patterns
 
-1. **Clean Architecture**: Strict separation of concerns
-   - **View Layer**: SwiftUI views with `@StateObject`
+1. **Unidirectional Data Flow**: Reactive Combine-based architecture
+   - **View Layer**: SwiftUI views with `@ObservedObject` ViewModels
    - **Presentation Layer**: ViewModels implementing `CombineViewModel`
    - **Domain Layer**: Interactors implementing `CombineInteractor`
    - **Service Layer**: Protocol-based services with Live/Mock implementations
 
-2. **ServiceLocator**: Instance-based dependency injection (passed through initializers)
+2. **Core Protocols** (in `Configs/Extensions/`):
+   ```swift
+   // ViewModel protocol
+   protocol CombineViewModel: ObservableObject {
+       associatedtype ViewState: Equatable
+       associatedtype ViewEvent
+       var viewState: ViewState { get }
+       func handle(event: ViewEvent)
+   }
+
+   // Interactor protocol
+   protocol CombineInteractor {
+       associatedtype DomainState: Equatable
+       associatedtype DomainAction
+       var statePublisher: AnyPublisher<DomainState, Never> { get }
+       func dispatch(action: DomainAction)
+   }
+
+   // State transformation
+   protocol ViewStateReducing {
+       associatedtype DomainState
+       associatedtype ViewState
+       func reduce(domainState: DomainState) -> ViewState
+   }
+
+   // Event to action mapping
+   protocol DomainEventActionMap {
+       associatedtype ViewEvent
+       associatedtype DomainAction
+       func map(event: ViewEvent) -> DomainAction?
+   }
+   ```
+
+3. **ServiceLocator**: Instance-based dependency injection (passed through initializers)
    ```swift
    // Service Registration (PulseSceneDelegate.swift)
    let serviceLocator = ServiceLocator()
@@ -54,10 +108,7 @@ Network Layer (EntropyCore)
    - **Easy Testing**: Mock services automatically injected in test environments
    - **Type Safety**: Compile-time service resolution with proper error handling
 
-3. **ViewStateReducing**: Transforms DomainState to ViewState
-4. **DomainEventActionMap**: Maps ViewEvents to DomainActions
-
-5. **Coordinator + Router Navigation**: Centralized navigation with per-tab paths
+4. **Coordinator + Router Navigation**: Centralized navigation with per-tab paths
 
    ```
    CoordinatorView (@StateObject Coordinator)
@@ -110,27 +161,30 @@ Network Layer (EntropyCore)
 
 ```
 Pulse/
-├── Home/                    # Home feed feature
-│   ├── API/                 # NewsAPI, NewsService
-│   ├── Domain/              # Interactor, State, Action, Reducers
-│   ├── ViewModel/           # HomeViewModel
-│   ├── View/                # SwiftUI views (generic over Router)
-│   ├── ViewEvents/          # HomeViewEvent
-│   ├── ViewStates/          # HomeViewState
-│   └── Router/              # HomeNavigationRouter
-├── Search/                  # Search feature
-├── Bookmarks/               # Offline reading
-├── Categories/              # Category browsing
-├── ForYou/                  # Personalized feed
-├── Settings/                # User preferences
-├── ArticleDetail/           # Article view
-├── Configs/
-│   ├── Navigation/          # Coordinator, Page, CoordinatorView, DeeplinkRouter
-│   ├── Storage/             # SwiftData persistence
-│   ├── Networking/          # API keys, base URLs
-│   ├── Extensions/          # Protocols
-│   └── Mocks/               # Mock services for testing
-└── SplashScreen/            # App launch
+├── Home/                       # Home feed feature
+│   ├── API/                    # NewsAPI, NewsService
+│   ├── Domain/                 # Interactor, State, Action, Reducer, EventActionMap
+│   ├── ViewModel/              # HomeViewModel
+│   ├── View/                   # SwiftUI views (generic over Router)
+│   ├── ViewEvents/             # HomeViewEvent
+│   ├── ViewStates/             # HomeViewState
+│   └── Router/                 # HomeNavigationRouter
+├── ForYou/                     # Personalized feed (same pattern)
+├── Categories/                 # Category browsing
+├── Search/                     # Search feature
+├── Bookmarks/                  # Offline reading
+├── Settings/                   # User preferences
+├── ArticleDetail/              # Article view
+├── SplashScreen/               # App launch animation
+└── Configs/
+    ├── Navigation/             # Coordinator, Page, CoordinatorView, DeeplinkRouter
+    ├── DesignSystem/           # ColorSystem, Typography, Components
+    ├── Extensions/             # CombineViewModel, CombineInteractor, etc.
+    ├── Models/                 # Article, NewsCategory, UserPreferences
+    ├── Storage/                # StorageService (SwiftData)
+    ├── Networking/             # API keys, base URLs
+    ├── Mocks/                  # Mock services for testing
+    └── Widget/                 # WidgetDataManager
 ```
 
 ## Features
@@ -224,11 +278,18 @@ final class LiveNewsService: APIRequest, NewsService {
 
 | File | Purpose |
 |------|---------|
+| **Architecture Protocols** | |
+| `CombineViewModel.swift` | Base protocol for ViewModels |
+| `CombineInteractor.swift` | Base protocol for domain interactors |
+| `ViewStateReducing.swift` | Protocol for state transformation |
+| `DomainEventActionMap.swift` | Protocol for event-to-action mapping |
+| **Navigation** | |
 | `Coordinator.swift` | Central navigation manager with per-tab paths |
 | `CoordinatorView.swift` | Root TabView with NavigationStacks |
 | `Page.swift` | Enum of all navigable destinations |
 | `DeeplinkRouter.swift` | Routes deeplinks to coordinator |
 | `*NavigationRouter.swift` | Feature-specific navigation routers |
+| **Infrastructure** | |
 | `ServiceLocator.swift` | Dependency injection container |
 | `DeeplinkManager.swift` | URL scheme handling |
 | `ThemeManager.swift` | Dark/light mode management |
