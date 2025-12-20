@@ -26,7 +26,8 @@ final class WidgetDataManager {
             SharedWidgetArticle(
                 id: article.id,
                 title: article.title,
-                source: article.source.name
+                source: article.source.name,
+                imageURL: article.imageURL
             )
         }
 
@@ -46,4 +47,5 @@ struct SharedWidgetArticle: Codable {
     let id: String
     let title: String
     let source: String?
+    let imageURL: String?
 }

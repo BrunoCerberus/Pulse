@@ -1,4 +1,5 @@
 import SwiftUI
+import UIKit
 import WidgetKit
 
 struct PulseNewsWidget: Widget {
@@ -57,9 +58,9 @@ struct PulseNewsWidgetEntryView: View {
 
             Spacer(minLength: 0)
         }
-        .padding(paddingSize)
-        .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .topLeading)
-        .background(Color(uiColor: .systemBackground))
+        .containerBackground(for: .widget) {
+            Color(uiColor: .systemBackground)
+        }
     }
 
     private var headerSpacing: CGFloat {
@@ -68,17 +69,6 @@ struct PulseNewsWidgetEntryView: View {
 
     private var contentSpacing: CGFloat {
         entry.family == .systemSmall ? 8 : 10
-    }
-
-    private var paddingSize: CGFloat {
-        switch entry.family {
-        case .systemSmall:
-            14
-        case .systemMedium:
-            16
-        default:
-            16
-        }
     }
 
     private func articleLimit(for family: WidgetFamily) -> Int {
@@ -96,27 +86,15 @@ struct PulseNewsWidgetEntryView: View {
 }
 
 struct ArticleRowView: View {
-    let article: SharedArticle
+    let article: WidgetArticle
     let family: WidgetFamily
 
     var body: some View {
         HStack(alignment: .center, spacing: 10) {
-            // Article image placeholder
-            ZStack {
-                RoundedRectangle(cornerRadius: 8)
-                    .fill(
-                        LinearGradient(
-                            colors: [Color.blue.opacity(0.4), Color.blue.opacity(0.2)],
-                            startPoint: .topLeading,
-                            endPoint: .bottomTrailing
-                        )
-                    )
-
-                Image(systemName: "newspaper.fill")
-                    .font(.system(size: 20, weight: .light))
-                    .foregroundColor(.white.opacity(0.8))
-            }
-            .frame(width: family == .systemSmall ? 45 : 50, height: family == .systemSmall ? 45 : 50)
+            // Article image
+            articleImage
+                .frame(width: family == .systemSmall ? 45 : 50, height: family == .systemSmall ? 45 : 50)
+                .clipShape(RoundedRectangle(cornerRadius: 8))
 
             // Article details
             VStack(alignment: .leading, spacing: 3) {
@@ -137,16 +115,43 @@ struct ArticleRowView: View {
         .frame(maxWidth: .infinity)
         .frame(height: family == .systemSmall ? 45 : 50)
     }
+
+    @ViewBuilder
+    private var articleImage: some View {
+        if let imageData = article.imageData,
+           let uiImage = UIImage(data: imageData) {
+            Image(uiImage: uiImage)
+                .resizable()
+                .aspectRatio(contentMode: .fill)
+        } else {
+            // Placeholder when no image available
+            ZStack {
+                RoundedRectangle(cornerRadius: 8)
+                    .fill(
+                        LinearGradient(
+                            colors: [Color.blue.opacity(0.4), Color.blue.opacity(0.2)],
+                            startPoint: .topLeading,
+                            endPoint: .bottomTrailing
+                        )
+                    )
+
+                Image(systemName: "newspaper.fill")
+                    .font(.system(size: 20, weight: .light))
+                    .foregroundColor(.white.opacity(0.8))
+            }
+        }
+    }
 }
 
 #Preview("PulseNewsWidget - Small", as: .systemSmall) {
     PulseNewsWidget()
 } timeline: {
     let sampleArticles = [
-        SharedArticle(
+        WidgetArticle(
             id: "1",
             title: "Breaking: Major Tech Announcement",
-            source: "TechNews"
+            source: "TechNews",
+            imageData: nil
         ),
     ]
     NewsTimelineEntry(
@@ -160,15 +165,17 @@ struct ArticleRowView: View {
     PulseNewsWidget()
 } timeline: {
     let sampleArticles = [
-        SharedArticle(
+        WidgetArticle(
             id: "1",
             title: "Breaking: Major Tech Announcement",
-            source: "TechNews"
+            source: "TechNews",
+            imageData: nil
         ),
-        SharedArticle(
+        WidgetArticle(
             id: "2",
             title: "Markets Rally on Economic News",
-            source: "Financial Times"
+            source: "Financial Times",
+            imageData: nil
         ),
     ]
     NewsTimelineEntry(
@@ -182,20 +189,23 @@ struct ArticleRowView: View {
     PulseNewsWidget()
 } timeline: {
     let sampleArticles = [
-        SharedArticle(
+        WidgetArticle(
             id: "1",
             title: "Breaking: Major Tech Announcement",
-            source: "TechNews"
+            source: "TechNews",
+            imageData: nil
         ),
-        SharedArticle(
+        WidgetArticle(
             id: "2",
             title: "Markets Rally on Economic News",
-            source: "Financial Times"
+            source: "Financial Times",
+            imageData: nil
         ),
-        SharedArticle(
+        WidgetArticle(
             id: "3",
             title: "Sports Update: Championship Finals",
-            source: "ESPN"
+            source: "ESPN",
+            imageData: nil
         ),
     ]
     NewsTimelineEntry(
