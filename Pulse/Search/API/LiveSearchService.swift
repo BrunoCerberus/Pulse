@@ -9,12 +9,20 @@ final class LiveSearchService: APIRequest, SearchService {
     func search(query: String, page: Int, sortBy: String) -> AnyPublisher<[Article], Error> {
         saveRecentSearch(query)
 
+        let guardianOrderBy = mapSortOrder(sortBy)
+
         return fetchRequest(
-            target: NewsAPI.everything(query: query, page: page, sortBy: sortBy),
-            dataType: NewsResponse.self
+            target: GuardianAPI.search(
+                query: query,
+                section: nil,
+                page: page,
+                pageSize: 20,
+                orderBy: guardianOrderBy
+            ),
+            dataType: GuardianResponse.self
         )
         .map { response in
-            response.articles.compactMap { $0.toArticle() }
+            response.response.results.compactMap { $0.toArticle() }
         }
         .receive(on: DispatchQueue.main)
         .eraseToAnyPublisher()
@@ -26,6 +34,19 @@ final class LiveSearchService: APIRequest, SearchService {
             $0.lowercased().contains(query.lowercased())
         }
         return Just(filtered).eraseToAnyPublisher()
+    }
+
+    private func mapSortOrder(_ newsAPISortBy: String) -> String {
+        switch newsAPISortBy.lowercased() {
+        case "relevancy":
+            return "relevance"
+        case "popularity":
+            return "relevance"
+        case "publishedat":
+            return "newest"
+        default:
+            return "relevance"
+        }
     }
 
     private func saveRecentSearch(_ query: String) {
