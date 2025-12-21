@@ -3,7 +3,7 @@ import Foundation
 @testable import Pulse
 import Testing
 
-@Suite("DeeplinkManager Tests")
+@Suite("DeeplinkManager Tests", .serialized)
 struct DeeplinkManagerTests {
     let sut: DeeplinkManager
 
