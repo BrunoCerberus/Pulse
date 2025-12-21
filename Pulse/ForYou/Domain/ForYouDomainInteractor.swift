@@ -10,6 +10,10 @@ final class ForYouDomainInteractor: CombineInteractor {
     private let stateSubject = CurrentValueSubject<ForYouDomainState, Never>(.initial)
     private var cancellables = Set<AnyCancellable>()
 
+    /// Time when data finished loading - pagination is disabled for a brief period after each load
+    private var lastLoadCompletedAt: Date?
+    private let paginationCooldown: TimeInterval = 1.0
+
     var statePublisher: AnyPublisher<ForYouDomainState, Never> {
         stateSubject.eraseToAnyPublisher()
     }
@@ -48,6 +52,13 @@ final class ForYouDomainInteractor: CombineInteractor {
     }
 
     private func loadFeed() {
+        // Reset cooldown when screen appears to prevent pagination on return
+        if currentState.hasLoadedInitialData {
+            lastLoadCompletedAt = Date()
+            return
+        }
+        guard !currentState.isLoading else { return }
+
         updateState { state in
             state.isLoading = true
             state.error = nil
@@ -71,10 +82,12 @@ final class ForYouDomainInteractor: CombineInteractor {
                         }
                     }
                 } receiveValue: { [weak self] articles in
+                    self?.lastLoadCompletedAt = Date()
                     self?.updateState { state in
                         state.articles = articles
                         state.isLoading = false
                         state.hasMorePages = articles.count >= 20
+                        state.hasLoadedInitialData = true
                     }
                 }
                 .store(in: &cancellables)
@@ -82,7 +95,12 @@ final class ForYouDomainInteractor: CombineInteractor {
     }
 
     private func loadMore() {
-        guard !currentState.isLoadingMore, currentState.hasMorePages else { return }
+        // Wait for previous load to complete and cooldown to pass before allowing pagination
+        guard let loadTime = lastLoadCompletedAt,
+              Date().timeIntervalSince(loadTime) >= paginationCooldown,
+              !currentState.isLoadingMore,
+              currentState.hasMorePages
+        else { return }
 
         updateState { state in
             state.isLoadingMore = true
@@ -93,11 +111,13 @@ final class ForYouDomainInteractor: CombineInteractor {
         forYouService.fetchPersonalizedFeed(preferences: currentState.preferences, page: nextPage)
             .sink { [weak self] completion in
                 if case .failure = completion {
+                    self?.lastLoadCompletedAt = Date()
                     self?.updateState { state in
                         state.isLoadingMore = false
                     }
                 }
             } receiveValue: { [weak self] articles in
+                self?.lastLoadCompletedAt = Date()
                 self?.updateState { state in
                     let existingIDs = Set(state.articles.map { $0.id })
                     let newArticles = articles.filter { !existingIDs.contains($0.id) }
@@ -111,6 +131,10 @@ final class ForYouDomainInteractor: CombineInteractor {
     }
 
     private func refresh() {
+        lastLoadCompletedAt = nil
+        updateState { state in
+            state.hasLoadedInitialData = false
+        }
         loadFeed()
     }
 

@@ -8,6 +8,7 @@ struct CategoriesDomainState: Equatable {
     var error: String?
     var currentPage: Int
     var hasMorePages: Bool
+    var hasLoadedInitialData: Bool
 
     static var initial: CategoriesDomainState {
         CategoriesDomainState(
@@ -17,7 +18,8 @@ struct CategoriesDomainState: Equatable {
             isLoadingMore: false,
             error: nil,
             currentPage: 1,
-            hasMorePages: true
+            hasMorePages: true,
+            hasLoadedInitialData: false
         )
     }
 }
