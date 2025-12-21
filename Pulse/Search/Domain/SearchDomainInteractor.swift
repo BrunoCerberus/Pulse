@@ -11,10 +11,6 @@ final class SearchDomainInteractor: CombineInteractor {
     private var cancellables = Set<AnyCancellable>()
     private var searchCancellable: AnyCancellable?
 
-    /// Time when data finished loading - pagination is disabled for a brief period after each load
-    private var lastLoadCompletedAt: Date?
-    private let paginationCooldown: TimeInterval = 1.0
-
     var statePublisher: AnyPublisher<SearchDomainState, Never> {
         stateSubject.eraseToAnyPublisher()
     }
@@ -106,7 +102,6 @@ final class SearchDomainInteractor: CombineInteractor {
                 }
             }
         } receiveValue: { [weak self] articles in
-            self?.lastLoadCompletedAt = Date()
             self?.updateState { state in
                 state.results = articles
                 state.isLoading = false
@@ -116,12 +111,7 @@ final class SearchDomainInteractor: CombineInteractor {
     }
 
     private func loadMore() {
-        // Wait for previous load to complete and cooldown to pass before allowing pagination
-        guard let loadTime = lastLoadCompletedAt,
-              Date().timeIntervalSince(loadTime) >= paginationCooldown,
-              !currentState.isLoadingMore,
-              currentState.hasMorePages
-        else { return }
+        guard !currentState.isLoadingMore, currentState.hasMorePages else { return }
 
         updateState { state in
             state.isLoadingMore = true
@@ -136,13 +126,11 @@ final class SearchDomainInteractor: CombineInteractor {
         )
         .sink { [weak self] completion in
             if case .failure = completion {
-                self?.lastLoadCompletedAt = Date()
                 self?.updateState { state in
                     state.isLoadingMore = false
                 }
             }
         } receiveValue: { [weak self] articles in
-            self?.lastLoadCompletedAt = Date()
             self?.updateState { state in
                 let existingIDs = Set(state.results.map { $0.id })
                 let newArticles = articles.filter { !existingIDs.contains($0.id) }
@@ -156,7 +144,6 @@ final class SearchDomainInteractor: CombineInteractor {
     }
 
     private func clearResults() {
-        lastLoadCompletedAt = nil
         updateState { state in
             state.query = ""
             state.results = []

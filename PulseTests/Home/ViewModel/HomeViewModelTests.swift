@@ -90,7 +90,8 @@ struct HomeViewModelTests {
             isLoadingMore: true,
             error: nil,
             currentPage: 2,
-            hasMorePages: true
+            hasMorePages: true,
+            hasLoadedInitialData: true
         )
 
         let viewState = reducer.reduce(domainState: domainState)

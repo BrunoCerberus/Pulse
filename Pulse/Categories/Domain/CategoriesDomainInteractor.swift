@@ -10,10 +10,6 @@ final class CategoriesDomainInteractor: CombineInteractor {
     private let stateSubject = CurrentValueSubject<CategoriesDomainState, Never>(.initial)
     private var cancellables = Set<AnyCancellable>()
 
-    /// Time when data finished loading - pagination is disabled for a brief period after each load
-    private var lastLoadCompletedAt: Date?
-    private let paginationCooldown: TimeInterval = 1.0
-
     var statePublisher: AnyPublisher<CategoriesDomainState, Never> {
         stateSubject.eraseToAnyPublisher()
     }
@@ -75,7 +71,6 @@ final class CategoriesDomainInteractor: CombineInteractor {
                     }
                 }
             } receiveValue: { [weak self] articles in
-                self?.lastLoadCompletedAt = Date()
                 self?.updateState { state in
                     state.articles = articles
                     state.isLoading = false
@@ -87,10 +82,7 @@ final class CategoriesDomainInteractor: CombineInteractor {
     }
 
     private func loadMore() {
-        // Wait for previous load to complete and cooldown to pass before allowing pagination
-        guard let loadTime = lastLoadCompletedAt,
-              Date().timeIntervalSince(loadTime) >= paginationCooldown,
-              let category = currentState.selectedCategory,
+        guard let category = currentState.selectedCategory,
               !currentState.isLoadingMore,
               currentState.hasMorePages
         else { return }
@@ -104,13 +96,11 @@ final class CategoriesDomainInteractor: CombineInteractor {
         categoriesService.fetchArticles(for: category, page: nextPage)
             .sink { [weak self] completion in
                 if case .failure = completion {
-                    self?.lastLoadCompletedAt = Date()
                     self?.updateState { state in
                         state.isLoadingMore = false
                     }
                 }
             } receiveValue: { [weak self] articles in
-                self?.lastLoadCompletedAt = Date()
                 self?.updateState { state in
                     let existingIDs = Set(state.articles.map { $0.id })
                     let newArticles = articles.filter { !existingIDs.contains($0.id) }
@@ -124,7 +114,6 @@ final class CategoriesDomainInteractor: CombineInteractor {
     }
 
     private func refresh() {
-        lastLoadCompletedAt = nil
         updateState { state in
             state.hasLoadedInitialData = false
         }

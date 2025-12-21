@@ -10,10 +10,6 @@ final class HomeDomainInteractor: CombineInteractor {
     private let stateSubject = CurrentValueSubject<HomeDomainState, Never>(.initial)
     private var cancellables = Set<AnyCancellable>()
 
-    /// Time when data finished loading - pagination is disabled for a brief period after each load
-    private var lastLoadCompletedAt: Date?
-    private let paginationCooldown: TimeInterval = 1.0
-
     var statePublisher: AnyPublisher<HomeDomainState, Never> {
         stateSubject.eraseToAnyPublisher()
     }
@@ -78,7 +74,6 @@ final class HomeDomainInteractor: CombineInteractor {
                 }
             }
         } receiveValue: { [weak self] breaking, headlines in
-            self?.lastLoadCompletedAt = Date()
             self?.updateState { state in
                 state.breakingNews = breaking
                 state.headlines = self?.deduplicateArticles(headlines, excluding: breaking) ?? headlines
@@ -95,12 +90,7 @@ final class HomeDomainInteractor: CombineInteractor {
     }
 
     private func loadMoreHeadlines() {
-        // Wait for previous load to complete and cooldown to pass before allowing pagination
-        guard let loadTime = lastLoadCompletedAt,
-              Date().timeIntervalSince(loadTime) >= paginationCooldown,
-              !currentState.isLoadingMore,
-              currentState.hasMorePages
-        else { return }
+        guard !currentState.isLoadingMore, currentState.hasMorePages else { return }
 
         updateState { state in
             state.isLoadingMore = true
@@ -113,14 +103,12 @@ final class HomeDomainInteractor: CombineInteractor {
         newsService.fetchTopHeadlines(country: country, page: nextPage)
             .sink { [weak self] completion in
                 if case .failure = completion {
-                    self?.lastLoadCompletedAt = Date()
                     self?.updateState { state in
                         state.isLoadingMore = false
                     }
                 }
             } receiveValue: { [weak self] articles in
                 guard let self else { return }
-                self.lastLoadCompletedAt = Date()
                 self.updateState { state in
                     let existingIDs = Set(state.headlines.map { $0.id } + state.breakingNews.map { $0.id })
                     let newArticles = articles.filter { !existingIDs.contains($0.id) }
@@ -134,7 +122,6 @@ final class HomeDomainInteractor: CombineInteractor {
     }
 
     private func refresh() {
-        lastLoadCompletedAt = nil
         updateState { state in
             state.currentPage = 1
             state.hasMorePages = true
