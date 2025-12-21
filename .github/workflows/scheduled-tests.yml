@@ -13,7 +13,7 @@ concurrency:
 jobs:
   build:
     name: Build Project
-    runs-on: macos-latest
+    runs-on: macos-26
 
     steps:
     - name: Checkout code
@@ -107,7 +107,7 @@ jobs:
 
   tests:
     name: ${{ matrix.test-name }}
-    runs-on: macos-latest
+    runs-on: macos-26
     needs: build
     strategy:
       fail-fast: false
@@ -214,7 +214,7 @@ jobs:
 
   test-results:
     name: Test Results Summary
-    runs-on: macos-latest
+    runs-on: macos-26
     needs: [tests]
     if: always()
 
