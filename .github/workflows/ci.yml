@@ -11,7 +11,7 @@ concurrency:
 jobs:
   code-quality:
     name: Code Quality
-    runs-on: macos-latest
+    runs-on: macos-26
 
     steps:
     - name: Checkout code
@@ -20,7 +20,7 @@ jobs:
     - name: Setup Xcode
       uses: maxim-lobanov/setup-xcode@60606e260d2fc5762a71e64e74b2174e8ea3c8bd # v1
       with:
-        xcode-version: '26.1.1'
+        xcode-version: '26.2'
 
     # Cache Homebrew packages
     # Note: Static version key (brew-v1) - increment manually when brew dependencies change
@@ -106,7 +106,7 @@ jobs:
 
   build:
     name: Build Project
-    runs-on: macos-latest
+    runs-on: macos-26
     needs: code-quality
 
     steps:
@@ -116,7 +116,7 @@ jobs:
     - name: Setup Xcode
       uses: maxim-lobanov/setup-xcode@60606e260d2fc5762a71e64e74b2174e8ea3c8bd # v1
       with:
-        xcode-version: '26.1.1'
+        xcode-version: '26.2'
 
     # Cache Homebrew packages
     # Note: Static version key (brew-v1) - increment manually when brew dependencies change
@@ -180,7 +180,7 @@ jobs:
         xcodebuild build-for-testing \
           -project Pulse.xcodeproj \
           -scheme PulseDev \
-          -destination 'platform=iOS Simulator,name=iPhone Air,OS=26.1' \
+          -destination 'platform=iOS Simulator,name=iPhone Air,OS=26.2' \
           -derivedDataPath ./DerivedData
 
     - name: Build for testing (PulseSnapshotTests)
@@ -189,7 +189,7 @@ jobs:
         xcodebuild build-for-testing \
           -project Pulse.xcodeproj \
           -scheme PulseSnapshotTests \
-          -destination 'platform=iOS Simulator,name=iPhone Air,OS=26.1' \
+          -destination 'platform=iOS Simulator,name=iPhone Air,OS=26.2' \
           -derivedDataPath ./DerivedData
 
     - name: Upload build artifacts
@@ -201,7 +201,7 @@ jobs:
 
   tests:
     name: ${{ matrix.test-name }}
-    runs-on: macos-latest
+    runs-on: macos-26
     needs: build
     strategy:
       fail-fast: false
@@ -227,7 +227,7 @@ jobs:
     - name: Setup Xcode
       uses: maxim-lobanov/setup-xcode@60606e260d2fc5762a71e64e74b2174e8ea3c8bd # v1
       with:
-        xcode-version: '26.1.1'
+        xcode-version: '26.2'
 
     # Cache Homebrew packages
     # Note: Static version key (brew-v1) - increment manually when brew dependencies change
@@ -279,7 +279,7 @@ jobs:
           -project Pulse.xcodeproj \
           -scheme ${{ matrix.scheme }} \
           -only-testing:${{ matrix.test-target }} \
-          -destination 'platform=iOS Simulator,name=iPhone Air,OS=26.1' \
+          -destination 'platform=iOS Simulator,name=iPhone Air,OS=26.2' \
           -derivedDataPath ./DerivedData \
           -resultBundlePath test-results/${{ matrix.artifact-name }}.xcresult \
           -disableAutomaticPackageResolution \
@@ -307,7 +307,7 @@ jobs:
 
   test-results:
     name: Test Results Summary
-    runs-on: macos-latest
+    runs-on: macos-26
     needs: [tests]
     if: always()
 
