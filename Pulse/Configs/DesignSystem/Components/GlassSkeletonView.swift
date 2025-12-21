@@ -65,14 +65,20 @@ struct GlassHeroSkeleton: View {
     @State private var isAnimating = false
 
     var body: some View {
-        VStack(alignment: .leading, spacing: 0) {
-            Spacer()
+        ZStack(alignment: .bottomLeading) {
+            // Full image background placeholder
+            Color.primary.opacity(0.08)
 
+            // Content overlay at bottom (matching HeroNewsCard)
             VStack(alignment: .leading, spacing: Spacing.xs) {
-                SkeletonShape(width: 80, height: 14)
-                SkeletonShape(height: 20)
-                SkeletonShape(width: 200, height: 20)
+                // Breaking badge placeholder
+                SkeletonShape(width: 80, height: 22, cornerRadius: CornerRadius.pill)
 
+                // Title lines
+                SkeletonShape(height: 18)
+                SkeletonShape(width: 220, height: 18)
+
+                // Metadata row
                 HStack(spacing: Spacing.xs) {
                     SkeletonShape(width: 60, height: 12)
                     SkeletonShape(width: 80, height: 12)
@@ -80,10 +86,9 @@ struct GlassHeroSkeleton: View {
             }
             .padding(Spacing.md)
             .frame(maxWidth: .infinity, alignment: .leading)
-            .background(.ultraThinMaterial)
+            .background(.ultraThinMaterial.opacity(0.5))
         }
         .frame(width: 300, height: 200)
-        .background(Color.primary.opacity(0.05))
         .clipShape(RoundedRectangle(cornerRadius: CornerRadius.lg, style: .continuous))
         .shimmer(isActive: isAnimating)
         .onAppear {
