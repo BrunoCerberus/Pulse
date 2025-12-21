@@ -52,12 +52,7 @@ final class ForYouDomainInteractor: CombineInteractor {
     }
 
     private func loadFeed() {
-        // Reset cooldown when screen appears to prevent pagination on return
-        if currentState.hasLoadedInitialData {
-            lastLoadCompletedAt = Date()
-            return
-        }
-        guard !currentState.isLoading else { return }
+        guard !currentState.isLoading, !currentState.hasLoadedInitialData else { return }
 
         updateState { state in
             state.isLoading = true

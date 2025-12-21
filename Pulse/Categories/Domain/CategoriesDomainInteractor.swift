@@ -52,9 +52,8 @@ final class CategoriesDomainInteractor: CombineInteractor {
     }
 
     private func selectCategory(_ category: NewsCategory) {
-        // Reset cooldown and skip if same category is already loaded
+        // Skip if same category is already loaded
         if currentState.selectedCategory == category, currentState.hasLoadedInitialData {
-            lastLoadCompletedAt = Date()
             return
         }
 

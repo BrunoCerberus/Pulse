@@ -167,7 +167,7 @@ struct ForYouView<R: ForYouNavigationRouter>: View {
             LazyVStack(spacing: 0, pinnedViews: [.sectionHeaders]) {
                 if !viewModel.viewState.followedTopics.isEmpty {
                     Section {
-                        VStack(spacing: Spacing.sm) {
+                        LazyVStack(spacing: Spacing.sm) {
                             ForEach(Array(viewModel.viewState.articles.enumerated()), id: \.element.id) { index, item in
                                 GlassArticleCard(
                                     item: item,
