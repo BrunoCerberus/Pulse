@@ -1,0 +1,164 @@
+import SwiftUI
+
+// MARK: - Stretchy Header
+
+/// A header component that stays sticky at the top and stretches when pulled down.
+/// Commonly used for hero images in detail views.
+struct StretchyHeader<Content: View>: View {
+    let baseHeight: CGFloat
+    let showGradientOverlay: Bool
+    let gradientHeight: CGFloat
+    let content: Content
+
+    init(
+        baseHeight: CGFloat = 280,
+        showGradientOverlay: Bool = true,
+        gradientHeight: CGFloat = 120,
+        @ViewBuilder content: () -> Content
+    ) {
+        self.baseHeight = baseHeight
+        self.showGradientOverlay = showGradientOverlay
+        self.gradientHeight = gradientHeight
+        self.content = content()
+    }
+
+    var body: some View {
+        GeometryReader { proxy in
+            let minY = proxy.frame(in: .global).minY
+            let stretchAmount = max(0, minY)
+            let height = baseHeight + stretchAmount
+
+            stretchyContent(height: height, width: proxy.size.width)
+                .offset(y: -minY)
+        }
+        .frame(height: baseHeight)
+    }
+
+    @ViewBuilder
+    private func stretchyContent(height: CGFloat, width _: CGFloat) -> some View {
+        GeometryReader { geo in
+            ZStack(alignment: .bottom) {
+                content
+                    .frame(width: geo.size.width, height: height)
+                    .clipped()
+
+                if showGradientOverlay {
+                    LinearGradient.heroOverlay
+                        .frame(height: gradientHeight)
+                }
+            }
+            .frame(width: geo.size.width, height: height)
+        }
+        .frame(height: height)
+    }
+}
+
+// MARK: - Stretchy Async Image
+
+/// A convenience wrapper for StretchyHeader with AsyncImage content.
+struct StretchyAsyncImage: View {
+    let url: URL?
+    let baseHeight: CGFloat
+    let showGradientOverlay: Bool
+    let gradientHeight: CGFloat
+
+    init(
+        url: URL?,
+        baseHeight: CGFloat = 280,
+        showGradientOverlay: Bool = true,
+        gradientHeight: CGFloat = 120
+    ) {
+        self.url = url
+        self.baseHeight = baseHeight
+        self.showGradientOverlay = showGradientOverlay
+        self.gradientHeight = gradientHeight
+    }
+
+    var body: some View {
+        StretchyHeader(
+            baseHeight: baseHeight,
+            showGradientOverlay: showGradientOverlay,
+            gradientHeight: gradientHeight
+        ) {
+            AsyncImage(url: url) { phase in
+                switch phase {
+                case .empty:
+                    Rectangle()
+                        .fill(Color.primary.opacity(0.05))
+                        .overlay { ProgressView() }
+                case let .success(image):
+                    image
+                        .resizable()
+                        .scaledToFill()
+                case .failure:
+                    Rectangle()
+                        .fill(Color.primary.opacity(0.05))
+                        .overlay {
+                            Image(systemName: "photo")
+                                .font(.system(size: IconSize.xxl))
+                                .foregroundStyle(.secondary)
+                        }
+                @unknown default:
+                    Rectangle()
+                        .fill(Color.primary.opacity(0.05))
+                }
+            }
+        }
+    }
+}
+
+// MARK: - Previews
+
+#Preview("Stretchy Header") {
+    ScrollView {
+        VStack(spacing: 0) {
+            StretchyHeader(baseHeight: 300) {
+                LinearGradient(
+                    colors: [.blue, .purple],
+                    startPoint: .topLeading,
+                    endPoint: .bottomTrailing
+                )
+            }
+
+            VStack(spacing: Spacing.md) {
+                Text("Content Title")
+                    .font(Typography.displaySmall)
+
+                Text("This content scrolls over the stretchy header. Pull down to see the stretch effect.")
+                    .font(Typography.bodyMedium)
+                    .foregroundStyle(.secondary)
+            }
+            .padding(Spacing.lg)
+            .frame(maxWidth: .infinity, alignment: .leading)
+            .background(.regularMaterial)
+            .clipShape(
+                .rect(
+                    topLeadingRadius: CornerRadius.xl,
+                    bottomLeadingRadius: 0,
+                    bottomTrailingRadius: 0,
+                    topTrailingRadius: CornerRadius.xl
+                )
+            )
+            .offset(y: -Spacing.lg)
+        }
+    }
+    .ignoresSafeArea(.container, edges: .top)
+}
+
+#Preview("Stretchy Async Image") {
+    ScrollView {
+        VStack(spacing: 0) {
+            StretchyAsyncImage(
+                url: URL(string: "https://picsum.photos/800/600"),
+                baseHeight: 280
+            )
+
+            Text("Article Content")
+                .font(Typography.titleLarge)
+                .padding(Spacing.lg)
+                .frame(maxWidth: .infinity, alignment: .leading)
+                .background(.regularMaterial)
+        }
+    }
+    .ignoresSafeArea(.container, edges: .top)
+}

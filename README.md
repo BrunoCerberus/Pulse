@@ -15,34 +15,47 @@ The app uses iOS 26's liquid glass TabView style with tabs: Home, For You, Categ
 
 ## Architecture
 
-Pulse follows **Clean Architecture** with **MVVM** presentation layer:
+Pulse implements a **Unidirectional Data Flow Architecture** based on Clean Architecture principles, using **Combine** for reactive data binding:
 
 ```
 ┌─────────────────────────────────────────────────────────────┐
 │                         View Layer                          │
-│                    (SwiftUI + ViewState)                    │
+│              (SwiftUI + @ObservedObject ViewModel)          │
 └─────────────────────────────────────────────────────────────┘
-                              ↕
+         │ ViewEvent                    ↑ @Published ViewState
+         ↓                              │
 ┌─────────────────────────────────────────────────────────────┐
 │                    Presentation Layer                       │
-│            (ViewModel + ViewStateReducer)                   │
+│  ViewModel (CombineViewModel) + EventActionMap + Reducer    │
 └─────────────────────────────────────────────────────────────┘
-                              ↕
+         │ DomainAction                 ↑ DomainState (Combine)
+         ↓                              │
 ┌─────────────────────────────────────────────────────────────┐
 │                       Domain Layer                          │
-│              (Interactor + DomainState)                     │
+│         Interactor (CombineInteractor + statePublisher)     │
 └─────────────────────────────────────────────────────────────┘
-                              ↕
+         │                              ↑
+         ↓                              │
 ┌─────────────────────────────────────────────────────────────┐
 │                       Service Layer                         │
-│           (Protocol-based + Live/Mock impl)                 │
+│           (Protocol-based + Live/Mock implementations)      │
 └─────────────────────────────────────────────────────────────┘
-                              ↕
+         │                              ↑
+         ↓                              │
 ┌─────────────────────────────────────────────────────────────┐
 │                       Network Layer                         │
-│                      (EntropyCore)                          │
+│                   (EntropyCore + SwiftData)                 │
 └─────────────────────────────────────────────────────────────┘
 ```
+
+### Key Protocols
+
+| Protocol | Purpose |
+|----------|---------|
+| `CombineViewModel` | Base protocol for ViewModels with `viewState` and `handle(event:)` |
+| `CombineInteractor` | Base protocol for domain layer with `statePublisher` and `dispatch(action:)` |
+| `ViewStateReducing` | Transforms DomainState → ViewState |
+| `DomainEventActionMap` | Maps ViewEvent → DomainAction |
 
 ### Navigation
 
@@ -127,22 +140,35 @@ export GNEWS_API_KEY="your_gnews_key"
 ```
 Pulse/
 ├── Pulse/
-│   ├── Home/           # Home feed feature (includes Router/)
-│   ├── ForYou/         # Personalized feed
-│   ├── Categories/     # Category browsing
-│   ├── Search/         # Search functionality
-│   ├── Bookmarks/      # Saved articles
-│   ├── Settings/       # User preferences
-│   ├── ArticleDetail/  # Article view
-│   ├── Configs/
-│   │   ├── Navigation/ # Coordinator, Page, CoordinatorView, DeeplinkRouter
-│   │   └── ...         # Other infrastructure
-│   └── SplashScreen/   # Launch screen
-├── PulseTests/         # Unit tests
-├── PulseUITests/       # UI tests
-├── PulseSnapshotTests/ # Snapshot tests
-├── .github/workflows/  # CI/CD
-└── .claude/commands/   # Claude Code integration
+│   ├── Home/               # Home feed feature
+│   │   ├── API/            # NewsService protocol + LiveNewsService
+│   │   ├── Domain/         # Interactor, State, Action, Reducer, EventActionMap
+│   │   ├── ViewModel/      # HomeViewModel
+│   │   ├── View/           # SwiftUI views
+│   │   ├── ViewEvents/     # HomeViewEvent
+│   │   ├── ViewStates/     # HomeViewState
+│   │   └── Router/         # HomeNavigationRouter
+│   ├── ForYou/             # Personalized feed (same pattern)
+│   ├── Categories/         # Category browsing
+│   ├── Search/             # Search functionality
+│   ├── Bookmarks/          # Saved articles
+│   ├── Settings/           # User preferences
+│   ├── ArticleDetail/      # Article view
+│   ├── SplashScreen/       # Launch animation
+│   └── Configs/
+│       ├── Navigation/     # Coordinator, Page, CoordinatorView, DeeplinkRouter
+│       ├── DesignSystem/   # ColorSystem, Typography, Components, HapticManager
+│       ├── Extensions/     # CombineViewModel, CombineInteractor, ViewStateReducing
+│       ├── Models/         # Article, NewsCategory, UserPreferences
+│       ├── Networking/     # APIKeysProvider, BaseURLs
+│       ├── Storage/        # StorageService (SwiftData)
+│       ├── Mocks/          # Mock services for testing
+│       └── Widget/         # WidgetDataManager
+├── PulseTests/             # Unit tests (Swift Testing)
+├── PulseUITests/           # UI tests (XCTest)
+├── PulseSnapshotTests/     # Snapshot tests (SnapshotTesting)
+├── .github/workflows/      # CI/CD
+└── .claude/commands/       # Claude Code integration
 ```
 
 ## Dependencies

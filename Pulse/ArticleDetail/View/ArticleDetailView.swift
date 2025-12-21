@@ -6,9 +6,9 @@ struct ArticleDetailView: View {
     @Environment(\.dismiss) private var dismiss
     @Environment(\.colorScheme) private var colorScheme
     @State private var isContentExpanded = false
-    @State private var scrollOffset: CGFloat = 0
 
     private let serviceLocator: ServiceLocator
+    private let heroBaseHeight: CGFloat = 280
 
     /// Strips the "[+XXX chars]" truncation marker from API content
     private var cleanedContent: String? {
@@ -30,39 +30,38 @@ struct ArticleDetailView: View {
     }
 
     var body: some View {
-        ZStack {
+        ZStack(alignment: .top) {
             LinearGradient.subtleBackground
                 .ignoresSafeArea()
 
             ScrollView {
                 VStack(alignment: .leading, spacing: 0) {
-                    heroImage
+                    if let imageURL = article.imageURL, let url = URL(string: imageURL) {
+                        StretchyAsyncImage(url: url, baseHeight: heroBaseHeight)
+                    }
 
                     contentCard
                 }
             }
         }
         .navigationBarTitleDisplayMode(.inline)
-        .toolbarBackground(.ultraThinMaterial, for: .navigationBar)
+        .navigationBarBackButtonHidden(true)
+        .toolbarBackground(.hidden, for: .navigationBar)
         .toolbar {
-            ToolbarItem(placement: .primaryAction) {
+            ToolbarItem(placement: .topBarLeading) {
+                Button("", systemImage: "chevron.left") {
+                    dismiss()
+                }
+            }
+
+            ToolbarItem(placement: .topBarTrailing) {
                 HStack(spacing: Spacing.sm) {
-                    Button {
-                        HapticManager.shared.tap()
+                    Button("", systemImage: viewModel.isBookmarked ? "bookmark.fill" : "bookmark") {
                         viewModel.toggleBookmark()
-                    } label: {
-                        Image(systemName: viewModel.isBookmarked ? "bookmark.fill" : "bookmark")
-                            .font(.system(size: IconSize.md))
-                            .foregroundStyle(viewModel.isBookmarked ? Color.Accent.primary : .primary)
-                            .symbolEffect(.bounce, value: viewModel.isBookmarked)
                     }
 
-                    Button {
-                        HapticManager.shared.tap()
+                    Button("", systemImage: "square.and.arrow.up") {
                         viewModel.share()
-                    } label: {
-                        Image(systemName: "square.and.arrow.up")
-                            .font(.system(size: IconSize.md))
                     }
                 }
             }
@@ -74,43 +73,6 @@ struct ArticleDetailView: View {
         }
         .onAppear {
             viewModel.onAppear()
-        }
-    }
-
-    @ViewBuilder
-    private var heroImage: some View {
-        if let imageURL = article.imageURL, let url = URL(string: imageURL) {
-            ZStack(alignment: .bottom) {
-                AsyncImage(url: url) { phase in
-                    switch phase {
-                    case .empty:
-                        Rectangle()
-                            .fill(Color.primary.opacity(0.05))
-                            .aspectRatio(16 / 9, contentMode: .fit)
-                            .overlay { ProgressView() }
-                    case let .success(image):
-                        image
-                            .resizable()
-                            .aspectRatio(contentMode: .fill)
-                            .frame(maxWidth: .infinity, maxHeight: 280)
-                            .clipped()
-                    case .failure:
-                        Rectangle()
-                            .fill(Color.primary.opacity(0.05))
-                            .aspectRatio(16 / 9, contentMode: .fit)
-                            .overlay {
-                                Image(systemName: "photo")
-                                    .font(.system(size: IconSize.xxl))
-                                    .foregroundStyle(.secondary)
-                            }
-                    @unknown default:
-                        EmptyView()
-                    }
-                }
-
-                LinearGradient.heroOverlay
-                    .frame(height: 120)
-            }
         }
     }
 

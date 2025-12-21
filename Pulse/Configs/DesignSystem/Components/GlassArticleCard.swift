@@ -237,7 +237,10 @@ struct GlassArticleCardCompact: View {
             VStack(spacing: Spacing.md) {
                 GlassArticleCard(
                     title: "Apple Announces Revolutionary New AI Features for iPhone",
-                    description: "The tech giant unveiled groundbreaking artificial intelligence capabilities that will transform how users interact with their devices.",
+                    description: """
+                    The tech giant unveiled groundbreaking artificial intelligence \
+                    capabilities that will transform how users interact with their devices.
+                    """,
                     sourceName: "TechCrunch",
                     formattedDate: "2h ago",
                     imageURL: URL(string: "https://picsum.photos/200"),

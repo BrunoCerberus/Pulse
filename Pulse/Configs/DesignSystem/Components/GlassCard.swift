@@ -79,25 +79,28 @@ struct GlassCardButton<Content: View>: View {
     }
 
     var body: some View {
-        Button(action: {
-            if enableHaptic {
-                HapticManager.shared.tap()
+        Button(
+            action: {
+                if enableHaptic {
+                    HapticManager.shared.tap()
+                }
+                action()
+            },
+            label: {
+                content
+                    .padding(padding)
+                    .background(style.material)
+                    .clipShape(RoundedRectangle(cornerRadius: cornerRadius, style: .continuous))
+                    .overlay(
+                        RoundedRectangle(cornerRadius: cornerRadius, style: .continuous)
+                            .stroke(
+                                showBorder ? Color.Border.adaptive(for: colorScheme) : .clear,
+                                lineWidth: 0.5
+                            )
+                    )
+                    .depthShadow(shadowStyle)
             }
-            action()
-        }) {
-            content
-                .padding(padding)
-                .background(style.material)
-                .clipShape(RoundedRectangle(cornerRadius: cornerRadius, style: .continuous))
-                .overlay(
-                    RoundedRectangle(cornerRadius: cornerRadius, style: .continuous)
-                        .stroke(
-                            showBorder ? Color.Border.adaptive(for: colorScheme) : .clear,
-                            lineWidth: 0.5
-                        )
-                )
-                .depthShadow(shadowStyle)
-        }
+        )
         .buttonStyle(.plain)
         .pressEffect(enableHaptic: false)
     }
@@ -160,14 +163,17 @@ struct GlassContainer<Content: View>: View {
                 .frame(maxWidth: .infinity, alignment: .leading)
             }
 
-            GlassCardButton(action: {}) {
-                HStack {
-                    Image(systemName: "star.fill")
-                    Text("Tap Me")
-                        .font(Typography.labelLarge)
+            GlassCardButton(
+                action: {},
+                content: {
+                    HStack {
+                        Image(systemName: "star.fill")
+                        Text("Tap Me")
+                            .font(Typography.labelLarge)
+                    }
+                    .frame(maxWidth: .infinity)
                 }
-                .frame(maxWidth: .infinity)
-            }
+            )
 
             GlassCard(style: .ultraThin, shadowStyle: .subtle) {
                 Text("Ultra Thin Style")

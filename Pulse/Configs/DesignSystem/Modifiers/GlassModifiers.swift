@@ -66,23 +66,10 @@ struct ShimmerModifier: ViewModifier {
     func body(content: Content) -> some View {
         content
             .overlay(
-                GeometryReader { geometry in
-                    if isActive {
-                        LinearGradient(
-                            colors: [
-                                .clear,
-                                .white.opacity(0.4),
-                                .clear,
-                            ],
-                            startPoint: .leading,
-                            endPoint: .trailing
-                        )
-                        .frame(width: geometry.size.width * 2)
-                        .offset(x: -geometry.size.width + phase * geometry.size.width * 3)
-                        .mask(content)
-                    }
-                }
+                shimmerOverlay
+                    .allowsHitTesting(false)
             )
+            .clipped()
             .onAppear {
                 guard isActive else { return }
                 withAnimation(
@@ -92,6 +79,26 @@ struct ShimmerModifier: ViewModifier {
                     phase = 1
                 }
             }
+    }
+
+    @ViewBuilder
+    private var shimmerOverlay: some View {
+        if isActive {
+            GeometryReader { geometry in
+                LinearGradient(
+                    colors: [
+                        .clear,
+                        .white.opacity(0.3),
+                        .clear,
+                    ],
+                    startPoint: .leading,
+                    endPoint: .trailing
+                )
+                .frame(width: geometry.size.width)
+                .offset(x: -geometry.size.width + phase * geometry.size.width * 2)
+                .blendMode(.softLight)
+            }
+        }
     }
 }
 

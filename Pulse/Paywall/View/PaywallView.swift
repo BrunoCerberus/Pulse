@@ -129,6 +129,7 @@ struct PaywallView: View {
             .subscriptionStoreButtonLabel(.multiline)
             .subscriptionStorePickerItemBackground(.thinMaterial)
             .storeButton(.visible, for: .restorePurchases)
+            .storeButton(.hidden, for: .cancellation)
             .onInAppPurchaseCompletion { _, result in
                 switch result {
                 case .success:
