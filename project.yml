@@ -3,7 +3,7 @@ options:
   bundleIdPrefix: com.bruno
   deploymentTarget:
     iOS: "26.1"
-  xcodeVersion: "26.0.1"
+  xcodeVersion: "26.1.1"
   groupSortPosition: top
   generateEmptyDirectories: true
   fileTypes:
