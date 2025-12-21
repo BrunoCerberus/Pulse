@@ -88,7 +88,8 @@ struct GlassHeroSkeleton: View {
             .frame(maxWidth: .infinity, alignment: .leading)
             .background(.ultraThinMaterial.opacity(0.5))
         }
-        .frame(width: 300, height: 200)
+        .frame(width: 300)
+        .frame(maxHeight: .infinity)
         .clipShape(RoundedRectangle(cornerRadius: CornerRadius.lg, style: .continuous))
         .shimmer(isActive: isAnimating)
         .onAppear {
