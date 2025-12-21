@@ -52,7 +52,7 @@ final class HomeDomainInteractor: CombineInteractor {
     }
 
     private func loadInitialData() {
-        guard !currentState.isLoading else { return }
+        guard !currentState.isLoading, !currentState.hasLoadedInitialData else { return }
 
         updateState { state in
             state.isLoading = true
@@ -80,6 +80,7 @@ final class HomeDomainInteractor: CombineInteractor {
                 state.isLoading = false
                 state.currentPage = 1
                 state.hasMorePages = headlines.count >= 20
+                state.hasLoadedInitialData = true
             }
             // Update widget with latest headlines
             let allArticles = breaking + headlines
@@ -124,6 +125,7 @@ final class HomeDomainInteractor: CombineInteractor {
         updateState { state in
             state.currentPage = 1
             state.hasMorePages = true
+            state.hasLoadedInitialData = false
         }
         loadInitialData()
     }

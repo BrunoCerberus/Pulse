@@ -59,4 +59,37 @@ enum NewsCategory: String, CaseIterable, Codable, Identifiable {
         case .entertainment: return "entertainment"
         }
     }
+
+    var guardianSection: String {
+        switch self {
+        case .world: return "world"
+        case .business: return "business"
+        case .technology: return "technology"
+        case .science: return "science"
+        case .health: return "society"
+        case .sports: return "sport"
+        case .entertainment: return "culture"
+        }
+    }
+
+    static func fromGuardianSection(_ section: String) -> NewsCategory? {
+        switch section.lowercased() {
+        case "world", "uk-news", "us-news", "australia-news":
+            return .world
+        case "business", "money":
+            return .business
+        case "technology":
+            return .technology
+        case "science":
+            return .science
+        case "society", "healthcare-network":
+            return .health
+        case "sport", "football":
+            return .sports
+        case "culture", "film", "music", "books", "tv-and-radio", "stage":
+            return .entertainment
+        default:
+            return nil
+        }
+    }
 }

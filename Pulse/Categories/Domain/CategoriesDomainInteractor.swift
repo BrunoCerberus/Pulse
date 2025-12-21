@@ -48,12 +48,18 @@ final class CategoriesDomainInteractor: CombineInteractor {
     }
 
     private func selectCategory(_ category: NewsCategory) {
+        // Skip if same category is already loaded
+        if currentState.selectedCategory == category, currentState.hasLoadedInitialData {
+            return
+        }
+
         updateState { state in
             state.selectedCategory = category
             state.isLoading = true
             state.error = nil
             state.currentPage = 1
             state.articles = []
+            state.hasLoadedInitialData = false
         }
 
         categoriesService.fetchArticles(for: category, page: 1)
@@ -69,6 +75,7 @@ final class CategoriesDomainInteractor: CombineInteractor {
                     state.articles = articles
                     state.isLoading = false
                     state.hasMorePages = articles.count >= 20
+                    state.hasLoadedInitialData = true
                 }
             }
             .store(in: &cancellables)
@@ -77,7 +84,8 @@ final class CategoriesDomainInteractor: CombineInteractor {
     private func loadMore() {
         guard let category = currentState.selectedCategory,
               !currentState.isLoadingMore,
-              currentState.hasMorePages else { return }
+              currentState.hasMorePages
+        else { return }
 
         updateState { state in
             state.isLoadingMore = true
@@ -106,6 +114,9 @@ final class CategoriesDomainInteractor: CombineInteractor {
     }
 
     private func refresh() {
+        updateState { state in
+            state.hasLoadedInitialData = false
+        }
         guard let category = currentState.selectedCategory else { return }
         selectCategory(category)
     }

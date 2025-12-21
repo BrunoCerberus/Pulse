@@ -48,21 +48,33 @@ final class ForYouDomainInteractor: CombineInteractor {
     }
 
     private func loadFeed() {
-        updateState { state in
-            state.isLoading = true
-            state.error = nil
-            state.currentPage = 1
-        }
+        guard !currentState.isLoading else { return }
 
         Task {
             let preferences = try? await storageService.fetchUserPreferences() ?? .default
+            let currentPreferences = preferences ?? .default
+            let previousPreferences = currentState.preferences
+
+            // Skip if already loaded and preferences haven't changed
+            let preferencesChanged = currentPreferences != previousPreferences
+            if currentState.hasLoadedInitialData, !preferencesChanged {
+                return
+            }
+
             await MainActor.run {
                 updateState { state in
-                    state.preferences = preferences ?? .default
+                    state.isLoading = true
+                    state.error = nil
+                    state.currentPage = 1
+                    state.preferences = currentPreferences
+                    // Clear articles when preferences change
+                    if preferencesChanged {
+                        state.articles = []
+                    }
                 }
             }
 
-            forYouService.fetchPersonalizedFeed(preferences: preferences ?? .default, page: 1)
+            forYouService.fetchPersonalizedFeed(preferences: currentPreferences, page: 1)
                 .sink { [weak self] completion in
                     if case let .failure(error) = completion {
                         self?.updateState { state in
@@ -75,6 +87,7 @@ final class ForYouDomainInteractor: CombineInteractor {
                         state.articles = articles
                         state.isLoading = false
                         state.hasMorePages = articles.count >= 20
+                        state.hasLoadedInitialData = true
                     }
                 }
                 .store(in: &cancellables)
@@ -111,6 +124,9 @@ final class ForYouDomainInteractor: CombineInteractor {
     }
 
     private func refresh() {
+        updateState { state in
+            state.hasLoadedInitialData = false
+        }
         loadFeed()
     }
 

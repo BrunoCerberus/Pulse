@@ -11,16 +11,14 @@ final class LiveForYouService: APIRequest, ForYouService {
 
     func fetchPersonalizedFeed(preferences: UserPreferences, page: Int) -> AnyPublisher<[Article], Error> {
         let topics = preferences.followedTopics
-        // NewsAPI free tier has best coverage for US
-        let country = "us"
 
         if topics.isEmpty {
             return fetchRequest(
-                target: NewsAPI.topHeadlines(country: country, page: page),
-                dataType: NewsResponse.self
+                target: GuardianAPI.search(query: nil, section: nil, page: page, pageSize: 20, orderBy: "newest"),
+                dataType: GuardianResponse.self
             )
             .map { response in
-                response.articles.compactMap { $0.toArticle() }
+                response.response.results.compactMap { $0.toArticle() }
             }
             .map { [preferences] articles in
                 self.filterMutedContent(articles, preferences: preferences)
@@ -31,11 +29,17 @@ final class LiveForYouService: APIRequest, ForYouService {
 
         let publishers = topics.map { category in
             fetchRequest(
-                target: NewsAPI.topHeadlinesByCategory(category: category, country: country, page: page),
-                dataType: NewsResponse.self
+                target: GuardianAPI.search(
+                    query: nil,
+                    section: category.guardianSection,
+                    page: page,
+                    pageSize: 20,
+                    orderBy: "newest"
+                ),
+                dataType: GuardianResponse.self
             )
             .map { response in
-                response.articles.compactMap { $0.toArticle(category: category) }
+                response.response.results.compactMap { $0.toArticle(category: category) }
             }
             .catch { _ in Just([Article]()).setFailureType(to: Error.self) }
             .eraseToAnyPublisher()

@@ -205,11 +205,11 @@ struct SearchView<R: SearchNavigationRouter>: View {
 
     private var resultsList: some View {
         ScrollView {
-            VStack(spacing: Spacing.md) {
+            LazyVStack(spacing: Spacing.md) {
                 sortPicker
                     .padding(.horizontal, Spacing.md)
 
-                VStack(spacing: Spacing.sm) {
+                LazyVStack(spacing: Spacing.sm) {
                     ForEach(Array(viewModel.viewState.results.enumerated()), id: \.element.id) { index, item in
                         GlassArticleCard(
                             item: item,

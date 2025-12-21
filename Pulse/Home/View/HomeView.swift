@@ -155,7 +155,7 @@ struct HomeView<R: HomeNavigationRouter>: View {
                 }
 
                 Section {
-                    VStack(spacing: Spacing.sm) {
+                    LazyVStack(spacing: Spacing.sm) {
                         ForEach(Array(viewModel.viewState.headlines.enumerated()), id: \.element.id) { index, item in
                             GlassArticleCard(
                                 item: item,

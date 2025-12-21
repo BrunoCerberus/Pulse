@@ -1,3 +1,4 @@
+import Foundation
 import SwiftUI
 
 struct ArticleDetailView: View {
@@ -10,16 +11,36 @@ struct ArticleDetailView: View {
     private let serviceLocator: ServiceLocator
     private let heroBaseHeight: CGFloat = 280
 
+    private let contentLineLimit = 4
+
+    private enum ArticleContent {
+        case html(String)
+        case plain(String)
+    }
+
     /// Strips the "[+XXX chars]" truncation marker from API content
-    private var cleanedContent: String? {
+    private var articleContent: ArticleContent? {
         guard let content = article.content else { return nil }
-        let pattern = #"\s*\[\+\d+ chars\]$"#
-        return content.replacingOccurrences(of: pattern, with: "", options: .regularExpression)
+        let strippedContent = stripTruncationMarker(from: content)
+        if containsHTML(in: content) {
+            return .html(strippedContent)
+        }
+
+        let sanitizedContent = plainText(from: strippedContent)
+            .trimmingCharacters(in: .whitespacesAndNewlines)
+        guard !sanitizedContent.isEmpty else { return nil }
+        return .plain(sanitizedContent)
+    }
+
+    private var cleanedDescription: String? {
+        guard let description = article.description else { return nil }
+        return plainText(from: description)
+            .trimmingCharacters(in: .whitespacesAndNewlines)
     }
 
     /// Checks if the content was truncated by the API
     private var isContentTruncated: Bool {
-        guard let content = article.content else { return false }
+        guard let content = article.content, !containsHTML(in: content) else { return false }
         return content.contains(#/\[\+\d+ chars\]/#)
     }
 
@@ -92,34 +113,40 @@ struct ArticleDetailView: View {
                 .fill(Color.Border.adaptive(for: colorScheme))
                 .frame(height: 0.5)
 
-            if let description = article.description {
+            if let description = cleanedDescription {
                 Text(description)
                     .font(Typography.bodyLarge)
                     .foregroundStyle(.primary)
             }
 
-            if let content = cleanedContent {
-                VStack(alignment: .leading, spacing: Spacing.sm) {
-                    Text(content)
-                        .font(Typography.bodyMedium)
-                        .foregroundStyle(.secondary)
-                        .lineLimit(isContentExpanded ? nil : 4)
+            if let content = articleContent {
+                switch content {
+                case let .html(html):
+                    HTMLTextView(html: html)
+                        .fixedSize(horizontal: false, vertical: true)
+                case let .plain(text):
+                    VStack(alignment: .leading, spacing: Spacing.sm) {
+                        Text(text)
+                            .font(Typography.bodyMedium)
+                            .foregroundStyle(.secondary)
+                            .lineLimit(isContentTruncated ? (isContentExpanded ? nil : contentLineLimit) : nil)
 
-                    if isContentTruncated {
-                        Button {
-                            HapticManager.shared.tap()
-                            withAnimation(.easeInOut(duration: AnimationTiming.normal)) {
-                                isContentExpanded.toggle()
+                        if isContentTruncated {
+                            Button {
+                                HapticManager.shared.tap()
+                                withAnimation(.easeInOut(duration: AnimationTiming.normal)) {
+                                    isContentExpanded.toggle()
+                                }
+                            } label: {
+                                HStack(spacing: Spacing.xxs) {
+                                    Text(isContentExpanded ? "Show less" : "Show more")
+                                    Image(systemName: isContentExpanded ? "chevron.up" : "chevron.down")
+                                }
+                                .font(Typography.labelMedium)
+                                .foregroundStyle(Color.Accent.primary)
                             }
-                        } label: {
-                            HStack(spacing: Spacing.xxs) {
-                                Text(isContentExpanded ? "Show less" : "Show more")
-                                Image(systemName: isContentExpanded ? "chevron.up" : "chevron.down")
-                            }
-                            .font(Typography.labelMedium)
-                            .foregroundStyle(Color.Accent.primary)
+                            .buttonStyle(.plain)
                         }
-                        .buttonStyle(.plain)
                     }
                 }
             }
@@ -189,6 +216,31 @@ struct ArticleDetailView: View {
             .clipShape(RoundedRectangle(cornerRadius: CornerRadius.md, style: .continuous))
         }
         .pressEffect()
+    }
+
+    private func plainText(from html: String) -> String {
+        guard let data = html.data(using: .utf8) else { return html }
+        if let attributedString = try? NSAttributedString(
+            data: data,
+            options: [
+                .documentType: NSAttributedString.DocumentType.html,
+                .characterEncoding: String.Encoding.utf8.rawValue,
+            ],
+            documentAttributes: nil
+        ) {
+            return attributedString.string
+        }
+
+        return html
+    }
+
+    private func stripTruncationMarker(from content: String) -> String {
+        let pattern = #"\s*\[\+\d+ chars\]"#
+        return content.replacingOccurrences(of: pattern, with: "", options: .regularExpression)
+    }
+
+    private func containsHTML(in content: String) -> Bool {
+        content.range(of: #"<[^>]+>"#, options: .regularExpression) != nil
     }
 }
 
