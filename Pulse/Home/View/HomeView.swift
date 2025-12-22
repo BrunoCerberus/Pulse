@@ -24,7 +24,7 @@ struct HomeView<R: HomeNavigationRouter>: View {
             content
         }
         .navigationTitle("Pulse")
-        .toolbarBackground(.ultraThinMaterial, for: .navigationBar)
+        .toolbarBackground(.hidden, for: .navigationBar)
         .toolbar {
             ToolbarItem(placement: .topBarTrailing) {
                 Button {

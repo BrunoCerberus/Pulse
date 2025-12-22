@@ -24,7 +24,7 @@ struct BookmarksView<R: BookmarksNavigationRouter>: View {
             content
         }
         .navigationTitle("Bookmarks")
-        .toolbarBackground(.ultraThinMaterial, for: .navigationBar)
+        .toolbarBackground(.hidden, for: .navigationBar)
         .refreshable {
             HapticManager.shared.refresh()
             viewModel.handle(event: .onRefresh)
