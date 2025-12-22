@@ -40,9 +40,10 @@ final class ForYouViewModel: CombineViewModel, ObservableObject {
                     followedTopics: state.preferences.followedTopics,
                     isLoading: state.isLoading,
                     isLoadingMore: state.isLoadingMore,
+                    isRefreshing: state.isRefreshing,
                     errorMessage: state.error,
-                    showEmptyState: !state.isLoading && state.articles.isEmpty,
-                    showOnboarding: state.preferences.followedTopics.isEmpty && !state.isLoading
+                    showEmptyState: !state.isLoading && !state.isRefreshing && state.articles.isEmpty,
+                    showOnboarding: state.preferences.followedTopics.isEmpty && !state.isLoading && !state.isRefreshing
                 )
             }
             .receive(on: DispatchQueue.main)
@@ -55,6 +56,7 @@ struct ForYouViewState: Equatable {
     var followedTopics: [NewsCategory]
     var isLoading: Bool
     var isLoadingMore: Bool
+    var isRefreshing: Bool
     var errorMessage: String?
     var showEmptyState: Bool
     var showOnboarding: Bool
@@ -65,6 +67,7 @@ struct ForYouViewState: Equatable {
             followedTopics: [],
             isLoading: false,
             isLoadingMore: false,
+            isRefreshing: false,
             errorMessage: nil,
             showEmptyState: false,
             showOnboarding: false

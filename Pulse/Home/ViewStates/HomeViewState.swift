@@ -5,6 +5,7 @@ struct HomeViewState: Equatable {
     var headlines: [ArticleViewItem]
     var isLoading: Bool
     var isLoadingMore: Bool
+    var isRefreshing: Bool
     var errorMessage: String?
     var showEmptyState: Bool
 
@@ -14,6 +15,7 @@ struct HomeViewState: Equatable {
             headlines: [],
             isLoading: false,
             isLoadingMore: false,
+            isRefreshing: false,
             errorMessage: nil,
             showEmptyState: false
         )

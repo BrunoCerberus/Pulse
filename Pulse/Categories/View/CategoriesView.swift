@@ -93,7 +93,7 @@ struct CategoriesView<R: CategoriesNavigationRouter>: View {
     private var articlesList: some View {
         if viewModel.viewState.selectedCategory == nil {
             selectCategoryPrompt
-        } else if viewModel.viewState.isLoading {
+        } else if viewModel.viewState.isRefreshing || viewModel.viewState.isLoading {
             VStack(spacing: Spacing.md) {
                 ProgressView()
                     .scaleEffect(1.2)

@@ -114,11 +114,33 @@ final class CategoriesDomainInteractor: CombineInteractor {
     }
 
     private func refresh() {
+        guard let category = currentState.selectedCategory else { return }
+
         updateState { state in
+            state.isRefreshing = true
+            state.articles = []
+            state.error = nil
+            state.currentPage = 1
             state.hasLoadedInitialData = false
         }
-        guard let category = currentState.selectedCategory else { return }
-        selectCategory(category)
+
+        categoriesService.fetchArticles(for: category, page: 1)
+            .sink { [weak self] completion in
+                if case let .failure(error) = completion {
+                    self?.updateState { state in
+                        state.isRefreshing = false
+                        state.error = error.localizedDescription
+                    }
+                }
+            } receiveValue: { [weak self] articles in
+                self?.updateState { state in
+                    state.articles = articles
+                    state.isRefreshing = false
+                    state.hasMorePages = articles.count >= 20
+                    state.hasLoadedInitialData = true
+                }
+            }
+            .store(in: &cancellables)
     }
 
     private func saveToReadingHistory(_ article: Article) {
