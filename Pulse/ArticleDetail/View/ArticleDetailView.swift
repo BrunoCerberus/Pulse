@@ -82,6 +82,21 @@ struct ArticleDetailView: View {
                     .foregroundStyle(.primary)
             }
 
+            if let content = viewModel.processedContent {
+                switch content {
+                case let .html(html):
+                    // Temporarily show as plain text to debug
+                    Text(html.replacingOccurrences(of: "<[^>]+>", with: "", options: .regularExpression))
+                        .font(Typography.bodyMedium)
+                        .foregroundStyle(.secondary)
+                case let .plain(text):
+                    Text(text)
+                        .font(Typography.bodyMedium)
+                        .foregroundStyle(.secondary)
+                        .lineLimit(viewModel.isContentTruncated ? (viewModel.isContentExpanded ? nil : viewModel.contentLineLimit) : nil)
+                }
+            }
+
             Rectangle()
                 .fill(Color.Border.adaptive(for: colorScheme))
                 .frame(height: 0.5)

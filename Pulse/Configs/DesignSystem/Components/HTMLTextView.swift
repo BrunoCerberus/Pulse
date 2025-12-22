@@ -161,7 +161,12 @@ private extension HTMLTextView {
 // MARK: - Intrinsic Text View
 
 final class IntrinsicTextView: UITextView {
+    private var lastKnownWidth: CGFloat = 0
+
     override var intrinsicContentSize: CGSize {
+        guard bounds.width > 0 else {
+            return CGSize(width: UIView.noIntrinsicMetric, height: 0)
+        }
         let targetSize = CGSize(width: bounds.width, height: .greatestFiniteMagnitude)
         let size = sizeThatFits(targetSize)
         return CGSize(width: UIView.noIntrinsicMetric, height: size.height)
@@ -169,7 +174,8 @@ final class IntrinsicTextView: UITextView {
 
     override func layoutSubviews() {
         super.layoutSubviews()
-        if bounds.width > 0 {
+        if bounds.width > 0, bounds.width != lastKnownWidth {
+            lastKnownWidth = bounds.width
             invalidateIntrinsicContentSize()
         }
     }
