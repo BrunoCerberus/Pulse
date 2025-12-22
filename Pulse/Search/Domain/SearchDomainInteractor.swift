@@ -158,8 +158,40 @@ final class SearchDomainInteractor: CombineInteractor {
             state.sortBy = option
         }
 
-        if !currentState.query.isEmpty {
-            performSearch()
+        if !currentState.query.isEmpty, currentState.hasSearched {
+            performSortedSearch()
+        }
+    }
+
+    private func performSortedSearch() {
+        let query = currentState.query
+
+        searchCancellable?.cancel()
+
+        updateState { state in
+            state.isSorting = true
+            state.error = nil
+            state.currentPage = 1
+        }
+
+        searchCancellable = searchService.search(
+            query: query,
+            page: 1,
+            sortBy: currentState.sortBy.rawValue
+        )
+        .sink { [weak self] completion in
+            if case let .failure(error) = completion {
+                self?.updateState { state in
+                    state.isSorting = false
+                    state.error = error.localizedDescription
+                }
+            }
+        } receiveValue: { [weak self] articles in
+            self?.updateState { state in
+                state.results = articles
+                state.isSorting = false
+                state.hasMorePages = articles.count >= 20
+            }
         }
     }
 

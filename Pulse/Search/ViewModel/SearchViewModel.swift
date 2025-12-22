@@ -66,8 +66,9 @@ final class SearchViewModel: CombineViewModel, ObservableObject {
                     suggestions: state.suggestions,
                     isLoading: state.isLoading,
                     isLoadingMore: state.isLoadingMore,
+                    isSorting: state.isSorting,
                     errorMessage: state.error,
-                    showNoResults: state.hasSearched && !state.isLoading && state.results.isEmpty,
+                    showNoResults: state.hasSearched && !state.isLoading && !state.isSorting && state.results.isEmpty,
                     hasSearched: state.hasSearched,
                     sortOption: state.sortBy
                 )
