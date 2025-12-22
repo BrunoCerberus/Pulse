@@ -17,8 +17,8 @@ struct CoordinatorView: View {
     }
 
     var body: some View {
-        TabView(selection: $coordinator.selectedTab) {
-            Tab("Home", systemImage: "newspaper", value: .home) {
+        AnimatedTabView(selection: $coordinator.selectedTab) {
+            Tab("Home", systemImage: AppTab.home.symbolImage, value: .home) {
                 NavigationStack(path: $coordinator.homePath) {
                     HomeView(
                         router: HomeNavigationRouter(coordinator: coordinator),
@@ -30,7 +30,7 @@ struct CoordinatorView: View {
                 }
             }
 
-            Tab("For You", systemImage: "heart.text.square", value: .forYou) {
+            Tab("For You", systemImage: AppTab.forYou.symbolImage, value: .forYou) {
                 NavigationStack(path: $coordinator.forYouPath) {
                     ForYouView(
                         router: ForYouNavigationRouter(coordinator: coordinator),
@@ -42,7 +42,7 @@ struct CoordinatorView: View {
                 }
             }
 
-            Tab("Categories", systemImage: "square.grid.2x2", value: .categories) {
+            Tab("Categories", systemImage: AppTab.categories.symbolImage, value: .categories) {
                 NavigationStack(path: $coordinator.categoriesPath) {
                     CategoriesView(
                         router: CategoriesNavigationRouter(coordinator: coordinator),
@@ -54,7 +54,7 @@ struct CoordinatorView: View {
                 }
             }
 
-            Tab("Bookmarks", systemImage: "bookmark", value: .bookmarks) {
+            Tab("Bookmarks", systemImage: AppTab.bookmarks.symbolImage, value: .bookmarks) {
                 NavigationStack(path: $coordinator.bookmarksPath) {
                     BookmarksView(
                         router: BookmarksNavigationRouter(coordinator: coordinator),
@@ -66,7 +66,7 @@ struct CoordinatorView: View {
                 }
             }
 
-            Tab("Search", systemImage: "magnifyingglass", value: .search, role: .search) {
+            Tab("Search", systemImage: AppTab.search.symbolImage, value: .search, role: .search) {
                 NavigationStack(path: $coordinator.searchPath) {
                     SearchView(
                         router: SearchNavigationRouter(coordinator: coordinator),
@@ -77,8 +77,9 @@ struct CoordinatorView: View {
                     }
                 }
             }
+        } effects: { tab in
+            tab.symbolEffect
         }
-        .tabViewStyle(.sidebarAdaptable)
         .preferredColorScheme(themeManager.colorScheme)
         .onChange(of: coordinator.selectedTab) { _, _ in
             HapticManager.shared.tabChange()

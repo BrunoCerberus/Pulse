@@ -1,12 +1,38 @@
 import SwiftUI
 
+/// Protocol for tabs that support animated symbol effects.
+protocol AnimatedTabSelectionProtocol: CaseIterable, Hashable {
+    var symbolImage: String { get }
+    var symbolEffect: any DiscreteSymbolEffect & SymbolEffect { get }
+}
+
 /// Tab selection enum for the main TabView.
-enum AppTab {
+enum AppTab: CaseIterable, AnimatedTabSelectionProtocol {
     case home
     case forYou
     case categories
     case bookmarks
     case search
+
+    var symbolImage: String {
+        switch self {
+        case .home: "newspaper"
+        case .forYou: "heart.text.square"
+        case .categories: "square.grid.2x2"
+        case .bookmarks: "bookmark"
+        case .search: "magnifyingglass"
+        }
+    }
+
+    var symbolEffect: any DiscreteSymbolEffect & SymbolEffect {
+        switch self {
+        case .home: .bounce
+        case .forYou: .bounce
+        case .categories: .bounce
+        case .bookmarks: .bounce
+        case .search: .bounce
+        }
+    }
 }
 
 /// Central navigation coordinator managing per-tab NavigationPaths and building views.
