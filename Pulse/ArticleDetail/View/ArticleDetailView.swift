@@ -58,6 +58,7 @@ struct ArticleDetailView: View {
         .onAppear {
             viewModel.onAppear()
         }
+        .enableSwipeBack()
     }
 
     private var contentCard: some View {
