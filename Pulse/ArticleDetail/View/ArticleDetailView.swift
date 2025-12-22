@@ -78,23 +78,22 @@ struct ArticleDetailView: View {
 
             if let description = article.description {
                 Text(description)
-                    .font(Typography.bodyLarge)
-                    .foregroundStyle(.primary)
+                    .font(Typography.bodyLarge.weight(.medium))
+                    .foregroundStyle(.primary.opacity(0.9))
+                    .lineSpacing(6)
+                    .padding(.leading, Spacing.md)
+                    .overlay(alignment: .leading) {
+                        Rectangle()
+                            .fill(Color.Accent.gradient)
+                            .frame(width: 3)
+                    }
             }
 
             if let content = viewModel.processedContent {
-                switch content {
-                case let .html(html):
-                    // Temporarily show as plain text to debug
-                    Text(html.replacingOccurrences(of: "<[^>]+>", with: "", options: .regularExpression))
-                        .font(Typography.bodyMedium)
-                        .foregroundStyle(.secondary)
-                case let .plain(text):
-                    Text(text)
-                        .font(Typography.bodyMedium)
-                        .foregroundStyle(.secondary)
-                        .lineLimit(viewModel.isContentTruncated ? (viewModel.isContentExpanded ? nil : viewModel.contentLineLimit) : nil)
-                }
+                Text(content)
+                    .font(Typography.bodyMedium)
+                    .foregroundStyle(.secondary)
+                    .lineLimit(viewModel.isContentTruncated ? (viewModel.isContentExpanded ? nil : viewModel.contentLineLimit) : nil)
             }
 
             Rectangle()

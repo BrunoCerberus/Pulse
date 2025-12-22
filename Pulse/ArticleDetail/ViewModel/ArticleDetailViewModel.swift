@@ -3,15 +3,10 @@ import Foundation
 import UIKit
 
 final class ArticleDetailViewModel: ObservableObject {
-    enum ProcessedContent: Equatable {
-        case html(String)
-        case plain(String)
-    }
-
     @Published var isBookmarked = false
     @Published var showShareSheet = false
     @Published var isContentExpanded = false
-    @Published private(set) var processedContent: ProcessedContent?
+    @Published private(set) var processedContent: String?
     @Published private(set) var isContentTruncated = false
 
     private let article: Article
@@ -35,49 +30,37 @@ final class ArticleDetailViewModel: ObservableObject {
             return
         }
 
+        isContentTruncated = content.range(of: #"\[\+\d+ chars\]"#, options: .regularExpression) != nil
         let strippedContent = stripTruncationMarker(from: content)
+        let plainContent = stripHTML(from: strippedContent)
+            .trimmingCharacters(in: .whitespacesAndNewlines)
 
-        if containsHTML(in: content) {
-            processedContent = .html(strippedContent)
-            isContentTruncated = false
-        } else {
-            let sanitizedContent = plainText(from: strippedContent)
-                .trimmingCharacters(in: .whitespacesAndNewlines)
-            guard !sanitizedContent.isEmpty else {
-                processedContent = nil
-                return
-            }
-            processedContent = .plain(sanitizedContent)
-            isContentTruncated = content.range(of: #"\[\+\d+ chars\]"#, options: .regularExpression) != nil
+        guard !plainContent.isEmpty else {
+            processedContent = nil
+            return
         }
+
+        processedContent = plainContent
     }
 
     func toggleContentExpansion() {
         isContentExpanded.toggle()
     }
 
-    private func plainText(from html: String) -> String {
-        guard let data = html.data(using: .utf8) else { return html }
-        if let attributedString = try? NSAttributedString(
-            data: data,
-            options: [
-                .documentType: NSAttributedString.DocumentType.html,
-                .characterEncoding: String.Encoding.utf8.rawValue,
-            ],
-            documentAttributes: nil
-        ) {
-            return attributedString.string
-        }
-        return html
+    private func stripHTML(from html: String) -> String {
+        html.replacingOccurrences(of: #"<[^>]+>"#, with: " ", options: .regularExpression)
+            .replacingOccurrences(of: "&nbsp;", with: " ")
+            .replacingOccurrences(of: "&amp;", with: "&")
+            .replacingOccurrences(of: "&lt;", with: "<")
+            .replacingOccurrences(of: "&gt;", with: ">")
+            .replacingOccurrences(of: "&quot;", with: "\"")
+            .replacingOccurrences(of: "&#39;", with: "'")
+            .replacingOccurrences(of: #"\s+"#, with: " ", options: .regularExpression)
     }
 
     private func stripTruncationMarker(from content: String) -> String {
         let pattern = #"\s*\[\+\d+ chars\]"#
         return content.replacingOccurrences(of: pattern, with: "", options: .regularExpression)
-    }
-
-    private func containsHTML(in content: String) -> Bool {
-        content.range(of: #"<[^>]+>"#, options: .regularExpression) != nil
     }
 
     func onAppear() {
