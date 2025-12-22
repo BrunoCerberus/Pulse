@@ -24,7 +24,7 @@ struct ForYouView<R: ForYouNavigationRouter>: View {
             content
         }
         .navigationTitle("For You")
-        .toolbarBackground(.ultraThinMaterial, for: .navigationBar)
+        .toolbarBackground(.hidden, for: .navigationBar)
         .refreshable {
             HapticManager.shared.refresh()
             viewModel.handle(event: .onRefresh)

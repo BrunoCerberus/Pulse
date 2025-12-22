@@ -29,7 +29,7 @@ struct SearchView<R: SearchNavigationRouter>: View {
             content
         }
         .navigationTitle("Search")
-        .toolbarBackground(.ultraThinMaterial, for: .navigationBar)
+        .toolbarBackground(.hidden, for: .navigationBar)
         .searchable(
             text: Binding(
                 get: { viewModel.viewState.query },
