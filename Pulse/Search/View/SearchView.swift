@@ -208,6 +208,7 @@ struct SearchView<R: SearchNavigationRouter>: View {
             LazyVStack(spacing: Spacing.md) {
                 sortPicker
                     .padding(.horizontal, Spacing.md)
+                    .disabled(viewModel.viewState.isSorting)
 
                 LazyVStack(spacing: Spacing.sm) {
                     ForEach(Array(viewModel.viewState.results.enumerated()), id: \.element.id) { index, item in
@@ -228,6 +229,16 @@ struct SearchView<R: SearchNavigationRouter>: View {
                     }
                 }
                 .padding(.horizontal, Spacing.md)
+                .opacity(viewModel.viewState.isSorting ? 0.5 : 1.0)
+                .animation(.easeInOut(duration: 0.2), value: viewModel.viewState.isSorting)
+                .overlay {
+                    if viewModel.viewState.isSorting {
+                        ProgressView()
+                            .scaleEffect(1.2)
+                            .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .center)
+                    }
+                }
+                .allowsHitTesting(!viewModel.viewState.isSorting)
 
                 if viewModel.viewState.isLoadingMore {
                     HStack {

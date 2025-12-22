@@ -6,6 +6,7 @@ struct SearchDomainState: Equatable {
     var suggestions: [String]
     var isLoading: Bool
     var isLoadingMore: Bool
+    var isSorting: Bool
     var error: String?
     var currentPage: Int
     var hasMorePages: Bool
@@ -19,6 +20,7 @@ struct SearchDomainState: Equatable {
             suggestions: [],
             isLoading: false,
             isLoadingMore: false,
+            isSorting: false,
             error: nil,
             currentPage: 1,
             hasMorePages: true,
