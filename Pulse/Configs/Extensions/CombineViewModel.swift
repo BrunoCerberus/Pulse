@@ -1,10 +1,11 @@
 import Combine
-import Foundation
 
+/// A ViewModel protocol for Combine-based unidirectional data flow.
 protocol CombineViewModel: ObservableObject {
-    associatedtype ViewState
+    associatedtype ViewState: Equatable
     associatedtype ViewEvent
 
     var viewState: ViewState { get }
+
     func handle(event: ViewEvent)
 }

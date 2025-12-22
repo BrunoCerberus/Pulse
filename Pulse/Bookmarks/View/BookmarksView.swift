@@ -42,7 +42,7 @@ struct BookmarksView<R: BookmarksNavigationRouter>: View {
 
     @ViewBuilder
     private var content: some View {
-        if viewModel.viewState.isLoading {
+        if viewModel.viewState.isRefreshing || viewModel.viewState.isLoading {
             VStack(spacing: Spacing.md) {
                 ProgressView()
                     .scaleEffect(1.2)

@@ -38,6 +38,8 @@ final class BookmarksDomainInteractor: CombineInteractor {
         switch action {
         case .loadBookmarks:
             loadBookmarks()
+        case .refresh:
+            refresh()
         case let .removeBookmark(article):
             removeBookmark(article)
         case let .selectArticle(article):
@@ -63,6 +65,30 @@ final class BookmarksDomainInteractor: CombineInteractor {
                 self?.updateState { state in
                     state.bookmarks = articles
                     state.isLoading = false
+                }
+            }
+            .store(in: &cancellables)
+    }
+
+    private func refresh() {
+        updateState { state in
+            state.isRefreshing = true
+            state.bookmarks = []
+            state.error = nil
+        }
+
+        bookmarksService.fetchBookmarks()
+            .sink { [weak self] completion in
+                if case let .failure(error) = completion {
+                    self?.updateState { state in
+                        state.isRefreshing = false
+                        state.error = error.localizedDescription
+                    }
+                }
+            } receiveValue: { [weak self] articles in
+                self?.updateState { state in
+                    state.bookmarks = articles
+                    state.isRefreshing = false
                 }
             }
             .store(in: &cancellables)

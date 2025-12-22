@@ -41,8 +41,9 @@ final class CategoriesViewModel: CombineViewModel, ObservableObject {
                     articles: state.articles.map { ArticleViewItem(from: $0) },
                     isLoading: state.isLoading,
                     isLoadingMore: state.isLoadingMore,
+                    isRefreshing: state.isRefreshing,
                     errorMessage: state.error,
-                    showEmptyState: !state.isLoading && state.articles.isEmpty && state.selectedCategory != nil
+                    showEmptyState: !state.isLoading && !state.isRefreshing && state.articles.isEmpty && state.selectedCategory != nil
                 )
             }
             .receive(on: DispatchQueue.main)
@@ -56,6 +57,7 @@ struct CategoriesViewState: Equatable {
     var articles: [ArticleViewItem]
     var isLoading: Bool
     var isLoadingMore: Bool
+    var isRefreshing: Bool
     var errorMessage: String?
     var showEmptyState: Bool
 
@@ -66,6 +68,7 @@ struct CategoriesViewState: Equatable {
             articles: [],
             isLoading: false,
             isLoadingMore: false,
+            isRefreshing: false,
             errorMessage: nil,
             showEmptyState: false
         )

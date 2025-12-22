@@ -5,6 +5,7 @@ struct HomeDomainState: Equatable {
     var headlines: [Article]
     var isLoading: Bool
     var isLoadingMore: Bool
+    var isRefreshing: Bool
     var error: String?
     var currentPage: Int
     var hasMorePages: Bool
@@ -16,6 +17,7 @@ struct HomeDomainState: Equatable {
             headlines: [],
             isLoading: false,
             isLoadingMore: false,
+            isRefreshing: false,
             error: nil,
             currentPage: 1,
             hasMorePages: true,

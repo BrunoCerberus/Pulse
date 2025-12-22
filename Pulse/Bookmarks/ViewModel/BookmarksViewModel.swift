@@ -23,7 +23,7 @@ final class BookmarksViewModel: CombineViewModel, ObservableObject {
         case .onAppear:
             interactor.dispatch(action: .loadBookmarks)
         case .onRefresh:
-            interactor.dispatch(action: .loadBookmarks)
+            interactor.dispatch(action: .refresh)
         case let .onArticleTapped(article):
             selectedArticle = article
             interactor.dispatch(action: .selectArticle(article))
@@ -38,8 +38,9 @@ final class BookmarksViewModel: CombineViewModel, ObservableObject {
                 BookmarksViewState(
                     bookmarks: state.bookmarks.map { ArticleViewItem(from: $0) },
                     isLoading: state.isLoading,
+                    isRefreshing: state.isRefreshing,
                     errorMessage: state.error,
-                    showEmptyState: !state.isLoading && state.bookmarks.isEmpty
+                    showEmptyState: !state.isLoading && !state.isRefreshing && state.bookmarks.isEmpty
                 )
             }
             .receive(on: DispatchQueue.main)
@@ -50,6 +51,7 @@ final class BookmarksViewModel: CombineViewModel, ObservableObject {
 struct BookmarksViewState: Equatable {
     var bookmarks: [ArticleViewItem]
     var isLoading: Bool
+    var isRefreshing: Bool
     var errorMessage: String?
     var showEmptyState: Bool
 
@@ -57,6 +59,7 @@ struct BookmarksViewState: Equatable {
         BookmarksViewState(
             bookmarks: [],
             isLoading: false,
+            isRefreshing: false,
             errorMessage: nil,
             showEmptyState: false
         )

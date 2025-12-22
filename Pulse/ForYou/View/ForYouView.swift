@@ -42,7 +42,7 @@ struct ForYouView<R: ForYouNavigationRouter>: View {
 
     @ViewBuilder
     private var content: some View {
-        if viewModel.viewState.isLoading && viewModel.viewState.articles.isEmpty {
+        if viewModel.viewState.isRefreshing || (viewModel.viewState.isLoading && viewModel.viewState.articles.isEmpty) {
             loadingView
         } else if let error = viewModel.viewState.errorMessage {
             errorView(error)

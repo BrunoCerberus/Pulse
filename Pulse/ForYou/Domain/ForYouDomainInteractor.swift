@@ -124,10 +124,39 @@ final class ForYouDomainInteractor: CombineInteractor {
     }
 
     private func refresh() {
-        updateState { state in
-            state.hasLoadedInitialData = false
+        Task {
+            let preferences = try? await storageService.fetchUserPreferences() ?? .default
+            let currentPreferences = preferences ?? .default
+
+            await MainActor.run {
+                updateState { state in
+                    state.isRefreshing = true
+                    state.articles = []
+                    state.error = nil
+                    state.currentPage = 1
+                    state.hasLoadedInitialData = false
+                    state.preferences = currentPreferences
+                }
+            }
+
+            forYouService.fetchPersonalizedFeed(preferences: currentPreferences, page: 1)
+                .sink { [weak self] completion in
+                    if case let .failure(error) = completion {
+                        self?.updateState { state in
+                            state.isRefreshing = false
+                            state.error = error.localizedDescription
+                        }
+                    }
+                } receiveValue: { [weak self] articles in
+                    self?.updateState { state in
+                        state.articles = articles
+                        state.isRefreshing = false
+                        state.hasMorePages = articles.count >= 20
+                        state.hasLoadedInitialData = true
+                    }
+                }
+                .store(in: &cancellables)
         }
-        loadFeed()
     }
 
     private func saveToReadingHistory(_ article: Article) {

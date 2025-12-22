@@ -88,6 +88,7 @@ struct HomeViewModelTests {
             headlines: [Article.mockArticles[1], Article.mockArticles[2]],
             isLoading: false,
             isLoadingMore: true,
+            isRefreshing: false,
             error: nil,
             currentPage: 2,
             hasMorePages: true,

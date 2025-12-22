@@ -123,11 +123,41 @@ final class HomeDomainInteractor: CombineInteractor {
 
     private func refresh() {
         updateState { state in
+            state.isRefreshing = true
+            state.breakingNews = []
+            state.headlines = []
+            state.error = nil
             state.currentPage = 1
             state.hasMorePages = true
             state.hasLoadedInitialData = false
         }
-        loadInitialData()
+
+        let country = "us"
+
+        Publishers.Zip(
+            newsService.fetchBreakingNews(country: country),
+            newsService.fetchTopHeadlines(country: country, page: 1)
+        )
+        .sink { [weak self] completion in
+            if case let .failure(error) = completion {
+                self?.updateState { state in
+                    state.isRefreshing = false
+                    state.error = error.localizedDescription
+                }
+            }
+        } receiveValue: { [weak self] breaking, headlines in
+            self?.updateState { state in
+                state.breakingNews = breaking
+                state.headlines = self?.deduplicateArticles(headlines, excluding: breaking) ?? headlines
+                state.isRefreshing = false
+                state.currentPage = 1
+                state.hasMorePages = headlines.count >= 20
+                state.hasLoadedInitialData = true
+            }
+            let allArticles = breaking + headlines
+            WidgetDataManager.shared.saveArticlesForWidget(allArticles)
+        }
+        .store(in: &cancellables)
     }
 
     private func saveToReadingHistory(_ article: Article) {
