@@ -1,0 +1,334 @@
+import Combine
+import Foundation
+@testable import Pulse
+import Testing
+
+@Suite("SearchDomainInteractor Tests")
+@MainActor
+struct SearchDomainInteractorTests {
+    let mockSearchService: MockSearchService
+    let mockStorageService: MockStorageService
+    let serviceLocator: ServiceLocator
+    let sut: SearchDomainInteractor
+
+    init() {
+        mockSearchService = MockSearchService()
+        mockStorageService = MockStorageService()
+        serviceLocator = ServiceLocator()
+
+        serviceLocator.register(SearchService.self, instance: mockSearchService)
+        serviceLocator.register(StorageService.self, instance: mockStorageService)
+
+        sut = SearchDomainInteractor(serviceLocator: serviceLocator)
+    }
+
+    // MARK: - Initial State Tests
+
+    @Test("Initial state is correct")
+    func initialState() {
+        let state = sut.currentState
+        #expect(state.query.isEmpty)
+        #expect(state.results.isEmpty)
+        #expect(state.suggestions.isEmpty)
+        #expect(!state.isLoading)
+        #expect(!state.isLoadingMore)
+        #expect(!state.isSorting)
+        #expect(state.error == nil)
+        #expect(state.currentPage == 1)
+        #expect(state.hasMorePages)
+        #expect(state.sortBy == .relevancy)
+        #expect(!state.hasSearched)
+    }
+
+    // MARK: - Query Update Tests
+
+    @Test("Update query updates state")
+    func updateQueryUpdatesState() async throws {
+        sut.dispatch(action: .updateQuery("swift"))
+
+        try await Task.sleep(nanoseconds: 100_000_000)
+
+        let state = sut.currentState
+        #expect(state.query == "swift")
+    }
+
+    @Test("Update query triggers suggestions")
+    func updateQueryTriggersSuggestions() async throws {
+        mockSearchService.suggestionsResult = ["Swift", "SwiftUI", "Swift Testing"]
+
+        sut.dispatch(action: .updateQuery("swift"))
+
+        try await Task.sleep(nanoseconds: 200_000_000)
+
+        let state = sut.currentState
+        #expect(!state.suggestions.isEmpty)
+        #expect(state.suggestions.contains("Swift"))
+    }
+
+    @Test("Empty query clears suggestions")
+    func emptyQueryClearsSuggestions() async throws {
+        mockSearchService.suggestionsResult = ["Swift", "iOS"]
+
+        sut.dispatch(action: .updateQuery("swift"))
+        try await Task.sleep(nanoseconds: 100_000_000)
+
+        sut.dispatch(action: .updateQuery(""))
+        try await Task.sleep(nanoseconds: 100_000_000)
+
+        let state = sut.currentState
+        #expect(state.suggestions.isEmpty)
+    }
+
+    // MARK: - Search Tests
+
+    @Test("Search action loads results")
+    func searchLoadsResults() async throws {
+        mockSearchService.searchResult = .success(Article.mockArticles)
+
+        sut.dispatch(action: .updateQuery("technology"))
+        sut.dispatch(action: .search)
+
+        try await Task.sleep(nanoseconds: 500_000_000)
+
+        let state = sut.currentState
+        #expect(!state.isLoading)
+        #expect(!state.results.isEmpty)
+        #expect(state.hasSearched)
+        #expect(state.error == nil)
+    }
+
+    @Test("Search with empty query does nothing")
+    func searchWithEmptyQueryDoesNothing() async throws {
+        sut.dispatch(action: .search)
+
+        try await Task.sleep(nanoseconds: 100_000_000)
+
+        let state = sut.currentState
+        #expect(!state.isLoading)
+        #expect(state.results.isEmpty)
+        #expect(!state.hasSearched)
+    }
+
+    @Test("Search error handling")
+    func searchErrorHandling() async throws {
+        let testError = NSError(domain: "test", code: 1, userInfo: [NSLocalizedDescriptionKey: "Search failed"])
+        mockSearchService.searchResult = .failure(testError)
+
+        sut.dispatch(action: .updateQuery("test"))
+        sut.dispatch(action: .search)
+
+        try await Task.sleep(nanoseconds: 500_000_000)
+
+        let state = sut.currentState
+        #expect(!state.isLoading)
+        #expect(state.error != nil)
+        #expect(state.error == "Search failed")
+    }
+
+    @Test("Search resets page to 1")
+    func searchResetsPage() async throws {
+        mockSearchService.searchResult = .success(Article.mockArticles)
+
+        sut.dispatch(action: .updateQuery("test"))
+        sut.dispatch(action: .search)
+
+        try await Task.sleep(nanoseconds: 500_000_000)
+
+        let state = sut.currentState
+        #expect(state.currentPage == 1)
+    }
+
+    // MARK: - Load More Tests
+
+    @Test("Load more appends results")
+    func loadMoreAppendsResults() async throws {
+        mockSearchService.searchResult = .success(Array(Article.mockArticles.prefix(20)))
+
+        sut.dispatch(action: .updateQuery("test"))
+        sut.dispatch(action: .search)
+
+        try await Task.sleep(nanoseconds: 500_000_000)
+
+        let initialCount = sut.currentState.results.count
+
+        let newArticles = [
+            Article(
+                id: "new-1",
+                title: "New Article 1",
+                description: "Description",
+                content: "Content",
+                author: "Author",
+                source: ArticleSource(id: "source", name: "Source"),
+                url: "https://example.com/new1",
+                imageURL: nil,
+                publishedAt: Date(),
+                category: .technology
+            ),
+        ]
+        mockSearchService.searchResult = .success(newArticles)
+
+        sut.dispatch(action: .loadMore)
+
+        try await Task.sleep(nanoseconds: 500_000_000)
+
+        let state = sut.currentState
+        #expect(state.results.count > initialCount)
+        #expect(state.currentPage == 2)
+    }
+
+    @Test("Load more deduplicates results")
+    func loadMoreDeduplicatesResults() async throws {
+        mockSearchService.searchResult = .success(Article.mockArticles)
+
+        sut.dispatch(action: .updateQuery("test"))
+        sut.dispatch(action: .search)
+
+        try await Task.sleep(nanoseconds: 500_000_000)
+
+        let initialCount = sut.currentState.results.count
+
+        // Return same articles - should be deduplicated
+        sut.dispatch(action: .loadMore)
+
+        try await Task.sleep(nanoseconds: 500_000_000)
+
+        let state = sut.currentState
+        // Count should not increase significantly due to deduplication
+        #expect(state.results.count == initialCount)
+    }
+
+    @Test("Load more does nothing when already loading")
+    func loadMoreWhenAlreadyLoading() async throws {
+        mockSearchService.searchResult = .success(Array(Article.mockArticles.prefix(20)))
+
+        sut.dispatch(action: .updateQuery("test"))
+        sut.dispatch(action: .search)
+
+        try await Task.sleep(nanoseconds: 500_000_000)
+
+        // Dispatch load more twice in quick succession
+        sut.dispatch(action: .loadMore)
+        sut.dispatch(action: .loadMore)
+
+        try await Task.sleep(nanoseconds: 500_000_000)
+
+        let state = sut.currentState
+        #expect(state.currentPage == 2) // Should only increment once
+    }
+
+    @Test("Load more respects hasMorePages")
+    func loadMoreRespectsHasMorePages() async throws {
+        // Return fewer than 20 articles to indicate no more pages
+        mockSearchService.searchResult = .success(Array(Article.mockArticles.prefix(5)))
+
+        sut.dispatch(action: .updateQuery("test"))
+        sut.dispatch(action: .search)
+
+        try await Task.sleep(nanoseconds: 500_000_000)
+
+        let state = sut.currentState
+        #expect(!state.hasMorePages)
+
+        // Try to load more - should do nothing
+        sut.dispatch(action: .loadMore)
+
+        try await Task.sleep(nanoseconds: 200_000_000)
+
+        #expect(sut.currentState.currentPage == 1)
+    }
+
+    // MARK: - Clear Results Tests
+
+    @Test("Clear results resets state")
+    func clearResultsResetsState() async throws {
+        mockSearchService.searchResult = .success(Article.mockArticles)
+
+        sut.dispatch(action: .updateQuery("test"))
+        sut.dispatch(action: .search)
+
+        try await Task.sleep(nanoseconds: 500_000_000)
+
+        sut.dispatch(action: .clearResults)
+
+        let state = sut.currentState
+        #expect(state.query.isEmpty)
+        #expect(state.results.isEmpty)
+        #expect(state.suggestions.isEmpty)
+        #expect(state.error == nil)
+        #expect(!state.hasSearched)
+    }
+
+    // MARK: - Sort Option Tests
+
+    @Test("Set sort option updates state")
+    func setSortOptionUpdatesState() async throws {
+        sut.dispatch(action: .setSortOption(.publishedAt))
+
+        let state = sut.currentState
+        #expect(state.sortBy == .publishedAt)
+    }
+
+    @Test("Set sort option triggers re-search when has searched")
+    func setSortOptionTriggersReSearch() async throws {
+        mockSearchService.searchResult = .success(Article.mockArticles)
+
+        sut.dispatch(action: .updateQuery("test"))
+        sut.dispatch(action: .search)
+
+        try await Task.sleep(nanoseconds: 500_000_000)
+
+        #expect(sut.currentState.hasSearched)
+
+        sut.dispatch(action: .setSortOption(.publishedAt))
+
+        try await Task.sleep(nanoseconds: 500_000_000)
+
+        let state = sut.currentState
+        #expect(state.sortBy == .publishedAt)
+        #expect(state.currentPage == 1) // Reset after sort
+    }
+
+    @Test("Set sort option does not search when query is empty")
+    func setSortOptionNoSearchWhenEmpty() async throws {
+        sut.dispatch(action: .setSortOption(.popularity))
+
+        try await Task.sleep(nanoseconds: 200_000_000)
+
+        let state = sut.currentState
+        #expect(state.sortBy == .popularity)
+        #expect(!state.hasSearched)
+        #expect(state.results.isEmpty)
+    }
+
+    // MARK: - Select Article Tests
+
+    @Test("Select article saves to reading history")
+    func selectArticleSavesToHistory() async throws {
+        let article = Article.mockArticles[0]
+
+        sut.dispatch(action: .selectArticle(article))
+
+        try await Task.sleep(nanoseconds: 200_000_000)
+
+        let history = try await mockStorageService.fetchReadingHistory()
+        #expect(history.contains(where: { $0.id == article.id }))
+    }
+
+    // MARK: - Empty Results Tests
+
+    @Test("Empty search results handled correctly")
+    func emptySearchResultsHandled() async throws {
+        mockSearchService.searchResult = .success([])
+
+        sut.dispatch(action: .updateQuery("nonexistent"))
+        sut.dispatch(action: .search)
+
+        try await Task.sleep(nanoseconds: 500_000_000)
+
+        let state = sut.currentState
+        #expect(state.results.isEmpty)
+        #expect(state.hasSearched)
+        #expect(!state.hasMorePages)
+        #expect(state.error == nil)
+    }
+}

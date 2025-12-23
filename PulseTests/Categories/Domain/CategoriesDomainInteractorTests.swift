@@ -1,0 +1,388 @@
+import Combine
+import Foundation
+@testable import Pulse
+import Testing
+
+@Suite("CategoriesDomainInteractor Tests")
+@MainActor
+struct CategoriesDomainInteractorTests {
+    let mockCategoriesService: MockCategoriesService
+    let mockStorageService: MockStorageService
+    let serviceLocator: ServiceLocator
+    let sut: CategoriesDomainInteractor
+
+    init() {
+        mockCategoriesService = MockCategoriesService()
+        mockStorageService = MockStorageService()
+        serviceLocator = ServiceLocator()
+
+        serviceLocator.register(CategoriesService.self, instance: mockCategoriesService)
+        serviceLocator.register(StorageService.self, instance: mockStorageService)
+
+        sut = CategoriesDomainInteractor(serviceLocator: serviceLocator)
+    }
+
+    // MARK: - Initial State Tests
+
+    @Test("Initial state is correct")
+    func initialState() {
+        let state = sut.currentState
+        #expect(state.selectedCategory == nil)
+        #expect(state.articles.isEmpty)
+        #expect(!state.isLoading)
+        #expect(!state.isLoadingMore)
+        #expect(!state.isRefreshing)
+        #expect(state.error == nil)
+        #expect(state.currentPage == 1)
+        #expect(state.hasMorePages)
+        #expect(!state.hasLoadedInitialData)
+    }
+
+    // MARK: - Select Category Tests
+
+    @Test("Select category loads articles")
+    func selectCategoryLoadsArticles() async throws {
+        mockCategoriesService.articlesResult = .success(Article.mockArticles)
+
+        sut.dispatch(action: .selectCategory(.technology))
+
+        try await Task.sleep(nanoseconds: 500_000_000)
+
+        let state = sut.currentState
+        #expect(state.selectedCategory == .technology)
+        #expect(!state.isLoading)
+        #expect(!state.articles.isEmpty)
+        #expect(state.hasLoadedInitialData)
+        #expect(state.error == nil)
+    }
+
+    @Test("Select same category skips reload")
+    func selectSameCategorySkipsReload() async throws {
+        mockCategoriesService.articlesResult = .success(Article.mockArticles)
+
+        // First selection
+        sut.dispatch(action: .selectCategory(.technology))
+        try await Task.sleep(nanoseconds: 500_000_000)
+
+        #expect(sut.currentState.hasLoadedInitialData)
+        let firstLoadArticles = sut.currentState.articles
+
+        // Second selection of same category - should skip
+        sut.dispatch(action: .selectCategory(.technology))
+        try await Task.sleep(nanoseconds: 300_000_000)
+
+        // Articles should be the same (not reloaded)
+        #expect(sut.currentState.articles == firstLoadArticles)
+    }
+
+    @Test("Select different category clears and reloads")
+    func selectDifferentCategoryClearsAndReloads() async throws {
+        mockCategoriesService.articlesResult = .success(Article.mockArticles)
+
+        // First selection
+        sut.dispatch(action: .selectCategory(.technology))
+        try await Task.sleep(nanoseconds: 500_000_000)
+
+        #expect(sut.currentState.selectedCategory == .technology)
+
+        // Track states
+        var cancellables = Set<AnyCancellable>()
+        var articleCounts: [Int] = []
+
+        sut.statePublisher
+            .map(\.articles.count)
+            .sink { count in
+                articleCounts.append(count)
+            }
+            .store(in: &cancellables)
+
+        // Different category - should clear and reload
+        sut.dispatch(action: .selectCategory(.sports))
+        try await Task.sleep(nanoseconds: 500_000_000)
+
+        #expect(sut.currentState.selectedCategory == .sports)
+        // Should have cleared to 0 at some point
+        #expect(articleCounts.contains(0))
+    }
+
+    @Test("Select category sets loading state")
+    func selectCategorySetsLoadingState() async throws {
+        var cancellables = Set<AnyCancellable>()
+        var loadingStates: [Bool] = []
+
+        sut.statePublisher
+            .map(\.isLoading)
+            .sink { isLoading in
+                loadingStates.append(isLoading)
+            }
+            .store(in: &cancellables)
+
+        mockCategoriesService.articlesResult = .success(Article.mockArticles)
+
+        sut.dispatch(action: .selectCategory(.business))
+
+        try await Task.sleep(nanoseconds: 500_000_000)
+
+        #expect(loadingStates.contains(true))
+        #expect(loadingStates.last == false)
+    }
+
+    @Test("Select category handles error")
+    func selectCategoryHandlesError() async throws {
+        let testError = NSError(domain: "test", code: 1, userInfo: [NSLocalizedDescriptionKey: "Category error"])
+        mockCategoriesService.articlesResult = .failure(testError)
+
+        sut.dispatch(action: .selectCategory(.health))
+
+        try await Task.sleep(nanoseconds: 500_000_000)
+
+        let state = sut.currentState
+        #expect(!state.isLoading)
+        #expect(state.error != nil)
+        #expect(state.error == "Category error")
+    }
+
+    @Test("Select category resets page to 1")
+    func selectCategoryResetsPage() async throws {
+        mockCategoriesService.articlesResult = .success(Array(Article.mockArticles.prefix(20)))
+
+        sut.dispatch(action: .selectCategory(.science))
+        try await Task.sleep(nanoseconds: 500_000_000)
+
+        sut.dispatch(action: .loadMore)
+        try await Task.sleep(nanoseconds: 500_000_000)
+
+        #expect(sut.currentState.currentPage == 2)
+
+        // Select different category - should reset page
+        sut.dispatch(action: .selectCategory(.entertainment))
+        try await Task.sleep(nanoseconds: 500_000_000)
+
+        #expect(sut.currentState.currentPage == 1)
+    }
+
+    // MARK: - Load More Tests
+
+    @Test("Load more appends articles")
+    func loadMoreAppendsArticles() async throws {
+        mockCategoriesService.articlesResult = .success(Array(Article.mockArticles.prefix(20)))
+
+        sut.dispatch(action: .selectCategory(.technology))
+        try await Task.sleep(nanoseconds: 500_000_000)
+
+        let initialCount = sut.currentState.articles.count
+
+        let newArticle = Article(
+            id: "new-article",
+            title: "New Article",
+            description: "Description",
+            content: "Content",
+            author: "Author",
+            source: ArticleSource(id: "source", name: "Source"),
+            url: "https://example.com/new",
+            imageURL: nil,
+            publishedAt: Date(),
+            category: .technology
+        )
+        mockCategoriesService.articlesResult = .success([newArticle])
+
+        sut.dispatch(action: .loadMore)
+        try await Task.sleep(nanoseconds: 500_000_000)
+
+        let state = sut.currentState
+        #expect(state.articles.count > initialCount)
+        #expect(state.currentPage == 2)
+    }
+
+    @Test("Load more deduplicates articles")
+    func loadMoreDeduplicatesArticles() async throws {
+        mockCategoriesService.articlesResult = .success(Article.mockArticles)
+
+        sut.dispatch(action: .selectCategory(.technology))
+        try await Task.sleep(nanoseconds: 500_000_000)
+
+        let initialCount = sut.currentState.articles.count
+
+        // Return same articles - should be deduplicated
+        sut.dispatch(action: .loadMore)
+        try await Task.sleep(nanoseconds: 500_000_000)
+
+        // Count should not increase due to deduplication
+        #expect(sut.currentState.articles.count == initialCount)
+    }
+
+    @Test("Load more requires selected category")
+    func loadMoreRequiresSelectedCategory() async throws {
+        // No category selected
+        sut.dispatch(action: .loadMore)
+
+        try await Task.sleep(nanoseconds: 300_000_000)
+
+        // Should do nothing - page should still be 1
+        #expect(sut.currentState.currentPage == 1)
+        #expect(!sut.currentState.isLoadingMore)
+    }
+
+    @Test("Load more sets loading more state")
+    func loadMoreSetsLoadingMoreState() async throws {
+        mockCategoriesService.articlesResult = .success(Array(Article.mockArticles.prefix(20)))
+
+        sut.dispatch(action: .selectCategory(.technology))
+        try await Task.sleep(nanoseconds: 500_000_000)
+
+        var cancellables = Set<AnyCancellable>()
+        var loadingMoreStates: [Bool] = []
+
+        sut.statePublisher
+            .map(\.isLoadingMore)
+            .sink { isLoadingMore in
+                loadingMoreStates.append(isLoadingMore)
+            }
+            .store(in: &cancellables)
+
+        sut.dispatch(action: .loadMore)
+        try await Task.sleep(nanoseconds: 500_000_000)
+
+        #expect(loadingMoreStates.contains(true))
+        #expect(loadingMoreStates.last == false)
+    }
+
+    @Test("Load more respects hasMorePages")
+    func loadMoreRespectsHasMorePages() async throws {
+        // Return fewer than 20 articles to indicate no more pages
+        mockCategoriesService.articlesResult = .success(Array(Article.mockArticles.prefix(5)))
+
+        sut.dispatch(action: .selectCategory(.technology))
+        try await Task.sleep(nanoseconds: 500_000_000)
+
+        #expect(!sut.currentState.hasMorePages)
+
+        // Try to load more - should do nothing
+        sut.dispatch(action: .loadMore)
+        try await Task.sleep(nanoseconds: 300_000_000)
+
+        #expect(sut.currentState.currentPage == 1)
+    }
+
+    // MARK: - Refresh Tests
+
+    @Test("Refresh reloads category")
+    func refreshReloadsCategory() async throws {
+        mockCategoriesService.articlesResult = .success(Article.mockArticles)
+
+        sut.dispatch(action: .selectCategory(.technology))
+        try await Task.sleep(nanoseconds: 500_000_000)
+
+        sut.dispatch(action: .refresh)
+        try await Task.sleep(nanoseconds: 500_000_000)
+
+        let state = sut.currentState
+        #expect(!state.isRefreshing)
+        #expect(!state.articles.isEmpty)
+        #expect(state.selectedCategory == .technology)
+    }
+
+    @Test("Refresh requires selected category")
+    func refreshRequiresSelectedCategory() async throws {
+        // No category selected
+        sut.dispatch(action: .refresh)
+
+        try await Task.sleep(nanoseconds: 300_000_000)
+
+        // Should do nothing
+        #expect(!sut.currentState.isRefreshing)
+        #expect(sut.currentState.articles.isEmpty)
+    }
+
+    @Test("Refresh clears existing articles")
+    func refreshClearsExistingArticles() async throws {
+        mockCategoriesService.articlesResult = .success(Article.mockArticles)
+
+        sut.dispatch(action: .selectCategory(.technology))
+        try await Task.sleep(nanoseconds: 500_000_000)
+
+        #expect(!sut.currentState.articles.isEmpty)
+
+        var cancellables = Set<AnyCancellable>()
+        var articleCounts: [Int] = []
+
+        sut.statePublisher
+            .map(\.articles.count)
+            .sink { count in
+                articleCounts.append(count)
+            }
+            .store(in: &cancellables)
+
+        sut.dispatch(action: .refresh)
+        try await Task.sleep(nanoseconds: 500_000_000)
+
+        // Should have cleared to 0 at some point
+        #expect(articleCounts.contains(0))
+    }
+
+    @Test("Refresh resets page to 1")
+    func refreshResetsPage() async throws {
+        mockCategoriesService.articlesResult = .success(Array(Article.mockArticles.prefix(20)))
+
+        sut.dispatch(action: .selectCategory(.technology))
+        try await Task.sleep(nanoseconds: 500_000_000)
+
+        sut.dispatch(action: .loadMore)
+        try await Task.sleep(nanoseconds: 500_000_000)
+
+        #expect(sut.currentState.currentPage == 2)
+
+        sut.dispatch(action: .refresh)
+        try await Task.sleep(nanoseconds: 500_000_000)
+
+        #expect(sut.currentState.currentPage == 1)
+    }
+
+    @Test("Refresh handles error")
+    func refreshHandlesError() async throws {
+        mockCategoriesService.articlesResult = .success(Article.mockArticles)
+
+        sut.dispatch(action: .selectCategory(.technology))
+        try await Task.sleep(nanoseconds: 500_000_000)
+
+        let testError = NSError(domain: "test", code: 1, userInfo: [NSLocalizedDescriptionKey: "Refresh error"])
+        mockCategoriesService.articlesResult = .failure(testError)
+
+        sut.dispatch(action: .refresh)
+        try await Task.sleep(nanoseconds: 500_000_000)
+
+        let state = sut.currentState
+        #expect(!state.isRefreshing)
+        #expect(state.error == "Refresh error")
+    }
+
+    // MARK: - Select Article Tests
+
+    @Test("Select article saves to reading history")
+    func selectArticleSavesToHistory() async throws {
+        let article = Article.mockArticles[0]
+
+        sut.dispatch(action: .selectArticle(article))
+
+        try await Task.sleep(nanoseconds: 200_000_000)
+
+        let history = try await mockStorageService.fetchReadingHistory()
+        #expect(history.contains(where: { $0.id == article.id }))
+    }
+
+    // MARK: - All Categories Tests
+
+    @Test("All news categories can be selected")
+    func allCategoriesCanBeSelected() async throws {
+        mockCategoriesService.articlesResult = .success(Article.mockArticles)
+
+        for category in NewsCategory.allCases {
+            sut.dispatch(action: .selectCategory(category))
+            try await Task.sleep(nanoseconds: 300_000_000)
+
+            let state = sut.currentState
+            #expect(state.selectedCategory == category)
+            #expect(state.hasLoadedInitialData)
+        }
+    }
+}
