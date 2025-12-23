@@ -67,3 +67,4 @@ Secrets.plist
 # Temporary
 *.tmp
 *.temp
+buildServer.json
