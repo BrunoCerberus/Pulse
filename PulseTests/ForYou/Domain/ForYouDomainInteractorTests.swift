@@ -22,6 +22,24 @@ struct ForYouDomainInteractorTests {
         sut = ForYouDomainInteractor(serviceLocator: serviceLocator)
     }
 
+    // Helper to generate mock articles (need 20+ to enable pagination)
+    private func makeMockArticles(count: Int, idPrefix: String = "article") -> [Article] {
+        (1 ... count).map { index in
+            Article(
+                id: "\(idPrefix)-\(index)",
+                title: "Article \(index)",
+                description: "Description \(index)",
+                content: "Content \(index)",
+                author: "Author",
+                source: ArticleSource(id: "source", name: "Source"),
+                url: "https://example.com/\(idPrefix)/\(index)",
+                imageURL: nil,
+                publishedAt: Date(),
+                category: .technology
+            )
+        }
+    }
+
     // MARK: - Initial State Tests
 
     @Test("Initial state is correct")
@@ -210,7 +228,7 @@ struct ForYouDomainInteractorTests {
 
     @Test("Load more appends articles")
     func loadMoreAppendsArticles() async throws {
-        mockForYouService.feedResult = .success(Array(Article.mockArticles.prefix(20)))
+        mockForYouService.feedResult = .success(makeMockArticles(count: 20))
 
         sut.dispatch(action: .loadFeed)
         try await Task.sleep(nanoseconds: 500_000_000)
@@ -258,7 +276,7 @@ struct ForYouDomainInteractorTests {
 
     @Test("Load more sets loading more state")
     func loadMoreSetsLoadingMoreState() async throws {
-        mockForYouService.feedResult = .success(Array(Article.mockArticles.prefix(20)))
+        mockForYouService.feedResult = .success(makeMockArticles(count: 20))
 
         sut.dispatch(action: .loadFeed)
         try await Task.sleep(nanoseconds: 500_000_000)
@@ -340,7 +358,7 @@ struct ForYouDomainInteractorTests {
 
     @Test("Refresh resets page to 1")
     func refreshResetsPage() async throws {
-        mockForYouService.feedResult = .success(Array(Article.mockArticles.prefix(20)))
+        mockForYouService.feedResult = .success(makeMockArticles(count: 20))
 
         sut.dispatch(action: .loadFeed)
         try await Task.sleep(nanoseconds: 500_000_000)

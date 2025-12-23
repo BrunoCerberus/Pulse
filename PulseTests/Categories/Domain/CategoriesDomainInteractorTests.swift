@@ -22,6 +22,24 @@ struct CategoriesDomainInteractorTests {
         sut = CategoriesDomainInteractor(serviceLocator: serviceLocator)
     }
 
+    // Helper to generate mock articles (need 20+ to enable pagination)
+    private func makeMockArticles(count: Int, idPrefix: String = "article") -> [Article] {
+        (1 ... count).map { index in
+            Article(
+                id: "\(idPrefix)-\(index)",
+                title: "Article \(index)",
+                description: "Description \(index)",
+                content: "Content \(index)",
+                author: "Author",
+                source: ArticleSource(id: "source", name: "Source"),
+                url: "https://example.com/\(idPrefix)/\(index)",
+                imageURL: nil,
+                publishedAt: Date(),
+                category: .technology
+            )
+        }
+    }
+
     // MARK: - Initial State Tests
 
     @Test("Initial state is correct")
@@ -144,7 +162,7 @@ struct CategoriesDomainInteractorTests {
 
     @Test("Select category resets page to 1")
     func selectCategoryResetsPage() async throws {
-        mockCategoriesService.articlesResult = .success(Array(Article.mockArticles.prefix(20)))
+        mockCategoriesService.articlesResult = .success(makeMockArticles(count: 20))
 
         sut.dispatch(action: .selectCategory(.science))
         try await Task.sleep(nanoseconds: 500_000_000)
@@ -165,7 +183,7 @@ struct CategoriesDomainInteractorTests {
 
     @Test("Load more appends articles")
     func loadMoreAppendsArticles() async throws {
-        mockCategoriesService.articlesResult = .success(Array(Article.mockArticles.prefix(20)))
+        mockCategoriesService.articlesResult = .success(makeMockArticles(count: 20))
 
         sut.dispatch(action: .selectCategory(.technology))
         try await Task.sleep(nanoseconds: 500_000_000)
@@ -225,7 +243,7 @@ struct CategoriesDomainInteractorTests {
 
     @Test("Load more sets loading more state")
     func loadMoreSetsLoadingMoreState() async throws {
-        mockCategoriesService.articlesResult = .success(Array(Article.mockArticles.prefix(20)))
+        mockCategoriesService.articlesResult = .success(makeMockArticles(count: 20))
 
         sut.dispatch(action: .selectCategory(.technology))
         try await Task.sleep(nanoseconds: 500_000_000)
@@ -322,7 +340,7 @@ struct CategoriesDomainInteractorTests {
 
     @Test("Refresh resets page to 1")
     func refreshResetsPage() async throws {
-        mockCategoriesService.articlesResult = .success(Array(Article.mockArticles.prefix(20)))
+        mockCategoriesService.articlesResult = .success(makeMockArticles(count: 20))
 
         sut.dispatch(action: .selectCategory(.technology))
         try await Task.sleep(nanoseconds: 500_000_000)
