@@ -62,7 +62,7 @@ final class ArticleDetailUITests: XCTestCase {
         firstCard.tap()
 
         // Verify navigation to detail
-        let backButton = app.navigationBars.buttons["chevron.left"]
+        let backButton = app.buttons["backButton"]
         return backButton.waitForExistence(timeout: 5)
     }
 
@@ -74,8 +74,8 @@ final class ArticleDetailUITests: XCTestCase {
             throw XCTSkip("Could not navigate to article detail - no articles available")
         }
 
-        let backButton = app.navigationBars.buttons["chevron.left"]
-        XCTAssertTrue(backButton.exists, "Back button (chevron.left) should exist in navigation bar")
+        let backButton = app.buttons["backButton"]
+        XCTAssertTrue(backButton.exists, "Back button should exist in navigation bar")
     }
 
     func testBackButtonNavigatesBackToHome() throws {
@@ -84,7 +84,7 @@ final class ArticleDetailUITests: XCTestCase {
             throw XCTSkip("Could not navigate to article detail - no articles available")
         }
 
-        let backButton = app.navigationBars.buttons["chevron.left"]
+        let backButton = app.buttons["backButton"]
         XCTAssertTrue(backButton.exists, "Back button should exist")
 
         backButton.tap()
@@ -251,7 +251,7 @@ final class ArticleDetailUITests: XCTestCase {
         scrollView.swipeDown()
 
         // View should still be functional
-        let backButton = app.navigationBars.buttons["chevron.left"]
+        let backButton = app.buttons["backButton"]
         XCTAssertTrue(backButton.exists, "Navigation should still work after scrolling")
     }
 
@@ -351,7 +351,7 @@ final class ArticleDetailUITests: XCTestCase {
         articleCards.firstMatch.tap()
 
         // Verify on detail
-        let backButton = app.navigationBars.buttons["chevron.left"]
+        let backButton = app.buttons["backButton"]
         XCTAssertTrue(backButton.waitForExistence(timeout: 5), "Should be on article detail")
 
         // Navigate back
@@ -382,7 +382,7 @@ final class ArticleDetailUITests: XCTestCase {
         }
 
         // Navigate back
-        let backButton = app.navigationBars.buttons["chevron.left"]
+        let backButton = app.buttons["backButton"]
         backButton.tap()
 
         // Wait for home

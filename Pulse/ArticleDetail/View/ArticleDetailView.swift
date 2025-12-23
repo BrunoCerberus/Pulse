@@ -36,6 +36,7 @@ struct ArticleDetailView: View {
                 Button("", systemImage: "chevron.left") {
                     dismiss()
                 }
+                .accessibilityIdentifier("backButton")
             }
 
             ToolbarItem(placement: .topBarTrailing) {

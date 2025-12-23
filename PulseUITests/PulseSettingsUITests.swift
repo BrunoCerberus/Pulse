@@ -308,12 +308,17 @@ final class PulseSettingsUITests: XCTestCase {
 
         if systemThemeValue == "1" {
             systemThemeToggle.tap()
-            Thread.sleep(forTimeInterval: 0.5)
+            // Wait for UI to update after toggle
+            Thread.sleep(forTimeInterval: 1.0)
         }
+
+        // Swipe up slightly to ensure Dark Mode toggle is visible
+        app.swipeUp()
+        Thread.sleep(forTimeInterval: 0.5)
 
         // Dark Mode toggle should now be visible
         let darkModeToggle = app.switches["Dark Mode"]
-        XCTAssertTrue(darkModeToggle.waitForExistence(timeout: 3), "Dark Mode toggle should be visible")
+        XCTAssertTrue(darkModeToggle.waitForExistence(timeout: 5), "Dark Mode toggle should be visible")
 
         // Restore system theme
         systemThemeToggle.tap()

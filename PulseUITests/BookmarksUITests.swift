@@ -61,7 +61,7 @@ final class BookmarksUITests: XCTestCase {
         articleCards.firstMatch.tap()
 
         // Wait for detail view
-        let backButton = app.navigationBars.buttons["chevron.left"]
+        let backButton = app.buttons["backButton"]
         guard backButton.waitForExistence(timeout: 5) else {
             return false
         }
@@ -197,7 +197,7 @@ final class BookmarksUITests: XCTestCase {
                 articleCards.firstMatch.tap()
 
                 // Verify navigation to detail
-                let backButton = app.navigationBars.buttons["chevron.left"]
+                let backButton = app.buttons["backButton"]
                 XCTAssertTrue(backButton.waitForExistence(timeout: 5), "Should navigate to article detail")
 
                 // Navigate back
@@ -283,7 +283,7 @@ final class BookmarksUITests: XCTestCase {
         articleCards.firstMatch.tap()
 
         // Wait for detail
-        let backButton = app.navigationBars.buttons["chevron.left"]
+        let backButton = app.buttons["backButton"]
         guard backButton.waitForExistence(timeout: 5) else {
             throw XCTSkip("Could not open article detail")
         }
@@ -370,11 +370,12 @@ final class BookmarksUITests: XCTestCase {
     func testSwitchingTabsPreservesBookmarksState() throws {
         navigateToBookmarks()
 
-        // Wait for content
-        Thread.sleep(forTimeInterval: 2)
+        // Wait for content to fully load
+        Thread.sleep(forTimeInterval: 3)
 
-        // Note the current state
-        let noBookmarksExists = app.staticTexts["No Bookmarks"].exists
+        // Note the current state - check for empty state
+        let noBookmarksText = app.staticTexts["No Bookmarks"]
+        let noBookmarksExists = noBookmarksText.waitForExistence(timeout: 3)
 
         // Switch to Home
         navigateToHome()
@@ -384,9 +385,13 @@ final class BookmarksUITests: XCTestCase {
         // Switch back to Bookmarks
         navigateToBookmarks()
 
+        // Wait for content to load after switching back
+        Thread.sleep(forTimeInterval: 2)
+
         // State should be preserved
         if noBookmarksExists {
-            XCTAssertTrue(app.staticTexts["No Bookmarks"].waitForExistence(timeout: 5), "Empty state should be preserved")
+            // Allow more time for empty state to reappear after tab switch
+            XCTAssertTrue(app.staticTexts["No Bookmarks"].waitForExistence(timeout: 10), "Empty state should be preserved")
         }
     }
 

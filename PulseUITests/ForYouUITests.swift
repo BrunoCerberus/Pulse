@@ -233,7 +233,7 @@ final class ForYouUITests: XCTestCase {
             articleCards.firstMatch.tap()
 
             // Verify navigation to detail
-            let backButton = app.navigationBars.buttons["chevron.left"]
+            let backButton = app.buttons["backButton"]
             XCTAssertTrue(backButton.waitForExistence(timeout: 5), "Should navigate to article detail")
 
             // Navigate back

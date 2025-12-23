@@ -87,7 +87,7 @@ final class HomeUITests: XCTestCase {
             firstCard.tap()
 
             // Verify navigation to article detail - check for back button
-            let backButton = app.navigationBars.buttons["chevron.left"]
+            let backButton = app.buttons["backButton"]
             XCTAssertTrue(backButton.waitForExistence(timeout: 5), "Should navigate to article detail with back button")
         }
     }
@@ -111,7 +111,7 @@ final class HomeUITests: XCTestCase {
             heroCards.tap()
 
             // Verify navigation
-            let backButton = app.navigationBars.buttons["chevron.left"]
+            let backButton = app.buttons["backButton"]
             if backButton.waitForExistence(timeout: 3) {
                 XCTAssertTrue(backButton.exists, "Should navigate to article detail")
             }
