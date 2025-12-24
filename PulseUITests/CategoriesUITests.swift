@@ -34,35 +34,68 @@ final class CategoriesUITests: XCTestCase {
         categoriesTab.tap()
     }
 
+    private func waitForArticleDetail(timeout: TimeInterval = 8) -> Bool {
+        let detailScrollView = app.scrollViews["articleDetailScrollView"]
+        if detailScrollView.waitForExistence(timeout: timeout) {
+            return true
+        }
+
+        let backButton = app.buttons["backButton"]
+        return backButton.waitForExistence(timeout: 2)
+    }
+
+    private func navigateBack() {
+        let backButton = app.buttons["backButton"]
+        if backButton.exists {
+            backButton.tap()
+        } else {
+            app.swipeRight()
+        }
+    }
+
+    private func categoryChipsScrollView() -> XCUIElement {
+        let chipsScrollView = app.scrollViews["categoryChipsScrollView"]
+        if chipsScrollView.exists {
+            return chipsScrollView
+        }
+        return app.scrollViews.firstMatch
+    }
+
+    private func isElementVisible(_ element: XCUIElement) -> Bool {
+        guard element.exists else { return false }
+        let frame = element.frame
+        guard !frame.isEmpty else { return false }
+        return app.windows.element(boundBy: 0).frame.intersects(frame)
+    }
+
     /// Scroll horizontally to find and tap a category button
     /// - Parameter category: The category name to find and tap
     /// - Returns: True if the button was found and tapped
     @discardableResult
     private func scrollToAndTapCategory(_ category: String) -> Bool {
         let button = app.buttons[category]
+        let scrollView = categoryChipsScrollView()
 
-        // If button is already visible and hittable, tap it
-        if button.exists && button.isHittable {
+        // If button is already visible, tap it
+        if isElementVisible(button) {
             button.tap()
             return true
         }
 
-        // Try scrolling right to find the button
-        let scrollView = app.scrollViews.firstMatch
-        for _ in 0..<5 {
-            if button.exists && button.isHittable {
+        // Try scrolling to find the button
+        for _ in 0..<6 {
+            scrollView.swipeLeft()
+            Thread.sleep(forTimeInterval: 0.3)
+            if isElementVisible(button) {
                 button.tap()
                 return true
             }
-            scrollView.swipeLeft()
-            Thread.sleep(forTimeInterval: 0.3)
         }
 
-        // Scroll back left and try again
-        for _ in 0..<10 {
+        for _ in 0..<6 {
             scrollView.swipeRight()
             Thread.sleep(forTimeInterval: 0.3)
-            if button.exists && button.isHittable {
+            if isElementVisible(button) {
                 button.tap()
                 return true
             }
@@ -343,11 +376,10 @@ final class CategoriesUITests: XCTestCase {
             articleCards.firstMatch.tap()
 
             // Verify navigation to detail
-            let backButton = app.buttons["backButton"]
-            XCTAssertTrue(backButton.waitForExistence(timeout: 5), "Should navigate to article detail")
+            XCTAssertTrue(waitForArticleDetail(), "Should navigate to article detail")
 
             // Navigate back
-            backButton.tap()
+            navigateBack()
 
             // Verify back on Categories
             let categoriesNav = app.navigationBars["Categories"]

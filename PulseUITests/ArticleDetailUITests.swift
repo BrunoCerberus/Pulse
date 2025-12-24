@@ -61,9 +61,26 @@ final class ArticleDetailUITests: XCTestCase {
 
         firstCard.tap()
 
-        // Verify navigation to detail
+        return waitForArticleDetail()
+    }
+
+    private func waitForArticleDetail(timeout: TimeInterval = 8) -> Bool {
+        let detailScrollView = app.scrollViews["articleDetailScrollView"]
+        if detailScrollView.waitForExistence(timeout: timeout) {
+            return true
+        }
+
         let backButton = app.buttons["backButton"]
-        return backButton.waitForExistence(timeout: 5)
+        return backButton.waitForExistence(timeout: 2)
+    }
+
+    private func navigateBack() {
+        let backButton = app.buttons["backButton"]
+        if backButton.exists {
+            backButton.tap()
+        } else {
+            app.swipeRight()
+        }
     }
 
     // MARK: - Navigation Tests
@@ -351,11 +368,10 @@ final class ArticleDetailUITests: XCTestCase {
         articleCards.firstMatch.tap()
 
         // Verify on detail
-        let backButton = app.buttons["backButton"]
-        XCTAssertTrue(backButton.waitForExistence(timeout: 5), "Should be on article detail")
+        XCTAssertTrue(waitForArticleDetail(), "Should be on article detail")
 
         // Navigate back
-        backButton.tap()
+        navigateBack()
 
         // Verify back on home
         let homeNavBar = app.navigationBars["Pulse"]

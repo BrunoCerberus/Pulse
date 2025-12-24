@@ -85,6 +85,7 @@ struct CategoriesView<R: CategoriesNavigationRouter>: View {
             }
             .padding(.horizontal, Spacing.md)
         }
+        .accessibilityIdentifier("categoryChipsScrollView")
         .padding(.vertical, Spacing.sm)
         .background(.ultraThinMaterial)
     }

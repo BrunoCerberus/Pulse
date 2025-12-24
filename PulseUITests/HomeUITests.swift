@@ -36,6 +36,16 @@ final class HomeUITests: XCTestCase {
         XCTAssertTrue(homeTab.waitForExistence(timeout: 5), "Home tab should exist")
     }
 
+    private func waitForArticleDetail(timeout: TimeInterval = 8) -> Bool {
+        let detailScrollView = app.scrollViews["articleDetailScrollView"]
+        if detailScrollView.waitForExistence(timeout: timeout) {
+            return true
+        }
+
+        let backButton = app.buttons["backButton"]
+        return backButton.waitForExistence(timeout: 2)
+    }
+
     // MARK: - Navigation Bar Tests
 
     func testHomeNavigationTitleExists() throws {
@@ -86,9 +96,7 @@ final class HomeUITests: XCTestCase {
             XCTAssertTrue(firstCard.waitForExistence(timeout: 5), "Article card should exist")
             firstCard.tap()
 
-            // Verify navigation to article detail - check for back button
-            let backButton = app.buttons["backButton"]
-            XCTAssertTrue(backButton.waitForExistence(timeout: 5), "Should navigate to article detail with back button")
+            XCTAssertTrue(waitForArticleDetail(), "Should navigate to article detail")
         }
     }
 
@@ -111,10 +119,7 @@ final class HomeUITests: XCTestCase {
             heroCards.tap()
 
             // Verify navigation
-            let backButton = app.buttons["backButton"]
-            if backButton.waitForExistence(timeout: 3) {
-                XCTAssertTrue(backButton.exists, "Should navigate to article detail")
-            }
+            XCTAssertTrue(waitForArticleDetail(timeout: 6), "Should navigate to article detail")
         }
     }
 

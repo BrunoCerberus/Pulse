@@ -28,15 +28,20 @@ struct ArticleDetailView: View {
                     contentCard
                 }
             }
+            .accessibilityIdentifier("articleDetailScrollView")
         }
         .navigationBarBackButtonHidden(true)
         .toolbarBackground(.hidden, for: .navigationBar)
         .toolbar {
             ToolbarItem(placement: .topBarLeading) {
-                Button("", systemImage: "chevron.left") {
+                Button {
                     dismiss()
+                } label: {
+                    Label("Back", systemImage: "chevron.left")
+                        .labelStyle(.iconOnly)
                 }
                 .accessibilityIdentifier("backButton")
+                .accessibilityLabel("Back")
             }
 
             ToolbarItem(placement: .topBarTrailing) {
