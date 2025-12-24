@@ -49,10 +49,12 @@ struct ArticleDetailView: View {
                     Button("", systemImage: viewModel.isBookmarked ? "bookmark.fill" : "bookmark") {
                         viewModel.toggleBookmark()
                     }
+                    .accessibilityIdentifier(viewModel.isBookmarked ? "bookmark.fill" : "bookmark")
 
                     Button("", systemImage: "square.and.arrow.up") {
                         viewModel.share()
                     }
+                    .accessibilityIdentifier("square.and.arrow.up")
                 }
             }
         }
