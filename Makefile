@@ -205,20 +205,20 @@ test-ui-clean:
 # Run UI tests in parallel (faster for CI)
 test-ui-parallel:
 	@echo "Running UI tests in parallel..."
-	@xcodebuild test \
+	@if xcodebuild test \
 		-project Pulse.xcodeproj \
-		-scheme PulseUITests \
-		-testPlan PulseUITests \
+		-scheme PulseDev \
+		-only-testing:PulseUITests \
 		-destination 'platform=iOS Simulator,name=iPhone Air,OS=26.2' \
 		-parallel-testing-enabled YES \
 		-parallel-testing-worker-count 4 \
-		CODE_SIGNING_ALLOWED=NO 2>&1 | tee /tmp/test_output.log; \
-	if grep -E "Test run.*failed" /tmp/test_output.log > /dev/null; then \
+		CODE_SIGNING_ALLOWED=NO 2>&1 | tee /tmp/test_output.log; then \
+		echo "UI tests completed successfully!"; \
+		grep -E "(Test run.*passed|Test run.*failed)" /tmp/test_output.log | tail -1; \
+	else \
 		echo "UI tests failed!"; \
 		grep -E "(✘|failed|FAIL)" /tmp/test_output.log | head -20; \
 		exit 1; \
-	else \
-		echo "UI tests completed successfully!"; \
 	fi
 
 # Run only snapshot tests
