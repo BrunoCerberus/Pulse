@@ -47,6 +47,32 @@ final class PulseSettingsUITests: XCTestCase {
         XCTAssertTrue(settingsNavBar.waitForExistence(timeout: 5), "Settings navigation bar should appear")
     }
 
+    private func isSwitchOn(_ toggle: XCUIElement) -> Bool {
+        if let value = toggle.value as? Bool {
+            return value
+        }
+        if let value = toggle.value as? String {
+            switch value.lowercased() {
+            case "1", "on", "true":
+                return true
+            case "0", "off", "false":
+                return false
+            default:
+                return false
+            }
+        }
+        if let value = toggle.value as? NSNumber {
+            return value.boolValue
+        }
+        return false
+    }
+
+    private func setSwitch(_ toggle: XCUIElement, to isOn: Bool) {
+        if isSwitchOn(toggle) != isOn {
+            toggle.tap()
+        }
+    }
+
     // MARK: - Navigation Tests
 
     func testSettingsViewLoads() throws {
@@ -248,7 +274,7 @@ final class PulseSettingsUITests: XCTestCase {
         XCTAssertTrue(breakingNewsToggle.waitForExistence(timeout: 5))
 
         // When notifications are disabled, breaking news should be disabled
-        let notificationsEnabled = (notificationsToggle.value as? String) == "1"
+        let notificationsEnabled = isSwitchOn(notificationsToggle)
 
         if !notificationsEnabled {
             XCTAssertFalse(breakingNewsToggle.isEnabled, "Breaking News should be disabled when Notifications are off")
@@ -274,6 +300,8 @@ final class PulseSettingsUITests: XCTestCase {
         let systemThemeToggle = app.switches["Use System Theme"]
         XCTAssertTrue(systemThemeToggle.waitForExistence(timeout: 5))
 
+        let wasSystemThemeOn = isSwitchOn(systemThemeToggle)
+
         // Toggle system theme
         systemThemeToggle.tap()
 
@@ -281,18 +309,13 @@ final class PulseSettingsUITests: XCTestCase {
         Thread.sleep(forTimeInterval: 0.5)
 
         // When system theme is off, Dark Mode toggle should appear
-        let darkModeToggle = app.switches["Dark Mode"]
-
-        // Dark Mode toggle visibility depends on system theme state
-        let systemThemeValue = systemThemeToggle.value as? String
-
-        if systemThemeValue == "0" {
-            // System theme is off, Dark Mode should be visible
+        if wasSystemThemeOn {
+            let darkModeToggle = app.switches["Dark Mode"]
             XCTAssertTrue(darkModeToggle.waitForExistence(timeout: 3), "Dark Mode toggle should appear when System Theme is off")
         }
 
         // Toggle back to restore state
-        systemThemeToggle.tap()
+        setSwitch(systemThemeToggle, to: wasSystemThemeOn)
     }
 
     func testDarkModeToggleAppearsWhenSystemThemeOff() throws {
@@ -303,11 +326,9 @@ final class PulseSettingsUITests: XCTestCase {
         let systemThemeToggle = app.switches["Use System Theme"]
         XCTAssertTrue(systemThemeToggle.waitForExistence(timeout: 5))
 
-        // If system theme is on, turn it off
-        let systemThemeValue = systemThemeToggle.value as? String
-
-        if systemThemeValue == "1" {
-            systemThemeToggle.tap()
+        let wasSystemThemeOn = isSwitchOn(systemThemeToggle)
+        setSwitch(systemThemeToggle, to: false)
+        if wasSystemThemeOn {
             // Wait for UI to update after toggle
             Thread.sleep(forTimeInterval: 1.0)
         }
@@ -318,10 +339,13 @@ final class PulseSettingsUITests: XCTestCase {
 
         // Dark Mode toggle should now be visible
         let darkModeToggle = app.switches["Dark Mode"]
+        if !darkModeToggle.exists {
+            app.swipeUp()
+        }
         XCTAssertTrue(darkModeToggle.waitForExistence(timeout: 5), "Dark Mode toggle should be visible")
 
         // Restore system theme
-        systemThemeToggle.tap()
+        setSwitch(systemThemeToggle, to: wasSystemThemeOn)
     }
 
     func testToggleDarkMode() throws {
@@ -333,9 +357,9 @@ final class PulseSettingsUITests: XCTestCase {
         let systemThemeToggle = app.switches["Use System Theme"]
         XCTAssertTrue(systemThemeToggle.waitForExistence(timeout: 5))
 
-        let systemThemeValue = systemThemeToggle.value as? String
-        if systemThemeValue == "1" {
-            systemThemeToggle.tap()
+        let wasSystemThemeOn = isSwitchOn(systemThemeToggle)
+        setSwitch(systemThemeToggle, to: false)
+        if wasSystemThemeOn {
             Thread.sleep(forTimeInterval: 0.5)
         }
 
@@ -350,7 +374,7 @@ final class PulseSettingsUITests: XCTestCase {
         }
 
         // Restore system theme
-        systemThemeToggle.tap()
+        setSwitch(systemThemeToggle, to: wasSystemThemeOn)
 
         XCTAssertTrue(true, "Dark mode toggle test completed")
     }

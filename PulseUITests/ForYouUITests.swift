@@ -32,6 +32,9 @@ final class ForYouUITests: XCTestCase {
         let forYouTab = app.tabBars.buttons["For You"]
         XCTAssertTrue(forYouTab.waitForExistence(timeout: 5), "For You tab should exist")
         forYouTab.tap()
+
+        let navTitle = app.navigationBars["For You"]
+        XCTAssertTrue(navTitle.waitForExistence(timeout: 5), "For You view should load")
     }
 
     /// Navigate to Settings via gear button
@@ -293,7 +296,7 @@ final class ForYouUITests: XCTestCase {
 
         // View should remain functional
         let navTitle = app.navigationBars["For You"]
-        XCTAssertTrue(navTitle.exists, "View should remain functional after scrolling")
+        XCTAssertTrue(navTitle.waitForExistence(timeout: 5), "View should remain functional after scrolling")
     }
 
     func testLoadingMoreIndicator() throws {

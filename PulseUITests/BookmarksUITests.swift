@@ -32,6 +32,9 @@ final class BookmarksUITests: XCTestCase {
         let bookmarksTab = app.tabBars.buttons["Bookmarks"]
         XCTAssertTrue(bookmarksTab.waitForExistence(timeout: 5), "Bookmarks tab should exist")
         bookmarksTab.tap()
+
+        let navTitle = app.navigationBars["Bookmarks"]
+        XCTAssertTrue(navTitle.waitForExistence(timeout: 5), "Bookmarks view should load")
     }
 
     /// Navigate to Home tab

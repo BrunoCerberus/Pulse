@@ -344,8 +344,8 @@ final class ArticleDetailUITests: XCTestCase {
         // Article detail has a hero image area at the top
         // This is implemented as StretchyAsyncImage
         // The image loads asynchronously, so we check for the scroll view structure
-        let scrollView = app.scrollViews.firstMatch
-        XCTAssertTrue(scrollView.exists, "Article detail should have a scroll view for the stretchy header")
+        let scrollView = app.scrollViews["articleDetailScrollView"]
+        XCTAssertTrue(scrollView.waitForExistence(timeout: 5), "Article detail should have a scroll view for the stretchy header")
     }
 
     // MARK: - Integration Tests
