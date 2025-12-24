@@ -324,8 +324,12 @@ schemes:
         PulseUITests: all
     test:
       config: Debug
+      testPlans:
+        - path: PulseUITests.xctestplan
+          defaultPlan: true
       targets:
-        - PulseUITests
+        - name: PulseUITests
+          parallelizable: true
       environmentVariables: {}
 
   PulseSnapshotTests:
