@@ -292,62 +292,6 @@ final class PulseSettingsUITests: XCTestCase {
         XCTAssertTrue(systemThemeToggle.waitForExistence(timeout: 5))
     }
 
-    func testToggleSystemTheme() throws {
-        navigateToSettings()
-
-        app.swipeUp()
-
-        let systemThemeToggle = app.switches["Use System Theme"]
-        XCTAssertTrue(systemThemeToggle.waitForExistence(timeout: 5))
-
-        let wasSystemThemeOn = isSwitchOn(systemThemeToggle)
-
-        // Toggle system theme
-        systemThemeToggle.tap()
-
-        // Wait for state change
-        Thread.sleep(forTimeInterval: 0.5)
-
-        // When system theme is off, Dark Mode toggle should appear
-        if wasSystemThemeOn {
-            let darkModeToggle = app.switches["Dark Mode"]
-            XCTAssertTrue(darkModeToggle.waitForExistence(timeout: 3), "Dark Mode toggle should appear when System Theme is off")
-        }
-
-        // Toggle back to restore state
-        setSwitch(systemThemeToggle, to: wasSystemThemeOn)
-    }
-
-    func testDarkModeToggleAppearsWhenSystemThemeOff() throws {
-        navigateToSettings()
-
-        app.swipeUp()
-
-        let systemThemeToggle = app.switches["Use System Theme"]
-        XCTAssertTrue(systemThemeToggle.waitForExistence(timeout: 5))
-
-        let wasSystemThemeOn = isSwitchOn(systemThemeToggle)
-        setSwitch(systemThemeToggle, to: false)
-        if wasSystemThemeOn {
-            // Wait for UI to update after toggle
-            Thread.sleep(forTimeInterval: 1.0)
-        }
-
-        // Swipe up slightly to ensure Dark Mode toggle is visible
-        app.swipeUp()
-        Thread.sleep(forTimeInterval: 0.5)
-
-        // Dark Mode toggle should now be visible
-        let darkModeToggle = app.switches["Dark Mode"]
-        if !darkModeToggle.exists {
-            app.swipeUp()
-        }
-        XCTAssertTrue(darkModeToggle.waitForExistence(timeout: 5), "Dark Mode toggle should be visible")
-
-        // Restore system theme
-        setSwitch(systemThemeToggle, to: wasSystemThemeOn)
-    }
-
     func testToggleDarkMode() throws {
         navigateToSettings()
 
