@@ -203,6 +203,7 @@ jobs:
     name: ${{ matrix.test-name }}
     runs-on: macos-26
     needs: build
+    timeout-minutes: ${{ matrix.timeout }}
     strategy:
       fail-fast: false
       matrix:
@@ -211,14 +212,17 @@ jobs:
             test-name: Unit Tests
             scheme: PulseDev
             artifact-name: unit-test-results
+            timeout: 15
           - test-target: PulseUITests
             test-name: UI Tests
             scheme: PulseDev
             artifact-name: ui-test-results
+            timeout: 45
           - test-target: PulseSnapshotTests
             test-name: Snapshot Tests
             scheme: PulseSnapshotTests
             artifact-name: snapshot-test-results
+            timeout: 15
 
     steps:
     - name: Checkout code
@@ -278,6 +282,7 @@ jobs:
 
         if [ "${{ matrix.test-target }}" == "PulseUITests" ]; then
           # Run UI tests with parallel execution using simulator cloning
+          # Use 2 workers for stability and add test timeouts
           xcodebuild test-without-building \
             -project Pulse.xcodeproj \
             -scheme ${{ matrix.scheme }} \
@@ -287,7 +292,10 @@ jobs:
             -resultBundlePath test-results/${{ matrix.artifact-name }}.xcresult \
             -disableAutomaticPackageResolution \
             -parallel-testing-enabled YES \
-            -maximum-parallel-testing-workers 4 \
+            -maximum-parallel-testing-workers 2 \
+            -test-timeouts-enabled YES \
+            -default-test-execution-time-allowance 120 \
+            -maximum-test-execution-time-allowance 180 \
             | tee /tmp/test_output.log
         else
           xcodebuild test-without-building \
