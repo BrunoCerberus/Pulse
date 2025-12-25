@@ -277,17 +277,17 @@ jobs:
         set -o pipefail
 
         if [ "${{ matrix.test-target }}" == "PulseUITests" ]; then
-          # Run UI tests with parallel execution across multiple simulators
+          # Run UI tests with parallel execution using simulator cloning
           xcodebuild test-without-building \
             -project Pulse.xcodeproj \
             -scheme ${{ matrix.scheme }} \
             -only-testing:${{ matrix.test-target }} \
             -destination 'platform=iOS Simulator,name=iPhone Air,OS=26.2' \
-            -destination 'platform=iOS Simulator,name=iPhone 16 Pro,OS=26.2' \
             -derivedDataPath ./DerivedData \
             -resultBundlePath test-results/${{ matrix.artifact-name }}.xcresult \
             -disableAutomaticPackageResolution \
             -parallel-testing-enabled YES \
+            -maximum-parallel-testing-workers 4 \
             | tee /tmp/test_output.log
         else
           xcodebuild test-without-building \
