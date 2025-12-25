@@ -276,23 +276,31 @@ jobs:
         mkdir -p test-results
         set -o pipefail
 
-        # Enable parallel testing for UI tests to speed up execution
-        PARALLEL_FLAGS=""
         if [ "${{ matrix.test-target }}" == "PulseUITests" ]; then
-          PARALLEL_FLAGS="-parallel-testing-enabled YES -parallel-testing-worker-count 4"
+          # Run UI tests with parallel execution across multiple simulators
+          xcodebuild test-without-building \
+            -project Pulse.xcodeproj \
+            -scheme ${{ matrix.scheme }} \
+            -only-testing:${{ matrix.test-target }} \
+            -destination 'platform=iOS Simulator,name=iPhone Air,OS=26.2' \
+            -destination 'platform=iOS Simulator,name=iPhone 16 Pro,OS=26.2' \
+            -derivedDataPath ./DerivedData \
+            -resultBundlePath test-results/${{ matrix.artifact-name }}.xcresult \
+            -disableAutomaticPackageResolution \
+            -parallel-testing-enabled YES \
+            | tee /tmp/test_output.log
+        else
+          xcodebuild test-without-building \
+            -project Pulse.xcodeproj \
+            -scheme ${{ matrix.scheme }} \
+            -only-testing:${{ matrix.test-target }} \
+            -destination 'platform=iOS Simulator,name=iPhone Air,OS=26.2' \
+            -derivedDataPath ./DerivedData \
+            -resultBundlePath test-results/${{ matrix.artifact-name }}.xcresult \
+            -disableAutomaticPackageResolution \
+            -retry-tests-on-failure \
+            | tee /tmp/test_output.log
         fi
-
-        xcodebuild test-without-building \
-          -project Pulse.xcodeproj \
-          -scheme ${{ matrix.scheme }} \
-          -only-testing:${{ matrix.test-target }} \
-          -destination 'platform=iOS Simulator,name=iPhone Air,OS=26.2' \
-          -derivedDataPath ./DerivedData \
-          -resultBundlePath test-results/${{ matrix.artifact-name }}.xcresult \
-          -disableAutomaticPackageResolution \
-          -retry-tests-on-failure \
-          $PARALLEL_FLAGS \
-          | tee /tmp/test_output.log
         TEST_EXIT_CODE=$?
         grep -E "(Test run.*passed|Test run.*failed)" /tmp/test_output.log | tail -5 || echo "${{ matrix.test-name }} completed"
         exit $TEST_EXIT_CODE
