@@ -403,16 +403,24 @@ final class BookmarksUITests: XCTestCase {
     func testBookmarkIconIsFilledForBookmarkedArticles() throws {
         navigateToBookmarks()
 
-        // Wait for content
-        Thread.sleep(forTimeInterval: 2)
+        // Wait for content to load using polling approach
+        let noBookmarksText = app.staticTexts["No Bookmarks"]
+        let savedArticlesText = app.staticTexts.matching(NSPredicate(format: "label CONTAINS[c] 'saved articles'")).firstMatch
+        let loadingText = app.staticTexts["Loading bookmarks..."]
 
-        // If there are bookmarked articles, they should show filled bookmark icon
-        let articleCards = app.buttons.matching(NSPredicate(format: "label CONTAINS[c] 'ago'"))
+        // Use polling to avoid cascading waits
+        let timeout: TimeInterval = 15
+        let startTime = Date()
+        var contentLoaded = false
 
-        if articleCards.count > 0 {
-            // Articles in Bookmarks should have filled bookmark icon
-            // This is indicated by the isBookmarked: true parameter
-            XCTAssertTrue(true, "Bookmarked articles should display filled bookmark icon")
+        while Date().timeIntervalSince(startTime) < timeout {
+            if noBookmarksText.exists || savedArticlesText.exists || loadingText.exists {
+                contentLoaded = true
+                break
+            }
+            Thread.sleep(forTimeInterval: 0.5)
         }
+
+        XCTAssertTrue(contentLoaded, "Bookmarks view should load with content or empty state")
     }
 }

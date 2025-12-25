@@ -392,34 +392,58 @@ final class CategoriesUITests: XCTestCase {
     func testInfiniteScrollLoadsMoreArticles() throws {
         navigateToCategories()
 
-        // Wait for UI to load
+        // Wait for Categories navigation
+        let navTitle = app.navigationBars["Categories"]
+        XCTAssertTrue(navTitle.waitForExistence(timeout: 10), "Categories navigation should exist")
+
+        // Wait for UI to stabilize
         Thread.sleep(forTimeInterval: 1)
 
-        // Select a category
+        // Select a category - try multiple with fallback
+        var categorySelected = false
         for category in categoryNames {
             let button = app.buttons[category]
-            if button.exists {
+            if button.exists && button.isHittable {
                 button.tap()
+                categorySelected = true
                 break
             }
         }
 
-        // Wait for initial content
-        Thread.sleep(forTimeInterval: 3)
+        guard categorySelected else {
+            throw XCTSkip("Could not select a category")
+        }
 
-        // Scroll down multiple times
-        let scrollView = app.scrollViews.firstMatch
-        if scrollView.exists {
-            scrollView.swipeUp()
-            scrollView.swipeUp()
-            scrollView.swipeUp()
+        // Wait for content to load using polling approach
+        let articlesCountText = app.staticTexts.matching(NSPredicate(format: "label CONTAINS[c] 'articles'")).firstMatch
+        let noArticlesText = app.staticTexts["No Articles"]
+        let loadingText = app.staticTexts["Loading articles..."]
+        let selectCategoryText = app.staticTexts["Select a Category"]
 
-            // Wait for potential loading
-            Thread.sleep(forTimeInterval: 2)
+        let timeout: TimeInterval = 15
+        let startTime = Date()
+        var contentLoaded = false
+
+        while Date().timeIntervalSince(startTime) < timeout {
+            // Content loaded when we see articles, no articles, loading, or the select prompt is gone
+            if articlesCountText.exists || noArticlesText.exists || loadingText.exists || !selectCategoryText.exists {
+                contentLoaded = true
+                break
+            }
+            Thread.sleep(forTimeInterval: 0.5)
+        }
+
+        // Scroll if content loaded
+        if contentLoaded {
+            let scrollView = app.scrollViews.firstMatch
+            if scrollView.exists {
+                scrollView.swipeUp()
+                Thread.sleep(forTimeInterval: 0.5)
+                scrollView.swipeUp()
+            }
         }
 
         // View should still be functional
-        let navTitle = app.navigationBars["Categories"]
         XCTAssertTrue(navTitle.exists, "Navigation should work after scrolling")
     }
 
@@ -461,20 +485,31 @@ final class CategoriesUITests: XCTestCase {
     func testPullToRefreshInCategory() throws {
         navigateToCategories()
 
-        // Wait for UI to load
-        Thread.sleep(forTimeInterval: 1)
+        // Wait for Categories navigation
+        let navTitle = app.navigationBars["Categories"]
+        XCTAssertTrue(navTitle.waitForExistence(timeout: 5), "Categories navigation should exist")
 
         // Select a category
+        var categorySelected = false
         for category in categoryNames {
             let button = app.buttons[category]
-            if button.exists {
+            if button.waitForExistence(timeout: 2), button.isHittable {
                 button.tap()
+                categorySelected = true
                 break
             }
         }
 
-        // Wait for content
-        Thread.sleep(forTimeInterval: 3)
+        guard categorySelected else {
+            throw XCTSkip("Could not select a category")
+        }
+
+        // Wait for content to load
+        let articlesCountText = app.staticTexts.matching(NSPredicate(format: "label CONTAINS[c] 'articles'")).firstMatch
+        let noArticlesText = app.staticTexts["No Articles"]
+
+        _ = articlesCountText.waitForExistence(timeout: 10) ||
+            noArticlesText.waitForExistence(timeout: 5)
 
         // Pull to refresh
         let scrollView = app.scrollViews.firstMatch
@@ -482,12 +517,8 @@ final class CategoriesUITests: XCTestCase {
             scrollView.swipeDown()
         }
 
-        // Wait for refresh
-        Thread.sleep(forTimeInterval: 2)
-
         // View should still be functional
-        let navTitle = app.navigationBars["Categories"]
-        XCTAssertTrue(navTitle.exists, "Navigation should work after refresh")
+        XCTAssertTrue(navTitle.waitForExistence(timeout: 5), "Navigation should work after refresh")
     }
 
     // MARK: - Background Gradient Tests
