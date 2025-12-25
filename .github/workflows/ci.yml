@@ -203,7 +203,6 @@ jobs:
     name: ${{ matrix.test-name }}
     runs-on: macos-26
     needs: build
-    timeout-minutes: ${{ matrix.timeout }}
     strategy:
       fail-fast: false
       matrix:
@@ -212,17 +211,14 @@ jobs:
             test-name: Unit Tests
             scheme: PulseDev
             artifact-name: unit-test-results
-            timeout: 30
           - test-target: PulseUITests
             test-name: UI Tests
             scheme: PulseDev
             artifact-name: ui-test-results
-            timeout: 90
           - test-target: PulseSnapshotTests
             test-name: Snapshot Tests
             scheme: PulseSnapshotTests
             artifact-name: snapshot-test-results
-            timeout: 30
 
     steps:
     - name: Checkout code

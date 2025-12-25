@@ -184,6 +184,7 @@ jobs:
 
         if [ "${{ matrix.test-target }}" == "PulseUITests" ]; then
           # Run UI tests with parallel execution using simulator cloning
+          # Use 2 workers for stability on CI runners
           xcodebuild test-without-building \
             -project Pulse.xcodeproj \
             -scheme ${{ matrix.scheme }} \
@@ -193,7 +194,7 @@ jobs:
             -resultBundlePath test-results/${{ matrix.artifact-name }}.xcresult \
             -disableAutomaticPackageResolution \
             -parallel-testing-enabled YES \
-            -maximum-parallel-testing-workers 4 \
+            -maximum-parallel-testing-workers 2 \
             | tee /tmp/test_output.log
         else
           xcodebuild test-without-building \
