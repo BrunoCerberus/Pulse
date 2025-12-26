@@ -61,6 +61,19 @@ final class CategoriesUITests: XCTestCase {
         return app.scrollViews.firstMatch
     }
 
+    private func selectAnyCategory(timeout: TimeInterval = 8) -> Bool {
+        let scrollView = categoryChipsScrollView()
+        _ = scrollView.waitForExistence(timeout: timeout)
+
+        for category in categoryNames {
+            if scrollToAndTapCategory(category) {
+                return true
+            }
+        }
+
+        return false
+    }
+
     private func isElementVisible(_ element: XCUIElement) -> Bool {
         guard element.exists else { return false }
         let frame = element.frame
@@ -399,18 +412,7 @@ final class CategoriesUITests: XCTestCase {
         // Wait for UI to stabilize
         Thread.sleep(forTimeInterval: 1)
 
-        // Select a category - try multiple with fallback
-        var categorySelected = false
-        for category in categoryNames {
-            let button = app.buttons[category]
-            if button.exists && button.isHittable {
-                button.tap()
-                categorySelected = true
-                break
-            }
-        }
-
-        guard categorySelected else {
+        guard selectAnyCategory(timeout: 10) else {
             throw XCTSkip("Could not select a category")
         }
 
@@ -489,18 +491,7 @@ final class CategoriesUITests: XCTestCase {
         let navTitle = app.navigationBars["Categories"]
         XCTAssertTrue(navTitle.waitForExistence(timeout: 5), "Categories navigation should exist")
 
-        // Select a category
-        var categorySelected = false
-        for category in categoryNames {
-            let button = app.buttons[category]
-            if button.waitForExistence(timeout: 2), button.isHittable {
-                button.tap()
-                categorySelected = true
-                break
-            }
-        }
-
-        guard categorySelected else {
+        guard selectAnyCategory(timeout: 10) else {
             throw XCTSkip("Could not select a category")
         }
 

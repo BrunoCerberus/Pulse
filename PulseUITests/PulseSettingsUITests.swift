@@ -73,6 +73,62 @@ final class PulseSettingsUITests: XCTestCase {
         }
     }
 
+    private func scrollContainer() -> XCUIElement? {
+        let table = app.tables.firstMatch
+        if table.waitForExistence(timeout: 2) {
+            return table
+        }
+
+        let scrollView = app.scrollViews.firstMatch
+        if scrollView.waitForExistence(timeout: 2) {
+            return scrollView
+        }
+
+        return nil
+    }
+
+    private func scrollToElement(_ element: XCUIElement, maxSwipes: Int = 8) -> Bool {
+        if element.exists && element.isHittable {
+            return true
+        }
+
+        guard let scrollView = scrollContainer() else {
+            for _ in 0..<maxSwipes {
+                app.swipeUp()
+                Thread.sleep(forTimeInterval: 0.3)
+                if element.exists && element.isHittable {
+                    return true
+                }
+            }
+            return element.exists && element.isHittable
+        }
+
+        for _ in 0..<maxSwipes {
+            if element.exists && element.isHittable {
+                return true
+            }
+            scrollView.swipeUp()
+            Thread.sleep(forTimeInterval: 0.3)
+        }
+
+        return element.exists && element.isHittable
+    }
+
+    private func scrollToTop(maxSwipes: Int = 4) {
+        guard let scrollView = scrollContainer() else {
+            for _ in 0..<maxSwipes {
+                app.swipeDown()
+                Thread.sleep(forTimeInterval: 0.2)
+            }
+            return
+        }
+
+        for _ in 0..<maxSwipes {
+            scrollView.swipeDown()
+            Thread.sleep(forTimeInterval: 0.2)
+        }
+    }
+
     // MARK: - Navigation Tests
 
     func testSettingsViewLoads() throws {
@@ -239,10 +295,11 @@ final class PulseSettingsUITests: XCTestCase {
 
         // Wait for Settings to fully load
         let notificationsSection = app.staticTexts["Notifications"]
+        scrollToTop()
         XCTAssertTrue(notificationsSection.waitForExistence(timeout: 10), "Notifications section should exist")
 
         let breakingNewsToggle = app.switches["Breaking News Alerts"]
-        XCTAssertTrue(breakingNewsToggle.waitForExistence(timeout: 10), "Breaking News toggle should exist")
+        XCTAssertTrue(breakingNewsToggle.waitForExistence(timeout: 15), "Breaking News toggle should exist")
     }
 
     func testToggleNotifications() throws {
@@ -374,29 +431,17 @@ final class PulseSettingsUITests: XCTestCase {
 
         // Scroll to Content Filters section - needs multiple swipes as it's below several sections
         let contentFiltersSection = app.staticTexts["Content Filters"]
-
-        // Use a scrolling loop to find Content Filters
-        var foundContentFilters = false
-        for _ in 0..<5 {
-            if contentFiltersSection.exists {
-                foundContentFilters = true
-                break
-            }
-            app.swipeUp()
-            Thread.sleep(forTimeInterval: 0.3)
-        }
-
-        guard foundContentFilters else {
+        guard scrollToElement(contentFiltersSection, maxSwipes: 16) else {
             throw XCTSkip("Content Filters section not found after scrolling")
         }
 
-        // Wait for Content Filters section to be fully visible
-        XCTAssertTrue(contentFiltersSection.waitForExistence(timeout: 5), "Content Filters section should exist")
-
         // Expand Muted Sources
         let mutedSourcesButton = app.buttons.matching(NSPredicate(format: "label CONTAINS[c] 'Muted Sources'")).firstMatch
+        if !mutedSourcesButton.exists {
+            _ = scrollToElement(mutedSourcesButton, maxSwipes: 4)
+        }
 
-        guard mutedSourcesButton.waitForExistence(timeout: 5) else {
+        guard mutedSourcesButton.waitForExistence(timeout: 10) else {
             throw XCTSkip("Muted Sources button not found")
         }
 

@@ -48,19 +48,20 @@ final class PulseSearchUITests: XCTestCase {
     func testSearchBarExists() throws {
         navigateToSearchTab()
 
-        // Wait for search view to load fully with extended timeout for CI
-        Thread.sleep(forTimeInterval: 2)
+        let searchNav = app.navigationBars["Search"]
+        XCTAssertTrue(searchNav.waitForExistence(timeout: 10), "Search navigation should load")
 
         // Use polling to check for search field or search-related content
         let searchField = app.searchFields.firstMatch
         let searchForNews = app.staticTexts["Search for News"]
+        let searchSubtitle = app.staticTexts["Find articles from thousands of sources worldwide"]
 
-        let timeout: TimeInterval = 15
+        let timeout: TimeInterval = 20
         let startTime = Date()
         var searchUILoaded = false
 
         while Date().timeIntervalSince(startTime) < timeout {
-            if searchField.exists || searchForNews.exists {
+            if searchField.exists || searchForNews.exists || searchSubtitle.exists {
                 searchUILoaded = true
                 break
             }

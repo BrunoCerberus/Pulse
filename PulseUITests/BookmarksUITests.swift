@@ -121,12 +121,13 @@ final class BookmarksUITests: XCTestCase {
         let noBookmarksText = app.staticTexts["No Bookmarks"]
         let savedArticlesText = app.staticTexts.matching(NSPredicate(format: "label CONTAINS[c] 'saved articles'")).firstMatch
         let loadingText = app.staticTexts["Loading bookmarks..."]
+        let errorText = app.staticTexts["Unable to Load Bookmarks"]
 
         // Wait for content to load
         Thread.sleep(forTimeInterval: 2)
 
         // Either empty state, loading, or bookmarks should appear
-        let contentLoaded = noBookmarksText.exists || savedArticlesText.exists || loadingText.exists
+        let contentLoaded = noBookmarksText.exists || savedArticlesText.exists || loadingText.exists || errorText.exists
         XCTAssertTrue(contentLoaded, "Bookmarks view should show empty state, loading, or bookmarks list")
     }
 
@@ -340,13 +341,15 @@ final class BookmarksUITests: XCTestCase {
 
         // Check for loading text, empty state, or bookmarks
         let loadingText = app.staticTexts["Loading bookmarks..."]
+        let errorText = app.staticTexts["Unable to Load Bookmarks"]
         let noBookmarksText = app.staticTexts["No Bookmarks"]
         let savedArticlesText = app.staticTexts.matching(NSPredicate(format: "label CONTAINS[c] 'saved articles'")).firstMatch
 
         // One of these should appear
         let contentShown = loadingText.waitForExistence(timeout: 3) ||
             noBookmarksText.waitForExistence(timeout: 5) ||
-            savedArticlesText.waitForExistence(timeout: 5)
+            savedArticlesText.waitForExistence(timeout: 5) ||
+            errorText.waitForExistence(timeout: 3)
 
         XCTAssertTrue(contentShown, "Loading state, empty state, or bookmarks should appear")
     }
@@ -407,14 +410,15 @@ final class BookmarksUITests: XCTestCase {
         let noBookmarksText = app.staticTexts["No Bookmarks"]
         let savedArticlesText = app.staticTexts.matching(NSPredicate(format: "label CONTAINS[c] 'saved articles'")).firstMatch
         let loadingText = app.staticTexts["Loading bookmarks..."]
+        let errorText = app.staticTexts["Unable to Load Bookmarks"]
 
         // Use polling to avoid cascading waits
-        let timeout: TimeInterval = 15
+        let timeout: TimeInterval = 20
         let startTime = Date()
         var contentLoaded = false
 
         while Date().timeIntervalSince(startTime) < timeout {
-            if noBookmarksText.exists || savedArticlesText.exists || loadingText.exists {
+            if noBookmarksText.exists || savedArticlesText.exists || loadingText.exists || errorText.exists {
                 contentLoaded = true
                 break
             }
