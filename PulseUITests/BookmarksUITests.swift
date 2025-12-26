@@ -8,13 +8,13 @@ final class BookmarksUITests: XCTestCase {
         XCUIDevice.shared.orientation = .portrait
 
         app = XCUIApplication()
-        app.launchEnvironment["XCTestConfigurationFilePath"] = "UI"
+        app.launchEnvironment["UI_TESTING"] = "1"
         app.launch()
 
-        _ = app.wait(for: .runningForeground, timeout: 5.0)
+        XCTAssertTrue(app.wait(for: .runningForeground, timeout: 20.0), "App should be running in the foreground")
 
-        let tabBar = app.tabBars.element
-        XCTAssertTrue(tabBar.waitForExistence(timeout: 10.0), "Tab bar should appear after splash screen")
+        let tabBar = app.tabBars.firstMatch
+        XCTAssertTrue(tabBar.waitForExistence(timeout: 20.0), "Tab bar should appear after splash screen")
     }
 
     override func tearDownWithError() throws {
@@ -328,13 +328,13 @@ final class BookmarksUITests: XCTestCase {
         // Launch fresh to catch loading state
         app.terminate()
         app = XCUIApplication()
-        app.launchEnvironment["XCTestConfigurationFilePath"] = "UI"
+        app.launchEnvironment["UI_TESTING"] = "1"
         app.launch()
 
-        _ = app.wait(for: .runningForeground, timeout: 5.0)
+        XCTAssertTrue(app.wait(for: .runningForeground, timeout: 20.0), "App should be running in the foreground")
 
-        let tabBar = app.tabBars.element
-        XCTAssertTrue(tabBar.waitForExistence(timeout: 10.0), "Tab bar should appear")
+        let tabBar = app.tabBars.firstMatch
+        XCTAssertTrue(tabBar.waitForExistence(timeout: 20.0), "Tab bar should appear")
 
         // Navigate to Bookmarks immediately
         navigateToBookmarks()
