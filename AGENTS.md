@@ -322,9 +322,7 @@ refactor: extract common loading state
 ## Environment Variables
 
 ```bash
-NEWS_API_KEY      # NewsAPI.org key
-GUARDIAN_API_KEY  # Guardian API key
-GNEWS_API_KEY     # GNews API key
+GUARDIAN_API_KEY  # Guardian API key (primary data source)
 ```
 
 ## Troubleshooting
