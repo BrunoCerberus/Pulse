@@ -37,15 +37,16 @@ jobs:
           ${{ runner.os }}-brew-
 
     # Cache SPM dependencies
-    # Note: Using static version key (spm-v1) due to hashFiles() limitations in this CI environment
-    # Manually increment version (v1 -> v2) when project.yml package dependencies change
+    # Note: Using static version key (spm-v2) due to hashFiles() limitations in this CI environment
+    # Manually increment version (v2 -> v3) when project.yml package dependencies change
     # IMPORTANT: Do NOT use broad restore-keys fallback - it can restore stale package versions
+    # v2: Added firebase-ios-sdk and GoogleSignIn packages
     - name: Cache SPM dependencies
       uses: actions/cache@v4
       with:
         path: |
           Pulse.xcodeproj/project.xcworkspace/xcshareddata/swiftpm
-        key: ${{ runner.os }}-spm-v1
+        key: ${{ runner.os }}-spm-v2
 
     - name: Install XcodeGen
       run: |
@@ -148,15 +149,16 @@ jobs:
           ${{ runner.os }}-brew-
 
     # Cache SPM dependencies
-    # Note: Using static version key (spm-v1) due to hashFiles() limitations in this CI environment
-    # Manually increment version (v1 -> v2) when project.yml package dependencies change
+    # Note: Using static version key (spm-v2) due to hashFiles() limitations in this CI environment
+    # Manually increment version (v2 -> v3) when project.yml package dependencies change
     # IMPORTANT: Do NOT use broad restore-keys fallback - it can restore stale package versions
+    # v2: Added firebase-ios-sdk and GoogleSignIn packages
     - name: Cache SPM dependencies
       uses: actions/cache@v4
       with:
         path: |
           Pulse.xcodeproj/project.xcworkspace/xcshareddata/swiftpm
-        key: ${{ runner.os }}-spm-v1
+        key: ${{ runner.os }}-spm-v2
 
     - name: Install XcodeGen
       run: |

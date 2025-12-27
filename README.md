@@ -4,14 +4,15 @@ A modern iOS news aggregation app built with Clean Architecture, SwiftUI, and Co
 
 ## Features
 
+- **Authentication**: Firebase Auth with Google and Apple Sign-In (required before accessing app)
 - **Home Feed**: Breaking news carousel and top headlines with infinite scrolling (settings accessible via gear icon)
 - **For You**: Personalized feed based on followed topics and reading history
 - **Categories**: Browse news by World, Business, Technology, Science, Health, Sports, Entertainment
 - **Search**: Full-text search with 300ms debounce, suggestions, recent searches, and sort options
 - **Bookmarks**: Save articles for offline reading with SwiftData persistence
-- **Settings**: Customize topics, notifications, theme, and content filters (accessed from Home navigation bar)
+- **Settings**: Customize topics, notifications, theme, content filters, and account/logout (accessed from Home navigation bar)
 
-The app uses iOS 26's liquid glass TabView style with tabs: Home, For You, Categories, Bookmarks, and Search.
+The app uses iOS 26's liquid glass TabView style with tabs: Home, For You, Categories, Bookmarks, and Search. Users must sign in with Google or Apple before accessing the main app.
 
 ## Architecture
 
@@ -138,6 +139,12 @@ export GUARDIAN_API_KEY="your_guardian_key"
 ```
 Pulse/
 ├── Pulse/
+│   ├── Authentication/     # Firebase Auth (Google + Apple Sign-In)
+│   │   ├── API/            # AuthService protocol + Live/Mock implementations
+│   │   ├── Domain/         # AuthDomainInteractor, State, Action
+│   │   ├── ViewModel/      # SignInViewModel
+│   │   ├── View/           # SignInView
+│   │   └── Manager/        # AuthenticationManager (global state)
 │   ├── Home/               # Home feed feature
 │   │   ├── API/            # NewsService protocol + LiveNewsService
 │   │   ├── Domain/         # Interactor, State, Action, Reducer, EventActionMap
@@ -150,7 +157,7 @@ Pulse/
 │   ├── Categories/         # Category browsing
 │   ├── Search/             # Search functionality
 │   ├── Bookmarks/          # Saved articles
-│   ├── Settings/           # User preferences
+│   ├── Settings/           # User preferences + account/logout
 │   ├── ArticleDetail/      # Article view
 │   ├── SplashScreen/       # Launch animation
 │   └── Configs/
@@ -174,6 +181,8 @@ Pulse/
 | Package | Purpose |
 |---------|---------|
 | [EntropyCore](https://github.com/BrunoCerberus/EntropyCore) | Network layer abstraction |
+| [Firebase](https://github.com/firebase/firebase-ios-sdk) | Authentication (Google + Apple Sign-In) |
+| [GoogleSignIn](https://github.com/google/GoogleSignIn-iOS) | Google Sign-In SDK |
 | [SnapshotTesting](https://github.com/pointfreeco/swift-snapshot-testing) | Snapshot testing |
 | [Lottie](https://github.com/airbnb/lottie-ios) | Animations |
 

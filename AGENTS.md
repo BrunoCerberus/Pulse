@@ -9,6 +9,12 @@ Pulse is an iOS news aggregation app built with **Unidirectional Data Flow Archi
 ```
 Pulse/
 ├── Pulse/                      # Main app source
+│   ├── Authentication/         # Firebase Auth (Google + Apple Sign-In)
+│   │   ├── API/                # AuthService protocol + Live/Mock implementations
+│   │   ├── Domain/             # AuthDomainInteractor, State, Action
+│   │   ├── ViewModel/          # SignInViewModel
+│   │   ├── View/               # SignInView
+│   │   └── Manager/            # AuthenticationManager (global state)
 │   ├── [Feature]/              # Feature modules (Home, ForYou, Categories, etc.)
 │   │   ├── API/                # Service protocols + implementations
 │   │   ├── Domain/             # Interactor, State, Action, Reducer, EventActionMap
@@ -167,6 +173,8 @@ struct HomeDomainInteractorTests {
 4. **Domain layer is UI-agnostic** - no SwiftUI imports
 5. **All dependencies injected via ServiceLocator**
 6. **State is immutable** - use Equatable structs for DomainState and ViewState
+7. **Authentication is required** - RootView gates access via AuthenticationManager
+8. **AuthenticationManager is a singleton** - observed by RootView to switch between SignInView and CoordinatorView
 
 ## Navigation Architecture
 
@@ -191,6 +199,9 @@ coordinator.build(page:)
 
 | Component | Purpose |
 |-----------|---------|
+| `RootView` | Auth-gated root (shows SignInView or CoordinatorView) |
+| `AuthenticationManager` | Global singleton observing Firebase auth state |
+| `AuthService` | Protocol for sign-in/sign-out operations |
 | `Page` | Enum of all navigable destinations |
 | `Coordinator` | Central navigation manager with per-tab paths |
 | `CoordinatorView` | Root view hosting TabView + NavigationStacks |

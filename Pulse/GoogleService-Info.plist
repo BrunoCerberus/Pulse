@@ -1,0 +1,34 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+<plist version="1.0">
+<dict>
+	<key>CLIENT_ID</key>
+	<string>113782214096-c9mvbi5rem9i8iq33isp0ukj2e3nsgnc.apps.googleusercontent.com</string>
+	<key>REVERSED_CLIENT_ID</key>
+	<string>com.googleusercontent.apps.113782214096-c9mvbi5rem9i8iq33isp0ukj2e3nsgnc</string>
+	<key>API_KEY</key>
+	<string>AIzaSyDwV5OJRlKg_c9wrlLU1FgDHdEFBnKindU</string>
+	<key>GCM_SENDER_ID</key>
+	<string>113782214096</string>
+	<key>PLIST_VERSION</key>
+	<string>1</string>
+	<key>BUNDLE_ID</key>
+	<string>com.bruno.Pulse-News</string>
+	<key>PROJECT_ID</key>
+	<string>pulse-e7685</string>
+	<key>STORAGE_BUCKET</key>
+	<string>pulse-e7685.firebasestorage.app</string>
+	<key>IS_ADS_ENABLED</key>
+	<false></false>
+	<key>IS_ANALYTICS_ENABLED</key>
+	<false></false>
+	<key>IS_APPINVITE_ENABLED</key>
+	<true></true>
+	<key>IS_GCM_ENABLED</key>
+	<true></true>
+	<key>IS_SIGNIN_ENABLED</key>
+	<true></true>
+	<key>GOOGLE_APP_ID</key>
+	<string>1:113782214096:ios:c95d93846b6d1a8ec1bdd5</string>
+</dict>
+</plist>

@@ -1,3 +1,5 @@
+import FirebaseCore
+import GoogleSignIn
 import UIKit
 import UserNotifications
 
@@ -26,10 +28,14 @@ final class PulseAppDelegate: UIResponder, UIApplicationDelegate {
         _ application: UIApplication,
         didFinishLaunchingWithOptions _: [UIApplication.LaunchOptionsKey: Any]? = nil
     ) -> Bool {
-        // Skip notification configuration during tests to prevent hanging
+        // Skip configuration during tests to prevent hanging
         guard ProcessInfo.processInfo.environment["XCTestConfigurationFilePath"] == nil else {
             return true
         }
+
+        // Configure Firebase
+        FirebaseApp.configure()
+
         configureNotifications(application)
         return true
     }
@@ -42,14 +48,20 @@ final class PulseAppDelegate: UIResponder, UIApplicationDelegate {
      *
      * - Parameter application: The singleton app object
      * - Parameter url: The URL that was opened
+     * - Parameter options: Additional options for opening the URL
      * - Returns: True if the URL was handled successfully
      */
     func application(
         _: UIApplication,
-        open url: URL
+        open url: URL,
+        options _: [UIApplication.OpenURLOptionsKey: Any] = [:]
     ) -> Bool {
-        // For iOS 13+, this is handled by the scene delegate
-        // This method is kept for backward compatibility
+        // Handle Google Sign-In callback
+        if GIDSignIn.sharedInstance.handle(url) {
+            return true
+        }
+
+        // Handle deeplinks
         deeplinkManager.parse(url: url)
         return true
     }
