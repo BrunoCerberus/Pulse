@@ -76,6 +76,15 @@ final class LiveAuthService: NSObject, AuthService {
         .eraseToAnyPublisher()
     }
 
+    // TODO: Apple Sign-In requires additional setup before it will work:
+    // 1. Enroll in Apple Developer Program ($99/year)
+    // 2. Enable "Sign in with Apple" capability for App ID in Apple Developer Portal
+    // 3. Create a Sign in with Apple key (Keys section) and download the .p8 file
+    // 4. In Firebase Console > Authentication > Sign-in method:
+    //    - Add Apple provider
+    //    - Enter Services ID (bundle ID: com.bruno.Pulse-News)
+    //    - Enter Apple Team ID (from Apple Developer Portal > Membership)
+    //    - Enter Key ID and upload the private key (.p8 file)
     func signInWithApple() -> AnyPublisher<AuthUser, Error> {
         Future { [weak self] promise in
             guard let self else {
