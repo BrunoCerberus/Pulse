@@ -16,9 +16,7 @@ help:
 	@echo "  format            - Auto-fix formatting with SwiftFormat"
 	@echo "  test              - Run all tests on iOS 26.2 iPhone Air"
 	@echo "  test-unit         - Run only unit tests"
-	@echo "  test-ui           - Run only UI tests (incremental build)"
-	@echo "  test-ui-clean     - Run UI tests with clean build"
-	@echo "  test-ui-parallel  - Run UI tests in parallel (fastest, for CI)"
+	@echo "  test-ui           - Run only UI tests"
 	@echo "  test-snapshot     - Run only snapshot tests"
 	@echo "  test-debug        - Run tests with full verbose output for debugging"
 	@echo "  clean             - Remove generated Xcode project"
@@ -184,7 +182,8 @@ test-unit:
 # Run only UI tests
 test-ui:
 	@echo "Running UI tests on iOS 26.2 iPhone Air..."
-	@if xcodebuild test -project Pulse.xcodeproj -scheme PulseDev -only-testing:PulseUITests -destination 'platform=iOS Simulator,name=iPhone Air,OS=26.2' CODE_SIGNING_ALLOWED=NO 2>&1 | tee /tmp/test_output.log; then \
+	@make clean-packages
+	@if xcodebuild clean test -project Pulse.xcodeproj -scheme PulseDev -only-testing:PulseUITests -destination 'platform=iOS Simulator,name=iPhone Air,OS=26.2' CODE_SIGNING_ALLOWED=NO 2>&1 | tee /tmp/test_output.log; then \
 		echo "UI tests completed successfully!"; \
 		grep -E "(Test run.*passed|Test run.*failed)" /tmp/test_output.log | tail -1; \
 	else \
@@ -193,31 +192,6 @@ test-ui:
 		grep -E "(✘|failed|FAIL|Fatal error|error:|Expectation failed)" /tmp/test_output.log | head -20; \
 		echo ""; \
 		echo "Full output saved to /tmp/test_output.log"; \
-		exit 1; \
-	fi
-
-# Run UI tests with clean build (use when needed)
-test-ui-clean:
-	@echo "Running UI tests with clean build..."
-	@make clean-packages
-	@xcodebuild clean test -project Pulse.xcodeproj -scheme PulseDev -only-testing:PulseUITests -destination 'platform=iOS Simulator,name=iPhone Air,OS=26.2' CODE_SIGNING_ALLOWED=NO 2>&1 | tee /tmp/test_output.log
-
-# Run UI tests in parallel (faster for CI)
-test-ui-parallel:
-	@echo "Running UI tests in parallel..."
-	@if xcodebuild test \
-		-project Pulse.xcodeproj \
-		-scheme PulseDev \
-		-only-testing:PulseUITests \
-		-destination 'platform=iOS Simulator,name=iPhone Air,OS=26.2' \
-		-parallel-testing-enabled YES \
-		-parallel-testing-worker-count 4 \
-		CODE_SIGNING_ALLOWED=NO 2>&1 | tee /tmp/test_output.log; then \
-		echo "UI tests completed successfully!"; \
-		grep -E "(Test run.*passed|Test run.*failed)" /tmp/test_output.log | tail -1; \
-	else \
-		echo "UI tests failed!"; \
-		grep -E "(✘|failed|FAIL)" /tmp/test_output.log | head -20; \
 		exit 1; \
 	fi
 
