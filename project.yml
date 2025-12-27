@@ -119,6 +119,10 @@ targets:
         UISupportedInterfaceOrientations~ipad:
           - UIInterfaceOrientationPortrait
           - UIInterfaceOrientationPortraitUpsideDown
+        CFBundleURLTypes:
+          - CFBundleTypeRole: Editor
+            CFBundleURLSchemes:
+              - com.googleusercontent.apps.113782214096-c9mvbi5rem9i8iq33isp0ukj2e3nsgnc
     dependencies:
       - sdk: Foundation.framework
       - sdk: UIKit.framework
