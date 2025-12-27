@@ -2,7 +2,7 @@
 
 ## Project Overview
 
-Pulse is an iOS news aggregation app built with **Unidirectional Data Flow Architecture** based on Clean Architecture principles, using **Combine** for reactive data binding. The app fetches news from public APIs (NewsAPI, Guardian API, GNews) and provides a personalized reading experience.
+Pulse is an iOS news aggregation app built with **Unidirectional Data Flow Architecture** based on Clean Architecture principles, using **Combine** for reactive data binding. The app fetches news from the **Guardian API** (primary) and provides a personalized reading experience.
 
 ## Architecture
 
@@ -239,20 +239,22 @@ make coverage-badge     # Generate SVG badge
 ## Network Layer (EntropyCore)
 
 ```swift
-enum NewsAPI: APIFetcher {
-    case topHeadlines(country: String, page: Int)
-    case everything(query: String, page: Int, sortBy: String)
+enum GuardianAPI: APIFetcher {
+    case search(query: String?, section: String?, page: Int, pageSize: Int, orderBy: String)
+    case sections
 
     var path: String { ... }
     var method: HTTPMethod { .GET }
-    var queryItems: [URLQueryItem]? { ... }
 }
 
 final class LiveNewsService: APIRequest, NewsService {
     func fetchTopHeadlines(country: String, page: Int) -> AnyPublisher<[Article], Error> {
-        fetchRequest(target: NewsAPI.topHeadlines(country: country, page: page), dataType: NewsResponse.self)
-            .map { $0.articles.compactMap { $0.toArticle() } }
-            .eraseToAnyPublisher()
+        fetchRequest(
+            target: GuardianAPI.search(query: nil, section: nil, page: page, pageSize: 20, orderBy: "newest"),
+            dataType: GuardianResponse.self
+        )
+        .map { $0.response.results.compactMap { $0.toArticle() } }
+        .eraseToAnyPublisher()
     }
 }
 ```
@@ -315,11 +317,9 @@ make test-debug  # Verbose output
 
 ## API Keys
 
-Set environment variables:
+Set environment variable:
 ```bash
-export NEWS_API_KEY="your_key"
 export GUARDIAN_API_KEY="your_key"
-export GNEWS_API_KEY="your_key"
 ```
 
 ## Deeplinks

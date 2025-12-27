@@ -1,6 +1,6 @@
 # Pulse
 
-A modern iOS news aggregation app built with Clean Architecture, SwiftUI, and Combine.
+A modern iOS news aggregation app built with Clean Architecture, SwiftUI, and Combine. Powered by the Guardian API.
 
 ## Features
 
@@ -110,14 +110,12 @@ make setup
 open Pulse.xcodeproj
 ```
 
-### 4. Configure API Keys
+### 4. Configure API Key
 
-Set environment variables or add to scheme:
+Set environment variable or add to scheme:
 
 ```bash
-export NEWS_API_KEY="your_newsapi_key"
 export GUARDIAN_API_KEY="your_guardian_key"
-export GNEWS_API_KEY="your_gnews_key"
 ```
 
 ## Commands
@@ -232,6 +230,4 @@ MIT License - see [LICENSE](LICENSE) for details.
 
 ## Acknowledgments
 
-- [NewsAPI](https://newsapi.org) - News data provider
-- [Guardian API](https://open-platform.theguardian.com) - News data provider
-- [GNews](https://gnews.io) - News data provider
+- [Guardian API](https://open-platform.theguardian.com) - Primary news data provider
