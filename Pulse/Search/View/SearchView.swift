@@ -35,6 +35,7 @@ struct SearchView<R: SearchNavigationRouter>: View {
                 get: { viewModel.viewState.query },
                 set: { viewModel.handle(event: .onQueryChanged($0)) }
             ),
+            placement: .navigationBarDrawer(displayMode: .always),
             prompt: "Search news..."
         )
         .onSubmit(of: .search) {

@@ -275,6 +275,7 @@ jobs:
       run: |
         mkdir -p test-results
         set -o pipefail
+
         xcodebuild test-without-building \
           -project Pulse.xcodeproj \
           -scheme ${{ matrix.scheme }} \

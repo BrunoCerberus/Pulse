@@ -80,7 +80,8 @@ final class PulseSceneDelegate: UIResponder, UIWindowSceneDelegate {
      * - Returns: `true` if running UI tests, `false` otherwise
      */
     private func isRunningUITests() -> Bool {
-        ProcessInfo.processInfo.environment["XCTestConfigurationFilePath"] == "UI"
+        let environment = ProcessInfo.processInfo.environment
+        return environment["UI_TESTING"] == "1" || environment["XCTestConfigurationFilePath"] == "UI"
     }
 
     /**
