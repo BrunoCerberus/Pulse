@@ -4,7 +4,8 @@ import UIKit
 final class MockAuthService: AuthService {
     private let authStateSubject = CurrentValueSubject<AuthUser?, Never>(nil)
 
-    var signInResult: Result<AuthUser, Error> = .success(AuthUser.mock)
+    var signInWithGoogleResult: Result<AuthUser, Error> = .success(AuthUser.mock)
+    var signInWithAppleResult: Result<AuthUser, Error> = .success(AuthUser.mock)
     var signOutResult: Result<Void, Error> = .success(())
 
     var authStatePublisher: AnyPublisher<AuthUser?, Never> {
@@ -16,7 +17,7 @@ final class MockAuthService: AuthService {
     }
 
     func signInWithGoogle(presenting _: UIViewController) -> AnyPublisher<AuthUser, Error> {
-        signInResult.publisher
+        signInWithGoogleResult.publisher
             .handleEvents(receiveOutput: { [weak self] user in
                 self?.authStateSubject.send(user)
             })
@@ -24,7 +25,7 @@ final class MockAuthService: AuthService {
     }
 
     func signInWithApple() -> AnyPublisher<AuthUser, Error> {
-        signInResult.publisher
+        signInWithAppleResult.publisher
             .handleEvents(receiveOutput: { [weak self] user in
                 self?.authStateSubject.send(user)
             })
