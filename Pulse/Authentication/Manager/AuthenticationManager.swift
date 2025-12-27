@@ -66,4 +66,18 @@ final class AuthenticationManager: ObservableObject {
         }
         return false
     }
+
+    #if DEBUG
+        /// For testing: directly set authenticated state (bypasses async Combine pipeline)
+        func setAuthenticatedForTesting(_ user: AuthUser) {
+            authState = .authenticated(user)
+            currentUser = user
+        }
+
+        /// For testing: directly set unauthenticated state
+        func setUnauthenticatedForTesting() {
+            authState = .unauthenticated
+            currentUser = nil
+        }
+    #endif
 }

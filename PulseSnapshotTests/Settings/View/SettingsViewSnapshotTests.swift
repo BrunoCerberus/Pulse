@@ -5,7 +5,7 @@ import XCTest
 
 @MainActor
 final class SettingsViewSnapshotTests: XCTestCase {
-    private var serviceLocator: ServiceLocator!
+    private var window: UIWindow!
 
     // Custom device config matching CI's iPhone Air simulator
     private let iPhoneAirConfig = ViewImageConfig(
@@ -16,18 +16,45 @@ final class SettingsViewSnapshotTests: XCTestCase {
 
     override func setUp() {
         super.setUp()
-        serviceLocator = ServiceLocator()
-        serviceLocator.register(SettingsService.self, instance: MockSettingsService())
-        serviceLocator.register(StoreKitService.self, instance: MockStoreKitService())
+        // Set authenticated state before SettingsViewModel is created
+        AuthenticationManager.shared.setAuthenticatedForTesting(.mock)
+
+        // Create a window for proper view lifecycle
+        window = UIWindow(frame: CGRect(x: 0, y: 0, width: 393, height: 852))
+        window.makeKeyAndVisible()
+    }
+
+    override func tearDown() {
+        window?.isHidden = true
+        window = nil
+        AuthenticationManager.shared.setUnauthenticatedForTesting()
+        super.tearDown()
     }
 
     func testSettingsViewInitial() {
-        let view = SettingsView(serviceLocator: serviceLocator)
+        // Use preview ServiceLocator which has all mocks configured
+        let serviceLocator = ServiceLocator.preview
+
+        // Create view with NavigationStack
+        let view = NavigationStack {
+            SettingsView(serviceLocator: serviceLocator)
+        }
         let controller = UIHostingController(rootView: view)
+
+        // Add to window to trigger full view lifecycle
+        window.rootViewController = controller
+        controller.view.layoutIfNeeded()
+
+        // Wait for Combine pipeline and SwiftUI to settle
+        let expectation = XCTestExpectation(description: "Wait for view to settle")
+        DispatchQueue.main.asyncAfter(deadline: .now() + 1.0) {
+            expectation.fulfill()
+        }
+        wait(for: [expectation], timeout: 2.0)
 
         assertSnapshot(
             of: controller,
-            as: .wait(for: 1.0, on: .image(on: iPhoneAirConfig, precision: 0.98)),
+            as: .image(on: iPhoneAirConfig, precision: 0.98),
             record: false
         )
     }
