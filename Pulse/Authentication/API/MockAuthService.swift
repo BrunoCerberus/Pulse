@@ -2,9 +2,18 @@ import Combine
 import UIKit
 
 final class MockAuthService: AuthService {
-    private let authStateSubject = CurrentValueSubject<AuthUser?, Never>(nil)
+    private let authStateSubject: CurrentValueSubject<AuthUser?, Never>
 
     var signInWithGoogleResult: Result<AuthUser, Error> = .success(AuthUser.mock)
+
+    /// Initialize MockAuthService.
+    /// When running UI tests (UI_TESTING=1), starts in authenticated state.
+    init() {
+        // Auto-authenticate for UI tests so the tab bar appears immediately
+        let isUITesting = ProcessInfo.processInfo.environment["UI_TESTING"] == "1"
+        authStateSubject = CurrentValueSubject(isUITesting ? AuthUser.mock : nil)
+    }
+
     var signInWithAppleResult: Result<AuthUser, Error> = .success(AuthUser.mock)
     var signOutResult: Result<Void, Error> = .success(())
 
