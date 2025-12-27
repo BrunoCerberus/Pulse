@@ -276,32 +276,16 @@ jobs:
         mkdir -p test-results
         set -o pipefail
 
-        if [ "${{ matrix.test-target }}" == "PulseUITests" ]; then
-          # Run UI tests with parallel execution using simulator cloning
-          # Use 2 workers for stability on CI runners
-          xcodebuild test-without-building \
-            -project Pulse.xcodeproj \
-            -scheme ${{ matrix.scheme }} \
-            -only-testing:${{ matrix.test-target }} \
-            -destination 'platform=iOS Simulator,name=iPhone Air,OS=26.2' \
-            -derivedDataPath ./DerivedData \
-            -resultBundlePath test-results/${{ matrix.artifact-name }}.xcresult \
-            -disableAutomaticPackageResolution \
-            -parallel-testing-enabled YES \
-            -maximum-parallel-testing-workers 2 \
-            | tee /tmp/test_output.log
-        else
-          xcodebuild test-without-building \
-            -project Pulse.xcodeproj \
-            -scheme ${{ matrix.scheme }} \
-            -only-testing:${{ matrix.test-target }} \
-            -destination 'platform=iOS Simulator,name=iPhone Air,OS=26.2' \
-            -derivedDataPath ./DerivedData \
-            -resultBundlePath test-results/${{ matrix.artifact-name }}.xcresult \
-            -disableAutomaticPackageResolution \
-            -retry-tests-on-failure \
-            | tee /tmp/test_output.log
-        fi
+        xcodebuild test-without-building \
+          -project Pulse.xcodeproj \
+          -scheme ${{ matrix.scheme }} \
+          -only-testing:${{ matrix.test-target }} \
+          -destination 'platform=iOS Simulator,name=iPhone Air,OS=26.2' \
+          -derivedDataPath ./DerivedData \
+          -resultBundlePath test-results/${{ matrix.artifact-name }}.xcresult \
+          -disableAutomaticPackageResolution \
+          -retry-tests-on-failure \
+          | tee /tmp/test_output.log
         TEST_EXIT_CODE=$?
         grep -E "(Test run.*passed|Test run.*failed)" /tmp/test_output.log | tail -5 || echo "${{ matrix.test-name }} completed"
         exit $TEST_EXIT_CODE
