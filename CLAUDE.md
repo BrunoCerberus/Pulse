@@ -161,6 +161,12 @@ Pulse is an iOS news aggregation app built with **Unidirectional Data Flow Archi
 
 ```
 Pulse/
+├── Authentication/             # Firebase Auth (Google + Apple Sign-In)
+│   ├── API/                    # AuthService protocol + Live/Mock implementations
+│   ├── Domain/                 # AuthDomainInteractor, State, Action
+│   ├── ViewModel/              # SignInViewModel
+│   ├── View/                   # SignInView
+│   └── Manager/                # AuthenticationManager (global state)
 ├── Home/                       # Home feed feature
 │   ├── API/                    # NewsAPI, NewsService
 │   ├── Domain/                 # Interactor, State, Action, Reducer, EventActionMap
@@ -173,7 +179,7 @@ Pulse/
 ├── Categories/                 # Category browsing
 ├── Search/                     # Search feature
 ├── Bookmarks/                  # Offline reading
-├── Settings/                   # User preferences
+├── Settings/                   # User preferences (includes account/logout)
 ├── ArticleDetail/              # Article view
 ├── SplashScreen/               # App launch animation
 └── Configs/
@@ -191,12 +197,13 @@ Pulse/
 
 | Feature | Description |
 |---------|-------------|
+| **Authentication** | Firebase Auth with Google and Apple Sign-In (required before accessing app) |
 | **Home** | Breaking news carousel, top headlines with infinite scroll, settings access via gear icon |
 | **For You** | Personalized feed based on followed topics |
 | **Categories** | Browse by World, Business, Tech, Science, Health, Sports, Entertainment |
 | **Search** | Full-text search with 300ms debounce, suggestions, and sort options (last tab with liquid glass style) |
 | **Bookmarks** | Save articles for offline reading (SwiftData) |
-| **Settings** | Topics, notifications, theme, muted content (accessed from Home navigation bar) |
+| **Settings** | Topics, notifications, theme, muted content, account/logout (accessed from Home navigation bar) |
 
 ## Development Commands
 
@@ -285,6 +292,12 @@ final class LiveNewsService: APIRequest, NewsService {
 | `CombineInteractor.swift` | Base protocol for domain interactors |
 | `ViewStateReducing.swift` | Protocol for state transformation |
 | `DomainEventActionMap.swift` | Protocol for event-to-action mapping |
+| **Authentication** | |
+| `AuthService.swift` | Protocol for authentication operations |
+| `LiveAuthService.swift` | Firebase Auth implementation (Google + Apple) |
+| `AuthenticationManager.swift` | Global auth state observer singleton |
+| `RootView.swift` | Auth-gated root view (SignIn vs CoordinatorView) |
+| `SignInView.swift` | Sign-in UI with Google/Apple buttons |
 | **Navigation** | |
 | `Coordinator.swift` | Central navigation manager with per-tab paths |
 | `CoordinatorView.swift` | Root TabView with NavigationStacks |
@@ -297,6 +310,7 @@ final class LiveNewsService: APIRequest, NewsService {
 | `ThemeManager.swift` | Dark/light mode management |
 | `StorageService.swift` | SwiftData persistence |
 | `NewsAPI.swift` | API endpoint definitions |
+| `GoogleService-Info.plist` | Firebase configuration |
 
 ## Troubleshooting
 
