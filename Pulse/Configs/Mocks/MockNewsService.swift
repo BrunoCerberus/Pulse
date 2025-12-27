@@ -159,6 +159,26 @@ extension ServiceLocator {
         locator.register(SettingsService.self, instance: MockSettingsService())
         locator.register(StorageService.self, instance: MockStorageService())
         locator.register(StoreKitService.self, instance: MockStoreKitService())
+
+        // Auth service with mock signed-in user
+        let mockAuth = MockAuthService()
+        mockAuth.simulateSignedIn(.mock)
+        locator.register(AuthService.self, instance: mockAuth)
+
+        return locator
+    }
+
+    static var previewUnauthenticated: ServiceLocator {
+        let locator = ServiceLocator()
+        locator.register(NewsService.self, instance: MockNewsService())
+        locator.register(SearchService.self, instance: MockSearchService())
+        locator.register(BookmarksService.self, instance: MockBookmarksService())
+        locator.register(CategoriesService.self, instance: MockCategoriesService())
+        locator.register(ForYouService.self, instance: MockForYouService())
+        locator.register(SettingsService.self, instance: MockSettingsService())
+        locator.register(StorageService.self, instance: MockStorageService())
+        locator.register(StoreKitService.self, instance: MockStoreKitService())
+        locator.register(AuthService.self, instance: MockAuthService())
         return locator
     }
 }

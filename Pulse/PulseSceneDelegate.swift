@@ -1,3 +1,4 @@
+import GoogleSignIn
 import SwiftUI
 import UIKit
 
@@ -47,6 +48,9 @@ final class PulseSceneDelegate: UIResponder, UIWindowSceneDelegate {
         // Initialize services in ServiceLocator
         setupServices()
 
+        // Configure authentication manager with auth service
+        configureAuthenticationManager()
+
         // Initialize deeplink router for coordinator-based navigation
         deeplinkRouter = DeeplinkRouter()
 
@@ -74,6 +78,18 @@ final class PulseSceneDelegate: UIResponder, UIWindowSceneDelegate {
         }
     }
 
+    /// Configure the AuthenticationManager with the registered AuthService.
+    private func configureAuthenticationManager() {
+        do {
+            let authService = try serviceLocator.retrieve(AuthService.self)
+            Task { @MainActor in
+                AuthenticationManager.shared.configure(with: authService)
+            }
+        } catch {
+            Logger.shared.service("Failed to configure AuthenticationManager: \(error)", level: .warning)
+        }
+    }
+
     /**
      * Checks if the app is running in UI test mode.
      *
@@ -93,7 +109,7 @@ final class PulseSceneDelegate: UIResponder, UIWindowSceneDelegate {
      */
     private func showMainApp(in window: UIWindow) {
         let rootView = UIHostingController(
-            rootView: CoordinatorView(serviceLocator: serviceLocator)
+            rootView: RootView(serviceLocator: serviceLocator)
         )
         rootView.overrideUserInterfaceStyle = ThemeManager.shared.colorScheme == .dark ? .dark : .light
         window.rootViewController = rootView
@@ -123,7 +139,7 @@ final class PulseSceneDelegate: UIResponder, UIWindowSceneDelegate {
      */
     private func transitionToMainApp(in window: UIWindow) {
         let rootView = UIHostingController(
-            rootView: CoordinatorView(serviceLocator: serviceLocator)
+            rootView: RootView(serviceLocator: serviceLocator)
         )
         rootView.overrideUserInterfaceStyle = ThemeManager.shared.colorScheme == .dark ? .dark : .light
 
@@ -160,6 +176,7 @@ final class PulseSceneDelegate: UIResponder, UIWindowSceneDelegate {
                 serviceLocator.register(CategoriesService.self, instance: MockCategoriesService())
                 serviceLocator.register(ForYouService.self, instance: MockForYouService())
                 serviceLocator.register(StoreKitService.self, instance: MockStoreKitService())
+                serviceLocator.register(AuthService.self, instance: MockAuthService())
             } else {
                 // Use real services for debug builds
                 registerLiveServices()
@@ -190,6 +207,9 @@ final class PulseSceneDelegate: UIResponder, UIWindowSceneDelegate {
         serviceLocator.register(BookmarksService.self, instance: LiveBookmarksService(storageService: storageService))
         serviceLocator.register(SettingsService.self, instance: LiveSettingsService(storageService: storageService))
         serviceLocator.register(ForYouService.self, instance: LiveForYouService(storageService: storageService))
+
+        // Register authentication service
+        serviceLocator.register(AuthService.self, instance: LiveAuthService())
     }
 
     /**
@@ -203,6 +223,12 @@ final class PulseSceneDelegate: UIResponder, UIWindowSceneDelegate {
      */
     func scene(_: UIScene, openURLContexts URLContexts: Set<UIOpenURLContext>) {
         guard let url = URLContexts.first?.url else { return }
+
+        // Handle Google Sign-In callback
+        if GIDSignIn.sharedInstance.handle(url) {
+            return
+        }
+
         handleDeeplink(url)
     }
 

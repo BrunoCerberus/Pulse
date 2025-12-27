@@ -21,6 +21,12 @@ packages:
   Lottie:
     url: https://github.com/airbnb/lottie-ios.git
     from: 4.4.0
+  firebase-ios-sdk:
+    url: https://github.com/firebase/firebase-ios-sdk.git
+    from: 11.0.0
+  GoogleSignIn:
+    url: https://github.com/google/GoogleSignIn-iOS.git
+    from: 8.0.0
 
 settings:
   base:
@@ -117,8 +123,12 @@ targets:
       - sdk: Foundation.framework
       - sdk: UIKit.framework
       - sdk: Combine.framework
+      - sdk: AuthenticationServices.framework
       - package: EntropyCore
       - package: Lottie
+      - package: firebase-ios-sdk
+        product: FirebaseAuth
+      - package: GoogleSignIn
       - target: PulseWidgetExtension
         embed: true
 
