@@ -274,7 +274,6 @@ jobs:
         xcrun simctl boot "iPhone Air" || echo "Simulator already booted or unavailable"
 
     - name: Run ${{ matrix.test-name }}
-      timeout-minutes: 30
       run: |
         mkdir -p test-results
         set -o pipefail
