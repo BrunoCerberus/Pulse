@@ -64,7 +64,7 @@ final class PulseSearchUITests: BaseUITestCase {
                 searchUILoaded = true
                 break
             }
-            Thread.sleep(forTimeInterval: 0.5)
+            wait(for: 0.5)
         }
 
         XCTAssertTrue(searchUILoaded, "Search UI should load (search field or empty state)")
@@ -111,7 +111,7 @@ final class PulseSearchUITests: BaseUITestCase {
                 hasContent = true
                 break
             }
-            Thread.sleep(forTimeInterval: 0.5)
+            wait(for: 0.5)
         }
 
         // If nothing specific appeared, at least verify we're not in initial state
@@ -133,13 +133,13 @@ final class PulseSearchUITests: BaseUITestCase {
 
         searchField.tap()
         searchField.typeText("test query")
-        Thread.sleep(forTimeInterval: 0.5)
+        wait(for: 0.5)
 
         // Test clear button
         let clearButton = app.searchFields.buttons["Clear text"]
         if clearButton.waitForExistence(timeout: 3) {
             clearButton.tap()
-            Thread.sleep(forTimeInterval: 0.5)
+            wait(for: 0.5)
 
             let searchFieldValue = searchField.value as? String ?? ""
             let isCleared = searchFieldValue.isEmpty ||
@@ -155,7 +155,7 @@ final class PulseSearchUITests: BaseUITestCase {
 
         if cancelButton.waitForExistence(timeout: 3) {
             cancelButton.tap()
-            Thread.sleep(forTimeInterval: 0.5)
+            wait(for: 0.5)
             XCTAssertFalse(app.keyboards.element.exists, "Keyboard should dismiss after cancel")
         }
     }
@@ -179,7 +179,7 @@ final class PulseSearchUITests: BaseUITestCase {
                 foundInitialState = true
                 break
             }
-            Thread.sleep(forTimeInterval: 0.5)
+            wait(for: 0.5)
         }
 
         XCTAssertTrue(foundInitialState, "Initial empty state should show 'Search for News'")
@@ -193,7 +193,7 @@ final class PulseSearchUITests: BaseUITestCase {
         searchField.tap()
 
         // Wait for suggestions or empty state
-        Thread.sleep(forTimeInterval: 1)
+        wait(for: 1)
 
         // Either suggestions, trending topics, or empty state should appear
         let trendingHeader = app.staticTexts["Trending Topics"]
@@ -208,7 +208,7 @@ final class PulseSearchUITests: BaseUITestCase {
             let categoryButton = app.buttons[category]
             if categoryButton.exists {
                 categoryButton.tap()
-                Thread.sleep(forTimeInterval: 2)
+                wait(for: 2)
 
                 // Initial empty state should disappear
                 let emptyStateGone = !app.staticTexts["Search for News"].exists
@@ -232,7 +232,7 @@ final class PulseSearchUITests: BaseUITestCase {
         submitSearch()
 
         // Wait for results
-        Thread.sleep(forTimeInterval: 3)
+        wait(for: 3)
 
         // Try to change sort option
         let segmentedControl = app.segmentedControls.firstMatch
@@ -242,7 +242,7 @@ final class PulseSearchUITests: BaseUITestCase {
             let segments = segmentedControl.buttons
             if segments.count > 1 {
                 segments.element(boundBy: 1).tap()
-                Thread.sleep(forTimeInterval: 2)
+                wait(for: 2)
             }
         }
 
@@ -264,21 +264,21 @@ final class PulseSearchUITests: BaseUITestCase {
         submitSearch()
 
         // Wait for results
-        Thread.sleep(forTimeInterval: 3)
+        wait(for: 3)
 
         // Find and tap an article
         let articleCards = app.buttons.matching(NSPredicate(format: "label CONTAINS[c] 'ago'"))
 
         if articleCards.count > 0 {
             articleCards.firstMatch.tap()
-            Thread.sleep(forTimeInterval: 1)
+            wait(for: 1)
 
             let backButton = app.navigationBars.buttons.firstMatch
             let didNavigate = backButton.waitForExistence(timeout: 5) && !searchField.isHittable
 
             if didNavigate {
                 backButton.tap()
-                Thread.sleep(forTimeInterval: 1)
+                wait(for: 1)
                 XCTAssertTrue(searchField.waitForExistence(timeout: 5), "Should return to Search")
             }
         }
@@ -289,7 +289,7 @@ final class PulseSearchUITests: BaseUITestCase {
             scrollView.swipeUp()
             scrollView.swipeUp()
             scrollView.swipeUp()
-            Thread.sleep(forTimeInterval: 2)
+            wait(for: 2)
         }
 
         XCTAssertTrue(searchField.exists, "Search should remain functional after scrolling")
@@ -310,7 +310,7 @@ final class PulseSearchUITests: BaseUITestCase {
         submitSearch()
 
         // Wait for results
-        Thread.sleep(forTimeInterval: 3)
+        wait(for: 3)
 
         // Check for various states
         let noResultsText = app.staticTexts["No Results Found"]
@@ -349,7 +349,7 @@ final class PulseSearchUITests: BaseUITestCase {
         submitSearch()
 
         // Keyboard should dismiss after search
-        Thread.sleep(forTimeInterval: 1)
+        wait(for: 1)
     }
 
     // MARK: - Tab Switching Tests
@@ -366,16 +366,16 @@ final class PulseSearchUITests: BaseUITestCase {
         submitSearch()
 
         // Wait for results
-        Thread.sleep(forTimeInterval: 3)
+        wait(for: 3)
 
         // Switch to Home tab
         let homeTab = app.tabBars.buttons["Home"]
         homeTab.tap()
-        Thread.sleep(forTimeInterval: 1)
+        wait(for: 1)
 
         // Switch back to Search
         navigateToSearchTab()
-        Thread.sleep(forTimeInterval: 0.5)
+        wait(for: 0.5)
 
         // Search state should be preserved
         XCTAssertTrue(searchField.waitForExistence(timeout: 5), "Should return to Search view")

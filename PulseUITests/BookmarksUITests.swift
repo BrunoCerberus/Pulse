@@ -59,7 +59,7 @@ final class BookmarksUITests: BaseUITestCase {
                 contentLoaded = true
                 break
             }
-            Thread.sleep(forTimeInterval: 0.5)
+            wait(for: 0.5)
         }
 
         XCTAssertTrue(contentLoaded, "Bookmarks view should show empty state, loading, or bookmarks list")
@@ -76,7 +76,7 @@ final class BookmarksUITests: BaseUITestCase {
     func testScrollAndArticleNavigation() throws {
         navigateToBookmarks()
 
-        Thread.sleep(forTimeInterval: 2)
+        wait(for: 2)
 
         let scrollView = app.scrollViews.firstMatch
 
@@ -114,7 +114,7 @@ final class BookmarksUITests: BaseUITestCase {
     func testRemoveBookmarkViaContextMenu() throws {
         navigateToBookmarks()
 
-        Thread.sleep(forTimeInterval: 2)
+        wait(for: 2)
 
         let articleCards = app.buttons.matching(NSPredicate(format: "label CONTAINS[c] 'ago' OR label CONTAINS[c] 'hour'"))
 
@@ -127,7 +127,7 @@ final class BookmarksUITests: BaseUITestCase {
 
             if removeBookmarkOption.waitForExistence(timeout: 3) {
                 removeBookmarkOption.tap()
-                Thread.sleep(forTimeInterval: 1)
+                wait(for: 1)
             } else {
                 app.tap() // Dismiss context menu
             }
@@ -160,7 +160,7 @@ final class BookmarksUITests: BaseUITestCase {
         let bookmarkButton = app.navigationBars.buttons["bookmark"]
         if bookmarkButton.exists {
             bookmarkButton.tap()
-            Thread.sleep(forTimeInterval: 1)
+            wait(for: 1)
         }
 
         backButton.tap()
@@ -172,7 +172,7 @@ final class BookmarksUITests: BaseUITestCase {
         let bookmarksNav = app.navigationBars["Bookmarks"]
         XCTAssertTrue(bookmarksNav.waitForExistence(timeout: 5), "Should be on Bookmarks")
 
-        Thread.sleep(forTimeInterval: 2)
+        wait(for: 2)
 
         let savedArticlesText = app.staticTexts.matching(NSPredicate(format: "label CONTAINS[c] 'saved articles'")).firstMatch
         let noBookmarksText = app.staticTexts["No Bookmarks"]
@@ -186,7 +186,7 @@ final class BookmarksUITests: BaseUITestCase {
     func testSwitchingTabsPreservesBookmarksState() throws {
         navigateToBookmarks()
 
-        Thread.sleep(forTimeInterval: 3)
+        wait(for: 3)
 
         let noBookmarksText = app.staticTexts["No Bookmarks"]
         let noBookmarksExists = noBookmarksText.waitForExistence(timeout: 3)
@@ -197,7 +197,7 @@ final class BookmarksUITests: BaseUITestCase {
 
         navigateToBookmarks()
 
-        Thread.sleep(forTimeInterval: 2)
+        wait(for: 2)
 
         if noBookmarksExists {
             XCTAssertTrue(app.staticTexts["No Bookmarks"].waitForExistence(timeout: 10), "Empty state should be preserved")
@@ -210,7 +210,7 @@ final class BookmarksUITests: BaseUITestCase {
     func testErrorStateShowsTryAgain() throws {
         navigateToBookmarks()
 
-        Thread.sleep(forTimeInterval: 2)
+        wait(for: 2)
 
         let errorTitle = app.staticTexts["Unable to Load Bookmarks"]
 

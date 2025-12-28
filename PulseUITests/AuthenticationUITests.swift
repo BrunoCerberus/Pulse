@@ -73,7 +73,7 @@ final class AuthenticationUITests: BaseUITestCase {
         let signInButton = app.buttons["Sign in with Apple"]
 
         // Wait for app to settle
-        Thread.sleep(forTimeInterval: 2)
+        wait(for: 2)
 
         if tabBar.exists {
             // If authenticated, verify main app UI

@@ -116,6 +116,20 @@ class BaseUITestCase: XCTestCase {
 
     // MARK: - Wait Helpers
 
+    /// Smart wait that replaces Thread.sleep - waits for UI to settle
+    /// Uses RunLoop to allow UI updates while waiting, more efficient than Thread.sleep
+    @discardableResult
+    func wait(for duration: TimeInterval) -> Bool {
+        // Use expectation-based waiting which is more efficient than Thread.sleep
+        // and allows the UI to continue processing events
+        let expectation = XCTNSPredicateExpectation(
+            predicate: NSPredicate(value: false),
+            object: nil
+        )
+        _ = XCTWaiter.wait(for: [expectation], timeout: duration)
+        return true
+    }
+
     /// Wait for content to load (articles, error, or empty state)
     func waitForHomeContent(timeout: TimeInterval = 10) -> Bool {
         let contentIndicators = [
