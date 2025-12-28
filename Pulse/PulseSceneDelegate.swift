@@ -79,10 +79,12 @@ final class PulseSceneDelegate: UIResponder, UIWindowSceneDelegate {
     }
 
     /// Configure the AuthenticationManager with the registered AuthService.
+    /// Note: This is called from scene(_:willConnectTo:options:) which runs on main thread,
+    /// so we use MainActor.assumeIsolated to synchronously configure auth state.
     private func configureAuthenticationManager() {
         do {
             let authService = try serviceLocator.retrieve(AuthService.self)
-            Task { @MainActor in
+            MainActor.assumeIsolated {
                 AuthenticationManager.shared.configure(with: authService)
             }
         } catch {

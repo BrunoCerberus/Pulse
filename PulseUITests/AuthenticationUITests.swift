@@ -233,10 +233,9 @@ final class AuthenticationUITests: XCTestCase {
         }
         gearButton.tap()
 
-        // Scroll to find Account section
-        for _ in 0..<5 {
-            app.swipeUp()
-        }
+        // Wait for Settings to load - Account section is at the top, no scrolling needed
+        let settingsNav = app.navigationBars["Settings"]
+        XCTAssertTrue(settingsNav.waitForExistence(timeout: 5), "Settings should open")
 
         let accountSection = app.staticTexts["Account"]
         XCTAssertTrue(accountSection.waitForExistence(timeout: 5), "Account section should exist in settings")

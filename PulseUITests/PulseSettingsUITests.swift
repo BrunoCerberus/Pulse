@@ -164,6 +164,9 @@ final class PulseSettingsUITests: XCTestCase {
     func testNotificationsSectionExists() throws {
         navigateToSettings()
 
+        // Scroll to find the section since Account section is at top
+        app.swipeUp()
+
         let notificationsSection = app.staticTexts["Notifications"]
         XCTAssertTrue(notificationsSection.waitForExistence(timeout: 5))
     }
@@ -277,6 +280,9 @@ final class PulseSettingsUITests: XCTestCase {
     func testFollowedTopicsFooterText() throws {
         navigateToSettings()
 
+        // Scroll to see the footer text below the Followed Topics section
+        app.swipeUp()
+
         let footerText = app.staticTexts["Articles from followed topics will appear in your For You feed."]
         XCTAssertTrue(footerText.waitForExistence(timeout: 5), "Footer text should explain followed topics")
     }
@@ -286,6 +292,9 @@ final class PulseSettingsUITests: XCTestCase {
     func testNotificationsToggleExists() throws {
         navigateToSettings()
 
+        // Scroll to find the Notifications section since Account section is at top
+        app.swipeUp()
+
         let notificationsToggle = app.switches["Enable Notifications"]
         XCTAssertTrue(notificationsToggle.waitForExistence(timeout: 5), "Notifications toggle should exist")
     }
@@ -293,9 +302,11 @@ final class PulseSettingsUITests: XCTestCase {
     func testBreakingNewsToggleExists() throws {
         navigateToSettings()
 
+        // Scroll to find the Notifications section since Account section is at top
+        app.swipeUp()
+
         // Wait for Settings to fully load
         let notificationsSection = app.staticTexts["Notifications"]
-        scrollToTop()
         XCTAssertTrue(notificationsSection.waitForExistence(timeout: 10), "Notifications section should exist")
 
         let breakingNewsToggle = app.switches["Breaking News Alerts"]
@@ -304,6 +315,9 @@ final class PulseSettingsUITests: XCTestCase {
 
     func testToggleNotifications() throws {
         navigateToSettings()
+
+        // Scroll to find the Notifications section since Account section is at top
+        app.swipeUp()
 
         let notificationsToggle = app.switches["Enable Notifications"]
         XCTAssertTrue(notificationsToggle.waitForExistence(timeout: 5))
@@ -327,6 +341,9 @@ final class PulseSettingsUITests: XCTestCase {
 
     func testBreakingNewsToggleDependsOnNotifications() throws {
         navigateToSettings()
+
+        // Scroll to find the Notifications section since Account section is at top
+        app.swipeUp()
 
         let notificationsToggle = app.switches["Enable Notifications"]
         let breakingNewsToggle = app.switches["Breaking News Alerts"]
@@ -695,6 +712,9 @@ final class PulseSettingsUITests: XCTestCase {
 
         // Navigate back to Settings
         navigateToSettings()
+
+        // Scroll to find the Notifications section again
+        app.swipeUp()
 
         // Re-query the toggle element after navigation
         let notificationsToggleAfter = app.switches["Enable Notifications"]

@@ -45,6 +45,17 @@ final class AuthenticationManager: ObservableObject {
     func configure(with authService: AuthService) {
         self.authService = authService
 
+        // Immediately set current state from auth service (synchronous)
+        // This ensures the UI has correct state before any async pipeline fires
+        if let user = authService.currentUser {
+            authState = .authenticated(user)
+            currentUser = user
+        } else {
+            authState = .unauthenticated
+            currentUser = nil
+        }
+
+        // Subscribe to future auth state changes
         authService.authStatePublisher
             .receive(on: DispatchQueue.main)
             .sink { [weak self] user in
