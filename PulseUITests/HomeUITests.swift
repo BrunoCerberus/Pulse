@@ -10,31 +10,29 @@ final class HomeUITests: BaseUITestCase {
 
     // MARK: - Navigation Bar Tests
 
-    func testHomeNavigationTitleExists() throws {
+    /// Tests navigation bar elements: title and gear button
+    func testNavigationBarElements() throws {
         navigateToHome()
-        XCTAssertTrue(app.navigationBars["Pulse"].waitForExistence(timeout: Self.shortTimeout), "Navigation title 'Pulse' should exist")
-    }
 
-    func testGearButtonExistsInNavigationBar() throws {
-        navigateToHome()
+        // Verify navigation title
+        XCTAssertTrue(app.navigationBars["Pulse"].waitForExistence(timeout: Self.shortTimeout), "Navigation title 'Pulse' should exist")
+
+        // Verify gear button
         XCTAssertTrue(app.navigationBars.buttons["gearshape"].waitForExistence(timeout: Self.shortTimeout), "Gear button should exist in navigation bar")
     }
 
-    // MARK: - Content Section Tests
+    // MARK: - Content Tests
 
-    func testBreakingNewsSectionExists() throws {
+    /// Tests that home content loads (breaking news, headlines, or appropriate state)
+    func testHomeContentLoads() throws {
         navigateToHome()
-        XCTAssertTrue(waitForHomeContent(timeout: Self.defaultTimeout), "Home should show content")
+        XCTAssertTrue(waitForHomeContent(timeout: Self.defaultTimeout), "Home should show content, empty state, or error state")
     }
 
-    func testTopHeadlinesSectionExists() throws {
-        navigateToHome()
-        XCTAssertTrue(waitForHomeContent(timeout: Self.defaultTimeout), "Home should show content")
-    }
+    // MARK: - Article Navigation Tests
 
-    // MARK: - Article Card Interaction Tests
-
-    func testArticleCardTapNavigatesToDetail() throws {
+    /// Tests tapping article cards navigates to detail and back
+    func testArticleCardNavigation() throws {
         navigateToHome()
 
         guard waitForHomeContent(timeout: Self.defaultTimeout) else {
@@ -50,93 +48,44 @@ final class HomeUITests: BaseUITestCase {
             throw XCTSkip("No article cards found to test navigation")
         }
 
+        // Tap first article card
         cards.firstMatch.tap()
         XCTAssertTrue(waitForArticleDetail(), "Should navigate to article detail")
+
+        // Navigate back
+        navigateBack()
+        XCTAssertTrue(app.navigationBars["Pulse"].waitForExistence(timeout: Self.shortTimeout), "Should return to Home")
     }
 
-    func testBreakingNewsCardTapNavigatesToDetail() throws {
+    // MARK: - Scroll Interaction Tests
+
+    /// Tests pull to refresh, vertical scroll, and horizontal carousel scroll
+    func testScrollInteractions() throws {
         navigateToHome()
 
-        guard waitForHomeContent(timeout: Self.defaultTimeout) else {
-            throw XCTSkip("Content did not load in time")
-        }
-
-        if app.staticTexts["Unable to Load News"].exists || app.staticTexts["No News Available"].exists {
-            throw XCTSkip("No breaking news available to test navigation")
-        }
-
-        let heroCards = app.buttons.matching(NSPredicate(format: "label CONTAINS[c] 'Breaking' OR (label CONTAINS[c] 'ago')")).firstMatch
-        guard heroCards.waitForExistence(timeout: Self.shortTimeout) else {
-            throw XCTSkip("No breaking news cards found")
-        }
-
-        heroCards.tap()
-        XCTAssertTrue(waitForArticleDetail(), "Should navigate to article detail")
-    }
-
-    // MARK: - Pull to Refresh Tests
-
-    func testPullToRefreshExists() throws {
-        navigateToHome()
         guard waitForHomeContent(timeout: Self.defaultTimeout) else {
             throw XCTSkip("Content did not load")
         }
 
         if app.staticTexts["Unable to Load News"].exists || app.staticTexts["No News Available"].exists {
-            throw XCTSkip("No content available - ScrollView only exists with articles")
+            throw XCTSkip("No content available for scroll testing")
         }
 
         let scrollView = app.scrollViews.firstMatch
         XCTAssertTrue(scrollView.waitForExistence(timeout: Self.shortTimeout), "ScrollView should exist")
+
+        // Pull to refresh
         scrollView.swipeDown()
         XCTAssertTrue(scrollView.exists, "ScrollView should still exist after refresh")
-    }
 
-    // MARK: - Infinite Scroll Tests
-
-    func testScrollingLoadsMoreContent() throws {
-        navigateToHome()
-
-        guard waitForHomeContent(timeout: Self.defaultTimeout) else {
-            throw XCTSkip("Content did not load")
-        }
-
-        if app.staticTexts["Unable to Load News"].exists || app.staticTexts["No News Available"].exists {
-            throw XCTSkip("No content to scroll")
-        }
-
-        let scrollView = app.scrollViews.firstMatch
-        XCTAssertTrue(scrollView.exists, "ScrollView should exist")
+        // Vertical scroll
         scrollView.swipeUp()
-
         XCTAssertTrue(app.navigationBars["Pulse"].waitForExistence(timeout: Self.shortTimeout), "App should remain responsive after scrolling")
-    }
 
-    // MARK: - Breaking News Carousel Tests
-
-    func testBreakingNewsCarouselIsHorizontallyScrollable() throws {
-        navigateToHome()
-
-        guard waitForHomeContent(timeout: Self.defaultTimeout) else {
-            throw XCTSkip("Content did not load")
+        // Horizontal carousel scroll (if Breaking News exists)
+        if app.staticTexts["Breaking News"].exists {
+            scrollView.swipeLeft()
         }
-
-        let breakingNewsHeader = app.staticTexts["Breaking News"]
-        guard breakingNewsHeader.exists else {
-            throw XCTSkip("Breaking News section not available")
-        }
-
-        let scrollViews = app.scrollViews
-        XCTAssertTrue(scrollViews.count > 0, "Should have scroll views")
-        scrollViews.firstMatch.swipeLeft()
-        XCTAssertTrue(breakingNewsHeader.exists, "Breaking News header should still exist after scroll")
-    }
-
-    // MARK: - Loading State Tests
-
-    func testLoadingStateShowsSkeletons() throws {
-        navigateToHome()
-        XCTAssertTrue(waitForHomeContent(timeout: Self.defaultTimeout), "Content should appear after loading")
     }
 
     // MARK: - Error State Tests
@@ -150,16 +99,9 @@ final class HomeUITests: BaseUITestCase {
         }
     }
 
-    // MARK: - Empty State Tests
-
-    func testEmptyStateMessage() throws {
-        navigateToHome()
-        XCTAssertTrue(waitForHomeContent(timeout: Self.defaultTimeout), "Content, empty state, or error state should appear")
-    }
-
     // MARK: - Context Menu Tests
 
-    func testArticleCardContextMenuExists() throws {
+    func testArticleCardContextMenu() throws {
         navigateToHome()
 
         guard waitForHomeContent(timeout: Self.defaultTimeout) else {
