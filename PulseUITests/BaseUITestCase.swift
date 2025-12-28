@@ -105,22 +105,39 @@ class BaseUITestCase: XCTestCase {
 
     /// Navigate to Search tab (handles role: .search accessibility)
     func navigateToSearchTab() {
-        let searchTab = app.tabBars.buttons.matching(
+        // Try standard Search tab first
+        let searchTab = app.tabBars.buttons["Search"]
+        if searchTab.waitForExistence(timeout: Self.shortTimeout) {
+            if !searchTab.isSelected {
+                searchTab.tap()
+            }
+            // Wait for Search view to load
+            _ = app.navigationBars["Search"].waitForExistence(timeout: Self.defaultTimeout)
+            return
+        }
+
+        // Fallback to predicate search
+        let searchTabAlt = app.tabBars.buttons.matching(
             NSPredicate(format: "label CONTAINS[c] 'search' OR identifier CONTAINS[c] 'search'")
         ).firstMatch
-        if searchTab.waitForExistence(timeout: Self.shortTimeout) {
-            searchTab.tap()
+        if searchTabAlt.waitForExistence(timeout: Self.shortTimeout) {
+            searchTabAlt.tap()
+            _ = app.navigationBars["Search"].waitForExistence(timeout: Self.defaultTimeout)
         }
     }
 
     /// Navigate to Settings via gear button
     func navigateToSettings() {
         navigateToTab("Home")
+        // Wait for Home to fully load
+        _ = app.navigationBars["Pulse"].waitForExistence(timeout: Self.defaultTimeout)
+
         let gearButton = app.navigationBars.buttons["gearshape"]
         if gearButton.waitForExistence(timeout: Self.shortTimeout) {
             gearButton.tap()
+            // Wait for Settings to open
+            _ = app.navigationBars["Settings"].waitForExistence(timeout: Self.defaultTimeout)
         }
-        _ = app.navigationBars["Settings"].waitForExistence(timeout: Self.shortTimeout)
     }
 
     // MARK: - Wait Helpers

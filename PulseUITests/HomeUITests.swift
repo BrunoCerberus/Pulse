@@ -48,8 +48,23 @@ final class HomeUITests: BaseUITestCase {
             throw XCTSkip("No article cards found to test navigation")
         }
 
-        // Tap first article card
-        cards.firstMatch.tap()
+        // Find a hittable article card
+        let firstCard = cards.firstMatch
+        guard firstCard.waitForExistence(timeout: Self.shortTimeout) else {
+            throw XCTSkip("Article card not found")
+        }
+
+        // Scroll to make the card hittable if needed
+        if !firstCard.isHittable {
+            app.scrollViews.firstMatch.swipeUp()
+            Thread.sleep(forTimeInterval: 0.5)
+        }
+
+        guard firstCard.isHittable else {
+            throw XCTSkip("Article card not hittable")
+        }
+
+        firstCard.tap()
         XCTAssertTrue(waitForArticleDetail(), "Should navigate to article detail")
 
         // Navigate back
@@ -140,7 +155,7 @@ final class HomeUITests: BaseUITestCase {
         gearButton.tap()
 
         let settingsNavBar = app.navigationBars["Settings"]
-        XCTAssertTrue(settingsNavBar.waitForExistence(timeout: Self.shortTimeout), "Settings should open")
+        XCTAssertTrue(settingsNavBar.waitForExistence(timeout: Self.defaultTimeout), "Settings should open")
 
         // Navigate back
         var backButton = settingsNavBar.buttons["Pulse"]

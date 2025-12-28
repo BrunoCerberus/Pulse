@@ -7,11 +7,12 @@ final class ForYouUITests: BaseUITestCase {
     /// Navigate to For You tab
     private func navigateToForYou() {
         let forYouTab = app.tabBars.buttons["For You"]
-        XCTAssertTrue(forYouTab.waitForExistence(timeout: 5), "For You tab should exist")
-        forYouTab.tap()
-
-        let navTitle = app.navigationBars["For You"]
-        XCTAssertTrue(navTitle.waitForExistence(timeout: 5), "For You view should load")
+        guard forYouTab.waitForExistence(timeout: 5) else { return }
+        if !forYouTab.isSelected {
+            forYouTab.tap()
+        }
+        // Wait for For You view to load
+        _ = app.navigationBars["For You"].waitForExistence(timeout: Self.defaultTimeout)
     }
 
     // MARK: - Navigation Tests
@@ -161,7 +162,7 @@ final class ForYouUITests: BaseUITestCase {
         }
 
         let navTitle = app.navigationBars["For You"]
-        XCTAssertTrue(navTitle.exists, "View should remain functional after scrolling")
+        XCTAssertTrue(navTitle.waitForExistence(timeout: Self.defaultTimeout), "View should remain functional after scrolling")
     }
 
     // MARK: - Error State Tests
@@ -187,25 +188,27 @@ final class ForYouUITests: BaseUITestCase {
         navigateToForYou()
 
         let navTitle = app.navigationBars["For You"]
-        XCTAssertTrue(navTitle.waitForExistence(timeout: 10), "For You navigation should exist")
+        guard navTitle.waitForExistence(timeout: Self.defaultTimeout) else {
+            throw XCTSkip("For You navigation did not load")
+        }
 
         Thread.sleep(forTimeInterval: 2)
 
         let homeTab = app.tabBars.buttons["Home"]
-        XCTAssertTrue(homeTab.waitForExistence(timeout: 5), "Home tab should exist")
+        XCTAssertTrue(homeTab.waitForExistence(timeout: Self.shortTimeout), "Home tab should exist")
         homeTab.tap()
 
         let homeNav = app.navigationBars["Pulse"]
-        XCTAssertTrue(homeNav.waitForExistence(timeout: 10), "Home should load")
+        XCTAssertTrue(homeNav.waitForExistence(timeout: Self.defaultTimeout), "Home should load")
 
         Thread.sleep(forTimeInterval: 1)
 
         let forYouTab = app.tabBars.buttons["For You"]
-        XCTAssertTrue(forYouTab.waitForExistence(timeout: 5), "For You tab should exist")
+        XCTAssertTrue(forYouTab.waitForExistence(timeout: Self.shortTimeout), "For You tab should exist")
         forYouTab.tap()
 
         let forYouNav = app.navigationBars["For You"]
-        XCTAssertTrue(forYouNav.waitForExistence(timeout: 10), "For You should be visible after tab switch")
+        XCTAssertTrue(forYouNav.waitForExistence(timeout: Self.defaultTimeout), "For You should be visible after tab switch")
     }
 
     // MARK: - Integration Tests

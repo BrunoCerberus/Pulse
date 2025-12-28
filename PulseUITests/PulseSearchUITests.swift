@@ -13,8 +13,31 @@ final class PulseSearchUITests: BaseUITestCase {
 
     /// Submit search via keyboard
     private func submitSearch() {
-        if app.keyboards.element.exists {
-            app.keyboards.buttons["search"].tap()
+        guard app.keyboards.element.exists else { return }
+
+        // Try different button identifiers for the search key
+        let searchButton = app.keyboards.buttons["search"]
+        if searchButton.exists {
+            searchButton.tap()
+            return
+        }
+
+        let searchButtonCap = app.keyboards.buttons["Search"]
+        if searchButtonCap.exists {
+            searchButtonCap.tap()
+            return
+        }
+
+        // Fallback: tap return/go key
+        let returnButton = app.keyboards.buttons["return"]
+        if returnButton.exists {
+            returnButton.tap()
+            return
+        }
+
+        let goButton = app.keyboards.buttons["Go"]
+        if goButton.exists {
+            goButton.tap()
         }
     }
 
@@ -25,7 +48,7 @@ final class PulseSearchUITests: BaseUITestCase {
         navigateToSearchTab()
 
         let searchNav = app.navigationBars["Search"]
-        XCTAssertTrue(searchNav.waitForExistence(timeout: 10), "Search navigation should load")
+        XCTAssertTrue(searchNav.waitForExistence(timeout: Self.defaultTimeout), "Search navigation should load")
 
         // Use polling to check for search field or search-related content
         let searchField = app.searchFields.firstMatch
@@ -145,7 +168,21 @@ final class PulseSearchUITests: BaseUITestCase {
 
         // Initial state shows "Search for News" empty state
         let searchForNews = app.staticTexts["Search for News"]
-        XCTAssertTrue(searchForNews.waitForExistence(timeout: 5), "Initial empty state should show 'Search for News'")
+        let searchSubtitle = app.staticTexts["Find articles from thousands of sources worldwide"]
+
+        let timeout: TimeInterval = 15
+        let startTime = Date()
+        var foundInitialState = false
+
+        while Date().timeIntervalSince(startTime) < timeout {
+            if searchForNews.exists || searchSubtitle.exists {
+                foundInitialState = true
+                break
+            }
+            Thread.sleep(forTimeInterval: 0.5)
+        }
+
+        XCTAssertTrue(foundInitialState, "Initial empty state should show 'Search for News'")
 
         let subtitle = app.staticTexts["Find articles from thousands of sources worldwide"]
         XCTAssertTrue(subtitle.exists || searchForNews.exists, "Initial empty state should have descriptive text")
@@ -309,7 +346,7 @@ final class PulseSearchUITests: BaseUITestCase {
         // Test keyboard dismisses on search
         searchField.typeText("test")
         XCTAssertTrue(app.keyboards.element.exists, "Keyboard should be shown")
-        app.keyboards.buttons["search"].tap()
+        submitSearch()
 
         // Keyboard should dismiss after search
         Thread.sleep(forTimeInterval: 1)

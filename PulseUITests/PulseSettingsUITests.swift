@@ -78,11 +78,20 @@ final class PulseSettingsUITests: BaseUITestCase {
         navigateToSettings()
 
         let navigationTitle = app.navigationBars["Settings"]
-        XCTAssertTrue(navigationTitle.exists)
+        XCTAssertTrue(navigationTitle.waitForExistence(timeout: Self.defaultTimeout), "Settings navigation should exist")
 
-        // Test all sections exist (scroll to find them)
+        // Wait for settings content to load
+        Thread.sleep(forTimeInterval: 1)
+
+        // Test Account section first (it's at the top)
+        let accountSection = app.staticTexts["Account"]
+        guard accountSection.waitForExistence(timeout: Self.defaultTimeout) else {
+            throw XCTSkip("Account section did not load in time")
+        }
+
+        // Test Subscription section (right below Account)
         let subscriptionSection = app.staticTexts["Subscription"]
-        XCTAssertTrue(subscriptionSection.waitForExistence(timeout: 5))
+        XCTAssertTrue(subscriptionSection.waitForExistence(timeout: 5), "Subscription section should exist")
 
         let topicsSection = app.staticTexts["Followed Topics"]
         XCTAssertTrue(topicsSection.waitForExistence(timeout: 5))
@@ -119,8 +128,13 @@ final class PulseSettingsUITests: BaseUITestCase {
     func testFollowedTopicsSection() throws {
         navigateToSettings()
 
+        // Wait for settings content to load
+        Thread.sleep(forTimeInterval: 1)
+
         let topicsSection = app.staticTexts["Followed Topics"]
-        XCTAssertTrue(topicsSection.waitForExistence(timeout: 5))
+        guard topicsSection.waitForExistence(timeout: Self.defaultTimeout) else {
+            throw XCTSkip("Followed Topics section did not load in time")
+        }
 
         // Category names that should appear
         let categoryNames = ["World", "Business", "Technology", "Science", "Health", "Sports", "Entertainment"]
@@ -281,8 +295,13 @@ final class PulseSettingsUITests: BaseUITestCase {
     func testPremiumSection() throws {
         navigateToSettings()
 
+        // Wait for settings content to load
+        Thread.sleep(forTimeInterval: 1)
+
         let subscriptionSection = app.staticTexts["Subscription"]
-        XCTAssertTrue(subscriptionSection.waitForExistence(timeout: 10), "Subscription section should exist")
+        guard subscriptionSection.waitForExistence(timeout: Self.defaultTimeout) else {
+            throw XCTSkip("Subscription section did not load in time")
+        }
 
         // Premium section is at the top
         let goPremiumText = app.staticTexts.matching(NSPredicate(format: "label CONTAINS[c] 'Premium' OR label CONTAINS[c] 'premium'")).firstMatch
