@@ -1,27 +1,6 @@
 import XCTest
 
-final class AuthenticationUITests: XCTestCase {
-    var app: XCUIApplication!
-
-    override func setUpWithError() throws {
-        continueAfterFailure = false
-        XCUIDevice.shared.orientation = .portrait
-
-        app = XCUIApplication()
-        app.launchEnvironment["UI_TESTING"] = "1"
-        app.launch()
-
-        // Wait for app to be fully running
-        XCTAssertTrue(app.wait(for: .runningForeground, timeout: 20.0), "App should be running in the foreground")
-    }
-
-    override func tearDownWithError() throws {
-        if app.state != .notRunning {
-            app.terminate()
-        }
-        XCUIDevice.shared.orientation = .portrait
-        app = nil
-    }
+final class AuthenticationUITests: BaseUITestCase {
 
     // MARK: - Sign In View Existence Tests
 

@@ -1,29 +1,6 @@
 import XCTest
 
-final class ForYouUITests: XCTestCase {
-    var app: XCUIApplication!
-
-    override func setUpWithError() throws {
-        continueAfterFailure = false
-        XCUIDevice.shared.orientation = .portrait
-
-        app = XCUIApplication()
-        app.launchEnvironment["UI_TESTING"] = "1"
-        app.launch()
-
-        XCTAssertTrue(app.wait(for: .runningForeground, timeout: 20.0), "App should be running in the foreground")
-
-        let tabBar = app.tabBars.firstMatch
-        XCTAssertTrue(tabBar.waitForExistence(timeout: 20.0), "Tab bar should appear after splash screen")
-    }
-
-    override func tearDownWithError() throws {
-        if app.state != .notRunning {
-            app.terminate()
-        }
-        XCUIDevice.shared.orientation = .portrait
-        app = nil
-    }
+final class ForYouUITests: BaseUITestCase {
 
     // MARK: - Helper Methods
 
@@ -37,18 +14,6 @@ final class ForYouUITests: XCTestCase {
         XCTAssertTrue(navTitle.waitForExistence(timeout: 5), "For You view should load")
     }
 
-    /// Navigate to Settings via gear button
-    private func navigateToSettings() {
-        let homeTab = app.tabBars.buttons["Home"]
-        homeTab.tap()
-
-        let gearButton = app.navigationBars.buttons["gearshape"]
-        XCTAssertTrue(gearButton.waitForExistence(timeout: 5), "Gear button should exist")
-        gearButton.tap()
-
-        let settingsNav = app.navigationBars["Settings"]
-        XCTAssertTrue(settingsNav.waitForExistence(timeout: 5), "Settings should open")
-    }
 
     // MARK: - Navigation Tests
 
@@ -404,32 +369,24 @@ final class ForYouUITests: XCTestCase {
     // MARK: - Loading State Tests
 
     func testLoadingStateShowsSkeletons() throws {
-        // Launch fresh to catch loading state
-        app.terminate()
-        app = XCUIApplication()
-        app.launchEnvironment["UI_TESTING"] = "1"
-        app.launch()
-
-        XCTAssertTrue(app.wait(for: .runningForeground, timeout: 20.0), "App should be running in the foreground")
-
-        let tabBar = app.tabBars.firstMatch
-        XCTAssertTrue(tabBar.waitForExistence(timeout: 20.0), "Tab bar should appear")
-
-        // Navigate to For You immediately
         navigateToForYou()
 
-        // Check for loading state or content
-        let forYouHeader = app.staticTexts["For You"]
+        // Check for content to appear
         let personalizeText = app.staticTexts["Personalize Your Feed"]
         let noArticlesText = app.staticTexts["No Articles"]
+        let articleCards = app.buttons.matching(NSPredicate(format: "label CONTAINS[c] 'ago'"))
+        let forYouNav = app.navigationBars["For You"]
 
-        // Wait for any content
-        Thread.sleep(forTimeInterval: 3)
+        let deadline = Date().addingTimeInterval(Self.defaultTimeout)
+        var contentLoaded = false
 
-        let contentLoaded = forYouHeader.exists ||
-            personalizeText.exists ||
-            noArticlesText.exists ||
-            app.buttons.matching(NSPredicate(format: "label CONTAINS[c] 'ago'")).count > 0
+        while Date() < deadline {
+            if personalizeText.exists || noArticlesText.exists || articleCards.count > 0 || forYouNav.exists {
+                contentLoaded = true
+                break
+            }
+            usleep(200_000)
+        }
 
         XCTAssertTrue(contentLoaded, "Content should load")
     }

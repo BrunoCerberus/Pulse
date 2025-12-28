@@ -1,51 +1,8 @@
 import XCTest
 
-final class PulseSettingsUITests: XCTestCase {
-    var app: XCUIApplication!
-
-    override func setUpWithError() throws {
-        continueAfterFailure = false
-        XCUIDevice.shared.orientation = .portrait
-
-        app = XCUIApplication()
-        app.launchEnvironment["UI_TESTING"] = "1"
-        app.launch()
-
-        // Wait for app to be fully running and splash screen to complete
-        XCTAssertTrue(app.wait(for: .runningForeground, timeout: 20.0), "App should be running in the foreground")
-
-        // Wait for tab bar to appear (indicates splash screen is done)
-        let tabBar = app.tabBars.firstMatch
-        XCTAssertTrue(tabBar.waitForExistence(timeout: 20.0), "Tab bar should appear after splash screen")
-    }
-
-    override func tearDownWithError() throws {
-        if app.state != .notRunning {
-            app.terminate()
-        }
-        XCUIDevice.shared.orientation = .portrait
-        app = nil
-    }
+final class PulseSettingsUITests: BaseUITestCase {
 
     // MARK: - Helper Methods
-
-    /// Navigate to Settings via the gear button in Home navigation bar
-    private func navigateToSettings() {
-        // Ensure we're on Home tab first
-        let homeTab = app.tabBars.buttons["Home"]
-        if homeTab.exists, !homeTab.isSelected {
-            homeTab.tap()
-        }
-
-        // Tap the gear button in the navigation bar
-        let gearButton = app.navigationBars.buttons["gearshape"]
-        XCTAssertTrue(gearButton.waitForExistence(timeout: 5), "Gear button should exist in navigation bar")
-        gearButton.tap()
-
-        // Wait for Settings view to appear
-        let settingsNavBar = app.navigationBars["Settings"]
-        XCTAssertTrue(settingsNavBar.waitForExistence(timeout: 5), "Settings navigation bar should appear")
-    }
 
     private func isSwitchOn(_ toggle: XCUIElement) -> Bool {
         if let value = toggle.value as? Bool {

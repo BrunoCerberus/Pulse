@@ -1,29 +1,6 @@
 import XCTest
 
-final class CategoriesUITests: XCTestCase {
-    var app: XCUIApplication!
-
-    override func setUpWithError() throws {
-        continueAfterFailure = false
-        XCUIDevice.shared.orientation = .portrait
-
-        app = XCUIApplication()
-        app.launchEnvironment["UI_TESTING"] = "1"
-        app.launch()
-
-        XCTAssertTrue(app.wait(for: .runningForeground, timeout: 20.0), "App should be running in the foreground")
-
-        let tabBar = app.tabBars.firstMatch
-        XCTAssertTrue(tabBar.waitForExistence(timeout: 20.0), "Tab bar should appear after splash screen")
-    }
-
-    override func tearDownWithError() throws {
-        if app.state != .notRunning {
-            app.terminate()
-        }
-        XCUIDevice.shared.orientation = .portrait
-        app = nil
-    }
+final class CategoriesUITests: BaseUITestCase {
 
     // MARK: - Helper Methods
 
@@ -34,24 +11,6 @@ final class CategoriesUITests: XCTestCase {
         categoriesTab.tap()
     }
 
-    private func waitForArticleDetail(timeout: TimeInterval = 8) -> Bool {
-        let detailScrollView = app.scrollViews["articleDetailScrollView"]
-        if detailScrollView.waitForExistence(timeout: timeout) {
-            return true
-        }
-
-        let backButton = app.buttons["backButton"]
-        return backButton.waitForExistence(timeout: 2)
-    }
-
-    private func navigateBack() {
-        let backButton = app.buttons["backButton"]
-        if backButton.exists {
-            backButton.tap()
-        } else {
-            app.swipeRight()
-        }
-    }
 
     private func categoryChipsScrollView() -> XCUIElement {
         let chipsScrollView = app.scrollViews["categoryChipsScrollView"]
@@ -74,12 +33,6 @@ final class CategoriesUITests: XCTestCase {
         return false
     }
 
-    private func isElementVisible(_ element: XCUIElement) -> Bool {
-        guard element.exists else { return false }
-        let frame = element.frame
-        guard !frame.isEmpty else { return false }
-        return app.windows.element(boundBy: 0).frame.intersects(frame)
-    }
 
     /// Scroll horizontally to find and tap a category button
     /// - Parameter category: The category name to find and tap

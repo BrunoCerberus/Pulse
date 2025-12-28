@@ -1,29 +1,6 @@
 import XCTest
 
-final class BookmarksUITests: XCTestCase {
-    var app: XCUIApplication!
-
-    override func setUpWithError() throws {
-        continueAfterFailure = false
-        XCUIDevice.shared.orientation = .portrait
-
-        app = XCUIApplication()
-        app.launchEnvironment["UI_TESTING"] = "1"
-        app.launch()
-
-        XCTAssertTrue(app.wait(for: .runningForeground, timeout: 20.0), "App should be running in the foreground")
-
-        let tabBar = app.tabBars.firstMatch
-        XCTAssertTrue(tabBar.waitForExistence(timeout: 20.0), "Tab bar should appear after splash screen")
-    }
-
-    override func tearDownWithError() throws {
-        if app.state != .notRunning {
-            app.terminate()
-        }
-        XCUIDevice.shared.orientation = .portrait
-        app = nil
-    }
+final class BookmarksUITests: BaseUITestCase {
 
     // MARK: - Helper Methods
 
@@ -325,31 +302,15 @@ final class BookmarksUITests: XCTestCase {
     // MARK: - Loading State Tests
 
     func testLoadingStateShowsProgress() throws {
-        // Launch fresh to catch loading state
-        app.terminate()
-        app = XCUIApplication()
-        app.launchEnvironment["UI_TESTING"] = "1"
-        app.launch()
-
-        XCTAssertTrue(app.wait(for: .runningForeground, timeout: 20.0), "App should be running in the foreground")
-
-        let tabBar = app.tabBars.firstMatch
-        XCTAssertTrue(tabBar.waitForExistence(timeout: 20.0), "Tab bar should appear")
-
-        // Navigate to Bookmarks immediately
         navigateToBookmarks()
 
         // Check for loading text, empty state, or bookmarks
-        let loadingText = app.staticTexts["Loading bookmarks..."]
-        let errorText = app.staticTexts["Unable to Load Bookmarks"]
         let noBookmarksText = app.staticTexts["No Bookmarks"]
         let savedArticlesText = app.staticTexts.matching(NSPredicate(format: "label CONTAINS[c] 'saved articles'")).firstMatch
 
         // One of these should appear
-        let contentShown = loadingText.waitForExistence(timeout: 3) ||
-            noBookmarksText.waitForExistence(timeout: 5) ||
-            savedArticlesText.waitForExistence(timeout: 5) ||
-            errorText.waitForExistence(timeout: 3)
+        let contentShown = noBookmarksText.waitForExistence(timeout: Self.defaultTimeout) ||
+            savedArticlesText.waitForExistence(timeout: Self.defaultTimeout)
 
         XCTAssertTrue(contentShown, "Loading state, empty state, or bookmarks should appear")
     }

@@ -1,40 +1,8 @@
 import XCTest
 
-final class PulseSearchUITests: XCTestCase {
-    var app: XCUIApplication!
-
-    override func setUpWithError() throws {
-        continueAfterFailure = false
-        XCUIDevice.shared.orientation = .portrait
-
-        app = XCUIApplication()
-        app.launchEnvironment["UI_TESTING"] = "1"
-        app.launch()
-
-        // Wait for app to be fully running and splash screen to complete
-        XCTAssertTrue(app.wait(for: .runningForeground, timeout: 20.0), "App should be running in the foreground")
-
-        // Wait for tab bar to appear (indicates splash screen is done)
-        let tabBar = app.tabBars.firstMatch
-        XCTAssertTrue(tabBar.waitForExistence(timeout: 20.0), "Tab bar should appear after splash screen")
-    }
-
-    override func tearDownWithError() throws {
-        if app.state != .notRunning {
-            app.terminate()
-        }
-        XCUIDevice.shared.orientation = .portrait
-        app = nil
-    }
+final class PulseSearchUITests: BaseUITestCase {
 
     // MARK: - Helper Methods
-
-    /// Navigate to Search tab (handles role: .search accessibility)
-    private func navigateToSearchTab() {
-        let searchTab = app.tabBars.buttons.matching(NSPredicate(format: "label CONTAINS[c] 'search' OR identifier CONTAINS[c] 'search'")).firstMatch
-        XCTAssertTrue(searchTab.waitForExistence(timeout: 5), "Search tab should exist")
-        searchTab.tap()
-    }
 
     /// Dismiss keyboard if visible
     private func dismissKeyboard() {
