@@ -1,13 +1,9 @@
 import XCTest
 
-/// Optimized base class for UI tests that minimizes app launch overhead.
-/// Uses class-level setup to launch app once per test class instead of per test.
+/// Base class for UI tests that standardizes launch configuration and isolation.
 class BaseUITestCase: XCTestCase {
-    /// Shared app instance - launched once per test class
-    static var app: XCUIApplication!
-
-    /// Tracks if app was launched for this class
-    private static var isAppLaunched = false
+    /// App instance - launched per test for isolation
+    var app: XCUIApplication!
 
     /// Default timeout for element existence checks (reduced from 20s)
     static let defaultTimeout: TimeInterval = 8
@@ -15,52 +11,26 @@ class BaseUITestCase: XCTestCase {
     /// Short timeout for quick checks
     static let shortTimeout: TimeInterval = 3
 
-    /// Instance accessor for the shared app
-    var app: XCUIApplication {
-        Self.app
-    }
-
-    // MARK: - Class-level Setup (runs once per test class)
-
-    override class func setUp() {
-        super.setUp()
-
-        // Launch app once for entire test class
-        if !isAppLaunched {
-            app = XCUIApplication()
-
-            // Speed optimizations
-            app.launchEnvironment["UI_TESTING"] = "1"
-            app.launchEnvironment["DISABLE_ANIMATIONS"] = "1"
-
-            // Launch arguments to speed up tests
-            app.launchArguments += ["-UIViewAnimationDuration", "0.01"]
-            app.launchArguments += ["-CATransactionAnimationDuration", "0.01"]
-
-            app.launch()
-            isAppLaunched = true
-
-            // Wait for app to be ready (once per class)
-            _ = app.wait(for: .runningForeground, timeout: 15.0)
-            _ = app.tabBars.firstMatch.waitForExistence(timeout: 15.0)
-        }
-    }
-
-    override class func tearDown() {
-        // Terminate app after all tests in this class complete
-        if isAppLaunched, app?.state != .notRunning {
-            app.terminate()
-        }
-        isAppLaunched = false
-        app = nil
-        super.tearDown()
-    }
-
     // MARK: - Instance-level Setup (runs before each test)
 
     override func setUpWithError() throws {
         continueAfterFailure = false
         XCUIDevice.shared.orientation = .portrait
+
+        app = XCUIApplication()
+
+        // Speed optimizations
+        app.launchEnvironment["UI_TESTING"] = "1"
+        app.launchEnvironment["DISABLE_ANIMATIONS"] = "1"
+
+        // Launch arguments to speed up tests
+        app.launchArguments += ["-UIViewAnimationDuration", "0.01"]
+        app.launchArguments += ["-CATransactionAnimationDuration", "0.01"]
+
+        app.launch()
+
+        _ = app.wait(for: .runningForeground, timeout: 15.0)
+        _ = app.tabBars.firstMatch.waitForExistence(timeout: 15.0)
 
         // Ensure app is in a clean state
         resetToHomeTab()
@@ -68,6 +38,10 @@ class BaseUITestCase: XCTestCase {
 
     override func tearDownWithError() throws {
         XCUIDevice.shared.orientation = .portrait
+        if app?.state != .notRunning {
+            app.terminate()
+        }
+        app = nil
     }
 
     // MARK: - Navigation Helpers
