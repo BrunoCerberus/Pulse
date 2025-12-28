@@ -22,6 +22,7 @@ struct SettingsView: View {
                 .ignoresSafeArea()
 
             List {
+                accountSection
                 premiumSection
                 topicsSection
                 notificationsSection
@@ -48,6 +49,21 @@ struct SettingsView: View {
             }
         } message: {
             Text("This will remove all articles from your reading history. This action cannot be undone.")
+        }
+        .alert("Sign Out?", isPresented: Binding(
+            get: { viewModel.viewState.showSignOutConfirmation },
+            set: { _ in viewModel.handle(event: .onCancelSignOut) }
+        )) {
+            Button("Cancel", role: .cancel) {
+                HapticManager.shared.tap()
+                viewModel.handle(event: .onCancelSignOut)
+            }
+            Button("Sign Out", role: .destructive) {
+                HapticManager.shared.notification(.warning)
+                viewModel.handle(event: .onConfirmSignOut)
+            }
+        } message: {
+            Text("Are you sure you want to sign out of your account?")
         }
         .onAppear {
             viewModel.handle(event: .onAppear)
@@ -265,6 +281,61 @@ struct SettingsView: View {
                 Label("View on GitHub", systemImage: "link")
             }
         }
+    }
+
+    private var accountSection: some View {
+        Section {
+            if let user = viewModel.viewState.currentUser {
+                HStack(spacing: Spacing.md) {
+                    ZStack {
+                        Circle()
+                            .fill(Color.blue.opacity(0.15))
+                            .frame(width: 48, height: 48)
+
+                        Text(userInitial(for: user))
+                            .font(Typography.headlineLarge)
+                            .foregroundStyle(.blue)
+                    }
+
+                    VStack(alignment: .leading, spacing: Spacing.xxs) {
+                        if let displayName = user.displayName {
+                            Text(displayName)
+                                .font(Typography.headlineMedium)
+                                .foregroundStyle(.primary)
+                        }
+
+                        if let email = user.email {
+                            Text(email)
+                                .font(Typography.captionLarge)
+                                .foregroundStyle(.secondary)
+                        }
+                    }
+
+                    Spacer()
+                }
+                .padding(.vertical, Spacing.xs)
+
+                Button(role: .destructive) {
+                    HapticManager.shared.buttonPress()
+                    viewModel.handle(event: .onSignOutTapped)
+                } label: {
+                    Label("Sign Out", systemImage: "rectangle.portrait.and.arrow.right")
+                }
+            }
+        } header: {
+            Text("Account")
+                .font(Typography.captionLarge)
+        }
+    }
+
+    private func userInitial(for user: AuthUser) -> String {
+        if let displayName = user.displayName, let first = displayName.first {
+            return String(first).uppercased()
+        }
+        if let email = user.email, let first = email.first {
+            return String(first).uppercased()
+        }
+        return "U"
     }
 }
 

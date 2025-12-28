@@ -12,15 +12,21 @@ final class SettingsViewModel: CombineViewModel, ObservableObject {
     private let serviceLocator: ServiceLocator
     private let interactor: SettingsDomainInteractor
     private let themeManager: ThemeManager
+    private let authenticationManager: AuthenticationManager
+    private var authService: AuthService?
+    @Published private var showSignOutConfirmation: Bool = false
     private var cancellables = Set<AnyCancellable>()
 
     init(
         serviceLocator: ServiceLocator,
-        themeManager: ThemeManager = .shared
+        themeManager: ThemeManager = .shared,
+        authenticationManager: AuthenticationManager = .shared
     ) {
         self.serviceLocator = serviceLocator
         interactor = SettingsDomainInteractor(serviceLocator: serviceLocator)
         self.themeManager = themeManager
+        self.authenticationManager = authenticationManager
+        authService = try? serviceLocator.retrieve(AuthService.self)
         setupBindings()
     }
 
@@ -53,7 +59,29 @@ final class SettingsViewModel: CombineViewModel, ObservableObject {
             interactor.dispatch(action: .clearReadingHistory)
         case .onCancelClearHistory:
             interactor.dispatch(action: .setShowClearHistoryConfirmation(false))
+        case .onSignOutTapped:
+            showSignOutConfirmation = true
+        case .onConfirmSignOut:
+            handleSignOut()
+        case .onCancelSignOut:
+            showSignOutConfirmation = false
         }
+    }
+
+    private func handleSignOut() {
+        guard let authService else { return }
+        authService.signOut()
+            .receive(on: DispatchQueue.main)
+            .sink(
+                receiveCompletion: { [weak self] completion in
+                    self?.showSignOutConfirmation = false
+                    if case let .failure(error) = completion {
+                        Logger.shared.service("Sign out failed: \(error.localizedDescription)", level: .error)
+                    }
+                },
+                receiveValue: { _ in }
+            )
+            .store(in: &cancellables)
     }
 
     private func handleAddMutedSource() {
@@ -69,13 +97,22 @@ final class SettingsViewModel: CombineViewModel, ObservableObject {
     }
 
     private func setupBindings() {
-        Publishers.CombineLatest3(
+        Publishers.CombineLatest4(
             interactor.statePublisher,
             themeManager.$isDarkMode,
-            themeManager.$useSystemTheme
+            themeManager.$useSystemTheme,
+            $showSignOutConfirmation
         )
-        .map { state, isDarkMode, useSystemTheme in
-            SettingsViewState(
+        .combineLatest(authenticationManager.authStatePublisher)
+        .map { combined, authState in
+            let (state, isDarkMode, useSystemTheme, showSignOut) = combined
+            let currentUser: AuthUser? = {
+                if case let .authenticated(user) = authState {
+                    return user
+                }
+                return nil
+            }()
+            return SettingsViewState(
                 followedTopics: state.preferences.followedTopics,
                 allTopics: NewsCategory.allCases,
                 mutedSources: state.preferences.mutedSources,
@@ -86,6 +123,8 @@ final class SettingsViewModel: CombineViewModel, ObservableObject {
                 useSystemTheme: useSystemTheme,
                 isLoading: state.isLoading,
                 showClearHistoryConfirmation: state.showClearHistoryConfirmation,
+                showSignOutConfirmation: showSignOut,
+                currentUser: currentUser,
                 errorMessage: state.error
             )
         }
@@ -105,6 +144,8 @@ struct SettingsViewState: Equatable {
     var useSystemTheme: Bool
     var isLoading: Bool
     var showClearHistoryConfirmation: Bool
+    var showSignOutConfirmation: Bool
+    var currentUser: AuthUser?
     var errorMessage: String?
 
     static var initial: SettingsViewState {
@@ -119,6 +160,8 @@ struct SettingsViewState: Equatable {
             useSystemTheme: true,
             isLoading: false,
             showClearHistoryConfirmation: false,
+            showSignOutConfirmation: false,
+            currentUser: nil,
             errorMessage: nil
         )
     }
@@ -138,4 +181,7 @@ enum SettingsViewEvent: Equatable {
     case onClearReadingHistory
     case onConfirmClearHistory
     case onCancelClearHistory
+    case onSignOutTapped
+    case onConfirmSignOut
+    case onCancelSignOut
 }
