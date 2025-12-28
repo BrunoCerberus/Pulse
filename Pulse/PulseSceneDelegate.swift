@@ -165,8 +165,13 @@ final class PulseSceneDelegate: UIResponder, UIWindowSceneDelegate {
      */
     private func setupServices() {
         #if DEBUG
-            // Check if running in test environment
-            if ProcessInfo.processInfo.environment["XCTestConfigurationFilePath"] != nil {
+            // Check if running in test environment (unit tests or UI tests)
+            // XCTestConfigurationFilePath is set for unit tests
+            // UI_TESTING is set by UI tests via launchEnvironment
+            let isUnitTesting = ProcessInfo.processInfo.environment["XCTestConfigurationFilePath"] != nil
+            let isUITesting = ProcessInfo.processInfo.environment["UI_TESTING"] == "1"
+
+            if isUnitTesting || isUITesting {
                 // Use mock services for tests
                 serviceLocator.register(StorageService.self, instance: MockStorageService())
                 serviceLocator.register(NewsService.self, instance: MockNewsService())
