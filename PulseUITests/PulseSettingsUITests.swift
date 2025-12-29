@@ -52,7 +52,7 @@ final class PulseSettingsUITests: BaseUITestCase {
         guard let scrollView = scrollContainer() else {
             for _ in 0..<maxSwipes {
                 app.swipeUp()
-                Thread.sleep(forTimeInterval: 0.3)
+                wait(for: 0.3)
                 if element.exists && element.isHittable {
                     return true
                 }
@@ -65,7 +65,7 @@ final class PulseSettingsUITests: BaseUITestCase {
                 return true
             }
             scrollView.swipeUp()
-            Thread.sleep(forTimeInterval: 0.3)
+            wait(for: 0.3)
         }
 
         return element.exists && element.isHittable
@@ -81,7 +81,7 @@ final class PulseSettingsUITests: BaseUITestCase {
         XCTAssertTrue(navigationTitle.waitForExistence(timeout: Self.defaultTimeout), "Settings navigation should exist")
 
         // Wait for settings content to load
-        Thread.sleep(forTimeInterval: 1)
+        wait(for: 1)
 
         // Test Account section first (it's at the top)
         let accountSection = app.staticTexts["Account"]
@@ -129,7 +129,7 @@ final class PulseSettingsUITests: BaseUITestCase {
         navigateToSettings()
 
         // Wait for settings content to load
-        Thread.sleep(forTimeInterval: 1)
+        wait(for: 1)
 
         let topicsSection = app.staticTexts["Followed Topics"]
         guard topicsSection.waitForExistence(timeout: Self.defaultTimeout) else {
@@ -156,7 +156,7 @@ final class PulseSettingsUITests: BaseUITestCase {
         let technologyRow = app.buttons.matching(NSPredicate(format: "label CONTAINS[c] 'Technology'")).firstMatch
         if technologyRow.exists {
             technologyRow.tap()
-            Thread.sleep(forTimeInterval: 0.5)
+            wait(for: 0.5)
             technologyRow.tap()
         }
 
@@ -182,7 +182,7 @@ final class PulseSettingsUITests: BaseUITestCase {
 
         // Test toggle functionality
         notificationsToggle.tap()
-        Thread.sleep(forTimeInterval: 0.5)
+        wait(for: 0.5)
 
         // Test dependency - breaking news should be disabled when notifications are off
         let notificationsEnabled = isSwitchOn(notificationsToggle)
@@ -205,14 +205,14 @@ final class PulseSettingsUITests: BaseUITestCase {
         let wasSystemThemeOn = isSwitchOn(systemThemeToggle)
         setSwitch(systemThemeToggle, to: false)
         if wasSystemThemeOn {
-            Thread.sleep(forTimeInterval: 0.5)
+            wait(for: 0.5)
         }
 
         // Toggle Dark Mode
         let darkModeToggle = app.switches["Dark Mode"]
         if darkModeToggle.waitForExistence(timeout: 3) {
             darkModeToggle.tap()
-            Thread.sleep(forTimeInterval: 0.5)
+            wait(for: 0.5)
             darkModeToggle.tap()
         }
 
@@ -238,7 +238,7 @@ final class PulseSettingsUITests: BaseUITestCase {
         let mutedSourcesButton = app.buttons.matching(NSPredicate(format: "label CONTAINS[c] 'Muted Sources'")).firstMatch
         if mutedSourcesButton.waitForExistence(timeout: 5) {
             mutedSourcesButton.tap()
-            Thread.sleep(forTimeInterval: 0.5)
+            wait(for: 0.5)
 
             let addSourceField = app.textFields["Add source..."]
             XCTAssertTrue(addSourceField.waitForExistence(timeout: 3), "Add source field should appear")
@@ -250,7 +250,7 @@ final class PulseSettingsUITests: BaseUITestCase {
         let mutedKeywordsButton = app.buttons.matching(NSPredicate(format: "label CONTAINS[c] 'Muted Keywords'")).firstMatch
         if mutedKeywordsButton.waitForExistence(timeout: 5) {
             mutedKeywordsButton.tap()
-            Thread.sleep(forTimeInterval: 0.5)
+            wait(for: 0.5)
 
             let addKeywordField = app.textFields["Add keyword..."]
             XCTAssertTrue(addKeywordField.waitForExistence(timeout: 3), "Add keyword field should appear")
@@ -296,7 +296,7 @@ final class PulseSettingsUITests: BaseUITestCase {
         navigateToSettings()
 
         // Wait for settings content to load
-        Thread.sleep(forTimeInterval: 1)
+        wait(for: 1)
 
         let subscriptionSection = app.staticTexts["Subscription"]
         guard subscriptionSection.waitForExistence(timeout: Self.defaultTimeout) else {
@@ -318,7 +318,7 @@ final class PulseSettingsUITests: BaseUITestCase {
         let premiumButton = app.buttons.matching(NSPredicate(format: "label CONTAINS[c] 'Premium' OR label CONTAINS[c] 'Go Premium'")).firstMatch
         if premiumButton.waitForExistence(timeout: 5) {
             premiumButton.tap()
-            Thread.sleep(forTimeInterval: 1)
+            wait(for: 1)
 
             // Dismiss if paywall appeared
             let closeButton = app.buttons["xmark"]
@@ -401,7 +401,7 @@ final class PulseSettingsUITests: BaseUITestCase {
 
         // Tap to toggle
         notificationsToggle.tap()
-        Thread.sleep(forTimeInterval: 1.0)
+        wait(for: 1.0)
 
         let toggledValue = notificationsToggle.value as? String ?? "unknown"
 

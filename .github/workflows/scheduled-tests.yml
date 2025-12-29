@@ -193,7 +193,6 @@ jobs:
           -resultBundlePath test-results/${{ matrix.artifact-name }}.xcresult \
           -disableAutomaticPackageResolution \
           -retry-tests-on-failure \
-          -test-iterations 2 \
           | tee /tmp/test_output.log
         TEST_EXIT_CODE=$?
         grep -E "(Test run.*passed|Test run.*failed)" /tmp/test_output.log | tail -5 || echo "${{ matrix.test-name }} completed"

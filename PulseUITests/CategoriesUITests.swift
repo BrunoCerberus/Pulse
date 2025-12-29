@@ -48,7 +48,7 @@ final class CategoriesUITests: BaseUITestCase {
 
         for _ in 0 ..< 6 {
             scrollView.swipeLeft()
-            Thread.sleep(forTimeInterval: 0.3)
+            wait(for: 0.3)
             if isElementVisible(button) {
                 button.tap()
                 return true
@@ -57,7 +57,7 @@ final class CategoriesUITests: BaseUITestCase {
 
         for _ in 0 ..< 6 {
             scrollView.swipeRight()
-            Thread.sleep(forTimeInterval: 0.3)
+            wait(for: 0.3)
             if isElementVisible(button) {
                 button.tap()
                 return true
@@ -107,7 +107,7 @@ final class CategoriesUITests: BaseUITestCase {
                 foundInitialState = true
                 break
             }
-            Thread.sleep(forTimeInterval: 0.5)
+            wait(for: 0.5)
         }
 
         XCTAssertTrue(foundInitialState, "Initial state should show select category prompt")
@@ -119,7 +119,7 @@ final class CategoriesUITests: BaseUITestCase {
     func testCategoryChips() throws {
         navigateToCategories()
 
-        Thread.sleep(forTimeInterval: 1)
+        wait(for: 1)
 
         // At least one category should be visible
         var foundCategory = false
@@ -153,7 +153,7 @@ final class CategoriesUITests: BaseUITestCase {
     func testCategorySelection() throws {
         navigateToCategories()
 
-        Thread.sleep(forTimeInterval: 1)
+        wait(for: 1)
 
         // Find and tap a category
         var categoryTapped = false
@@ -170,7 +170,7 @@ final class CategoriesUITests: BaseUITestCase {
             throw XCTSkip("Could not find a category to tap")
         }
 
-        Thread.sleep(forTimeInterval: 2)
+        wait(for: 2)
 
         // Content should change
         let selectCategoryText = app.staticTexts["Select a Category"]
@@ -194,7 +194,7 @@ final class CategoriesUITests: BaseUITestCase {
             }
         }
 
-        Thread.sleep(forTimeInterval: 2)
+        wait(for: 2)
 
         let navTitle = app.navigationBars["Categories"]
         XCTAssertTrue(navTitle.exists, "Navigation should work after switching categories")
@@ -206,7 +206,7 @@ final class CategoriesUITests: BaseUITestCase {
     func testArticleCardNavigation() throws {
         navigateToCategories()
 
-        Thread.sleep(forTimeInterval: 1)
+        wait(for: 1)
 
         for category in categoryNames {
             let button = app.buttons[category]
@@ -216,7 +216,7 @@ final class CategoriesUITests: BaseUITestCase {
             }
         }
 
-        Thread.sleep(forTimeInterval: 3)
+        wait(for: 3)
 
         let articleCards = app.buttons.matching(NSPredicate(format: "label CONTAINS[c] 'ago' OR label CONTAINS[c] 'hour'"))
 
@@ -244,7 +244,7 @@ final class CategoriesUITests: BaseUITestCase {
             throw XCTSkip("Categories navigation did not load")
         }
 
-        Thread.sleep(forTimeInterval: 1)
+        wait(for: 1)
 
         guard selectAnyCategory(timeout: 10) else {
             throw XCTSkip("Could not select a category")
@@ -264,7 +264,7 @@ final class CategoriesUITests: BaseUITestCase {
                 contentLoaded = true
                 break
             }
-            Thread.sleep(forTimeInterval: 0.5)
+            wait(for: 0.5)
         }
 
         let scrollView = app.scrollViews.firstMatch
@@ -287,7 +287,7 @@ final class CategoriesUITests: BaseUITestCase {
     func testContentStates() throws {
         navigateToCategories()
 
-        Thread.sleep(forTimeInterval: 1)
+        wait(for: 1)
 
         for category in categoryNames {
             let button = app.buttons[category]
@@ -297,7 +297,7 @@ final class CategoriesUITests: BaseUITestCase {
             }
         }
 
-        Thread.sleep(forTimeInterval: 3)
+        wait(for: 3)
 
         let errorText = app.staticTexts["Error"]
         let noArticlesText = app.staticTexts["No Articles"]
@@ -321,20 +321,20 @@ final class CategoriesUITests: BaseUITestCase {
     func testTabSwitching() throws {
         navigateToCategories()
 
-        Thread.sleep(forTimeInterval: 1)
+        wait(for: 1)
 
         let technologyButton = app.buttons["Technology"]
         if technologyButton.exists {
             technologyButton.tap()
         }
 
-        Thread.sleep(forTimeInterval: 2)
+        wait(for: 2)
 
         let homeTab = app.tabBars.buttons["Home"]
         XCTAssertTrue(homeTab.waitForExistence(timeout: Self.shortTimeout), "Home tab should exist")
         homeTab.tap()
 
-        Thread.sleep(forTimeInterval: 1)
+        wait(for: 1)
 
         // Verify we're on Home
         let homeNav = app.navigationBars["Pulse"]
@@ -342,7 +342,7 @@ final class CategoriesUITests: BaseUITestCase {
 
         navigateToCategories()
 
-        Thread.sleep(forTimeInterval: 1)
+        wait(for: 1)
 
         let navTitle = app.navigationBars["Categories"]
         XCTAssertTrue(navTitle.waitForExistence(timeout: Self.defaultTimeout), "Categories view should load after tab switch")

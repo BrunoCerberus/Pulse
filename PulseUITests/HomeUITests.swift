@@ -57,7 +57,7 @@ final class HomeUITests: BaseUITestCase {
         // Scroll to make the card hittable if needed
         if !firstCard.isHittable {
             app.scrollViews.firstMatch.swipeUp()
-            Thread.sleep(forTimeInterval: 0.5)
+            wait(for: 0.5)
         }
 
         guard firstCard.isHittable else {

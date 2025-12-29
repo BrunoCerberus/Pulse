@@ -51,7 +51,7 @@ final class ForYouUITests: BaseUITestCase {
                 contentLoaded = true
                 break
             }
-            Thread.sleep(forTimeInterval: 0.5)
+            wait(for: 0.5)
         }
 
         if !contentLoaded {
@@ -90,7 +90,7 @@ final class ForYouUITests: BaseUITestCase {
                 contentAppeared = true
                 break
             }
-            Thread.sleep(forTimeInterval: 0.5)
+            wait(for: 0.5)
         }
 
         guard contentAppeared else {
@@ -120,7 +120,7 @@ final class ForYouUITests: BaseUITestCase {
     func testArticleCardNavigation() throws {
         navigateToForYou()
 
-        Thread.sleep(forTimeInterval: 3)
+        wait(for: 3)
 
         let articleCards = app.buttons.matching(NSPredicate(format: "label CONTAINS[c] 'ago' OR label CONTAINS[c] 'hour'"))
 
@@ -143,7 +143,7 @@ final class ForYouUITests: BaseUITestCase {
     func testScrollBehavior() throws {
         navigateToForYou()
 
-        Thread.sleep(forTimeInterval: 2)
+        wait(for: 2)
 
         let scrollView = app.scrollViews.firstMatch
         let articleCards = app.buttons.matching(NSPredicate(format: "label CONTAINS[c] 'ago'"))
@@ -151,7 +151,7 @@ final class ForYouUITests: BaseUITestCase {
         if scrollView.exists {
             // Pull to refresh
             scrollView.swipeDown()
-            Thread.sleep(forTimeInterval: 1)
+            wait(for: 1)
 
             // Infinite scroll
             if articleCards.count > 0 {
@@ -171,7 +171,7 @@ final class ForYouUITests: BaseUITestCase {
     func testErrorStateShowsTryAgainButton() throws {
         navigateToForYou()
 
-        Thread.sleep(forTimeInterval: 3)
+        wait(for: 3)
 
         let errorText = app.staticTexts["Unable to Load Feed"]
 
@@ -192,7 +192,7 @@ final class ForYouUITests: BaseUITestCase {
             throw XCTSkip("For You navigation did not load")
         }
 
-        Thread.sleep(forTimeInterval: 2)
+        wait(for: 2)
 
         let homeTab = app.tabBars.buttons["Home"]
         XCTAssertTrue(homeTab.waitForExistence(timeout: Self.shortTimeout), "Home tab should exist")
@@ -201,7 +201,7 @@ final class ForYouUITests: BaseUITestCase {
         let homeNav = app.navigationBars["Pulse"]
         XCTAssertTrue(homeNav.waitForExistence(timeout: Self.defaultTimeout), "Home should load")
 
-        Thread.sleep(forTimeInterval: 1)
+        wait(for: 1)
 
         let forYouTab = app.tabBars.buttons["For You"]
         XCTAssertTrue(forYouTab.waitForExistence(timeout: Self.shortTimeout), "For You tab should exist")
@@ -224,7 +224,7 @@ final class ForYouUITests: BaseUITestCase {
 
         if technologyRow.exists {
             technologyRow.tap()
-            Thread.sleep(forTimeInterval: 1)
+            wait(for: 1)
         }
 
         let backButton = app.navigationBars.buttons.firstMatch
@@ -235,7 +235,7 @@ final class ForYouUITests: BaseUITestCase {
 
         navigateToForYou()
 
-        Thread.sleep(forTimeInterval: 3)
+        wait(for: 3)
 
         let navTitle = app.navigationBars["For You"]
         XCTAssertTrue(navTitle.exists, "For You should be visible")
