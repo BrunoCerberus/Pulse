@@ -283,7 +283,8 @@ schemes:
       storeKitConfiguration: Pulse/StoreKit.storekit
       targets:
         - PulseTests
-        - PulseUITests
+        - name: PulseUITests
+          parallelizable: true
       environmentVariables: {}
     profile:
       config: Release
