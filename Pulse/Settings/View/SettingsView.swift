@@ -1,3 +1,4 @@
+import EntropyCore
 import SwiftUI
 
 struct SettingsView: View {
@@ -288,15 +289,7 @@ struct SettingsView: View {
         Section {
             if let user = viewModel.viewState.currentUser {
                 HStack(spacing: Spacing.md) {
-                    ZStack {
-                        Circle()
-                            .fill(Color.blue.opacity(0.15))
-                            .frame(width: 48, height: 48)
-
-                        Text(userInitial(for: user))
-                            .font(Typography.headlineLarge)
-                            .foregroundStyle(.blue)
-                    }
+                    profileImage(for: user)
 
                     VStack(alignment: .leading, spacing: Spacing.xxs) {
                         if let displayName = user.displayName {
@@ -337,6 +330,32 @@ struct SettingsView: View {
             return String(first).uppercased()
         }
         return "U"
+    }
+
+    @ViewBuilder
+    private func profileImage(for user: AuthUser) -> some View {
+        if let photoURL = user.photoURL {
+            AsyncImageViewer(url: photoURL) {
+                initialPlaceholder(for: user)
+            }
+            .scaledToFill()
+            .frame(width: 64, height: 64)
+            .clipShape(Circle())
+        } else {
+            initialPlaceholder(for: user)
+        }
+    }
+
+    private func initialPlaceholder(for user: AuthUser) -> some View {
+        ZStack {
+            Circle()
+                .fill(Color.blue.opacity(0.15))
+                .frame(width: 64, height: 64)
+
+            Text(userInitial(for: user))
+                .font(.system(size: 24, weight: .semibold))
+                .foregroundStyle(.blue)
+        }
     }
 }
 
