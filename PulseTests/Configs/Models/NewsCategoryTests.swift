@@ -25,7 +25,7 @@ struct NewsCategoryTests {
             (NewsCategory.technology, "cpu", Color.purple, "technology", "technology"),
             (NewsCategory.science, "atom", Color.orange, "science", "science"),
             (NewsCategory.health, "heart.text.square", Color.red, "health", "society"),
-            (NewsCategory.sports, "sportscourt", Color.mint, "sports", "sport"),
+            (NewsCategory.sports, "sportscourt", Color.cyan, "sports", "sport"),
             (NewsCategory.entertainment, "film", Color.pink, "entertainment", "culture"),
         ]
     )
