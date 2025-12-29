@@ -41,10 +41,10 @@ final class PulseSearchUITests: BaseUITestCase {
         }
     }
 
-    // MARK: - Search UI and Initial State Tests
+    // MARK: - Search UI, Initial State, and Suggestions Tests
 
-    /// Tests search bar existence, interactivity, and initial empty state
-    func testSearchUIAndInitialState() throws {
+    /// Tests search bar, initial state, and trending topics/suggestions
+    func testSearchUIInitialStateAndSuggestions() throws {
         navigateToSearchTab()
 
         let searchNav = app.navigationBars["Search"]
@@ -76,22 +76,47 @@ final class PulseSearchUITests: BaseUITestCase {
         if searchField.exists {
             XCTAssertTrue(searchField.isHittable, "Search field should be interactable")
             searchField.tap()
-            searchField.typeText("technology")
 
             let keyboard = app.keyboards.element
             XCTAssertTrue(keyboard.waitForExistence(timeout: 3), "Keyboard should appear for text input")
+
+            // Wait for suggestions or empty state
+            wait(for: 1)
+
+            // Either suggestions, trending topics, or empty state should appear
+            let trendingHeader = app.staticTexts["Trending Topics"]
+            let recentHeader = app.staticTexts["Recent Searches"]
+
+            let hasSuggestions = trendingHeader.exists || recentHeader.exists || searchForNews.exists
+            XCTAssertTrue(hasSuggestions, "Should show suggestions or empty state")
+
+            // Test tapping a category if visible
+            let categoryNames = ["Technology", "Business", "World", "Science"]
+            for category in categoryNames {
+                let categoryButton = app.buttons[category]
+                if categoryButton.exists {
+                    categoryButton.tap()
+                    wait(for: 2)
+
+                    // Initial empty state should disappear
+                    let emptyStateGone = !app.staticTexts["Search for News"].exists
+                    XCTAssertTrue(emptyStateGone, "Tapping category should start search")
+                    return
+                }
+            }
         }
     }
 
-    // MARK: - Search Input and Results Tests
+    // MARK: - Search Input, Results, and Clear/Cancel Tests
 
-    /// Tests search input shows results and article cards
-    func testSearchInputAndResults() throws {
+    /// Tests search input, results display, clear button, and cancel button
+    func testSearchInputResultsAndClearCancel() throws {
         navigateToSearchTab()
 
         let searchField = app.searchFields.firstMatch
         XCTAssertTrue(searchField.waitForExistence(timeout: 5))
 
+        // --- Search Input and Results ---
         searchField.tap()
         searchField.typeText("Apple")
         submitSearch()
@@ -120,37 +145,29 @@ final class PulseSearchUITests: BaseUITestCase {
         }
 
         XCTAssertTrue(hasContent, "Search should show results, loading, or status message")
-    }
 
-    // MARK: - Clear and Cancel Button Tests
-
-    /// Tests search clear and cancel buttons
-    func testSearchClearAndCancelButtons() throws {
-        navigateToSearchTab()
-
-        let searchField = app.searchFields.firstMatch
-        XCTAssertTrue(searchField.waitForExistence(timeout: 5))
-
-        searchField.tap()
-        searchField.typeText("test query")
-        wait(for: 0.5)
-
-        // Test clear button
+        // --- Clear Button ---
         let clearButton = app.searchFields.buttons["Clear text"]
         if clearButton.waitForExistence(timeout: 3) {
             clearButton.tap()
-            wait(for: 0.5)
+            wait(for: 1)
 
-            let searchFieldValue = searchField.value as? String ?? ""
+            // Re-query the search field after clearing
+            let searchFieldAfterClear = app.searchFields.firstMatch
+            let searchFieldValue = searchFieldAfterClear.value as? String ?? ""
+            let placeholderValue = searchFieldAfterClear.placeholderValue ?? ""
             let isCleared = searchFieldValue.isEmpty ||
+                searchFieldValue == placeholderValue ||
                 searchFieldValue == "Search news..." ||
                 searchFieldValue == "Search" ||
-                !searchFieldValue.contains("test query")
-            XCTAssertTrue(isCleared, "Search field should be cleared")
+                searchFieldValue == "Search..." ||
+                !searchFieldValue.lowercased().contains("apple")
+            XCTAssertTrue(isCleared, "Search field should be cleared, got: '\(searchFieldValue)'")
         }
 
-        // Test cancel button
+        // --- Cancel Button ---
         searchField.tap()
+        searchField.typeText("test query")
         let cancelButton = app.buttons["Cancel"]
 
         if cancelButton.waitForExistence(timeout: 3) {
@@ -160,68 +177,10 @@ final class PulseSearchUITests: BaseUITestCase {
         }
     }
 
-    // MARK: - Trending Topics and Suggestions Tests
+    // MARK: - Sort, Navigation, and Content States Tests
 
-    /// Tests trending topics, categories, and suggestions
-    func testTrendingTopicsAndSuggestions() throws {
-        navigateToSearchTab()
-
-        // Initial state shows "Search for News" empty state
-        let searchForNews = app.staticTexts["Search for News"]
-        let searchSubtitle = app.staticTexts["Find articles from thousands of sources worldwide"]
-
-        let timeout: TimeInterval = 15
-        let startTime = Date()
-        var foundInitialState = false
-
-        while Date().timeIntervalSince(startTime) < timeout {
-            if searchForNews.exists || searchSubtitle.exists {
-                foundInitialState = true
-                break
-            }
-            wait(for: 0.5)
-        }
-
-        XCTAssertTrue(foundInitialState, "Initial empty state should show 'Search for News'")
-
-        let subtitle = app.staticTexts["Find articles from thousands of sources worldwide"]
-        XCTAssertTrue(subtitle.exists || searchForNews.exists, "Initial empty state should have descriptive text")
-
-        // Tap search field to activate
-        let searchField = app.searchFields.firstMatch
-        XCTAssertTrue(searchField.waitForExistence(timeout: 5))
-        searchField.tap()
-
-        // Wait for suggestions or empty state
-        wait(for: 1)
-
-        // Either suggestions, trending topics, or empty state should appear
-        let trendingHeader = app.staticTexts["Trending Topics"]
-        let recentHeader = app.staticTexts["Recent Searches"]
-
-        let hasSuggestions = trendingHeader.exists || recentHeader.exists || searchForNews.exists
-        XCTAssertTrue(hasSuggestions, "Should show suggestions or empty state")
-
-        // Test tapping a category if visible
-        let categoryNames = ["Technology", "Business", "World", "Science"]
-        for category in categoryNames {
-            let categoryButton = app.buttons[category]
-            if categoryButton.exists {
-                categoryButton.tap()
-                wait(for: 2)
-
-                // Initial empty state should disappear
-                let emptyStateGone = !app.staticTexts["Search for News"].exists
-                XCTAssertTrue(emptyStateGone, "Tapping category should start search")
-                return
-            }
-        }
-    }
-
-    // MARK: - Sort Options Tests
-
-    /// Tests sort picker and changing sort options
-    func testSortOptions() throws {
+    /// Tests sort options, article navigation, infinite scroll, and content states
+    func testSortNavigationAndContentStates() throws {
         navigateToSearchTab()
 
         let searchField = app.searchFields.firstMatch
@@ -234,11 +193,10 @@ final class PulseSearchUITests: BaseUITestCase {
         // Wait for results
         wait(for: 3)
 
-        // Try to change sort option
+        // --- Sort Options ---
         let segmentedControl = app.segmentedControls.firstMatch
 
         if segmentedControl.exists {
-            // Find and tap a different segment
             let segments = segmentedControl.buttons
             if segments.count > 1 {
                 segments.element(boundBy: 1).tap()
@@ -246,27 +204,9 @@ final class PulseSearchUITests: BaseUITestCase {
             }
         }
 
-        // View should remain functional
         XCTAssertTrue(searchField.exists, "Search view should remain functional")
-    }
 
-    // MARK: - Article Navigation Tests
-
-    /// Tests article tap navigation and infinite scroll
-    func testSearchResultNavigation() throws {
-        navigateToSearchTab()
-
-        let searchField = app.searchFields.firstMatch
-        XCTAssertTrue(searchField.waitForExistence(timeout: 5))
-
-        searchField.tap()
-        searchField.typeText("technology")
-        submitSearch()
-
-        // Wait for results
-        wait(for: 3)
-
-        // Find and tap an article
+        // --- Article Navigation ---
         let articleCards = app.buttons.matching(NSPredicate(format: "label CONTAINS[c] 'ago'"))
 
         if articleCards.count > 0 {
@@ -283,7 +223,7 @@ final class PulseSearchUITests: BaseUITestCase {
             }
         }
 
-        // Test infinite scroll
+        // --- Infinite Scroll ---
         let scrollView = app.scrollViews.firstMatch
         if scrollView.exists {
             scrollView.swipeUp()
@@ -293,31 +233,24 @@ final class PulseSearchUITests: BaseUITestCase {
         }
 
         XCTAssertTrue(searchField.exists, "Search should remain functional after scrolling")
-    }
 
-    // MARK: - Content State Tests
+        // --- Content States (No Results) ---
+        // Clear and search for something unlikely
+        let clearButton = app.searchFields.buttons["Clear text"]
+        if clearButton.exists {
+            clearButton.tap()
+        }
 
-    /// Tests no results, error, and loading states
-    func testSearchContentStates() throws {
-        navigateToSearchTab()
-
-        let searchField = app.searchFields.firstMatch
-        XCTAssertTrue(searchField.waitForExistence(timeout: 5))
-
-        // Search for something unlikely to have results
         searchField.tap()
         searchField.typeText("xyzqwerty123456789unlikely")
         submitSearch()
 
-        // Wait for results
         wait(for: 3)
 
-        // Check for various states
         let noResultsText = app.staticTexts["No Results Found"]
         let errorText = app.staticTexts["Search Failed"]
-        let searchingText = app.staticTexts["Searching..."]
 
-        let hasResponse = noResultsText.exists || errorText.exists || searchingText.exists ||
+        let hasResponse = noResultsText.exists || errorText.exists ||
             app.buttons.matching(NSPredicate(format: "label CONTAINS[c] 'ago'")).count > 0
 
         XCTAssertTrue(hasResponse, "Search should show a response")

@@ -69,10 +69,11 @@ final class CategoriesUITests: BaseUITestCase {
 
     private let categoryNames = ["World", "Business", "Technology", "Science", "Health", "Sports", "Entertainment"]
 
-    // MARK: - Navigation Tests
+    // MARK: - Navigation, Initial State, and Chips Tests
 
-    /// Tests tab navigation and title
-    func testCategoriesNavigation() throws {
+    /// Tests tab navigation, initial state, and category chips
+    func testNavigationInitialStateAndChips() throws {
+        // --- Navigation ---
         let categoriesTab = app.tabBars.buttons["Categories"]
         XCTAssertTrue(categoriesTab.exists, "Categories tab should exist")
 
@@ -82,18 +83,8 @@ final class CategoriesUITests: BaseUITestCase {
 
         let navTitle = app.navigationBars["Categories"]
         XCTAssertTrue(navTitle.waitForExistence(timeout: 5), "Navigation title 'Categories' should exist")
-    }
 
-    // MARK: - Initial State Tests
-
-    /// Tests initial state shows select category prompt and helpful message
-    func testInitialState() throws {
-        navigateToCategories()
-
-        // Wait for navigation bar first
-        let navTitle = app.navigationBars["Categories"]
-        XCTAssertTrue(navTitle.waitForExistence(timeout: Self.defaultTimeout), "Categories navigation should exist")
-
+        // --- Initial State ---
         let selectCategoryText = app.staticTexts["Select a Category"]
         let noSelectionText = app.staticTexts.matching(NSPredicate(format: "label CONTAINS[c] 'Choose a category'")).firstMatch
 
@@ -111,17 +102,10 @@ final class CategoriesUITests: BaseUITestCase {
         }
 
         XCTAssertTrue(foundInitialState, "Initial state should show select category prompt")
-    }
 
-    // MARK: - Category Chips Tests
-
-    /// Tests category chips exist and are horizontally scrollable
-    func testCategoryChips() throws {
-        navigateToCategories()
-
+        // --- Category Chips ---
         wait(for: 1)
 
-        // At least one category should be visible
         var foundCategory = false
         for category in categoryNames {
             if app.staticTexts[category].exists || app.buttons[category].exists {
@@ -147,15 +131,15 @@ final class CategoriesUITests: BaseUITestCase {
         }
     }
 
-    // MARK: - Category Selection Tests
+    // MARK: - Selection, Navigation, and Scroll Tests
 
-    /// Tests selecting categories loads content and switching works
-    func testCategorySelection() throws {
+    /// Tests category selection, article navigation, scroll behavior, and content states
+    func testSelectionNavigationScrollAndContentStates() throws {
         navigateToCategories()
 
         wait(for: 1)
 
-        // Find and tap a category
+        // --- Category Selection ---
         var categoryTapped = false
         for category in categoryNames {
             let categoryButton = app.buttons[category]
@@ -187,37 +171,7 @@ final class CategoriesUITests: BaseUITestCase {
 
         XCTAssertTrue(contentChanged, "Content should change after selecting a category")
 
-        // Test switching categories
-        for category in categoryNames.reversed() {
-            if scrollToAndTapCategory(category) {
-                break
-            }
-        }
-
-        wait(for: 2)
-
-        let navTitle = app.navigationBars["Categories"]
-        XCTAssertTrue(navTitle.exists, "Navigation should work after switching categories")
-    }
-
-    // MARK: - Article Navigation Tests
-
-    /// Tests tapping article card navigates to detail
-    func testArticleCardNavigation() throws {
-        navigateToCategories()
-
-        wait(for: 1)
-
-        for category in categoryNames {
-            let button = app.buttons[category]
-            if button.exists {
-                button.tap()
-                break
-            }
-        }
-
-        wait(for: 3)
-
+        // --- Article Navigation ---
         let articleCards = app.buttons.matching(NSPredicate(format: "label CONTAINS[c] 'ago' OR label CONTAINS[c] 'hour'"))
 
         if articleCards.count > 0 {
@@ -230,45 +184,15 @@ final class CategoriesUITests: BaseUITestCase {
             let categoriesNav = app.navigationBars["Categories"]
             XCTAssertTrue(categoriesNav.waitForExistence(timeout: 5), "Should return to Categories")
         }
-    }
 
-    // MARK: - Scroll Behavior Tests
-
-    /// Tests infinite scroll and pull to refresh
-    func testScrollBehavior() throws {
-        navigateToCategories()
-
-        // Wait for navigation bar to be ready
+        // --- Scroll Behavior ---
         let navTitle = app.navigationBars["Categories"]
         guard navTitle.waitForExistence(timeout: Self.defaultTimeout) else {
             throw XCTSkip("Categories navigation did not load")
         }
 
-        wait(for: 1)
-
-        guard selectAnyCategory(timeout: 10) else {
-            throw XCTSkip("Could not select a category")
-        }
-
-        // Wait for content
-        let articlesCountText = app.staticTexts.matching(NSPredicate(format: "label CONTAINS[c] 'articles'")).firstMatch
-        let noArticlesText = app.staticTexts["No Articles"]
-        let selectCategoryText = app.staticTexts["Select a Category"]
-
-        let timeout: TimeInterval = 15
-        let startTime = Date()
-        var contentLoaded = false
-
-        while Date().timeIntervalSince(startTime) < timeout {
-            if articlesCountText.exists || noArticlesText.exists || !selectCategoryText.exists {
-                contentLoaded = true
-                break
-            }
-            wait(for: 0.5)
-        }
-
         let scrollView = app.scrollViews.firstMatch
-        if scrollView.exists && contentLoaded {
+        if scrollView.exists {
             // Test infinite scroll
             scrollView.swipeUp()
             scrollView.swipeUp()
@@ -277,42 +201,27 @@ final class CategoriesUITests: BaseUITestCase {
             scrollView.swipeDown()
         }
 
-        // Verify navigation is still visible after scrolling
         XCTAssertTrue(navTitle.exists || app.navigationBars.count > 0, "Navigation should work after scrolling")
-    }
 
-    // MARK: - Content State Tests
-
-    /// Tests content states (error, empty, articles)
-    func testContentStates() throws {
-        navigateToCategories()
-
-        wait(for: 1)
-
-        for category in categoryNames {
-            let button = app.buttons[category]
-            if button.exists {
-                button.tap()
-                break
-            }
-        }
-
-        wait(for: 3)
-
-        let errorText = app.staticTexts["Error"]
-        let noArticlesText = app.staticTexts["No Articles"]
-        let articlesCountText = app.staticTexts.matching(NSPredicate(format: "label CONTAINS[c] 'articles'")).firstMatch
-
-        // Verify appropriate state is shown
+        // --- Content States ---
         if errorText.exists {
             let tryAgainButton = app.buttons["Try Again"]
             XCTAssertTrue(tryAgainButton.exists, "Error state should have Try Again button")
         } else if noArticlesText.exists {
             let helpText = app.staticTexts["No articles found in this category."]
             XCTAssertTrue(helpText.exists, "Empty state should show helpful message")
-        } else if articlesCountText.exists {
-            XCTAssertTrue(articlesCountText.exists, "Article count should be displayed")
         }
+
+        // Test switching categories
+        for category in categoryNames.reversed() {
+            if scrollToAndTapCategory(category) {
+                break
+            }
+        }
+
+        wait(for: 2)
+
+        XCTAssertTrue(navTitle.exists, "Navigation should work after switching categories")
     }
 
     // MARK: - Tab Switching Tests
