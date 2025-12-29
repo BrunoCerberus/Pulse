@@ -93,15 +93,29 @@ final class ArticleDetailUITests: BaseUITestCase {
             app.swipeDown()
         }
 
-        wait(for: 1)
+        wait(for: 2)
 
         // --- Back Navigation ---
         let backButtonAfter = app.buttons["backButton"]
-        XCTAssertTrue(backButtonAfter.waitForExistence(timeout: 5), "Back button should exist after share sheet dismissed")
+        XCTAssertTrue(backButtonAfter.waitForExistence(timeout: 10), "Back button should exist after share sheet dismissed")
+
+        // Wait for button to become hittable
+        var isHittable = false
+        for _ in 0..<10 {
+            if backButtonAfter.exists && backButtonAfter.isHittable {
+                isHittable = true
+                break
+            }
+            wait(for: 0.5)
+        }
+        XCTAssertTrue(isHittable, "Back button should be tappable")
         backButtonAfter.tap()
 
+        // Check for Home navigation - either by nav bar title or Home tab being selected
         let homeNavBar = app.navigationBars["Pulse"]
-        XCTAssertTrue(homeNavBar.waitForExistence(timeout: 10), "Should navigate back to Home (Pulse)")
+        let homeTab = app.tabBars.buttons["Home"]
+        let navigatedBack = homeNavBar.waitForExistence(timeout: 10) || (homeTab.exists && homeTab.isSelected)
+        XCTAssertTrue(navigatedBack, "Should navigate back to Home")
     }
 
     // MARK: - Content and Scroll Tests

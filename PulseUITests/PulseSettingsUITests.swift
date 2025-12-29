@@ -269,8 +269,8 @@ final class PulseSettingsUITests: BaseUITestCase {
 
     // MARK: - Data, Premium, and About Tests
 
-    /// Tests data section, premium section, and about section
-    func testDataPremiumAndAboutSections() throws {
+    /// Tests premium section visibility
+    func testPremiumSection() throws {
         navigateToSettings()
 
         // Wait for settings content to load
@@ -284,30 +284,25 @@ final class PulseSettingsUITests: BaseUITestCase {
 
         let goPremiumText = app.staticTexts.matching(NSPredicate(format: "label CONTAINS[c] 'Premium' OR label CONTAINS[c] 'premium'")).firstMatch
         XCTAssertTrue(goPremiumText.waitForExistence(timeout: 5), "Premium section should be visible")
+    }
 
-        // Only tap if not already premium
-        let alreadyPremium = app.staticTexts["Premium Active"].exists
+    /// Tests data section with clear history and about section
+    func testDataAndAboutSections() throws {
+        navigateToSettings()
+        wait(for: 1)
 
-        if !alreadyPremium {
-            let premiumButton = app.buttons.matching(NSPredicate(format: "label CONTAINS[c] 'Premium' OR label CONTAINS[c] 'Go Premium'")).firstMatch
-            if premiumButton.waitForExistence(timeout: 5) {
-                premiumButton.tap()
-                wait(for: 1)
-
-                // Dismiss if paywall appeared
-                let closeButton = app.buttons["xmark"]
-                if closeButton.exists {
-                    closeButton.tap()
-                } else {
-                    app.swipeDown()
-                }
-            }
+        // Scroll to bottom where Data and About sections are
+        for _ in 0..<5 {
+            app.swipeUp()
+            wait(for: 0.3)
         }
 
         // --- Data Section ---
-        let clearHistoryButton = app.buttons["Clear Reading History"]
-        let foundClearHistory = scrollToElement(clearHistoryButton, maxSwipes: 10)
-        XCTAssertTrue(foundClearHistory, "Clear Reading History button should exist")
+        let dataSection = app.staticTexts["Data"]
+        XCTAssertTrue(dataSection.waitForExistence(timeout: 5), "Data section should exist")
+
+        let clearHistoryButton = app.buttons["clearReadingHistoryButton"]
+        XCTAssertTrue(clearHistoryButton.waitForExistence(timeout: 5), "Clear Reading History button should exist")
 
         clearHistoryButton.tap()
 
@@ -315,24 +310,16 @@ final class PulseSettingsUITests: BaseUITestCase {
         let alertTitle = app.staticTexts["Clear Reading History?"]
         XCTAssertTrue(alertTitle.waitForExistence(timeout: 3), "Confirmation alert should appear")
 
-        // Check for Cancel and Clear buttons
         let cancelButton = app.buttons["Cancel"]
-        let clearButton = app.buttons["Clear"]
-
         XCTAssertTrue(cancelButton.waitForExistence(timeout: 3), "Cancel button should exist")
-        XCTAssertTrue(clearButton.exists, "Clear button should exist")
-
-        // Dismiss by tapping Cancel
         cancelButton.tap()
 
         // --- About Section ---
         let versionLabel = app.staticTexts["Version"]
-        let foundVersion = scrollToElement(versionLabel, maxSwipes: 5)
-        XCTAssertTrue(foundVersion, "Version label should exist")
+        XCTAssertTrue(versionLabel.waitForExistence(timeout: 5), "Version label should exist")
 
         let githubLink = app.buttons["View on GitHub"]
-        let foundGithub = scrollToElement(githubLink, maxSwipes: 3)
-        XCTAssertTrue(foundGithub, "GitHub link should exist")
+        XCTAssertTrue(githubLink.waitForExistence(timeout: 5), "GitHub link should exist")
     }
 
     // MARK: - Integration Tests

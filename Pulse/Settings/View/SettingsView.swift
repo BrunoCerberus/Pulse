@@ -213,6 +213,7 @@ struct SettingsView: View {
             } label: {
                 Label("Clear Reading History", systemImage: "trash")
             }
+            .accessibilityIdentifier("clearReadingHistoryButton")
         }
     }
 
