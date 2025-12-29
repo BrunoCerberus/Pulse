@@ -12,67 +12,27 @@ struct DeeplinkManagerTests {
         sut.clearDeeplink()
     }
 
-    @Test("Parse home deeplink")
-    func parseHomeDeeplink() {
-        let url = URL(string: "pulse://home")!
+    // MARK: - Deeplink Parsing Tests (Consolidated)
+
+    @Test(
+        "Parse deeplinks correctly",
+        arguments: [
+            ("pulse://home", Deeplink.home),
+            ("pulse://bookmarks", Deeplink.bookmarks),
+            ("pulse://settings", Deeplink.settings),
+            ("pulse://search", Deeplink.search(query: nil)),
+            ("pulse://search?q=swift", Deeplink.search(query: "swift")),
+            ("pulse://article?id=123", Deeplink.article(id: "123")),
+            ("pulse://category?name=technology", Deeplink.category(name: "technology")),
+        ]
+    )
+    func parseDeeplinkCorrectly(urlString: String, expectedDeeplink: Deeplink) {
+        let url = URL(string: urlString)!
 
         sut.parse(url: url)
 
-        #expect(sut.currentDeeplink == .home)
-    }
-
-    @Test("Parse search deeplink with query")
-    func parseSearchDeeplinkWithQuery() {
-        let url = URL(string: "pulse://search?q=swift")!
-
-        sut.parse(url: url)
-
-        #expect(sut.currentDeeplink == .search(query: "swift"))
-    }
-
-    @Test("Parse search deeplink without query")
-    func parseSearchDeeplinkWithoutQuery() {
-        let url = URL(string: "pulse://search")!
-
-        sut.parse(url: url)
-
-        #expect(sut.currentDeeplink == .search(query: nil))
-    }
-
-    @Test("Parse bookmarks deeplink")
-    func parseBookmarksDeeplink() {
-        let url = URL(string: "pulse://bookmarks")!
-
-        sut.parse(url: url)
-
-        #expect(sut.currentDeeplink == .bookmarks)
-    }
-
-    @Test("Parse settings deeplink")
-    func parseSettingsDeeplink() {
-        let url = URL(string: "pulse://settings")!
-
-        sut.parse(url: url)
-
-        #expect(sut.currentDeeplink == .settings)
-    }
-
-    @Test("Parse article deeplink")
-    func parseArticleDeeplink() {
-        let url = URL(string: "pulse://article?id=123")!
-
-        sut.parse(url: url)
-
-        #expect(sut.currentDeeplink == .article(id: "123"))
-    }
-
-    @Test("Parse category deeplink")
-    func parseCategoryDeeplink() {
-        let url = URL(string: "pulse://category?name=technology")!
-
-        sut.parse(url: url)
-
-        #expect(sut.currentDeeplink == .category(name: "technology"))
+        #expect(sut.currentDeeplink == expectedDeeplink)
+        sut.clearDeeplink()
     }
 
     @Test("Invalid scheme is ignored")

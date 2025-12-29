@@ -150,19 +150,31 @@ final class PulseSearchUITests: BaseUITestCase {
         let clearButton = app.searchFields.buttons["Clear text"]
         if clearButton.waitForExistence(timeout: 3) {
             clearButton.tap()
-            wait(for: 1)
 
-            // Re-query the search field after clearing
-            let searchFieldAfterClear = app.searchFields.firstMatch
-            let searchFieldValue = searchFieldAfterClear.value as? String ?? ""
-            let placeholderValue = searchFieldAfterClear.placeholderValue ?? ""
-            let isCleared = searchFieldValue.isEmpty ||
-                searchFieldValue == placeholderValue ||
-                searchFieldValue == "Search news..." ||
-                searchFieldValue == "Search" ||
-                searchFieldValue == "Search..." ||
-                !searchFieldValue.lowercased().contains("apple")
-            XCTAssertTrue(isCleared, "Search field should be cleared, got: '\(searchFieldValue)'")
+            // Poll for the field to be cleared
+            let timeout: TimeInterval = 5
+            let startTime = Date()
+            var isCleared = false
+
+            while Date().timeIntervalSince(startTime) < timeout {
+                let searchFieldAfterClear = app.searchFields.firstMatch
+                let searchFieldValue = searchFieldAfterClear.value as? String ?? ""
+                let placeholderValue = searchFieldAfterClear.placeholderValue ?? ""
+
+                isCleared = searchFieldValue.isEmpty ||
+                    searchFieldValue == placeholderValue ||
+                    searchFieldValue == "Search news..." ||
+                    searchFieldValue == "Search" ||
+                    searchFieldValue == "Search..." ||
+                    !searchFieldValue.lowercased().contains("apple")
+
+                if isCleared {
+                    break
+                }
+                wait(for: 0.3)
+            }
+
+            XCTAssertTrue(isCleared, "Search field should be cleared")
         }
 
         // --- Cancel Button ---
