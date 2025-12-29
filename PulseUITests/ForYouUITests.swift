@@ -15,10 +15,11 @@ final class ForYouUITests: BaseUITestCase {
         _ = app.navigationBars["For You"].waitForExistence(timeout: Self.defaultTimeout)
     }
 
-    // MARK: - Navigation Tests
+    // MARK: - Navigation and Content Tests
 
-    /// Tests tab navigation and selection
-    func testForYouTabNavigation() throws {
+    /// Tests tab navigation and content loading (onboarding, articles, empty, or error state)
+    func testForYouNavigationAndContentLoads() throws {
+        // --- Tab Navigation ---
         let forYouTab = app.tabBars.buttons["For You"]
         XCTAssertTrue(forYouTab.exists, "For You tab should exist")
 
@@ -28,14 +29,8 @@ final class ForYouUITests: BaseUITestCase {
 
         let navTitle = app.navigationBars["For You"]
         XCTAssertTrue(navTitle.waitForExistence(timeout: 5), "Navigation title 'For You' should exist")
-    }
 
-    // MARK: - Content State Tests
-
-    /// Tests content loads (onboarding, articles, empty, or error state)
-    func testForYouContentLoads() throws {
-        navigateToForYou()
-
+        // --- Content Loading ---
         let personalizeText = app.staticTexts["Personalize Your Feed"]
         let articleCards = app.buttons.matching(NSPredicate(format: "label CONTAINS[c] 'ago' OR label CONTAINS[c] 'hour'"))
         let noArticlesText = app.staticTexts["No Articles"]
@@ -68,6 +63,56 @@ final class ForYouUITests: BaseUITestCase {
             let setPreferencesButton = app.buttons["Set Preferences"]
             XCTAssertTrue(setPreferencesButton.exists, "Onboarding should have 'Set Preferences' button")
         }
+
+        // If error, verify Try Again button
+        if errorText.exists {
+            let tryAgainButton = app.buttons["Try Again"]
+            XCTAssertTrue(tryAgainButton.exists, "Error state should have Try Again button")
+        }
+    }
+
+    // MARK: - Article Navigation and Scroll Tests
+
+    /// Tests article card navigation and scroll interactions
+    func testArticleNavigationAndScroll() throws {
+        navigateToForYou()
+
+        wait(for: 3)
+
+        // --- Article Card Navigation ---
+        let articleCards = app.buttons.matching(NSPredicate(format: "label CONTAINS[c] 'ago' OR label CONTAINS[c] 'hour'"))
+
+        if articleCards.count > 0 {
+            articleCards.firstMatch.tap()
+
+            let backButton = app.buttons["backButton"]
+            XCTAssertTrue(backButton.waitForExistence(timeout: 5), "Should navigate to article detail")
+
+            backButton.tap()
+
+            let forYouNav = app.navigationBars["For You"]
+            XCTAssertTrue(forYouNav.waitForExistence(timeout: 5), "Should return to For You")
+        }
+
+        // --- Scroll Interactions ---
+        let scrollView = app.scrollViews.firstMatch
+        let articleCardsAfter = app.buttons.matching(NSPredicate(format: "label CONTAINS[c] 'ago'"))
+
+        if scrollView.exists {
+            // Pull to refresh
+            scrollView.swipeDown()
+            wait(for: 1)
+
+            // Infinite scroll
+            if articleCardsAfter.count > 0 {
+                scrollView.swipeUp()
+                scrollView.swipeUp()
+                scrollView.swipeUp()
+            }
+        }
+
+        let navTitle = app.navigationBars["For You"]
+        XCTAssertTrue(navTitle.waitForExistence(timeout: Self.defaultTimeout), "View should remain functional after scrolling")
     }
 
     // MARK: - Onboarding Tests
@@ -111,73 +156,6 @@ final class ForYouUITests: BaseUITestCase {
             XCTAssertTrue(settingsNav.waitForExistence(timeout: 10), "Should navigate to Settings")
         } else {
             XCTAssertTrue(articleCards.count > 0 || noArticlesText.exists, "For You should show content")
-        }
-    }
-
-    // MARK: - Article Navigation Tests
-
-    /// Tests tapping article card navigates to detail and back
-    func testArticleCardNavigation() throws {
-        navigateToForYou()
-
-        wait(for: 3)
-
-        let articleCards = app.buttons.matching(NSPredicate(format: "label CONTAINS[c] 'ago' OR label CONTAINS[c] 'hour'"))
-
-        if articleCards.count > 0 {
-            articleCards.firstMatch.tap()
-
-            let backButton = app.buttons["backButton"]
-            XCTAssertTrue(backButton.waitForExistence(timeout: 5), "Should navigate to article detail")
-
-            backButton.tap()
-
-            let forYouNav = app.navigationBars["For You"]
-            XCTAssertTrue(forYouNav.waitForExistence(timeout: 5), "Should return to For You")
-        }
-    }
-
-    // MARK: - Scroll Behavior Tests
-
-    /// Tests scroll interactions (pull to refresh, infinite scroll)
-    func testScrollBehavior() throws {
-        navigateToForYou()
-
-        wait(for: 2)
-
-        let scrollView = app.scrollViews.firstMatch
-        let articleCards = app.buttons.matching(NSPredicate(format: "label CONTAINS[c] 'ago'"))
-
-        if scrollView.exists {
-            // Pull to refresh
-            scrollView.swipeDown()
-            wait(for: 1)
-
-            // Infinite scroll
-            if articleCards.count > 0 {
-                scrollView.swipeUp()
-                scrollView.swipeUp()
-                scrollView.swipeUp()
-            }
-        }
-
-        let navTitle = app.navigationBars["For You"]
-        XCTAssertTrue(navTitle.waitForExistence(timeout: Self.defaultTimeout), "View should remain functional after scrolling")
-    }
-
-    // MARK: - Error State Tests
-
-    /// Tests error state shows try again button
-    func testErrorStateShowsTryAgainButton() throws {
-        navigateToForYou()
-
-        wait(for: 3)
-
-        let errorText = app.staticTexts["Unable to Load Feed"]
-
-        if errorText.exists {
-            let tryAgainButton = app.buttons["Try Again"]
-            XCTAssertTrue(tryAgainButton.exists, "Error state should have Try Again button")
         }
     }
 

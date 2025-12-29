@@ -41,33 +41,20 @@ final class ArticleDetailUITests: BaseUITestCase {
         return waitForArticleDetail()
     }
 
-    // MARK: - Navigation Tests
+    // MARK: - Toolbar, Navigation, and Bookmark Tests
 
-    /// Tests back button exists and navigates back to home
-    func testBackNavigation() throws {
+    /// Tests back button, toolbar buttons, bookmark toggle, and share button
+    func testToolbarNavigationAndBookmark() throws {
         let navigated = navigateToArticleDetail()
         guard navigated else {
             throw XCTSkip("Could not navigate to article detail - no articles available")
         }
 
+        // --- Back Button ---
         let backButton = app.buttons["backButton"]
         XCTAssertTrue(backButton.exists, "Back button should exist in navigation bar")
 
-        backButton.tap()
-
-        let homeNavBar = app.navigationBars["Pulse"]
-        XCTAssertTrue(homeNavBar.waitForExistence(timeout: 5), "Should navigate back to Home (Pulse)")
-    }
-
-    // MARK: - Toolbar Tests
-
-    /// Tests that bookmark and share buttons exist in navigation bar
-    func testToolbarButtonsExist() throws {
-        let navigated = navigateToArticleDetail()
-        guard navigated else {
-            throw XCTSkip("Could not navigate to article detail - no articles available")
-        }
-
+        // --- Toolbar Buttons ---
         // Bookmark button can be either "bookmark" or "bookmark.fill"
         let bookmarkButton = app.navigationBars.buttons["bookmark"]
         let bookmarkFilledButton = app.navigationBars.buttons["bookmark.fill"]
@@ -77,38 +64,17 @@ final class ArticleDetailUITests: BaseUITestCase {
         // Share button
         let shareButton = app.navigationBars.buttons["square.and.arrow.up"]
         XCTAssertTrue(shareButton.exists, "Share button should exist in navigation bar")
-    }
 
-    /// Tests bookmark toggle functionality
-    func testBookmarkToggle() throws {
-        let navigated = navigateToArticleDetail()
-        guard navigated else {
-            throw XCTSkip("Could not navigate to article detail - no articles available")
-        }
-
-        let bookmarkButton = app.navigationBars.buttons["bookmark"]
-        let bookmarkFilledButton = app.navigationBars.buttons["bookmark.fill"]
-
+        // --- Bookmark Toggle ---
         if bookmarkButton.exists {
             bookmarkButton.tap()
             XCTAssertTrue(bookmarkFilledButton.waitForExistence(timeout: 3), "Bookmark should become filled after tapping")
         } else if bookmarkFilledButton.exists {
             bookmarkFilledButton.tap()
             XCTAssertTrue(bookmarkButton.waitForExistence(timeout: 3), "Bookmark should become unfilled after tapping")
-        } else {
-            XCTFail("Neither bookmark nor bookmark.fill button found")
-        }
-    }
-
-    /// Tests share button opens share sheet
-    func testShareButtonOpensShareSheet() throws {
-        let navigated = navigateToArticleDetail()
-        guard navigated else {
-            throw XCTSkip("Could not navigate to article detail - no articles available")
         }
 
-        let shareButton = app.navigationBars.buttons["square.and.arrow.up"]
-        XCTAssertTrue(shareButton.exists, "Share button should exist")
+        // --- Share Button ---
         shareButton.tap()
 
         let shareSheet = app.otherElements["ActivityListView"]
@@ -126,18 +92,28 @@ final class ArticleDetailUITests: BaseUITestCase {
         } else {
             app.swipeDown()
         }
+
+        wait(for: 1)
+
+        // --- Back Navigation ---
+        let backButtonAfter = app.buttons["backButton"]
+        XCTAssertTrue(backButtonAfter.waitForExistence(timeout: 5), "Back button should exist after share sheet dismissed")
+        backButtonAfter.tap()
+
+        let homeNavBar = app.navigationBars["Pulse"]
+        XCTAssertTrue(homeNavBar.waitForExistence(timeout: 10), "Should navigate back to Home (Pulse)")
     }
 
-    // MARK: - Content Tests
+    // MARK: - Content and Scroll Tests
 
-    /// Tests article content: title, metadata, image area, and scroll view
-    func testArticleContent() throws {
+    /// Tests article content, scroll view, and Read Full Article button
+    func testArticleContentAndScroll() throws {
         let navigated = navigateToArticleDetail()
         guard navigated else {
             throw XCTSkip("Could not navigate to article detail - no articles available")
         }
 
-        // Article should have text content
+        // --- Article Content ---
         let staticTexts = app.staticTexts
         XCTAssertTrue(staticTexts.count > 0, "Article detail should have text content")
 
@@ -148,30 +124,21 @@ final class ArticleDetailUITests: BaseUITestCase {
         // Check for scroll view (stretchy header)
         let scrollView = app.scrollViews["articleDetailScrollView"]
         XCTAssertTrue(scrollView.waitForExistence(timeout: 5), "Article detail should have a scroll view")
-    }
 
-    // MARK: - Scroll and Read Full Article Tests
-
-    /// Tests scrolling and Read Full Article button
-    func testScrollAndReadFullArticle() throws {
-        let navigated = navigateToArticleDetail()
-        guard navigated else {
-            throw XCTSkip("Could not navigate to article detail - no articles available")
-        }
-
-        let scrollView = app.scrollViews.firstMatch
-        XCTAssertTrue(scrollView.exists, "Article detail should have a scroll view")
+        // --- Scroll and Read Full Article ---
+        let scrollViewGeneric = app.scrollViews.firstMatch
+        XCTAssertTrue(scrollViewGeneric.exists, "Article detail should have a scroll view")
 
         // Scroll down to find Read Full Article button
         for _ in 0 ..< 3 {
-            scrollView.swipeUp()
+            scrollViewGeneric.swipeUp()
         }
 
         let readFullButton = app.buttons.matching(NSPredicate(format: "label CONTAINS[c] 'Read Full Article'")).firstMatch
         XCTAssertTrue(readFullButton.waitForExistence(timeout: 3), "Read Full Article button should be visible after scrolling")
 
         // Scroll back up
-        scrollView.swipeDown()
+        scrollViewGeneric.swipeDown()
 
         // View should still be functional
         let backButton = app.buttons["backButton"]

@@ -2,38 +2,52 @@ import XCTest
 
 final class PulseUITests: BaseUITestCase {
 
-    func testTabBarExists() throws {
+    /// Tests tab bar exists and home tab is selected by default
+    func testTabBarExistsAndHomeSelected() throws {
         XCTAssertTrue(app.tabBars.firstMatch.exists)
-    }
 
-    func testHomeTabIsSelected() throws {
         let homeTab = app.tabBars.buttons["Home"]
         XCTAssertTrue(homeTab.exists)
         XCTAssertTrue(homeTab.isSelected)
     }
 
-    func testNavigateToSearchTab() throws {
-        // Search tab uses role: .search which may have special accessibility handling
-        // Try multiple identifiers that could match the search tab
+    /// Tests navigation to all main tabs (Bookmarks, Categories, For You, Search)
+    func testNavigateToAllTabs() throws {
+        // --- Bookmarks Tab ---
+        let bookmarksTab = app.tabBars.buttons["Bookmarks"]
+        XCTAssertTrue(bookmarksTab.waitForExistence(timeout: 5), "Bookmarks tab should exist")
+
+        bookmarksTab.tap()
+
+        XCTAssertTrue(bookmarksTab.isSelected, "Bookmarks tab should be selected")
+
+        // --- Categories Tab ---
+        let categoriesTab = app.tabBars.buttons["Categories"]
+        XCTAssertTrue(categoriesTab.waitForExistence(timeout: 5), "Categories tab should exist")
+
+        categoriesTab.tap()
+
+        XCTAssertTrue(categoriesTab.isSelected, "Categories tab should be selected")
+
+        // --- For You Tab ---
+        let forYouTab = app.tabBars.buttons["For You"]
+        XCTAssertTrue(forYouTab.waitForExistence(timeout: 5), "For You tab should exist")
+
+        forYouTab.tap()
+
+        XCTAssertTrue(forYouTab.isSelected, "For You tab should be selected")
+
+        // --- Search Tab (last, as it has liquid glass style that may affect tab bar) ---
         let searchTab = app.tabBars.buttons.matching(NSPredicate(format: "label CONTAINS[c] 'search' OR identifier CONTAINS[c] 'search'")).firstMatch
         XCTAssertTrue(searchTab.waitForExistence(timeout: 5), "Search tab should exist")
 
         searchTab.tap()
 
-        // Verify navigation to search by checking for search field
         let searchField = app.searchFields.firstMatch
         XCTAssertTrue(searchField.waitForExistence(timeout: 5), "Search field should appear after tapping Search tab")
     }
 
-    func testNavigateToBookmarksTab() throws {
-        let bookmarksTab = app.tabBars.buttons["Bookmarks"]
-        XCTAssertTrue(bookmarksTab.exists)
-
-        bookmarksTab.tap()
-
-        XCTAssertTrue(bookmarksTab.isSelected)
-    }
-
+    /// Tests navigation to settings via gear button
     func testNavigateToSettingsViaGearButton() throws {
         // Settings is accessed via the gear button in Home navigation bar, not a tab
         let gearButton = app.navigationBars.buttons["gearshape"]
@@ -43,23 +57,5 @@ final class PulseUITests: BaseUITestCase {
 
         let settingsNavBar = app.navigationBars["Settings"]
         XCTAssertTrue(settingsNavBar.waitForExistence(timeout: 5), "Settings should open")
-    }
-
-    func testNavigateToCategoriesTab() throws {
-        let categoriesTab = app.tabBars.buttons["Categories"]
-        XCTAssertTrue(categoriesTab.exists)
-
-        categoriesTab.tap()
-
-        XCTAssertTrue(categoriesTab.isSelected)
-    }
-
-    func testNavigateToForYouTab() throws {
-        let forYouTab = app.tabBars.buttons["For You"]
-        XCTAssertTrue(forYouTab.exists)
-
-        forYouTab.tap()
-
-        XCTAssertTrue(forYouTab.isSelected)
     }
 }
