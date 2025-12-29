@@ -4,10 +4,18 @@ import Testing
 
 @Suite("ArticleDTO Tests")
 struct ArticleDTOTests {
-    // MARK: - Date Parsing Tests
+    // MARK: - Date Parsing Tests (Consolidated)
 
-    @Test("ISO8601 date with fractional seconds parses correctly")
-    func iso8601WithFractionalSeconds() {
+    @Test(
+        "Date parsing handles various ISO8601 formats",
+        arguments: [
+            ("2024-01-15T10:30:00.000Z", true), // With fractional seconds
+            ("2024-01-15T10:30:00Z", true), // Without fractional seconds
+            ("invalid-date", false), // Invalid format
+            ("", false), // Empty string
+        ]
+    )
+    func dateParsingHandlesVariousFormats(dateString: String, shouldSucceed: Bool) {
         let dto = ArticleDTO(
             source: SourceDTO(id: "test", name: "Test Source"),
             author: "Author",
@@ -15,69 +23,18 @@ struct ArticleDTOTests {
             description: "Description",
             url: "https://example.com/article",
             urlToImage: "https://example.com/image.jpg",
-            publishedAt: "2024-01-15T10:30:00.000Z",
+            publishedAt: dateString,
             content: "Content"
         )
 
         let article = dto.toArticle()
 
-        #expect(article != nil)
-        #expect(article?.publishedAt != nil)
-    }
-
-    @Test("ISO8601 date without fractional seconds parses correctly")
-    func iso8601WithoutFractionalSeconds() {
-        let dto = ArticleDTO(
-            source: SourceDTO(id: "test", name: "Test Source"),
-            author: "Author",
-            title: "Test Title",
-            description: "Description",
-            url: "https://example.com/article",
-            urlToImage: "https://example.com/image.jpg",
-            publishedAt: "2024-01-15T10:30:00Z",
-            content: "Content"
-        )
-
-        let article = dto.toArticle()
-
-        #expect(article != nil)
-        #expect(article?.publishedAt != nil)
-    }
-
-    @Test("Invalid date returns nil article")
-    func invalidDateReturnsNil() {
-        let dto = ArticleDTO(
-            source: SourceDTO(id: "test", name: "Test Source"),
-            author: "Author",
-            title: "Test Title",
-            description: "Description",
-            url: "https://example.com/article",
-            urlToImage: "https://example.com/image.jpg",
-            publishedAt: "invalid-date",
-            content: "Content"
-        )
-
-        let article = dto.toArticle()
-
-        #expect(article == nil)
-    }
-
-    @Test("Empty date string returns nil article")
-    func emptyDateReturnsNil() {
-        let dto = ArticleDTO(
-            source: SourceDTO(id: "test", name: "Test Source"),
-            author: "Author",
-            title: "Test Title",
-            description: "Description",
-            url: "https://example.com/article",
-            urlToImage: "https://example.com/image.jpg",
-            publishedAt: "",
-            content: "Content"
-        )
-
-        let article = dto.toArticle()
-
-        #expect(article == nil)
+        if shouldSucceed {
+            #expect(article != nil)
+            #expect(article?.publishedAt != nil)
+        } else {
+            #expect(article == nil)
+        }
     }
 
     // MARK: - URL as ID Tests
@@ -100,89 +57,24 @@ struct ArticleDTOTests {
         #expect(article?.id == "https://example.com/unique-article-url")
     }
 
-    // MARK: - Optional Field Tests
+    // MARK: - Optional Field Tests (Consolidated)
 
-    @Test("Optional author is preserved")
-    func optionalAuthorPreserved() {
-        let dtoWithAuthor = ArticleDTO(
+    @Test("All optional fields are preserved correctly")
+    func optionalFieldsArePreserved() {
+        // Test with all optional fields present
+        let dtoWithAllFields = ArticleDTO(
             source: SourceDTO(id: "test", name: "Test Source"),
             author: "John Doe",
             title: "Test Title",
-            description: nil,
-            url: "https://example.com/article",
-            urlToImage: nil,
-            publishedAt: "2024-01-15T10:30:00Z",
-            content: nil
-        )
-
-        let dtoWithoutAuthor = ArticleDTO(
-            source: SourceDTO(id: "test", name: "Test Source"),
-            author: nil,
-            title: "Test Title",
-            description: nil,
-            url: "https://example.com/article2",
-            urlToImage: nil,
-            publishedAt: "2024-01-15T10:30:00Z",
-            content: nil
-        )
-
-        let articleWithAuthor = dtoWithAuthor.toArticle()
-        let articleWithoutAuthor = dtoWithoutAuthor.toArticle()
-
-        #expect(articleWithAuthor?.author == "John Doe")
-        #expect(articleWithoutAuthor?.author == nil)
-    }
-
-    @Test("Optional description is preserved")
-    func optionalDescriptionPreserved() {
-        let dtoWithDescription = ArticleDTO(
-            source: SourceDTO(id: "test", name: "Test Source"),
-            author: nil,
-            title: "Test Title",
             description: "This is a description",
             url: "https://example.com/article",
-            urlToImage: nil,
-            publishedAt: "2024-01-15T10:30:00Z",
-            content: nil
-        )
-
-        let article = dtoWithDescription.toArticle()
-
-        #expect(article?.description == "This is a description")
-    }
-
-    @Test("Optional content is preserved")
-    func optionalContentPreserved() {
-        let dtoWithContent = ArticleDTO(
-            source: SourceDTO(id: "test", name: "Test Source"),
-            author: nil,
-            title: "Test Title",
-            description: nil,
-            url: "https://example.com/article",
-            urlToImage: nil,
+            urlToImage: "https://example.com/image.jpg",
             publishedAt: "2024-01-15T10:30:00Z",
             content: "Full article content"
         )
 
-        let article = dtoWithContent.toArticle()
-
-        #expect(article?.content == "Full article content")
-    }
-
-    @Test("Optional image URL is preserved")
-    func optionalImageUrlPreserved() {
-        let dtoWithImage = ArticleDTO(
-            source: SourceDTO(id: "test", name: "Test Source"),
-            author: nil,
-            title: "Test Title",
-            description: nil,
-            url: "https://example.com/article",
-            urlToImage: "https://example.com/image.jpg",
-            publishedAt: "2024-01-15T10:30:00Z",
-            content: nil
-        )
-
-        let dtoWithoutImage = ArticleDTO(
+        // Test without optional fields
+        let dtoWithoutOptionalFields = ArticleDTO(
             source: SourceDTO(id: "test", name: "Test Source"),
             author: nil,
             title: "Test Title",
@@ -193,17 +85,26 @@ struct ArticleDTOTests {
             content: nil
         )
 
-        let articleWithImage = dtoWithImage.toArticle()
-        let articleWithoutImage = dtoWithoutImage.toArticle()
+        let articleWithFields = dtoWithAllFields.toArticle()
+        let articleWithoutFields = dtoWithoutOptionalFields.toArticle()
 
-        #expect(articleWithImage?.imageURL == "https://example.com/image.jpg")
-        #expect(articleWithoutImage?.imageURL == nil)
+        // Verify fields are preserved when present
+        #expect(articleWithFields?.author == "John Doe")
+        #expect(articleWithFields?.description == "This is a description")
+        #expect(articleWithFields?.content == "Full article content")
+        #expect(articleWithFields?.imageURL == "https://example.com/image.jpg")
+
+        // Verify nil when absent
+        #expect(articleWithoutFields?.author == nil)
+        #expect(articleWithoutFields?.description == nil)
+        #expect(articleWithoutFields?.content == nil)
+        #expect(articleWithoutFields?.imageURL == nil)
     }
 
-    // MARK: - Category Tests
+    // MARK: - Category Tests (Consolidated)
 
-    @Test("Category is passed through correctly")
-    func categoryPassedThrough() {
+    @Test("Category is passed through correctly for all categories")
+    func categoryPassedThroughForAllCategories() {
         let dto = ArticleDTO(
             source: SourceDTO(id: "test", name: "Test Source"),
             author: nil,
@@ -215,70 +116,50 @@ struct ArticleDTOTests {
             content: nil
         )
 
-        let articleWithCategory = dto.toArticle(category: .technology)
+        // Test without category
         let articleWithoutCategory = dto.toArticle()
-
-        #expect(articleWithCategory?.category == .technology)
         #expect(articleWithoutCategory?.category == nil)
-    }
 
-    @Test("All categories can be assigned")
-    func allCategoriesCanBeAssigned() {
-        let dto = ArticleDTO(
-            source: SourceDTO(id: "test", name: "Test Source"),
-            author: nil,
-            title: "Test Title",
-            description: nil,
-            url: "https://example.com/article",
-            urlToImage: nil,
-            publishedAt: "2024-01-15T10:30:00Z",
-            content: nil
-        )
-
+        // Test with all categories
         for category in NewsCategory.allCases {
             let article = dto.toArticle(category: category)
             #expect(article?.category == category)
         }
     }
 
-    // MARK: - Source Tests
+    // MARK: - Source Tests (Consolidated)
 
-    @Test("Source is transformed correctly")
+    @Test("Source is transformed correctly including nil ID handling")
     func sourceTransformedCorrectly() {
-        let dto = ArticleDTO(
+        let dtoWithSourceId = ArticleDTO(
             source: SourceDTO(id: "bbc-news", name: "BBC News"),
             author: nil,
             title: "Test Title",
             description: nil,
-            url: "https://example.com/article",
+            url: "https://example.com/article1",
             urlToImage: nil,
             publishedAt: "2024-01-15T10:30:00Z",
             content: nil
         )
 
-        let article = dto.toArticle()
-
-        #expect(article?.source.id == "bbc-news")
-        #expect(article?.source.name == "BBC News")
-    }
-
-    @Test("Source with nil ID is handled")
-    func sourceWithNilIdHandled() {
-        let dto = ArticleDTO(
+        let dtoWithNilSourceId = ArticleDTO(
             source: SourceDTO(id: nil, name: "Unknown Source"),
             author: nil,
             title: "Test Title",
             description: nil,
-            url: "https://example.com/article",
+            url: "https://example.com/article2",
             urlToImage: nil,
             publishedAt: "2024-01-15T10:30:00Z",
             content: nil
         )
 
-        let article = dto.toArticle()
+        let articleWithSourceId = dtoWithSourceId.toArticle()
+        let articleWithNilSourceId = dtoWithNilSourceId.toArticle()
 
-        #expect(article?.source.id == nil)
-        #expect(article?.source.name == "Unknown Source")
+        #expect(articleWithSourceId?.source.id == "bbc-news")
+        #expect(articleWithSourceId?.source.name == "BBC News")
+        #expect(articleWithNilSourceId?.source.id == nil)
+        #expect(articleWithNilSourceId?.source.name == "Unknown Source")
     }
 
     // MARK: - Full Transformation Test

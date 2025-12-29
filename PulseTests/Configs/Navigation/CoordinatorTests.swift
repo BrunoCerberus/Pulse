@@ -23,35 +23,15 @@ struct CoordinatorTests {
         sut = Coordinator(serviceLocator: serviceLocator)
     }
 
-    // MARK: - Initial State Tests
+    // MARK: - Initial State Tests (Consolidated)
 
-    @Test("Initial selected tab is home")
-    func initialSelectedTabIsHome() {
+    @Test("Initial state has home tab selected and all paths empty")
+    func initialStateIsCorrect() {
         #expect(sut.selectedTab == .home)
-    }
-
-    @Test("Initial home path is empty")
-    func initialHomePathIsEmpty() {
         #expect(sut.homePath.isEmpty)
-    }
-
-    @Test("Initial forYou path is empty")
-    func initialForYouPathIsEmpty() {
         #expect(sut.forYouPath.isEmpty)
-    }
-
-    @Test("Initial categories path is empty")
-    func initialCategoriesPathIsEmpty() {
         #expect(sut.categoriesPath.isEmpty)
-    }
-
-    @Test("Initial bookmarks path is empty")
-    func initialBookmarksPathIsEmpty() {
         #expect(sut.bookmarksPath.isEmpty)
-    }
-
-    @Test("Initial search path is empty")
-    func initialSearchPathIsEmpty() {
         #expect(sut.searchPath.isEmpty)
     }
 
@@ -240,48 +220,23 @@ struct CoordinatorTests {
         #expect(sut.forYouPath.count == 1)
     }
 
-    // MARK: - ViewModel Lazy Initialization Tests
+    // MARK: - ViewModel Lazy Initialization Tests (Consolidated)
 
-    @Test("HomeViewModel is lazily initialized")
-    func homeViewModelIsLazilyInitialized() {
-        _ = sut.homeViewModel
+    @Test("All ViewModels are lazily initialized and non-nil after access")
+    func allViewModelsAreLazilyInitialized() {
+        // Access each viewModel and verify it's not nil
         #expect(sut.homeViewModel != nil)
-    }
-
-    @Test("ForYouViewModel is lazily initialized")
-    func forYouViewModelIsLazilyInitialized() {
-        _ = sut.forYouViewModel
         #expect(sut.forYouViewModel != nil)
-    }
-
-    @Test("CategoriesViewModel is lazily initialized")
-    func categoriesViewModelIsLazilyInitialized() {
-        _ = sut.categoriesViewModel
         #expect(sut.categoriesViewModel != nil)
-    }
-
-    @Test("BookmarksViewModel is lazily initialized")
-    func bookmarksViewModelIsLazilyInitialized() {
-        _ = sut.bookmarksViewModel
         #expect(sut.bookmarksViewModel != nil)
-    }
-
-    @Test("SearchViewModel is lazily initialized")
-    func searchViewModelIsLazilyInitialized() {
-        _ = sut.searchViewModel
         #expect(sut.searchViewModel != nil)
-    }
-
-    @Test("SettingsViewModel is lazily initialized")
-    func settingsViewModelIsLazilyInitialized() {
-        _ = sut.settingsViewModel
         #expect(sut.settingsViewModel != nil)
     }
 
     // MARK: - AppTab Tests
 
-    @Test("AppTab has all expected cases")
-    func appTabHasAllExpectedCases() {
+    @Test("AppTab has all expected cases with symbol images")
+    func appTabHasAllExpectedCasesWithSymbols() {
         let allTabs = AppTab.allCases
         #expect(allTabs.count == 5)
         #expect(allTabs.contains(.home))
@@ -289,10 +244,7 @@ struct CoordinatorTests {
         #expect(allTabs.contains(.categories))
         #expect(allTabs.contains(.bookmarks))
         #expect(allTabs.contains(.search))
-    }
 
-    @Test("AppTab has symbol images")
-    func appTabHasSymbolImages() {
         for tab in AppTab.allCases {
             #expect(!tab.symbolImage.isEmpty)
         }

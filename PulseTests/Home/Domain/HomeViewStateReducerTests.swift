@@ -33,120 +33,75 @@ struct HomeViewStateReducerTests {
 
     // MARK: - Basic Transformation Tests
 
-    @Test("Reduce transforms breaking news to ArticleViewItems")
-    func reduceTransformsBreakingNews() {
-        let domainState = makeDomainState(breakingNews: Article.mockArticles)
+    @Test("Reduce transforms breaking news and headlines to ArticleViewItems")
+    func reduceTransformsArticlesToViewItems() {
+        let domainState = makeDomainState(
+            breakingNews: Article.mockArticles,
+            headlines: Article.mockArticles
+        )
 
         let viewState = sut.reduce(domainState: domainState)
 
         #expect(viewState.breakingNews.count == Article.mockArticles.count)
         #expect(viewState.breakingNews[0].id == Article.mockArticles[0].id)
         #expect(viewState.breakingNews[0].title == Article.mockArticles[0].title)
-    }
-
-    @Test("Reduce transforms headlines to ArticleViewItems")
-    func reduceTransformsHeadlines() {
-        let domainState = makeDomainState(headlines: Article.mockArticles)
-
-        let viewState = sut.reduce(domainState: domainState)
-
         #expect(viewState.headlines.count == Article.mockArticles.count)
         #expect(viewState.headlines[0].id == Article.mockArticles[0].id)
     }
 
-    // MARK: - Loading State Tests
+    // MARK: - Loading State Tests (Consolidated)
 
-    @Test("Reduce passes through isLoading state")
-    func reducePassesThroughIsLoading() {
-        let domainState = makeDomainState(isLoading: true)
+    @Test("Reduce passes through all loading states correctly")
+    func reducePassesThroughAllLoadingStates() {
+        let loadingState = makeDomainState(isLoading: true)
+        let loadingMoreState = makeDomainState(headlines: Article.mockArticles, isLoadingMore: true)
+        let refreshingState = makeDomainState(isRefreshing: true)
 
-        let viewState = sut.reduce(domainState: domainState)
+        let loadingViewState = sut.reduce(domainState: loadingState)
+        let loadingMoreViewState = sut.reduce(domainState: loadingMoreState)
+        let refreshingViewState = sut.reduce(domainState: refreshingState)
 
-        #expect(viewState.isLoading == true)
+        #expect(loadingViewState.isLoading == true)
+        #expect(loadingMoreViewState.isLoadingMore == true)
+        #expect(refreshingViewState.isRefreshing == true)
     }
 
-    @Test("Reduce passes through isLoadingMore state")
-    func reducePassesThroughIsLoadingMore() {
-        let domainState = makeDomainState(headlines: Article.mockArticles, isLoadingMore: true)
+    // MARK: - Error State Tests (Consolidated)
 
-        let viewState = sut.reduce(domainState: domainState)
-
-        #expect(viewState.isLoadingMore == true)
-    }
-
-    @Test("Reduce passes through isRefreshing state")
-    func reducePassesThroughIsRefreshing() {
-        let domainState = makeDomainState(isRefreshing: true)
-
-        let viewState = sut.reduce(domainState: domainState)
-
-        #expect(viewState.isRefreshing == true)
-    }
-
-    // MARK: - Error State Tests
-
-    @Test("Reduce passes through error message")
+    @Test("Reduce passes through error message including nil")
     func reducePassesThroughErrorMessage() {
-        let domainState = makeDomainState(error: "Network error")
+        let errorState = makeDomainState(error: "Network error")
+        let noErrorState = makeDomainState(breakingNews: Article.mockArticles, error: nil)
 
-        let viewState = sut.reduce(domainState: domainState)
+        let errorViewState = sut.reduce(domainState: errorState)
+        let noErrorViewState = sut.reduce(domainState: noErrorState)
 
-        #expect(viewState.errorMessage == "Network error")
+        #expect(errorViewState.errorMessage == "Network error")
+        #expect(noErrorViewState.errorMessage == nil)
     }
 
-    @Test("Reduce handles nil error")
-    func reduceHandlesNilError() {
-        let domainState = makeDomainState(breakingNews: Article.mockArticles, error: nil)
+    // MARK: - Empty State Tests (Consolidated)
 
-        let viewState = sut.reduce(domainState: domainState)
+    @Test("showEmptyState logic handles all conditions correctly")
+    func showEmptyStateLogic() {
+        // Empty state when no content and not loading
+        let emptyState = makeDomainState()
+        #expect(sut.reduce(domainState: emptyState).showEmptyState == true)
 
-        #expect(viewState.errorMessage == nil)
-    }
+        // Not empty when loading
+        let loadingState = makeDomainState(isLoading: true)
+        #expect(sut.reduce(domainState: loadingState).showEmptyState == false)
 
-    // MARK: - Empty State Tests
+        // Not empty when refreshing
+        let refreshingState = makeDomainState(isRefreshing: true)
+        #expect(sut.reduce(domainState: refreshingState).showEmptyState == false)
 
-    @Test("showEmptyState is true when not loading and no content")
-    func showEmptyStateWhenNoContent() {
-        let domainState = makeDomainState()
+        // Not empty when has breaking news
+        let withBreakingNews = makeDomainState(breakingNews: Article.mockArticles)
+        #expect(sut.reduce(domainState: withBreakingNews).showEmptyState == false)
 
-        let viewState = sut.reduce(domainState: domainState)
-
-        #expect(viewState.showEmptyState == true)
-    }
-
-    @Test("showEmptyState is false when loading")
-    func showEmptyStateFalseWhenLoading() {
-        let domainState = makeDomainState(isLoading: true)
-
-        let viewState = sut.reduce(domainState: domainState)
-
-        #expect(viewState.showEmptyState == false)
-    }
-
-    @Test("showEmptyState is false when refreshing")
-    func showEmptyStateFalseWhenRefreshing() {
-        let domainState = makeDomainState(isRefreshing: true)
-
-        let viewState = sut.reduce(domainState: domainState)
-
-        #expect(viewState.showEmptyState == false)
-    }
-
-    @Test("showEmptyState is false when has breaking news")
-    func showEmptyStateFalseWithBreakingNews() {
-        let domainState = makeDomainState(breakingNews: Article.mockArticles)
-
-        let viewState = sut.reduce(domainState: domainState)
-
-        #expect(viewState.showEmptyState == false)
-    }
-
-    @Test("showEmptyState is false when has headlines")
-    func showEmptyStateFalseWithHeadlines() {
-        let domainState = makeDomainState(headlines: Article.mockArticles)
-
-        let viewState = sut.reduce(domainState: domainState)
-
-        #expect(viewState.showEmptyState == false)
+        // Not empty when has headlines
+        let withHeadlines = makeDomainState(headlines: Article.mockArticles)
+        #expect(sut.reduce(domainState: withHeadlines).showEmptyState == false)
     }
 }

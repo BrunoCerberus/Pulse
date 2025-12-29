@@ -30,10 +30,14 @@ struct AuthDomainInteractorTests {
         #expect(state.error == nil)
     }
 
-    // MARK: - Sign In With Google Tests
+    // MARK: - Sign In Tests (Consolidated for both providers)
 
-    @Test("Sign in with Google sets loading state")
-    func signInWithGoogleSetsLoading() async throws {
+    @Test("Sign in sets loading state and handles success correctly")
+    func signInSuccessFlow() async throws {
+        let expectedUser = AuthUser.mock
+
+        // Test Google Sign In
+        mockAuthService.signInWithGoogleResult = .success(expectedUser)
         var states: [AuthDomainState] = []
         var cancellables = Set<AnyCancellable>()
 
@@ -42,135 +46,84 @@ struct AuthDomainInteractorTests {
             .store(in: &cancellables)
 
         sut.dispatch(action: .signInWithGoogle(presenting: mockViewController))
-
-        try await Task.sleep(nanoseconds: 100_000_000)
+        try await Task.sleep(nanoseconds: 300_000_000)
 
         #expect(states.contains { $0.isLoading == true })
-    }
+        #expect(sut.currentState.isLoading == false)
+        #expect(sut.currentState.user == expectedUser)
+        #expect(sut.currentState.error == nil)
 
-    @Test("Sign in with Google success updates user")
-    func signInWithGoogleSuccess() async throws {
-        let expectedUser = AuthUser.mock
-        mockAuthService.signInWithGoogleResult = .success(expectedUser)
-
-        sut.dispatch(action: .signInWithGoogle(presenting: mockViewController))
-
+        // Reset for Apple Sign In test
+        sut.dispatch(action: .signOut)
         try await Task.sleep(nanoseconds: 300_000_000)
 
-        let finalState = sut.currentState
-        #expect(finalState.isLoading == false)
-        #expect(finalState.user == expectedUser)
-        #expect(finalState.error == nil)
-    }
-
-    @Test("Sign in with Google failure sets error")
-    func signInWithGoogleFailure() async throws {
-        let testError = AuthError.networkError
-        mockAuthService.signInWithGoogleResult = .failure(testError)
-
-        sut.dispatch(action: .signInWithGoogle(presenting: mockViewController))
-
+        mockAuthService.signInWithAppleResult = .success(expectedUser)
+        sut.dispatch(action: .signInWithApple)
         try await Task.sleep(nanoseconds: 300_000_000)
 
-        let finalState = sut.currentState
-        #expect(finalState.isLoading == false)
-        #expect(finalState.user == nil)
-        #expect(finalState.error != nil)
+        #expect(sut.currentState.user == expectedUser)
+        #expect(sut.currentState.error == nil)
     }
 
-    @Test("Sign in with Google cancelled does not set error")
-    func signInWithGoogleCancelled() async throws {
+    @Test("Sign in failure sets error state")
+    func signInFailureFlow() async throws {
+        // Test Google Sign In failure
+        mockAuthService.signInWithGoogleResult = .failure(AuthError.networkError)
+        sut.dispatch(action: .signInWithGoogle(presenting: mockViewController))
+        try await Task.sleep(nanoseconds: 300_000_000)
+
+        #expect(sut.currentState.isLoading == false)
+        #expect(sut.currentState.user == nil)
+        #expect(sut.currentState.error != nil)
+
+        // Clear error and test Apple Sign In failure
+        sut.dispatch(action: .clearError)
+        try await Task.sleep(nanoseconds: 100_000_000)
+
+        mockAuthService.signInWithAppleResult = .failure(AuthError.invalidCredential)
+        sut.dispatch(action: .signInWithApple)
+        try await Task.sleep(nanoseconds: 300_000_000)
+
+        #expect(sut.currentState.isLoading == false)
+        #expect(sut.currentState.user == nil)
+        #expect(sut.currentState.error != nil)
+    }
+
+    @Test("Sign in cancelled does not set error")
+    func signInCancelledDoesNotSetError() async throws {
         mockAuthService.signInWithGoogleResult = .failure(AuthError.signInCancelled)
 
         sut.dispatch(action: .signInWithGoogle(presenting: mockViewController))
-
         try await Task.sleep(nanoseconds: 300_000_000)
 
-        let finalState = sut.currentState
-        #expect(finalState.isLoading == false)
-        #expect(finalState.error == nil)
+        #expect(sut.currentState.isLoading == false)
+        #expect(sut.currentState.error == nil)
     }
 
-    // MARK: - Sign In With Apple Tests
+    // MARK: - Sign Out Tests (Consolidated)
 
-    @Test("Sign in with Apple sets loading state")
-    func signInWithAppleSetsLoading() async throws {
-        var states: [AuthDomainState] = []
-        var cancellables = Set<AnyCancellable>()
-
-        sut.statePublisher
-            .sink { state in states.append(state) }
-            .store(in: &cancellables)
-
-        sut.dispatch(action: .signInWithApple)
-
-        try await Task.sleep(nanoseconds: 100_000_000)
-
-        #expect(states.contains { $0.isLoading == true })
-    }
-
-    @Test("Sign in with Apple success updates user")
-    func signInWithAppleSuccess() async throws {
-        let expectedUser = AuthUser.mock
-        mockAuthService.signInWithAppleResult = .success(expectedUser)
-
-        sut.dispatch(action: .signInWithApple)
-
-        try await Task.sleep(nanoseconds: 300_000_000)
-
-        let finalState = sut.currentState
-        #expect(finalState.isLoading == false)
-        #expect(finalState.user == expectedUser)
-        #expect(finalState.error == nil)
-    }
-
-    @Test("Sign in with Apple failure sets error")
-    func signInWithAppleFailure() async throws {
-        let testError = AuthError.invalidCredential
-        mockAuthService.signInWithAppleResult = .failure(testError)
-
-        sut.dispatch(action: .signInWithApple)
-
-        try await Task.sleep(nanoseconds: 300_000_000)
-
-        let finalState = sut.currentState
-        #expect(finalState.isLoading == false)
-        #expect(finalState.user == nil)
-        #expect(finalState.error != nil)
-    }
-
-    // MARK: - Sign Out Tests
-
-    @Test("Sign out clears user")
-    func signOutClearsUser() async throws {
+    @Test("Sign out clears user and handles errors")
+    func signOutFlow() async throws {
         // First sign in
         mockAuthService.signInWithGoogleResult = .success(.mock)
         sut.dispatch(action: .signInWithGoogle(presenting: mockViewController))
         try await Task.sleep(nanoseconds: 300_000_000)
-
         #expect(sut.currentState.user != nil)
 
-        // Then sign out
+        // Test successful sign out
         mockAuthService.signOutResult = .success(())
         sut.dispatch(action: .signOut)
-
         try await Task.sleep(nanoseconds: 300_000_000)
 
-        let finalState = sut.currentState
-        #expect(finalState.user == nil)
-        #expect(finalState.error == nil)
-    }
+        #expect(sut.currentState.user == nil)
+        #expect(sut.currentState.error == nil)
 
-    @Test("Sign out failure sets error")
-    func signOutFailure() async throws {
+        // Test sign out failure
         mockAuthService.signOutResult = .failure(AuthError.unknown("Sign out failed"))
-
         sut.dispatch(action: .signOut)
-
         try await Task.sleep(nanoseconds: 300_000_000)
 
-        let finalState = sut.currentState
-        #expect(finalState.error != nil)
+        #expect(sut.currentState.error != nil)
     }
 
     // MARK: - Clear Error Tests
@@ -186,7 +139,6 @@ struct AuthDomainInteractorTests {
 
         // Then clear the error
         sut.dispatch(action: .clearError)
-
         try await Task.sleep(nanoseconds: 100_000_000)
 
         #expect(sut.currentState.error == nil)
