@@ -71,58 +71,29 @@ final class PulseSettingsUITests: BaseUITestCase {
         return element.exists && element.isHittable
     }
 
-    // MARK: - Navigation and Sections Tests
+    // MARK: - Combined Flow Test
 
-    /// Tests settings loads, back navigation, all section headers exist, and scroll/layout
-    func testSettingsNavigationSectionsAndLayout() throws {
+    /// Tests settings sections, toggles, content filters, and persistence
+    func testSettingsFlow() throws {
         navigateToSettings()
 
         let navigationTitle = app.navigationBars["Settings"]
         XCTAssertTrue(navigationTitle.waitForExistence(timeout: Self.defaultTimeout), "Settings navigation should exist")
 
-        // Wait for settings content to load
         wait(for: 1)
 
-        // Test Account section first (it's at the top)
         let accountSection = app.staticTexts["Account"]
-        guard accountSection.waitForExistence(timeout: Self.defaultTimeout) else {
-            throw XCTSkip("Account section did not load in time")
-        }
+        XCTAssertTrue(accountSection.waitForExistence(timeout: Self.defaultTimeout), "Account section should exist")
 
-        // Test Subscription section (right below Account)
         let subscriptionSection = app.staticTexts["Subscription"]
         XCTAssertTrue(subscriptionSection.waitForExistence(timeout: 5), "Subscription section should exist")
 
         let topicsSection = app.staticTexts["Followed Topics"]
-        XCTAssertTrue(topicsSection.waitForExistence(timeout: 5))
+        XCTAssertTrue(topicsSection.waitForExistence(timeout: 5), "Followed Topics section should exist")
 
-        app.swipeUp()
+        let goPremiumText = app.staticTexts.matching(NSPredicate(format: "label CONTAINS[c] 'Premium' OR label CONTAINS[c] 'premium'")).firstMatch
+        XCTAssertTrue(goPremiumText.waitForExistence(timeout: 5), "Premium section should be visible")
 
-        let notificationsSection = app.staticTexts["Notifications"]
-        XCTAssertTrue(notificationsSection.waitForExistence(timeout: 5))
-
-        let appearanceSection = app.staticTexts["Appearance"]
-        XCTAssertTrue(appearanceSection.waitForExistence(timeout: 5))
-
-        let contentFiltersSection = app.staticTexts["Content Filters"]
-        XCTAssertTrue(contentFiltersSection.waitForExistence(timeout: 5))
-
-        let dataSection = app.staticTexts["Data"]
-        XCTAssertTrue(dataSection.waitForExistence(timeout: 5))
-
-        let aboutSection = app.staticTexts["About"]
-        XCTAssertTrue(aboutSection.waitForExistence(timeout: 5))
-
-        // Test scroll to bottom and back up
-        for _ in 0..<3 {
-            app.swipeUp()
-        }
-        XCTAssertTrue(aboutSection.exists, "Should be able to scroll to About section")
-
-        app.swipeDown()
-        app.swipeDown()
-
-        // Verify list-style sections exist after scrolling
         let sectionHeaders = ["Subscription", "Followed Topics", "Notifications", "Appearance"]
         var foundSections = 0
         for header in sectionHeaders {
@@ -132,33 +103,7 @@ final class PulseSettingsUITests: BaseUITestCase {
         }
         XCTAssertGreaterThan(foundSections, 0, "Settings should have visible section headers")
 
-        // Test back navigation
-        let backButton = app.navigationBars.buttons.firstMatch
-        XCTAssertTrue(backButton.exists, "Back button should exist")
-        backButton.tap()
-
-        let homeNavBar = app.navigationBars["Pulse"]
-        XCTAssertTrue(homeNavBar.waitForExistence(timeout: 5), "Should return to Home (Pulse)")
-    }
-
-    // MARK: - Topics and Notifications Tests
-
-    /// Tests followed topics, notifications toggles, and dependencies
-    func testTopicsAndNotificationsSections() throws {
-        navigateToSettings()
-
-        // Wait for settings content to load
-        wait(for: 1)
-
-        // --- Followed Topics Section ---
-        let topicsSection = app.staticTexts["Followed Topics"]
-        guard topicsSection.waitForExistence(timeout: Self.defaultTimeout) else {
-            throw XCTSkip("Followed Topics section did not load in time")
-        }
-
-        // Category names that should appear
         let categoryNames = ["World", "Business", "Technology", "Science", "Health", "Sports", "Entertainment"]
-
         var foundCategory = false
         for category in categoryNames {
             let categoryLabel = app.staticTexts[category]
@@ -172,7 +117,6 @@ final class PulseSettingsUITests: BaseUITestCase {
 
         XCTAssertTrue(foundCategory, "At least one category should be displayed")
 
-        // Test toggle functionality
         let technologyRow = app.buttons.matching(NSPredicate(format: "label CONTAINS[c] 'Technology'")).firstMatch
         if technologyRow.exists {
             technologyRow.tap()
@@ -180,49 +124,68 @@ final class PulseSettingsUITests: BaseUITestCase {
             technologyRow.tap()
         }
 
-        // Scroll to see footer
         app.swipeUp()
 
-        let footerText = app.staticTexts["Articles from followed topics will appear in your For You feed."]
-        XCTAssertTrue(footerText.waitForExistence(timeout: 5), "Footer text should explain followed topics")
+        let topicsFooterText = app.staticTexts["Articles from followed topics will appear in your For You feed."]
+        XCTAssertTrue(topicsFooterText.waitForExistence(timeout: 5), "Footer text should explain followed topics")
 
-        // --- Notifications Section ---
         let notificationsToggle = app.switches["Enable Notifications"]
         XCTAssertTrue(notificationsToggle.waitForExistence(timeout: 5), "Notifications toggle should exist")
 
         let breakingNewsToggle = app.switches["Breaking News Alerts"]
         XCTAssertTrue(breakingNewsToggle.waitForExistence(timeout: 15), "Breaking News toggle should exist")
 
-        // Test toggle functionality
+        let initialNotificationsEnabled = isSwitchOn(notificationsToggle)
         notificationsToggle.tap()
         wait(for: 0.5)
 
-        // Test dependency - breaking news should be disabled when notifications are off
-        let notificationsEnabled = isSwitchOn(notificationsToggle)
-        if !notificationsEnabled {
+        let notificationsEnabledAfter = isSwitchOn(notificationsToggle)
+        if !notificationsEnabledAfter {
             XCTAssertFalse(breakingNewsToggle.isEnabled, "Breaking News should be disabled when Notifications are off")
         }
-    }
 
-    // MARK: - Appearance and Content Filters Tests
+        setSwitch(notificationsToggle, to: initialNotificationsEnabled)
 
-    /// Tests appearance toggles and content filter disclosures
-    func testAppearanceAndContentFiltersSections() throws {
+        // --- Persistence Check ---
+        let persistInitialValue = isSwitchOn(notificationsToggle)
+        notificationsToggle.tap()
+        wait(for: 1.0)
+
+        let toggledValue = isSwitchOn(notificationsToggle)
+
+        let backButton = app.navigationBars.buttons.firstMatch
+        XCTAssertTrue(backButton.exists, "Back button should exist")
+        backButton.tap()
+
+        let homeNav = app.navigationBars["Pulse"]
+        XCTAssertTrue(homeNav.waitForExistence(timeout: 5), "Should return to Home (Pulse)")
+
         navigateToSettings()
-        app.swipeUp()
+        wait(for: 1)
+
+        let notificationsToggleAfter = app.switches["Enable Notifications"]
+        XCTAssertTrue(scrollToElement(notificationsToggleAfter), "Notifications toggle should exist")
+
+        let persistedValue = isSwitchOn(notificationsToggleAfter)
+        XCTAssertEqual(toggledValue, persistedValue, "Setting change should persist across navigation")
+
+        if persistedValue != persistInitialValue {
+            notificationsToggleAfter.tap()
+        }
 
         // --- Appearance Section ---
+        let appearanceSection = app.staticTexts["Appearance"]
+        XCTAssertTrue(scrollToElement(appearanceSection), "Appearance section should exist")
+
         let systemThemeToggle = app.switches["Use System Theme"]
         XCTAssertTrue(systemThemeToggle.waitForExistence(timeout: 5))
 
-        // Turn off system theme to enable dark mode toggle
         let wasSystemThemeOn = isSwitchOn(systemThemeToggle)
         setSwitch(systemThemeToggle, to: false)
         if wasSystemThemeOn {
             wait(for: 0.5)
         }
 
-        // Toggle Dark Mode
         let darkModeToggle = app.switches["Dark Mode"]
         if darkModeToggle.waitForExistence(timeout: 3) {
             darkModeToggle.tap()
@@ -230,17 +193,15 @@ final class PulseSettingsUITests: BaseUITestCase {
             darkModeToggle.tap()
         }
 
-        // Restore system theme
         setSwitch(systemThemeToggle, to: wasSystemThemeOn)
 
         // --- Content Filters Section ---
         let mutedSourcesText = app.staticTexts.matching(NSPredicate(format: "label CONTAINS[c] 'Muted Sources'")).firstMatch
-        XCTAssertTrue(mutedSourcesText.waitForExistence(timeout: 5), "Muted Sources section should exist")
+        XCTAssertTrue(scrollToElement(mutedSourcesText), "Muted Sources section should exist")
 
         let mutedKeywordsText = app.staticTexts.matching(NSPredicate(format: "label CONTAINS[c] 'Muted Keywords'")).firstMatch
-        XCTAssertTrue(mutedKeywordsText.waitForExistence(timeout: 5), "Muted Keywords section should exist")
+        XCTAssertTrue(scrollToElement(mutedKeywordsText), "Muted Keywords section should exist")
 
-        // Expand Muted Sources
         let mutedSourcesButton = app.buttons.matching(NSPredicate(format: "label CONTAINS[c] 'Muted Sources'")).firstMatch
         if mutedSourcesButton.waitForExistence(timeout: 5) {
             mutedSourcesButton.tap()
@@ -252,7 +213,6 @@ final class PulseSettingsUITests: BaseUITestCase {
 
         app.swipeUp()
 
-        // Expand Muted Keywords
         let mutedKeywordsButton = app.buttons.matching(NSPredicate(format: "label CONTAINS[c] 'Muted Keywords'")).firstMatch
         if mutedKeywordsButton.waitForExistence(timeout: 5) {
             mutedKeywordsButton.tap()
@@ -262,51 +222,18 @@ final class PulseSettingsUITests: BaseUITestCase {
             XCTAssertTrue(addKeywordField.waitForExistence(timeout: 3), "Add keyword field should appear")
         }
 
-        // Check footer text
-        let footerText = app.staticTexts["Muted sources and keywords will be hidden from all feeds."]
-        XCTAssertTrue(footerText.waitForExistence(timeout: 5), "Footer text should explain content filters")
-    }
+        let contentFiltersFooter = app.staticTexts["Muted sources and keywords will be hidden from all feeds."]
+        XCTAssertTrue(contentFiltersFooter.waitForExistence(timeout: 5), "Footer text should explain content filters")
 
-    // MARK: - Data, Premium, and About Tests
-
-    /// Tests premium section visibility
-    func testPremiumSection() throws {
-        navigateToSettings()
-
-        // Wait for settings content to load
-        wait(for: 1)
-
-        // --- Premium Section (at the top) ---
-        let subscriptionSection = app.staticTexts["Subscription"]
-        guard subscriptionSection.waitForExistence(timeout: Self.defaultTimeout) else {
-            throw XCTSkip("Subscription section did not load in time")
-        }
-
-        let goPremiumText = app.staticTexts.matching(NSPredicate(format: "label CONTAINS[c] 'Premium' OR label CONTAINS[c] 'premium'")).firstMatch
-        XCTAssertTrue(goPremiumText.waitForExistence(timeout: 5), "Premium section should be visible")
-    }
-
-    /// Tests data section with clear history and about section
-    func testDataAndAboutSections() throws {
-        navigateToSettings()
-        wait(for: 1)
-
-        // Scroll to bottom where Data and About sections are
-        for _ in 0..<5 {
-            app.swipeUp()
-            wait(for: 0.3)
-        }
-
-        // --- Data Section ---
+        // --- Data and About Sections ---
         let dataSection = app.staticTexts["Data"]
-        XCTAssertTrue(dataSection.waitForExistence(timeout: 5), "Data section should exist")
+        XCTAssertTrue(scrollToElement(dataSection), "Data section should exist")
 
         let clearHistoryButton = app.buttons["clearReadingHistoryButton"]
         XCTAssertTrue(clearHistoryButton.waitForExistence(timeout: 5), "Clear Reading History button should exist")
 
         clearHistoryButton.tap()
 
-        // Confirmation alert should appear
         let alertTitle = app.staticTexts["Clear Reading History?"]
         XCTAssertTrue(alertTitle.waitForExistence(timeout: 3), "Confirmation alert should appear")
 
@@ -314,54 +241,13 @@ final class PulseSettingsUITests: BaseUITestCase {
         XCTAssertTrue(cancelButton.waitForExistence(timeout: 3), "Cancel button should exist")
         cancelButton.tap()
 
-        // --- About Section ---
+        let aboutSection = app.staticTexts["About"]
+        XCTAssertTrue(scrollToElement(aboutSection), "About section should exist")
+
         let versionLabel = app.staticTexts["Version"]
         XCTAssertTrue(versionLabel.waitForExistence(timeout: 5), "Version label should exist")
 
         let githubLink = app.buttons["View on GitHub"]
         XCTAssertTrue(githubLink.waitForExistence(timeout: 5), "GitHub link should exist")
-    }
-
-    // MARK: - Integration Tests
-
-    /// Tests setting change persists across navigation
-    func testSettingsChangePersists() throws {
-        navigateToSettings()
-        app.swipeUp()
-
-        let notificationsToggle = app.switches["Enable Notifications"]
-        XCTAssertTrue(notificationsToggle.waitForExistence(timeout: 5))
-
-        let initialValue = notificationsToggle.value as? String ?? "unknown"
-
-        // Tap to toggle
-        notificationsToggle.tap()
-        wait(for: 1.0)
-
-        let toggledValue = notificationsToggle.value as? String ?? "unknown"
-
-        // Navigate back
-        let backButton = app.navigationBars.buttons.firstMatch
-        backButton.tap()
-
-        let homeNav = app.navigationBars["Pulse"]
-        XCTAssertTrue(homeNav.waitForExistence(timeout: 5))
-
-        // Navigate back to Settings
-        navigateToSettings()
-        app.swipeUp()
-
-        // Re-query the toggle element after navigation
-        let notificationsToggleAfter = app.switches["Enable Notifications"]
-        XCTAssertTrue(notificationsToggleAfter.waitForExistence(timeout: 5))
-
-        // Verify setting persisted
-        let persistedValue = notificationsToggleAfter.value as? String ?? "unknown"
-        XCTAssertEqual(toggledValue, persistedValue, "Setting change should persist across navigation")
-
-        // Restore original value
-        if persistedValue != initialValue {
-            notificationsToggleAfter.tap()
-        }
     }
 }
