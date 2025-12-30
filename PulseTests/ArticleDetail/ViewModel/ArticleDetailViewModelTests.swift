@@ -30,6 +30,13 @@ struct ArticleDetailViewModelTests {
         )
     }
 
+    // MARK: - Helper
+
+    private func contentString(from attributedString: AttributedString?) -> String? {
+        guard let attributedString else { return nil }
+        return String(attributedString.characters)
+    }
+
     // MARK: - Initial State Tests
 
     @Test("Initial state has processed content")
@@ -37,7 +44,7 @@ struct ArticleDetailViewModelTests {
         let sut = ArticleDetailViewModel(article: testArticle, serviceLocator: serviceLocator)
 
         #expect(sut.processedContent != nil)
-        #expect(sut.processedContent == "This is the full article content with some text.")
+        #expect(contentString(from: sut.processedContent) == "This is the full article content with some text.")
     }
 
     @Test("Initial bookmark state is false")
@@ -45,13 +52,6 @@ struct ArticleDetailViewModelTests {
         let sut = ArticleDetailViewModel(article: testArticle, serviceLocator: serviceLocator)
 
         #expect(!sut.isBookmarked)
-    }
-
-    @Test("Initial content expansion state is false")
-    func initialContentExpansionIsFalse() {
-        let sut = ArticleDetailViewModel(article: testArticle, serviceLocator: serviceLocator)
-
-        #expect(!sut.isContentExpanded)
     }
 
     // MARK: - HTML Stripping Tests
@@ -72,10 +72,11 @@ struct ArticleDetailViewModelTests {
         )
 
         let sut = ArticleDetailViewModel(article: articleWithHTML, serviceLocator: serviceLocator)
+        let content = contentString(from: sut.processedContent)
 
-        #expect(sut.processedContent != nil)
-        #expect(!sut.processedContent!.contains("<"))
-        #expect(!sut.processedContent!.contains(">"))
+        #expect(content != nil)
+        #expect(!content!.contains("<"))
+        #expect(!content!.contains(">"))
     }
 
     @Test("HTML entity &amp; is decoded")
@@ -94,8 +95,9 @@ struct ArticleDetailViewModelTests {
         )
 
         let sut = ArticleDetailViewModel(article: articleWithEntity, serviceLocator: serviceLocator)
+        let content = contentString(from: sut.processedContent)
 
-        #expect(sut.processedContent?.contains("Tom & Jerry") == true)
+        #expect(content?.contains("Tom & Jerry") == true)
     }
 
     @Test("HTML entity &lt; and &gt; are decoded")
@@ -114,8 +116,9 @@ struct ArticleDetailViewModelTests {
         )
 
         let sut = ArticleDetailViewModel(article: articleWithEntity, serviceLocator: serviceLocator)
+        let content = contentString(from: sut.processedContent)
 
-        #expect(sut.processedContent?.contains("5 < 10 > 3") == true)
+        #expect(content?.contains("5 < 10 > 3") == true)
     }
 
     @Test("HTML entity &nbsp; is decoded to space")
@@ -134,8 +137,9 @@ struct ArticleDetailViewModelTests {
         )
 
         let sut = ArticleDetailViewModel(article: articleWithEntity, serviceLocator: serviceLocator)
+        let content = contentString(from: sut.processedContent)
 
-        #expect(sut.processedContent?.contains("Hello World") == true)
+        #expect(content?.contains("Hello World") == true)
     }
 
     @Test("HTML entity &quot; is decoded")
@@ -154,8 +158,9 @@ struct ArticleDetailViewModelTests {
         )
 
         let sut = ArticleDetailViewModel(article: articleWithEntity, serviceLocator: serviceLocator)
+        let content = contentString(from: sut.processedContent)
 
-        #expect(sut.processedContent?.contains("He said \"Hello\"") == true)
+        #expect(content?.contains("He said \"Hello\"") == true)
     }
 
     @Test("HTML entity &#39; is decoded to apostrophe")
@@ -174,31 +179,12 @@ struct ArticleDetailViewModelTests {
         )
 
         let sut = ArticleDetailViewModel(article: articleWithEntity, serviceLocator: serviceLocator)
+        let content = contentString(from: sut.processedContent)
 
-        #expect(sut.processedContent?.contains("It's working") == true)
+        #expect(content?.contains("It's working") == true)
     }
 
     // MARK: - Truncation Marker Tests
-
-    @Test("Truncation marker is detected")
-    func truncationMarkerDetected() {
-        let articleWithTruncation = Article(
-            id: "truncated-article",
-            title: "Truncated Article",
-            description: nil,
-            content: "This is the beginning of the article... [+1234 chars]",
-            author: nil,
-            source: ArticleSource(id: nil, name: "Source"),
-            url: "https://example.com",
-            imageURL: nil,
-            publishedAt: Date(),
-            category: nil
-        )
-
-        let sut = ArticleDetailViewModel(article: articleWithTruncation, serviceLocator: serviceLocator)
-
-        #expect(sut.isContentTruncated)
-    }
 
     @Test("Truncation marker is removed from content")
     func truncationMarkerRemoved() {
@@ -216,17 +202,11 @@ struct ArticleDetailViewModelTests {
         )
 
         let sut = ArticleDetailViewModel(article: articleWithTruncation, serviceLocator: serviceLocator)
+        let content = contentString(from: sut.processedContent)
 
-        #expect(sut.processedContent != nil)
-        #expect(!sut.processedContent!.contains("[+"))
-        #expect(!sut.processedContent!.contains("chars]"))
-    }
-
-    @Test("Content without truncation marker is not truncated")
-    func contentWithoutTruncationMarkerNotTruncated() {
-        let sut = ArticleDetailViewModel(article: testArticle, serviceLocator: serviceLocator)
-
-        #expect(!sut.isContentTruncated)
+        #expect(content != nil)
+        #expect(!content!.contains("[+"))
+        #expect(!content!.contains("chars]"))
     }
 
     // MARK: - Whitespace Normalization Tests
@@ -247,8 +227,9 @@ struct ArticleDetailViewModelTests {
         )
 
         let sut = ArticleDetailViewModel(article: articleWithWhitespace, serviceLocator: serviceLocator)
+        let content = contentString(from: sut.processedContent)
 
-        #expect(sut.processedContent == "This has multiple spaces")
+        #expect(content == "This has multiple spaces")
     }
 
     // MARK: - Nil Content Tests
@@ -291,23 +272,6 @@ struct ArticleDetailViewModelTests {
         let sut = ArticleDetailViewModel(article: articleWithEmptyContent, serviceLocator: serviceLocator)
 
         #expect(sut.processedContent == nil)
-    }
-
-    // MARK: - Content Expansion Tests
-
-    @Test("Toggle content expansion changes state")
-    func toggleContentExpansion() {
-        let sut = ArticleDetailViewModel(article: testArticle, serviceLocator: serviceLocator)
-
-        #expect(!sut.isContentExpanded)
-
-        sut.toggleContentExpansion()
-
-        #expect(sut.isContentExpanded)
-
-        sut.toggleContentExpansion()
-
-        #expect(!sut.isContentExpanded)
     }
 
     // MARK: - Bookmark Tests
@@ -390,12 +354,58 @@ struct ArticleDetailViewModelTests {
         #expect(sut.showShareSheet)
     }
 
-    // MARK: - Line Limit Tests
+    // MARK: - Description Processing Tests
 
-    @Test("Content line limit is set")
-    func contentLineLimitIsSet() {
+    @Test("Description is processed into AttributedString")
+    func descriptionIsProcessed() {
         let sut = ArticleDetailViewModel(article: testArticle, serviceLocator: serviceLocator)
 
-        #expect(sut.contentLineLimit == 4)
+        #expect(sut.processedDescription != nil)
+        let description = contentString(from: sut.processedDescription)
+        #expect(description == "Test article description")
+    }
+
+    @Test("Nil description results in nil processed description")
+    func nilDescriptionResultsInNilProcessed() {
+        let articleWithNilDescription = Article(
+            id: "nil-desc-article",
+            title: "No Description Article",
+            description: nil,
+            content: "Some content",
+            author: nil,
+            source: ArticleSource(id: nil, name: "Source"),
+            url: "https://example.com",
+            imageURL: nil,
+            publishedAt: Date(),
+            category: nil
+        )
+
+        let sut = ArticleDetailViewModel(article: articleWithNilDescription, serviceLocator: serviceLocator)
+
+        #expect(sut.processedDescription == nil)
+    }
+
+    // MARK: - Paragraph Formatting Tests
+
+    @Test("Content with multiple sentences is formatted into paragraphs")
+    func contentFormattedIntoParagraphs() {
+        let articleWithSentences = Article(
+            id: "sentences-article",
+            title: "Multi-sentence Article",
+            description: nil,
+            content: "First sentence. Second sentence. Third sentence. Fourth sentence. Fifth sentence. Sixth sentence.",
+            author: nil,
+            source: ArticleSource(id: nil, name: "Source"),
+            url: "https://example.com",
+            imageURL: nil,
+            publishedAt: Date(),
+            category: nil
+        )
+
+        let sut = ArticleDetailViewModel(article: articleWithSentences, serviceLocator: serviceLocator)
+        let content = contentString(from: sut.processedContent)
+
+        #expect(content != nil)
+        #expect(content!.contains("\n\n"))
     }
 }

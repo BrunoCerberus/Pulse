@@ -5,13 +5,11 @@ import UIKit
 final class ArticleDetailViewModel: ObservableObject {
     @Published var isBookmarked = false
     @Published var showShareSheet = false
-    @Published var isContentExpanded = false
-    @Published private(set) var processedContent: String?
-    @Published private(set) var isContentTruncated = false
+    @Published private(set) var processedContent: AttributedString?
+    @Published private(set) var processedDescription: AttributedString?
 
     private let article: Article
     private let storageService: StorageService
-    let contentLineLimit = 4
 
     init(article: Article, serviceLocator: ServiceLocator) {
         self.article = article
@@ -22,6 +20,7 @@ final class ArticleDetailViewModel: ObservableObject {
             storageService = LiveStorageService()
         }
         processContent()
+        processDescription()
     }
 
     private func processContent() {
@@ -30,7 +29,6 @@ final class ArticleDetailViewModel: ObservableObject {
             return
         }
 
-        isContentTruncated = content.range(of: #"\[\+\d+ chars\]"#, options: .regularExpression) != nil
         let strippedContent = stripTruncationMarker(from: content)
         let plainContent = stripHTML(from: strippedContent)
             .trimmingCharacters(in: .whitespacesAndNewlines)
@@ -40,11 +38,74 @@ final class ArticleDetailViewModel: ObservableObject {
             return
         }
 
-        processedContent = plainContent
+        let formattedText = formatIntoParagraphs(plainContent)
+        var attributedString = AttributedString(formattedText)
+        attributedString.font = .system(.body, design: .serif)
+
+        processedContent = attributedString
     }
 
-    func toggleContentExpansion() {
-        isContentExpanded.toggle()
+    private func processDescription() {
+        guard let description = article.description else {
+            processedDescription = nil
+            return
+        }
+
+        let cleanText = stripHTML(from: description)
+            .trimmingCharacters(in: .whitespacesAndNewlines)
+
+        guard !cleanText.isEmpty else {
+            processedDescription = nil
+            return
+        }
+
+        // Format into paragraphs by splitting on sentence boundaries
+        let formattedText = formatIntoParagraphs(cleanText)
+
+        var attributedString = AttributedString(formattedText)
+        attributedString.font = .system(.body, design: .serif, weight: .medium)
+
+        // Style the first sentence as a lead/drop cap effect
+        if let firstSentenceEnd = formattedText.firstIndex(where: { $0 == "." || $0 == "!" || $0 == "?" }) {
+            let firstSentenceRange = formattedText.startIndex ... firstSentenceEnd
+            if let attributedRange = Range(firstSentenceRange, in: attributedString) {
+                attributedString[attributedRange].font = .system(.title3, design: .serif, weight: .semibold)
+            }
+        }
+
+        processedDescription = attributedString
+    }
+
+    private func formatIntoParagraphs(_ text: String) -> String {
+        // Split into sentences using regex pattern for sentence boundaries
+        let pattern = #"(?<=[.!?])\s+"#
+        guard let regex = try? NSRegularExpression(pattern: pattern) else { return text }
+
+        let range = NSRange(text.startIndex..., in: text)
+        let modifiedText = regex.stringByReplacingMatches(in: text, range: range, withTemplate: "|||")
+        let sentences = modifiedText.components(separatedBy: "|||")
+            .map { $0.trimmingCharacters(in: .whitespaces) }
+            .filter { !$0.isEmpty }
+
+        guard sentences.count > 1 else { return text }
+
+        var paragraphs: [String] = []
+        var currentParagraph: [String] = []
+        let sentencesPerParagraph = 3
+
+        for sentence in sentences {
+            currentParagraph.append(sentence)
+            if currentParagraph.count >= sentencesPerParagraph {
+                paragraphs.append(currentParagraph.joined(separator: " "))
+                currentParagraph = []
+            }
+        }
+
+        if !currentParagraph.isEmpty {
+            paragraphs.append(currentParagraph.joined(separator: " "))
+        }
+
+        return paragraphs.joined(separator: "\n\n")
     }
 
     private func stripHTML(from html: String) -> String {
