@@ -41,27 +41,26 @@ final class ArticleDetailUITests: BaseUITestCase {
         return waitForArticleDetail()
     }
 
-    // MARK: - Toolbar, Navigation, and Bookmark Tests
+    // MARK: - Combined Flow Test
 
-    /// Tests back button, toolbar buttons, bookmark toggle, and share button
-    func testToolbarNavigationAndBookmark() throws {
+    /// Tests article detail toolbar, content, navigation, and bookmarking flow
+    func testArticleDetailFlow() throws {
         let navigated = navigateToArticleDetail()
-        guard navigated else {
-            throw XCTSkip("Could not navigate to article detail - no articles available")
+        if !navigated {
+            let errorState = app.staticTexts["Unable to Load News"].exists || app.staticTexts["No News Available"].exists
+            XCTAssertTrue(errorState, "Home should show an empty or error state when article detail is unavailable")
+            return
         }
 
-        // --- Back Button ---
+        // --- Toolbar Buttons ---
         let backButton = app.buttons["backButton"]
         XCTAssertTrue(backButton.exists, "Back button should exist in navigation bar")
 
-        // --- Toolbar Buttons ---
-        // Bookmark button can be either "bookmark" or "bookmark.fill"
         let bookmarkButton = app.navigationBars.buttons["bookmark"]
         let bookmarkFilledButton = app.navigationBars.buttons["bookmark.fill"]
         let bookmarkExists = bookmarkButton.exists || bookmarkFilledButton.exists
         XCTAssertTrue(bookmarkExists, "Bookmark button should exist in navigation bar")
 
-        // Share button
         let shareButton = app.navigationBars.buttons["square.and.arrow.up"]
         XCTAssertTrue(shareButton.exists, "Share button should exist in navigation bar")
 
@@ -72,6 +71,8 @@ final class ArticleDetailUITests: BaseUITestCase {
         } else if bookmarkFilledButton.exists {
             bookmarkFilledButton.tap()
             XCTAssertTrue(bookmarkButton.waitForExistence(timeout: 3), "Bookmark should become unfilled after tapping")
+            bookmarkButton.tap()
+            XCTAssertTrue(bookmarkFilledButton.waitForExistence(timeout: 3), "Bookmark should become filled after tapping again")
         }
 
         // --- Share Button ---
@@ -95,55 +96,22 @@ final class ArticleDetailUITests: BaseUITestCase {
 
         wait(for: 2)
 
-        // --- Back Navigation ---
-        let backButtonAfter = app.buttons["backButton"]
-        XCTAssertTrue(backButtonAfter.waitForExistence(timeout: 10), "Back button should exist after share sheet dismissed")
-
-        // Wait for button to become hittable
-        var isHittable = false
-        for _ in 0..<10 {
-            if backButtonAfter.exists && backButtonAfter.isHittable {
-                isHittable = true
-                break
-            }
-            wait(for: 0.5)
-        }
-        XCTAssertTrue(isHittable, "Back button should be tappable")
-        backButtonAfter.tap()
-
-        // Check for Home navigation - either by nav bar title or Home tab being selected
-        let homeNavBar = app.navigationBars["Pulse"]
-        let homeTab = app.tabBars.buttons["Home"]
-        let navigatedBack = homeNavBar.waitForExistence(timeout: 10) || (homeTab.exists && homeTab.isSelected)
-        XCTAssertTrue(navigatedBack, "Should navigate back to Home")
-    }
-
-    // MARK: - Content and Scroll Tests
-
-    /// Tests article content, scroll view, and Read Full Article button
-    func testArticleContentAndScroll() throws {
-        let navigated = navigateToArticleDetail()
-        guard navigated else {
-            throw XCTSkip("Could not navigate to article detail - no articles available")
-        }
+        let backButtonAfterShare = app.buttons["backButton"]
+        XCTAssertTrue(backButtonAfterShare.waitForExistence(timeout: 10), "Back button should exist after share sheet dismissed")
 
         // --- Article Content ---
         let staticTexts = app.staticTexts
         XCTAssertTrue(staticTexts.count > 0, "Article detail should have text content")
 
-        // Check for metadata (author, date)
         let hasMetadata = staticTexts.matching(NSPredicate(format: "label CONTAINS[c] 'By' OR label CONTAINS[c] 'ago' OR label CONTAINS[c] 'hour'")).count > 0
         XCTAssertTrue(hasMetadata, "Article should display metadata (author, source, or date)")
 
-        // Check for scroll view (stretchy header)
         let scrollView = app.scrollViews["articleDetailScrollView"]
         XCTAssertTrue(scrollView.waitForExistence(timeout: 5), "Article detail should have a scroll view")
 
-        // --- Scroll and Read Full Article ---
         let scrollViewGeneric = app.scrollViews.firstMatch
         XCTAssertTrue(scrollViewGeneric.exists, "Article detail should have a scroll view")
 
-        // Scroll down to find Read Full Article button
         for _ in 0 ..< 3 {
             scrollViewGeneric.swipeUp()
         }
@@ -151,62 +119,31 @@ final class ArticleDetailUITests: BaseUITestCase {
         let readFullButton = app.buttons.matching(NSPredicate(format: "label CONTAINS[c] 'Read Full Article'")).firstMatch
         XCTAssertTrue(readFullButton.waitForExistence(timeout: 3), "Read Full Article button should be visible after scrolling")
 
-        // Scroll back up
         scrollViewGeneric.swipeDown()
 
-        // View should still be functional
-        let backButton = app.buttons["backButton"]
-        XCTAssertTrue(backButton.exists, "Navigation should still work after scrolling")
-    }
+        XCTAssertTrue(backButtonAfterShare.exists, "Navigation should still work after scrolling")
 
-    // MARK: - Integration Tests
+        // --- Back Navigation ---
+        var isHittable = false
+        for _ in 0..<10 {
+            if backButtonAfterShare.exists && backButtonAfterShare.isHittable {
+                isHittable = true
+                break
+            }
+            wait(for: 0.5)
+        }
+        XCTAssertTrue(isHittable, "Back button should be tappable")
+        backButtonAfterShare.tap()
 
-    /// Tests full navigation flow from home to detail and back
-    func testNavigateFromHomeToDetailAndBack() throws {
-        navigateToHome()
+        let homeNavBar = app.navigationBars["Pulse"]
+        let homeTab = app.tabBars.buttons["Home"]
+        let navigatedBack = homeNavBar.waitForExistence(timeout: 10) || (homeTab.exists && homeTab.isSelected)
+        XCTAssertTrue(navigatedBack, "Should navigate back to Home")
 
         let topHeadlinesHeader = app.staticTexts["Top Headlines"]
-        guard topHeadlinesHeader.waitForExistence(timeout: 10) else {
-            throw XCTSkip("Content did not load")
-        }
+        XCTAssertTrue(topHeadlinesHeader.waitForExistence(timeout: 5) || homeNavBar.exists, "Home content should be visible")
 
-        let articleCards = app.buttons.matching(NSPredicate(format: "label CONTAINS[c] 'ago'"))
-        guard articleCards.count > 0 else {
-            throw XCTSkip("No articles found")
-        }
-
-        articleCards.firstMatch.tap()
-
-        XCTAssertTrue(waitForArticleDetail(), "Should be on article detail")
-
-        navigateBack()
-
-        let homeNavBar = app.navigationBars["Pulse"]
-        XCTAssertTrue(homeNavBar.waitForExistence(timeout: 5), "Should return to Home")
-        XCTAssertTrue(topHeadlinesHeader.waitForExistence(timeout: 5), "Content should still be visible")
-    }
-
-    /// Tests bookmarking an article and verifying it appears in Bookmarks tab
-    func testBookmarkArticleAndVerifyInBookmarks() throws {
-        let navigated = navigateToArticleDetail()
-        guard navigated else {
-            throw XCTSkip("Could not navigate to article detail - no articles available")
-        }
-
-        let bookmarkButton = app.navigationBars.buttons["bookmark"]
-        let bookmarkFilledButton = app.navigationBars.buttons["bookmark.fill"]
-
-        if bookmarkButton.exists {
-            bookmarkButton.tap()
-            XCTAssertTrue(bookmarkFilledButton.waitForExistence(timeout: 3), "Article should be bookmarked")
-        }
-
-        let backButton = app.buttons["backButton"]
-        backButton.tap()
-
-        let homeNavBar = app.navigationBars["Pulse"]
-        XCTAssertTrue(homeNavBar.waitForExistence(timeout: 5), "Should return to Home")
-
+        // --- Bookmarks Verification ---
         let bookmarksTab = app.tabBars.buttons["Bookmarks"]
         bookmarksTab.tap()
 

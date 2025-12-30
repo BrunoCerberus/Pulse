@@ -48,9 +48,53 @@ class BaseUITestCase: XCTestCase {
 
     /// Reset to Home tab to start each test from a known state
     func resetToHomeTab() {
-        let homeTab = app.tabBars.buttons["Home"]
-        if homeTab.exists, !homeTab.isSelected {
-            homeTab.tap()
+        let tabBar = app.tabBars.firstMatch
+        if !tabBar.waitForExistence(timeout: Self.shortTimeout) {
+            var attempts = 0
+            while attempts < 3 && !tabBar.exists {
+                let backButton = app.buttons["backButton"]
+                if backButton.exists {
+                    backButton.tap()
+                } else {
+                    app.swipeRight()
+                }
+                usleep(100_000)
+                attempts += 1
+                _ = tabBar.waitForExistence(timeout: Self.shortTimeout)
+            }
+        }
+        guard tabBar.exists else { return }
+
+        let homeTab = tabBar.buttons["Home"]
+        let homeTabFallback = tabBar.buttons.matching(
+            NSPredicate(format: "label CONTAINS[c] 'home' OR identifier CONTAINS[c] 'home' OR identifier CONTAINS[c] 'newspaper'")
+        ).firstMatch
+        let firstTab = tabBar.buttons.element(boundBy: 0)
+
+        if homeTab.waitForExistence(timeout: Self.shortTimeout) {
+            if !homeTab.isSelected {
+                homeTab.tap()
+            }
+        } else if homeTabFallback.waitForExistence(timeout: Self.shortTimeout) {
+            if !homeTabFallback.isSelected {
+                homeTabFallback.tap()
+            }
+        } else if firstTab.exists {
+            firstTab.tap()
+        }
+
+        let homeNavBar = app.navigationBars["Pulse"]
+        let gearButton = app.navigationBars.buttons["gearshape"]
+        if !homeNavBar.exists && !gearButton.exists {
+            for button in tabBar.buttons.allElementsBoundByIndex {
+                if button.isSelected {
+                    continue
+                }
+                button.tap()
+                if homeNavBar.waitForExistence(timeout: Self.shortTimeout) || gearButton.exists {
+                    break
+                }
+            }
         }
 
         // Pop any pushed views by tapping back until we're at root

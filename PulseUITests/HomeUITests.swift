@@ -10,9 +10,9 @@ final class HomeUITests: BaseUITestCase {
 
     // MARK: - Navigation and Content Tests
 
-    /// Tests navigation bar elements, content loading, and error state
-    func testNavigationBarAndContentLoads() throws {
-        navigateToHome()
+    /// Tests navigation bar, content loading, interactions, and settings navigation
+    func testHomeContentInteractionsAndSettingsFlow() throws {
+        resetToHomeTab()
 
         // Verify navigation title
         XCTAssertTrue(app.navigationBars["Pulse"].waitForExistence(timeout: Self.shortTimeout), "Navigation title 'Pulse' should exist")
@@ -21,117 +21,97 @@ final class HomeUITests: BaseUITestCase {
         XCTAssertTrue(app.navigationBars.buttons["gearshape"].waitForExistence(timeout: Self.shortTimeout), "Gear button should exist in navigation bar")
 
         // Verify content loads
-        XCTAssertTrue(waitForHomeContent(timeout: Self.defaultTimeout), "Home should show content, empty state, or error state")
+        let contentLoaded = waitForHomeContent(timeout: Self.defaultTimeout)
+        XCTAssertTrue(contentLoaded, "Home should show content, empty state, or error state")
 
         // Check error state if present
-        if app.staticTexts["Unable to Load News"].exists {
+        let errorState = app.staticTexts["Unable to Load News"].exists
+        let emptyState = app.staticTexts["No News Available"].exists
+
+        if errorState {
             XCTAssertTrue(app.buttons["Try Again"].exists, "Try Again button should exist in error state")
         }
-    }
 
-    // MARK: - Article Interaction Tests
-
-    /// Tests article card navigation, scroll interactions, and context menu
-    func testArticleInteractionsAndScroll() throws {
-        navigateToHome()
-
-        guard waitForHomeContent(timeout: Self.defaultTimeout) else {
-            throw XCTSkip("Content did not load in time")
-        }
-
-        if app.staticTexts["Unable to Load News"].exists || app.staticTexts["No News Available"].exists {
-            throw XCTSkip("No articles available to test interactions")
-        }
-
-        let cards = articleCards()
-        guard cards.count > 0 else {
-            throw XCTSkip("No article cards found to test interactions")
-        }
-
-        // --- Article Card Navigation ---
-        let firstCard = cards.firstMatch
-        guard firstCard.waitForExistence(timeout: Self.shortTimeout) else {
-            throw XCTSkip("Article card not found")
-        }
-
-        // Scroll to make the card hittable if needed
-        if !firstCard.isHittable {
-            app.scrollViews.firstMatch.swipeUp()
-            wait(for: 0.5)
-        }
-
-        guard firstCard.isHittable else {
-            throw XCTSkip("Article card not hittable")
-        }
-
-        firstCard.tap()
-        XCTAssertTrue(waitForArticleDetail(), "Should navigate to article detail")
-
-        // Navigate back
-        navigateBack()
-        XCTAssertTrue(app.navigationBars["Pulse"].waitForExistence(timeout: Self.shortTimeout), "Should return to Home")
-
-        // --- Scroll Interactions ---
-        let scrollView = app.scrollViews.firstMatch
-        XCTAssertTrue(scrollView.waitForExistence(timeout: Self.shortTimeout), "ScrollView should exist")
-
-        // Pull to refresh
-        scrollView.swipeDown()
-        XCTAssertTrue(scrollView.exists, "ScrollView should still exist after refresh")
-
-        // Vertical scroll
-        scrollView.swipeUp()
-        XCTAssertTrue(app.navigationBars["Pulse"].waitForExistence(timeout: Self.shortTimeout), "App should remain responsive after scrolling")
-
-        // Horizontal carousel scroll (if Breaking News exists)
-        if app.staticTexts["Breaking News"].exists {
-            scrollView.swipeLeft()
-        }
-
-        // --- Context Menu ---
-        let cardsAfterScroll = articleCards()
-        if cardsAfterScroll.count > 0 {
-            cardsAfterScroll.firstMatch.press(forDuration: 1.0)
-
-            let contextMenuAppeared = app.buttons["Bookmark"].waitForExistence(timeout: Self.shortTimeout) ||
-                app.buttons["Share"].waitForExistence(timeout: 1)
-
-            if contextMenuAppeared {
-                app.tap() // Dismiss context menu
-            }
-        }
-    }
-
-    // MARK: - Navigation Integration Tests
-
-    func testNavigateToSettingsAndBack() throws {
-        navigateToHome()
-
-        let homeNavBar = app.navigationBars["Pulse"]
-        XCTAssertTrue(homeNavBar.waitForExistence(timeout: Self.defaultTimeout), "Home navigation bar should exist")
-
-        let gearButton = app.navigationBars.buttons["gearshape"]
-        XCTAssertTrue(gearButton.waitForExistence(timeout: Self.shortTimeout), "Gear button should exist")
-        gearButton.tap()
+        // --- Settings Navigation ---
+        let settingsGearButton = app.navigationBars.buttons["gearshape"]
+        XCTAssertTrue(settingsGearButton.waitForExistence(timeout: Self.shortTimeout), "Gear button should exist")
+        settingsGearButton.tap()
 
         let settingsNavBar = app.navigationBars["Settings"]
         XCTAssertTrue(settingsNavBar.waitForExistence(timeout: Self.defaultTimeout), "Settings should open")
 
-        // Navigate back
-        var backButton = settingsNavBar.buttons["Pulse"]
-        if !backButton.exists {
-            backButton = settingsNavBar.buttons["Back"]
+        var settingsBackButton = settingsNavBar.buttons["Pulse"]
+        if !settingsBackButton.exists {
+            settingsBackButton = settingsNavBar.buttons["Back"]
         }
-        if !backButton.exists {
-            backButton = settingsNavBar.buttons.firstMatch
+        if !settingsBackButton.exists {
+            settingsBackButton = settingsNavBar.buttons.firstMatch
         }
 
-        if backButton.exists {
-            backButton.tap()
+        if settingsBackButton.exists {
+            settingsBackButton.tap()
         } else {
             app.swipeRight()
         }
 
-        XCTAssertTrue(homeNavBar.waitForExistence(timeout: Self.shortTimeout), "Should return to Home")
+        XCTAssertTrue(app.navigationBars["Pulse"].waitForExistence(timeout: Self.shortTimeout), "Should return to Home")
+
+        if contentLoaded, !errorState, !emptyState {
+            let cards = articleCards()
+            XCTAssertTrue(cards.count > 0, "Article cards should exist when content loads")
+
+            if cards.count > 0 {
+                // --- Article Card Navigation ---
+                let firstCard = cards.firstMatch
+                XCTAssertTrue(firstCard.waitForExistence(timeout: Self.shortTimeout), "Article card should exist")
+
+                // Scroll to make the card hittable if needed
+                if !firstCard.isHittable {
+                    app.scrollViews.firstMatch.swipeUp()
+                    wait(for: 0.5)
+                }
+
+                if firstCard.isHittable {
+                    firstCard.tap()
+                    XCTAssertTrue(waitForArticleDetail(), "Should navigate to article detail")
+
+                    // Navigate back
+                    navigateBack()
+                    XCTAssertTrue(app.navigationBars["Pulse"].waitForExistence(timeout: Self.shortTimeout), "Should return to Home")
+                }
+
+                // --- Scroll Interactions ---
+                let scrollView = app.scrollViews.firstMatch
+                XCTAssertTrue(scrollView.waitForExistence(timeout: Self.shortTimeout), "ScrollView should exist")
+
+                // Pull to refresh
+                scrollView.swipeDown()
+                XCTAssertTrue(scrollView.exists, "ScrollView should still exist after refresh")
+
+                // Vertical scroll
+                scrollView.swipeUp()
+                XCTAssertTrue(app.navigationBars["Pulse"].waitForExistence(timeout: Self.shortTimeout), "App should remain responsive after scrolling")
+
+                // Horizontal carousel scroll (if Breaking News exists)
+                if app.staticTexts["Breaking News"].exists {
+                    scrollView.swipeLeft()
+                }
+
+                // --- Context Menu ---
+                let cardsAfterScroll = articleCards()
+                if cardsAfterScroll.count > 0 {
+                    cardsAfterScroll.firstMatch.press(forDuration: 1.0)
+
+                    let contextMenuAppeared = app.buttons["Bookmark"].waitForExistence(timeout: Self.shortTimeout) ||
+                        app.buttons["Share"].waitForExistence(timeout: 1)
+
+                    if contextMenuAppeared {
+                        app.tap() // Dismiss context menu
+                    }
+                }
+            }
+        }
+
+        resetToHomeTab()
     }
 }

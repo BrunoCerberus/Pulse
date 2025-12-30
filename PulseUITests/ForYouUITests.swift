@@ -15,10 +15,10 @@ final class ForYouUITests: BaseUITestCase {
         _ = app.navigationBars["For You"].waitForExistence(timeout: Self.defaultTimeout)
     }
 
-    // MARK: - Navigation and Content Tests
+    // MARK: - Combined Flow Test
 
-    /// Tests tab navigation and content loading (onboarding, articles, empty, or error state)
-    func testForYouNavigationAndContentLoads() throws {
+    /// Tests For You navigation, content states, interactions, and related settings flows
+    func testForYouFlow() throws {
         // --- Tab Navigation ---
         let forYouTab = app.tabBars.buttons["For You"]
         XCTAssertTrue(forYouTab.exists, "For You tab should exist")
@@ -55,13 +55,29 @@ final class ForYouUITests: BaseUITestCase {
 
         XCTAssertTrue(contentLoaded, "For You should show content (articles, onboarding, empty, or error state)")
 
-        // If onboarding, verify helpful elements
+        // If onboarding, verify helpful elements and Set Preferences navigation
         if personalizeText.exists {
             let helpText = app.staticTexts["Follow topics and sources to see articles tailored to your interests."]
             XCTAssertTrue(helpText.exists, "Onboarding should show helpful message")
 
             let setPreferencesButton = app.buttons["Set Preferences"]
             XCTAssertTrue(setPreferencesButton.exists, "Onboarding should have 'Set Preferences' button")
+
+            if setPreferencesButton.isHittable {
+                setPreferencesButton.tap()
+
+                let settingsNav = app.navigationBars["Settings"]
+                XCTAssertTrue(settingsNav.waitForExistence(timeout: 10), "Should navigate to Settings")
+
+                let backButton = settingsNav.buttons.firstMatch
+                if backButton.exists {
+                    backButton.tap()
+                } else {
+                    app.swipeRight()
+                }
+
+                _ = app.navigationBars["For You"].waitForExistence(timeout: Self.defaultTimeout)
+            }
         }
 
         // If error, verify Try Again button
@@ -69,34 +85,26 @@ final class ForYouUITests: BaseUITestCase {
             let tryAgainButton = app.buttons["Try Again"]
             XCTAssertTrue(tryAgainButton.exists, "Error state should have Try Again button")
         }
-    }
 
-    // MARK: - Article Navigation and Scroll Tests
-
-    /// Tests article card navigation and scroll interactions
-    func testArticleNavigationAndScroll() throws {
+        // --- Article Navigation and Scroll ---
         navigateToForYou()
+        wait(for: 2)
 
-        wait(for: 3)
-
-        // --- Article Card Navigation ---
-        let articleCards = app.buttons.matching(NSPredicate(format: "label CONTAINS[c] 'ago' OR label CONTAINS[c] 'hour'"))
-
-        if articleCards.count > 0 {
-            articleCards.firstMatch.tap()
+        let articleCardsAfterLoad = app.buttons.matching(NSPredicate(format: "label CONTAINS[c] 'ago' OR label CONTAINS[c] 'hour'"))
+        if articleCardsAfterLoad.count > 0 {
+            articleCardsAfterLoad.firstMatch.tap()
 
             let backButton = app.buttons["backButton"]
             XCTAssertTrue(backButton.waitForExistence(timeout: 5), "Should navigate to article detail")
 
             backButton.tap()
 
-            let forYouNav = app.navigationBars["For You"]
-            XCTAssertTrue(forYouNav.waitForExistence(timeout: 5), "Should return to For You")
+            let forYouNavAfter = app.navigationBars["For You"]
+            XCTAssertTrue(forYouNavAfter.waitForExistence(timeout: 5), "Should return to For You")
         }
 
-        // --- Scroll Interactions ---
         let scrollView = app.scrollViews.firstMatch
-        let articleCardsAfter = app.buttons.matching(NSPredicate(format: "label CONTAINS[c] 'ago'"))
+        let articleCardsAfterScroll = app.buttons.matching(NSPredicate(format: "label CONTAINS[c] 'ago'"))
 
         if scrollView.exists {
             // Pull to refresh
@@ -104,74 +112,16 @@ final class ForYouUITests: BaseUITestCase {
             wait(for: 1)
 
             // Infinite scroll
-            if articleCardsAfter.count > 0 {
+            if articleCardsAfterScroll.count > 0 {
                 scrollView.swipeUp()
                 scrollView.swipeUp()
                 scrollView.swipeUp()
             }
         }
 
-        let navTitle = app.navigationBars["For You"]
         XCTAssertTrue(navTitle.waitForExistence(timeout: Self.defaultTimeout), "View should remain functional after scrolling")
-    }
 
-    // MARK: - Onboarding Tests
-
-    /// Tests Set Preferences button navigates to Settings
-    func testOnboardingSetPreferencesNavigation() throws {
-        navigateToForYou()
-
-        let personalizeText = app.staticTexts["Personalize Your Feed"]
-        let articleCards = app.buttons.matching(NSPredicate(format: "label CONTAINS[c] 'ago'"))
-        let noArticlesText = app.staticTexts["No Articles"]
-        let errorText = app.staticTexts["Unable to Load Feed"]
-
-        let timeout: TimeInterval = 20
-        let startTime = Date()
-        var contentAppeared = false
-
-        while Date().timeIntervalSince(startTime) < timeout {
-            if personalizeText.exists || articleCards.count > 0 || noArticlesText.exists || errorText.exists {
-                contentAppeared = true
-                break
-            }
-            wait(for: 0.5)
-        }
-
-        guard contentAppeared else {
-            throw XCTSkip("Content did not load in time")
-        }
-
-        if errorText.exists {
-            throw XCTSkip("For You feed error state shown")
-        } else if personalizeText.exists {
-            let setPreferencesButton = app.buttons["Set Preferences"]
-            guard setPreferencesButton.waitForExistence(timeout: 5) else {
-                throw XCTSkip("Set Preferences button not found in onboarding")
-            }
-
-            setPreferencesButton.tap()
-
-            let settingsNav = app.navigationBars["Settings"]
-            XCTAssertTrue(settingsNav.waitForExistence(timeout: 10), "Should navigate to Settings")
-        } else {
-            XCTAssertTrue(articleCards.count > 0 || noArticlesText.exists, "For You should show content")
-        }
-    }
-
-    // MARK: - Tab Switching Tests
-
-    /// Tests tab switching preserves For You state
-    func testSwitchingTabsPreservesForYouState() throws {
-        navigateToForYou()
-
-        let navTitle = app.navigationBars["For You"]
-        guard navTitle.waitForExistence(timeout: Self.defaultTimeout) else {
-            throw XCTSkip("For You navigation did not load")
-        }
-
-        wait(for: 2)
-
+        // --- Tab Switching ---
         let homeTab = app.tabBars.buttons["Home"]
         XCTAssertTrue(homeTab.waitForExistence(timeout: Self.shortTimeout), "Home tab should exist")
         homeTab.tap()
@@ -179,20 +129,14 @@ final class ForYouUITests: BaseUITestCase {
         let homeNav = app.navigationBars["Pulse"]
         XCTAssertTrue(homeNav.waitForExistence(timeout: Self.defaultTimeout), "Home should load")
 
-        wait(for: 1)
+        let forYouTabReturn = app.tabBars.buttons["For You"]
+        XCTAssertTrue(forYouTabReturn.waitForExistence(timeout: Self.shortTimeout), "For You tab should exist")
+        forYouTabReturn.tap()
 
-        let forYouTab = app.tabBars.buttons["For You"]
-        XCTAssertTrue(forYouTab.waitForExistence(timeout: Self.shortTimeout), "For You tab should exist")
-        forYouTab.tap()
+        let forYouNavAfterSwitch = app.navigationBars["For You"]
+        XCTAssertTrue(forYouNavAfterSwitch.waitForExistence(timeout: Self.defaultTimeout), "For You should be visible after tab switch")
 
-        let forYouNav = app.navigationBars["For You"]
-        XCTAssertTrue(forYouNav.waitForExistence(timeout: Self.defaultTimeout), "For You should be visible after tab switch")
-    }
-
-    // MARK: - Integration Tests
-
-    /// Tests following topic in settings and verifying in For You
-    func testFollowTopicInSettingsAndVerifyInForYou() throws {
+        // --- Follow Topic in Settings ---
         navigateToSettings()
 
         let followedTopicsSection = app.staticTexts["Followed Topics"]
@@ -206,16 +150,19 @@ final class ForYouUITests: BaseUITestCase {
         }
 
         let backButton = app.navigationBars.buttons.firstMatch
-        backButton.tap()
+        if backButton.exists {
+            backButton.tap()
+        } else {
+            app.swipeRight()
+        }
 
-        let homeNav = app.navigationBars["Pulse"]
-        XCTAssertTrue(homeNav.waitForExistence(timeout: 5), "Should return to Home")
+        let homeNavAfterSettings = app.navigationBars["Pulse"]
+        XCTAssertTrue(homeNavAfterSettings.waitForExistence(timeout: 5), "Should return to Home")
 
         navigateToForYou()
+        wait(for: 2)
 
-        wait(for: 3)
-
-        let navTitle = app.navigationBars["For You"]
-        XCTAssertTrue(navTitle.exists, "For You should be visible")
+        let navTitleAfterSettings = app.navigationBars["For You"]
+        XCTAssertTrue(navTitleAfterSettings.exists, "For You should be visible")
     }
 }

@@ -2,17 +2,14 @@ import XCTest
 
 final class PulseUITests: BaseUITestCase {
 
-    /// Tests tab bar exists and home tab is selected by default
-    func testTabBarExistsAndHomeSelected() throws {
+    /// Tests tab bar exists, tab navigation, and settings access
+    func testMainAppNavigationFlow() throws {
         XCTAssertTrue(app.tabBars.firstMatch.exists)
 
         let homeTab = app.tabBars.buttons["Home"]
         XCTAssertTrue(homeTab.exists)
         XCTAssertTrue(homeTab.isSelected)
-    }
 
-    /// Tests navigation to all main tabs (Bookmarks, Categories, For You, Search)
-    func testNavigateToAllTabs() throws {
         // --- Bookmarks Tab ---
         let bookmarksTab = app.tabBars.buttons["Bookmarks"]
         XCTAssertTrue(bookmarksTab.waitForExistence(timeout: 5), "Bookmarks tab should exist")
@@ -45,10 +42,19 @@ final class PulseUITests: BaseUITestCase {
 
         let searchField = app.searchFields.firstMatch
         XCTAssertTrue(searchField.waitForExistence(timeout: 5), "Search field should appear after tapping Search tab")
-    }
 
-    /// Tests navigation to settings via gear button
-    func testNavigateToSettingsViaGearButton() throws {
+        // Return to Home before opening Settings
+        let cancelButton = app.buttons["Cancel"]
+        if cancelButton.exists {
+            cancelButton.tap()
+            wait(for: 0.5)
+        }
+
+        resetToHomeTab()
+
+        let homeNavBar = app.navigationBars["Pulse"]
+        XCTAssertTrue(homeNavBar.waitForExistence(timeout: 5), "Home navigation bar should exist")
+
         // Settings is accessed via the gear button in Home navigation bar, not a tab
         let gearButton = app.navigationBars.buttons["gearshape"]
         XCTAssertTrue(gearButton.waitForExistence(timeout: 5), "Gear button should exist")

@@ -69,10 +69,10 @@ final class CategoriesUITests: BaseUITestCase {
 
     private let categoryNames = ["World", "Business", "Technology", "Science", "Health", "Sports", "Entertainment"]
 
-    // MARK: - Navigation, Initial State, and Chips Tests
+    // MARK: - Combined Flow Test
 
-    /// Tests tab navigation, initial state, and category chips
-    func testNavigationInitialStateAndChips() throws {
+    /// Tests categories navigation, selection, content states, and tab switching
+    func testCategoriesFlow() throws {
         // --- Navigation ---
         let categoriesTab = app.tabBars.buttons["Categories"]
         XCTAssertTrue(categoriesTab.exists, "Categories tab should exist")
@@ -88,7 +88,6 @@ final class CategoriesUITests: BaseUITestCase {
         let selectCategoryText = app.staticTexts["Select a Category"]
         let noSelectionText = app.staticTexts.matching(NSPredicate(format: "label CONTAINS[c] 'Choose a category'")).firstMatch
 
-        // Wait for initial state content with longer timeout
         let timeout: TimeInterval = 15
         let startTime = Date()
         var foundInitialState = false
@@ -129,123 +128,81 @@ final class CategoriesUITests: BaseUITestCase {
             }
             XCTAssertTrue(foundCategory, "Categories should still be visible after scrolling")
         }
-    }
 
-    // MARK: - Selection, Navigation, and Scroll Tests
-
-    /// Tests category selection, article navigation, scroll behavior, and content states
-    func testSelectionNavigationScrollAndContentStates() throws {
-        navigateToCategories()
-
+        // --- Selection, Content, and Scroll ---
         wait(for: 1)
 
-        // --- Category Selection ---
-        var categoryTapped = false
-        for category in categoryNames {
-            let categoryButton = app.buttons[category]
-            if categoryButton.exists {
-                categoryButton.tap()
-                categoryTapped = true
-                break
+        let categoryTapped = selectAnyCategory()
+        XCTAssertTrue(categoryTapped, "Could not find a category to tap")
+
+        if categoryTapped {
+            wait(for: 2)
+
+            let loadingText = app.staticTexts["Loading articles..."]
+            let articlesCountText = app.staticTexts.matching(NSPredicate(format: "label CONTAINS[c] 'articles'")).firstMatch
+            let noArticlesText = app.staticTexts["No Articles"]
+            let errorText = app.staticTexts["Error"]
+
+            let contentChanged = !selectCategoryText.exists ||
+                loadingText.exists ||
+                articlesCountText.exists ||
+                noArticlesText.exists ||
+                errorText.exists
+
+            XCTAssertTrue(contentChanged, "Content should change after selecting a category")
+
+            // --- Article Navigation ---
+            let articleCards = app.buttons.matching(NSPredicate(format: "label CONTAINS[c] 'ago' OR label CONTAINS[c] 'hour'"))
+
+            if articleCards.count > 0 {
+                articleCards.firstMatch.tap()
+
+                XCTAssertTrue(waitForArticleDetail(), "Should navigate to article detail")
+
+                navigateBack()
+
+                let categoriesNav = app.navigationBars["Categories"]
+                XCTAssertTrue(categoriesNav.waitForExistence(timeout: 5), "Should return to Categories")
             }
-        }
 
-        guard categoryTapped else {
-            throw XCTSkip("Could not find a category to tap")
-        }
+            // --- Scroll Behavior ---
+            if navTitle.waitForExistence(timeout: Self.defaultTimeout) {
+                let scrollView = app.scrollViews.firstMatch
+                if scrollView.exists {
+                    scrollView.swipeUp()
+                    scrollView.swipeUp()
+                    scrollView.swipeDown()
+                }
 
-        wait(for: 2)
-
-        // Content should change
-        let selectCategoryText = app.staticTexts["Select a Category"]
-        let loadingText = app.staticTexts["Loading articles..."]
-        let articlesCountText = app.staticTexts.matching(NSPredicate(format: "label CONTAINS[c] 'articles'")).firstMatch
-        let noArticlesText = app.staticTexts["No Articles"]
-        let errorText = app.staticTexts["Error"]
-
-        let contentChanged = !selectCategoryText.exists ||
-            loadingText.exists ||
-            articlesCountText.exists ||
-            noArticlesText.exists ||
-            errorText.exists
-
-        XCTAssertTrue(contentChanged, "Content should change after selecting a category")
-
-        // --- Article Navigation ---
-        let articleCards = app.buttons.matching(NSPredicate(format: "label CONTAINS[c] 'ago' OR label CONTAINS[c] 'hour'"))
-
-        if articleCards.count > 0 {
-            articleCards.firstMatch.tap()
-
-            XCTAssertTrue(waitForArticleDetail(), "Should navigate to article detail")
-
-            navigateBack()
-
-            let categoriesNav = app.navigationBars["Categories"]
-            XCTAssertTrue(categoriesNav.waitForExistence(timeout: 5), "Should return to Categories")
-        }
-
-        // --- Scroll Behavior ---
-        let navTitle = app.navigationBars["Categories"]
-        guard navTitle.waitForExistence(timeout: Self.defaultTimeout) else {
-            throw XCTSkip("Categories navigation did not load")
-        }
-
-        let scrollView = app.scrollViews.firstMatch
-        if scrollView.exists {
-            // Test infinite scroll
-            scrollView.swipeUp()
-            scrollView.swipeUp()
-
-            // Test pull to refresh
-            scrollView.swipeDown()
-        }
-
-        XCTAssertTrue(navTitle.exists || app.navigationBars.count > 0, "Navigation should work after scrolling")
-
-        // --- Content States ---
-        if errorText.exists {
-            let tryAgainButton = app.buttons["Try Again"]
-            XCTAssertTrue(tryAgainButton.exists, "Error state should have Try Again button")
-        } else if noArticlesText.exists {
-            let helpText = app.staticTexts["No articles found in this category."]
-            XCTAssertTrue(helpText.exists, "Empty state should show helpful message")
-        }
-
-        // Test switching categories
-        for category in categoryNames.reversed() {
-            if scrollToAndTapCategory(category) {
-                break
+                XCTAssertTrue(navTitle.exists || app.navigationBars.count > 0, "Navigation should work after scrolling")
             }
+
+            // --- Content States ---
+            if errorText.exists {
+                let tryAgainButton = app.buttons["Try Again"]
+                XCTAssertTrue(tryAgainButton.exists, "Error state should have Try Again button")
+            } else if noArticlesText.exists {
+                let helpText = app.staticTexts["No articles found in this category."]
+                XCTAssertTrue(helpText.exists, "Empty state should show helpful message")
+            }
+
+            // Test switching categories
+            for category in categoryNames.reversed() {
+                if scrollToAndTapCategory(category) {
+                    break
+                }
+            }
+
+            wait(for: 2)
+
+            XCTAssertTrue(navTitle.exists, "Navigation should work after switching categories")
         }
 
-        wait(for: 2)
-
-        XCTAssertTrue(navTitle.exists, "Navigation should work after switching categories")
-    }
-
-    // MARK: - Tab Switching Tests
-
-    /// Tests that tab switching works correctly
-    func testTabSwitching() throws {
-        navigateToCategories()
-
-        wait(for: 1)
-
-        let technologyButton = app.buttons["Technology"]
-        if technologyButton.exists {
-            technologyButton.tap()
-        }
-
-        wait(for: 2)
-
+        // --- Tab Switching ---
         let homeTab = app.tabBars.buttons["Home"]
         XCTAssertTrue(homeTab.waitForExistence(timeout: Self.shortTimeout), "Home tab should exist")
         homeTab.tap()
 
-        wait(for: 1)
-
-        // Verify we're on Home
         let homeNav = app.navigationBars["Pulse"]
         XCTAssertTrue(homeNav.waitForExistence(timeout: Self.defaultTimeout), "Home should load after tab switch")
 
@@ -253,7 +210,7 @@ final class CategoriesUITests: BaseUITestCase {
 
         wait(for: 1)
 
-        let navTitle = app.navigationBars["Categories"]
-        XCTAssertTrue(navTitle.waitForExistence(timeout: Self.defaultTimeout), "Categories view should load after tab switch")
+        let navTitleAfterSwitch = app.navigationBars["Categories"]
+        XCTAssertTrue(navTitleAfterSwitch.waitForExistence(timeout: Self.defaultTimeout), "Categories view should load after tab switch")
     }
 }
