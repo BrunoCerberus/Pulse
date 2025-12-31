@@ -76,12 +76,13 @@ struct SettingsViewModelTests {
         sut.handle(event: .onAppear)
         try await Task.sleep(nanoseconds: 300_000_000)
 
-        sut.newMutedSource = "TestSource"
+        sut.handle(event: .onNewMutedSourceChanged("TestSource"))
+        try await Task.sleep(nanoseconds: 50_000_000)
         sut.handle(event: .onAddMutedSource)
         try await Task.sleep(nanoseconds: 300_000_000)
 
         #expect(sut.viewState.mutedSources.contains("TestSource"))
-        #expect(sut.newMutedSource.isEmpty)
+        #expect(sut.viewState.newMutedSource.isEmpty)
     }
 
     @Test("Add muted keyword works correctly")
@@ -89,12 +90,13 @@ struct SettingsViewModelTests {
         sut.handle(event: .onAppear)
         try await Task.sleep(nanoseconds: 300_000_000)
 
-        sut.newMutedKeyword = "TestKeyword"
+        sut.handle(event: .onNewMutedKeywordChanged("TestKeyword"))
+        try await Task.sleep(nanoseconds: 50_000_000)
         sut.handle(event: .onAddMutedKeyword)
         try await Task.sleep(nanoseconds: 300_000_000)
 
         #expect(sut.viewState.mutedKeywords.contains("TestKeyword"))
-        #expect(sut.newMutedKeyword.isEmpty)
+        #expect(sut.viewState.newMutedKeyword.isEmpty)
     }
 
     // MARK: - Remove Tests
@@ -150,7 +152,8 @@ struct SettingsViewModelTests {
         sut.handle(event: .onAppear)
         try await Task.sleep(nanoseconds: 300_000_000)
 
-        sut.newMutedSource = ""
+        sut.handle(event: .onNewMutedSourceChanged(""))
+        try await Task.sleep(nanoseconds: 50_000_000)
         sut.handle(event: .onAddMutedSource)
         try await Task.sleep(nanoseconds: 300_000_000)
 
@@ -162,7 +165,8 @@ struct SettingsViewModelTests {
         sut.handle(event: .onAppear)
         try await Task.sleep(nanoseconds: 300_000_000)
 
-        sut.newMutedKeyword = ""
+        sut.handle(event: .onNewMutedKeywordChanged(""))
+        try await Task.sleep(nanoseconds: 50_000_000)
         sut.handle(event: .onAddMutedKeyword)
         try await Task.sleep(nanoseconds: 300_000_000)
 

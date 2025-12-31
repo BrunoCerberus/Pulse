@@ -6,15 +6,12 @@ final class SettingsViewModel: CombineViewModel, ObservableObject {
     typealias ViewEvent = SettingsViewEvent
 
     @Published private(set) var viewState: SettingsViewState = .initial
-    @Published var newMutedSource: String = ""
-    @Published var newMutedKeyword: String = ""
 
     private let serviceLocator: ServiceLocator
     private let interactor: SettingsDomainInteractor
     private let themeManager: ThemeManager
     private let authenticationManager: AuthenticationManager
     private var authService: AuthService?
-    @Published private var showSignOutConfirmation: Bool = false
     private var cancellables = Set<AnyCancellable>()
 
     init(
@@ -45,12 +42,16 @@ final class SettingsViewModel: CombineViewModel, ObservableObject {
             themeManager.isDarkMode = enabled
         case let .onToggleSystemTheme(enabled):
             themeManager.useSystemTheme = enabled
+        case let .onNewMutedSourceChanged(source):
+            interactor.dispatch(action: .setNewMutedSource(source))
         case .onAddMutedSource:
-            handleAddMutedSource()
+            interactor.dispatch(action: .addMutedSource(interactor.currentState.newMutedSource))
         case let .onRemoveMutedSource(source):
             interactor.dispatch(action: .removeMutedSource(source))
+        case let .onNewMutedKeywordChanged(keyword):
+            interactor.dispatch(action: .setNewMutedKeyword(keyword))
         case .onAddMutedKeyword:
-            handleAddMutedKeyword()
+            interactor.dispatch(action: .addMutedKeyword(interactor.currentState.newMutedKeyword))
         case let .onRemoveMutedKeyword(keyword):
             interactor.dispatch(action: .removeMutedKeyword(keyword))
         case .onClearReadingHistory:
@@ -60,11 +61,11 @@ final class SettingsViewModel: CombineViewModel, ObservableObject {
         case .onCancelClearHistory:
             interactor.dispatch(action: .setShowClearHistoryConfirmation(false))
         case .onSignOutTapped:
-            showSignOutConfirmation = true
+            interactor.dispatch(action: .setShowSignOutConfirmation(true))
         case .onConfirmSignOut:
             handleSignOut()
         case .onCancelSignOut:
-            showSignOutConfirmation = false
+            interactor.dispatch(action: .setShowSignOutConfirmation(false))
         }
     }
 
@@ -74,7 +75,7 @@ final class SettingsViewModel: CombineViewModel, ObservableObject {
             .receive(on: DispatchQueue.main)
             .sink(
                 receiveCompletion: { [weak self] completion in
-                    self?.showSignOutConfirmation = false
+                    self?.interactor.dispatch(action: .setShowSignOutConfirmation(false))
                     if case let .failure(error) = completion {
                         Logger.shared.service("Sign out failed: \(error.localizedDescription)", level: .error)
                     }
@@ -84,28 +85,15 @@ final class SettingsViewModel: CombineViewModel, ObservableObject {
             .store(in: &cancellables)
     }
 
-    private func handleAddMutedSource() {
-        guard !newMutedSource.isEmpty else { return }
-        interactor.dispatch(action: .addMutedSource(newMutedSource))
-        newMutedSource = ""
-    }
-
-    private func handleAddMutedKeyword() {
-        guard !newMutedKeyword.isEmpty else { return }
-        interactor.dispatch(action: .addMutedKeyword(newMutedKeyword))
-        newMutedKeyword = ""
-    }
-
     private func setupBindings() {
-        Publishers.CombineLatest4(
+        Publishers.CombineLatest3(
             interactor.statePublisher,
             themeManager.$isDarkMode,
-            themeManager.$useSystemTheme,
-            $showSignOutConfirmation
+            themeManager.$useSystemTheme
         )
         .combineLatest(authenticationManager.authStatePublisher)
         .map { combined, authState in
-            let (state, isDarkMode, useSystemTheme, showSignOut) = combined
+            let (state, isDarkMode, useSystemTheme) = combined
             let currentUser: AuthUser? = {
                 if case let .authenticated(user) = authState {
                     return user
@@ -123,9 +111,11 @@ final class SettingsViewModel: CombineViewModel, ObservableObject {
                 useSystemTheme: useSystemTheme,
                 isLoading: state.isLoading,
                 showClearHistoryConfirmation: state.showClearHistoryConfirmation,
-                showSignOutConfirmation: showSignOut,
+                showSignOutConfirmation: state.showSignOutConfirmation,
                 currentUser: currentUser,
-                errorMessage: state.error
+                errorMessage: state.error,
+                newMutedSource: state.newMutedSource,
+                newMutedKeyword: state.newMutedKeyword
             )
         }
         .receive(on: DispatchQueue.main)
@@ -147,6 +137,8 @@ struct SettingsViewState: Equatable {
     var showSignOutConfirmation: Bool
     var currentUser: AuthUser?
     var errorMessage: String?
+    var newMutedSource: String
+    var newMutedKeyword: String
 
     static var initial: SettingsViewState {
         SettingsViewState(
@@ -162,7 +154,9 @@ struct SettingsViewState: Equatable {
             showClearHistoryConfirmation: false,
             showSignOutConfirmation: false,
             currentUser: nil,
-            errorMessage: nil
+            errorMessage: nil,
+            newMutedSource: "",
+            newMutedKeyword: ""
         )
     }
 }
@@ -174,8 +168,10 @@ enum SettingsViewEvent: Equatable {
     case onToggleBreakingNews(Bool)
     case onToggleDarkMode(Bool)
     case onToggleSystemTheme(Bool)
+    case onNewMutedSourceChanged(String)
     case onAddMutedSource
     case onRemoveMutedSource(String)
+    case onNewMutedKeywordChanged(String)
     case onAddMutedKeyword
     case onRemoveMutedKeyword(String)
     case onClearReadingHistory
