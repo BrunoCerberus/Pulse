@@ -6,7 +6,6 @@ final class CategoriesViewModel: CombineViewModel, ObservableObject {
     typealias ViewEvent = CategoriesViewEvent
 
     @Published private(set) var viewState: CategoriesViewState = .initial
-    @Published var selectedArticle: Article?
 
     private let serviceLocator: ServiceLocator
     private let interactor: CategoriesDomainInteractor
@@ -27,8 +26,9 @@ final class CategoriesViewModel: CombineViewModel, ObservableObject {
         case .onRefresh:
             interactor.dispatch(action: .refresh)
         case let .onArticleTapped(article):
-            selectedArticle = article
             interactor.dispatch(action: .selectArticle(article))
+        case .onArticleNavigated:
+            interactor.dispatch(action: .clearSelectedArticle)
         }
     }
 
@@ -44,7 +44,8 @@ final class CategoriesViewModel: CombineViewModel, ObservableObject {
                     isRefreshing: state.isRefreshing,
                     errorMessage: state.error,
                     showEmptyState: !state.isLoading && !state.isRefreshing
-                        && state.articles.isEmpty && state.selectedCategory != nil
+                        && state.articles.isEmpty && state.selectedCategory != nil,
+                    selectedArticle: state.selectedArticle
                 )
             }
             .receive(on: DispatchQueue.main)
@@ -61,6 +62,7 @@ struct CategoriesViewState: Equatable {
     var isRefreshing: Bool
     var errorMessage: String?
     var showEmptyState: Bool
+    var selectedArticle: Article?
 
     static var initial: CategoriesViewState {
         CategoriesViewState(
@@ -71,7 +73,8 @@ struct CategoriesViewState: Equatable {
             isLoadingMore: false,
             isRefreshing: false,
             errorMessage: nil,
-            showEmptyState: false
+            showEmptyState: false,
+            selectedArticle: nil
         )
     }
 }
@@ -81,4 +84,5 @@ enum CategoriesViewEvent: Equatable {
     case onLoadMore
     case onRefresh
     case onArticleTapped(Article)
+    case onArticleNavigated
 }
