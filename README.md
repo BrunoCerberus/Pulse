@@ -111,13 +111,16 @@ make setup
 open Pulse.xcodeproj
 ```
 
-### 4. Configure API Key
+### 4. API Keys
 
-Set environment variable or add to scheme:
+API keys are managed via **Firebase Remote Config** (primary) with environment variable fallback for CI/CD:
 
 ```bash
+# For CI/CD or local development without Remote Config
 export GUARDIAN_API_KEY="your_guardian_key"
 ```
+
+The app fetches keys from Remote Config on launch. Environment variables are used as fallback when Remote Config is unavailable.
 
 ## Commands
 

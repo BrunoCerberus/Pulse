@@ -330,11 +330,22 @@ refactor: extract common loading state
 3. Update/add snapshot tests
 4. Test on multiple screen sizes
 
-## Environment Variables
+## API Keys
+
+API keys are managed via **Firebase Remote Config** (primary) with fallbacks:
+
+| Priority | Source | Purpose |
+|----------|--------|---------|
+| 1 | Remote Config | Primary source, fetched on app launch |
+| 2 | Environment variables | CI/CD and local development |
+| 3 | Keychain | Runtime storage for user-provided keys |
 
 ```bash
+# Environment variable fallback for CI/CD
 GUARDIAN_API_KEY  # Guardian API key (primary data source)
 ```
+
+See `Configs/Networking/APIKeysProvider.swift` for implementation.
 
 ## Troubleshooting
 
