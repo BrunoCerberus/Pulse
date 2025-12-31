@@ -41,16 +41,19 @@ struct HomeView<R: HomeNavigationRouter>: View {
             HapticManager.shared.refresh()
             viewModel.handle(event: .onRefresh)
         }
-        .sheet(item: $viewModel.shareArticle) { article in
+        .sheet(item: Binding(
+            get: { viewModel.viewState.articleToShare },
+            set: { _ in viewModel.handle(event: .onShareDismissed) }
+        )) { article in
             ShareSheet(activityItems: [URL(string: article.url) ?? article.title])
         }
         .onAppear {
             viewModel.handle(event: .onAppear)
         }
-        .onChange(of: viewModel.selectedArticle) { _, newValue in
+        .onChange(of: viewModel.viewState.selectedArticle) { _, newValue in
             if let article = newValue {
                 router.route(navigationEvent: .articleDetail(article))
-                viewModel.selectedArticle = nil
+                viewModel.handle(event: .onArticleNavigated)
             }
         }
     }

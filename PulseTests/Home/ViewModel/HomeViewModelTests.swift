@@ -61,22 +61,28 @@ struct HomeViewModelTests {
         #expect(true)
     }
 
-    @Test("Handle onArticleTapped sets selected article")
-    func testOnArticleTapped() {
+    @Test("Handle onArticleTapped sets selected article in view state")
+    func testOnArticleTapped() async throws {
         let article = Article.mockArticles[0]
 
         sut.handle(event: .onArticleTapped(article))
 
-        #expect(sut.selectedArticle?.id == article.id)
+        // Wait for Combine pipeline to propagate state
+        try await Task.sleep(nanoseconds: 50_000_000)
+
+        #expect(sut.viewState.selectedArticle?.id == article.id)
     }
 
-    @Test("Handle onShareTapped sets share article")
-    func testOnShareTapped() {
+    @Test("Handle onShareTapped sets article to share in view state")
+    func testOnShareTapped() async throws {
         let article = Article.mockArticles[0]
 
         sut.handle(event: .onShareTapped(article))
 
-        #expect(sut.shareArticle?.id == article.id)
+        // Wait for Combine pipeline to propagate state
+        try await Task.sleep(nanoseconds: 50_000_000)
+
+        #expect(sut.viewState.articleToShare?.id == article.id)
     }
 
     @Test("View state reducer transforms domain state correctly")
@@ -92,7 +98,9 @@ struct HomeViewModelTests {
             error: nil,
             currentPage: 2,
             hasMorePages: true,
-            hasLoadedInitialData: true
+            hasLoadedInitialData: true,
+            selectedArticle: nil,
+            articleToShare: nil
         )
 
         let viewState = reducer.reduce(domainState: domainState)

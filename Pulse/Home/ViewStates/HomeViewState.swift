@@ -8,6 +8,8 @@ struct HomeViewState: Equatable {
     var isRefreshing: Bool
     var errorMessage: String?
     var showEmptyState: Bool
+    var selectedArticle: Article?
+    var articleToShare: Article?
 
     static var initial: HomeViewState {
         HomeViewState(
@@ -17,7 +19,9 @@ struct HomeViewState: Equatable {
             isLoadingMore: false,
             isRefreshing: false,
             errorMessage: nil,
-            showEmptyState: false
+            showEmptyState: false,
+            selectedArticle: nil,
+            articleToShare: nil
         )
     }
 }

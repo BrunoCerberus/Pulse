@@ -16,7 +16,9 @@ struct HomeViewStateReducerTests {
         error: String? = nil,
         currentPage: Int = 1,
         hasMorePages: Bool = true,
-        hasLoadedInitialData: Bool = true
+        hasLoadedInitialData: Bool = true,
+        selectedArticle: Article? = nil,
+        articleToShare: Article? = nil
     ) -> HomeDomainState {
         HomeDomainState(
             breakingNews: breakingNews,
@@ -27,7 +29,9 @@ struct HomeViewStateReducerTests {
             error: error,
             currentPage: currentPage,
             hasMorePages: hasMorePages,
-            hasLoadedInitialData: hasLoadedInitialData
+            hasLoadedInitialData: hasLoadedInitialData,
+            selectedArticle: selectedArticle,
+            articleToShare: articleToShare
         )
     }
 
