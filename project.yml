@@ -132,6 +132,8 @@ targets:
       - package: Lottie
       - package: firebase-ios-sdk
         product: FirebaseAuth
+      - package: firebase-ios-sdk
+        product: FirebaseRemoteConfig
       - package: GoogleSignIn
       - target: PulseWidgetExtension
         embed: true

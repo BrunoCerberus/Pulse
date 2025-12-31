@@ -7,16 +7,27 @@ import Foundation
  * fallback mechanisms for different deployment scenarios.
  *
  * Security Features:
- * - Primary storage in Secrets.plist (gitignored)
+ * - Primary storage in Firebase Remote Config (secure, updatable)
+ * - Secondary storage in Secrets.plist (gitignored, for development)
  * - Environment variable fallback for CI/CD compatibility
  * - Keychain fallback for maximum security
  * - No hardcoded keys in source code (except default fallback)
  *
  * Fallback Hierarchy:
- * 1. Secrets.plist (primary, for development)
- * 2. Environment variables (for CI/CD)
- * 3. Keychain (for secure runtime storage)
- * 4. Default value (last resort)
+ * 1. Firebase Remote Config (primary, fetched from server)
+ * 2. Secrets.plist (for development when Remote Config unavailable)
+ * 3. Environment variables (for CI/CD)
+ * 4. Keychain (for secure runtime storage)
+ * 5. Default value (last resort)
+ *
+ * Usage:
+ * ```swift
+ * // Configure during app startup
+ * APIKeysProvider.configure(with: remoteConfigService)
+ *
+ * // Then access keys as needed
+ * let apiKey = APIKeysProvider.guardianAPIKey
+ * ```
  */
 enum APIKeysProvider {
     // MARK: - Constants
@@ -29,75 +40,121 @@ enum APIKeysProvider {
     private static let guardianAPIKeyKey: String = "GuardianAPIKey"
     private static let gnewsAPIKeyKey: String = "GNewsAPIKey"
 
+    // MARK: - Dependencies
+
+    /// The configured remote config service
+    private static var remoteConfigService: RemoteConfigService?
+
     // MARK: - Keychain Manager
 
     /// Shared keychain manager instance for API key storage
     private static let keychainManager: KeychainManager = .init(service: keychainService)
+
+    // MARK: - Configuration
+
+    /**
+     * Configure the API keys provider with a remote config service.
+     *
+     * Call this during app startup before accessing any API keys.
+     *
+     * - Parameter service: The remote config service to use for fetching keys
+     */
+    static func configure(with service: RemoteConfigService) {
+        remoteConfigService = service
+    }
 
     // MARK: - API Keys
 
     /**
      * NewsAPI.org API key.
      *
-     * The key is read from Secrets.plist file with fallbacks to environment variables and keychain.
+     * The key is read from Remote Config first, then falls back to
+     * Secrets.plist, environment variables, and keychain.
      */
-    static let newsAPIKey: String = {
-        // First try to get from Secrets.plist
+    static var newsAPIKey: String {
+        // 1. Try Remote Config (primary source)
+        if let apiKey = remoteConfigService?.newsAPIKey, !apiKey.isEmpty {
+            return apiKey
+        }
+
+        // 2. Fallback to Secrets.plist
         if let apiKey = loadAPIKeyFromSecretsPlist(key: "NEWS_API_KEY"), !apiKey.isEmpty {
             return apiKey
         }
 
-        // Fallback to environment variable (for CI/CD and debugging)
+        // 3. Fallback to environment variable (for CI/CD and debugging)
         if let apiKey = ProcessInfo.processInfo.environment["NEWS_API_KEY"], !apiKey.isEmpty {
             return apiKey
         }
 
-        // Fallback to keychain if environment variable is not set
+        // 4. Fallback to keychain if environment variable is not set
         do {
             return try keychainManager.retrieve(for: newsAPIKeyKey)
         } catch {
             logAPIKeyError(keyName: "NEWS_API_KEY")
             return ""
         }
-    }()
+    }
 
     /**
      * Guardian API key.
+     *
+     * The key is read from Remote Config first, then falls back to
+     * Secrets.plist, environment variables, and keychain.
      */
-    static let guardianAPIKey: String = {
+    static var guardianAPIKey: String {
+        // 1. Try Remote Config (primary source)
+        if let apiKey = remoteConfigService?.guardianAPIKey, !apiKey.isEmpty {
+            return apiKey
+        }
+
+        // 2. Fallback to Secrets.plist
         if let apiKey = loadAPIKeyFromSecretsPlist(key: "GUARDIAN_API_KEY"), !apiKey.isEmpty {
             return apiKey
         }
 
+        // 3. Fallback to environment variable
         if let apiKey = ProcessInfo.processInfo.environment["GUARDIAN_API_KEY"], !apiKey.isEmpty {
             return apiKey
         }
 
+        // 4. Fallback to keychain
         do {
             return try keychainManager.retrieve(for: guardianAPIKeyKey)
         } catch {
             return ""
         }
-    }()
+    }
 
     /**
      * GNews API key.
+     *
+     * The key is read from Remote Config first, then falls back to
+     * Secrets.plist, environment variables, and keychain.
      */
-    static let gnewsAPIKey: String = {
+    static var gnewsAPIKey: String {
+        // 1. Try Remote Config (primary source)
+        if let apiKey = remoteConfigService?.gnewsAPIKey, !apiKey.isEmpty {
+            return apiKey
+        }
+
+        // 2. Fallback to Secrets.plist
         if let apiKey = loadAPIKeyFromSecretsPlist(key: "GNEWS_API_KEY"), !apiKey.isEmpty {
             return apiKey
         }
 
+        // 3. Fallback to environment variable
         if let apiKey = ProcessInfo.processInfo.environment["GNEWS_API_KEY"], !apiKey.isEmpty {
             return apiKey
         }
 
+        // 4. Fallback to keychain
         do {
             return try keychainManager.retrieve(for: gnewsAPIKeyKey)
         } catch {
             return ""
         }
-    }()
+    }
 
     // MARK: - Public Methods
 
@@ -170,12 +227,13 @@ enum APIKeysProvider {
      */
     private static func logAPIKeyError(keyName: String) {
         Logger.shared.service("""
-        \(keyName) not found in Secrets.plist, environment variables, or keychain.
+        \(keyName) not found in Remote Config, Secrets.plist, environment variables, or keychain.
 
         To fix this:
-        1. Add \(keyName) to Secrets.plist file, OR
-        2. Set the \(keyName) environment variable in your build configuration, OR
-        3. Call APIKeysProvider.setAPIKey("your_api_key", for: .\(keyName.lowercased())) before accessing the key
+        1. Add \(keyName) to Firebase Remote Config, OR
+        2. Add \(keyName) to Secrets.plist file, OR
+        3. Set the \(keyName) environment variable in your build configuration, OR
+        4. Call APIKeysProvider.setAPIKey("your_api_key", for: .\(keyName.lowercased())) before accessing the key
 
         Current environment: \(ProcessInfo.processInfo.environment.keys.filter { $0.contains("API") })
         """, level: .error)
@@ -192,20 +250,8 @@ enum APIKeysProvider {
      * - Returns: The API key from the current fallback hierarchy
      */
     static func getCurrentNewsAPIKey() -> String {
-        if let apiKey = loadAPIKeyFromSecretsPlist(key: "NEWS_API_KEY"), !apiKey.isEmpty {
-            return apiKey
-        }
-
-        if let apiKey = ProcessInfo.processInfo.environment["NEWS_API_KEY"], !apiKey.isEmpty {
-            return apiKey
-        }
-
-        do {
-            return try keychainManager.retrieve(for: newsAPIKeyKey)
-        } catch {
-            logAPIKeyError(keyName: "NEWS_API_KEY")
-            return ""
-        }
+        // Since newsAPIKey is now a computed property, just return it
+        newsAPIKey
     }
 }
 

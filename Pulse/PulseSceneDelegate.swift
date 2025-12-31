@@ -183,7 +183,11 @@ final class PulseSceneDelegate: UIResponder, UIWindowSceneDelegate {
                 serviceLocator.register(CategoriesService.self, instance: MockCategoriesService())
                 serviceLocator.register(ForYouService.self, instance: MockForYouService())
                 serviceLocator.register(StoreKitService.self, instance: MockStoreKitService())
+                serviceLocator.register(RemoteConfigService.self, instance: MockRemoteConfigService())
                 serviceLocator.register(AuthService.self, instance: MockAuthService())
+
+                // Configure APIKeysProvider with mock service
+                APIKeysProvider.configure(with: MockRemoteConfigService())
             } else {
                 // Use real services for debug builds
                 registerLiveServices()
@@ -202,6 +206,14 @@ final class PulseSceneDelegate: UIResponder, UIWindowSceneDelegate {
      * directly rather than through ServiceLocator.
      */
     private func registerLiveServices() {
+        // Register and configure Remote Config service first
+        let remoteConfigService = LiveRemoteConfigService()
+        serviceLocator.register(RemoteConfigService.self, instance: remoteConfigService)
+        APIKeysProvider.configure(with: remoteConfigService)
+
+        // Fetch Remote Config values (fire-and-forget, fallbacks work until ready)
+        fetchRemoteConfig(remoteConfigService)
+
         // Register base services first
         let storageService = LiveStorageService()
         serviceLocator.register(StorageService.self, instance: storageService)
@@ -217,6 +229,23 @@ final class PulseSceneDelegate: UIResponder, UIWindowSceneDelegate {
 
         // Register authentication service
         serviceLocator.register(AuthService.self, instance: LiveAuthService())
+    }
+
+    /**
+     * Fetch Remote Config values asynchronously.
+     *
+     * This is fire-and-forget - the app uses fallback API keys until
+     * Remote Config values are fetched. Subsequent API calls will use
+     * the fetched values from Remote Config.
+     */
+    private func fetchRemoteConfig(_ service: RemoteConfigService) {
+        Task {
+            do {
+                try await service.fetchAndActivate()
+            } catch {
+                Logger.shared.service("Remote Config fetch failed: \(error)", level: .warning)
+            }
+        }
     }
 
     /**
