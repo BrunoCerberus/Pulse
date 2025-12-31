@@ -43,7 +43,8 @@ final class CategoriesViewModel: CombineViewModel, ObservableObject {
                     isLoadingMore: state.isLoadingMore,
                     isRefreshing: state.isRefreshing,
                     errorMessage: state.error,
-                    showEmptyState: !state.isLoading && !state.isRefreshing && state.articles.isEmpty && state.selectedCategory != nil
+                    showEmptyState: !state.isLoading && !state.isRefreshing
+                        && state.articles.isEmpty && state.selectedCategory != nil
                 )
             }
             .receive(on: DispatchQueue.main)

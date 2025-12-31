@@ -65,7 +65,8 @@ struct HomeView<R: HomeNavigationRouter>: View {
 
     @ViewBuilder
     private var content: some View {
-        if viewModel.viewState.isRefreshing || (viewModel.viewState.isLoading && viewModel.viewState.headlines.isEmpty) {
+        let isInitialLoading = viewModel.viewState.isLoading && viewModel.viewState.headlines.isEmpty
+        if viewModel.viewState.isRefreshing || isInitialLoading {
             loadingView
         } else if let error = viewModel.viewState.errorMessage {
             errorView(error)

@@ -76,7 +76,9 @@ final class LiveAuthService: NSObject, AuthService {
         .eraseToAnyPublisher()
     }
 
-    // TODO: Apple Sign-In requires additional setup before it will work:
+    // MARK: - Apple Sign-In
+
+    // Apple Sign-In requires additional setup before it will work:
     // 1. Enroll in Apple Developer Program ($99/year)
     // 2. Enable "Sign in with Apple" capability for App ID in Apple Developer Portal
     // 3. Create a Sign in with Apple key (Keys section) and download the .p8 file

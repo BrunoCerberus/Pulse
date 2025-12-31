@@ -85,24 +85,24 @@ struct ArticleDetailView: View {
                 .fill(Color.Border.adaptive(for: colorScheme))
                 .frame(height: 0.5)
 
-            if let description = article.description {
+            if let description = viewModel.processedDescription {
                 Text(description)
-                    .font(Typography.bodyLarge.weight(.medium))
                     .foregroundStyle(.primary.opacity(0.9))
-                    .lineSpacing(6)
+                    .lineSpacing(8)
                     .padding(.leading, Spacing.md)
+                    .padding(.vertical, Spacing.xs)
                     .overlay(alignment: .leading) {
                         Rectangle()
                             .fill(Color.Accent.gradient)
                             .frame(width: 3)
+                            .clipShape(RoundedRectangle(cornerRadius: 1.5))
                     }
             }
 
             if let content = viewModel.processedContent {
                 Text(content)
-                    .font(Typography.bodyMedium)
-                    .foregroundStyle(.secondary)
-                    .lineLimit(viewModel.isContentTruncated ? (viewModel.isContentExpanded ? nil : viewModel.contentLineLimit) : nil)
+                    .foregroundStyle(.primary.opacity(0.85))
+                    .lineSpacing(6)
             }
 
             Rectangle()

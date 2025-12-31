@@ -212,14 +212,17 @@ jobs:
             test-name: Unit Tests
             scheme: PulseDev
             artifact-name: unit-test-results
+            timeout: 60
           - test-target: PulseUITests
             test-name: UI Tests
             scheme: PulseDev
             artifact-name: ui-test-results
+            timeout: 60
           - test-target: PulseSnapshotTests
             test-name: Snapshot Tests
             scheme: PulseSnapshotTests
             artifact-name: snapshot-test-results
+            timeout: 60
 
     steps:
     - name: Checkout code
@@ -274,6 +277,7 @@ jobs:
         xcrun simctl boot "iPhone Air" || echo "Simulator already booted or unavailable"
 
     - name: Run ${{ matrix.test-name }}
+      timeout-minutes: ${{ matrix.timeout }}
       run: |
         mkdir -p test-results
         set -o pipefail
