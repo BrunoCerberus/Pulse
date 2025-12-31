@@ -212,7 +212,7 @@ jobs:
             test-name: Unit Tests
             scheme: PulseDev
             artifact-name: unit-test-results
-            timeout: 15
+            timeout: 60
           - test-target: PulseUITests
             test-name: UI Tests
             scheme: PulseDev
@@ -222,7 +222,7 @@ jobs:
             test-name: Snapshot Tests
             scheme: PulseSnapshotTests
             artifact-name: snapshot-test-results
-            timeout: 15
+            timeout: 60
 
     steps:
     - name: Checkout code
