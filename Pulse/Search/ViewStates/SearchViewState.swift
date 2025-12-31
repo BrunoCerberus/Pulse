@@ -11,6 +11,7 @@ struct SearchViewState: Equatable {
     var showNoResults: Bool
     var hasSearched: Bool
     var sortOption: SearchSortOption
+    var selectedArticle: Article?
 
     static var initial: SearchViewState {
         SearchViewState(
@@ -23,7 +24,8 @@ struct SearchViewState: Equatable {
             errorMessage: nil,
             showNoResults: false,
             hasSearched: false,
-            sortOption: .relevancy
+            sortOption: .relevancy,
+            selectedArticle: nil
         )
     }
 }

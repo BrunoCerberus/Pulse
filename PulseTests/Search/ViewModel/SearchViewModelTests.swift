@@ -63,12 +63,14 @@ struct SearchViewModelTests {
     }
 
     @Test("Article tap sets selected article")
-    func articleTap() {
+    func articleTap() async throws {
         let article = Article.mockArticles[0]
 
         sut.handle(event: .onArticleTapped(article))
 
-        #expect(sut.selectedArticle?.id == article.id)
+        try await Task.sleep(nanoseconds: 50_000_000)
+
+        #expect(sut.viewState.selectedArticle?.id == article.id)
     }
 
     @Test("Sort change updates sort option")

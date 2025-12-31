@@ -7,4 +7,5 @@ enum SearchDomainAction: Equatable {
     case clearResults
     case setSortOption(SearchSortOption)
     case selectArticle(Article)
+    case clearSelectedArticle
 }
