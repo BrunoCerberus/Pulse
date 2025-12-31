@@ -331,10 +331,18 @@ make test-debug  # Verbose output
 
 ## API Keys
 
-Set environment variable:
+API keys are managed via **Firebase Remote Config** (primary) with fallbacks:
+
+1. **Remote Config** - Primary source, fetched on app launch
+2. **Environment variables** - Fallback for CI/CD
+3. **Keychain** - Runtime storage for user-provided keys
+
 ```bash
+# For CI/CD or local development without Remote Config
 export GUARDIAN_API_KEY="your_key"
 ```
+
+See `APIKeysProvider.swift` for the fallback hierarchy implementation.
 
 ## Deeplinks
 
