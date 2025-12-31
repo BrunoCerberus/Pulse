@@ -6,7 +6,6 @@ final class ForYouViewModel: CombineViewModel, ObservableObject {
     typealias ViewEvent = ForYouViewEvent
 
     @Published private(set) var viewState: ForYouViewState = .initial
-    @Published var selectedArticle: Article?
 
     private let serviceLocator: ServiceLocator
     private let interactor: ForYouDomainInteractor
@@ -27,8 +26,9 @@ final class ForYouViewModel: CombineViewModel, ObservableObject {
         case .onLoadMore:
             interactor.dispatch(action: .loadMore)
         case let .onArticleTapped(article):
-            selectedArticle = article
             interactor.dispatch(action: .selectArticle(article))
+        case .onArticleNavigated:
+            interactor.dispatch(action: .clearSelectedArticle)
         }
     }
 
@@ -43,7 +43,8 @@ final class ForYouViewModel: CombineViewModel, ObservableObject {
                     isRefreshing: state.isRefreshing,
                     errorMessage: state.error,
                     showEmptyState: !state.isLoading && !state.isRefreshing && state.articles.isEmpty,
-                    showOnboarding: state.preferences.followedTopics.isEmpty && !state.isLoading && !state.isRefreshing
+                    showOnboarding: state.preferences.followedTopics.isEmpty && !state.isLoading && !state.isRefreshing,
+                    selectedArticle: state.selectedArticle
                 )
             }
             .receive(on: DispatchQueue.main)
@@ -60,6 +61,7 @@ struct ForYouViewState: Equatable {
     var errorMessage: String?
     var showEmptyState: Bool
     var showOnboarding: Bool
+    var selectedArticle: Article?
 
     static var initial: ForYouViewState {
         ForYouViewState(
@@ -70,7 +72,8 @@ struct ForYouViewState: Equatable {
             isRefreshing: false,
             errorMessage: nil,
             showEmptyState: false,
-            showOnboarding: false
+            showOnboarding: false,
+            selectedArticle: nil
         )
     }
 }
@@ -80,4 +83,5 @@ enum ForYouViewEvent: Equatable {
     case onRefresh
     case onLoadMore
     case onArticleTapped(Article)
+    case onArticleNavigated
 }
