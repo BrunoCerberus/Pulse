@@ -5,13 +5,15 @@ struct BookmarksDomainState: Equatable {
     var isLoading: Bool
     var isRefreshing: Bool
     var error: String?
+    var selectedArticle: Article?
 
     static var initial: BookmarksDomainState {
         BookmarksDomainState(
             bookmarks: [],
             isLoading: false,
             isRefreshing: false,
-            error: nil
+            error: nil,
+            selectedArticle: nil
         )
     }
 }

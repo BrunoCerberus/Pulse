@@ -43,7 +43,9 @@ final class BookmarksDomainInteractor: CombineInteractor {
         case let .removeBookmark(article):
             removeBookmark(article)
         case let .selectArticle(article):
-            saveToReadingHistory(article)
+            selectArticle(article)
+        case .clearSelectedArticle:
+            clearSelectedArticle()
         }
     }
 
@@ -102,6 +104,19 @@ final class BookmarksDomainInteractor: CombineInteractor {
                 }
             }
             .store(in: &cancellables)
+    }
+
+    private func selectArticle(_ article: Article) {
+        updateState { state in
+            state.selectedArticle = article
+        }
+        saveToReadingHistory(article)
+    }
+
+    private func clearSelectedArticle() {
+        updateState { state in
+            state.selectedArticle = nil
+        }
     }
 
     private func saveToReadingHistory(_ article: Article) {

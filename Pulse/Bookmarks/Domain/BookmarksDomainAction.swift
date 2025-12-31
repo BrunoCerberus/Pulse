@@ -5,4 +5,5 @@ enum BookmarksDomainAction: Equatable {
     case refresh
     case removeBookmark(Article)
     case selectArticle(Article)
+    case clearSelectedArticle
 }
