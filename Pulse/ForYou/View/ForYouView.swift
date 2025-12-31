@@ -32,10 +32,10 @@ struct ForYouView<R: ForYouNavigationRouter>: View {
         .onAppear {
             viewModel.handle(event: .onAppear)
         }
-        .onChange(of: viewModel.selectedArticle) { _, newValue in
+        .onChange(of: viewModel.viewState.selectedArticle) { _, newValue in
             if let article = newValue {
                 router.route(navigationEvent: .articleDetail(article))
-                viewModel.selectedArticle = nil
+                viewModel.handle(event: .onArticleNavigated)
             }
         }
     }

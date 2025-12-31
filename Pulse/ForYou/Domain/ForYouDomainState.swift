@@ -10,6 +10,7 @@ struct ForYouDomainState: Equatable {
     var currentPage: Int
     var hasMorePages: Bool
     var hasLoadedInitialData: Bool
+    var selectedArticle: Article?
 
     static var initial: ForYouDomainState {
         ForYouDomainState(
@@ -21,7 +22,8 @@ struct ForYouDomainState: Equatable {
             error: nil,
             currentPage: 1,
             hasMorePages: true,
-            hasLoadedInitialData: false
+            hasLoadedInitialData: false,
+            selectedArticle: nil
         )
     }
 }

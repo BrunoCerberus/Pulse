@@ -6,8 +6,6 @@ final class HomeViewModel: CombineViewModel, ObservableObject {
     typealias ViewEvent = HomeViewEvent
 
     @Published private(set) var viewState: HomeViewState = .initial
-    @Published var selectedArticle: Article?
-    @Published var shareArticle: Article?
 
     private let serviceLocator: ServiceLocator
     private let interactor: HomeDomainInteractor
@@ -29,13 +27,6 @@ final class HomeViewModel: CombineViewModel, ObservableObject {
     }
 
     func handle(event: HomeViewEvent) {
-        if case let .onArticleTapped(article) = event {
-            selectedArticle = article
-        }
-        if case let .onShareTapped(article) = event {
-            shareArticle = article
-        }
-
         guard let action = eventMap.map(event: event) else { return }
         interactor.dispatch(action: action)
     }

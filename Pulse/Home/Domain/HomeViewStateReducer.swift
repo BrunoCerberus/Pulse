@@ -10,7 +10,9 @@ struct HomeViewStateReducer: ViewStateReducing {
             isRefreshing: domainState.isRefreshing,
             errorMessage: domainState.error,
             showEmptyState: !domainState.isLoading && !domainState.isRefreshing
-                && domainState.headlines.isEmpty && domainState.breakingNews.isEmpty
+                && domainState.headlines.isEmpty && domainState.breakingNews.isEmpty,
+            selectedArticle: domainState.selectedArticle,
+            articleToShare: domainState.articleToShare
         )
     }
 }

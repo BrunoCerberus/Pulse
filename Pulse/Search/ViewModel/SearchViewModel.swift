@@ -6,7 +6,6 @@ final class SearchViewModel: CombineViewModel, ObservableObject {
     typealias ViewEvent = SearchViewEvent
 
     @Published private(set) var viewState: SearchViewState = .initial
-    @Published var selectedArticle: Article?
 
     private let serviceLocator: ServiceLocator
     private let interactor: SearchDomainInteractor
@@ -35,8 +34,9 @@ final class SearchViewModel: CombineViewModel, ObservableObject {
         case let .onSortChanged(option):
             interactor.dispatch(action: .setSortOption(option))
         case let .onArticleTapped(article):
-            selectedArticle = article
             interactor.dispatch(action: .selectArticle(article))
+        case .onArticleNavigated:
+            interactor.dispatch(action: .clearSelectedArticle)
         case let .onSuggestionTapped(suggestion):
             searchWorkItem?.cancel()
             interactor.dispatch(action: .updateQuery(suggestion))
@@ -70,7 +70,8 @@ final class SearchViewModel: CombineViewModel, ObservableObject {
                     errorMessage: state.error,
                     showNoResults: state.hasSearched && !state.isLoading && !state.isSorting && state.results.isEmpty,
                     hasSearched: state.hasSearched,
-                    sortOption: state.sortBy
+                    sortOption: state.sortBy,
+                    selectedArticle: state.selectedArticle
                 )
             }
             .receive(on: DispatchQueue.main)

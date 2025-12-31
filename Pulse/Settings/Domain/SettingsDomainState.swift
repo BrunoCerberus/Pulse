@@ -6,6 +6,9 @@ struct SettingsDomainState: Equatable {
     var isSaving: Bool
     var error: String?
     var showClearHistoryConfirmation: Bool
+    var showSignOutConfirmation: Bool
+    var newMutedSource: String
+    var newMutedKeyword: String
 
     static var initial: SettingsDomainState {
         SettingsDomainState(
@@ -13,7 +16,10 @@ struct SettingsDomainState: Equatable {
             isLoading: false,
             isSaving: false,
             error: nil,
-            showClearHistoryConfirmation: false
+            showClearHistoryConfirmation: false,
+            showSignOutConfirmation: false,
+            newMutedSource: "",
+            newMutedKeyword: ""
         )
     }
 }

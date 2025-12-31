@@ -10,6 +10,8 @@ struct HomeDomainState: Equatable {
     var currentPage: Int
     var hasMorePages: Bool
     var hasLoadedInitialData: Bool
+    var selectedArticle: Article?
+    var articleToShare: Article?
 
     static var initial: HomeDomainState {
         HomeDomainState(
@@ -21,7 +23,9 @@ struct HomeDomainState: Equatable {
             error: nil,
             currentPage: 1,
             hasMorePages: true,
-            hasLoadedInitialData: false
+            hasLoadedInitialData: false,
+            selectedArticle: nil,
+            articleToShare: nil
         )
     }
 }

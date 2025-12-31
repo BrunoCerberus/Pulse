@@ -43,7 +43,9 @@ final class CategoriesDomainInteractor: CombineInteractor {
         case .refresh:
             refresh()
         case let .selectArticle(article):
-            saveToReadingHistory(article)
+            selectArticle(article)
+        case .clearSelectedArticle:
+            clearSelectedArticle()
         }
     }
 
@@ -143,6 +145,19 @@ final class CategoriesDomainInteractor: CombineInteractor {
             .store(in: &cancellables)
     }
 
+    private func selectArticle(_ article: Article) {
+        updateState { state in
+            state.selectedArticle = article
+        }
+        saveToReadingHistory(article)
+    }
+
+    private func clearSelectedArticle() {
+        updateState { state in
+            state.selectedArticle = nil
+        }
+    }
+
     private func saveToReadingHistory(_ article: Article) {
         Task {
             try? await storageService.saveReadingHistory(article)
@@ -161,4 +176,5 @@ enum CategoriesDomainAction: Equatable {
     case loadMore
     case refresh
     case selectArticle(Article)
+    case clearSelectedArticle
 }

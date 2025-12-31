@@ -37,8 +37,14 @@ struct SettingsView: View {
                 SettingsMutedContentSection(
                     mutedSources: viewModel.viewState.mutedSources,
                     mutedKeywords: viewModel.viewState.mutedKeywords,
-                    newMutedSource: $viewModel.newMutedSource,
-                    newMutedKeyword: $viewModel.newMutedKeyword,
+                    newMutedSource: Binding(
+                        get: { viewModel.viewState.newMutedSource },
+                        set: { viewModel.handle(event: .onNewMutedSourceChanged($0)) }
+                    ),
+                    newMutedKeyword: Binding(
+                        get: { viewModel.viewState.newMutedKeyword },
+                        set: { viewModel.handle(event: .onNewMutedKeywordChanged($0)) }
+                    ),
                     onAddMutedSource: { viewModel.handle(event: .onAddMutedSource) },
                     onRemoveMutedSource: { viewModel.handle(event: .onRemoveMutedSource($0)) },
                     onAddMutedKeyword: { viewModel.handle(event: .onAddMutedKeyword) },

@@ -43,7 +43,9 @@ final class ForYouDomainInteractor: CombineInteractor {
         case .refresh:
             refresh()
         case let .selectArticle(article):
-            saveToReadingHistory(article)
+            selectArticle(article)
+        case .clearSelectedArticle:
+            clearSelectedArticle()
         }
     }
 
@@ -159,6 +161,19 @@ final class ForYouDomainInteractor: CombineInteractor {
         }
     }
 
+    private func selectArticle(_ article: Article) {
+        updateState { state in
+            state.selectedArticle = article
+        }
+        saveToReadingHistory(article)
+    }
+
+    private func clearSelectedArticle() {
+        updateState { state in
+            state.selectedArticle = nil
+        }
+    }
+
     private func saveToReadingHistory(_ article: Article) {
         Task {
             try? await storageService.saveReadingHistory(article)
@@ -177,4 +192,5 @@ enum ForYouDomainAction: Equatable {
     case loadMore
     case refresh
     case selectArticle(Article)
+    case clearSelectedArticle
 }

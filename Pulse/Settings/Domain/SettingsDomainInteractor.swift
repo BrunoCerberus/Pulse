@@ -50,6 +50,18 @@ final class SettingsDomainInteractor: CombineInteractor {
             updateState { state in
                 state.showClearHistoryConfirmation = show
             }
+        case let .setShowSignOutConfirmation(show):
+            updateState { state in
+                state.showSignOutConfirmation = show
+            }
+        case let .setNewMutedSource(source):
+            updateState { state in
+                state.newMutedSource = source
+            }
+        case let .setNewMutedKeyword(keyword):
+            updateState { state in
+                state.newMutedKeyword = keyword
+            }
         }
     }
 
@@ -99,10 +111,14 @@ final class SettingsDomainInteractor: CombineInteractor {
     }
 
     private func addMutedSource(_ source: String) {
+        guard !source.isEmpty else { return }
         var preferences = currentState.preferences
         if !preferences.mutedSources.contains(source) {
             preferences.mutedSources.append(source)
             savePreferences(preferences)
+        }
+        updateState { state in
+            state.newMutedSource = ""
         }
     }
 
@@ -113,10 +129,14 @@ final class SettingsDomainInteractor: CombineInteractor {
     }
 
     private func addMutedKeyword(_ keyword: String) {
+        guard !keyword.isEmpty else { return }
         var preferences = currentState.preferences
         if !preferences.mutedKeywords.contains(keyword) {
             preferences.mutedKeywords.append(keyword)
             savePreferences(preferences)
+        }
+        updateState { state in
+            state.newMutedKeyword = ""
         }
     }
 
@@ -176,4 +196,7 @@ enum SettingsDomainAction: Equatable {
     case removeMutedKeyword(String)
     case clearReadingHistory
     case setShowClearHistoryConfirmation(Bool)
+    case setShowSignOutConfirmation(Bool)
+    case setNewMutedSource(String)
+    case setNewMutedKeyword(String)
 }

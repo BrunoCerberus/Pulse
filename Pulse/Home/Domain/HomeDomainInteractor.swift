@@ -43,11 +43,15 @@ final class HomeDomainInteractor: CombineInteractor {
         case .refresh:
             refresh()
         case let .selectArticle(article):
-            saveToReadingHistory(article)
+            selectArticle(article)
+        case .clearSelectedArticle:
+            clearSelectedArticle()
         case let .bookmarkArticle(article):
             toggleBookmark(article)
-        case .shareArticle:
-            break
+        case let .shareArticle(article):
+            shareArticle(article)
+        case .clearArticleToShare:
+            clearArticleToShare()
         }
     }
 
@@ -158,6 +162,31 @@ final class HomeDomainInteractor: CombineInteractor {
             WidgetDataManager.shared.saveArticlesForWidget(allArticles)
         }
         .store(in: &cancellables)
+    }
+
+    private func selectArticle(_ article: Article) {
+        updateState { state in
+            state.selectedArticle = article
+        }
+        saveToReadingHistory(article)
+    }
+
+    private func clearSelectedArticle() {
+        updateState { state in
+            state.selectedArticle = nil
+        }
+    }
+
+    private func shareArticle(_ article: Article) {
+        updateState { state in
+            state.articleToShare = article
+        }
+    }
+
+    private func clearArticleToShare() {
+        updateState { state in
+            state.articleToShare = nil
+        }
     }
 
     private func saveToReadingHistory(_ article: Article) {

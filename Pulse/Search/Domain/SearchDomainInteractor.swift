@@ -48,7 +48,9 @@ final class SearchDomainInteractor: CombineInteractor {
         case let .setSortOption(option):
             setSortOption(option)
         case let .selectArticle(article):
-            saveToReadingHistory(article)
+            selectArticle(article)
+        case .clearSelectedArticle:
+            clearSelectedArticle()
         }
     }
 
@@ -195,9 +197,18 @@ final class SearchDomainInteractor: CombineInteractor {
         }
     }
 
-    private func saveToReadingHistory(_ article: Article) {
+    private func selectArticle(_ article: Article) {
+        updateState { state in
+            state.selectedArticle = article
+        }
         Task {
             try? await storageService.saveReadingHistory(article)
+        }
+    }
+
+    private func clearSelectedArticle() {
+        updateState { state in
+            state.selectedArticle = nil
         }
     }
 
