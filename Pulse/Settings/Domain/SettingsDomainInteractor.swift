@@ -30,12 +30,24 @@ final class SettingsDomainInteractor: CombineInteractor {
         switch action {
         case .loadPreferences:
             loadPreferences()
+        case .clearReadingHistory:
+            clearReadingHistory()
         case let .toggleTopic(topic):
             toggleTopic(topic)
         case let .toggleNotifications(enabled):
             toggleNotifications(enabled)
         case let .toggleBreakingNews(enabled):
             toggleBreakingNews(enabled)
+        case .addMutedSource, .removeMutedSource, .addMutedKeyword, .removeMutedKeyword:
+            handleMutedContentAction(action)
+        case .setShowClearHistoryConfirmation, .setShowSignOutConfirmation,
+             .setNewMutedSource, .setNewMutedKeyword:
+            handleUIStateAction(action)
+        }
+    }
+
+    private func handleMutedContentAction(_ action: SettingsDomainAction) {
+        switch action {
         case let .addMutedSource(source):
             addMutedSource(source)
         case let .removeMutedSource(source):
@@ -44,23 +56,24 @@ final class SettingsDomainInteractor: CombineInteractor {
             addMutedKeyword(keyword)
         case let .removeMutedKeyword(keyword):
             removeMutedKeyword(keyword)
-        case .clearReadingHistory:
-            clearReadingHistory()
-        case let .setShowClearHistoryConfirmation(show):
-            updateState { state in
+        default:
+            break
+        }
+    }
+
+    private func handleUIStateAction(_ action: SettingsDomainAction) {
+        updateState { state in
+            switch action {
+            case let .setShowClearHistoryConfirmation(show):
                 state.showClearHistoryConfirmation = show
-            }
-        case let .setShowSignOutConfirmation(show):
-            updateState { state in
+            case let .setShowSignOutConfirmation(show):
                 state.showSignOutConfirmation = show
-            }
-        case let .setNewMutedSource(source):
-            updateState { state in
+            case let .setNewMutedSource(source):
                 state.newMutedSource = source
-            }
-        case let .setNewMutedKeyword(keyword):
-            updateState { state in
+            case let .setNewMutedKeyword(keyword):
                 state.newMutedKeyword = keyword
+            default:
+                break
             }
         }
     }
