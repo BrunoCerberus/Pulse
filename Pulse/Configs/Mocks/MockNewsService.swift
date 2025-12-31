@@ -148,6 +148,31 @@ final class MockStorageService: StorageService {
     }
 }
 
+final class MockRemoteConfigService: RemoteConfigService {
+    var guardianAPIKeyValue: String?
+    var newsAPIKeyValue: String?
+    var gnewsAPIKeyValue: String?
+    var shouldThrowOnFetch = false
+
+    func fetchAndActivate() async throws {
+        if shouldThrowOnFetch {
+            throw RemoteConfigError.fetchFailed
+        }
+    }
+
+    func getStringOrNil(forKey key: RemoteConfigKey) -> String? {
+        switch key {
+        case .guardianAPIKey: guardianAPIKeyValue
+        case .newsAPIKey: newsAPIKeyValue
+        case .gnewsAPIKey: gnewsAPIKeyValue
+        }
+    }
+
+    var guardianAPIKey: String? { guardianAPIKeyValue }
+    var newsAPIKey: String? { newsAPIKeyValue }
+    var gnewsAPIKey: String? { gnewsAPIKeyValue }
+}
+
 extension ServiceLocator {
     static var preview: ServiceLocator {
         let locator = ServiceLocator()
@@ -159,6 +184,7 @@ extension ServiceLocator {
         locator.register(SettingsService.self, instance: MockSettingsService())
         locator.register(StorageService.self, instance: MockStorageService())
         locator.register(StoreKitService.self, instance: MockStoreKitService())
+        locator.register(RemoteConfigService.self, instance: MockRemoteConfigService())
 
         // Auth service with mock signed-in user
         let mockAuth = MockAuthService()
@@ -178,6 +204,7 @@ extension ServiceLocator {
         locator.register(SettingsService.self, instance: MockSettingsService())
         locator.register(StorageService.self, instance: MockStorageService())
         locator.register(StoreKitService.self, instance: MockStoreKitService())
+        locator.register(RemoteConfigService.self, instance: MockRemoteConfigService())
         locator.register(AuthService.self, instance: MockAuthService())
         return locator
     }
