@@ -154,7 +154,7 @@ final class BookmarksUITests: BaseUITestCase {
             XCTAssertTrue(errorState, "Home should show an empty or error state when articles are unavailable")
         }
 
-        let homeNavAfterBookmark = app.navigationBars["Pulse"]
+        let homeNavAfterBookmark = app.navigationBars["News"]
         XCTAssertTrue(homeNavAfterBookmark.waitForExistence(timeout: 5), "Should return to Home")
 
         navigateToBookmarks()
