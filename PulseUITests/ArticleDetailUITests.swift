@@ -135,7 +135,7 @@ final class ArticleDetailUITests: BaseUITestCase {
         XCTAssertTrue(isHittable, "Back button should be tappable")
         backButtonAfterShare.tap()
 
-        let homeNavBar = app.navigationBars["Pulse"]
+        let homeNavBar = app.navigationBars["News"]
         let homeTab = app.tabBars.buttons["Home"]
         let navigatedBack = homeNavBar.waitForExistence(timeout: 10) || (homeTab.exists && homeTab.isSelected)
         XCTAssertTrue(navigatedBack, "Should navigate back to Home")

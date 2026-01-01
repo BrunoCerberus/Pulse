@@ -15,7 +15,7 @@ final class HomeUITests: BaseUITestCase {
         resetToHomeTab()
 
         // Verify navigation title
-        XCTAssertTrue(app.navigationBars["News"].waitForExistence(timeout: Self.shortTimeout), "Navigation title 'Pulse' should exist")
+        XCTAssertTrue(app.navigationBars["News"].waitForExistence(timeout: Self.shortTimeout), "Navigation title 'News' should exist")
 
         // Verify gear button
         XCTAssertTrue(app.navigationBars.buttons["gearshape"].waitForExistence(timeout: Self.shortTimeout), "Gear button should exist in navigation bar")
@@ -54,7 +54,7 @@ final class HomeUITests: BaseUITestCase {
             app.swipeRight()
         }
 
-        XCTAssertTrue(app.navigationBars["Pulse"].waitForExistence(timeout: Self.shortTimeout), "Should return to Home")
+        XCTAssertTrue(app.navigationBars["News"].waitForExistence(timeout: Self.shortTimeout), "Should return to Home")
 
         if contentLoaded, !errorState, !emptyState {
             let cards = articleCards()
@@ -77,7 +77,7 @@ final class HomeUITests: BaseUITestCase {
 
                     // Navigate back
                     navigateBack()
-                    XCTAssertTrue(app.navigationBars["Pulse"].waitForExistence(timeout: Self.shortTimeout), "Should return to Home")
+                    XCTAssertTrue(app.navigationBars["News"].waitForExistence(timeout: Self.shortTimeout), "Should return to Home")
                 }
 
                 // --- Scroll Interactions ---
@@ -90,7 +90,7 @@ final class HomeUITests: BaseUITestCase {
 
                 // Vertical scroll
                 scrollView.swipeUp()
-                XCTAssertTrue(app.navigationBars["Pulse"].waitForExistence(timeout: Self.shortTimeout), "App should remain responsive after scrolling")
+                XCTAssertTrue(app.navigationBars["News"].waitForExistence(timeout: Self.shortTimeout), "App should remain responsive after scrolling")
 
                 // Horizontal carousel scroll (if Breaking News exists)
                 if app.staticTexts["Breaking News"].exists {

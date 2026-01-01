@@ -156,7 +156,7 @@ final class ForYouUITests: BaseUITestCase {
             app.swipeRight()
         }
 
-        let homeNavAfterSettings = app.navigationBars["Pulse"]
+        let homeNavAfterSettings = app.navigationBars["News"]
         XCTAssertTrue(homeNavAfterSettings.waitForExistence(timeout: 5), "Should return to Home")
 
         navigateToForYou()
