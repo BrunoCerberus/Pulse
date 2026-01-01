@@ -203,7 +203,7 @@ final class CategoriesUITests: BaseUITestCase {
         XCTAssertTrue(homeTab.waitForExistence(timeout: Self.shortTimeout), "Home tab should exist")
         homeTab.tap()
 
-        let homeNav = app.navigationBars["Pulse"]
+        let homeNav = app.navigationBars["News"]
         XCTAssertTrue(homeNav.waitForExistence(timeout: Self.defaultTimeout), "Home should load after tab switch")
 
         navigateToCategories()

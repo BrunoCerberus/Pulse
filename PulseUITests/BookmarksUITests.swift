@@ -113,7 +113,7 @@ final class BookmarksUITests: BaseUITestCase {
         let noBookmarksExists = noBookmarksText.waitForExistence(timeout: 3)
 
         navigateToHome()
-        let homeNav = app.navigationBars["Pulse"]
+        let homeNav = app.navigationBars["News"]
         XCTAssertTrue(homeNav.waitForExistence(timeout: 5), "Should be on Home")
 
         navigateToBookmarks()

@@ -52,7 +52,7 @@ final class PulseUITests: BaseUITestCase {
 
         resetToHomeTab()
 
-        let homeNavBar = app.navigationBars["Pulse"]
+        let homeNavBar = app.navigationBars["News"]
         XCTAssertTrue(homeNavBar.waitForExistence(timeout: 5), "Home navigation bar should exist")
 
         // Settings is accessed via the gear button in Home navigation bar, not a tab

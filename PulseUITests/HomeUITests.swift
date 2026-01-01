@@ -15,7 +15,7 @@ final class HomeUITests: BaseUITestCase {
         resetToHomeTab()
 
         // Verify navigation title
-        XCTAssertTrue(app.navigationBars["Pulse"].waitForExistence(timeout: Self.shortTimeout), "Navigation title 'Pulse' should exist")
+        XCTAssertTrue(app.navigationBars["News"].waitForExistence(timeout: Self.shortTimeout), "Navigation title 'Pulse' should exist")
 
         // Verify gear button
         XCTAssertTrue(app.navigationBars.buttons["gearshape"].waitForExistence(timeout: Self.shortTimeout), "Gear button should exist in navigation bar")
