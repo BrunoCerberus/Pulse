@@ -83,7 +83,7 @@ class BaseUITestCase: XCTestCase {
             firstTab.tap()
         }
 
-        let homeNavBar = app.navigationBars["Pulse"]
+        let homeNavBar = app.navigationBars["News"]
         let gearButton = app.navigationBars.buttons["gearshape"]
         if !homeNavBar.exists && !gearButton.exists {
             for button in tabBar.buttons.allElementsBoundByIndex {

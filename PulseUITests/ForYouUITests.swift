@@ -126,7 +126,7 @@ final class ForYouUITests: BaseUITestCase {
         XCTAssertTrue(homeTab.waitForExistence(timeout: Self.shortTimeout), "Home tab should exist")
         homeTab.tap()
 
-        let homeNav = app.navigationBars["Pulse"]
+        let homeNav = app.navigationBars["News"]
         XCTAssertTrue(homeNav.waitForExistence(timeout: Self.defaultTimeout), "Home should load")
 
         let forYouTabReturn = app.tabBars.buttons["For You"]
@@ -156,7 +156,7 @@ final class ForYouUITests: BaseUITestCase {
             app.swipeRight()
         }
 
-        let homeNavAfterSettings = app.navigationBars["Pulse"]
+        let homeNavAfterSettings = app.navigationBars["News"]
         XCTAssertTrue(homeNavAfterSettings.waitForExistence(timeout: 5), "Should return to Home")
 
         navigateToForYou()

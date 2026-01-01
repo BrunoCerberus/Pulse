@@ -23,7 +23,7 @@ struct HomeView<R: HomeNavigationRouter>: View {
 
             content
         }
-        .navigationTitle("Pulse")
+        .navigationTitle("News")
         .toolbarBackground(.hidden, for: .navigationBar)
         .toolbar {
             ToolbarItem(placement: .topBarTrailing) {

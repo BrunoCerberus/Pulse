@@ -157,8 +157,8 @@ final class PulseSettingsUITests: BaseUITestCase {
         XCTAssertTrue(backButton.exists, "Back button should exist")
         backButton.tap()
 
-        let homeNav = app.navigationBars["Pulse"]
-        XCTAssertTrue(homeNav.waitForExistence(timeout: 5), "Should return to Home (Pulse)")
+        let homeNav = app.navigationBars["News"]
+        XCTAssertTrue(homeNav.waitForExistence(timeout: 5), "Should return to Home")
 
         navigateToSettings()
         wait(for: 1)
