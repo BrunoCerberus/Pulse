@@ -179,17 +179,18 @@ extension View {
 struct FadeInModifier: ViewModifier {
     let delay: Double
 
-    @State private var opacity: Double = 0
-    @State private var offset: CGFloat = 20
+    @State private var hasAnimated = false
 
     func body(content: Content) -> some View {
         content
-            .opacity(opacity)
-            .offset(y: offset)
+            .opacity(hasAnimated ? 1 : 0)
+            .offset(y: hasAnimated ? 0 : 20)
             .onAppear {
-                withAnimation(.easeOut(duration: AnimationTiming.normal).delay(delay)) {
-                    opacity = 1
-                    offset = 0
+                guard !hasAnimated else { return }
+                // Cap delay to prevent excessive animation queuing
+                let cappedDelay = min(delay, 0.3)
+                withAnimation(.easeOut(duration: AnimationTiming.normal).delay(cappedDelay)) {
+                    hasAnimated = true
                 }
             }
     }
