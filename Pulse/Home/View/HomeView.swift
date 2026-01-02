@@ -175,7 +175,7 @@ struct HomeView<R: HomeNavigationRouter>: View {
                             )
                             .fadeIn(delay: Double(index) * 0.03)
                             .onAppear {
-                                if item == viewModel.viewState.headlines.last {
+                                if item.id == viewModel.viewState.headlines.last?.id {
                                     viewModel.handle(event: .onLoadMore)
                                 }
                             }

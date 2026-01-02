@@ -73,6 +73,8 @@ enum GlassStyle {
     case thin
     case regular
     case thick
+    /// Performance-optimized solid background (no blur)
+    case solid
 
     var material: Material {
         switch self {
@@ -80,7 +82,13 @@ enum GlassStyle {
         case .thin: return .thinMaterial
         case .regular: return .regularMaterial
         case .thick: return .thickMaterial
+        case .solid: return .ultraThinMaterial // Fallback, not used
         }
+    }
+
+    /// Whether this style uses expensive blur materials
+    var usesMaterial: Bool {
+        self != .solid
     }
 
     var borderOpacity: Double {
@@ -89,6 +97,7 @@ enum GlassStyle {
         case .thin: return 0.2
         case .regular: return 0.25
         case .thick: return 0.3
+        case .solid: return 0.15
         }
     }
 }

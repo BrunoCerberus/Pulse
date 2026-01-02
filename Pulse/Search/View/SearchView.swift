@@ -223,7 +223,7 @@ struct SearchView<R: SearchNavigationRouter>: View {
                         )
                         .fadeIn(delay: Double(index) * 0.03)
                         .onAppear {
-                            if item == viewModel.viewState.results.last {
+                            if item.id == viewModel.viewState.results.last?.id {
                                 viewModel.handle(event: .onLoadMore)
                             }
                         }

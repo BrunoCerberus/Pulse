@@ -223,7 +223,7 @@ struct CategoriesView<R: CategoriesNavigationRouter>: View {
                 )
                 .fadeIn(delay: Double(index) * 0.03)
                 .onAppear {
-                    if item == viewModel.viewState.articles.last {
+                    if item.id == viewModel.viewState.articles.last?.id {
                         viewModel.handle(event: .onLoadMore)
                     }
                 }

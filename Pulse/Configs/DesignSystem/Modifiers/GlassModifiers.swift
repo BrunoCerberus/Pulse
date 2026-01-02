@@ -11,7 +11,7 @@ struct GlassBackgroundModifier: ViewModifier {
 
     func body(content: Content) -> some View {
         content
-            .background(style.material)
+            .background(backgroundView)
             .clipShape(RoundedRectangle(cornerRadius: cornerRadius, style: .continuous))
             .overlay(
                 RoundedRectangle(cornerRadius: cornerRadius, style: .continuous)
@@ -20,6 +20,16 @@ struct GlassBackgroundModifier: ViewModifier {
                         lineWidth: 0.5
                     )
             )
+    }
+
+    @ViewBuilder
+    private var backgroundView: some View {
+        if style.usesMaterial {
+            Rectangle().fill(style.material)
+        } else {
+            // Solid background for performance - no blur
+            Color(uiColor: colorScheme == .dark ? .secondarySystemBackground : .systemBackground)
+        }
     }
 }
 

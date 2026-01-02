@@ -7,6 +7,7 @@ struct HeroNewsCard: View {
     let onTap: () -> Void
 
     @State private var isPulsing = false
+    @State private var hasStartedPulsing = false
     @Environment(\.colorScheme) private var colorScheme
 
     private let cardWidth: CGFloat = 300
@@ -153,6 +154,8 @@ struct HeroNewsCard: View {
     }
 
     private func startPulseAnimation() {
+        guard !hasStartedPulsing else { return }
+        hasStartedPulsing = true
         withAnimation(
             .easeInOut(duration: 1.0)
                 .repeatForever(autoreverses: true)
