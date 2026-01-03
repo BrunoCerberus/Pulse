@@ -54,7 +54,7 @@ final class SettingsViewSnapshotTests: XCTestCase {
 
         assertSnapshot(
             of: controller,
-            as: .image(on: iPhoneAirConfig, precision: 0.98),
+            as: .image(on: iPhoneAirConfig, precision: 0.99),
             record: false
         )
     }
