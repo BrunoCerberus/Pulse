@@ -10,6 +10,7 @@ final class SearchDomainInteractor: CombineInteractor {
     private let stateSubject = CurrentValueSubject<SearchDomainState, Never>(.initial)
     private var cancellables = Set<AnyCancellable>()
     private var searchCancellable: AnyCancellable?
+    private var backgroundTasks = Set<Task<Void, Never>>()
 
     var statePublisher: AnyPublisher<SearchDomainState, Never> {
         stateSubject.eraseToAnyPublisher()
@@ -201,9 +202,19 @@ final class SearchDomainInteractor: CombineInteractor {
         updateState { state in
             state.selectedArticle = article
         }
-        Task {
+        let task = Task { [weak self] in
+            guard let self else { return }
             try? await storageService.saveReadingHistory(article)
         }
+        backgroundTasks.insert(task)
+        Task {
+            await task.value
+            backgroundTasks.remove(task)
+        }
+    }
+
+    deinit {
+        backgroundTasks.forEach { $0.cancel() }
     }
 
     private func clearSelectedArticle() {

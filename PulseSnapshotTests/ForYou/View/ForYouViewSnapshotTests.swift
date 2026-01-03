@@ -98,7 +98,7 @@ final class ForYouViewSnapshotTests: XCTestCase {
 
         assertSnapshot(
             of: controller,
-            as: .wait(for: 1.5, on: .image(on: iPhoneAirConfig, precision: 0.95)),
+            as: .wait(for: 1.5, on: .image(on: iPhoneAirConfig, precision: 0.98)),
             record: false
         )
     }
@@ -233,7 +233,7 @@ private struct ForYouPopulatedPreview: View {
                 description: "From healthcare to finance, AI is reshaping the business landscape",
                 source: ArticleSource(id: "techcrunch", name: "TechCrunch"),
                 url: "https://example.com/1",
-                imageURL: "https://picsum.photos/400/300",
+                imageURL: nil,
                 publishedAt: fixedDate,
                 category: .technology
             )),
@@ -243,7 +243,7 @@ private struct ForYouPopulatedPreview: View {
                 description: "World leaders commit to ambitious carbon reduction targets",
                 source: ArticleSource(id: "reuters", name: "Reuters"),
                 url: "https://example.com/2",
-                imageURL: "https://picsum.photos/400/301",
+                imageURL: nil,
                 publishedAt: fixedDate,
                 category: .world
             )),
@@ -253,7 +253,7 @@ private struct ForYouPopulatedPreview: View {
                 description: "Research shows regular physical activity reduces anxiety symptoms",
                 source: ArticleSource(id: "bbc", name: "BBC Health"),
                 url: "https://example.com/3",
-                imageURL: "https://picsum.photos/400/302",
+                imageURL: nil,
                 publishedAt: fixedDate,
                 category: .health
             )),

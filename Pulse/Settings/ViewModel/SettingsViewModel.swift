@@ -88,10 +88,10 @@ final class SettingsViewModel: CombineViewModel, ObservableObject {
     private func setupBindings() {
         Publishers.CombineLatest3(
             interactor.statePublisher,
-            themeManager.$isDarkMode,
-            themeManager.$useSystemTheme
+            themeManager.$isDarkMode.removeDuplicates(),
+            themeManager.$useSystemTheme.removeDuplicates()
         )
-        .combineLatest(authenticationManager.authStatePublisher)
+        .combineLatest(authenticationManager.authStatePublisher.removeDuplicates())
         .map { combined, authState in
             let (state, isDarkMode, useSystemTheme) = combined
             let currentUser: AuthUser? = {
@@ -118,6 +118,7 @@ final class SettingsViewModel: CombineViewModel, ObservableObject {
                 newMutedKeyword: state.newMutedKeyword
             )
         }
+        .removeDuplicates()
         .receive(on: DispatchQueue.main)
         .assign(to: &$viewState)
     }

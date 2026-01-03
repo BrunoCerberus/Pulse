@@ -10,26 +10,25 @@ final class SearchViewModel: CombineViewModel, ObservableObject {
     private let serviceLocator: ServiceLocator
     private let interactor: SearchDomainInteractor
     private var cancellables = Set<AnyCancellable>()
-    private var searchWorkItem: DispatchWorkItem?
+    private let searchQuerySubject = PassthroughSubject<String, Never>()
 
     init(serviceLocator: ServiceLocator) {
         self.serviceLocator = serviceLocator
         interactor = SearchDomainInteractor(serviceLocator: serviceLocator)
         setupBindings()
+        setupDebouncedSearch()
     }
 
     func handle(event: SearchViewEvent) {
         switch event {
         case let .onQueryChanged(query):
             interactor.dispatch(action: .updateQuery(query))
-            debounceSearch(query: query)
+            searchQuerySubject.send(query)
         case .onSearch:
-            searchWorkItem?.cancel()
             interactor.dispatch(action: .search)
         case .onLoadMore:
             interactor.dispatch(action: .loadMore)
         case .onClear:
-            searchWorkItem?.cancel()
             interactor.dispatch(action: .clearResults)
         case let .onSortChanged(option):
             interactor.dispatch(action: .setSortOption(option))
@@ -38,23 +37,19 @@ final class SearchViewModel: CombineViewModel, ObservableObject {
         case .onArticleNavigated:
             interactor.dispatch(action: .clearSelectedArticle)
         case let .onSuggestionTapped(suggestion):
-            searchWorkItem?.cancel()
             interactor.dispatch(action: .updateQuery(suggestion))
             interactor.dispatch(action: .search)
         }
     }
 
-    private func debounceSearch(query: String) {
-        searchWorkItem?.cancel()
-
-        guard !query.isEmpty else { return }
-
-        let workItem = DispatchWorkItem { [weak self] in
-            self?.interactor.dispatch(action: .search)
-        }
-
-        searchWorkItem = workItem
-        DispatchQueue.main.asyncAfter(deadline: .now() + 0.3, execute: workItem)
+    private func setupDebouncedSearch() {
+        searchQuerySubject
+            .debounce(for: .milliseconds(300), scheduler: DispatchQueue.main)
+            .filter { !$0.isEmpty }
+            .sink { [weak self] _ in
+                self?.interactor.dispatch(action: .search)
+            }
+            .store(in: &cancellables)
     }
 
     private func setupBindings() {

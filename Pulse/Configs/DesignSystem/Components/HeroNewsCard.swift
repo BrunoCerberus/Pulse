@@ -37,35 +37,26 @@ struct HeroNewsCard: View {
         .onAppear {
             startPulseAnimation()
         }
+        .onDisappear {
+            stopPulseAnimation()
+        }
     }
 
     @ViewBuilder
     private var imageBackground: some View {
         if let imageURL = item.imageURL {
-            AsyncImage(url: imageURL) { phase in
-                switch phase {
-                case .empty:
-                    placeholderBackground
-                        .overlay {
-                            ProgressView()
-                                .tint(.white)
-                        }
-                case let .success(image):
-                    image
-                        .resizable()
-                        .aspectRatio(contentMode: .fill)
-                        .frame(width: cardWidth, height: cardHeight)
-                        .clipped()
-                case .failure:
-                    placeholderBackground
-                        .overlay {
-                            Image(systemName: "newspaper.fill")
-                                .font(.system(size: IconSize.xxl))
-                                .foregroundStyle(.white.opacity(0.5))
-                        }
-                @unknown default:
-                    EmptyView()
-                }
+            CachedAsyncImage(url: imageURL) { image in
+                image
+                    .resizable()
+                    .aspectRatio(contentMode: .fill)
+                    .frame(width: cardWidth, height: cardHeight)
+                    .clipped()
+            } placeholder: {
+                placeholderBackground
+                    .overlay {
+                        ProgressView()
+                            .tint(.white)
+                    }
             }
         } else {
             placeholderBackground
@@ -163,6 +154,13 @@ struct HeroNewsCard: View {
             isPulsing = true
         }
     }
+
+    private func stopPulseAnimation() {
+        withAnimation(.linear(duration: 0.1)) {
+            isPulsing = false
+        }
+        hasStartedPulsing = false
+    }
 }
 
 // MARK: - Featured Article Card (Larger variant)
@@ -193,18 +191,15 @@ struct FeaturedArticleCard: View {
     @ViewBuilder
     private var imageSection: some View {
         if let imageURL = item.imageURL {
-            AsyncImage(url: imageURL) { phase in
-                switch phase {
-                case let .success(image):
-                    image
-                        .resizable()
-                        .aspectRatio(contentMode: .fill)
-                        .frame(height: 180)
-                        .clipped()
-                default:
-                    Color.primary.opacity(0.05)
-                        .frame(height: 180)
-                }
+            CachedAsyncImage(url: imageURL) { image in
+                image
+                    .resizable()
+                    .aspectRatio(contentMode: .fill)
+                    .frame(height: 180)
+                    .clipped()
+            } placeholder: {
+                Color.primary.opacity(0.05)
+                    .frame(height: 180)
             }
         } else {
             Color.primary.opacity(0.05)

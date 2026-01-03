@@ -9,6 +9,7 @@ final class BookmarksDomainInteractor: CombineInteractor {
     private let storageService: StorageService
     private let stateSubject = CurrentValueSubject<BookmarksDomainState, Never>(.initial)
     private var cancellables = Set<AnyCancellable>()
+    private var backgroundTasks = Set<Task<Void, Never>>()
 
     var statePublisher: AnyPublisher<BookmarksDomainState, Never> {
         stateSubject.eraseToAnyPublisher()
@@ -120,9 +121,19 @@ final class BookmarksDomainInteractor: CombineInteractor {
     }
 
     private func saveToReadingHistory(_ article: Article) {
-        Task {
+        let task = Task { [weak self] in
+            guard let self else { return }
             try? await storageService.saveReadingHistory(article)
         }
+        backgroundTasks.insert(task)
+        Task {
+            await task.value
+            backgroundTasks.remove(task)
+        }
+    }
+
+    deinit {
+        backgroundTasks.forEach { $0.cancel() }
     }
 
     private func updateState(_ transform: (inout BookmarksDomainState) -> Void) {

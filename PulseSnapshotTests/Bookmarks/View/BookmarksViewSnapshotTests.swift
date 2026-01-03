@@ -82,7 +82,7 @@ final class BookmarksViewSnapshotTests: XCTestCase {
 
         assertSnapshot(
             of: controller,
-            as: .wait(for: 1.5, on: .image(on: iPhoneAirConfig, precision: 0.95)),
+            as: .wait(for: 1.5, on: .image(on: iPhoneAirConfig, precision: 0.98)),
             record: false
         )
     }
@@ -203,7 +203,7 @@ private struct BookmarksPopulatedPreview: View {
                 description: "Apple announces major updates to SwiftUI at WWDC 2024",
                 source: ArticleSource(id: "techcrunch", name: "TechCrunch"),
                 url: "https://example.com/1",
-                imageURL: "https://picsum.photos/400/300",
+                imageURL: nil,
                 publishedAt: fixedDate,
                 category: .technology
             )),
@@ -213,7 +213,7 @@ private struct BookmarksPopulatedPreview: View {
                 description: "World leaders commit to ambitious carbon reduction targets",
                 source: ArticleSource(id: "reuters", name: "Reuters"),
                 url: "https://example.com/2",
-                imageURL: "https://picsum.photos/400/301",
+                imageURL: nil,
                 publishedAt: fixedDate,
                 category: .world
             )),
@@ -223,7 +223,7 @@ private struct BookmarksPopulatedPreview: View {
                 description: "Research shows regular physical activity reduces anxiety symptoms",
                 source: ArticleSource(id: "bbc", name: "BBC Health"),
                 url: "https://example.com/3",
-                imageURL: "https://picsum.photos/400/302",
+                imageURL: nil,
                 publishedAt: fixedDate,
                 category: .health
             )),
@@ -233,7 +233,7 @@ private struct BookmarksPopulatedPreview: View {
                 description: "Historic game draws millions of viewers worldwide",
                 source: ArticleSource(id: "espn", name: "ESPN"),
                 url: "https://example.com/4",
-                imageURL: "https://picsum.photos/400/303",
+                imageURL: nil,
                 publishedAt: fixedDate,
                 category: .sports
             )),

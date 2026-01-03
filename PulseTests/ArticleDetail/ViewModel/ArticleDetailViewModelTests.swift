@@ -38,16 +38,30 @@ private func contentString(from attributedString: AttributedString?) -> String? 
     return String(attributedString.characters)
 }
 
+/// Wait for async content processing to complete
+@MainActor
+private func waitForContentProcessing(_ viewModel: ArticleDetailViewModel) async {
+    // Wait up to 2 seconds for content processing
+    for _ in 0 ..< 20 {
+        if !viewModel.isProcessingContent {
+            return
+        }
+        try? await Task.sleep(nanoseconds: 100_000_000) // 0.1 seconds
+    }
+}
+
 // MARK: - Initial State Tests
 
 @Suite("ArticleDetailViewModel Initial State")
 @MainActor
 struct ArticleDetailVMInitialTests {
     @Test("Initial state has processed content")
-    func initialStateHasProcessedContent() {
+    func initialStateHasProcessedContent() async {
         let (serviceLocator, _) = createTestServiceLocator()
         let testArticle = createTestArticle()
         let sut = ArticleDetailViewModel(article: testArticle, serviceLocator: serviceLocator)
+
+        await waitForContentProcessing(sut)
 
         #expect(sut.processedContent != nil)
         let content = contentString(from: sut.processedContent)
@@ -70,59 +84,65 @@ struct ArticleDetailVMInitialTests {
 @MainActor
 struct ArticleDetailVMHTMLTests {
     @Test("HTML tags are stripped from content")
-    func htmlTagsStripped() {
+    func htmlTagsStripped() async {
         let (serviceLocator, _) = createTestServiceLocator()
         let article = createTestArticle(
             content: "<p>This is <strong>bold</strong> and <em>italic</em> text.</p>"
         )
         let sut = ArticleDetailViewModel(article: article, serviceLocator: serviceLocator)
+        await waitForContentProcessing(sut)
         let content = contentString(from: sut.processedContent)
         #expect(content != nil)
-        #expect(!content!.contains("<"))
-        #expect(!content!.contains(">"))
+        #expect(content?.contains("<") == false)
+        #expect(content?.contains(">") == false)
     }
 
     @Test("HTML entity &amp; is decoded")
-    func htmlEntityAmpDecoded() {
+    func htmlEntityAmpDecoded() async {
         let (serviceLocator, _) = createTestServiceLocator()
         let article = createTestArticle(content: "Tom &amp; Jerry")
         let sut = ArticleDetailViewModel(article: article, serviceLocator: serviceLocator)
+        await waitForContentProcessing(sut)
         let content = contentString(from: sut.processedContent)
         #expect(content?.contains("Tom & Jerry") == true)
     }
 
     @Test("HTML entity &lt; and &gt; are decoded")
-    func htmlEntityLtGtDecoded() {
+    func htmlEntityLtGtDecoded() async {
         let (serviceLocator, _) = createTestServiceLocator()
         let article = createTestArticle(content: "5 &lt; 10 &gt; 3")
         let sut = ArticleDetailViewModel(article: article, serviceLocator: serviceLocator)
+        await waitForContentProcessing(sut)
         let content = contentString(from: sut.processedContent)
         #expect(content?.contains("5 < 10 > 3") == true)
     }
 
     @Test("HTML entity &nbsp; is decoded to space")
-    func htmlEntityNbspDecoded() {
+    func htmlEntityNbspDecoded() async {
         let (serviceLocator, _) = createTestServiceLocator()
         let article = createTestArticle(content: "Hello&nbsp;World")
         let sut = ArticleDetailViewModel(article: article, serviceLocator: serviceLocator)
+        await waitForContentProcessing(sut)
         let content = contentString(from: sut.processedContent)
         #expect(content?.contains("Hello World") == true)
     }
 
     @Test("HTML entity &quot; is decoded")
-    func htmlEntityQuotDecoded() {
+    func htmlEntityQuotDecoded() async {
         let (serviceLocator, _) = createTestServiceLocator()
         let article = createTestArticle(content: "He said &quot;Hello&quot;")
         let sut = ArticleDetailViewModel(article: article, serviceLocator: serviceLocator)
+        await waitForContentProcessing(sut)
         let content = contentString(from: sut.processedContent)
         #expect(content?.contains("He said \"Hello\"") == true)
     }
 
     @Test("HTML entity &#39; is decoded to apostrophe")
-    func htmlEntityAposDecoded() {
+    func htmlEntityAposDecoded() async {
         let (serviceLocator, _) = createTestServiceLocator()
         let article = createTestArticle(content: "It&#39;s working")
         let sut = ArticleDetailViewModel(article: article, serviceLocator: serviceLocator)
+        await waitForContentProcessing(sut)
         let content = contentString(from: sut.processedContent)
         #expect(content?.contains("It's working") == true)
     }
@@ -134,71 +154,78 @@ struct ArticleDetailVMHTMLTests {
 @MainActor
 struct ArticleDetailVMContentTests {
     @Test("Truncation marker is removed from content")
-    func truncationMarkerRemoved() {
+    func truncationMarkerRemoved() async {
         let (serviceLocator, _) = createTestServiceLocator()
         let article = createTestArticle(
             content: "This is the beginning of the article... [+1234 chars]"
         )
         let sut = ArticleDetailViewModel(article: article, serviceLocator: serviceLocator)
+        await waitForContentProcessing(sut)
         let content = contentString(from: sut.processedContent)
         #expect(content != nil)
-        #expect(!content!.contains("[+"))
-        #expect(!content!.contains("chars]"))
+        #expect(content?.contains("[+") == false)
+        #expect(content?.contains("chars]") == false)
     }
 
     @Test("Multiple whitespaces are normalized")
-    func whitespaceNormalized() {
+    func whitespaceNormalized() async {
         let (serviceLocator, _) = createTestServiceLocator()
         let article = createTestArticle(content: "This   has    multiple     spaces")
         let sut = ArticleDetailViewModel(article: article, serviceLocator: serviceLocator)
+        await waitForContentProcessing(sut)
         let content = contentString(from: sut.processedContent)
         #expect(content == "This has multiple spaces")
     }
 
     @Test("Nil content results in nil processed content")
-    func nilContentResultsInNilProcessed() {
+    func nilContentResultsInNilProcessed() async {
         let (serviceLocator, _) = createTestServiceLocator()
         let article = createTestArticle(content: nil, description: "Has description")
         let sut = ArticleDetailViewModel(article: article, serviceLocator: serviceLocator)
+        await waitForContentProcessing(sut)
         #expect(sut.processedContent == nil)
     }
 
     @Test("Empty content results in nil processed content")
-    func emptyContentResultsInNilProcessed() {
+    func emptyContentResultsInNilProcessed() async {
         let (serviceLocator, _) = createTestServiceLocator()
         let article = createTestArticle(content: "   ")
         let sut = ArticleDetailViewModel(article: article, serviceLocator: serviceLocator)
+        await waitForContentProcessing(sut)
         #expect(sut.processedContent == nil)
     }
 
     @Test("Description is processed into AttributedString")
-    func descriptionIsProcessed() {
+    func descriptionIsProcessed() async {
         let (serviceLocator, _) = createTestServiceLocator()
         let testArticle = createTestArticle()
         let sut = ArticleDetailViewModel(article: testArticle, serviceLocator: serviceLocator)
+        await waitForContentProcessing(sut)
         #expect(sut.processedDescription != nil)
         let description = contentString(from: sut.processedDescription)
         #expect(description == "Test article description")
     }
 
     @Test("Nil description results in nil processed description")
-    func nilDescriptionResultsInNilProcessed() {
+    func nilDescriptionResultsInNilProcessed() async {
         let (serviceLocator, _) = createTestServiceLocator()
         let article = createTestArticle(description: nil)
         let sut = ArticleDetailViewModel(article: article, serviceLocator: serviceLocator)
+        await waitForContentProcessing(sut)
         #expect(sut.processedDescription == nil)
     }
 
     @Test("Content with multiple sentences is formatted into paragraphs")
-    func contentFormattedIntoParagraphs() {
+    func contentFormattedIntoParagraphs() async {
         let (serviceLocator, _) = createTestServiceLocator()
         let multiSentenceContent = "First sentence. Second sentence. Third sentence. "
             + "Fourth sentence. Fifth sentence. Sixth sentence."
         let article = createTestArticle(content: multiSentenceContent)
         let sut = ArticleDetailViewModel(article: article, serviceLocator: serviceLocator)
+        await waitForContentProcessing(sut)
         let content = contentString(from: sut.processedContent)
         #expect(content != nil)
-        #expect(content!.contains("\n\n"))
+        #expect(content?.contains("\n\n") == true)
     }
 }
 

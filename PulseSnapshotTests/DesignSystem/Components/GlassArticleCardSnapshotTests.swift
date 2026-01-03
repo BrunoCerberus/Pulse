@@ -22,7 +22,7 @@ final class GlassArticleCardSnapshotTests: XCTestCase {
             author: "John Appleseed",
             source: ArticleSource(id: "techcrunch", name: "TechCrunch"),
             url: "https://example.com/1",
-            imageURL: "https://picsum.photos/400/300",
+            imageURL: nil,
             publishedAt: Date(timeIntervalSince1970: 1_672_531_200), // Jan 1, 2023 00:00:00 UTC
             category: .technology
         )
@@ -190,7 +190,7 @@ final class GlassArticleCardSnapshotTests: XCTestCase {
         let view = GlassArticleCardCompact(
             title: "Quick Update on Markets Today",
             sourceName: "Bloomberg",
-            imageURL: URL(string: "https://picsum.photos/100"),
+            imageURL: nil,
             onTap: {}
         )
         .frame(width: 375)

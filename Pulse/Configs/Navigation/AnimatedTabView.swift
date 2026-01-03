@@ -52,10 +52,8 @@ private struct ExtractImageViewsFromTabView<Value: AnimatedTabSelectionProtocol>
     }
 
     func updateUIView(_ uiView: UIView, context _: Context) {
-        DispatchQueue.main.async {
-            guard let tabBar = uiView.tabBar else { return }
-            extractImageViews(tabBar)
-        }
+        guard let tabBar = uiView.tabBar else { return }
+        extractImageViews(tabBar)
     }
 
     private func extractImageViews(_ tabBar: UITabBar) {

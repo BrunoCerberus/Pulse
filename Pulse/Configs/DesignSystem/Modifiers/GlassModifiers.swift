@@ -72,6 +72,7 @@ struct ShimmerModifier: ViewModifier {
     let duration: Double
 
     @State private var phase: CGFloat = 0
+    @State private var isAnimating = false
 
     func body(content: Content) -> some View {
         content
@@ -81,7 +82,8 @@ struct ShimmerModifier: ViewModifier {
             )
             .clipped()
             .onAppear {
-                guard isActive else { return }
+                guard isActive, !isAnimating else { return }
+                isAnimating = true
                 withAnimation(
                     .linear(duration: duration)
                         .repeatForever(autoreverses: false)
@@ -89,11 +91,17 @@ struct ShimmerModifier: ViewModifier {
                     phase = 1
                 }
             }
+            .onDisappear {
+                withAnimation(.linear(duration: 0.1)) {
+                    phase = 0
+                }
+                isAnimating = false
+            }
     }
 
     @ViewBuilder
     private var shimmerOverlay: some View {
-        if isActive {
+        if isActive, isAnimating {
             GeometryReader { geometry in
                 LinearGradient(
                     colors: [
@@ -190,15 +198,26 @@ struct FadeInModifier: ViewModifier {
     let delay: Double
 
     @State private var hasAnimated = false
+    @Environment(\.accessibilityReduceMotion) private var reduceMotion
+
+    // Cap delay to prevent excessive animation queuing
+    private static let maxDelay: Double = 0.3
 
     func body(content: Content) -> some View {
         content
             .opacity(hasAnimated ? 1 : 0)
-            .offset(y: hasAnimated ? 0 : 20)
+            .offset(y: hasAnimated ? 0 : (reduceMotion ? 0 : 20))
             .onAppear {
                 guard !hasAnimated else { return }
-                // Cap delay to prevent excessive animation queuing
-                let cappedDelay = min(delay, 0.3)
+
+                // Skip animation for reduce motion preference
+                if reduceMotion {
+                    hasAnimated = true
+                    return
+                }
+
+                // Cap delay but still animate all items on first appearance
+                let cappedDelay = min(delay, Self.maxDelay)
                 withAnimation(.easeOut(duration: AnimationTiming.normal).delay(cappedDelay)) {
                     hasAnimated = true
                 }

@@ -6,11 +6,11 @@ struct ArticleSkeletonView: View {
     var body: some View {
         HStack(alignment: .top, spacing: 12) {
             VStack(alignment: .leading, spacing: 8) {
-                SkeletonLine(width: 60, height: 12)
-                SkeletonLine(width: .infinity, height: 18)
-                SkeletonLine(width: 200, height: 18)
-                SkeletonLine(width: .infinity, height: 14)
-                SkeletonLine(width: 150, height: 12)
+                SkeletonLine(width: 60, height: 12, isAnimating: isAnimating)
+                SkeletonLine(width: .infinity, height: 18, isAnimating: isAnimating)
+                SkeletonLine(width: 200, height: 18, isAnimating: isAnimating)
+                SkeletonLine(width: .infinity, height: 14, isAnimating: isAnimating)
+                SkeletonLine(width: 150, height: 12, isAnimating: isAnimating)
             }
 
             Spacer()
@@ -26,30 +26,30 @@ struct ArticleSkeletonView: View {
                 isAnimating = true
             }
         }
+        .onDisappear {
+            withAnimation(.linear(duration: 0.1)) {
+                isAnimating = false
+            }
+        }
     }
 }
 
 struct SkeletonLine: View {
     let width: CGFloat?
     let height: CGFloat
+    let isAnimating: Bool
 
-    init(width: CGFloat, height: CGFloat) {
+    init(width: CGFloat, height: CGFloat, isAnimating: Bool = false) {
         self.width = width
         self.height = height
+        self.isAnimating = isAnimating
     }
-
-    @State private var isAnimating = false
 
     var body: some View {
         RoundedRectangle(cornerRadius: 4)
             .fill(.quaternary)
             .frame(maxWidth: width == .infinity ? .infinity : width, minHeight: height, maxHeight: height)
             .shimmer(isAnimating: isAnimating)
-            .onAppear {
-                withAnimation(.easeInOut(duration: 1.0).repeatForever(autoreverses: true)) {
-                    isAnimating = true
-                }
-            }
     }
 }
 
