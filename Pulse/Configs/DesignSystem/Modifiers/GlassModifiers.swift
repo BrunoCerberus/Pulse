@@ -11,7 +11,7 @@ struct GlassBackgroundModifier: ViewModifier {
 
     func body(content: Content) -> some View {
         content
-            .background(style.material)
+            .background(backgroundView)
             .clipShape(RoundedRectangle(cornerRadius: cornerRadius, style: .continuous))
             .overlay(
                 RoundedRectangle(cornerRadius: cornerRadius, style: .continuous)
@@ -20,6 +20,16 @@ struct GlassBackgroundModifier: ViewModifier {
                         lineWidth: 0.5
                     )
             )
+    }
+
+    @ViewBuilder
+    private var backgroundView: some View {
+        if style.usesMaterial {
+            Rectangle().fill(style.material)
+        } else {
+            // Solid background for performance - no blur
+            Color(uiColor: colorScheme == .dark ? .secondarySystemBackground : .systemBackground)
+        }
     }
 }
 
@@ -179,17 +189,18 @@ extension View {
 struct FadeInModifier: ViewModifier {
     let delay: Double
 
-    @State private var opacity: Double = 0
-    @State private var offset: CGFloat = 20
+    @State private var hasAnimated = false
 
     func body(content: Content) -> some View {
         content
-            .opacity(opacity)
-            .offset(y: offset)
+            .opacity(hasAnimated ? 1 : 0)
+            .offset(y: hasAnimated ? 0 : 20)
             .onAppear {
-                withAnimation(.easeOut(duration: AnimationTiming.normal).delay(delay)) {
-                    opacity = 1
-                    offset = 0
+                guard !hasAnimated else { return }
+                // Cap delay to prevent excessive animation queuing
+                let cappedDelay = min(delay, 0.3)
+                withAnimation(.easeOut(duration: AnimationTiming.normal).delay(cappedDelay)) {
+                    hasAnimated = true
                 }
             }
     }

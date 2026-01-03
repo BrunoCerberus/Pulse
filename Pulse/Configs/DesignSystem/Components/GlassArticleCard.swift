@@ -84,7 +84,7 @@ struct GlassArticleCard: View {
                 articleImage
             }
             .padding(Spacing.md)
-            .glassBackground(style: .thin, cornerRadius: CornerRadius.lg)
+            .glassBackground(style: .solid, cornerRadius: CornerRadius.lg)
             .depthShadow(.subtle)
         }
         .pressEffect()
@@ -220,7 +220,7 @@ struct GlassArticleCardCompact: View {
                 Spacer(minLength: 0)
             }
             .padding(Spacing.sm)
-            .glassBackground(style: .ultraThin, cornerRadius: CornerRadius.md)
+            .glassBackground(style: .solid, cornerRadius: CornerRadius.md)
         }
         .pressEffect()
     }
