@@ -118,20 +118,19 @@ struct BookmarksView<R: BookmarksNavigationRouter>: View {
             VStack(spacing: Spacing.sm) {
                 bookmarkCountHeader
 
-                ForEach(Array(viewModel.viewState.bookmarks.enumerated()), id: \.element.id) { index, item in
+                ForEach(viewModel.viewState.bookmarks) { item in
                     GlassArticleCard(
                         item: item,
                         isBookmarked: true,
                         onTap: {
-                            viewModel.handle(event: .onArticleTapped(item.article))
+                            viewModel.handle(event: .onArticleTapped(articleId: item.id))
                         },
                         onBookmark: {
                             HapticManager.shared.notification(.warning)
-                            viewModel.handle(event: .onRemoveBookmark(item.article))
+                            viewModel.handle(event: .onRemoveBookmark(articleId: item.id))
                         },
                         onShare: {}
                     )
-                    .fadeIn(delay: Double(index) * 0.03)
                 }
             }
             .padding(.horizontal, Spacing.md)

@@ -34,6 +34,7 @@ final class HomeViewModel: CombineViewModel, ObservableObject {
     private func setupBindings() {
         interactor.statePublisher
             .map { [reducer] state in reducer.reduce(domainState: state) }
+            .removeDuplicates()
             .receive(on: DispatchQueue.main)
             .assign(to: &$viewState)
     }

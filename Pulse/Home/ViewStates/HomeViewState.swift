@@ -34,7 +34,6 @@ struct ArticleViewItem: Identifiable, Equatable {
     let imageURL: URL?
     let formattedDate: String
     let category: NewsCategory?
-    let article: Article
 
     init(from article: Article) {
         id = article.id
@@ -44,6 +43,5 @@ struct ArticleViewItem: Identifiable, Equatable {
         imageURL = article.imageURL.flatMap { URL(string: $0) }
         formattedDate = article.formattedDate
         category = article.category
-        self.article = article
     }
 }

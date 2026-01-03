@@ -62,7 +62,7 @@ struct BookmarksViewModelTests {
         sut.handle(event: .onAppear)
         try await Task.sleep(nanoseconds: 300_000_000)
 
-        sut.handle(event: .onRemoveBookmark(article))
+        sut.handle(event: .onRemoveBookmark(articleId: article.id))
         try await Task.sleep(nanoseconds: 300_000_000)
 
         #expect(!sut.viewState.bookmarks.contains(where: { $0.id == article.id }))
@@ -71,8 +71,12 @@ struct BookmarksViewModelTests {
     @Test("Article tap sets selected article")
     func articleTap() async throws {
         let article = Article.mockArticles[0]
+        mockBookmarksService.bookmarks = [article]
 
-        sut.handle(event: .onArticleTapped(article))
+        sut.handle(event: .onAppear)
+        try await Task.sleep(nanoseconds: 300_000_000)
+
+        sut.handle(event: .onArticleTapped(articleId: article.id))
 
         try await Task.sleep(nanoseconds: 50_000_000)
 
@@ -144,8 +148,12 @@ struct BookmarksViewModelTests {
     @Test("Article tap saves to reading history")
     func articleTapSavesToHistory() async throws {
         let article = Article.mockArticles[0]
+        mockBookmarksService.bookmarks = [article]
 
-        sut.handle(event: .onArticleTapped(article))
+        sut.handle(event: .onAppear)
+        try await Task.sleep(nanoseconds: 300_000_000)
+
+        sut.handle(event: .onArticleTapped(articleId: article.id))
 
         try await Task.sleep(nanoseconds: 200_000_000)
 
@@ -165,7 +173,7 @@ struct BookmarksViewModelTests {
 
         #expect(!sut.viewState.showEmptyState)
 
-        sut.handle(event: .onRemoveBookmark(article))
+        sut.handle(event: .onRemoveBookmark(articleId: article.id))
         try await Task.sleep(nanoseconds: 300_000_000)
 
         #expect(sut.viewState.showEmptyState)
@@ -181,7 +189,7 @@ struct BookmarksViewModelTests {
         let initialCount = sut.viewState.bookmarks.count
         let articleToRemove = Article.mockArticles[0]
 
-        sut.handle(event: .onRemoveBookmark(articleToRemove))
+        sut.handle(event: .onRemoveBookmark(articleId: articleToRemove.id))
         try await Task.sleep(nanoseconds: 300_000_000)
 
         #expect(sut.viewState.bookmarks.count == initialCount - 1)

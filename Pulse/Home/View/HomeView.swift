@@ -160,20 +160,19 @@ struct HomeView<R: HomeNavigationRouter>: View {
 
                 Section {
                     LazyVStack(spacing: Spacing.sm) {
-                        ForEach(Array(viewModel.viewState.headlines.enumerated()), id: \.element.id) { index, item in
+                        ForEach(viewModel.viewState.headlines) { item in
                             GlassArticleCard(
                                 item: item,
                                 onTap: {
-                                    viewModel.handle(event: .onArticleTapped(item.article))
+                                    viewModel.handle(event: .onArticleTapped(articleId: item.id))
                                 },
                                 onBookmark: {
-                                    viewModel.handle(event: .onBookmarkTapped(item.article))
+                                    viewModel.handle(event: .onBookmarkTapped(articleId: item.id))
                                 },
                                 onShare: {
-                                    viewModel.handle(event: .onShareTapped(item.article))
+                                    viewModel.handle(event: .onShareTapped(articleId: item.id))
                                 }
                             )
-                            .fadeIn(delay: Double(index) * 0.03)
                             .onAppear {
                                 if item.id == viewModel.viewState.headlines.last?.id {
                                     viewModel.handle(event: .onLoadMore)
@@ -205,11 +204,10 @@ struct HomeView<R: HomeNavigationRouter>: View {
     private var breakingNewsCarousel: some View {
         ScrollView(.horizontal, showsIndicators: false) {
             LazyHStack(spacing: Spacing.md) {
-                ForEach(Array(viewModel.viewState.breakingNews.enumerated()), id: \.element.id) { index, item in
+                ForEach(viewModel.viewState.breakingNews) { item in
                     HeroNewsCard(item: item) {
-                        viewModel.handle(event: .onArticleTapped(item.article))
+                        viewModel.handle(event: .onArticleTapped(articleId: item.id))
                     }
-                    .fadeIn(delay: Double(index) * 0.1)
                 }
             }
             .padding(.horizontal, Spacing.md)

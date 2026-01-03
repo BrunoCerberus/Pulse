@@ -25,8 +25,8 @@ final class CategoriesViewModel: CombineViewModel, ObservableObject {
             interactor.dispatch(action: .loadMore)
         case .onRefresh:
             interactor.dispatch(action: .refresh)
-        case let .onArticleTapped(article):
-            interactor.dispatch(action: .selectArticle(article))
+        case let .onArticleTapped(articleId):
+            interactor.dispatch(action: .selectArticle(articleId: articleId))
         case .onArticleNavigated:
             interactor.dispatch(action: .clearSelectedArticle)
         }
@@ -48,6 +48,7 @@ final class CategoriesViewModel: CombineViewModel, ObservableObject {
                     selectedArticle: state.selectedArticle
                 )
             }
+            .removeDuplicates()
             .receive(on: DispatchQueue.main)
             .assign(to: &$viewState)
     }
@@ -83,6 +84,6 @@ enum CategoriesViewEvent: Equatable {
     case onCategorySelected(NewsCategory)
     case onLoadMore
     case onRefresh
-    case onArticleTapped(Article)
+    case onArticleTapped(articleId: String)
     case onArticleNavigated
 }
