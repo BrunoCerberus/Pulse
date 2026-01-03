@@ -33,8 +33,10 @@ final class LiveStoreKitService: StoreKitService {
     // MARK: - Properties
 
     private let subscriptionStatusSubject = CurrentValueSubject<Bool, Never>(false)
-    private var updateListenerTask: Task<Void, Error>?
+    private var updateListenerTask: Task<Void, Never>?
+    private var initialStatusTask: Task<Void, Never>?
     private var cancellables = Set<AnyCancellable>()
+    private var isListening = true
 
     var subscriptionStatusPublisher: AnyPublisher<Bool, Never> {
         subscriptionStatusSubject.eraseToAnyPublisher()
@@ -48,13 +50,15 @@ final class LiveStoreKitService: StoreKitService {
 
     init() {
         updateListenerTask = listenForTransactions()
-        Task {
-            await updateSubscriptionStatus()
+        initialStatusTask = Task { [weak self] in
+            await self?.updateSubscriptionStatus()
         }
     }
 
     deinit {
+        isListening = false
         updateListenerTask?.cancel()
+        initialStatusTask?.cancel()
     }
 
     // MARK: - StoreKitService Implementation
@@ -135,13 +139,15 @@ final class LiveStoreKitService: StoreKitService {
 
     // MARK: - Private Methods
 
-    private func listenForTransactions() -> Task<Void, Error> {
-        Task.detached { [weak self] in
+    private func listenForTransactions() -> Task<Void, Never> {
+        Task { [weak self] in
             for await result in Transaction.updates {
+                guard let self, self.isListening else { break }
+
                 do {
-                    let transaction = try self?.checkVerified(result)
-                    await self?.updateSubscriptionStatus()
-                    await transaction?.finish()
+                    let transaction = try self.checkVerified(result)
+                    await self.updateSubscriptionStatus()
+                    await transaction.finish()
                 } catch {
                     Logger.shared.error("Transaction verification failed: \(error)")
                 }

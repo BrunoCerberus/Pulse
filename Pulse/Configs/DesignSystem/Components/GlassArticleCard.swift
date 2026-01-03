@@ -109,29 +109,18 @@ struct GlassArticleCard: View {
     @ViewBuilder
     private var articleImage: some View {
         if let imageURL {
-            AsyncImage(url: imageURL) { phase in
-                switch phase {
-                case .empty:
-                    imagePlaceholder
-                        .overlay {
-                            ProgressView()
-                                .tint(.secondary)
-                        }
-                case let .success(image):
-                    image
-                        .resizable()
-                        .aspectRatio(contentMode: .fill)
-                        .frame(width: 100, height: 100)
-                        .clipped()
-                case .failure:
-                    imagePlaceholder
-                        .overlay {
-                            Image(systemName: "photo")
-                                .foregroundStyle(.secondary)
-                        }
-                @unknown default:
-                    EmptyView()
-                }
+            CachedAsyncImage(url: imageURL) { image in
+                image
+                    .resizable()
+                    .aspectRatio(contentMode: .fill)
+                    .frame(width: 100, height: 100)
+                    .clipped()
+            } placeholder: {
+                imagePlaceholder
+                    .overlay {
+                        ProgressView()
+                            .tint(.secondary)
+                    }
             }
             .frame(width: 100, height: 100)
             .clipShape(RoundedRectangle(cornerRadius: CornerRadius.sm, style: .continuous))
@@ -191,15 +180,12 @@ struct GlassArticleCardCompact: View {
         } label: {
             HStack(spacing: Spacing.sm) {
                 if let imageURL {
-                    AsyncImage(url: imageURL) { phase in
-                        switch phase {
-                        case let .success(image):
-                            image
-                                .resizable()
-                                .aspectRatio(contentMode: .fill)
-                        default:
-                            Color.primary.opacity(0.05)
-                        }
+                    CachedAsyncImage(url: imageURL) { image in
+                        image
+                            .resizable()
+                            .aspectRatio(contentMode: .fill)
+                    } placeholder: {
+                        Color.primary.opacity(0.05)
                     }
                     .frame(width: 60, height: 60)
                     .clipShape(RoundedRectangle(cornerRadius: CornerRadius.sm, style: .continuous))

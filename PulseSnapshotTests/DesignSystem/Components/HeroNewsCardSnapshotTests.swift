@@ -23,7 +23,7 @@ final class HeroNewsCardSnapshotTests: XCTestCase {
                 description: "World leaders commit to ambitious targets",
                 source: ArticleSource(id: "reuters", name: "Reuters"),
                 url: "https://example.com",
-                imageURL: "https://picsum.photos/400/300",
+                imageURL: nil,
                 publishedAt: fixedDate,
                 category: .world
             )
@@ -53,7 +53,7 @@ final class HeroNewsCardSnapshotTests: XCTestCase {
                 description: "New species found at record depths",
                 source: ArticleSource(id: "nature", name: "Nature"),
                 url: "https://example.com",
-                imageURL: "https://picsum.photos/400/301",
+                imageURL: nil,
                 publishedAt: fixedDate,
                 category: .science
             )
@@ -71,7 +71,7 @@ final class HeroNewsCardSnapshotTests: XCTestCase {
 
         assertSnapshot(
             of: controller,
-            as: .wait(for: 1.5, on: .image(on: iPhoneAirConfig, precision: 0.95)),
+            as: .wait(for: 1.5, on: .image(on: iPhoneAirConfig, precision: 0.98)),
             record: false
         )
     }
@@ -85,7 +85,7 @@ final class HeroNewsCardSnapshotTests: XCTestCase {
 
         assertSnapshot(
             of: controller,
-            as: .wait(for: 1.5, on: .image(on: iPhoneAirConfig, precision: 0.95)),
+            as: .wait(for: 1.5, on: .image(on: iPhoneAirConfig, precision: 0.98)),
             record: false
         )
     }
@@ -99,7 +99,7 @@ final class HeroNewsCardSnapshotTests: XCTestCase {
 
         assertSnapshot(
             of: controller,
-            as: .wait(for: 1.5, on: .image(on: iPhoneAirConfig, precision: 0.95)),
+            as: .wait(for: 1.5, on: .image(on: iPhoneAirConfig, precision: 0.98)),
             record: false
         )
     }
@@ -116,7 +116,7 @@ final class HeroNewsCardSnapshotTests: XCTestCase {
 
         assertSnapshot(
             of: controller,
-            as: .wait(for: 1.5, on: .image(on: iPhoneAirConfig, precision: 0.95)),
+            as: .wait(for: 1.5, on: .image(on: iPhoneAirConfig, precision: 0.98)),
             record: false
         )
     }
@@ -131,7 +131,7 @@ final class HeroNewsCardSnapshotTests: XCTestCase {
 
         assertSnapshot(
             of: controller,
-            as: .wait(for: 1.5, on: .image(on: iPhoneAirConfig, precision: 0.95)),
+            as: .wait(for: 1.5, on: .image(on: iPhoneAirConfig, precision: 0.98)),
             record: false
         )
     }
@@ -156,7 +156,7 @@ final class HeroNewsCardSnapshotTests: XCTestCase {
 
         assertSnapshot(
             of: controller,
-            as: .wait(for: 1.5, on: .image(on: iPhoneAirConfig, precision: 0.95)),
+            as: .wait(for: 1.5, on: .image(on: iPhoneAirConfig, precision: 0.98)),
             record: false
         )
     }

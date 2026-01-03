@@ -8,31 +8,18 @@ struct BreakingNewsCard: View {
         Button(action: onTap) {
             ZStack(alignment: .bottomLeading) {
                 if let imageURL = item.imageURL {
-                    AsyncImage(url: imageURL) { phase in
-                        switch phase {
-                        case .empty:
-                            Rectangle()
-                                .fill(.quaternary)
-                                .overlay {
-                                    ProgressView()
-                                }
-                        case let .success(image):
-                            image
-                                .resizable()
-                                .aspectRatio(contentMode: .fill)
-                                .frame(width: 280, height: 200)
-                                .clipped()
-                        case .failure:
-                            Rectangle()
-                                .fill(.quaternary)
-                                .overlay {
-                                    Image(systemName: "newspaper")
-                                        .font(.largeTitle)
-                                        .foregroundStyle(.secondary)
-                                }
-                        @unknown default:
-                            EmptyView()
-                        }
+                    CachedAsyncImage(url: imageURL) { image in
+                        image
+                            .resizable()
+                            .aspectRatio(contentMode: .fill)
+                            .frame(width: 280, height: 200)
+                            .clipped()
+                    } placeholder: {
+                        Rectangle()
+                            .fill(.quaternary)
+                            .overlay {
+                                ProgressView()
+                            }
                     }
                 } else {
                     Rectangle()

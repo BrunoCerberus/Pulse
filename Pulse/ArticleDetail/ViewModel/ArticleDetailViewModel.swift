@@ -7,9 +7,11 @@ final class ArticleDetailViewModel: ObservableObject {
     @Published var showShareSheet = false
     @Published private(set) var processedContent: AttributedString?
     @Published private(set) var processedDescription: AttributedString?
+    @Published private(set) var isProcessingContent = true
 
     private let article: Article
     private let storageService: StorageService
+    private var processingTask: Task<Void, Never>?
 
     init(article: Article, serviceLocator: ServiceLocator) {
         self.article = article
@@ -19,53 +21,67 @@ final class ArticleDetailViewModel: ObservableObject {
             Logger.shared.service("Failed to retrieve StorageService: \(error)", level: .warning)
             storageService = LiveStorageService()
         }
-        processContent()
-        processDescription()
+        startContentProcessing()
     }
 
-    private func processContent() {
-        guard let content = article.content else {
-            processedContent = nil
-            return
+    deinit {
+        processingTask?.cancel()
+    }
+
+    private func startContentProcessing() {
+        processingTask = Task { [weak self] in
+            guard let self else { return }
+
+            let article = self.article
+
+            // Process content on background thread
+            let content = await Task.detached(priority: .userInitiated) {
+                self.createProcessedContent(from: article.content)
+            }.value
+
+            let description = await Task.detached(priority: .userInitiated) {
+                self.createProcessedDescription(from: article.description)
+            }.value
+
+            guard !Task.isCancelled else { return }
+
+            await MainActor.run {
+                self.processedContent = content
+                self.processedDescription = description
+                self.isProcessingContent = false
+            }
         }
+    }
+
+    private func createProcessedContent(from content: String?) -> AttributedString? {
+        guard let content else { return nil }
 
         let strippedContent = stripTruncationMarker(from: content)
         let plainContent = stripHTML(from: strippedContent)
             .trimmingCharacters(in: .whitespacesAndNewlines)
 
-        guard !plainContent.isEmpty else {
-            processedContent = nil
-            return
-        }
+        guard !plainContent.isEmpty else { return nil }
 
         let formattedText = formatIntoParagraphs(plainContent)
         var attributedString = AttributedString(formattedText)
         attributedString.font = .system(.body, design: .serif)
 
-        processedContent = attributedString
+        return attributedString
     }
 
-    private func processDescription() {
-        guard let description = article.description else {
-            processedDescription = nil
-            return
-        }
+    private func createProcessedDescription(from description: String?) -> AttributedString? {
+        guard let description else { return nil }
 
         let cleanText = stripHTML(from: description)
             .trimmingCharacters(in: .whitespacesAndNewlines)
 
-        guard !cleanText.isEmpty else {
-            processedDescription = nil
-            return
-        }
+        guard !cleanText.isEmpty else { return nil }
 
-        // Format into paragraphs by splitting on sentence boundaries
         let formattedText = formatIntoParagraphs(cleanText)
 
         var attributedString = AttributedString(formattedText)
         attributedString.font = .system(.body, design: .serif, weight: .medium)
 
-        // Style the first sentence as a lead/drop cap effect
         if let firstSentenceEnd = formattedText.firstIndex(where: { $0 == "." || $0 == "!" || $0 == "?" }) {
             let firstSentenceRange = formattedText.startIndex ... firstSentenceEnd
             if let attributedRange = Range(firstSentenceRange, in: attributedString) {
@@ -73,7 +89,7 @@ final class ArticleDetailViewModel: ObservableObject {
             }
         }
 
-        processedDescription = attributedString
+        return attributedString
     }
 
     private func formatIntoParagraphs(_ text: String) -> String {

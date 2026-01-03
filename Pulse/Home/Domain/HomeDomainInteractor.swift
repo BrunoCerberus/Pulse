@@ -9,6 +9,7 @@ final class HomeDomainInteractor: CombineInteractor {
     private let storageService: StorageService
     private let stateSubject = CurrentValueSubject<HomeDomainState, Never>(.initial)
     private var cancellables = Set<AnyCancellable>()
+    private var backgroundTasks = Set<Task<Void, Never>>()
 
     var statePublisher: AnyPublisher<HomeDomainState, Never> {
         stateSubject.eraseToAnyPublisher()
@@ -190,13 +191,20 @@ final class HomeDomainInteractor: CombineInteractor {
     }
 
     private func saveToReadingHistory(_ article: Article) {
-        Task {
+        let task = Task { [weak self] in
+            guard let self else { return }
             try? await storageService.saveReadingHistory(article)
+        }
+        backgroundTasks.insert(task)
+        Task {
+            await task.value
+            backgroundTasks.remove(task)
         }
     }
 
     private func toggleBookmark(_ article: Article) {
-        Task {
+        let task = Task { [weak self] in
+            guard let self else { return }
             let isBookmarked = await storageService.isBookmarked(article.id)
             if isBookmarked {
                 try? await storageService.deleteArticle(article)
@@ -204,6 +212,15 @@ final class HomeDomainInteractor: CombineInteractor {
                 try? await storageService.saveArticle(article)
             }
         }
+        backgroundTasks.insert(task)
+        Task {
+            await task.value
+            backgroundTasks.remove(task)
+        }
+    }
+
+    deinit {
+        backgroundTasks.forEach { $0.cancel() }
     }
 
     private func deduplicateArticles(_ articles: [Article], excluding: [Article]) -> [Article] {

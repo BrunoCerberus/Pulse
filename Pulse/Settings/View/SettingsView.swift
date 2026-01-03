@@ -3,6 +3,7 @@ import SwiftUI
 
 struct SettingsView: View {
     @StateObject private var viewModel: SettingsViewModel
+    @StateObject private var paywallViewModel: PaywallViewModel
 
     private let serviceLocator: ServiceLocator
 
@@ -12,6 +13,7 @@ struct SettingsView: View {
     init(serviceLocator: ServiceLocator) {
         self.serviceLocator = serviceLocator
         _viewModel = StateObject(wrappedValue: SettingsViewModel(serviceLocator: serviceLocator))
+        _paywallViewModel = StateObject(wrappedValue: PaywallViewModel(serviceLocator: serviceLocator))
     }
 
     var body: some View {
@@ -95,7 +97,7 @@ struct SettingsView: View {
         .sheet(
             isPresented: $isPaywallPresented,
             onDismiss: { checkPremiumStatus() },
-            content: { PaywallView(viewModel: PaywallViewModel(serviceLocator: serviceLocator)) }
+            content: { PaywallView(viewModel: paywallViewModel) }
         )
     }
 

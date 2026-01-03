@@ -113,7 +113,7 @@ final class CategoriesViewSnapshotTests: XCTestCase {
 
         assertSnapshot(
             of: controller,
-            as: .wait(for: 1.5, on: .image(on: iPhoneAirConfig, precision: 0.95)),
+            as: .wait(for: 1.5, on: .image(on: iPhoneAirConfig, precision: 0.98)),
             record: false
         )
     }
@@ -356,7 +356,7 @@ private struct CategoriesPopulatedPreview: View {
                 description: "From healthcare to finance, AI is reshaping the business landscape",
                 source: ArticleSource(id: "techcrunch", name: "TechCrunch"),
                 url: "https://example.com/1",
-                imageURL: "https://picsum.photos/400/300",
+                imageURL: nil,
                 publishedAt: fixedDate,
                 category: .technology
             )),
@@ -366,7 +366,7 @@ private struct CategoriesPopulatedPreview: View {
                 description: "The latest MacBook Pro features unprecedented performance",
                 source: ArticleSource(id: "theverge", name: "The Verge"),
                 url: "https://example.com/2",
-                imageURL: "https://picsum.photos/400/301",
+                imageURL: nil,
                 publishedAt: fixedDate,
                 category: .technology
             )),
@@ -376,7 +376,7 @@ private struct CategoriesPopulatedPreview: View {
                 description: "New concurrency features and performance optimizations",
                 source: ArticleSource(id: "hackingwithswift", name: "Hacking with Swift"),
                 url: "https://example.com/3",
-                imageURL: "https://picsum.photos/400/302",
+                imageURL: nil,
                 publishedAt: fixedDate,
                 category: .technology
             )),
