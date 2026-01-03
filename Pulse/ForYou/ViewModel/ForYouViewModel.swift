@@ -25,8 +25,8 @@ final class ForYouViewModel: CombineViewModel, ObservableObject {
             interactor.dispatch(action: .refresh)
         case .onLoadMore:
             interactor.dispatch(action: .loadMore)
-        case let .onArticleTapped(article):
-            interactor.dispatch(action: .selectArticle(article))
+        case let .onArticleTapped(articleId):
+            interactor.dispatch(action: .selectArticle(articleId: articleId))
         case .onArticleNavigated:
             interactor.dispatch(action: .clearSelectedArticle)
         }
@@ -47,6 +47,7 @@ final class ForYouViewModel: CombineViewModel, ObservableObject {
                     selectedArticle: state.selectedArticle
                 )
             }
+            .removeDuplicates()
             .receive(on: DispatchQueue.main)
             .assign(to: &$viewState)
     }
@@ -82,6 +83,6 @@ enum ForYouViewEvent: Equatable {
     case onAppear
     case onRefresh
     case onLoadMore
-    case onArticleTapped(Article)
+    case onArticleTapped(articleId: String)
     case onArticleNavigated
 }

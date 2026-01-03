@@ -10,15 +10,15 @@ final class ImageCache: @unchecked Sendable {
     private let urlSession: URLSession
 
     private init() {
-        // Configure cache limits
-        cache.countLimit = 100
-        cache.totalCostLimit = 50 * 1024 * 1024 // 50MB
+        // Configure cache limits - optimized for news app scrolling
+        cache.countLimit = 75
+        cache.totalCostLimit = 30 * 1024 * 1024 // 30MB
 
         // Configure URLSession with caching
         let config = URLSessionConfiguration.default
         config.urlCache = URLCache(
-            memoryCapacity: 20 * 1024 * 1024, // 20MB memory
-            diskCapacity: 100 * 1024 * 1024, // 100MB disk
+            memoryCapacity: 15 * 1024 * 1024, // 15MB memory
+            diskCapacity: 75 * 1024 * 1024, // 75MB disk
             diskPath: "image_cache"
         )
         config.requestCachePolicy = .returnCacheDataElseLoad

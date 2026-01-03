@@ -43,17 +43,28 @@ final class HomeDomainInteractor: CombineInteractor {
             loadMoreHeadlines()
         case .refresh:
             refresh()
-        case let .selectArticle(article):
-            selectArticle(article)
+        case let .selectArticle(articleId):
+            if let article = findArticle(by: articleId) {
+                selectArticle(article)
+            }
         case .clearSelectedArticle:
             clearSelectedArticle()
-        case let .bookmarkArticle(article):
-            toggleBookmark(article)
-        case let .shareArticle(article):
-            shareArticle(article)
+        case let .bookmarkArticle(articleId):
+            if let article = findArticle(by: articleId) {
+                toggleBookmark(article)
+            }
+        case let .shareArticle(articleId):
+            if let article = findArticle(by: articleId) {
+                shareArticle(article)
+            }
         case .clearArticleToShare:
             clearArticleToShare()
         }
+    }
+
+    private func findArticle(by id: String) -> Article? {
+        currentState.breakingNews.first { $0.id == id }
+            ?? currentState.headlines.first { $0.id == id }
     }
 
     private func loadInitialData() {

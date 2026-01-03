@@ -90,7 +90,13 @@ struct HomeDomainInteractorTests {
     func testSelectArticle() async throws {
         let article = Article.mockArticles[0]
 
-        sut.dispatch(action: .selectArticle(article))
+        // First load articles so they can be found
+        mockNewsService.topHeadlinesResult = .success([article])
+        mockNewsService.breakingNewsResult = .success([])
+        sut.dispatch(action: .loadInitialData)
+        try await Task.sleep(nanoseconds: 500_000_000)
+
+        sut.dispatch(action: .selectArticle(articleId: article.id))
 
         try await Task.sleep(nanoseconds: 100_000_000)
 
@@ -102,7 +108,13 @@ struct HomeDomainInteractorTests {
     func testBookmarkArticle() async throws {
         let article = Article.mockArticles[0]
 
-        sut.dispatch(action: .bookmarkArticle(article))
+        // First load articles so they can be found
+        mockNewsService.topHeadlinesResult = .success([article])
+        mockNewsService.breakingNewsResult = .success([])
+        sut.dispatch(action: .loadInitialData)
+        try await Task.sleep(nanoseconds: 500_000_000)
+
+        sut.dispatch(action: .bookmarkArticle(articleId: article.id))
 
         try await Task.sleep(nanoseconds: 100_000_000)
 

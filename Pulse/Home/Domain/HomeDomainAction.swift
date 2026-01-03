@@ -4,9 +4,9 @@ enum HomeDomainAction: Equatable {
     case loadInitialData
     case loadMoreHeadlines
     case refresh
-    case selectArticle(Article)
+    case selectArticle(articleId: String)
     case clearSelectedArticle
-    case bookmarkArticle(Article)
-    case shareArticle(Article)
+    case bookmarkArticle(articleId: String)
+    case shareArticle(articleId: String)
     case clearArticleToShare
 }

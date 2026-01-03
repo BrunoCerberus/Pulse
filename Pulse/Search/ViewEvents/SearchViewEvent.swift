@@ -6,7 +6,7 @@ enum SearchViewEvent: Equatable {
     case onLoadMore
     case onClear
     case onSortChanged(SearchSortOption)
-    case onArticleTapped(Article)
+    case onArticleTapped(articleId: String)
     case onArticleNavigated
     case onSuggestionTapped(String)
 }

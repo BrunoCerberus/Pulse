@@ -158,7 +158,7 @@ struct BookmarksDomainInteractorTests {
         let articleToRemove = Article.mockArticles[0]
         let initialCount = sut.currentState.bookmarks.count
 
-        sut.dispatch(action: .removeBookmark(articleToRemove))
+        sut.dispatch(action: .removeBookmark(articleId: articleToRemove.id))
 
         try await Task.sleep(nanoseconds: 300_000_000)
 
@@ -176,7 +176,7 @@ struct BookmarksDomainInteractorTests {
 
         let articleToRemove = Article.mockArticles[0]
 
-        sut.dispatch(action: .removeBookmark(articleToRemove))
+        sut.dispatch(action: .removeBookmark(articleId: articleToRemove.id))
 
         try await Task.sleep(nanoseconds: 300_000_000)
 
@@ -206,7 +206,7 @@ struct BookmarksDomainInteractorTests {
 
         let initialCount = sut.currentState.bookmarks.count
 
-        sut.dispatch(action: .removeBookmark(nonExistentArticle))
+        sut.dispatch(action: .removeBookmark(articleId: nonExistentArticle.id))
 
         try await Task.sleep(nanoseconds: 300_000_000)
 
@@ -219,8 +219,12 @@ struct BookmarksDomainInteractorTests {
     @Test("Select article saves to reading history")
     func selectArticleSavesToHistory() async throws {
         let article = Article.mockArticles[0]
+        mockBookmarksService.bookmarks = [article]
 
-        sut.dispatch(action: .selectArticle(article))
+        sut.dispatch(action: .loadBookmarks)
+        try await Task.sleep(nanoseconds: 300_000_000)
+
+        sut.dispatch(action: .selectArticle(articleId: article.id))
 
         try await Task.sleep(nanoseconds: 200_000_000)
 
@@ -232,11 +236,15 @@ struct BookmarksDomainInteractorTests {
     func selectArticleAddsToBeginning() async throws {
         let firstArticle = Article.mockArticles[0]
         let secondArticle = Article.mockArticles[1]
+        mockBookmarksService.bookmarks = [firstArticle, secondArticle]
 
-        sut.dispatch(action: .selectArticle(firstArticle))
+        sut.dispatch(action: .loadBookmarks)
+        try await Task.sleep(nanoseconds: 300_000_000)
+
+        sut.dispatch(action: .selectArticle(articleId: firstArticle.id))
         try await Task.sleep(nanoseconds: 200_000_000)
 
-        sut.dispatch(action: .selectArticle(secondArticle))
+        sut.dispatch(action: .selectArticle(articleId: secondArticle.id))
         try await Task.sleep(nanoseconds: 200_000_000)
 
         let history = try await mockStorageService.fetchReadingHistory()

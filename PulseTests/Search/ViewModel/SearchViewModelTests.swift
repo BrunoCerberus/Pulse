@@ -66,7 +66,13 @@ struct SearchViewModelTests {
     func articleTap() async throws {
         let article = Article.mockArticles[0]
 
-        sut.handle(event: .onArticleTapped(article))
+        // First search to load articles so they can be found
+        mockSearchService.searchResult = .success([article])
+        sut.handle(event: .onQueryChanged("test"))
+        sut.handle(event: .onSearch)
+        try await Task.sleep(nanoseconds: 500_000_000)
+
+        sut.handle(event: .onArticleTapped(articleId: article.id))
 
         try await Task.sleep(nanoseconds: 50_000_000)
 
@@ -227,7 +233,13 @@ struct SearchViewModelTests {
     func articleTapSavesToHistory() async throws {
         let article = Article.mockArticles[0]
 
-        sut.handle(event: .onArticleTapped(article))
+        // First search to load articles so they can be found
+        mockSearchService.searchResult = .success([article])
+        sut.handle(event: .onQueryChanged("test"))
+        sut.handle(event: .onSearch)
+        try await Task.sleep(nanoseconds: 500_000_000)
+
+        sut.handle(event: .onArticleTapped(articleId: article.id))
 
         try await Task.sleep(nanoseconds: 200_000_000)
 

@@ -4,9 +4,9 @@ enum HomeViewEvent: Equatable {
     case onAppear
     case onRefresh
     case onLoadMore
-    case onArticleTapped(Article)
+    case onArticleTapped(articleId: String)
     case onArticleNavigated
-    case onBookmarkTapped(Article)
-    case onShareTapped(Article)
+    case onBookmarkTapped(articleId: String)
+    case onShareTapped(articleId: String)
     case onShareDismissed
 }

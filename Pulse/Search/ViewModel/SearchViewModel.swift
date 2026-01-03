@@ -32,8 +32,8 @@ final class SearchViewModel: CombineViewModel, ObservableObject {
             interactor.dispatch(action: .clearResults)
         case let .onSortChanged(option):
             interactor.dispatch(action: .setSortOption(option))
-        case let .onArticleTapped(article):
-            interactor.dispatch(action: .selectArticle(article))
+        case let .onArticleTapped(articleId):
+            interactor.dispatch(action: .selectArticle(articleId: articleId))
         case .onArticleNavigated:
             interactor.dispatch(action: .clearSelectedArticle)
         case let .onSuggestionTapped(suggestion):
@@ -69,6 +69,7 @@ final class SearchViewModel: CombineViewModel, ObservableObject {
                     selectedArticle: state.selectedArticle
                 )
             }
+            .removeDuplicates()
             .receive(on: DispatchQueue.main)
             .assign(to: &$viewState)
     }

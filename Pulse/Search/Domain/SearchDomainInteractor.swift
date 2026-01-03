@@ -48,11 +48,17 @@ final class SearchDomainInteractor: CombineInteractor {
             clearResults()
         case let .setSortOption(option):
             setSortOption(option)
-        case let .selectArticle(article):
-            selectArticle(article)
+        case let .selectArticle(articleId):
+            if let article = findArticle(by: articleId) {
+                selectArticle(article)
+            }
         case .clearSelectedArticle:
             clearSelectedArticle()
         }
+    }
+
+    private func findArticle(by id: String) -> Article? {
+        currentState.results.first { $0.id == id }
     }
 
     private func updateQuery(_ query: String) {

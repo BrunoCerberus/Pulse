@@ -320,7 +320,13 @@ struct SearchDomainInteractorTests {
     func selectArticleSavesToHistory() async throws {
         let article = Article.mockArticles[0]
 
-        sut.dispatch(action: .selectArticle(article))
+        // First search to load articles so they can be found
+        mockSearchService.searchResult = .success([article])
+        sut.dispatch(action: .updateQuery("test"))
+        sut.dispatch(action: .search)
+        try await Task.sleep(nanoseconds: 500_000_000)
+
+        sut.dispatch(action: .selectArticle(articleId: article.id))
 
         try await Task.sleep(nanoseconds: 200_000_000)
 

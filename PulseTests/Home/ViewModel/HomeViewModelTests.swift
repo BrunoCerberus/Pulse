@@ -65,7 +65,13 @@ struct HomeViewModelTests {
     func testOnArticleTapped() async throws {
         let article = Article.mockArticles[0]
 
-        sut.handle(event: .onArticleTapped(article))
+        // First load articles so they can be found
+        mockNewsService.topHeadlinesResult = .success([article])
+        mockNewsService.breakingNewsResult = .success([])
+        sut.handle(event: .onAppear)
+        try await Task.sleep(nanoseconds: 500_000_000)
+
+        sut.handle(event: .onArticleTapped(articleId: article.id))
 
         // Wait for Combine pipeline to propagate state
         try await Task.sleep(nanoseconds: 50_000_000)
@@ -77,7 +83,13 @@ struct HomeViewModelTests {
     func testOnShareTapped() async throws {
         let article = Article.mockArticles[0]
 
-        sut.handle(event: .onShareTapped(article))
+        // First load articles so they can be found
+        mockNewsService.topHeadlinesResult = .success([article])
+        mockNewsService.breakingNewsResult = .success([])
+        sut.handle(event: .onAppear)
+        try await Task.sleep(nanoseconds: 500_000_000)
+
+        sut.handle(event: .onShareTapped(articleId: article.id))
 
         // Wait for Combine pipeline to propagate state
         try await Task.sleep(nanoseconds: 50_000_000)

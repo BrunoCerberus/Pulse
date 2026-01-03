@@ -23,12 +23,12 @@ final class BookmarksViewModel: CombineViewModel, ObservableObject {
             interactor.dispatch(action: .loadBookmarks)
         case .onRefresh:
             interactor.dispatch(action: .refresh)
-        case let .onArticleTapped(article):
-            interactor.dispatch(action: .selectArticle(article))
+        case let .onArticleTapped(articleId):
+            interactor.dispatch(action: .selectArticle(articleId: articleId))
         case .onArticleNavigated:
             interactor.dispatch(action: .clearSelectedArticle)
-        case let .onRemoveBookmark(article):
-            interactor.dispatch(action: .removeBookmark(article))
+        case let .onRemoveBookmark(articleId):
+            interactor.dispatch(action: .removeBookmark(articleId: articleId))
         }
     }
 
@@ -44,6 +44,7 @@ final class BookmarksViewModel: CombineViewModel, ObservableObject {
                     selectedArticle: state.selectedArticle
                 )
             }
+            .removeDuplicates()
             .receive(on: DispatchQueue.main)
             .assign(to: &$viewState)
     }
@@ -72,7 +73,7 @@ struct BookmarksViewState: Equatable {
 enum BookmarksViewEvent: Equatable {
     case onAppear
     case onRefresh
-    case onArticleTapped(Article)
+    case onArticleTapped(articleId: String)
     case onArticleNavigated
-    case onRemoveBookmark(Article)
+    case onRemoveBookmark(articleId: String)
 }

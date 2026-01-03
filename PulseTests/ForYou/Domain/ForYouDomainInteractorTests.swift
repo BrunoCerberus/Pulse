@@ -230,7 +230,12 @@ struct ForYouDomainInteractorTests {
     func selectArticleSavesToHistory() async throws {
         let article = Article.mockArticles[0]
 
-        sut.dispatch(action: .selectArticle(article))
+        // First load articles so they can be found
+        mockForYouService.feedResult = .success([article])
+        sut.dispatch(action: .loadFeed)
+        try await Task.sleep(nanoseconds: 500_000_000)
+
+        sut.dispatch(action: .selectArticle(articleId: article.id))
 
         try await Task.sleep(nanoseconds: 200_000_000)
 

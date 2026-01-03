@@ -9,14 +9,14 @@ struct HomeEventActionMap: DomainEventActionMap {
             return .refresh
         case .onLoadMore:
             return .loadMoreHeadlines
-        case let .onArticleTapped(article):
-            return .selectArticle(article)
+        case let .onArticleTapped(articleId):
+            return .selectArticle(articleId: articleId)
         case .onArticleNavigated:
             return .clearSelectedArticle
-        case let .onBookmarkTapped(article):
-            return .bookmarkArticle(article)
-        case let .onShareTapped(article):
-            return .shareArticle(article)
+        case let .onBookmarkTapped(articleId):
+            return .bookmarkArticle(articleId: articleId)
+        case let .onShareTapped(articleId):
+            return .shareArticle(articleId: articleId)
         case .onShareDismissed:
             return .clearArticleToShare
         }

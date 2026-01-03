@@ -10,29 +10,29 @@ struct HomeEventActionMapTests {
 
     @Test("All events map to correct actions")
     func allEventsMappingToCorrectActions() {
-        let article = Article.mockArticles[0]
+        let articleId = Article.mockArticles[0].id
 
         // Test all event → action mappings
         #expect(sut.map(event: .onAppear) == .loadInitialData)
         #expect(sut.map(event: .onRefresh) == .refresh)
         #expect(sut.map(event: .onLoadMore) == .loadMoreHeadlines)
-        #expect(sut.map(event: .onArticleTapped(article)) == .selectArticle(article))
-        #expect(sut.map(event: .onBookmarkTapped(article)) == .bookmarkArticle(article))
-        #expect(sut.map(event: .onShareTapped(article)) == .shareArticle(article))
+        #expect(sut.map(event: .onArticleTapped(articleId: articleId)) == .selectArticle(articleId: articleId))
+        #expect(sut.map(event: .onBookmarkTapped(articleId: articleId)) == .bookmarkArticle(articleId: articleId))
+        #expect(sut.map(event: .onShareTapped(articleId: articleId)) == .shareArticle(articleId: articleId))
     }
 
     // MARK: - All Events Have Mappings
 
     @Test("All events produce non-nil actions")
     func allEventsProduceActions() {
-        let article = Article.mockArticles[0]
+        let articleId = Article.mockArticles[0].id
         let events: [HomeViewEvent] = [
             .onAppear,
             .onRefresh,
             .onLoadMore,
-            .onArticleTapped(article),
-            .onBookmarkTapped(article),
-            .onShareTapped(article),
+            .onArticleTapped(articleId: articleId),
+            .onBookmarkTapped(articleId: articleId),
+            .onShareTapped(articleId: articleId),
         ]
 
         for event in events {

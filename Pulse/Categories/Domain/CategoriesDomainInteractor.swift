@@ -43,11 +43,17 @@ final class CategoriesDomainInteractor: CombineInteractor {
             loadMore()
         case .refresh:
             refresh()
-        case let .selectArticle(article):
-            selectArticle(article)
+        case let .selectArticle(articleId):
+            if let article = findArticle(by: articleId) {
+                selectArticle(article)
+            }
         case .clearSelectedArticle:
             clearSelectedArticle()
         }
+    }
+
+    private func findArticle(by id: String) -> Article? {
+        currentState.articles.first { $0.id == id }
     }
 
     private func selectCategory(_ category: NewsCategory) {
@@ -186,6 +192,6 @@ enum CategoriesDomainAction: Equatable {
     case selectCategory(NewsCategory)
     case loadMore
     case refresh
-    case selectArticle(Article)
+    case selectArticle(articleId: String)
     case clearSelectedArticle
 }

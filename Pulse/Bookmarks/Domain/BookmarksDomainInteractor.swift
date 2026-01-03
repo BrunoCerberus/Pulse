@@ -41,13 +41,21 @@ final class BookmarksDomainInteractor: CombineInteractor {
             loadBookmarks()
         case .refresh:
             refresh()
-        case let .removeBookmark(article):
-            removeBookmark(article)
-        case let .selectArticle(article):
-            selectArticle(article)
+        case let .removeBookmark(articleId):
+            if let article = findArticle(by: articleId) {
+                removeBookmark(article)
+            }
+        case let .selectArticle(articleId):
+            if let article = findArticle(by: articleId) {
+                selectArticle(article)
+            }
         case .clearSelectedArticle:
             clearSelectedArticle()
         }
+    }
+
+    private func findArticle(by id: String) -> Article? {
+        currentState.bookmarks.first { $0.id == id }
     }
 
     private func loadBookmarks() {

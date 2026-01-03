@@ -212,16 +212,15 @@ struct SearchView<R: SearchNavigationRouter>: View {
                     .disabled(viewModel.viewState.isSorting)
 
                 LazyVStack(spacing: Spacing.sm) {
-                    ForEach(Array(viewModel.viewState.results.enumerated()), id: \.element.id) { index, item in
+                    ForEach(viewModel.viewState.results) { item in
                         GlassArticleCard(
                             item: item,
                             onTap: {
-                                viewModel.handle(event: .onArticleTapped(item.article))
+                                viewModel.handle(event: .onArticleTapped(articleId: item.id))
                             },
                             onBookmark: {},
                             onShare: {}
                         )
-                        .fadeIn(delay: Double(index) * 0.03)
                         .onAppear {
                             if item.id == viewModel.viewState.results.last?.id {
                                 viewModel.handle(event: .onLoadMore)
@@ -230,16 +229,15 @@ struct SearchView<R: SearchNavigationRouter>: View {
                     }
                 }
                 .padding(.horizontal, Spacing.md)
-                .opacity(viewModel.viewState.isSorting ? 0.5 : 1.0)
-                .animation(.easeInOut(duration: 0.2), value: viewModel.viewState.isSorting)
+                .allowsHitTesting(!viewModel.viewState.isSorting)
                 .overlay {
                     if viewModel.viewState.isSorting {
                         ProgressView()
                             .scaleEffect(1.2)
                             .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .center)
+                            .background(.ultraThinMaterial.opacity(0.5))
                     }
                 }
-                .allowsHitTesting(!viewModel.viewState.isSorting)
 
                 if viewModel.viewState.isLoadingMore {
                     HStack {
