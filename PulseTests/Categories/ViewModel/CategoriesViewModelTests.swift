@@ -51,7 +51,7 @@ struct CategoriesViewModelTests {
 
         sut.handle(event: .onCategorySelected(.technology))
 
-        try await Task.sleep(nanoseconds: 500_000_000)
+        try await Task.sleep(nanoseconds: 100_000_000)
 
         #expect(sut.viewState.selectedCategory == .technology)
         #expect(states.count > 1)
@@ -62,7 +62,7 @@ struct CategoriesViewModelTests {
         // First select a category
         mockCategoriesService.categoryArticlesResult = .success(Article.mockArticles)
         sut.handle(event: .onCategorySelected(.business))
-        try await Task.sleep(nanoseconds: 500_000_000)
+        try await Task.sleep(nanoseconds: 100_000_000)
 
         var cancellables = Set<AnyCancellable>()
         var states: [CategoriesViewState] = []
@@ -75,7 +75,7 @@ struct CategoriesViewModelTests {
 
         sut.handle(event: .onRefresh)
 
-        try await Task.sleep(nanoseconds: 500_000_000)
+        try await Task.sleep(nanoseconds: 100_000_000)
 
         #expect(states.count > 1)
     }
@@ -85,7 +85,7 @@ struct CategoriesViewModelTests {
         // First select category and load initial articles
         mockCategoriesService.categoryArticlesResult = .success(Article.mockArticles)
         sut.handle(event: .onCategorySelected(.technology))
-        try await Task.sleep(nanoseconds: 500_000_000)
+        try await Task.sleep(nanoseconds: 100_000_000)
 
         let initialCount = sut.viewState.articles.count
 
@@ -105,7 +105,7 @@ struct CategoriesViewModelTests {
         mockCategoriesService.categoryArticlesResult = .success([newArticle])
 
         sut.handle(event: .onLoadMore)
-        try await Task.sleep(nanoseconds: 500_000_000)
+        try await Task.sleep(nanoseconds: 100_000_000)
 
         #expect(sut.viewState.articles.count >= initialCount)
     }
@@ -117,7 +117,7 @@ struct CategoriesViewModelTests {
         // First select category and load articles
         mockCategoriesService.categoryArticlesResult = .success([article])
         sut.handle(event: .onCategorySelected(.technology))
-        try await Task.sleep(nanoseconds: 500_000_000)
+        try await Task.sleep(nanoseconds: 100_000_000)
 
         sut.handle(event: .onArticleTapped(articleId: article.id))
 
@@ -134,7 +134,7 @@ struct CategoriesViewModelTests {
         // First select category, load and select an article
         mockCategoriesService.categoryArticlesResult = .success([article])
         sut.handle(event: .onCategorySelected(.technology))
-        try await Task.sleep(nanoseconds: 500_000_000)
+        try await Task.sleep(nanoseconds: 100_000_000)
 
         sut.handle(event: .onArticleTapped(articleId: article.id))
         try await Task.sleep(nanoseconds: 50_000_000)
@@ -152,7 +152,7 @@ struct CategoriesViewModelTests {
         mockCategoriesService.categoryArticlesResult = .success([])
 
         sut.handle(event: .onCategorySelected(.technology))
-        try await Task.sleep(nanoseconds: 500_000_000)
+        try await Task.sleep(nanoseconds: 100_000_000)
 
         #expect(sut.viewState.showEmptyState)
         #expect(sut.viewState.selectedCategory == .technology)
@@ -175,7 +175,7 @@ struct CategoriesViewModelTests {
         mockCategoriesService.categoryArticlesResult = .failure(testError)
 
         sut.handle(event: .onCategorySelected(.business))
-        try await Task.sleep(nanoseconds: 500_000_000)
+        try await Task.sleep(nanoseconds: 100_000_000)
 
         #expect(sut.viewState.errorMessage == "Category loading failed")
     }
@@ -186,13 +186,13 @@ struct CategoriesViewModelTests {
 
         // Select first category
         sut.handle(event: .onCategorySelected(.technology))
-        try await Task.sleep(nanoseconds: 500_000_000)
+        try await Task.sleep(nanoseconds: 100_000_000)
 
         #expect(sut.viewState.selectedCategory == .technology)
 
         // Switch to different category
         sut.handle(event: .onCategorySelected(.business))
-        try await Task.sleep(nanoseconds: 500_000_000)
+        try await Task.sleep(nanoseconds: 100_000_000)
 
         #expect(sut.viewState.selectedCategory == .business)
     }
@@ -202,7 +202,7 @@ struct CategoriesViewModelTests {
         mockCategoriesService.categoryArticlesResult = .success(Article.mockArticles)
 
         sut.handle(event: .onCategorySelected(.science))
-        try await Task.sleep(nanoseconds: 500_000_000)
+        try await Task.sleep(nanoseconds: 100_000_000)
 
         let state = sut.viewState
         #expect(state.selectedCategory == .science)
@@ -225,7 +225,7 @@ struct CategoriesViewModelTests {
         mockCategoriesService.categoryArticlesResult = .success(Article.mockArticles)
 
         sut.handle(event: .onCategorySelected(.health))
-        try await Task.sleep(nanoseconds: 500_000_000)
+        try await Task.sleep(nanoseconds: 100_000_000)
 
         #expect(states.count > 1)
     }
@@ -245,7 +245,7 @@ struct CategoriesViewModelTests {
         mockCategoriesService.categoryArticlesResult = .success(Article.mockArticles)
 
         sut.handle(event: .onCategorySelected(.sports))
-        try await Task.sleep(nanoseconds: 500_000_000)
+        try await Task.sleep(nanoseconds: 100_000_000)
 
         // Should have at least initial state (false) and loading state (true)
         #expect(loadingStates.count >= 2)

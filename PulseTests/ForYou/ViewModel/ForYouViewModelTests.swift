@@ -51,7 +51,7 @@ struct ForYouViewModelTests {
 
         sut.handle(event: .onAppear)
 
-        try await Task.sleep(nanoseconds: 500_000_000)
+        try await Task.sleep(nanoseconds: 100_000_000)
 
         #expect(states.count > 1)
     }
@@ -71,7 +71,7 @@ struct ForYouViewModelTests {
 
         sut.handle(event: .onRefresh)
 
-        try await Task.sleep(nanoseconds: 500_000_000)
+        try await Task.sleep(nanoseconds: 100_000_000)
 
         #expect(states.count > 1)
     }
@@ -81,7 +81,7 @@ struct ForYouViewModelTests {
         // First load initial articles
         mockForYouService.personalizedFeedResult = .success(Article.mockArticles)
         sut.handle(event: .onAppear)
-        try await Task.sleep(nanoseconds: 500_000_000)
+        try await Task.sleep(nanoseconds: 100_000_000)
 
         let initialCount = sut.viewState.articles.count
 
@@ -101,7 +101,7 @@ struct ForYouViewModelTests {
         mockForYouService.personalizedFeedResult = .success([newArticle])
 
         sut.handle(event: .onLoadMore)
-        try await Task.sleep(nanoseconds: 500_000_000)
+        try await Task.sleep(nanoseconds: 100_000_000)
 
         #expect(sut.viewState.articles.count >= initialCount)
     }
@@ -113,7 +113,7 @@ struct ForYouViewModelTests {
         // First load articles so they can be found
         mockForYouService.personalizedFeedResult = .success([article])
         sut.handle(event: .onAppear)
-        try await Task.sleep(nanoseconds: 500_000_000)
+        try await Task.sleep(nanoseconds: 100_000_000)
 
         sut.handle(event: .onArticleTapped(articleId: article.id))
 
@@ -130,7 +130,7 @@ struct ForYouViewModelTests {
         // First load and select an article
         mockForYouService.personalizedFeedResult = .success([article])
         sut.handle(event: .onAppear)
-        try await Task.sleep(nanoseconds: 500_000_000)
+        try await Task.sleep(nanoseconds: 100_000_000)
 
         sut.handle(event: .onArticleTapped(articleId: article.id))
         try await Task.sleep(nanoseconds: 50_000_000)
@@ -149,7 +149,7 @@ struct ForYouViewModelTests {
         mockForYouService.personalizedFeedResult = .success([])
 
         sut.handle(event: .onAppear)
-        try await Task.sleep(nanoseconds: 500_000_000)
+        try await Task.sleep(nanoseconds: 100_000_000)
 
         #expect(sut.viewState.showOnboarding)
     }
@@ -170,7 +170,7 @@ struct ForYouViewModelTests {
         mockForYouService.personalizedFeedResult = .success([])
 
         sut.handle(event: .onAppear)
-        try await Task.sleep(nanoseconds: 500_000_000)
+        try await Task.sleep(nanoseconds: 100_000_000)
 
         #expect(sut.viewState.showEmptyState)
         #expect(!sut.viewState.showOnboarding)
@@ -186,7 +186,7 @@ struct ForYouViewModelTests {
         mockForYouService.personalizedFeedResult = .failure(testError)
 
         sut.handle(event: .onAppear)
-        try await Task.sleep(nanoseconds: 500_000_000)
+        try await Task.sleep(nanoseconds: 100_000_000)
 
         #expect(sut.viewState.errorMessage == "Feed loading failed")
     }
@@ -205,7 +205,7 @@ struct ForYouViewModelTests {
         )
 
         sut.handle(event: .onAppear)
-        try await Task.sleep(nanoseconds: 500_000_000)
+        try await Task.sleep(nanoseconds: 100_000_000)
 
         let state = sut.viewState
         #expect(!state.articles.isEmpty)
@@ -228,7 +228,7 @@ struct ForYouViewModelTests {
         mockForYouService.personalizedFeedResult = .success(Article.mockArticles)
 
         sut.handle(event: .onAppear)
-        try await Task.sleep(nanoseconds: 500_000_000)
+        try await Task.sleep(nanoseconds: 100_000_000)
 
         #expect(states.count > 1)
     }
@@ -248,7 +248,7 @@ struct ForYouViewModelTests {
         mockForYouService.personalizedFeedResult = .success(Article.mockArticles)
 
         sut.handle(event: .onAppear)
-        try await Task.sleep(nanoseconds: 500_000_000)
+        try await Task.sleep(nanoseconds: 100_000_000)
 
         // Should have at least initial state (false) and loading state (true)
         #expect(loadingStates.count >= 2)

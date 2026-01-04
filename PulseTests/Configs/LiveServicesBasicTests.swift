@@ -38,7 +38,9 @@ struct LiveServicesBasicTests {
             )
             .store(in: &cancellables)
 
-        #expect(true) // Verified publisher exists with correct type
+        // Smoke test: Verifies method signature exists and returns AnyPublisher<[Article], Error>
+        // Type-checking ensures compile-time API contract validation
+        #expect(true)
     }
 
     @Test("LiveNewsService fetchTopHeadlines with category returns publisher")
@@ -55,6 +57,7 @@ struct LiveServicesBasicTests {
             )
             .store(in: &cancellables)
 
+        // Smoke test: Verifies method signature and return type contract
         #expect(true)
     }
 
@@ -72,6 +75,7 @@ struct LiveServicesBasicTests {
             )
             .store(in: &cancellables)
 
+        // Smoke test: Verifies method signature and return type contract
         #expect(true)
     }
 
@@ -100,6 +104,7 @@ struct LiveServicesBasicTests {
             )
             .store(in: &cancellables)
 
+        // Smoke test: Verifies method signature and return type contract
         #expect(true)
     }
 
@@ -125,6 +130,7 @@ struct LiveServicesBasicTests {
             )
             .store(in: &cancellables)
 
+        // Smoke test: Verifies method signature and return type contract
         #expect(true)
     }
 
@@ -154,6 +160,7 @@ struct LiveServicesBasicTests {
             )
             .store(in: &cancellables)
 
+        // Smoke test: Verifies method signature and return type contract
         #expect(true)
     }
 
@@ -181,6 +188,7 @@ struct LiveServicesBasicTests {
             )
             .store(in: &cancellables)
 
+        // Smoke test: Verifies method signature and return type contract
         #expect(true)
     }
 
@@ -200,6 +208,7 @@ struct LiveServicesBasicTests {
             )
             .store(in: &cancellables)
 
+        // Smoke test: Verifies method signature and return type contract
         #expect(true)
     }
 

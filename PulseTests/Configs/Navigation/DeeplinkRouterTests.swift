@@ -202,10 +202,7 @@ struct DeeplinkRouterTests {
         )
 
         // Give notification time to process
-        let expectation = XCTestExpectation(description: "Coordinator becomes available")
-        DispatchQueue.main.asyncAfter(deadline: .now() + 0.1) {
-            expectation.fulfill()
-        }
+        try await Task.sleep(nanoseconds: 100_000_000)
 
         // Queued deeplink should have been processed
         #expect(coordinator.selectedTab == .home)

@@ -76,7 +76,7 @@ struct AuthenticationManagerTests {
         )
 
         // Simulate auth service publishing a new user
-        mockAuthService.authStateSubject.send(testUser)
+        mockAuthService.simulateSignedIn(testUser)
 
         try await Task.sleep(nanoseconds: 100_000_000)
 
@@ -110,7 +110,7 @@ struct AuthenticationManagerTests {
             provider: .google
         )
 
-        mockAuthService.authStateSubject.send(testUser)
+        mockAuthService.simulateSignedIn(testUser)
 
         try await Task.sleep(nanoseconds: 100_000_000)
 
@@ -132,7 +132,7 @@ struct AuthenticationManagerTests {
         #expect(sut.isAuthenticated)
 
         // Simulate logout by sending nil
-        mockAuthService.authStateSubject.send(nil)
+        mockAuthService.simulateSignedOut()
 
         try await Task.sleep(nanoseconds: 100_000_000)
 
@@ -156,7 +156,7 @@ struct AuthenticationManagerTests {
             provider: .apple
         )
 
-        mockAuthService.authStateSubject.send(testUser)
+        mockAuthService.simulateSignedIn(testUser)
 
         try await Task.sleep(nanoseconds: 100_000_000)
 
