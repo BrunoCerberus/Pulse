@@ -77,7 +77,7 @@ final class GlassArticleCardSnapshotTests: XCTestCase {
 
         assertSnapshot(
             of: controller,
-            as: .wait(for: 1.0, on: .image(on: iPhoneAirConfig, precision: 0.98)),
+            as: .wait(for: 1.0, on: .image(on: iPhoneAirConfig, precision: 0.99)),
             record: false
         )
     }
@@ -99,7 +99,7 @@ final class GlassArticleCardSnapshotTests: XCTestCase {
 
         assertSnapshot(
             of: controller,
-            as: .wait(for: 1.0, on: .image(on: iPhoneAirConfig, precision: 0.98)),
+            as: .wait(for: 1.0, on: .image(on: iPhoneAirConfig, precision: 0.99)),
             record: false
         )
     }
@@ -121,7 +121,7 @@ final class GlassArticleCardSnapshotTests: XCTestCase {
 
         assertSnapshot(
             of: controller,
-            as: .wait(for: 1.0, on: .image(on: iPhoneAirConfig, precision: 0.98)),
+            as: .wait(for: 1.0, on: .image(on: iPhoneAirConfig, precision: 0.99)),
             record: false
         )
     }
@@ -143,7 +143,7 @@ final class GlassArticleCardSnapshotTests: XCTestCase {
 
         assertSnapshot(
             of: controller,
-            as: .wait(for: 1.0, on: .image(on: iPhoneAirConfig, precision: 0.98)),
+            as: .wait(for: 1.0, on: .image(on: iPhoneAirConfig, precision: 0.99)),
             record: false
         )
     }
@@ -177,7 +177,7 @@ final class GlassArticleCardSnapshotTests: XCTestCase {
 
             assertSnapshot(
                 of: controller,
-                as: .wait(for: 1.0, on: .image(on: iPhoneAirConfig, precision: 0.98)),
+                as: .wait(for: 1.0, on: .image(on: iPhoneAirConfig, precision: 0.99)),
                 record: false,
                 testName: "testGlassArticleCard_\(category.rawValue)"
             )
@@ -201,7 +201,7 @@ final class GlassArticleCardSnapshotTests: XCTestCase {
 
         assertSnapshot(
             of: controller,
-            as: .wait(for: 1.0, on: .image(on: iPhoneAirConfig, precision: 0.98)),
+            as: .wait(for: 1.0, on: .image(on: iPhoneAirConfig, precision: 0.99)),
             record: false
         )
     }
@@ -221,7 +221,7 @@ final class GlassArticleCardSnapshotTests: XCTestCase {
 
         assertSnapshot(
             of: controller,
-            as: .wait(for: 1.0, on: .image(on: iPhoneAirConfig, precision: 0.98)),
+            as: .wait(for: 1.0, on: .image(on: iPhoneAirConfig, precision: 0.99)),
             record: false
         )
     }
