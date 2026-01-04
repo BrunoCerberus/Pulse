@@ -1,5 +1,20 @@
 import SwiftUI
 
+// MARK: - Constants
+
+private enum Constants {
+    static let title = String(localized: "search.title")
+    static let searching = String(localized: "search.searching")
+    static let placeholderTitle = String(localized: "search.placeholder.title")
+    static let placeholderMessage = String(localized: "search.placeholder.message")
+    static let errorTitle = String(localized: "search.error.title")
+    static let emptyTitle = String(localized: "search.empty.title")
+    static let tryAgain = String(localized: "common.try_again")
+    static let loadingMore = String(localized: "common.loading_more")
+}
+
+// MARK: - SearchView
+
 struct SearchView<R: SearchNavigationRouter>: View {
     /// Router responsible for navigation actions
     private var router: R
@@ -28,7 +43,7 @@ struct SearchView<R: SearchNavigationRouter>: View {
 
             content
         }
-        .navigationTitle("Search")
+        .navigationTitle(Constants.title)
         .toolbarBackground(.hidden, for: .navigationBar)
         .searchable(
             text: Binding(
@@ -62,7 +77,7 @@ struct SearchView<R: SearchNavigationRouter>: View {
             VStack(spacing: Spacing.md) {
                 ProgressView()
                     .scaleEffect(1.2)
-                Text("Searching...")
+                Text(Constants.searching)
                     .font(Typography.bodyMedium)
                     .foregroundStyle(.secondary)
             }
@@ -88,10 +103,10 @@ struct SearchView<R: SearchNavigationRouter>: View {
                         .font(.system(size: IconSize.xxl))
                         .foregroundStyle(Color.Accent.primary)
 
-                    Text("Search for News")
+                    Text(Constants.placeholderTitle)
                         .font(Typography.titleMedium)
 
-                    Text("Find articles from thousands of sources worldwide")
+                    Text(Constants.placeholderMessage)
                         .font(Typography.bodyMedium)
                         .foregroundStyle(.secondary)
                         .multilineTextAlignment(.center)
@@ -159,7 +174,7 @@ struct SearchView<R: SearchNavigationRouter>: View {
                     .font(.system(size: IconSize.xxl))
                     .foregroundStyle(Color.Semantic.error)
 
-                Text("Search Failed")
+                Text(Constants.errorTitle)
                     .font(Typography.titleMedium)
 
                 Text(message)
@@ -171,7 +186,7 @@ struct SearchView<R: SearchNavigationRouter>: View {
                     HapticManager.shared.tap()
                     viewModel.handle(event: .onSearch)
                 } label: {
-                    Text("Try Again")
+                    Text(Constants.tryAgain)
                         .font(Typography.labelLarge)
                         .foregroundStyle(.white)
                         .padding(.horizontal, Spacing.lg)
@@ -192,7 +207,7 @@ struct SearchView<R: SearchNavigationRouter>: View {
                     .font(.system(size: IconSize.xxl))
                     .foregroundStyle(.secondary)
 
-                Text("No Results Found")
+                Text(Constants.emptyTitle)
                     .font(Typography.titleMedium)
 
                 Text("No articles found for \"\(viewModel.viewState.query)\"")
@@ -243,7 +258,7 @@ struct SearchView<R: SearchNavigationRouter>: View {
                     HStack {
                         ProgressView()
                             .tint(.secondary)
-                        Text("Loading more...")
+                        Text(Constants.loadingMore)
                             .font(Typography.captionLarge)
                             .foregroundStyle(.secondary)
                     }

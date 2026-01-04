@@ -1,26 +1,154 @@
-/* Home Tab */
-"Home" = "Home";
+/* ==================== */
+/* MARK: - Common       */
+/* ==================== */
 
-/* For You Tab */
-"For You" = "For You";
+"app.name" = "Pulse";
+"common.ok" = "OK";
+"common.cancel" = "Cancel";
+"common.error" = "Error";
+"common.try_again" = "Try Again";
+"common.back" = "Back";
+"common.loading_more" = "Loading more...";
+"common.version" = "Version";
 
-/* Categories Tab */
-"Categories" = "Categories";
+/* ==================== */
+/* MARK: - Tab Bar      */
+/* ==================== */
 
-/* Search Tab */
-"Search" = "Search";
+"tab.home" = "Home";
+"tab.for_you" = "For You";
+"tab.categories" = "Categories";
+"tab.search" = "Search";
+"tab.bookmarks" = "Bookmarks";
 
-/* Bookmarks Tab */
-"Bookmarks" = "Bookmarks";
+/* ==================== */
+/* MARK: - Categories   */
+/* ==================== */
 
-/* Settings Tab */
-"Settings" = "Settings";
+"category.world" = "World";
+"category.business" = "Business";
+"category.technology" = "Technology";
+"category.science" = "Science";
+"category.health" = "Health";
+"category.sports" = "Sports";
+"category.entertainment" = "Entertainment";
 
-/* Categories */
-"World" = "World";
-"Business" = "Business";
-"Technology" = "Technology";
-"Science" = "Science";
-"Health" = "Health";
-"Sports" = "Sports";
-"Entertainment" = "Entertainment";
+/* ==================== */
+/* MARK: - Home         */
+/* ==================== */
+
+"home.title" = "News";
+"home.breaking" = "BREAKING";
+"home.error.title" = "Unable to Load News";
+"home.empty.title" = "No News Available";
+"home.empty.message" = "Check back later for the latest headlines.";
+
+/* ==================== */
+/* MARK: - For You      */
+/* ==================== */
+
+"for_you.title" = "For You";
+"for_you.error.title" = "Unable to Load Feed";
+"for_you.empty.title" = "Personalize Your Feed";
+"for_you.empty.message" = "Follow topics and sources to see articles tailored to your interests.";
+"for_you.set_preferences" = "Set Preferences";
+"for_you.no_articles.title" = "No Articles";
+"for_you.no_articles.message" = "No articles found based on your preferences.";
+
+/* ==================== */
+/* MARK: - Categories   */
+/* ==================== */
+
+"categories.title" = "Categories";
+"categories.loading" = "Loading articles...";
+"categories.select.title" = "Select a Category";
+"categories.select.message" = "Choose a category above to see related articles.";
+"categories.error.title" = "Error";
+"categories.empty.title" = "No Articles";
+"categories.empty.message" = "No articles found in this category.";
+"categories.article_count" = "%d articles";
+
+/* ==================== */
+/* MARK: - Search       */
+/* ==================== */
+
+"search.title" = "Search";
+"search.searching" = "Searching...";
+"search.placeholder.title" = "Search for News";
+"search.placeholder.message" = "Find articles from thousands of sources worldwide";
+"search.error.title" = "Search Failed";
+"search.empty.title" = "No Results Found";
+
+/* ==================== */
+/* MARK: - Bookmarks    */
+/* ==================== */
+
+"bookmarks.title" = "Bookmarks";
+"bookmarks.loading" = "Loading bookmarks...";
+"bookmarks.error.title" = "Unable to Load Bookmarks";
+"bookmarks.empty.title" = "No Bookmarks";
+"bookmarks.empty.message" = "Articles you bookmark will appear here for offline reading.";
+"bookmarks.saved_count" = "%d saved articles";
+
+/* ==================== */
+/* MARK: - Article      */
+/* ==================== */
+
+"article.by_author" = "By %@";
+"article.read_full" = "Read Full Article";
+"article.bookmark" = "Bookmark";
+"article.share" = "Share";
+
+/* ==================== */
+/* MARK: - Settings     */
+/* ==================== */
+
+"settings.title" = "Settings";
+"settings.followed_topics" = "Followed Topics";
+"settings.followed_topics.description" = "Articles from followed topics will appear in your For You feed.";
+"settings.content_filters" = "Content Filters";
+"settings.content_filters.description" = "Muted sources and keywords will be hidden from all feeds.";
+"settings.clear_history" = "Clear Reading History";
+"settings.clear_history.confirm" = "This will remove all articles from your reading history. This action cannot be undone.";
+"settings.clear_history.action" = "Clear";
+"settings.view_github" = "View on GitHub";
+"settings.subscription" = "Subscription";
+
+/* ==================== */
+/* MARK: - Account      */
+/* ==================== */
+
+"account.title" = "Account";
+"account.sign_out" = "Sign Out";
+"account.sign_out.confirm" = "Are you sure you want to sign out of your account?";
+
+/* ==================== */
+/* MARK: - Auth         */
+/* ==================== */
+
+"auth.tagline" = "Your personalized news experience";
+"auth.sign_in_apple" = "Sign in with Apple";
+"auth.sign_in_google" = "Sign in with Google";
+"auth.terms" = "By signing in, you agree to our Terms of Service and Privacy Policy";
+"auth.signing_in" = "Signing in...";
+
+/* ==================== */
+/* MARK: - Paywall      */
+/* ==================== */
+
+"paywall.loading" = "Loading...";
+"paywall.title" = "Unlock Premium";
+"paywall.subtitle" = "Get the full Pulse experience with unlimited access";
+"paywall.feature1.title" = "Unlimited Articles";
+"paywall.feature1.description" = "Read as many articles as you want without limits";
+"paywall.feature2.title" = "Offline Reading";
+"paywall.feature2.description" = "Save unlimited articles for offline access";
+"paywall.feature3.title" = "Ad-Free Experience";
+"paywall.feature3.description" = "Enjoy a clean, distraction-free reading experience";
+"paywall.error.title" = "Error";
+"paywall.retry" = "Retry";
+"paywall.restore_purchases" = "Restore Purchases";
+"paywall.go_premium" = "Go Premium";
+"paywall.unlock_features" = "Unlock all premium features";
+"paywall.premium_active" = "Premium Active";
+"paywall.full_access" = "You have full access to all features";

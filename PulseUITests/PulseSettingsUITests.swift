@@ -234,7 +234,7 @@ final class PulseSettingsUITests: BaseUITestCase {
 
         clearHistoryButton.tap()
 
-        let alertTitle = app.staticTexts["Clear Reading History?"]
+        let alertTitle = app.staticTexts["Clear Reading History"]
         XCTAssertTrue(alertTitle.waitForExistence(timeout: 3), "Confirmation alert should appear")
 
         let cancelButton = app.buttons["Cancel"]

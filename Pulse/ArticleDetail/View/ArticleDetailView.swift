@@ -1,5 +1,14 @@
 import SwiftUI
 
+// MARK: - Constants
+
+private enum Constants {
+    static let back = String(localized: "common.back")
+    static let readFull = String(localized: "article.read_full")
+}
+
+// MARK: - ArticleDetailView
+
 struct ArticleDetailView: View {
     let article: Article
     @StateObject private var viewModel: ArticleDetailViewModel
@@ -37,11 +46,11 @@ struct ArticleDetailView: View {
                 Button {
                     dismiss()
                 } label: {
-                    Label("Back", systemImage: "chevron.left")
+                    Label(Constants.back, systemImage: "chevron.left")
                         .labelStyle(.iconOnly)
                 }
                 .accessibilityIdentifier("backButton")
-                .accessibilityLabel("Back")
+                .accessibilityLabel(Constants.back)
             }
 
             ToolbarItem(placement: .topBarTrailing) {
@@ -160,7 +169,7 @@ struct ArticleDetailView: View {
         } label: {
             HStack(spacing: Spacing.sm) {
                 Image(systemName: "safari.fill")
-                Text("Read Full Article")
+                Text(Constants.readFull)
             }
             .font(Typography.labelLarge)
             .foregroundStyle(.white)

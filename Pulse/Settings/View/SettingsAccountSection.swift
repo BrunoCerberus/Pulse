@@ -1,6 +1,15 @@
 import EntropyCore
 import SwiftUI
 
+// MARK: - Constants
+
+private enum Constants {
+    static let title = String(localized: "account.title")
+    static let signOut = String(localized: "account.sign_out")
+}
+
+// MARK: - SettingsAccountSection
+
 struct SettingsAccountSection: View {
     let currentUser: AuthUser?
     let onSignOutTapped: () -> Void
@@ -33,11 +42,11 @@ struct SettingsAccountSection: View {
                     HapticManager.shared.buttonPress()
                     onSignOutTapped()
                 } label: {
-                    Label("Sign Out", systemImage: "rectangle.portrait.and.arrow.right")
+                    Label(Constants.signOut, systemImage: "rectangle.portrait.and.arrow.right")
                 }
             }
         } header: {
-            Text("Account")
+            Text(Constants.title)
                 .font(Typography.captionLarge)
         }
     }

@@ -1,5 +1,21 @@
 import SwiftUI
 
+// MARK: - Constants
+
+private enum Constants {
+    static let title = String(localized: "for_you.title")
+    static let errorTitle = String(localized: "for_you.error.title")
+    static let emptyTitle = String(localized: "for_you.empty.title")
+    static let emptyMessage = String(localized: "for_you.empty.message")
+    static let setPreferences = String(localized: "for_you.set_preferences")
+    static let noArticlesTitle = String(localized: "for_you.no_articles.title")
+    static let noArticlesMessage = String(localized: "for_you.no_articles.message")
+    static let tryAgain = String(localized: "common.try_again")
+    static let loadingMore = String(localized: "common.loading_more")
+}
+
+// MARK: - ForYouView
+
 struct ForYouView<R: ForYouNavigationRouter>: View {
     /// Router responsible for navigation actions
     private var router: R
@@ -23,7 +39,7 @@ struct ForYouView<R: ForYouNavigationRouter>: View {
 
             content
         }
-        .navigationTitle("For You")
+        .navigationTitle(Constants.title)
         .toolbarBackground(.hidden, for: .navigationBar)
         .refreshable {
             HapticManager.shared.refresh()
@@ -72,7 +88,7 @@ struct ForYouView<R: ForYouNavigationRouter>: View {
                     .font(.system(size: IconSize.xxl))
                     .foregroundStyle(Color.Semantic.warning)
 
-                Text("Unable to Load Feed")
+                Text(Constants.errorTitle)
                     .font(Typography.titleMedium)
 
                 Text(message)
@@ -84,7 +100,7 @@ struct ForYouView<R: ForYouNavigationRouter>: View {
                     HapticManager.shared.tap()
                     viewModel.handle(event: .onRefresh)
                 } label: {
-                    Text("Try Again")
+                    Text(Constants.tryAgain)
                         .font(Typography.labelLarge)
                         .foregroundStyle(.white)
                         .padding(.horizontal, Spacing.lg)
@@ -113,10 +129,10 @@ struct ForYouView<R: ForYouNavigationRouter>: View {
                 }
                 .glowEffect(color: Color.Accent.primary, radius: 16)
 
-                Text("Personalize Your Feed")
+                Text(Constants.emptyTitle)
                     .font(Typography.displaySmall)
 
-                Text("Follow topics and sources to see articles tailored to your interests.")
+                Text(Constants.emptyMessage)
                     .font(Typography.bodyMedium)
                     .foregroundStyle(.secondary)
                     .multilineTextAlignment(.center)
@@ -127,7 +143,7 @@ struct ForYouView<R: ForYouNavigationRouter>: View {
                 } label: {
                     HStack(spacing: Spacing.xs) {
                         Image(systemName: "gearshape.fill")
-                        Text("Set Preferences")
+                        Text(Constants.setPreferences)
                     }
                     .font(Typography.labelLarge)
                     .foregroundStyle(.white)
@@ -150,10 +166,10 @@ struct ForYouView<R: ForYouNavigationRouter>: View {
                     .font(.system(size: IconSize.xxl))
                     .foregroundStyle(.secondary)
 
-                Text("No Articles")
+                Text(Constants.noArticlesTitle)
                     .font(Typography.titleMedium)
 
-                Text("No articles found based on your preferences.")
+                Text(Constants.noArticlesMessage)
                     .font(Typography.bodyMedium)
                     .foregroundStyle(.secondary)
                     .multilineTextAlignment(.center)
@@ -191,7 +207,7 @@ struct ForYouView<R: ForYouNavigationRouter>: View {
                             HStack {
                                 ProgressView()
                                     .tint(.secondary)
-                                Text("Loading more...")
+                                Text(Constants.loadingMore)
                                     .font(Typography.captionLarge)
                                     .foregroundStyle(.secondary)
                             }

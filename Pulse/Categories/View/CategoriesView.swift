@@ -1,5 +1,21 @@
 import SwiftUI
 
+// MARK: - Constants
+
+private enum Constants {
+    static let title = String(localized: "categories.title")
+    static let loading = String(localized: "categories.loading")
+    static let selectTitle = String(localized: "categories.select.title")
+    static let selectMessage = String(localized: "categories.select.message")
+    static let emptyTitle = String(localized: "categories.empty.title")
+    static let emptyMessage = String(localized: "categories.empty.message")
+    static let error = String(localized: "common.error")
+    static let tryAgain = String(localized: "common.try_again")
+    static let loadingMore = String(localized: "common.loading_more")
+}
+
+// MARK: - CategoriesView
+
 struct CategoriesView<R: CategoriesNavigationRouter>: View {
     /// Router responsible for navigation actions
     private var router: R
@@ -35,7 +51,7 @@ struct CategoriesView<R: CategoriesNavigationRouter>: View {
             categoryBackground
                 .ignoresSafeArea()
         }
-        .navigationTitle("Categories")
+        .navigationTitle(Constants.title)
         .navigationBarTitleDisplayMode(.large)
         .toolbarBackground(.hidden, for: .navigationBar)
         .onChange(of: viewModel.viewState.selectedArticle) { _, newValue in
@@ -98,7 +114,7 @@ struct CategoriesView<R: CategoriesNavigationRouter>: View {
             VStack(spacing: Spacing.md) {
                 ProgressView()
                     .scaleEffect(1.2)
-                Text("Loading articles...")
+                Text(Constants.loading)
                     .font(Typography.bodyMedium)
                     .foregroundStyle(.secondary)
             }
@@ -122,10 +138,10 @@ struct CategoriesView<R: CategoriesNavigationRouter>: View {
                     .font(.system(size: IconSize.xxl))
                     .foregroundStyle(Color.Accent.primary)
 
-                Text("Select a Category")
+                Text(Constants.selectTitle)
                     .font(Typography.titleMedium)
 
-                Text("Choose a category above to see related articles.")
+                Text(Constants.selectMessage)
                     .font(Typography.bodyMedium)
                     .foregroundStyle(.secondary)
                     .multilineTextAlignment(.center)
@@ -145,7 +161,7 @@ struct CategoriesView<R: CategoriesNavigationRouter>: View {
                     .font(.system(size: IconSize.xxl))
                     .foregroundStyle(Color.Semantic.warning)
 
-                Text("Error")
+                Text(Constants.error)
                     .font(Typography.titleMedium)
 
                 Text(message)
@@ -157,7 +173,7 @@ struct CategoriesView<R: CategoriesNavigationRouter>: View {
                     HapticManager.shared.tap()
                     viewModel.handle(event: .onRefresh)
                 } label: {
-                    Text("Try Again")
+                    Text(Constants.tryAgain)
                         .font(Typography.labelLarge)
                         .foregroundStyle(.white)
                         .padding(.horizontal, Spacing.lg)
@@ -183,10 +199,10 @@ struct CategoriesView<R: CategoriesNavigationRouter>: View {
                     .font(.system(size: IconSize.xxl))
                     .foregroundStyle(.secondary)
 
-                Text("No Articles")
+                Text(Constants.emptyTitle)
                     .font(Typography.titleMedium)
 
-                Text("No articles found in this category.")
+                Text(Constants.emptyMessage)
                     .font(Typography.bodyMedium)
                     .foregroundStyle(.secondary)
                     .multilineTextAlignment(.center)
@@ -232,7 +248,7 @@ struct CategoriesView<R: CategoriesNavigationRouter>: View {
                 HStack {
                     ProgressView()
                         .tint(.secondary)
-                    Text("Loading more...")
+                    Text(Constants.loadingMore)
                         .font(Typography.captionLarge)
                         .foregroundStyle(.secondary)
                 }

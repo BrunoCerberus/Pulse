@@ -1,5 +1,13 @@
 import SwiftUI
 
+// MARK: - Constants
+
+private enum Constants {
+    static let breaking = String(localized: "home.breaking")
+}
+
+// MARK: - BreakingNewsCard
+
 struct BreakingNewsCard: View {
     let item: ArticleViewItem
     let onTap: () -> Void
@@ -39,7 +47,7 @@ struct BreakingNewsCard: View {
 
                 VStack(alignment: .leading, spacing: 4) {
                     HStack {
-                        Text("BREAKING")
+                        Text(Constants.breaking)
                             .font(.caption2)
                             .fontWeight(.bold)
                             .padding(.horizontal, 6)
