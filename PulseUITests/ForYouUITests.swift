@@ -32,26 +32,12 @@ final class ForYouUITests: BaseUITestCase {
 
         // --- Content Loading ---
         let personalizeText = app.staticTexts["Personalize Your Feed"]
-        let articleCards = app.buttons.matching(NSPredicate(format: "label CONTAINS[c] 'ago' OR label CONTAINS[c] 'hour'"))
         let noArticlesText = app.staticTexts["No Articles"]
         let errorText = app.staticTexts["Unable to Load Feed"]
         let forYouNav = app.navigationBars["For You"]
 
-        let timeout: TimeInterval = 20
-        let startTime = Date()
-        var contentLoaded = false
-
-        while Date().timeIntervalSince(startTime) < timeout {
-            if personalizeText.exists || articleCards.count > 0 || noArticlesText.exists || errorText.exists {
-                contentLoaded = true
-                break
-            }
-            wait(for: 0.5)
-        }
-
-        if !contentLoaded {
-            contentLoaded = forYouNav.exists
-        }
+        let contentLoaded = waitForAny([personalizeText, noArticlesText, errorText, forYouNav], timeout: 20) ||
+            waitForAnyMatch(articleCards(), timeout: 1)
 
         XCTAssertTrue(contentLoaded, "For You should show content (articles, onboarding, empty, or error state)")
 
@@ -88,9 +74,8 @@ final class ForYouUITests: BaseUITestCase {
 
         // --- Article Navigation and Scroll ---
         navigateToForYou()
-        wait(for: 2)
 
-        let articleCardsAfterLoad = app.buttons.matching(NSPredicate(format: "label CONTAINS[c] 'ago' OR label CONTAINS[c] 'hour'"))
+        let articleCardsAfterLoad = articleCards()
         if articleCardsAfterLoad.count > 0 {
             articleCardsAfterLoad.firstMatch.tap()
 
@@ -104,15 +89,13 @@ final class ForYouUITests: BaseUITestCase {
         }
 
         let scrollView = app.scrollViews.firstMatch
-        let articleCardsAfterScroll = app.buttons.matching(NSPredicate(format: "label CONTAINS[c] 'ago'"))
 
         if scrollView.exists {
             // Pull to refresh
             scrollView.swipeDown()
-            wait(for: 1)
 
             // Infinite scroll
-            if articleCardsAfterScroll.count > 0 {
+            if articleCards().count > 0 {
                 scrollView.swipeUp()
                 scrollView.swipeUp()
                 scrollView.swipeUp()
@@ -146,7 +129,6 @@ final class ForYouUITests: BaseUITestCase {
 
         if technologyRow.exists {
             technologyRow.tap()
-            wait(for: 1)
         }
 
         let backButton = app.navigationBars.buttons.firstMatch
@@ -160,9 +142,8 @@ final class ForYouUITests: BaseUITestCase {
         XCTAssertTrue(homeNavAfterSettings.waitForExistence(timeout: 5), "Should return to Home")
 
         navigateToForYou()
-        wait(for: 2)
 
         let navTitleAfterSettings = app.navigationBars["For You"]
-        XCTAssertTrue(navTitleAfterSettings.exists, "For You should be visible")
+        XCTAssertTrue(navTitleAfterSettings.waitForExistence(timeout: Self.defaultTimeout), "For You should be visible")
     }
 }

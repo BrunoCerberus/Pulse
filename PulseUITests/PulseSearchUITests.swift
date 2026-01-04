@@ -73,17 +73,7 @@ final class PulseSearchUITests: BaseUITestCase {
         let searchForNews = app.staticTexts["Search for News"]
         let searchSubtitle = app.staticTexts["Find articles from thousands of sources worldwide"]
 
-        let timeout: TimeInterval = 20
-        let startTime = Date()
-        var searchUILoaded = false
-
-        while Date().timeIntervalSince(startTime) < timeout {
-            if searchField.exists || searchForNews.exists || searchSubtitle.exists {
-                searchUILoaded = true
-                break
-            }
-            wait(for: 0.5)
-        }
+        let searchUILoaded = waitForAny([searchField, searchForNews, searchSubtitle], timeout: 20)
 
         XCTAssertTrue(searchUILoaded, "Search UI should load (search field or empty state)")
         XCTAssertTrue(searchForNews.exists || searchSubtitle.exists || searchField.exists, "Initial empty state should show search prompt")
@@ -94,8 +84,6 @@ final class PulseSearchUITests: BaseUITestCase {
 
             let keyboard = app.keyboards.element
             XCTAssertTrue(keyboard.waitForExistence(timeout: 3), "Keyboard should appear for text input")
-
-            wait(for: 1)
 
             let trendingHeader = app.staticTexts["Trending Topics"]
             let recentHeader = app.staticTexts["Recent Searches"]
@@ -109,8 +97,9 @@ final class PulseSearchUITests: BaseUITestCase {
                 let categoryButton = app.buttons[category]
                 if categoryButton.exists {
                     categoryButton.tap()
-                    wait(for: 2)
 
+                    // Wait for search to start - empty state should disappear or results appear
+                    _ = waitForAnyMatch(articleCards(), timeout: 5)
                     let emptyStateGone = !app.staticTexts["Search for News"].exists
                     XCTAssertTrue(emptyStateGone, "Tapping category should start search")
                     didTapCategory = true
@@ -131,26 +120,13 @@ final class PulseSearchUITests: BaseUITestCase {
         searchField.typeText("Apple")
         submitSearch()
 
-        let articleCards = app.buttons.matching(NSPredicate(format: "label CONTAINS[c] 'ago' OR label CONTAINS[c] 'hour'"))
         let noResultsText = app.staticTexts["No Results Found"]
         let searchingText = app.staticTexts["Searching..."]
         let errorText = app.staticTexts["Search Failed"]
 
-        let resultsTimeout: TimeInterval = 15
-        let resultsStartTime = Date()
-        var hasContent = false
-
-        while Date().timeIntervalSince(resultsStartTime) < resultsTimeout {
-            if articleCards.count > 0 || noResultsText.exists || searchingText.exists || errorText.exists {
-                hasContent = true
-                break
-            }
-            wait(for: 0.5)
-        }
-
-        if !hasContent {
-            hasContent = !app.staticTexts["Search for News"].exists
-        }
+        let hasContent = waitForAny([noResultsText, searchingText, errorText], timeout: 15) ||
+            waitForAnyMatch(articleCards(), timeout: 1) ||
+            !app.staticTexts["Search for News"].exists
 
         XCTAssertTrue(hasContent, "Search should show results, loading, or status message")
 
@@ -158,45 +134,15 @@ final class PulseSearchUITests: BaseUITestCase {
         if clearButton.waitForExistence(timeout: 3) {
             clearButton.tap()
 
-            let clearTimeout: TimeInterval = 5
-            let clearStartTime = Date()
-            var isCleared = false
-
-            while Date().timeIntervalSince(clearStartTime) < clearTimeout {
-                let searchFieldAfterClear = app.searchFields.firstMatch
-                let searchFieldValue = searchFieldAfterClear.value as? String ?? ""
-                let placeholderValue = searchFieldAfterClear.placeholderValue ?? ""
-
-                isCleared = searchFieldValue.isEmpty ||
-                    searchFieldValue == placeholderValue ||
-                    searchFieldValue == "Search news..." ||
-                    searchFieldValue == "Search" ||
-                    searchFieldValue == "Search..." ||
-                    !searchFieldValue.lowercased().contains("apple") ||
-                    searchForNews.exists ||
-                    searchSubtitle.exists
-
-                if isCleared {
-                    break
-                }
-                wait(for: 0.3)
-            }
+            // Wait for empty state to return or field to clear
+            let emptyStateReturned = waitForAny([searchForNews, searchSubtitle], timeout: 3)
+            var fieldValue = app.searchFields.firstMatch.value as? String ?? ""
+            var isCleared = emptyStateReturned || !fieldValue.lowercased().contains("apple")
 
             if !isCleared {
                 clearSearchFieldIfNeeded(searchField)
-
-                let searchFieldAfterClear = app.searchFields.firstMatch
-                let searchFieldValue = searchFieldAfterClear.value as? String ?? ""
-                let placeholderValue = searchFieldAfterClear.placeholderValue ?? ""
-
-                isCleared = searchFieldValue.isEmpty ||
-                    searchFieldValue == placeholderValue ||
-                    searchFieldValue == "Search news..." ||
-                    searchFieldValue == "Search" ||
-                    searchFieldValue == "Search..." ||
-                    !searchFieldValue.lowercased().contains("apple") ||
-                    searchForNews.exists ||
-                    searchSubtitle.exists
+                fieldValue = app.searchFields.firstMatch.value as? String ?? ""
+                isCleared = !fieldValue.lowercased().contains("apple") || fieldValue.isEmpty
             }
 
             XCTAssertTrue(isCleared, "Search field should be cleared")
@@ -208,8 +154,7 @@ final class PulseSearchUITests: BaseUITestCase {
 
         if cancelButton.waitForExistence(timeout: 3) {
             cancelButton.tap()
-            wait(for: 0.5)
-            XCTAssertFalse(app.keyboards.element.exists, "Keyboard should dismiss after cancel")
+            XCTAssertTrue(!app.keyboards.element.waitForExistence(timeout: 1), "Keyboard should dismiss after cancel")
         }
 
         // --- Sort, Navigation, and Content States ---
@@ -218,7 +163,8 @@ final class PulseSearchUITests: BaseUITestCase {
         searchField.typeText("technology")
         submitSearch()
 
-        wait(for: 3)
+        // Wait for results to load
+        _ = waitForAnyMatch(articleCards(), timeout: 5)
 
         let segmentedControl = app.segmentedControls.firstMatch
 
@@ -226,24 +172,21 @@ final class PulseSearchUITests: BaseUITestCase {
             let segments = segmentedControl.buttons
             if segments.count > 1 {
                 segments.element(boundBy: 1).tap()
-                wait(for: 2)
             }
         }
 
         XCTAssertTrue(searchField.exists, "Search view should remain functional")
 
-        let articleCardsForNavigation = app.buttons.matching(NSPredicate(format: "label CONTAINS[c] 'ago'"))
+        let articleCardsForNavigation = articleCards()
 
         if articleCardsForNavigation.count > 0 {
             articleCardsForNavigation.firstMatch.tap()
-            wait(for: 1)
 
             let backButton = app.navigationBars.buttons.firstMatch
             let didNavigate = backButton.waitForExistence(timeout: 5) && !searchField.isHittable
 
             if didNavigate {
                 backButton.tap()
-                wait(for: 1)
                 XCTAssertTrue(searchField.waitForExistence(timeout: 5), "Should return to Search")
             }
         }
@@ -253,7 +196,6 @@ final class PulseSearchUITests: BaseUITestCase {
             scrollView.swipeUp()
             scrollView.swipeUp()
             scrollView.swipeUp()
-            wait(for: 2)
         }
 
         XCTAssertTrue(searchField.exists, "Search should remain functional after scrolling")
@@ -267,13 +209,12 @@ final class PulseSearchUITests: BaseUITestCase {
         searchField.typeText("xyzqwerty123456789unlikely")
         submitSearch()
 
-        wait(for: 3)
-
         let noResultsTextAfter = app.staticTexts["No Results Found"]
         let errorTextAfter = app.staticTexts["Search Failed"]
 
-        let hasResponse = noResultsTextAfter.exists || errorTextAfter.exists ||
-            app.buttons.matching(NSPredicate(format: "label CONTAINS[c] 'ago'")).count > 0
+        // Wait for any response
+        let hasResponse = waitForAny([noResultsTextAfter, errorTextAfter], timeout: 5) ||
+            articleCards().count > 0
 
         XCTAssertTrue(hasResponse, "Search should show a response")
 
@@ -291,17 +232,13 @@ final class PulseSearchUITests: BaseUITestCase {
         searchField.typeText("test")
         XCTAssertTrue(app.keyboards.element.exists, "Keyboard should be shown")
         submitSearch()
-
-        wait(for: 1)
         dismissKeyboard()
 
         // --- Tab Switching ---
         let homeTab = app.tabBars.buttons["Home"]
         homeTab.tap()
-        wait(for: 1)
 
         navigateToSearchTab()
-        wait(for: 0.5)
 
         XCTAssertTrue(searchField.waitForExistence(timeout: 5), "Should return to Search view")
     }

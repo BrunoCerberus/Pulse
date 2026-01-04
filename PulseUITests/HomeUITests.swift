@@ -12,13 +12,12 @@ final class HomeUITests: BaseUITestCase {
 
     /// Tests navigation bar, content loading, interactions, and settings navigation
     func testHomeContentInteractionsAndSettingsFlow() throws {
-        resetToHomeTab()
-
         // Verify navigation title
         XCTAssertTrue(app.navigationBars["News"].waitForExistence(timeout: Self.shortTimeout), "Navigation title 'News' should exist")
 
         // Verify gear button
-        XCTAssertTrue(app.navigationBars.buttons["gearshape"].waitForExistence(timeout: Self.shortTimeout), "Gear button should exist in navigation bar")
+        let gearButton = app.navigationBars.buttons["gearshape"]
+        XCTAssertTrue(gearButton.waitForExistence(timeout: Self.shortTimeout), "Gear button should exist in navigation bar")
 
         // Verify content loads
         let contentLoaded = waitForHomeContent(timeout: Self.defaultTimeout)
@@ -33,9 +32,7 @@ final class HomeUITests: BaseUITestCase {
         }
 
         // --- Settings Navigation ---
-        let settingsGearButton = app.navigationBars.buttons["gearshape"]
-        XCTAssertTrue(settingsGearButton.waitForExistence(timeout: Self.shortTimeout), "Gear button should exist")
-        settingsGearButton.tap()
+        gearButton.tap()
 
         let settingsNavBar = app.navigationBars["Settings"]
         XCTAssertTrue(settingsNavBar.waitForExistence(timeout: Self.defaultTimeout), "Settings should open")
@@ -68,7 +65,6 @@ final class HomeUITests: BaseUITestCase {
                 // Scroll to make the card hittable if needed
                 if !firstCard.isHittable {
                     app.scrollViews.firstMatch.swipeUp()
-                    wait(for: 0.5)
                 }
 
                 if firstCard.isHittable {
@@ -100,7 +96,7 @@ final class HomeUITests: BaseUITestCase {
                 // --- Context Menu ---
                 let cardsAfterScroll = articleCards()
                 if cardsAfterScroll.count > 0 {
-                    cardsAfterScroll.firstMatch.press(forDuration: 1.0)
+                    cardsAfterScroll.firstMatch.press(forDuration: 0.5)
 
                     let contextMenuAppeared = app.buttons["Bookmark"].waitForExistence(timeout: Self.shortTimeout) ||
                         app.buttons["Share"].waitForExistence(timeout: 1)
@@ -111,7 +107,5 @@ final class HomeUITests: BaseUITestCase {
                 }
             }
         }
-
-        resetToHomeTab()
     }
 }

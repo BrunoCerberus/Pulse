@@ -174,6 +174,20 @@ class BaseUITestCase: XCTestCase {
         return true
     }
 
+    /// Wait for any of the provided elements to exist - efficient predicate-based waiting
+    func waitForAny(_ elements: [XCUIElement], timeout: TimeInterval = 10) -> Bool {
+        let predicate = NSPredicate { _, _ in elements.contains { $0.exists } }
+        let expectation = XCTNSPredicateExpectation(predicate: predicate, object: nil)
+        return XCTWaiter.wait(for: [expectation], timeout: timeout) == .completed
+    }
+
+    /// Wait for any element matching query to exist
+    func waitForAnyMatch(_ query: XCUIElementQuery, timeout: TimeInterval = 10) -> Bool {
+        let predicate = NSPredicate { _, _ in query.count > 0 }
+        let expectation = XCTNSPredicateExpectation(predicate: predicate, object: nil)
+        return XCTWaiter.wait(for: [expectation], timeout: timeout) == .completed
+    }
+
     /// Wait for content to load (articles, error, or empty state)
     func waitForHomeContent(timeout: TimeInterval = 10) -> Bool {
         let contentIndicators = [
@@ -182,15 +196,7 @@ class BaseUITestCase: XCTestCase {
             app.staticTexts["Unable to Load News"],
             app.staticTexts["No News Available"],
         ]
-
-        let deadline = Date().addingTimeInterval(timeout)
-        while Date() < deadline {
-            if contentIndicators.contains(where: { $0.exists }) {
-                return true
-            }
-            usleep(200_000) // 0.2 second - faster polling
-        }
-        return false
+        return waitForAny(contentIndicators, timeout: timeout)
     }
 
     /// Wait for article detail view
@@ -240,8 +246,8 @@ class BaseUITestCase: XCTestCase {
 
         for _ in 0..<maxSwipes {
             container.swipeUp()
-            usleep(150_000) // 0.15 second
-            if element.exists, element.isHittable {
+            // Use element check instead of fixed delay
+            if element.waitForExistence(timeout: 0.1), element.isHittable {
                 return true
             }
         }
