@@ -5,10 +5,12 @@ class BaseUITestCase: XCTestCase {
     /// App instance - launched per test for isolation
     var app: XCUIApplication!
 
-    /// Default timeout for element existence checks (reduced from 20s)
+    /// Default timeout for element existence checks
+    /// 8s provides good balance between speed and reliability
+    /// Tests run with animations disabled, so elements appear quickly
     static let defaultTimeout: TimeInterval = 8
 
-    /// Short timeout for quick checks
+    /// Short timeout for quick checks (e.g., verifying element visibility)
     static let shortTimeout: TimeInterval = 3
 
     // MARK: - Instance-level Setup (runs before each test)
@@ -53,15 +55,27 @@ class BaseUITestCase: XCTestCase {
             // Quick recovery: try back button
             let backButton = app.buttons["backButton"]
             if backButton.exists { backButton.tap() }
-            guard tabBar.waitForExistence(timeout: 2) else { return }
+            guard tabBar.waitForExistence(timeout: 2) else {
+                XCTFail("Tab bar not found after recovery attempt")
+                return
+            }
         }
 
-        // Select Home tab
+        // Select Home tab with smart fallback
         let homeTab = tabBar.buttons["Home"]
         if homeTab.exists, !homeTab.isSelected {
             homeTab.tap()
         } else if !homeTab.exists {
-            tabBar.buttons.element(boundBy: 0).tap()
+            // Try to find any tab with "Home" identifier/label
+            let homeTabFallback = tabBar.buttons.matching(
+                NSPredicate(format: "label CONTAINS[c] 'home' OR identifier CONTAINS[c] 'home'")
+            ).firstMatch
+            if homeTabFallback.exists {
+                homeTabFallback.tap()
+            } else {
+                // Last resort: tap first tab (assumed to be Home)
+                tabBar.buttons.element(boundBy: 0).tap()
+            }
         }
 
         // Verify Home loaded successfully

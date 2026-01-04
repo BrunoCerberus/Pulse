@@ -48,23 +48,17 @@ final class PulseSettingsUITests: BaseUITestCase {
         if element.exists, element.isHittable { return true }
 
         // Try table first (Settings uses List which renders as UITableView), then scrollViews
-        let container: XCUIElement
-        if app.tables.firstMatch.exists {
-            container = app.tables.firstMatch
-        } else if app.scrollViews.firstMatch.exists {
-            container = app.scrollViews.firstMatch
-        } else {
-            // Fallback to swiping on app itself
-            for _ in 0..<maxSwipes {
-                app.swipeUp()
-                if element.exists, element.isHittable { return true }
-            }
-            return element.exists && element.isHittable
-        }
+        // Fall back to app itself if neither container is found
+        let container: XCUIElement = app.tables.firstMatch.exists
+            ? app.tables.firstMatch
+            : (app.scrollViews.firstMatch.exists ? app.scrollViews.firstMatch : app)
 
         for _ in 0..<maxSwipes {
             container.swipeUp()
-            if element.waitForExistence(timeout: 0.1), element.isHittable { return true }
+            // Brief wait allows element to appear after scroll
+            if element.waitForExistence(timeout: 0.1), element.isHittable {
+                return true
+            }
         }
         return element.exists && element.isHittable
     }

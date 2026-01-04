@@ -61,6 +61,7 @@ final class CategoriesUITests: BaseUITestCase {
         // Single scroll attempt in each direction
         let scrollView = categoryChipsScrollView()
         scrollView.swipeRight()
+        // Check existence immediately without aggressive timeout
         if button.exists, isElementVisible(button) {
             button.tap()
             return true
