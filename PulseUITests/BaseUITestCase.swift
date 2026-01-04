@@ -60,9 +60,16 @@ class BaseUITestCase: XCTestCase {
         let homeTab = tabBar.buttons["Home"]
         if homeTab.exists, !homeTab.isSelected {
             homeTab.tap()
-            _ = app.navigationBars["News"].waitForExistence(timeout: Self.shortTimeout)
         } else if !homeTab.exists {
             tabBar.buttons.element(boundBy: 0).tap()
+        }
+
+        // Verify Home loaded successfully
+        let homeNavBar = app.navigationBars["News"]
+        if !homeNavBar.waitForExistence(timeout: Self.shortTimeout) {
+            // Fallback: try tapping first tab if Home didn't load
+            tabBar.buttons.element(boundBy: 0).tap()
+            _ = homeNavBar.waitForExistence(timeout: Self.shortTimeout)
         }
 
         // Pop any pushed views
