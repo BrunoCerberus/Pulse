@@ -1,6 +1,24 @@
 import EntropyCore
 import SwiftUI
 
+// MARK: - Constants
+
+private enum Constants {
+    static let title = String(localized: "settings.title")
+    static let clearHistory = String(localized: "settings.clear_history")
+    static let clearHistoryAction = String(localized: "settings.clear_history.action")
+    static let clearHistoryConfirm = String(localized: "settings.clear_history.confirm")
+    static let followedTopics = String(localized: "settings.followed_topics")
+    static let followedTopicsDescription = String(localized: "settings.followed_topics.description")
+    static let viewGithub = String(localized: "settings.view_github")
+    static let signOut = String(localized: "account.sign_out")
+    static let signOutConfirm = String(localized: "account.sign_out.confirm")
+    static let cancel = String(localized: "common.cancel")
+    static let version = String(localized: "common.version")
+}
+
+// MARK: - SettingsView
+
 struct SettingsView: View {
     @StateObject private var viewModel: SettingsViewModel
     @StateObject private var paywallViewModel: PaywallViewModel
@@ -58,37 +76,37 @@ struct SettingsView: View {
             }
             .scrollContentBackground(.hidden)
         }
-        .navigationTitle(String(localized: "settings.title"))
+        .navigationTitle(Constants.title)
         .toolbarBackground(.ultraThinMaterial, for: .navigationBar)
-        .alert(String(localized: "settings.clear_history"), isPresented: Binding(
+        .alert(Constants.clearHistory, isPresented: Binding(
             get: { viewModel.viewState.showClearHistoryConfirmation },
             set: { _ in viewModel.handle(event: .onCancelClearHistory) }
         )) {
-            Button(String(localized: "common.cancel"), role: .cancel) {
+            Button(Constants.cancel, role: .cancel) {
                 HapticManager.shared.tap()
                 viewModel.handle(event: .onCancelClearHistory)
             }
-            Button(String(localized: "settings.clear_history.action"), role: .destructive) {
+            Button(Constants.clearHistoryAction, role: .destructive) {
                 HapticManager.shared.notification(.warning)
                 viewModel.handle(event: .onConfirmClearHistory)
             }
         } message: {
-            Text(String(localized: "settings.clear_history.confirm"))
+            Text(Constants.clearHistoryConfirm)
         }
-        .alert(String(localized: "account.sign_out"), isPresented: Binding(
+        .alert(Constants.signOut, isPresented: Binding(
             get: { viewModel.viewState.showSignOutConfirmation },
             set: { _ in viewModel.handle(event: .onCancelSignOut) }
         )) {
-            Button(String(localized: "common.cancel"), role: .cancel) {
+            Button(Constants.cancel, role: .cancel) {
                 HapticManager.shared.tap()
                 viewModel.handle(event: .onCancelSignOut)
             }
-            Button(String(localized: "account.sign_out"), role: .destructive) {
+            Button(Constants.signOut, role: .destructive) {
                 HapticManager.shared.notification(.warning)
                 viewModel.handle(event: .onConfirmSignOut)
             }
         } message: {
-            Text(String(localized: "account.sign_out.confirm"))
+            Text(Constants.signOutConfirm)
         }
         .onAppear {
             viewModel.handle(event: .onAppear)
@@ -131,9 +149,9 @@ struct SettingsView: View {
                 .buttonStyle(.plain)
             }
         } header: {
-            Text(String(localized: "settings.followed_topics"))
+            Text(Constants.followedTopics)
         } footer: {
-            Text(String(localized: "settings.followed_topics.description"))
+            Text(Constants.followedTopicsDescription)
         }
     }
 
@@ -173,7 +191,7 @@ struct SettingsView: View {
             Button(role: .destructive) {
                 viewModel.handle(event: .onClearReadingHistory)
             } label: {
-                Label(String(localized: "settings.clear_history"), systemImage: "trash")
+                Label(Constants.clearHistory, systemImage: "trash")
             }
             .accessibilityIdentifier("clearReadingHistoryButton")
         }
@@ -182,14 +200,14 @@ struct SettingsView: View {
     private var aboutSection: some View {
         Section("About") {
             HStack {
-                Text(String(localized: "common.version"))
+                Text(Constants.version)
                 Spacer()
                 Text(Bundle.main.infoDictionary?["CFBundleShortVersionString"] as? String ?? "1.0.0")
                     .foregroundStyle(.secondary)
             }
 
             Link(destination: URL(string: "https://github.com/BrunoCerberus/Pulse")!) {
-                Label(String(localized: "settings.view_github"), systemImage: "link")
+                Label(Constants.viewGithub, systemImage: "link")
             }
         }
     }

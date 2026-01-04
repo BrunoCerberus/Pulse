@@ -1,6 +1,21 @@
 import AuthenticationServices
 import SwiftUI
 
+// MARK: - Constants
+
+private enum Constants {
+    static let appName = String(localized: "app.name")
+    static let tagline = String(localized: "auth.tagline")
+    static let signInApple = String(localized: "auth.sign_in_apple")
+    static let signInGoogle = String(localized: "auth.sign_in_google")
+    static let terms = String(localized: "auth.terms")
+    static let signingIn = String(localized: "auth.signing_in")
+    static let error = String(localized: "common.error")
+    static let okButton = String(localized: "common.ok")
+}
+
+// MARK: - SignInView
+
 struct SignInView: View {
     @StateObject private var viewModel: SignInViewModel
     @State private var showError = false
@@ -32,8 +47,8 @@ struct SignInView: View {
                 loadingOverlay
             }
         }
-        .alert(String(localized: "common.error"), isPresented: $showError) {
-            Button(String(localized: "common.ok")) {
+        .alert(Constants.error, isPresented: $showError) {
+            Button(Constants.okButton) {
                 viewModel.handle(event: .onDismissError)
             }
         } message: {
@@ -74,11 +89,11 @@ struct SignInView: View {
             .glowEffect(color: Color.Accent.primary, radius: 20)
 
             VStack(spacing: Spacing.xs) {
-                Text(String(localized: "app.name"))
+                Text(Constants.appName)
                     .font(Typography.displayLarge)
                     .foregroundStyle(.white)
 
-                Text(String(localized: "auth.tagline"))
+                Text(Constants.tagline)
                     .font(Typography.bodyLarge)
                     .foregroundStyle(.white.opacity(0.7))
             }
@@ -96,7 +111,7 @@ struct SignInView: View {
                     Image(systemName: "apple.logo")
                         .font(.system(size: 20))
 
-                    Text(String(localized: "auth.sign_in_apple"))
+                    Text(Constants.signInApple)
                         .font(Typography.labelLarge)
                 }
                 .frame(maxWidth: .infinity)
@@ -120,7 +135,7 @@ struct SignInView: View {
                     googleLogo
                         .frame(width: 20, height: 20)
 
-                    Text(String(localized: "auth.sign_in_google"))
+                    Text(Constants.signInGoogle)
                         .font(Typography.labelLarge)
                 }
                 .frame(maxWidth: .infinity)
@@ -148,7 +163,7 @@ struct SignInView: View {
     }
 
     private var termsSection: some View {
-        Text(String(localized: "auth.terms"))
+        Text(Constants.terms)
             .font(Typography.captionMedium)
             .foregroundStyle(.white.opacity(0.5))
             .multilineTextAlignment(.center)
@@ -164,7 +179,7 @@ struct SignInView: View {
                     .tint(.white)
                     .scaleEffect(1.5)
 
-                Text(String(localized: "auth.signing_in"))
+                Text(Constants.signingIn)
                     .font(Typography.bodyMedium)
                     .foregroundStyle(.white)
             }

@@ -1,5 +1,19 @@
 import SwiftUI
 
+// MARK: - Constants
+
+private enum Constants {
+    static let title = String(localized: "home.title")
+    static let errorTitle = String(localized: "home.error.title")
+    static let emptyTitle = String(localized: "home.empty.title")
+    static let emptyMessage = String(localized: "home.empty.message")
+    static let breaking = String(localized: "home.breaking")
+    static let tryAgain = String(localized: "common.try_again")
+    static let loadingMore = String(localized: "common.loading_more")
+}
+
+// MARK: - HomeView
+
 struct HomeView<R: HomeNavigationRouter>: View {
     /// Router responsible for navigation actions
     private var router: R
@@ -23,7 +37,7 @@ struct HomeView<R: HomeNavigationRouter>: View {
 
             content
         }
-        .navigationTitle(String(localized: "home.title"))
+        .navigationTitle(Constants.title)
         .toolbarBackground(.hidden, for: .navigationBar)
         .toolbar {
             ToolbarItem(placement: .topBarTrailing) {
@@ -101,7 +115,7 @@ struct HomeView<R: HomeNavigationRouter>: View {
                     .font(.system(size: IconSize.xxl))
                     .foregroundStyle(Color.Semantic.warning)
 
-                Text(String(localized: "home.error.title"))
+                Text(Constants.errorTitle)
                     .font(Typography.titleMedium)
 
                 Text(message)
@@ -113,7 +127,7 @@ struct HomeView<R: HomeNavigationRouter>: View {
                     HapticManager.shared.tap()
                     viewModel.handle(event: .onRefresh)
                 } label: {
-                    Text(String(localized: "common.try_again"))
+                    Text(Constants.tryAgain)
                         .font(Typography.labelLarge)
                         .foregroundStyle(.white)
                         .padding(.horizontal, Spacing.lg)
@@ -135,10 +149,10 @@ struct HomeView<R: HomeNavigationRouter>: View {
                     .font(.system(size: IconSize.xxl))
                     .foregroundStyle(.secondary)
 
-                Text(String(localized: "home.empty.title"))
+                Text(Constants.emptyTitle)
                     .font(Typography.titleMedium)
 
-                Text(String(localized: "home.empty.message"))
+                Text(Constants.emptyMessage)
                     .font(Typography.bodyMedium)
                     .foregroundStyle(.secondary)
                     .multilineTextAlignment(.center)
@@ -187,7 +201,7 @@ struct HomeView<R: HomeNavigationRouter>: View {
                         HStack {
                             ProgressView()
                                 .tint(.secondary)
-                            Text(String(localized: "common.loading_more"))
+                            Text(Constants.loadingMore)
                                 .font(Typography.captionLarge)
                                 .foregroundStyle(.secondary)
                         }

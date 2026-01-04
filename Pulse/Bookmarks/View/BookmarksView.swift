@@ -1,5 +1,18 @@
 import SwiftUI
 
+// MARK: - Constants
+
+private enum Constants {
+    static let title = String(localized: "bookmarks.title")
+    static let loading = String(localized: "bookmarks.loading")
+    static let errorTitle = String(localized: "bookmarks.error.title")
+    static let emptyTitle = String(localized: "bookmarks.empty.title")
+    static let emptyMessage = String(localized: "bookmarks.empty.message")
+    static let tryAgain = String(localized: "common.try_again")
+}
+
+// MARK: - BookmarksView
+
 struct BookmarksView<R: BookmarksNavigationRouter>: View {
     /// Router responsible for navigation actions
     private var router: R
@@ -23,7 +36,7 @@ struct BookmarksView<R: BookmarksNavigationRouter>: View {
 
             content
         }
-        .navigationTitle(String(localized: "bookmarks.title"))
+        .navigationTitle(Constants.title)
         .toolbarBackground(.hidden, for: .navigationBar)
         .refreshable {
             HapticManager.shared.refresh()
@@ -46,7 +59,7 @@ struct BookmarksView<R: BookmarksNavigationRouter>: View {
             VStack(spacing: Spacing.md) {
                 ProgressView()
                     .scaleEffect(1.2)
-                Text(String(localized: "bookmarks.loading"))
+                Text(Constants.loading)
                     .font(Typography.bodyMedium)
                     .foregroundStyle(.secondary)
             }
@@ -67,7 +80,7 @@ struct BookmarksView<R: BookmarksNavigationRouter>: View {
                     .font(.system(size: IconSize.xxl))
                     .foregroundStyle(Color.Semantic.warning)
 
-                Text(String(localized: "bookmarks.error.title"))
+                Text(Constants.errorTitle)
                     .font(Typography.titleMedium)
 
                 Text(message)
@@ -79,7 +92,7 @@ struct BookmarksView<R: BookmarksNavigationRouter>: View {
                     HapticManager.shared.tap()
                     viewModel.handle(event: .onRefresh)
                 } label: {
-                    Text(String(localized: "common.try_again"))
+                    Text(Constants.tryAgain)
                         .font(Typography.labelLarge)
                         .foregroundStyle(.white)
                         .padding(.horizontal, Spacing.lg)
@@ -101,10 +114,10 @@ struct BookmarksView<R: BookmarksNavigationRouter>: View {
                     .font(.system(size: IconSize.xxl))
                     .foregroundStyle(Color.Accent.primary)
 
-                Text(String(localized: "bookmarks.empty.title"))
+                Text(Constants.emptyTitle)
                     .font(Typography.titleMedium)
 
-                Text(String(localized: "bookmarks.empty.message"))
+                Text(Constants.emptyMessage)
                     .font(Typography.bodyMedium)
                     .foregroundStyle(.secondary)
                     .multilineTextAlignment(.center)
