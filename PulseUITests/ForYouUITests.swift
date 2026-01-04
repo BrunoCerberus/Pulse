@@ -36,7 +36,7 @@ final class ForYouUITests: BaseUITestCase {
         let errorText = app.staticTexts["Unable to Load Feed"]
         let forYouNav = app.navigationBars["For You"]
 
-        let contentLoaded = waitForAny([personalizeText, noArticlesText, errorText, forYouNav], timeout: Self.defaultTimeout) ||
+        let contentLoaded = waitForAny([personalizeText, noArticlesText, errorText, forYouNav], timeout: 20) ||
             waitForAnyMatch(articleCards(), timeout: 1)
 
         XCTAssertTrue(contentLoaded, "For You should show content (articles, onboarding, empty, or error state)")

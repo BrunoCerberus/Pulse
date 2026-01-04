@@ -34,19 +34,29 @@ final class PulseUITests: BaseUITestCase {
 
         XCTAssertTrue(forYouTab.isSelected, "For You tab should be selected")
 
-        // --- Search Tab (verify exists) ---
+        // --- Search Tab (last, as it has liquid glass style that may affect tab bar) ---
         let searchTab = app.tabBars.buttons.matching(NSPredicate(format: "label CONTAINS[c] 'search' OR identifier CONTAINS[c] 'search'")).firstMatch
         XCTAssertTrue(searchTab.waitForExistence(timeout: 5), "Search tab should exist")
 
-        // Return to Home tab for settings test
-        homeTab.tap()
+        searchTab.tap()
+
+        let searchField = app.searchFields.firstMatch
+        XCTAssertTrue(searchField.waitForExistence(timeout: 5), "Search field should appear after tapping Search tab")
+
+        // Return to Home before opening Settings
+        let cancelButton = app.buttons["Cancel"]
+        if cancelButton.exists {
+            cancelButton.tap()
+            wait(for: 0.5)
+        }
+
+        resetToHomeTab()
 
         let homeNavBar = app.navigationBars["News"]
-        let gearButton = app.navigationBars.buttons["gearshape"]
-        let homeLoaded = homeNavBar.waitForExistence(timeout: Self.defaultTimeout) || gearButton.waitForExistence(timeout: 2)
-        XCTAssertTrue(homeLoaded, "Home navigation bar should exist")
+        XCTAssertTrue(homeNavBar.waitForExistence(timeout: 5), "Home navigation bar should exist")
 
         // Settings is accessed via the gear button in Home navigation bar, not a tab
+        let gearButton = app.navigationBars.buttons["gearshape"]
         XCTAssertTrue(gearButton.waitForExistence(timeout: 5), "Gear button should exist")
 
         gearButton.tap()

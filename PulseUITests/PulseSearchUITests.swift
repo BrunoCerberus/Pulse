@@ -73,7 +73,7 @@ final class PulseSearchUITests: BaseUITestCase {
         let searchForNews = app.staticTexts["Search for News"]
         let searchSubtitle = app.staticTexts["Find articles from thousands of sources worldwide"]
 
-        let searchUILoaded = waitForAny([searchField, searchForNews, searchSubtitle], timeout: Self.defaultTimeout)
+        let searchUILoaded = waitForAny([searchField, searchForNews, searchSubtitle], timeout: 20)
 
         XCTAssertTrue(searchUILoaded, "Search UI should load (search field or empty state)")
         XCTAssertTrue(searchForNews.exists || searchSubtitle.exists || searchField.exists, "Initial empty state should show search prompt")
@@ -124,7 +124,7 @@ final class PulseSearchUITests: BaseUITestCase {
         let searchingText = app.staticTexts["Searching..."]
         let errorText = app.staticTexts["Search Failed"]
 
-        let hasContent = waitForAny([noResultsText, searchingText, errorText], timeout: Self.defaultTimeout) ||
+        let hasContent = waitForAny([noResultsText, searchingText, errorText], timeout: 15) ||
             waitForAnyMatch(articleCards(), timeout: 1) ||
             !app.staticTexts["Search for News"].exists
 

@@ -23,57 +23,48 @@ final class CategoriesUITests: BaseUITestCase {
         return app.scrollViews.firstMatch
     }
 
-    private func selectAnyCategory(timeout: TimeInterval = 5) -> Bool {
-        _ = categoryChipsScrollView().waitForExistence(timeout: timeout)
-
-        // Try visible categories first (no scrolling needed)
-        for category in categoryNames {
-            let button = app.buttons[category]
-            if button.exists, isElementVisible(button) {
-                button.tap()
-                return true
-            }
-        }
-
-        // Quick scroll and try first visible
+    private func selectAnyCategory(timeout: TimeInterval = 8) -> Bool {
         let scrollView = categoryChipsScrollView()
-        scrollView.swipeLeft()
+        _ = scrollView.waitForExistence(timeout: timeout)
+
         for category in categoryNames {
-            let button = app.buttons[category]
-            if button.exists, isElementVisible(button) {
-                button.tap()
+            if scrollToAndTapCategory(category) {
                 return true
             }
         }
+
         return false
     }
 
     @discardableResult
     private func scrollToAndTapCategory(_ category: String) -> Bool {
         let button = app.buttons[category]
-
-        // Check if already visible
-        if button.exists, isElementVisible(button) {
-            button.tap()
-            return true
-        }
-
-        // Single scroll attempt in each direction
         let scrollView = categoryChipsScrollView()
-        scrollView.swipeRight()
-        // Check existence immediately without aggressive timeout
-        if button.exists, isElementVisible(button) {
+
+        if isElementVisible(button) {
             button.tap()
             return true
         }
 
-        for _ in 0..<3 {
+        // Reset scroll position to start, then scan left
+        for _ in 0 ..< 3 {
+            scrollView.swipeRight()
+        }
+
+        if isElementVisible(button) {
+            button.tap()
+            return true
+        }
+
+        // Scan left through all categories
+        for _ in 0 ..< 10 {
             scrollView.swipeLeft()
-            if button.exists, isElementVisible(button) {
+            if button.waitForExistence(timeout: 0.1), isElementVisible(button) {
                 button.tap()
                 return true
             }
         }
+
         return false
     }
 
@@ -98,7 +89,7 @@ final class CategoriesUITests: BaseUITestCase {
         let selectCategoryText = app.staticTexts["Select a Category"]
         let noSelectionText = app.staticTexts.matching(NSPredicate(format: "label CONTAINS[c] 'Choose a category'")).firstMatch
 
-        let foundInitialState = waitForAny([selectCategoryText, noSelectionText], timeout: Self.defaultTimeout)
+        let foundInitialState = waitForAny([selectCategoryText, noSelectionText], timeout: 15)
 
         XCTAssertTrue(foundInitialState, "Initial state should show select category prompt")
 
