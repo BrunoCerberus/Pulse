@@ -44,17 +44,7 @@ final class BookmarksUITests: BaseUITestCase {
         let errorText = app.staticTexts["Unable to Load Bookmarks"]
         let helpText = app.staticTexts["Articles you bookmark will appear here for offline reading."]
 
-        let timeout: TimeInterval = Self.defaultTimeout
-        let startTime = Date()
-        var contentLoaded = false
-
-        while Date().timeIntervalSince(startTime) < timeout {
-            if noBookmarksText.exists || savedArticlesText.exists || loadingText.exists || errorText.exists {
-                contentLoaded = true
-                break
-            }
-            wait(for: 0.5)
-        }
+        let contentLoaded = waitForAny([noBookmarksText, savedArticlesText, loadingText, errorText], timeout: Self.defaultTimeout)
 
         XCTAssertTrue(contentLoaded, "Bookmarks view should show empty state, loading, or bookmarks list")
 
@@ -63,8 +53,6 @@ final class BookmarksUITests: BaseUITestCase {
         }
 
         // --- Scroll and Article Navigation ---
-        wait(for: 2)
-
         let scrollView = app.scrollViews.firstMatch
 
         if scrollView.exists {
@@ -75,10 +63,10 @@ final class BookmarksUITests: BaseUITestCase {
         XCTAssertTrue(navTitle.exists, "Navigation should still work after scrolling")
 
         if savedArticlesText.exists {
-            let articleCards = app.buttons.matching(NSPredicate(format: "label CONTAINS[c] 'ago' OR label CONTAINS[c] 'hour'"))
+            let cards = articleCards()
 
-            if articleCards.count > 0 {
-                articleCards.firstMatch.tap()
+            if cards.count > 0 {
+                cards.firstMatch.tap()
 
                 let backButton = app.buttons["backButton"]
                 XCTAssertTrue(backButton.waitForExistence(timeout: 5), "Should navigate to article detail")
@@ -91,20 +79,17 @@ final class BookmarksUITests: BaseUITestCase {
         }
 
         // --- Context Menu and State Preservation ---
-        wait(for: 2)
-
-        let articleCardsForMenu = app.buttons.matching(NSPredicate(format: "label CONTAINS[c] 'ago' OR label CONTAINS[c] 'hour'"))
+        let articleCardsForMenu = articleCards()
 
         if articleCardsForMenu.count > 0 {
             let firstCard = articleCardsForMenu.firstMatch
 
-            firstCard.press(forDuration: 1.0)
+            firstCard.press(forDuration: 0.5)
 
             let removeBookmarkOption = app.buttons["Remove Bookmark"]
 
             if removeBookmarkOption.waitForExistence(timeout: 3) {
                 removeBookmarkOption.tap()
-                wait(for: 1)
             } else {
                 app.tap()
             }
@@ -117,8 +102,6 @@ final class BookmarksUITests: BaseUITestCase {
         XCTAssertTrue(homeNav.waitForExistence(timeout: 5), "Should be on Home")
 
         navigateToBookmarks()
-
-        wait(for: 2)
 
         if noBookmarksExists {
             XCTAssertTrue(app.staticTexts["No Bookmarks"].waitForExistence(timeout: 10), "Empty state should be preserved")
@@ -134,16 +117,15 @@ final class BookmarksUITests: BaseUITestCase {
 
         let topHeadlinesHeader = app.staticTexts["Top Headlines"]
         if topHeadlinesHeader.waitForExistence(timeout: 10) {
-            let articleCards = app.buttons.matching(NSPredicate(format: "label CONTAINS[c] 'ago'"))
-            if articleCards.count > 0 {
-                articleCards.firstMatch.tap()
+            let homeArticleCards = articleCards()
+            if homeArticleCards.count > 0 {
+                homeArticleCards.firstMatch.tap()
 
                 let backButton = app.buttons["backButton"]
                 if backButton.waitForExistence(timeout: 5) {
                     let bookmarkButton = app.navigationBars.buttons["bookmark"]
                     if bookmarkButton.exists {
                         bookmarkButton.tap()
-                        wait(for: 1)
                     }
 
                     backButton.tap()
@@ -162,11 +144,10 @@ final class BookmarksUITests: BaseUITestCase {
         let bookmarksNav = app.navigationBars["Bookmarks"]
         XCTAssertTrue(bookmarksNav.waitForExistence(timeout: 5), "Should be on Bookmarks")
 
-        wait(for: 2)
-
         let savedArticlesTextAfter = app.staticTexts.matching(NSPredicate(format: "label CONTAINS[c] 'saved articles'")).firstMatch
         let noBookmarksTextAfter = app.staticTexts["No Bookmarks"]
 
-        XCTAssertTrue(savedArticlesTextAfter.exists || noBookmarksTextAfter.exists, "Bookmarks should show content or empty state")
+        let finalStateLoaded = waitForAny([savedArticlesTextAfter, noBookmarksTextAfter], timeout: Self.defaultTimeout)
+        XCTAssertTrue(finalStateLoaded, "Bookmarks should show content or empty state")
     }
 }

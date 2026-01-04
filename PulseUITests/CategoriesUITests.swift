@@ -46,19 +46,20 @@ final class CategoriesUITests: BaseUITestCase {
             return true
         }
 
-        for _ in 0 ..< 6 {
-            scrollView.swipeLeft()
-            wait(for: 0.3)
-            if isElementVisible(button) {
-                button.tap()
-                return true
-            }
+        // Reset scroll position to start, then scan left
+        for _ in 0 ..< 3 {
+            scrollView.swipeRight()
         }
 
-        for _ in 0 ..< 6 {
-            scrollView.swipeRight()
-            wait(for: 0.3)
-            if isElementVisible(button) {
+        if isElementVisible(button) {
+            button.tap()
+            return true
+        }
+
+        // Scan left through all categories
+        for _ in 0 ..< 10 {
+            scrollView.swipeLeft()
+            if button.waitForExistence(timeout: 0.1), isElementVisible(button) {
                 button.tap()
                 return true
             }
@@ -88,23 +89,11 @@ final class CategoriesUITests: BaseUITestCase {
         let selectCategoryText = app.staticTexts["Select a Category"]
         let noSelectionText = app.staticTexts.matching(NSPredicate(format: "label CONTAINS[c] 'Choose a category'")).firstMatch
 
-        let timeout: TimeInterval = 15
-        let startTime = Date()
-        var foundInitialState = false
-
-        while Date().timeIntervalSince(startTime) < timeout {
-            if selectCategoryText.exists || noSelectionText.exists {
-                foundInitialState = true
-                break
-            }
-            wait(for: 0.5)
-        }
+        let foundInitialState = waitForAny([selectCategoryText, noSelectionText], timeout: 15)
 
         XCTAssertTrue(foundInitialState, "Initial state should show select category prompt")
 
         // --- Category Chips ---
-        wait(for: 1)
-
         var foundCategory = false
         for category in categoryNames {
             if app.staticTexts[category].exists || app.buttons[category].exists {
@@ -130,14 +119,10 @@ final class CategoriesUITests: BaseUITestCase {
         }
 
         // --- Selection, Content, and Scroll ---
-        wait(for: 1)
-
         let categoryTapped = selectAnyCategory()
         XCTAssertTrue(categoryTapped, "Could not find a category to tap")
 
         if categoryTapped {
-            wait(for: 2)
-
             let loadingText = app.staticTexts["Loading articles..."]
             let articlesCountText = app.staticTexts.matching(NSPredicate(format: "label CONTAINS[c] 'articles'")).firstMatch
             let noArticlesText = app.staticTexts["No Articles"]
@@ -152,10 +137,10 @@ final class CategoriesUITests: BaseUITestCase {
             XCTAssertTrue(contentChanged, "Content should change after selecting a category")
 
             // --- Article Navigation ---
-            let articleCards = app.buttons.matching(NSPredicate(format: "label CONTAINS[c] 'ago' OR label CONTAINS[c] 'hour'"))
+            let cards = articleCards()
 
-            if articleCards.count > 0 {
-                articleCards.firstMatch.tap()
+            if cards.count > 0 {
+                cards.firstMatch.tap()
 
                 XCTAssertTrue(waitForArticleDetail(), "Should navigate to article detail")
 
@@ -193,9 +178,7 @@ final class CategoriesUITests: BaseUITestCase {
                 }
             }
 
-            wait(for: 2)
-
-            XCTAssertTrue(navTitle.exists, "Navigation should work after switching categories")
+            XCTAssertTrue(navTitle.waitForExistence(timeout: Self.defaultTimeout), "Navigation should work after switching categories")
         }
 
         // --- Tab Switching ---
@@ -207,8 +190,6 @@ final class CategoriesUITests: BaseUITestCase {
         XCTAssertTrue(homeNav.waitForExistence(timeout: Self.defaultTimeout), "Home should load after tab switch")
 
         navigateToCategories()
-
-        wait(for: 1)
 
         let navTitleAfterSwitch = app.navigationBars["Categories"]
         XCTAssertTrue(navTitleAfterSwitch.waitForExistence(timeout: Self.defaultTimeout), "Categories view should load after tab switch")
