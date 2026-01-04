@@ -15,9 +15,9 @@ struct SettingsMutedContentSection: View {
             mutedSourcesGroup
             mutedKeywordsGroup
         } header: {
-            Text("Content Filters")
+            Text(String(localized: "settings.content_filters"))
         } footer: {
-            Text("Muted sources and keywords will be hidden from all feeds.")
+            Text(String(localized: "settings.content_filters.description"))
         }
     }
 

@@ -23,7 +23,7 @@ struct BookmarksView<R: BookmarksNavigationRouter>: View {
 
             content
         }
-        .navigationTitle("Bookmarks")
+        .navigationTitle(String(localized: "bookmarks.title"))
         .toolbarBackground(.hidden, for: .navigationBar)
         .refreshable {
             HapticManager.shared.refresh()
@@ -46,7 +46,7 @@ struct BookmarksView<R: BookmarksNavigationRouter>: View {
             VStack(spacing: Spacing.md) {
                 ProgressView()
                     .scaleEffect(1.2)
-                Text("Loading bookmarks...")
+                Text(String(localized: "bookmarks.loading"))
                     .font(Typography.bodyMedium)
                     .foregroundStyle(.secondary)
             }
@@ -67,7 +67,7 @@ struct BookmarksView<R: BookmarksNavigationRouter>: View {
                     .font(.system(size: IconSize.xxl))
                     .foregroundStyle(Color.Semantic.warning)
 
-                Text("Unable to Load Bookmarks")
+                Text(String(localized: "bookmarks.error.title"))
                     .font(Typography.titleMedium)
 
                 Text(message)
@@ -79,7 +79,7 @@ struct BookmarksView<R: BookmarksNavigationRouter>: View {
                     HapticManager.shared.tap()
                     viewModel.handle(event: .onRefresh)
                 } label: {
-                    Text("Try Again")
+                    Text(String(localized: "common.try_again"))
                         .font(Typography.labelLarge)
                         .foregroundStyle(.white)
                         .padding(.horizontal, Spacing.lg)
@@ -101,10 +101,10 @@ struct BookmarksView<R: BookmarksNavigationRouter>: View {
                     .font(.system(size: IconSize.xxl))
                     .foregroundStyle(Color.Accent.primary)
 
-                Text("No Bookmarks")
+                Text(String(localized: "bookmarks.empty.title"))
                     .font(Typography.titleMedium)
 
-                Text("Articles you bookmark will appear here for offline reading.")
+                Text(String(localized: "bookmarks.empty.message"))
                     .font(Typography.bodyMedium)
                     .foregroundStyle(.secondary)
                     .multilineTextAlignment(.center)

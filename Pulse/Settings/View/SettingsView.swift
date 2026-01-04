@@ -58,37 +58,37 @@ struct SettingsView: View {
             }
             .scrollContentBackground(.hidden)
         }
-        .navigationTitle("Settings")
+        .navigationTitle(String(localized: "settings.title"))
         .toolbarBackground(.ultraThinMaterial, for: .navigationBar)
-        .alert("Clear Reading History?", isPresented: Binding(
+        .alert(String(localized: "settings.clear_history"), isPresented: Binding(
             get: { viewModel.viewState.showClearHistoryConfirmation },
             set: { _ in viewModel.handle(event: .onCancelClearHistory) }
         )) {
-            Button("Cancel", role: .cancel) {
+            Button(String(localized: "common.cancel"), role: .cancel) {
                 HapticManager.shared.tap()
                 viewModel.handle(event: .onCancelClearHistory)
             }
-            Button("Clear", role: .destructive) {
+            Button(String(localized: "settings.clear_history.action"), role: .destructive) {
                 HapticManager.shared.notification(.warning)
                 viewModel.handle(event: .onConfirmClearHistory)
             }
         } message: {
-            Text("This will remove all articles from your reading history. This action cannot be undone.")
+            Text(String(localized: "settings.clear_history.confirm"))
         }
-        .alert("Sign Out?", isPresented: Binding(
+        .alert(String(localized: "account.sign_out"), isPresented: Binding(
             get: { viewModel.viewState.showSignOutConfirmation },
             set: { _ in viewModel.handle(event: .onCancelSignOut) }
         )) {
-            Button("Cancel", role: .cancel) {
+            Button(String(localized: "common.cancel"), role: .cancel) {
                 HapticManager.shared.tap()
                 viewModel.handle(event: .onCancelSignOut)
             }
-            Button("Sign Out", role: .destructive) {
+            Button(String(localized: "account.sign_out"), role: .destructive) {
                 HapticManager.shared.notification(.warning)
                 viewModel.handle(event: .onConfirmSignOut)
             }
         } message: {
-            Text("Are you sure you want to sign out of your account?")
+            Text(String(localized: "account.sign_out.confirm"))
         }
         .onAppear {
             viewModel.handle(event: .onAppear)
@@ -131,9 +131,9 @@ struct SettingsView: View {
                 .buttonStyle(.plain)
             }
         } header: {
-            Text("Followed Topics")
+            Text(String(localized: "settings.followed_topics"))
         } footer: {
-            Text("Articles from followed topics will appear in your For You feed.")
+            Text(String(localized: "settings.followed_topics.description"))
         }
     }
 
@@ -173,7 +173,7 @@ struct SettingsView: View {
             Button(role: .destructive) {
                 viewModel.handle(event: .onClearReadingHistory)
             } label: {
-                Label("Clear Reading History", systemImage: "trash")
+                Label(String(localized: "settings.clear_history"), systemImage: "trash")
             }
             .accessibilityIdentifier("clearReadingHistoryButton")
         }
@@ -182,14 +182,14 @@ struct SettingsView: View {
     private var aboutSection: some View {
         Section("About") {
             HStack {
-                Text("Version")
+                Text(String(localized: "common.version"))
                 Spacer()
                 Text(Bundle.main.infoDictionary?["CFBundleShortVersionString"] as? String ?? "1.0.0")
                     .foregroundStyle(.secondary)
             }
 
             Link(destination: URL(string: "https://github.com/BrunoCerberus/Pulse")!) {
-                Label("View on GitHub", systemImage: "link")
+                Label(String(localized: "settings.view_github"), systemImage: "link")
             }
         }
     }

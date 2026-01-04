@@ -37,11 +37,11 @@ struct ArticleDetailView: View {
                 Button {
                     dismiss()
                 } label: {
-                    Label("Back", systemImage: "chevron.left")
+                    Label(String(localized: "common.back"), systemImage: "chevron.left")
                         .labelStyle(.iconOnly)
                 }
                 .accessibilityIdentifier("backButton")
-                .accessibilityLabel("Back")
+                .accessibilityLabel(String(localized: "common.back"))
             }
 
             ToolbarItem(placement: .topBarTrailing) {
@@ -160,7 +160,7 @@ struct ArticleDetailView: View {
         } label: {
             HStack(spacing: Spacing.sm) {
                 Image(systemName: "safari.fill")
-                Text("Read Full Article")
+                Text(String(localized: "article.read_full"))
             }
             .font(Typography.labelLarge)
             .foregroundStyle(.white)

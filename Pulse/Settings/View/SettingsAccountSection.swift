@@ -33,11 +33,11 @@ struct SettingsAccountSection: View {
                     HapticManager.shared.buttonPress()
                     onSignOutTapped()
                 } label: {
-                    Label("Sign Out", systemImage: "rectangle.portrait.and.arrow.right")
+                    Label(String(localized: "account.sign_out"), systemImage: "rectangle.portrait.and.arrow.right")
                 }
             }
         } header: {
-            Text("Account")
+            Text(String(localized: "account.title"))
                 .font(Typography.captionLarge)
         }
     }

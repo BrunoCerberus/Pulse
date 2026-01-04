@@ -34,7 +34,7 @@ struct SettingsPremiumSection: View {
             .buttonStyle(.plain)
             .disabled(isPremium)
         } header: {
-            Text("Subscription")
+            Text(String(localized: "settings.subscription"))
                 .font(Typography.captionLarge)
         }
     }

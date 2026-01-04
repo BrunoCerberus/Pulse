@@ -39,7 +39,7 @@ struct BreakingNewsCard: View {
 
                 VStack(alignment: .leading, spacing: 4) {
                     HStack {
-                        Text("BREAKING")
+                        Text(String(localized: "home.breaking"))
                             .font(.caption2)
                             .fontWeight(.bold)
                             .padding(.horizontal, 6)

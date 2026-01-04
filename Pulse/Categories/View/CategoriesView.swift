@@ -35,7 +35,7 @@ struct CategoriesView<R: CategoriesNavigationRouter>: View {
             categoryBackground
                 .ignoresSafeArea()
         }
-        .navigationTitle("Categories")
+        .navigationTitle(String(localized: "categories.title"))
         .navigationBarTitleDisplayMode(.large)
         .toolbarBackground(.hidden, for: .navigationBar)
         .onChange(of: viewModel.viewState.selectedArticle) { _, newValue in
@@ -98,7 +98,7 @@ struct CategoriesView<R: CategoriesNavigationRouter>: View {
             VStack(spacing: Spacing.md) {
                 ProgressView()
                     .scaleEffect(1.2)
-                Text("Loading articles...")
+                Text(String(localized: "categories.loading"))
                     .font(Typography.bodyMedium)
                     .foregroundStyle(.secondary)
             }
@@ -122,10 +122,10 @@ struct CategoriesView<R: CategoriesNavigationRouter>: View {
                     .font(.system(size: IconSize.xxl))
                     .foregroundStyle(Color.Accent.primary)
 
-                Text("Select a Category")
+                Text(String(localized: "categories.select.title"))
                     .font(Typography.titleMedium)
 
-                Text("Choose a category above to see related articles.")
+                Text(String(localized: "categories.select.message"))
                     .font(Typography.bodyMedium)
                     .foregroundStyle(.secondary)
                     .multilineTextAlignment(.center)
@@ -145,7 +145,7 @@ struct CategoriesView<R: CategoriesNavigationRouter>: View {
                     .font(.system(size: IconSize.xxl))
                     .foregroundStyle(Color.Semantic.warning)
 
-                Text("Error")
+                Text(String(localized: "common.error"))
                     .font(Typography.titleMedium)
 
                 Text(message)
@@ -157,7 +157,7 @@ struct CategoriesView<R: CategoriesNavigationRouter>: View {
                     HapticManager.shared.tap()
                     viewModel.handle(event: .onRefresh)
                 } label: {
-                    Text("Try Again")
+                    Text(String(localized: "common.try_again"))
                         .font(Typography.labelLarge)
                         .foregroundStyle(.white)
                         .padding(.horizontal, Spacing.lg)
@@ -183,10 +183,10 @@ struct CategoriesView<R: CategoriesNavigationRouter>: View {
                     .font(.system(size: IconSize.xxl))
                     .foregroundStyle(.secondary)
 
-                Text("No Articles")
+                Text(String(localized: "categories.empty.title"))
                     .font(Typography.titleMedium)
 
-                Text("No articles found in this category.")
+                Text(String(localized: "categories.empty.message"))
                     .font(Typography.bodyMedium)
                     .foregroundStyle(.secondary)
                     .multilineTextAlignment(.center)
@@ -232,7 +232,7 @@ struct CategoriesView<R: CategoriesNavigationRouter>: View {
                 HStack {
                     ProgressView()
                         .tint(.secondary)
-                    Text("Loading more...")
+                    Text(String(localized: "common.loading_more"))
                         .font(Typography.captionLarge)
                         .foregroundStyle(.secondary)
                 }

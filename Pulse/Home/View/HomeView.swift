@@ -23,7 +23,7 @@ struct HomeView<R: HomeNavigationRouter>: View {
 
             content
         }
-        .navigationTitle("News")
+        .navigationTitle(String(localized: "home.title"))
         .toolbarBackground(.hidden, for: .navigationBar)
         .toolbar {
             ToolbarItem(placement: .topBarTrailing) {
@@ -101,7 +101,7 @@ struct HomeView<R: HomeNavigationRouter>: View {
                     .font(.system(size: IconSize.xxl))
                     .foregroundStyle(Color.Semantic.warning)
 
-                Text("Unable to Load News")
+                Text(String(localized: "home.error.title"))
                     .font(Typography.titleMedium)
 
                 Text(message)
@@ -113,7 +113,7 @@ struct HomeView<R: HomeNavigationRouter>: View {
                     HapticManager.shared.tap()
                     viewModel.handle(event: .onRefresh)
                 } label: {
-                    Text("Try Again")
+                    Text(String(localized: "common.try_again"))
                         .font(Typography.labelLarge)
                         .foregroundStyle(.white)
                         .padding(.horizontal, Spacing.lg)
@@ -135,10 +135,10 @@ struct HomeView<R: HomeNavigationRouter>: View {
                     .font(.system(size: IconSize.xxl))
                     .foregroundStyle(.secondary)
 
-                Text("No News Available")
+                Text(String(localized: "home.empty.title"))
                     .font(Typography.titleMedium)
 
-                Text("Check back later for the latest headlines.")
+                Text(String(localized: "home.empty.message"))
                     .font(Typography.bodyMedium)
                     .foregroundStyle(.secondary)
                     .multilineTextAlignment(.center)
@@ -187,7 +187,7 @@ struct HomeView<R: HomeNavigationRouter>: View {
                         HStack {
                             ProgressView()
                                 .tint(.secondary)
-                            Text("Loading more...")
+                            Text(String(localized: "common.loading_more"))
                                 .font(Typography.captionLarge)
                                 .foregroundStyle(.secondary)
                         }

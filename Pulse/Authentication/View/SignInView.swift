@@ -32,8 +32,8 @@ struct SignInView: View {
                 loadingOverlay
             }
         }
-        .alert("Sign In Error", isPresented: $showError) {
-            Button("OK") {
+        .alert(String(localized: "common.error"), isPresented: $showError) {
+            Button(String(localized: "common.ok")) {
                 viewModel.handle(event: .onDismissError)
             }
         } message: {
@@ -74,11 +74,11 @@ struct SignInView: View {
             .glowEffect(color: Color.Accent.primary, radius: 20)
 
             VStack(spacing: Spacing.xs) {
-                Text("Pulse")
+                Text(String(localized: "app.name"))
                     .font(Typography.displayLarge)
                     .foregroundStyle(.white)
 
-                Text("Your personalized news experience")
+                Text(String(localized: "auth.tagline"))
                     .font(Typography.bodyLarge)
                     .foregroundStyle(.white.opacity(0.7))
             }
@@ -96,7 +96,7 @@ struct SignInView: View {
                     Image(systemName: "apple.logo")
                         .font(.system(size: 20))
 
-                    Text("Sign in with Apple")
+                    Text(String(localized: "auth.sign_in_apple"))
                         .font(Typography.labelLarge)
                 }
                 .frame(maxWidth: .infinity)
@@ -120,7 +120,7 @@ struct SignInView: View {
                     googleLogo
                         .frame(width: 20, height: 20)
 
-                    Text("Sign in with Google")
+                    Text(String(localized: "auth.sign_in_google"))
                         .font(Typography.labelLarge)
                 }
                 .frame(maxWidth: .infinity)
@@ -148,7 +148,7 @@ struct SignInView: View {
     }
 
     private var termsSection: some View {
-        Text("By signing in, you agree to our Terms of Service and Privacy Policy")
+        Text(String(localized: "auth.terms"))
             .font(Typography.captionMedium)
             .foregroundStyle(.white.opacity(0.5))
             .multilineTextAlignment(.center)
@@ -164,7 +164,7 @@ struct SignInView: View {
                     .tint(.white)
                     .scaleEffect(1.5)
 
-                Text("Signing in...")
+                Text(String(localized: "auth.signing_in"))
                     .font(Typography.bodyMedium)
                     .foregroundStyle(.white)
             }
