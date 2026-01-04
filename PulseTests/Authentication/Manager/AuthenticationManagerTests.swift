@@ -11,8 +11,9 @@ struct AuthenticationManagerTests {
 
     init() {
         mockAuthService = MockAuthService()
-        // Use shared instance but reset it for testing
+        // Use shared instance but reset it for testing to ensure isolation
         sut = AuthenticationManager.shared
+        sut.resetForTesting()
     }
 
     @Test("Initial auth state is loading")

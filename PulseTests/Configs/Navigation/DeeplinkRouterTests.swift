@@ -187,7 +187,7 @@ struct DeeplinkRouterTests {
     }
 
     @Test("Queued deeplink is processed when coordinator becomes available")
-    func queuedDeeplinkIsProcessed() {
+    func queuedDeeplinkIsProcessed() async throws {
         // Create new router without posting coordinator notification
         let newRouter = DeeplinkRouter()
 

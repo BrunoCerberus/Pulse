@@ -253,4 +253,75 @@ struct ForYouViewModelTests {
         // Should have at least initial state (false) and loading state (true)
         #expect(loadingStates.count >= 2)
     }
+
+    // MARK: - Error Path Tests
+
+    @Test("Error during load more shows error message")
+    func errorDuringLoadMore() async throws {
+        // First load initial articles successfully
+        mockForYouService.personalizedFeedResult = .success(Article.mockArticles)
+        sut.handle(event: .onAppear)
+        try await Task.sleep(nanoseconds: 100_000_000)
+
+        // Now simulate error during load more
+        let loadMoreError = NSError(
+            domain: "test",
+            code: 2,
+            userInfo: [NSLocalizedDescriptionKey: "Load more failed"]
+        )
+        mockForYouService.personalizedFeedResult = .failure(loadMoreError)
+
+        sut.handle(event: .onLoadMore)
+        try await Task.sleep(nanoseconds: 100_000_000)
+
+        #expect(sut.viewState.errorMessage == "Load more failed")
+    }
+
+    @Test("Error during refresh clears articles and shows error")
+    func errorDuringRefresh() async throws {
+        // First load initial articles
+        mockForYouService.personalizedFeedResult = .success(Article.mockArticles)
+        sut.handle(event: .onAppear)
+        try await Task.sleep(nanoseconds: 100_000_000)
+
+        #expect(!sut.viewState.articles.isEmpty)
+
+        // Now simulate error during refresh
+        let refreshError = NSError(
+            domain: "test",
+            code: 3,
+            userInfo: [NSLocalizedDescriptionKey: "Refresh failed"]
+        )
+        mockForYouService.personalizedFeedResult = .failure(refreshError)
+
+        sut.handle(event: .onRefresh)
+        try await Task.sleep(nanoseconds: 100_000_000)
+
+        #expect(sut.viewState.errorMessage == "Refresh failed")
+    }
+
+    @Test("Error recovery: success after error clears error message")
+    func errorRecovery() async throws {
+        // First trigger an error
+        let initialError = NSError(
+            domain: "test",
+            code: 4,
+            userInfo: [NSLocalizedDescriptionKey: "Initial error"]
+        )
+        mockForYouService.personalizedFeedResult = .failure(initialError)
+
+        sut.handle(event: .onAppear)
+        try await Task.sleep(nanoseconds: 100_000_000)
+
+        #expect(sut.viewState.errorMessage == "Initial error")
+
+        // Now recover with successful load
+        mockForYouService.personalizedFeedResult = .success(Article.mockArticles)
+
+        sut.handle(event: .onRefresh)
+        try await Task.sleep(nanoseconds: 100_000_000)
+
+        #expect(sut.viewState.errorMessage == nil)
+        #expect(!sut.viewState.articles.isEmpty)
+    }
 }

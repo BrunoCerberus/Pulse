@@ -262,4 +262,100 @@ struct CategoriesViewModelTests {
         #expect(state.categories.contains(.sports))
         #expect(state.categories.contains(.entertainment))
     }
+
+    // MARK: - Error Path Tests
+
+    @Test("Error during load more shows error message")
+    func errorDuringLoadMore() async throws {
+        // First select category and load articles successfully
+        mockCategoriesService.categoryArticlesResult = .success(Article.mockArticles)
+        sut.handle(event: .onCategorySelected(.technology))
+        try await Task.sleep(nanoseconds: 100_000_000)
+
+        // Now simulate error during load more
+        let loadMoreError = NSError(
+            domain: "test",
+            code: 2,
+            userInfo: [NSLocalizedDescriptionKey: "Load more failed"]
+        )
+        mockCategoriesService.categoryArticlesResult = .failure(loadMoreError)
+
+        sut.handle(event: .onLoadMore)
+        try await Task.sleep(nanoseconds: 100_000_000)
+
+        #expect(sut.viewState.errorMessage == "Load more failed")
+    }
+
+    @Test("Error during refresh shows error message")
+    func errorDuringRefresh() async throws {
+        // First select category and load articles
+        mockCategoriesService.categoryArticlesResult = .success(Article.mockArticles)
+        sut.handle(event: .onCategorySelected(.business))
+        try await Task.sleep(nanoseconds: 100_000_000)
+
+        #expect(!sut.viewState.articles.isEmpty)
+
+        // Now simulate error during refresh
+        let refreshError = NSError(
+            domain: "test",
+            code: 3,
+            userInfo: [NSLocalizedDescriptionKey: "Refresh failed"]
+        )
+        mockCategoriesService.categoryArticlesResult = .failure(refreshError)
+
+        sut.handle(event: .onRefresh)
+        try await Task.sleep(nanoseconds: 100_000_000)
+
+        #expect(sut.viewState.errorMessage == "Refresh failed")
+    }
+
+    @Test("Error recovery: success after error clears error message")
+    func errorRecovery() async throws {
+        // First trigger an error when selecting category
+        let initialError = NSError(
+            domain: "test",
+            code: 4,
+            userInfo: [NSLocalizedDescriptionKey: "Category load failed"]
+        )
+        mockCategoriesService.categoryArticlesResult = .failure(initialError)
+
+        sut.handle(event: .onCategorySelected(.science))
+        try await Task.sleep(nanoseconds: 100_000_000)
+
+        #expect(sut.viewState.errorMessage == "Category load failed")
+
+        // Now recover with successful load
+        mockCategoriesService.categoryArticlesResult = .success(Article.mockArticles)
+
+        sut.handle(event: .onRefresh)
+        try await Task.sleep(nanoseconds: 100_000_000)
+
+        #expect(sut.viewState.errorMessage == nil)
+        #expect(!sut.viewState.articles.isEmpty)
+    }
+
+    @Test("Switching categories after error clears error state")
+    func switchingCategoriesAfterError() async throws {
+        // First trigger an error
+        let error = NSError(
+            domain: "test",
+            code: 5,
+            userInfo: [NSLocalizedDescriptionKey: "Technology load failed"]
+        )
+        mockCategoriesService.categoryArticlesResult = .failure(error)
+
+        sut.handle(event: .onCategorySelected(.technology))
+        try await Task.sleep(nanoseconds: 100_000_000)
+
+        #expect(sut.viewState.errorMessage != nil)
+
+        // Switch to different category with successful load
+        mockCategoriesService.categoryArticlesResult = .success(Article.mockArticles)
+
+        sut.handle(event: .onCategorySelected(.business))
+        try await Task.sleep(nanoseconds: 100_000_000)
+
+        #expect(sut.viewState.errorMessage == nil)
+        #expect(sut.viewState.selectedCategory == .business)
+    }
 }
