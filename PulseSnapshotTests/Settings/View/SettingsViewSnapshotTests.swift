@@ -58,4 +58,149 @@ final class SettingsViewSnapshotTests: XCTestCase {
             record: false
         )
     }
+
+    // MARK: - SettingsAccountSection Tests
+
+    func testSettingsAccountSectionWithUser() {
+        let user = AuthUser.mock
+        let view = Form {
+            SettingsAccountSection(
+                currentUser: user,
+                onSignOutTapped: {}
+            )
+        }
+        .frame(width: 393, height: 300)
+
+        let controller = UIHostingController(rootView: view)
+
+        assertSnapshot(
+            of: controller,
+            as: .wait(for: 1.0, on: .image(on: iPhoneAirConfig, precision: 0.99)),
+            record: false
+        )
+    }
+
+    func testSettingsAccountSectionWithoutUser() {
+        let view = Form {
+            SettingsAccountSection(
+                currentUser: nil,
+                onSignOutTapped: {}
+            )
+        }
+        .frame(width: 393, height: 200)
+
+        let controller = UIHostingController(rootView: view)
+
+        assertSnapshot(
+            of: controller,
+            as: .wait(for: 1.0, on: .image(on: iPhoneAirConfig, precision: 0.99)),
+            record: false
+        )
+    }
+
+    // MARK: - SettingsMutedContentSection Tests
+
+    func testSettingsMutedContentSectionEmpty() {
+        struct TestWrapper: View {
+            @State var newSource = ""
+            @State var newKeyword = ""
+
+            var body: some View {
+                Form {
+                    SettingsMutedContentSection(
+                        mutedSources: [],
+                        mutedKeywords: [],
+                        newMutedSource: $newSource,
+                        newMutedKeyword: $newKeyword,
+                        onAddMutedSource: {},
+                        onRemoveMutedSource: { _ in },
+                        onAddMutedKeyword: {},
+                        onRemoveMutedKeyword: { _ in }
+                    )
+                }
+            }
+        }
+
+        let view = TestWrapper()
+            .frame(width: 393, height: 300)
+
+        let controller = UIHostingController(rootView: view)
+
+        assertSnapshot(
+            of: controller,
+            as: .wait(for: 1.0, on: .image(on: iPhoneAirConfig, precision: 0.99)),
+            record: false
+        )
+    }
+
+    func testSettingsMutedContentSectionWithItems() {
+        struct TestWrapper: View {
+            @State var newSource = ""
+            @State var newKeyword = ""
+
+            var body: some View {
+                Form {
+                    SettingsMutedContentSection(
+                        mutedSources: ["CNN", "Fox News"],
+                        mutedKeywords: ["politics", "celebrity"],
+                        newMutedSource: $newSource,
+                        newMutedKeyword: $newKeyword,
+                        onAddMutedSource: {},
+                        onRemoveMutedSource: { _ in },
+                        onAddMutedKeyword: {},
+                        onRemoveMutedKeyword: { _ in }
+                    )
+                }
+            }
+        }
+
+        let view = TestWrapper()
+            .frame(width: 393, height: 400)
+
+        let controller = UIHostingController(rootView: view)
+
+        assertSnapshot(
+            of: controller,
+            as: .wait(for: 1.0, on: .image(on: iPhoneAirConfig, precision: 0.99)),
+            record: false
+        )
+    }
+
+    // MARK: - SettingsPremiumSection Tests
+
+    func testSettingsPremiumSectionNotPremium() {
+        let view = Form {
+            SettingsPremiumSection(
+                isPremium: false,
+                onUpgradeTapped: {}
+            )
+        }
+        .frame(width: 393, height: 200)
+
+        let controller = UIHostingController(rootView: view)
+
+        assertSnapshot(
+            of: controller,
+            as: .wait(for: 1.0, on: .image(on: iPhoneAirConfig, precision: 0.99)),
+            record: false
+        )
+    }
+
+    func testSettingsPremiumSectionPremium() {
+        let view = Form {
+            SettingsPremiumSection(
+                isPremium: true,
+                onUpgradeTapped: {}
+            )
+        }
+        .frame(width: 393, height: 200)
+
+        let controller = UIHostingController(rootView: view)
+
+        assertSnapshot(
+            of: controller,
+            as: .wait(for: 1.0, on: .image(on: iPhoneAirConfig, precision: 0.99)),
+            record: false
+        )
+    }
 }
