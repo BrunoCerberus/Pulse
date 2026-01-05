@@ -116,12 +116,12 @@ struct LiveServicesBasicTests {
         #expect(sut != nil)
     }
 
-    @Test("LiveCategoriesService fetchCategoryArticles returns publisher")
-    func liveCategoriesServiceFetchCategoryArticles() {
+    @Test("LiveCategoriesService fetchArticles returns publisher")
+    func liveCategoriesServiceFetchArticles() {
         let sut = LiveCategoriesService()
         var cancellables = Set<AnyCancellable>()
 
-        let publisher = sut.fetchCategoryArticles(category: .technology, country: "us", page: 1)
+        let publisher = sut.fetchArticles(for: .technology, page: 1)
 
         publisher
             .sink(

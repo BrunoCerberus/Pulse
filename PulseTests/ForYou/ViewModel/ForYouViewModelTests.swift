@@ -38,7 +38,7 @@ struct ForYouViewModelTests {
 
     @Test("Handle onAppear triggers load feed")
     func testOnAppear() async throws {
-        mockForYouService.personalizedFeedResult = .success(Article.mockArticles)
+        mockForYouService.feedResult = .success(Article.mockArticles)
 
         var cancellables = Set<AnyCancellable>()
         var states: [ForYouViewState] = []
@@ -58,7 +58,7 @@ struct ForYouViewModelTests {
 
     @Test("Handle onRefresh triggers refresh")
     func testOnRefresh() async throws {
-        mockForYouService.personalizedFeedResult = .success(Article.mockArticles)
+        mockForYouService.feedResult = .success(Article.mockArticles)
 
         var cancellables = Set<AnyCancellable>()
         var states: [ForYouViewState] = []
@@ -79,7 +79,7 @@ struct ForYouViewModelTests {
     @Test("Handle onLoadMore triggers load more")
     func testOnLoadMore() async throws {
         // First load initial articles
-        mockForYouService.personalizedFeedResult = .success(Article.mockArticles)
+        mockForYouService.feedResult = .success(Article.mockArticles)
         sut.handle(event: .onAppear)
         try await Task.sleep(nanoseconds: 100_000_000)
 
@@ -157,7 +157,7 @@ struct ForYouViewModelTests {
     @Test("View state shows empty state when no articles and has followed topics")
     func testShowEmptyState() async throws {
         // Set up preferences with followed topics
-        mockStorageService.mockPreferences = UserPreferencesModel(
+        mockStorageService.userPreferences = UserPreferencesModel(
             followedTopics: [.technology],
             mutedAuthors: [],
             mutedSources: [],
@@ -183,7 +183,7 @@ struct ForYouViewModelTests {
             code: 1,
             userInfo: [NSLocalizedDescriptionKey: "Feed loading failed"]
         )
-        mockForYouService.personalizedFeedResult = .failure(testError)
+        mockForYouService.feedResult = .failure(testError)
 
         sut.handle(event: .onAppear)
         try await Task.sleep(nanoseconds: 100_000_000)
@@ -193,8 +193,8 @@ struct ForYouViewModelTests {
 
     @Test("View state reducer transforms domain state correctly")
     func viewStateTransformation() async throws {
-        mockForYouService.personalizedFeedResult = .success(Article.mockArticles)
-        mockStorageService.mockPreferences = UserPreferencesModel(
+        mockForYouService.feedResult = .success(Article.mockArticles)
+        mockStorageService.userPreferences = UserPreferencesModel(
             followedTopics: [.technology, .business],
             mutedAuthors: [],
             mutedSources: [],
@@ -225,7 +225,7 @@ struct ForYouViewModelTests {
             }
             .store(in: &cancellables)
 
-        mockForYouService.personalizedFeedResult = .success(Article.mockArticles)
+        mockForYouService.feedResult = .success(Article.mockArticles)
 
         sut.handle(event: .onAppear)
         try await Task.sleep(nanoseconds: 100_000_000)
@@ -245,7 +245,7 @@ struct ForYouViewModelTests {
             }
             .store(in: &cancellables)
 
-        mockForYouService.personalizedFeedResult = .success(Article.mockArticles)
+        mockForYouService.feedResult = .success(Article.mockArticles)
 
         sut.handle(event: .onAppear)
         try await Task.sleep(nanoseconds: 100_000_000)
@@ -259,7 +259,7 @@ struct ForYouViewModelTests {
     @Test("Error during load more shows error message")
     func errorDuringLoadMore() async throws {
         // First load initial articles successfully
-        mockForYouService.personalizedFeedResult = .success(Article.mockArticles)
+        mockForYouService.feedResult = .success(Article.mockArticles)
         sut.handle(event: .onAppear)
         try await Task.sleep(nanoseconds: 100_000_000)
 
@@ -269,7 +269,7 @@ struct ForYouViewModelTests {
             code: 2,
             userInfo: [NSLocalizedDescriptionKey: "Load more failed"]
         )
-        mockForYouService.personalizedFeedResult = .failure(loadMoreError)
+        mockForYouService.feedResult = .failure(loadMoreError)
 
         sut.handle(event: .onLoadMore)
         try await Task.sleep(nanoseconds: 100_000_000)
@@ -280,7 +280,7 @@ struct ForYouViewModelTests {
     @Test("Error during refresh clears articles and shows error")
     func errorDuringRefresh() async throws {
         // First load initial articles
-        mockForYouService.personalizedFeedResult = .success(Article.mockArticles)
+        mockForYouService.feedResult = .success(Article.mockArticles)
         sut.handle(event: .onAppear)
         try await Task.sleep(nanoseconds: 100_000_000)
 
@@ -292,7 +292,7 @@ struct ForYouViewModelTests {
             code: 3,
             userInfo: [NSLocalizedDescriptionKey: "Refresh failed"]
         )
-        mockForYouService.personalizedFeedResult = .failure(refreshError)
+        mockForYouService.feedResult = .failure(refreshError)
 
         sut.handle(event: .onRefresh)
         try await Task.sleep(nanoseconds: 100_000_000)
@@ -308,7 +308,7 @@ struct ForYouViewModelTests {
             code: 4,
             userInfo: [NSLocalizedDescriptionKey: "Initial error"]
         )
-        mockForYouService.personalizedFeedResult = .failure(initialError)
+        mockForYouService.feedResult = .failure(initialError)
 
         sut.handle(event: .onAppear)
         try await Task.sleep(nanoseconds: 100_000_000)
@@ -316,7 +316,7 @@ struct ForYouViewModelTests {
         #expect(sut.viewState.errorMessage == "Initial error")
 
         // Now recover with successful load
-        mockForYouService.personalizedFeedResult = .success(Article.mockArticles)
+        mockForYouService.feedResult = .success(Article.mockArticles)
 
         sut.handle(event: .onRefresh)
         try await Task.sleep(nanoseconds: 100_000_000)

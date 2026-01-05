@@ -38,7 +38,7 @@ struct CategoriesViewModelTests {
 
     @Test("Handle onCategorySelected triggers load")
     func testOnCategorySelected() async throws {
-        mockCategoriesService.categoryArticlesResult = .success(Article.mockArticles)
+        mockCategoriesService.articlesResult = .success(Article.mockArticles)
 
         var cancellables = Set<AnyCancellable>()
         var states: [CategoriesViewState] = []
@@ -60,7 +60,7 @@ struct CategoriesViewModelTests {
     @Test("Handle onRefresh triggers refresh")
     func testOnRefresh() async throws {
         // First select a category
-        mockCategoriesService.categoryArticlesResult = .success(Article.mockArticles)
+        mockCategoriesService.articlesResult = .success(Article.mockArticles)
         sut.handle(event: .onCategorySelected(.business))
         try await Task.sleep(nanoseconds: 100_000_000)
 
@@ -83,7 +83,7 @@ struct CategoriesViewModelTests {
     @Test("Handle onLoadMore triggers load more")
     func testOnLoadMore() async throws {
         // First select category and load initial articles
-        mockCategoriesService.categoryArticlesResult = .success(Article.mockArticles)
+        mockCategoriesService.articlesResult = .success(Article.mockArticles)
         sut.handle(event: .onCategorySelected(.technology))
         try await Task.sleep(nanoseconds: 100_000_000)
 
@@ -149,7 +149,7 @@ struct CategoriesViewModelTests {
 
     @Test("View state shows empty state when category selected but no articles")
     func testShowEmptyState() async throws {
-        mockCategoriesService.categoryArticlesResult = .success([])
+        mockCategoriesService.articlesResult = .success([])
 
         sut.handle(event: .onCategorySelected(.technology))
         try await Task.sleep(nanoseconds: 100_000_000)
@@ -172,7 +172,7 @@ struct CategoriesViewModelTests {
             code: 1,
             userInfo: [NSLocalizedDescriptionKey: "Category loading failed"]
         )
-        mockCategoriesService.categoryArticlesResult = .failure(testError)
+        mockCategoriesService.articlesResult = .failure(testError)
 
         sut.handle(event: .onCategorySelected(.business))
         try await Task.sleep(nanoseconds: 100_000_000)
@@ -182,7 +182,7 @@ struct CategoriesViewModelTests {
 
     @Test("Switching categories updates state")
     func switchingCategories() async throws {
-        mockCategoriesService.categoryArticlesResult = .success(Article.mockArticles)
+        mockCategoriesService.articlesResult = .success(Article.mockArticles)
 
         // Select first category
         sut.handle(event: .onCategorySelected(.technology))
@@ -199,7 +199,7 @@ struct CategoriesViewModelTests {
 
     @Test("View state reducer transforms domain state correctly")
     func viewStateTransformation() async throws {
-        mockCategoriesService.categoryArticlesResult = .success(Article.mockArticles)
+        mockCategoriesService.articlesResult = .success(Article.mockArticles)
 
         sut.handle(event: .onCategorySelected(.science))
         try await Task.sleep(nanoseconds: 100_000_000)
@@ -222,7 +222,7 @@ struct CategoriesViewModelTests {
             }
             .store(in: &cancellables)
 
-        mockCategoriesService.categoryArticlesResult = .success(Article.mockArticles)
+        mockCategoriesService.articlesResult = .success(Article.mockArticles)
 
         sut.handle(event: .onCategorySelected(.health))
         try await Task.sleep(nanoseconds: 100_000_000)
@@ -242,7 +242,7 @@ struct CategoriesViewModelTests {
             }
             .store(in: &cancellables)
 
-        mockCategoriesService.categoryArticlesResult = .success(Article.mockArticles)
+        mockCategoriesService.articlesResult = .success(Article.mockArticles)
 
         sut.handle(event: .onCategorySelected(.sports))
         try await Task.sleep(nanoseconds: 100_000_000)
@@ -268,7 +268,7 @@ struct CategoriesViewModelTests {
     @Test("Error during load more shows error message")
     func errorDuringLoadMore() async throws {
         // First select category and load articles successfully
-        mockCategoriesService.categoryArticlesResult = .success(Article.mockArticles)
+        mockCategoriesService.articlesResult = .success(Article.mockArticles)
         sut.handle(event: .onCategorySelected(.technology))
         try await Task.sleep(nanoseconds: 100_000_000)
 
@@ -278,7 +278,7 @@ struct CategoriesViewModelTests {
             code: 2,
             userInfo: [NSLocalizedDescriptionKey: "Load more failed"]
         )
-        mockCategoriesService.categoryArticlesResult = .failure(loadMoreError)
+        mockCategoriesService.articlesResult = .failure(loadMoreError)
 
         sut.handle(event: .onLoadMore)
         try await Task.sleep(nanoseconds: 100_000_000)
@@ -289,7 +289,7 @@ struct CategoriesViewModelTests {
     @Test("Error during refresh shows error message")
     func errorDuringRefresh() async throws {
         // First select category and load articles
-        mockCategoriesService.categoryArticlesResult = .success(Article.mockArticles)
+        mockCategoriesService.articlesResult = .success(Article.mockArticles)
         sut.handle(event: .onCategorySelected(.business))
         try await Task.sleep(nanoseconds: 100_000_000)
 
@@ -301,7 +301,7 @@ struct CategoriesViewModelTests {
             code: 3,
             userInfo: [NSLocalizedDescriptionKey: "Refresh failed"]
         )
-        mockCategoriesService.categoryArticlesResult = .failure(refreshError)
+        mockCategoriesService.articlesResult = .failure(refreshError)
 
         sut.handle(event: .onRefresh)
         try await Task.sleep(nanoseconds: 100_000_000)
@@ -317,7 +317,7 @@ struct CategoriesViewModelTests {
             code: 4,
             userInfo: [NSLocalizedDescriptionKey: "Category load failed"]
         )
-        mockCategoriesService.categoryArticlesResult = .failure(initialError)
+        mockCategoriesService.articlesResult = .failure(initialError)
 
         sut.handle(event: .onCategorySelected(.science))
         try await Task.sleep(nanoseconds: 100_000_000)
@@ -325,7 +325,7 @@ struct CategoriesViewModelTests {
         #expect(sut.viewState.errorMessage == "Category load failed")
 
         // Now recover with successful load
-        mockCategoriesService.categoryArticlesResult = .success(Article.mockArticles)
+        mockCategoriesService.articlesResult = .success(Article.mockArticles)
 
         sut.handle(event: .onRefresh)
         try await Task.sleep(nanoseconds: 100_000_000)
@@ -342,7 +342,7 @@ struct CategoriesViewModelTests {
             code: 5,
             userInfo: [NSLocalizedDescriptionKey: "Technology load failed"]
         )
-        mockCategoriesService.categoryArticlesResult = .failure(error)
+        mockCategoriesService.articlesResult = .failure(error)
 
         sut.handle(event: .onCategorySelected(.technology))
         try await Task.sleep(nanoseconds: 100_000_000)
@@ -350,7 +350,7 @@ struct CategoriesViewModelTests {
         #expect(sut.viewState.errorMessage != nil)
 
         // Switch to different category with successful load
-        mockCategoriesService.categoryArticlesResult = .success(Article.mockArticles)
+        mockCategoriesService.articlesResult = .success(Article.mockArticles)
 
         sut.handle(event: .onCategorySelected(.business))
         try await Task.sleep(nanoseconds: 100_000_000)
