@@ -89,7 +89,7 @@ struct AuthenticationManagerTests {
         // Simulate auth service publishing a new user
         mockAuthService.simulateSignedIn(testUser)
 
-        try await Task.sleep(nanoseconds: 100_000_000)
+        try await waitForStateUpdate()
 
         #expect(states.contains { state in
             if case let .authenticated(user) = state {
@@ -123,7 +123,7 @@ struct AuthenticationManagerTests {
 
         mockAuthService.simulateSignedIn(testUser)
 
-        try await Task.sleep(nanoseconds: 100_000_000)
+        try await waitForStateUpdate()
 
         #expect(states.count >= 1)
     }
@@ -145,7 +145,7 @@ struct AuthenticationManagerTests {
         // Simulate logout by sending nil
         mockAuthService.simulateSignedOut()
 
-        try await Task.sleep(nanoseconds: 100_000_000)
+        try await waitForStateUpdate()
 
         #expect(sut.authState == .unauthenticated)
         #expect(sut.currentUser == nil)
@@ -169,7 +169,7 @@ struct AuthenticationManagerTests {
 
         mockAuthService.simulateSignedIn(testUser)
 
-        try await Task.sleep(nanoseconds: 100_000_000)
+        try await waitForStateUpdate()
 
         #expect(sut.currentUser == testUser)
     }

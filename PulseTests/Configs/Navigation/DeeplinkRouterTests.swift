@@ -76,7 +76,7 @@ struct DeeplinkRouterTests {
 
         sut.route(deeplink: .search(query: "technology"))
 
-        try await Task.sleep(nanoseconds: 100_000_000)
+        try await waitForStateUpdate()
 
         #expect(coordinator.selectedTab == .search)
         #expect(coordinator.searchViewModel.viewState.query == "technology")
@@ -157,7 +157,7 @@ struct DeeplinkRouterTests {
 
         sut.route(deeplink: .category(name: "technology"))
 
-        try await Task.sleep(nanoseconds: 100_000_000)
+        try await waitForStateUpdate()
 
         #expect(coordinator.selectedTab == .categories)
         #expect(coordinator.categoriesViewModel.viewState.selectedCategory == .technology)
@@ -208,7 +208,7 @@ struct DeeplinkRouterTests {
         )
 
         // Give notification time to process
-        try await Task.sleep(nanoseconds: 100_000_000)
+        try await waitForStateUpdate()
 
         // Queued deeplink should have been processed
         #expect(coordinator.selectedTab == .home)
@@ -226,12 +226,12 @@ struct DeeplinkRouterTests {
         coordinator.selectedTab = .home
 
         sut.route(deeplink: .search(query: "test"))
-        try await Task.sleep(nanoseconds: 100_000_000)
+        try await waitForStateUpdate()
 
         #expect(coordinator.selectedTab == .search)
 
         sut.route(deeplink: .bookmarks)
-        try await Task.sleep(nanoseconds: 100_000_000)
+        try await waitForStateUpdate()
 
         #expect(coordinator.selectedTab == .bookmarks)
     }
@@ -250,7 +250,7 @@ struct DeeplinkRouterTests {
         // Simulate DeeplinkManager sending a deeplink
         DeeplinkManager.shared.handle(deeplink: .bookmarks)
 
-        try await Task.sleep(nanoseconds: 100_000_000)
+        try await waitForStateUpdate()
 
         #expect(coordinator.selectedTab == .bookmarks)
     }
@@ -266,8 +266,79 @@ struct DeeplinkRouterTests {
 
         DeeplinkManager.shared.handle(deeplink: .home)
 
-        try await Task.sleep(nanoseconds: 100_000_000)
+        try await waitForStateUpdate()
 
         #expect(DeeplinkManager.shared.currentDeeplink == nil)
+    }
+
+    // MARK: - Concurrent Navigation Tests
+
+    @Test("Rapid tab switching handles concurrent deeplinks correctly")
+    func rapidTabSwitchingHandlesConcurrentDeeplinks() async throws {
+        NotificationCenter.default.post(
+            name: .coordinatorDidBecomeAvailable,
+            object: coordinator
+        )
+
+        coordinator.selectedTab = .home
+
+        // Rapidly fire multiple deeplinks to different tabs
+        sut.route(deeplink: .search(query: nil))
+        sut.route(deeplink: .bookmarks)
+        sut.route(deeplink: .home)
+        sut.route(deeplink: .search(query: "test"))
+
+        try await waitForStateUpdate(duration: TestWaitDuration.long)
+
+        // Last deeplink should win
+        #expect(coordinator.selectedTab == .search)
+    }
+
+    @Test("Concurrent deeplinks during active navigation complete without crash")
+    func concurrentDeeplinksDuringActiveNavigation() async throws {
+        NotificationCenter.default.post(
+            name: .coordinatorDidBecomeAvailable,
+            object: coordinator
+        )
+
+        // Start with a navigation in progress
+        coordinator.selectedTab = .home
+        coordinator.push(page: .settings, in: .home)
+
+        // Fire deeplinks while navigation is active
+        sut.route(deeplink: .bookmarks)
+        sut.route(deeplink: .category(name: "technology"))
+
+        try await waitForStateUpdate(duration: TestWaitDuration.long)
+
+        // Should complete without crash - final tab should be categories
+        #expect(coordinator.selectedTab == .categories)
+    }
+
+    @Test("Multiple coordinators becoming available handles queued deeplinks correctly")
+    func multipleCoordinatorNotificationsHandleQueuedDeeplinks() async throws {
+        let newRouter = DeeplinkRouter()
+
+        // Queue a deeplink before coordinator is available
+        newRouter.route(deeplink: .bookmarks)
+
+        // Post coordinator available notification twice (simulating edge case)
+        NotificationCenter.default.post(
+            name: .coordinatorDidBecomeAvailable,
+            object: coordinator
+        )
+
+        try await waitForStateUpdate()
+
+        // Post again to verify no duplicate processing
+        NotificationCenter.default.post(
+            name: .coordinatorDidBecomeAvailable,
+            object: coordinator
+        )
+
+        try await waitForStateUpdate()
+
+        // Should only have processed once
+        #expect(coordinator.selectedTab == .bookmarks)
     }
 }

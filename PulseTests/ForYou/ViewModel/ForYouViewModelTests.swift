@@ -58,7 +58,7 @@ struct ForYouViewModelTests {
 
         sut.handle(event: .onAppear)
 
-        try await Task.sleep(nanoseconds: 100_000_000)
+        try await waitForStateUpdate()
 
         #expect(states.count > 1)
     }
@@ -78,7 +78,7 @@ struct ForYouViewModelTests {
 
         sut.handle(event: .onRefresh)
 
-        try await Task.sleep(nanoseconds: 100_000_000)
+        try await waitForStateUpdate()
 
         #expect(states.count > 1)
     }
@@ -88,7 +88,7 @@ struct ForYouViewModelTests {
         // First load initial articles
         mockForYouService.feedResult = .success(Article.mockArticles)
         sut.handle(event: .onAppear)
-        try await Task.sleep(nanoseconds: 100_000_000)
+        try await waitForStateUpdate()
 
         let initialCount = sut.viewState.articles.count
 
@@ -108,7 +108,7 @@ struct ForYouViewModelTests {
         mockForYouService.personalizedFeedResult = .success([newArticle])
 
         sut.handle(event: .onLoadMore)
-        try await Task.sleep(nanoseconds: 100_000_000)
+        try await waitForStateUpdate()
 
         #expect(sut.viewState.articles.count >= initialCount)
     }
@@ -120,12 +120,12 @@ struct ForYouViewModelTests {
         // First load articles so they can be found
         mockForYouService.personalizedFeedResult = .success([article])
         sut.handle(event: .onAppear)
-        try await Task.sleep(nanoseconds: 100_000_000)
+        try await waitForStateUpdate()
 
         sut.handle(event: .onArticleTapped(articleId: article.id))
 
         // Wait for Combine pipeline to propagate state
-        try await Task.sleep(nanoseconds: 50_000_000)
+        try await waitForStateUpdate(duration: TestWaitDuration.short)
 
         #expect(sut.viewState.selectedArticle?.id == article.id)
     }
@@ -137,15 +137,15 @@ struct ForYouViewModelTests {
         // First load and select an article
         mockForYouService.personalizedFeedResult = .success([article])
         sut.handle(event: .onAppear)
-        try await Task.sleep(nanoseconds: 100_000_000)
+        try await waitForStateUpdate()
 
         sut.handle(event: .onArticleTapped(articleId: article.id))
-        try await Task.sleep(nanoseconds: 50_000_000)
+        try await waitForStateUpdate(duration: TestWaitDuration.short)
 
         #expect(sut.viewState.selectedArticle != nil)
 
         sut.handle(event: .onArticleNavigated)
-        try await Task.sleep(nanoseconds: 50_000_000)
+        try await waitForStateUpdate(duration: TestWaitDuration.short)
 
         #expect(sut.viewState.selectedArticle == nil)
     }
@@ -156,7 +156,7 @@ struct ForYouViewModelTests {
         mockForYouService.personalizedFeedResult = .success([])
 
         sut.handle(event: .onAppear)
-        try await Task.sleep(nanoseconds: 100_000_000)
+        try await waitForStateUpdate()
 
         #expect(sut.viewState.showOnboarding)
     }
@@ -177,7 +177,7 @@ struct ForYouViewModelTests {
         mockForYouService.personalizedFeedResult = .success([])
 
         sut.handle(event: .onAppear)
-        try await Task.sleep(nanoseconds: 100_000_000)
+        try await waitForStateUpdate()
 
         #expect(sut.viewState.showEmptyState)
         #expect(!sut.viewState.showOnboarding)
@@ -193,7 +193,7 @@ struct ForYouViewModelTests {
         mockForYouService.feedResult = .failure(testError)
 
         sut.handle(event: .onAppear)
-        try await Task.sleep(nanoseconds: 100_000_000)
+        try await waitForStateUpdate()
 
         #expect(sut.viewState.errorMessage == "Feed loading failed")
     }
@@ -212,7 +212,7 @@ struct ForYouViewModelTests {
         )
 
         sut.handle(event: .onAppear)
-        try await Task.sleep(nanoseconds: 100_000_000)
+        try await waitForStateUpdate()
 
         let state = sut.viewState
         #expect(!state.articles.isEmpty)
@@ -235,7 +235,7 @@ struct ForYouViewModelTests {
         mockForYouService.feedResult = .success(Article.mockArticles)
 
         sut.handle(event: .onAppear)
-        try await Task.sleep(nanoseconds: 100_000_000)
+        try await waitForStateUpdate()
 
         #expect(states.count > 1)
     }
@@ -255,7 +255,7 @@ struct ForYouViewModelTests {
         mockForYouService.feedResult = .success(Article.mockArticles)
 
         sut.handle(event: .onAppear)
-        try await Task.sleep(nanoseconds: 100_000_000)
+        try await waitForStateUpdate()
 
         // Should have at least initial state (false) and loading state (true)
         #expect(loadingStates.count >= 2)
@@ -268,7 +268,7 @@ struct ForYouViewModelTests {
         // First load initial articles successfully
         mockForYouService.feedResult = .success(Article.mockArticles)
         sut.handle(event: .onAppear)
-        try await Task.sleep(nanoseconds: 100_000_000)
+        try await waitForStateUpdate()
 
         // Now simulate error during load more
         let loadMoreError = NSError(
@@ -279,7 +279,7 @@ struct ForYouViewModelTests {
         mockForYouService.feedResult = .failure(loadMoreError)
 
         sut.handle(event: .onLoadMore)
-        try await Task.sleep(nanoseconds: 100_000_000)
+        try await waitForStateUpdate()
 
         #expect(sut.viewState.errorMessage == "Load more failed")
     }
@@ -289,7 +289,7 @@ struct ForYouViewModelTests {
         // First load initial articles
         mockForYouService.feedResult = .success(Article.mockArticles)
         sut.handle(event: .onAppear)
-        try await Task.sleep(nanoseconds: 100_000_000)
+        try await waitForStateUpdate()
 
         #expect(!sut.viewState.articles.isEmpty)
 
@@ -302,7 +302,7 @@ struct ForYouViewModelTests {
         mockForYouService.feedResult = .failure(refreshError)
 
         sut.handle(event: .onRefresh)
-        try await Task.sleep(nanoseconds: 100_000_000)
+        try await waitForStateUpdate()
 
         #expect(sut.viewState.errorMessage == "Refresh failed")
     }
@@ -318,7 +318,7 @@ struct ForYouViewModelTests {
         mockForYouService.feedResult = .failure(initialError)
 
         sut.handle(event: .onAppear)
-        try await Task.sleep(nanoseconds: 100_000_000)
+        try await waitForStateUpdate()
 
         #expect(sut.viewState.errorMessage == "Initial error")
 
@@ -326,7 +326,7 @@ struct ForYouViewModelTests {
         mockForYouService.feedResult = .success(Article.mockArticles)
 
         sut.handle(event: .onRefresh)
-        try await Task.sleep(nanoseconds: 100_000_000)
+        try await waitForStateUpdate()
 
         #expect(sut.viewState.errorMessage == nil)
         #expect(!sut.viewState.articles.isEmpty)
@@ -344,7 +344,7 @@ struct ForYouViewModelTests {
         mockForYouService.feedResult = .failure(timeoutError)
 
         sut.handle(event: .onAppear)
-        try await Task.sleep(nanoseconds: 100_000_000)
+        try await waitForStateUpdate()
 
         #expect(sut.viewState.errorMessage == "The request timed out.")
         #expect(!sut.viewState.isLoading)
@@ -357,7 +357,7 @@ struct ForYouViewModelTests {
         mockForYouService.feedResult = .success([])
 
         sut.handle(event: .onAppear)
-        try await Task.sleep(nanoseconds: 100_000_000)
+        try await waitForStateUpdate()
 
         // Should show onboarding when no preferences exist
         #expect(sut.viewState.showOnboarding)
