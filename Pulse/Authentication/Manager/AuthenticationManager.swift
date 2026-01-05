@@ -90,5 +90,14 @@ final class AuthenticationManager: ObservableObject {
             authState = .unauthenticated
             currentUser = nil
         }
+
+        /// For testing: reset singleton to clean state between tests
+        /// Clears auth service, cancellables, and resets to loading state
+        func resetForTesting() {
+            authService = nil
+            cancellables.removeAll()
+            authState = .loading
+            currentUser = nil
+        }
     #endif
 }

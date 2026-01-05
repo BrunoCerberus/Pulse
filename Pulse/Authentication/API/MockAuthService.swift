@@ -6,6 +6,13 @@ final class MockAuthService: AuthService {
 
     var signInWithGoogleResult: Result<AuthUser, Error> = .success(AuthUser.mock)
 
+    /// Property to set initial auth state for testing.
+    /// Setting this updates the auth state subject immediately.
+    var mockCurrentUser: AuthUser? {
+        get { authStateSubject.value }
+        set { authStateSubject.send(newValue) }
+    }
+
     /// Initialize MockAuthService.
     /// When running UI tests (UI_TESTING=1), starts in authenticated state.
     init() {
