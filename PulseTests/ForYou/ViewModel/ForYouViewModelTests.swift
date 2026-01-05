@@ -178,14 +178,14 @@ struct ForYouViewModelTests {
     @Test("View state shows empty state when no articles and has followed topics")
     func testShowEmptyState() async throws {
         // Set up preferences with followed topics
-        mockStorageService.userPreferences = UserPreferencesModel(
+        mockStorageService.userPreferences = UserPreferences(
             followedTopics: [.technology],
-            mutedAuthors: [],
+            followedSources: [],
             mutedSources: [],
-            selectedTheme: .automatic,
+            mutedKeywords: [],
+            preferredLanguage: "en",
             notificationsEnabled: true,
-            breakingNewsEnabled: true,
-            topicAlerts: [:]
+            breakingNewsNotifications: true
         )
 
         mockForYouService.personalizedFeedResult = .success([])
@@ -215,14 +215,14 @@ struct ForYouViewModelTests {
     @Test("View state reducer transforms domain state correctly")
     func viewStateTransformation() async throws {
         mockForYouService.feedResult = .success(Article.mockArticles)
-        mockStorageService.userPreferences = UserPreferencesModel(
+        mockStorageService.userPreferences = UserPreferences(
             followedTopics: [.technology, .business],
-            mutedAuthors: [],
+            followedSources: [],
             mutedSources: [],
-            selectedTheme: .automatic,
+            mutedKeywords: [],
+            preferredLanguage: "en",
             notificationsEnabled: true,
-            breakingNewsEnabled: true,
-            topicAlerts: [:]
+            breakingNewsNotifications: true
         )
 
         sut.handle(event: .onAppear)
