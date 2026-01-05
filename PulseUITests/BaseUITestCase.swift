@@ -5,6 +5,9 @@ class BaseUITestCase: XCTestCase {
     /// App instance - launched per test for isolation
     var app: XCUIApplication!
 
+    /// Timeout for app launch verification - requires more time than element checks
+    static let launchTimeout: TimeInterval = 8
+
     /// Default timeout for element existence checks
     /// 4s is sufficient with animations disabled - elements appear quickly
     static let defaultTimeout: TimeInterval = 4
@@ -31,9 +34,9 @@ class BaseUITestCase: XCTestCase {
 
         app.launch()
 
-        // Combined launch verification - 8s is sufficient with animations disabled
-        _ = app.wait(for: .runningForeground, timeout: 8.0)
-        _ = app.tabBars.firstMatch.waitForExistence(timeout: 8.0)
+        // Launch verification - uses longer timeout as app startup takes time
+        _ = app.wait(for: .runningForeground, timeout: Self.launchTimeout)
+        _ = app.tabBars.firstMatch.waitForExistence(timeout: Self.launchTimeout)
 
         // Ensure app is in a clean state
         resetToHomeTab()
@@ -69,10 +72,12 @@ class BaseUITestCase: XCTestCase {
             tabBar.buttons.element(boundBy: 0).tap()
         }
 
-        // Pop any pushed views with single check
-        let backButton = app.buttons["backButton"]
-        if backButton.exists, backButton.isHittable {
+        // Pop all navigation stack levels (handles deep navigation states)
+        for _ in 0..<3 {
+            let backButton = app.buttons["backButton"]
+            guard backButton.exists, backButton.isHittable else { break }
             backButton.tap()
+            wait(for: 0.2) // Allow navigation animation to settle
         }
     }
 
@@ -93,7 +98,7 @@ class BaseUITestCase: XCTestCase {
         _ = app.navigationBars["Search"].waitForExistence(timeout: Self.shortTimeout)
     }
 
-    /// Navigate to For You tab
+    /// Navigate to For You tab and verify navigation bar appears
     func navigateToForYouTab() {
         let forYouTab = app.tabBars.buttons["For You"]
         if forYouTab.exists, !forYouTab.isSelected {
@@ -102,7 +107,7 @@ class BaseUITestCase: XCTestCase {
         _ = app.navigationBars["For You"].waitForExistence(timeout: Self.shortTimeout)
     }
 
-    /// Navigate to Categories tab
+    /// Navigate to Categories tab and verify navigation bar appears
     func navigateToCategoriesTab() {
         let categoriesTab = app.tabBars.buttons["Categories"]
         if categoriesTab.exists, !categoriesTab.isSelected {
@@ -111,7 +116,7 @@ class BaseUITestCase: XCTestCase {
         _ = app.navigationBars["Categories"].waitForExistence(timeout: Self.shortTimeout)
     }
 
-    /// Navigate to Bookmarks tab
+    /// Navigate to Bookmarks tab and verify navigation bar appears
     func navigateToBookmarksTab() {
         let bookmarksTab = app.tabBars.buttons["Bookmarks"]
         if bookmarksTab.exists, !bookmarksTab.isSelected {
