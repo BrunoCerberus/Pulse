@@ -7,13 +7,6 @@ import XCTest
 final class SettingsViewSnapshotTests: XCTestCase {
     private var window: UIWindow!
 
-    // Custom device config matching CI's iPhone Air simulator
-    private let iPhoneAirConfig = ViewImageConfig(
-        safeArea: UIEdgeInsets(top: 59, left: 0, bottom: 34, right: 0),
-        size: CGSize(width: 393, height: 852),
-        traits: UITraitCollection(userInterfaceStyle: .dark)
-    )
-
     override func setUp() {
         super.setUp()
         // Set authenticated state before SettingsViewModel is created
@@ -54,7 +47,7 @@ final class SettingsViewSnapshotTests: XCTestCase {
 
         assertSnapshot(
             of: controller,
-            as: .image(on: iPhoneAirConfig, precision: 0.99),
+            as: .image(on: SnapshotConfig.iPhoneAir, precision: SnapshotConfig.standardPrecision),
             record: false
         )
     }
@@ -75,7 +68,7 @@ final class SettingsViewSnapshotTests: XCTestCase {
 
         assertSnapshot(
             of: controller,
-            as: .wait(for: 1.0, on: .image(on: iPhoneAirConfig, precision: 0.99)),
+            as: .wait(for: 1.0, on: .image(on: SnapshotConfig.iPhoneAir, precision: SnapshotConfig.standardPrecision)),
             record: false
         )
     }
@@ -93,7 +86,7 @@ final class SettingsViewSnapshotTests: XCTestCase {
 
         assertSnapshot(
             of: controller,
-            as: .wait(for: 1.0, on: .image(on: iPhoneAirConfig, precision: 0.99)),
+            as: .wait(for: 1.0, on: .image(on: SnapshotConfig.iPhoneAir, precision: SnapshotConfig.standardPrecision)),
             record: false
         )
     }
@@ -128,7 +121,7 @@ final class SettingsViewSnapshotTests: XCTestCase {
 
         assertSnapshot(
             of: controller,
-            as: .wait(for: 1.0, on: .image(on: iPhoneAirConfig, precision: 0.99)),
+            as: .wait(for: 1.0, on: .image(on: SnapshotConfig.iPhoneAir, precision: SnapshotConfig.standardPrecision)),
             record: false
         )
     }
@@ -161,7 +154,7 @@ final class SettingsViewSnapshotTests: XCTestCase {
 
         assertSnapshot(
             of: controller,
-            as: .wait(for: 1.0, on: .image(on: iPhoneAirConfig, precision: 0.99)),
+            as: .wait(for: 1.0, on: .image(on: SnapshotConfig.iPhoneAir, precision: SnapshotConfig.standardPrecision)),
             record: false
         )
     }
@@ -181,7 +174,7 @@ final class SettingsViewSnapshotTests: XCTestCase {
 
         assertSnapshot(
             of: controller,
-            as: .wait(for: 1.0, on: .image(on: iPhoneAirConfig, precision: 0.99)),
+            as: .wait(for: 1.0, on: .image(on: SnapshotConfig.iPhoneAir, precision: SnapshotConfig.standardPrecision)),
             record: false
         )
     }
@@ -199,7 +192,7 @@ final class SettingsViewSnapshotTests: XCTestCase {
 
         assertSnapshot(
             of: controller,
-            as: .wait(for: 1.0, on: .image(on: iPhoneAirConfig, precision: 0.99)),
+            as: .wait(for: 1.0, on: .image(on: SnapshotConfig.iPhoneAir, precision: SnapshotConfig.standardPrecision)),
             record: false
         )
     }

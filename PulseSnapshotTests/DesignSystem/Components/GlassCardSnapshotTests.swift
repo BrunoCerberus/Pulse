@@ -5,13 +5,6 @@ import XCTest
 
 @MainActor
 final class GlassCardSnapshotTests: XCTestCase {
-    // Custom device config matching CI's iPhone Air simulator (forced dark mode)
-    private let iPhoneAirConfig = ViewImageConfig(
-        safeArea: UIEdgeInsets(top: 59, left: 0, bottom: 34, right: 0),
-        size: CGSize(width: 393, height: 852),
-        traits: UITraitCollection(userInterfaceStyle: .dark)
-    )
-
     // MARK: - GlassCard Tests
 
     func testGlassCardRegularStyle() {
@@ -33,7 +26,7 @@ final class GlassCardSnapshotTests: XCTestCase {
 
         assertSnapshot(
             of: controller,
-            as: .wait(for: 1.0, on: .image(on: iPhoneAirConfig, precision: 0.99)),
+            as: .wait(for: 1.0, on: .image(on: SnapshotConfig.iPhoneAir, precision: SnapshotConfig.standardPrecision)),
             record: false
         )
     }
@@ -51,7 +44,7 @@ final class GlassCardSnapshotTests: XCTestCase {
 
         assertSnapshot(
             of: controller,
-            as: .wait(for: 1.0, on: .image(on: iPhoneAirConfig, precision: 0.99)),
+            as: .wait(for: 1.0, on: .image(on: SnapshotConfig.iPhoneAir, precision: SnapshotConfig.standardPrecision)),
             record: false
         )
     }
@@ -69,7 +62,7 @@ final class GlassCardSnapshotTests: XCTestCase {
 
         assertSnapshot(
             of: controller,
-            as: .wait(for: 1.0, on: .image(on: iPhoneAirConfig, precision: 0.99)),
+            as: .wait(for: 1.0, on: .image(on: SnapshotConfig.iPhoneAir, precision: SnapshotConfig.standardPrecision)),
             record: false
         )
     }
@@ -93,7 +86,7 @@ final class GlassCardSnapshotTests: XCTestCase {
 
         assertSnapshot(
             of: controller,
-            as: .wait(for: 1.0, on: .image(on: iPhoneAirConfig, precision: 0.99)),
+            as: .wait(for: 1.0, on: .image(on: SnapshotConfig.iPhoneAir, precision: SnapshotConfig.standardPrecision)),
             record: false
         )
     }
@@ -117,7 +110,7 @@ final class GlassCardSnapshotTests: XCTestCase {
 
         assertSnapshot(
             of: controller,
-            as: .wait(for: 1.0, on: .image(on: iPhoneAirConfig, precision: 0.99)),
+            as: .wait(for: 1.0, on: .image(on: SnapshotConfig.iPhoneAir, precision: SnapshotConfig.standardPrecision)),
             record: false
         )
     }
