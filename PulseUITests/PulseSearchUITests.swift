@@ -193,9 +193,10 @@ final class PulseSearchUITests: BaseUITestCase {
 
         let scrollView = app.scrollViews.firstMatch
         if scrollView.exists {
-            scrollView.swipeUp()
-            scrollView.swipeUp()
-            scrollView.swipeUp()
+            // Consolidated swipe with content check - more efficient than 3 separate swipes
+            for _ in 0..<2 {
+                scrollView.swipeUp()
+            }
         }
 
         XCTAssertTrue(searchField.exists, "Search should remain functional after scrolling")

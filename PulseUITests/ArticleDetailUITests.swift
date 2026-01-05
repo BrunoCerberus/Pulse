@@ -4,19 +4,11 @@ final class ArticleDetailUITests: BaseUITestCase {
 
     // MARK: - Helper Methods
 
-    /// Navigate to Home tab
-    private func navigateToHome() {
-        let homeTab = app.tabBars.buttons["Home"]
-        if homeTab.exists, !homeTab.isSelected {
-            homeTab.tap()
-        }
-    }
-
     /// Navigate to an article detail by tapping the first available article
     /// - Returns: True if successfully navigated to article detail
     @discardableResult
     private func navigateToArticleDetail() -> Bool {
-        navigateToHome()
+        navigateToTab("Home")
 
         // Wait for articles to load
         let topHeadlinesHeader = app.staticTexts["Top Headlines"]
@@ -94,10 +86,9 @@ final class ArticleDetailUITests: BaseUITestCase {
             app.swipeDown()
         }
 
-        wait(for: 2)
-
+        // Wait for share sheet to dismiss and back button to become available
         let backButtonAfterShare = app.buttons["backButton"]
-        XCTAssertTrue(backButtonAfterShare.waitForExistence(timeout: 10), "Back button should exist after share sheet dismissed")
+        XCTAssertTrue(backButtonAfterShare.waitForExistence(timeout: 5), "Back button should exist after share sheet dismissed")
 
         // --- Article Content ---
         let staticTexts = app.staticTexts
@@ -124,14 +115,10 @@ final class ArticleDetailUITests: BaseUITestCase {
         XCTAssertTrue(backButtonAfterShare.exists, "Navigation should still work after scrolling")
 
         // --- Back Navigation ---
-        var isHittable = false
-        for _ in 0..<10 {
-            if backButtonAfterShare.exists && backButtonAfterShare.isHittable {
-                isHittable = true
-                break
-            }
-            wait(for: 0.5)
-        }
+        // Use predicate-based wait for hittability instead of polling loop
+        let hittablePredicate = NSPredicate(format: "isHittable == true")
+        let expectation = XCTNSPredicateExpectation(predicate: hittablePredicate, object: backButtonAfterShare)
+        let isHittable = XCTWaiter.wait(for: [expectation], timeout: 3) == .completed
         XCTAssertTrue(isHittable, "Back button should be tappable")
         backButtonAfterShare.tap()
 

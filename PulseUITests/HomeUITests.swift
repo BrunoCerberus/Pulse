@@ -2,12 +2,6 @@ import XCTest
 
 final class HomeUITests: BaseUITestCase {
 
-    // MARK: - Helper Methods
-
-    private func navigateToHome() {
-        navigateToTab("Home")
-    }
-
     // MARK: - Navigation and Content Tests
 
     /// Tests navigation bar, content loading, interactions, and settings navigation
