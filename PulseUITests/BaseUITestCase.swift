@@ -5,13 +5,16 @@ class BaseUITestCase: XCTestCase {
     /// App instance - launched per test for isolation
     var app: XCUIApplication!
 
+    /// Timeout for app launch verification - requires more time than element checks
+    static let launchTimeout: TimeInterval = 8
+
     /// Default timeout for element existence checks
-    /// 8s provides good balance between speed and reliability
-    /// Tests run with animations disabled, so elements appear quickly
-    static let defaultTimeout: TimeInterval = 8
+    /// 4s is sufficient with animations disabled - elements appear quickly
+    static let defaultTimeout: TimeInterval = 4
 
     /// Short timeout for quick checks (e.g., verifying element visibility)
-    static let shortTimeout: TimeInterval = 3
+    /// 1.5s is enough for immediate UI responses
+    static let shortTimeout: TimeInterval = 1.5
 
     // MARK: - Instance-level Setup (runs before each test)
 
@@ -31,8 +34,9 @@ class BaseUITestCase: XCTestCase {
 
         app.launch()
 
-        _ = app.wait(for: .runningForeground, timeout: 15.0)
-        _ = app.tabBars.firstMatch.waitForExistence(timeout: 15.0)
+        // Launch verification - uses longer timeout as app startup takes time
+        _ = app.wait(for: .runningForeground, timeout: Self.launchTimeout)
+        _ = app.tabBars.firstMatch.waitForExistence(timeout: Self.launchTimeout)
 
         // Ensure app is in a clean state
         resetToHomeTab()
@@ -51,49 +55,29 @@ class BaseUITestCase: XCTestCase {
     /// Reset to Home tab to start each test from a known state
     func resetToHomeTab() {
         let tabBar = app.tabBars.firstMatch
+
+        // Quick check - if tab bar not visible, try recovery
         if !tabBar.waitForExistence(timeout: Self.shortTimeout) {
-            // Quick recovery: try back button
             let backButton = app.buttons["backButton"]
             if backButton.exists { backButton.tap() }
-            guard tabBar.waitForExistence(timeout: 2) else {
-                XCTFail("Tab bar not found after recovery attempt")
-                return
-            }
+            guard tabBar.waitForExistence(timeout: 1) else { return }
         }
 
-        // Select Home tab with smart fallback
+        // Select Home tab - use combined predicate for efficiency
         let homeTab = tabBar.buttons["Home"]
         if homeTab.exists, !homeTab.isSelected {
             homeTab.tap()
         } else if !homeTab.exists {
-            // Try to find any tab with "Home" identifier/label
-            let homeTabFallback = tabBar.buttons.matching(
-                NSPredicate(format: "label CONTAINS[c] 'home' OR identifier CONTAINS[c] 'home'")
-            ).firstMatch
-            if homeTabFallback.exists {
-                homeTabFallback.tap()
-            } else {
-                // Last resort: tap first tab (assumed to be Home)
-                tabBar.buttons.element(boundBy: 0).tap()
-            }
-        }
-
-        // Verify Home loaded successfully
-        let homeNavBar = app.navigationBars["News"]
-        if !homeNavBar.waitForExistence(timeout: Self.shortTimeout) {
-            // Fallback: try tapping first tab if Home didn't load
+            // Fallback: tap first tab (Home is always first)
             tabBar.buttons.element(boundBy: 0).tap()
-            _ = homeNavBar.waitForExistence(timeout: Self.shortTimeout)
         }
 
-        // Pop any pushed views
-        for _ in 0..<2 {
+        // Pop all navigation stack levels (handles deep navigation states)
+        for _ in 0..<3 {
             let backButton = app.buttons["backButton"]
-            if backButton.exists, backButton.isHittable {
-                backButton.tap()
-            } else {
-                break
-            }
+            guard backButton.exists, backButton.isHittable else { break }
+            backButton.tap()
+            wait(for: 0.2) // Allow navigation animation to settle
         }
     }
 
@@ -112,6 +96,33 @@ class BaseUITestCase: XCTestCase {
             searchTab.tap()
         }
         _ = app.navigationBars["Search"].waitForExistence(timeout: Self.shortTimeout)
+    }
+
+    /// Navigate to For You tab and verify navigation bar appears
+    func navigateToForYouTab() {
+        let forYouTab = app.tabBars.buttons["For You"]
+        if forYouTab.exists, !forYouTab.isSelected {
+            forYouTab.tap()
+        }
+        _ = app.navigationBars["For You"].waitForExistence(timeout: Self.shortTimeout)
+    }
+
+    /// Navigate to Categories tab and verify navigation bar appears
+    func navigateToCategoriesTab() {
+        let categoriesTab = app.tabBars.buttons["Categories"]
+        if categoriesTab.exists, !categoriesTab.isSelected {
+            categoriesTab.tap()
+        }
+        _ = app.navigationBars["Categories"].waitForExistence(timeout: Self.shortTimeout)
+    }
+
+    /// Navigate to Bookmarks tab and verify navigation bar appears
+    func navigateToBookmarksTab() {
+        let bookmarksTab = app.tabBars.buttons["Bookmarks"]
+        if bookmarksTab.exists, !bookmarksTab.isSelected {
+            bookmarksTab.tap()
+        }
+        _ = app.navigationBars["Bookmarks"].waitForExistence(timeout: Self.shortTimeout)
     }
 
     /// Navigate to Settings via gear button

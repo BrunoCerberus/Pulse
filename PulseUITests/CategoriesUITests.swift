@@ -4,17 +4,6 @@ final class CategoriesUITests: BaseUITestCase {
 
     // MARK: - Helper Methods
 
-    /// Navigate to Categories tab
-    private func navigateToCategories() {
-        let categoriesTab = app.tabBars.buttons["Categories"]
-        guard categoriesTab.waitForExistence(timeout: 5) else { return }
-        if !categoriesTab.isSelected {
-            categoriesTab.tap()
-        }
-        // Wait for Categories view to load
-        _ = app.navigationBars["Categories"].waitForExistence(timeout: Self.defaultTimeout)
-    }
-
     private func categoryChipsScrollView() -> XCUIElement {
         let chipsScrollView = app.scrollViews["categoryChipsScrollView"]
         if chipsScrollView.exists {
@@ -87,7 +76,7 @@ final class CategoriesUITests: BaseUITestCase {
         let categoriesTab = app.tabBars.buttons["Categories"]
         XCTAssertTrue(categoriesTab.exists, "Categories tab should exist")
 
-        navigateToCategories()
+        navigateToCategoriesTab()
 
         XCTAssertTrue(categoriesTab.isSelected, "Categories tab should be selected")
 
@@ -160,10 +149,10 @@ final class CategoriesUITests: BaseUITestCase {
             }
 
             // --- Scroll Behavior ---
-            if navTitle.waitForExistence(timeout: Self.defaultTimeout) {
+            if navTitle.waitForExistence(timeout: Self.shortTimeout) {
                 let scrollView = app.scrollViews.firstMatch
                 if scrollView.exists {
-                    scrollView.swipeUp()
+                    // Single swipe each direction - sufficient to verify scroll behavior
                     scrollView.swipeUp()
                     scrollView.swipeDown()
                 }
@@ -196,11 +185,11 @@ final class CategoriesUITests: BaseUITestCase {
         homeTab.tap()
 
         let homeNav = app.navigationBars["News"]
-        XCTAssertTrue(homeNav.waitForExistence(timeout: Self.defaultTimeout), "Home should load after tab switch")
+        XCTAssertTrue(homeNav.waitForExistence(timeout: Self.shortTimeout), "Home should load after tab switch")
 
-        navigateToCategories()
+        navigateToCategoriesTab()
 
         let navTitleAfterSwitch = app.navigationBars["Categories"]
-        XCTAssertTrue(navTitleAfterSwitch.waitForExistence(timeout: Self.defaultTimeout), "Categories view should load after tab switch")
+        XCTAssertTrue(navTitleAfterSwitch.waitForExistence(timeout: Self.shortTimeout), "Categories view should load after tab switch")
     }
 }

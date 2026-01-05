@@ -30,37 +30,13 @@ final class PulseSettingsUITests: BaseUITestCase {
         }
     }
 
-    private func scrollContainer() -> XCUIElement? {
+    /// Settings scroll container - prefers table (List renders as UITableView)
+    private func settingsScrollContainer() -> XCUIElement {
         let table = app.tables.firstMatch
-        if table.waitForExistence(timeout: 2) {
-            return table
-        }
-
+        if table.exists { return table }
         let scrollView = app.scrollViews.firstMatch
-        if scrollView.waitForExistence(timeout: 2) {
-            return scrollView
-        }
-
-        return nil
-    }
-
-    private func scrollToElement(_ element: XCUIElement, maxSwipes: Int = 5) -> Bool {
-        if element.exists, element.isHittable { return true }
-
-        // Try table first (Settings uses List which renders as UITableView), then scrollViews
-        // Fall back to app itself if neither container is found
-        let container: XCUIElement = app.tables.firstMatch.exists
-            ? app.tables.firstMatch
-            : (app.scrollViews.firstMatch.exists ? app.scrollViews.firstMatch : app)
-
-        for _ in 0..<maxSwipes {
-            container.swipeUp()
-            // Brief wait allows element to appear after scroll
-            if element.waitForExistence(timeout: 0.1), element.isHittable {
-                return true
-            }
-        }
-        return element.exists && element.isHittable
+        if scrollView.exists { return scrollView }
+        return app
     }
 
     // MARK: - Combined Flow Test
@@ -150,7 +126,7 @@ final class PulseSettingsUITests: BaseUITestCase {
         navigateToSettings()
 
         let notificationsToggleAfter = app.switches["Enable Notifications"]
-        XCTAssertTrue(scrollToElement(notificationsToggleAfter), "Notifications toggle should exist")
+        XCTAssertTrue(scrollToElement(notificationsToggleAfter, in: settingsScrollContainer()), "Notifications toggle should exist")
 
         let persistedValue = isSwitchOn(notificationsToggleAfter)
         XCTAssertEqual(toggledValue, persistedValue, "Setting change should persist across navigation")
@@ -161,7 +137,7 @@ final class PulseSettingsUITests: BaseUITestCase {
 
         // --- Appearance Section ---
         let appearanceSection = app.staticTexts["Appearance"]
-        XCTAssertTrue(scrollToElement(appearanceSection), "Appearance section should exist")
+        XCTAssertTrue(scrollToElement(appearanceSection, in: settingsScrollContainer()), "Appearance section should exist")
 
         let systemThemeToggle = app.switches["Use System Theme"]
         XCTAssertTrue(systemThemeToggle.waitForExistence(timeout: 5))
@@ -178,11 +154,12 @@ final class PulseSettingsUITests: BaseUITestCase {
         setSwitch(systemThemeToggle, to: wasSystemThemeOn)
 
         // --- Content Filters Section ---
+        let container = settingsScrollContainer()
         let mutedSourcesText = app.staticTexts.matching(NSPredicate(format: "label CONTAINS[c] 'Muted Sources'")).firstMatch
-        XCTAssertTrue(scrollToElement(mutedSourcesText), "Muted Sources section should exist")
+        XCTAssertTrue(scrollToElement(mutedSourcesText, in: container), "Muted Sources section should exist")
 
         let mutedKeywordsText = app.staticTexts.matching(NSPredicate(format: "label CONTAINS[c] 'Muted Keywords'")).firstMatch
-        XCTAssertTrue(scrollToElement(mutedKeywordsText), "Muted Keywords section should exist")
+        XCTAssertTrue(scrollToElement(mutedKeywordsText, in: container), "Muted Keywords section should exist")
 
         let mutedSourcesButton = app.buttons.matching(NSPredicate(format: "label CONTAINS[c] 'Muted Sources'")).firstMatch
         if mutedSourcesButton.waitForExistence(timeout: 3) {
@@ -205,7 +182,7 @@ final class PulseSettingsUITests: BaseUITestCase {
 
         // --- Data and About Sections ---
         let dataSection = app.staticTexts["Data"]
-        XCTAssertTrue(scrollToElement(dataSection), "Data section should exist")
+        XCTAssertTrue(scrollToElement(dataSection, in: container), "Data section should exist")
 
         let clearHistoryButton = app.buttons["clearReadingHistoryButton"]
         XCTAssertTrue(clearHistoryButton.waitForExistence(timeout: 5), "Clear Reading History button should exist")
@@ -220,7 +197,7 @@ final class PulseSettingsUITests: BaseUITestCase {
         cancelButton.tap()
 
         let aboutSection = app.staticTexts["About"]
-        XCTAssertTrue(scrollToElement(aboutSection), "About section should exist")
+        XCTAssertTrue(scrollToElement(aboutSection, in: container), "About section should exist")
 
         let versionLabel = app.staticTexts["Version"]
         XCTAssertTrue(versionLabel.waitForExistence(timeout: 5), "Version label should exist")

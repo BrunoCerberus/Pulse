@@ -2,19 +2,6 @@ import XCTest
 
 final class ForYouUITests: BaseUITestCase {
 
-    // MARK: - Helper Methods
-
-    /// Navigate to For You tab
-    private func navigateToForYou() {
-        let forYouTab = app.tabBars.buttons["For You"]
-        guard forYouTab.waitForExistence(timeout: 5) else { return }
-        if !forYouTab.isSelected {
-            forYouTab.tap()
-        }
-        // Wait for For You view to load
-        _ = app.navigationBars["For You"].waitForExistence(timeout: Self.defaultTimeout)
-    }
-
     // MARK: - Combined Flow Test
 
     /// Tests For You navigation, content states, interactions, and related settings flows
@@ -23,7 +10,7 @@ final class ForYouUITests: BaseUITestCase {
         let forYouTab = app.tabBars.buttons["For You"]
         XCTAssertTrue(forYouTab.exists, "For You tab should exist")
 
-        navigateToForYou()
+        navigateToForYouTab()
 
         XCTAssertTrue(forYouTab.isSelected, "For You tab should be selected")
 
@@ -73,7 +60,7 @@ final class ForYouUITests: BaseUITestCase {
         }
 
         // --- Article Navigation and Scroll ---
-        navigateToForYou()
+        navigateToForYouTab()
 
         let articleCardsAfterLoad = articleCards()
         if articleCardsAfterLoad.count > 0 {
@@ -94,15 +81,14 @@ final class ForYouUITests: BaseUITestCase {
             // Pull to refresh
             scrollView.swipeDown()
 
-            // Infinite scroll
+            // Verify infinite scroll works with single swipe pair
             if articleCards().count > 0 {
-                scrollView.swipeUp()
                 scrollView.swipeUp()
                 scrollView.swipeUp()
             }
         }
 
-        XCTAssertTrue(navTitle.waitForExistence(timeout: Self.defaultTimeout), "View should remain functional after scrolling")
+        XCTAssertTrue(navTitle.waitForExistence(timeout: Self.shortTimeout), "View should remain functional after scrolling")
 
         // --- Tab Switching ---
         let homeTab = app.tabBars.buttons["Home"]
@@ -141,9 +127,9 @@ final class ForYouUITests: BaseUITestCase {
         let homeNavAfterSettings = app.navigationBars["News"]
         XCTAssertTrue(homeNavAfterSettings.waitForExistence(timeout: 5), "Should return to Home")
 
-        navigateToForYou()
+        navigateToForYouTab()
 
         let navTitleAfterSettings = app.navigationBars["For You"]
-        XCTAssertTrue(navTitleAfterSettings.waitForExistence(timeout: Self.defaultTimeout), "For You should be visible")
+        XCTAssertTrue(navTitleAfterSettings.waitForExistence(timeout: Self.shortTimeout), "For You should be visible")
     }
 }
