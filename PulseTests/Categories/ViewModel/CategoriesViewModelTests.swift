@@ -294,7 +294,7 @@ struct CategoriesViewModelTests {
 
     // MARK: - Error Path Tests
 
-    @Test("Error during load more shows error message")
+    @Test("Error during load more stops loading and preserves articles")
     func errorDuringLoadMore() async throws {
         // First select category and load articles successfully
         mockCategoriesService.articlesResult = .success(Article.mockArticles)
@@ -306,6 +306,8 @@ struct CategoriesViewModelTests {
         }
         #expect(loaded)
 
+        let articlesBeforeError = sut.viewState.articles
+
         // Now simulate error during load more
         let loadMoreError = NSError(
             domain: "test",
@@ -316,11 +318,14 @@ struct CategoriesViewModelTests {
 
         sut.handle(event: .onLoadMore)
 
-        // Wait for error message to appear
-        let errorShown = await waitForCondition { [sut] in
-            sut.viewState.errorMessage == "Load more failed"
+        // Wait for loading to stop (load more silently fails, preserving existing articles)
+        let loadingStopped = await waitForCondition { [sut] in
+            !sut.viewState.isLoadingMore
         }
-        #expect(errorShown)
+        #expect(loadingStopped)
+
+        // Articles should remain unchanged after error
+        #expect(sut.viewState.articles.count == articlesBeforeError.count)
     }
 
     @Test("Error during refresh shows error message")
