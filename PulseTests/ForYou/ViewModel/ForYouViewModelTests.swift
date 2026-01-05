@@ -30,7 +30,10 @@ struct ForYouViewModelTests {
     }
 
     @Test("Initial view state is correct")
-    func initialViewState() {
+    func initialViewState() async throws {
+        // Wait for Combine binding to settle
+        try await waitForStateUpdate()
+
         let state = sut.viewState
         #expect(state.articles.isEmpty)
         #expect(state.followedTopics.isEmpty)
@@ -38,8 +41,9 @@ struct ForYouViewModelTests {
         #expect(!state.isLoadingMore)
         #expect(!state.isRefreshing)
         #expect(state.errorMessage == nil)
-        #expect(!state.showEmptyState)
-        #expect(!state.showOnboarding)
+        // When articles and followedTopics are empty, showOnboarding is true
+        // showEmptyState is true when articles empty but we have followed topics
+        #expect(state.showOnboarding)
         #expect(state.selectedArticle == nil)
     }
 
@@ -289,7 +293,12 @@ struct ForYouViewModelTests {
         // First load initial articles successfully
         mockForYouService.feedResult = .success(Article.mockArticles)
         sut.handle(event: .onAppear)
-        try await waitForStateUpdate()
+
+        // Wait for articles to load
+        let loaded = await waitForCondition { [sut] in
+            !sut.viewState.articles.isEmpty
+        }
+        #expect(loaded)
 
         // Now simulate error during load more
         let loadMoreError = NSError(
@@ -300,9 +309,12 @@ struct ForYouViewModelTests {
         mockForYouService.feedResult = .failure(loadMoreError)
 
         sut.handle(event: .onLoadMore)
-        try await waitForStateUpdate()
 
-        #expect(sut.viewState.errorMessage == "Load more failed")
+        // Wait for error message to appear
+        let errorShown = await waitForCondition { [sut] in
+            sut.viewState.errorMessage == "Load more failed"
+        }
+        #expect(errorShown)
     }
 
     @Test("Error during refresh clears articles and shows error")

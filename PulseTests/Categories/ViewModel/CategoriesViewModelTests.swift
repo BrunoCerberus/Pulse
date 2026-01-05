@@ -299,7 +299,12 @@ struct CategoriesViewModelTests {
         // First select category and load articles successfully
         mockCategoriesService.articlesResult = .success(Article.mockArticles)
         sut.handle(event: .onCategorySelected(.technology))
-        try await waitForStateUpdate()
+
+        // Wait for articles to load
+        let loaded = await waitForCondition { [sut] in
+            !sut.viewState.articles.isEmpty
+        }
+        #expect(loaded)
 
         // Now simulate error during load more
         let loadMoreError = NSError(
@@ -310,9 +315,12 @@ struct CategoriesViewModelTests {
         mockCategoriesService.articlesResult = .failure(loadMoreError)
 
         sut.handle(event: .onLoadMore)
-        try await waitForStateUpdate()
 
-        #expect(sut.viewState.errorMessage == "Load more failed")
+        // Wait for error message to appear
+        let errorShown = await waitForCondition { [sut] in
+            sut.viewState.errorMessage == "Load more failed"
+        }
+        #expect(errorShown)
     }
 
     @Test("Error during refresh shows error message")
