@@ -39,7 +39,7 @@ struct AuthenticationManagerTests {
     @Test("Configure with authenticated user sets state immediately")
     func configureWithAuthenticatedUser() {
         let testUser = AuthUser(
-            id: "test-user-123",
+            uid: "test-user-123",
             email: "test@example.com",
             displayName: "Test User",
             photoURL: nil,
@@ -80,7 +80,7 @@ struct AuthenticationManagerTests {
             .store(in: &cancellables)
 
         let testUser = AuthUser(
-            id: "test-user-456",
+            uid: "test-user-456",
             email: "user@example.com",
             displayName: "New User",
             photoURL: nil,
@@ -90,14 +90,17 @@ struct AuthenticationManagerTests {
         // Simulate auth service publishing a new user
         mockAuthService.simulateSignedIn(testUser)
 
-        try await waitForStateUpdate()
-
-        #expect(states.contains { state in
-            if case let .authenticated(user) = state {
-                return user == testUser
+        // Wait for authenticated state to be published
+        let success = await waitForCondition {
+            states.contains { state in
+                if case let .authenticated(user) = state {
+                    return user == testUser
+                }
+                return false
             }
-            return false
-        })
+        }
+
+        #expect(success)
     }
 
     @Test("Auth state publisher emits state changes")
@@ -115,7 +118,7 @@ struct AuthenticationManagerTests {
             .store(in: &cancellables)
 
         let testUser = AuthUser(
-            id: "test-user-789",
+            uid: "test-user-789",
             email: "another@example.com",
             displayName: "Another User",
             photoURL: nil,
@@ -124,15 +127,18 @@ struct AuthenticationManagerTests {
 
         mockAuthService.simulateSignedIn(testUser)
 
-        try await waitForStateUpdate()
+        // Wait for state changes to be published
+        let success = await waitForCondition {
+            states.count >= 1
+        }
 
-        #expect(states.count >= 1)
+        #expect(success)
     }
 
     @Test("Logout triggers unauthenticated state")
     func logoutTriggersUnauthenticatedState() async throws {
         let testUser = AuthUser(
-            id: "test-user-logout",
+            uid: "test-user-logout",
             email: "logout@example.com",
             displayName: "Logout User",
             photoURL: nil,
@@ -146,9 +152,12 @@ struct AuthenticationManagerTests {
         // Simulate logout by sending nil
         mockAuthService.simulateSignedOut()
 
-        try await waitForStateUpdate()
+        // Wait for unauthenticated state
+        let success = await waitForCondition { [sut] in
+            sut.authState == .unauthenticated
+        }
 
-        #expect(sut.authState == .unauthenticated)
+        #expect(success)
         #expect(sut.currentUser == nil)
         #expect(!sut.isAuthenticated)
     }
@@ -161,7 +170,7 @@ struct AuthenticationManagerTests {
         #expect(sut.currentUser == nil)
 
         let testUser = AuthUser(
-            id: "test-user-update",
+            uid: "test-user-update",
             email: "update@example.com",
             displayName: "Update User",
             photoURL: nil,
@@ -170,9 +179,12 @@ struct AuthenticationManagerTests {
 
         mockAuthService.simulateSignedIn(testUser)
 
-        try await waitForStateUpdate()
+        // Wait for current user to be updated
+        let success = await waitForCondition { [sut] in
+            sut.currentUser == testUser
+        }
 
-        #expect(sut.currentUser == testUser)
+        #expect(success)
     }
 
     @Test("isAuthenticated returns correct value for different states")
@@ -183,7 +195,7 @@ struct AuthenticationManagerTests {
 
         // Test authenticated state
         let testUser = AuthUser(
-            id: "test-user-auth-check",
+            uid: "test-user-auth-check",
             email: "authcheck@example.com",
             displayName: "Auth Check User",
             photoURL: nil,
@@ -200,14 +212,14 @@ struct AuthenticationManagerTests {
     @Test("Auth state equality works correctly")
     func authStateEquality() {
         let user1 = AuthUser(
-            id: "user-1",
+            uid: "user-1",
             email: "user1@example.com",
             displayName: "User 1",
             photoURL: nil,
             provider: .google
         )
         let user2 = AuthUser(
-            id: "user-2",
+            uid: "user-2",
             email: "user2@example.com",
             displayName: "User 2",
             photoURL: nil,
@@ -235,7 +247,7 @@ struct AuthenticationManagerTests {
     @Test("Testing helpers set state correctly")
     func helpersSetState() {
         let testUser = AuthUser(
-            id: "test-helper-user",
+            uid: "test-helper-user",
             email: "helper@example.com",
             displayName: "Helper User",
             photoURL: nil,

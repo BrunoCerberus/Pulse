@@ -142,14 +142,20 @@ struct ForYouViewModelTests {
         try await waitForStateUpdate()
 
         sut.handle(event: .onArticleTapped(articleId: article.id))
-        try await waitForStateUpdate(duration: TestWaitDuration.short)
 
-        #expect(sut.viewState.selectedArticle != nil)
+        // Wait for article to be selected
+        let selected = await waitForCondition { [sut] in
+            sut.viewState.selectedArticle != nil
+        }
+        #expect(selected)
 
         sut.handle(event: .onArticleNavigated)
-        try await waitForStateUpdate(duration: TestWaitDuration.short)
 
-        #expect(sut.viewState.selectedArticle == nil)
+        // Wait for article to be cleared
+        let cleared = await waitForCondition { [sut] in
+            sut.viewState.selectedArticle == nil
+        }
+        #expect(cleared)
     }
 
     @Test("View state shows onboarding when no followed topics")

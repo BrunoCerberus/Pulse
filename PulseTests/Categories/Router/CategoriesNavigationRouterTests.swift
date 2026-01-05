@@ -14,15 +14,7 @@ struct CategoriesNavigationRouterTests {
     let sut: CategoriesNavigationRouter
 
     init() {
-        serviceLocator = ServiceLocator()
-        serviceLocator.register(NewsService.self, instance: MockNewsService())
-        serviceLocator.register(StorageService.self, instance: MockStorageService())
-        serviceLocator.register(SearchService.self, instance: MockSearchService())
-        serviceLocator.register(ForYouService.self, instance: MockForYouService())
-        serviceLocator.register(CategoriesService.self, instance: MockCategoriesService())
-        serviceLocator.register(BookmarksService.self, instance: MockBookmarksService())
-        serviceLocator.register(SettingsService.self, instance: MockSettingsService())
-
+        serviceLocator = TestServiceLocatorFactory.createFullyMocked()
         coordinator = Coordinator(serviceLocator: serviceLocator)
         sut = CategoriesNavigationRouter(coordinator: coordinator)
     }
