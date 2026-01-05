@@ -58,9 +58,12 @@ struct ForYouViewModelTests {
 
         sut.handle(event: .onAppear)
 
-        try await waitForStateUpdate()
+        // Wait for state changes to be published
+        let success = await waitForCondition { states.count > 1 }
+        #expect(success)
 
-        #expect(states.count > 1)
+        // Keep cancellables alive until end of test
+        withExtendedLifetime(cancellables) {}
     }
 
     @Test("Handle onRefresh triggers refresh")
@@ -78,9 +81,12 @@ struct ForYouViewModelTests {
 
         sut.handle(event: .onRefresh)
 
-        try await waitForStateUpdate()
+        // Wait for state changes to be published
+        let success = await waitForCondition { states.count > 1 }
+        #expect(success)
 
-        #expect(states.count > 1)
+        // Keep cancellables alive until end of test
+        withExtendedLifetime(cancellables) {}
     }
 
     @Test("Handle onLoadMore triggers load more")
@@ -243,9 +249,13 @@ struct ForYouViewModelTests {
         mockForYouService.feedResult = .success(Article.mockArticles)
 
         sut.handle(event: .onAppear)
-        try await waitForStateUpdate()
 
-        #expect(states.count > 1)
+        // Wait for state changes to be published
+        let success = await waitForCondition { states.count > 1 }
+        #expect(success)
+
+        // Keep cancellables alive until end of test
+        withExtendedLifetime(cancellables) {}
     }
 
     @Test("Loading states are correctly reflected")
@@ -263,10 +273,13 @@ struct ForYouViewModelTests {
         mockForYouService.feedResult = .success(Article.mockArticles)
 
         sut.handle(event: .onAppear)
-        try await waitForStateUpdate()
 
-        // Should have at least initial state (false) and loading state (true)
-        #expect(loadingStates.count >= 2)
+        // Wait for loading states to be captured
+        let success = await waitForCondition { loadingStates.count >= 2 }
+        #expect(success)
+
+        // Keep cancellables alive until end of test
+        withExtendedLifetime(cancellables) {}
     }
 
     // MARK: - Error Path Tests
