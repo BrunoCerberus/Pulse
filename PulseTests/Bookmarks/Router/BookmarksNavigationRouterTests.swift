@@ -2,6 +2,10 @@ import Foundation
 @testable import Pulse
 import Testing
 
+/// Tests for BookmarksNavigationRouter covering:
+/// - Article detail navigation
+/// - Nil coordinator safety
+/// - Equatable conformance
 @Suite("BookmarksNavigationRouter Tests")
 @MainActor
 struct BookmarksNavigationRouterTests {
@@ -21,20 +25,6 @@ struct BookmarksNavigationRouterTests {
 
         coordinator = Coordinator(serviceLocator: serviceLocator)
         sut = BookmarksNavigationRouter(coordinator: coordinator)
-    }
-
-    // MARK: - Initialization Tests
-
-    @Test("Router can be initialized with coordinator")
-    func routerCanBeInitializedWithCoordinator() {
-        let router = BookmarksNavigationRouter(coordinator: coordinator)
-        #expect(router != nil)
-    }
-
-    @Test("Router can be initialized without coordinator")
-    func routerCanBeInitializedWithoutCoordinator() {
-        let router = BookmarksNavigationRouter(coordinator: nil)
-        #expect(router != nil)
     }
 
     // MARK: - Article Detail Navigation Tests

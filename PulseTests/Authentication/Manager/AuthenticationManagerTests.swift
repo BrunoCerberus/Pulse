@@ -3,6 +3,16 @@ import Foundation
 @testable import Pulse
 import Testing
 
+/// Tests for AuthenticationManager singleton covering:
+/// - Initial loading state
+/// - Configuration with/without authenticated user
+/// - Auth state publisher binding
+/// - User sign-in and sign-out lifecycle
+/// - State equality comparisons
+/// - Test isolation with resetForTesting()
+///
+/// NOTE: Tests use shared singleton with resetForTesting() for isolation.
+/// The resetForTesting() method ensures clean state between tests.
 @Suite("AuthenticationManager Tests")
 @MainActor
 struct AuthenticationManagerTests {

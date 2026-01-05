@@ -3,6 +3,13 @@ import Foundation
 @testable import Pulse
 import Testing
 
+/// Tests for ForYouViewModel covering:
+/// - Initial state and onAppear behavior
+/// - Refresh and load more functionality
+/// - Article selection and navigation
+/// - Empty state and onboarding detection
+/// - Error handling (load more, refresh, recovery)
+/// - Publisher binding and state transformation
 @Suite("ForYouViewModel Tests")
 @MainActor
 struct ForYouViewModelTests {
@@ -323,5 +330,36 @@ struct ForYouViewModelTests {
 
         #expect(sut.viewState.errorMessage == nil)
         #expect(!sut.viewState.articles.isEmpty)
+    }
+
+    // MARK: - Service Integration Tests
+
+    @Test("ViewModel handles network timeout errors gracefully")
+    func networkTimeoutError() async throws {
+        let timeoutError = NSError(
+            domain: NSURLErrorDomain,
+            code: NSURLErrorTimedOut,
+            userInfo: [NSLocalizedDescriptionKey: "The request timed out."]
+        )
+        mockForYouService.feedResult = .failure(timeoutError)
+
+        sut.handle(event: .onAppear)
+        try await Task.sleep(nanoseconds: 100_000_000)
+
+        #expect(sut.viewState.errorMessage == "The request timed out.")
+        #expect(!sut.viewState.isLoading)
+    }
+
+    @Test("ViewModel handles storage service errors")
+    func storageServiceError() async throws {
+        // Simulate storage service returning nil preferences (no error thrown, just nil)
+        mockStorageService.userPreferences = nil
+        mockForYouService.feedResult = .success([])
+
+        sut.handle(event: .onAppear)
+        try await Task.sleep(nanoseconds: 100_000_000)
+
+        // Should show onboarding when no preferences exist
+        #expect(sut.viewState.showOnboarding)
     }
 }

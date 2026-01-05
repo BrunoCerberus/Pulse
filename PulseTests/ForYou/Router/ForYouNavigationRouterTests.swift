@@ -2,6 +2,11 @@ import Foundation
 @testable import Pulse
 import Testing
 
+/// Tests for ForYouNavigationRouter covering:
+/// - Article detail navigation
+/// - Settings navigation
+/// - Nil coordinator safety
+/// - Equatable conformance
 @Suite("ForYouNavigationRouter Tests")
 @MainActor
 struct ForYouNavigationRouterTests {
@@ -21,20 +26,6 @@ struct ForYouNavigationRouterTests {
 
         coordinator = Coordinator(serviceLocator: serviceLocator)
         sut = ForYouNavigationRouter(coordinator: coordinator)
-    }
-
-    // MARK: - Initialization Tests
-
-    @Test("Router can be initialized with coordinator")
-    func routerCanBeInitializedWithCoordinator() {
-        let router = ForYouNavigationRouter(coordinator: coordinator)
-        #expect(router != nil)
-    }
-
-    @Test("Router can be initialized without coordinator")
-    func routerCanBeInitializedWithoutCoordinator() {
-        let router = ForYouNavigationRouter(coordinator: nil)
-        #expect(router != nil)
     }
 
     // MARK: - Article Detail Navigation Tests

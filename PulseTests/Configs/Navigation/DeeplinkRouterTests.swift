@@ -3,6 +3,12 @@ import Foundation
 @testable import Pulse
 import Testing
 
+/// Tests for DeeplinkRouter covering:
+/// - Home, search, bookmarks, settings navigation
+/// - Article and category deeplinks
+/// - Deeplink queuing when coordinator unavailable
+/// - Integration with DeeplinkManager publisher
+/// - Deeplink clearing after routing
 @Suite("DeeplinkRouter Tests")
 @MainActor
 struct DeeplinkRouterTests {

@@ -3,6 +3,14 @@ import Foundation
 @testable import Pulse
 import Testing
 
+/// Tests for CategoriesViewModel covering:
+/// - Initial state with all available categories
+/// - Category selection and article loading
+/// - Refresh and load more functionality
+/// - Article selection and navigation
+/// - Empty state handling
+/// - Error handling (category load, load more, refresh, recovery)
+/// - Publisher binding and state transformation
 @Suite("CategoriesViewModel Tests")
 @MainActor
 struct CategoriesViewModelTests {
@@ -357,5 +365,39 @@ struct CategoriesViewModelTests {
 
         #expect(sut.viewState.errorMessage == nil)
         #expect(sut.viewState.selectedCategory == .business)
+    }
+
+    // MARK: - Service Integration Tests
+
+    @Test("ViewModel handles network timeout errors gracefully")
+    func networkTimeoutError() async throws {
+        let timeoutError = NSError(
+            domain: NSURLErrorDomain,
+            code: NSURLErrorTimedOut,
+            userInfo: [NSLocalizedDescriptionKey: "The request timed out."]
+        )
+        mockCategoriesService.articlesResult = .failure(timeoutError)
+
+        sut.handle(event: .onCategorySelected(.technology))
+        try await Task.sleep(nanoseconds: 100_000_000)
+
+        #expect(sut.viewState.errorMessage == "The request timed out.")
+        #expect(!sut.viewState.isLoading)
+    }
+
+    @Test("ViewModel handles no internet connection errors")
+    func noInternetError() async throws {
+        let noConnectionError = NSError(
+            domain: NSURLErrorDomain,
+            code: NSURLErrorNotConnectedToInternet,
+            userInfo: [NSLocalizedDescriptionKey: "The Internet connection appears to be offline."]
+        )
+        mockCategoriesService.articlesResult = .failure(noConnectionError)
+
+        sut.handle(event: .onCategorySelected(.science))
+        try await Task.sleep(nanoseconds: 100_000_000)
+
+        #expect(sut.viewState.errorMessage == "The Internet connection appears to be offline.")
+        #expect(sut.viewState.articles.isEmpty)
     }
 }

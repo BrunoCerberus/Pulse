@@ -2,6 +2,10 @@ import Foundation
 @testable import Pulse
 import Testing
 
+/// Tests for CategoriesNavigationRouter covering:
+/// - Article detail navigation
+/// - Nil coordinator safety
+/// - Equatable conformance
 @Suite("CategoriesNavigationRouter Tests")
 @MainActor
 struct CategoriesNavigationRouterTests {
@@ -21,20 +25,6 @@ struct CategoriesNavigationRouterTests {
 
         coordinator = Coordinator(serviceLocator: serviceLocator)
         sut = CategoriesNavigationRouter(coordinator: coordinator)
-    }
-
-    // MARK: - Initialization Tests
-
-    @Test("Router can be initialized with coordinator")
-    func routerCanBeInitializedWithCoordinator() {
-        let router = CategoriesNavigationRouter(coordinator: coordinator)
-        #expect(router != nil)
-    }
-
-    @Test("Router can be initialized without coordinator")
-    func routerCanBeInitializedWithoutCoordinator() {
-        let router = CategoriesNavigationRouter(coordinator: nil)
-        #expect(router != nil)
     }
 
     // MARK: - Article Detail Navigation Tests
