@@ -3,16 +3,25 @@ import Foundation
 @testable import Pulse
 import Testing
 
-/// Basic tests for Live services to verify instantiation and basic functionality.
+/// Smoke tests for Live service implementations.
 ///
-/// Note: These are network/Firebase/SwiftData-dependent services. Comprehensive integration
-/// testing would require complex mocking infrastructure (URLProtocol, Firebase SDK mocks, etc.).
-/// The architecture properly isolates these via Mock services for DomainInteractor tests.
-///
-/// These tests verify:
-/// - Services can be instantiated
+/// **Purpose**: These are intentionally minimal tests that verify:
+/// - Services can be instantiated without crashing
 /// - Method signatures exist and return expected publisher types
-/// - Any testable business logic is verified
+/// - API contracts are maintained at compile-time
+///
+/// **Why Minimal Scope**: These services depend on external infrastructure:
+/// - Firebase Auth, Remote Config (requires SDK initialization)
+/// - StoreKit (requires App Store Connect configuration)
+/// - Network layer (requires URLProtocol mocking for true isolation)
+/// - SwiftData (requires ModelContainer setup)
+///
+/// Comprehensive testing of business logic is done through Mock services
+/// in DomainInteractor tests, which properly isolates the domain layer.
+///
+/// **Placeholder Tests**: Some tests use `#expect(true)` because actual
+/// instantiation requires external configuration that may not be available
+/// in CI environments. These serve as documentation of the test intention.
 @Suite("Live Services Basic Tests")
 struct LiveServicesBasicTests {
     // MARK: - LiveNewsService Tests

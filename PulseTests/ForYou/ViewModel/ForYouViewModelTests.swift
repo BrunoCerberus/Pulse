@@ -124,10 +124,12 @@ struct ForYouViewModelTests {
 
         sut.handle(event: .onArticleTapped(articleId: article.id))
 
-        // Wait for Combine pipeline to propagate state
-        try await waitForStateUpdate(duration: TestWaitDuration.short)
+        // Use condition-based waiting for more reliable state verification
+        let success = await waitForCondition { [sut] in
+            sut.viewState.selectedArticle?.id == article.id
+        }
 
-        #expect(sut.viewState.selectedArticle?.id == article.id)
+        #expect(success)
     }
 
     @Test("Handle onArticleNavigated clears selected article")
