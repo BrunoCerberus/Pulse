@@ -3,6 +3,7 @@ import Foundation
 import Testing
 
 @Suite("BookmarkedArticle Tests")
+@MainActor
 struct BookmarkedArticleTests {
     let testArticle: Article
 

@@ -3,6 +3,7 @@ import Foundation
 import Testing
 
 @Suite("ServiceLocator Tests")
+@MainActor
 struct ServiceLocatorTests {
     @Test("Register and retrieve service")
     func registerAndRetrieve() throws {

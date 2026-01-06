@@ -3,6 +3,7 @@ import Foundation
 import Testing
 
 @Suite("PaywallDomainEventActionMap Tests")
+@MainActor
 struct PaywallDomainEventActionMapTests {
     @Test("viewDidAppear maps to loadProducts")
     func viewDidAppearMapsToLoadProducts() {

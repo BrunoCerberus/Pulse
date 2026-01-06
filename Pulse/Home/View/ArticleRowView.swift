@@ -55,12 +55,14 @@ struct ArticleRowView: View {
                                 .overlay {
                                     ProgressView()
                                 }
+                                .accessibilityHidden(true)
                         case let .success(image):
                             image
                                 .resizable()
                                 .aspectRatio(contentMode: .fill)
                                 .frame(width: 100, height: 100)
                                 .clipped()
+                                .accessibilityLabel(item.title)
                         case .failure:
                             Rectangle()
                                 .fill(.quaternary)
@@ -68,6 +70,7 @@ struct ArticleRowView: View {
                                     Image(systemName: "photo")
                                         .foregroundStyle(.secondary)
                                 }
+                                .accessibilityHidden(true)
                         @unknown default:
                             EmptyView()
                         }

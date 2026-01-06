@@ -4,6 +4,7 @@ import Foundation
 import Testing
 
 @Suite("LiveSearchService Tests", .serialized)
+@MainActor
 struct LiveSearchServiceTests {
     private let recentSearchesKey = "pulse.recentSearches"
     let sut = LiveSearchService()

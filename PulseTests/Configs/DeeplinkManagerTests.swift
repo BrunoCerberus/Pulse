@@ -4,6 +4,7 @@ import Foundation
 import Testing
 
 @Suite("DeeplinkManager Tests", .serialized)
+@MainActor
 struct DeeplinkManagerTests {
     let sut: DeeplinkManager
 

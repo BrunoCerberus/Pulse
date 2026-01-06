@@ -3,6 +3,7 @@ import Foundation
 import Testing
 
 @Suite("WidgetDataManager Tests")
+@MainActor
 struct WidgetDataManagerTests {
     // MARK: - SharedWidgetArticle Encoding Tests
 

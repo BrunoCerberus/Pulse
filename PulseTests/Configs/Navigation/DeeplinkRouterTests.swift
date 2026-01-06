@@ -58,14 +58,20 @@ struct DeeplinkRouterTests {
         sut.setCoordinator(coordinator)
         coordinator.selectedTab = .home
 
+        // Clear any pending state before routing
+        coordinator.searchViewModel.handle(event: .onClear)
+        try await waitForStateUpdate()
+
         sut.route(deeplink: .search(query: "technology"))
 
         // Tab switch is synchronous
         #expect(coordinator.selectedTab == .search)
 
-        // ViewModel state update needs time to propagate through Combine
-        try await waitForStateUpdate()
-        #expect(coordinator.searchViewModel.viewState.query == "technology")
+        // Use condition-based wait for more reliable state verification
+        let success = await waitForCondition { [coordinator] in
+            coordinator.searchViewModel.viewState.query == "technology"
+        }
+        #expect(success, "Query should be 'technology' after routing")
     }
 
     @Test("Route search deeplink with empty query does not set query")
@@ -124,10 +130,16 @@ struct DeeplinkRouterTests {
 
         sut.route(deeplink: .category(name: "technology"))
 
-        try await waitForStateUpdate()
+        // Use condition-based wait for more reliable state verification
+        let tabSuccess = await waitForCondition { [coordinator] in
+            coordinator.selectedTab == .categories
+        }
+        #expect(tabSuccess, "Tab should switch to categories")
 
-        #expect(coordinator.selectedTab == .categories)
-        #expect(coordinator.categoriesViewModel.viewState.selectedCategory == .technology)
+        let categorySuccess = await waitForCondition { [coordinator] in
+            coordinator.categoriesViewModel.viewState.selectedCategory == .technology
+        }
+        #expect(categorySuccess, "Category should be technology")
     }
 
     @Test("Route category deeplink with invalid category switches but does not select")

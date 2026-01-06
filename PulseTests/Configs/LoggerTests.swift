@@ -3,6 +3,7 @@ import Foundation
 import Testing
 
 @Suite("Logger Tests")
+@MainActor
 struct LoggerTests {
     let sut = Logger.shared
 

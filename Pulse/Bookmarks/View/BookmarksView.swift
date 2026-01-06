@@ -128,7 +128,7 @@ struct BookmarksView<R: BookmarksNavigationRouter>: View {
 
     private var bookmarksList: some View {
         ScrollView {
-            VStack(spacing: Spacing.sm) {
+            LazyVStack(spacing: Spacing.sm) {
                 bookmarkCountHeader
 
                 ForEach(viewModel.viewState.bookmarks) { item in
