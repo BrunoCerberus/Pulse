@@ -1,6 +1,7 @@
 import XCTest
 
 /// Base class for UI tests that standardizes launch configuration and isolation.
+@MainActor
 class BaseUITestCase: XCTestCase {
     /// App instance - launched per test for isolation
     var app: XCUIApplication!

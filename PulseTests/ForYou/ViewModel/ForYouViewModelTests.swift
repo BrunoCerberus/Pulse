@@ -327,9 +327,12 @@ struct ForYouViewModelTests {
         // First load initial articles
         mockForYouService.feedResult = .success(Article.mockArticles)
         sut.handle(event: .onAppear)
-        try await waitForStateUpdate()
 
-        #expect(!sut.viewState.articles.isEmpty)
+        // Wait for articles to load
+        let loaded = await waitForCondition { [sut] in
+            !sut.viewState.articles.isEmpty
+        }
+        #expect(loaded)
 
         // Now simulate error during refresh
         let refreshError = NSError(
@@ -340,9 +343,12 @@ struct ForYouViewModelTests {
         mockForYouService.feedResult = .failure(refreshError)
 
         sut.handle(event: .onRefresh)
-        try await waitForStateUpdate()
 
-        #expect(sut.viewState.errorMessage == "Refresh failed")
+        // Wait for error message to appear
+        let hasError = await waitForCondition { [sut] in
+            sut.viewState.errorMessage == "Refresh failed"
+        }
+        #expect(hasError)
     }
 
     @Test("Error recovery: success after error clears error message")
@@ -356,18 +362,23 @@ struct ForYouViewModelTests {
         mockForYouService.feedResult = .failure(initialError)
 
         sut.handle(event: .onAppear)
-        try await waitForStateUpdate()
 
-        #expect(sut.viewState.errorMessage == "Initial error")
+        // Wait for error message to appear
+        let hasError = await waitForCondition { [sut] in
+            sut.viewState.errorMessage == "Initial error"
+        }
+        #expect(hasError)
 
         // Now recover with successful load
         mockForYouService.feedResult = .success(Article.mockArticles)
 
         sut.handle(event: .onRefresh)
-        try await waitForStateUpdate()
 
-        #expect(sut.viewState.errorMessage == nil)
-        #expect(!sut.viewState.articles.isEmpty)
+        // Wait for error to be cleared and articles to load
+        let recovered = await waitForCondition { [sut] in
+            sut.viewState.errorMessage == nil && !sut.viewState.articles.isEmpty
+        }
+        #expect(recovered)
     }
 
     // MARK: - Service Integration Tests

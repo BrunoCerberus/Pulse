@@ -207,9 +207,12 @@ struct DeeplinkRouterTests {
         // Simulate DeeplinkManager sending a deeplink
         DeeplinkManager.shared.handle(deeplink: .bookmarks)
 
-        try await waitForStateUpdate()
+        // Wait for Combine publisher to propagate with condition-based waiting
+        let routed = await waitForCondition(timeout: 1_000_000_000) { [coordinator] in
+            coordinator.selectedTab == .bookmarks
+        }
 
-        #expect(coordinator.selectedTab == .bookmarks)
+        #expect(routed)
     }
 
     // MARK: - Deeplink Clearing Tests

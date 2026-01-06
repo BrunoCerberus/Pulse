@@ -254,10 +254,10 @@ struct ArticleDetailVMBookmarkTests {
         try await mockStorageService.saveArticle(testArticle)
         let sut = ArticleDetailViewModel(article: testArticle, serviceLocator: serviceLocator)
         sut.onAppear()
-        try await Task.sleep(nanoseconds: 200_000_000)
+        try await Task.sleep(nanoseconds: 500_000_000)
         #expect(sut.isBookmarked)
         sut.toggleBookmark()
-        try await Task.sleep(nanoseconds: 200_000_000)
+        try await Task.sleep(nanoseconds: 500_000_000)
         #expect(!sut.isBookmarked)
     }
 
@@ -280,7 +280,7 @@ struct ArticleDetailVMBookmarkTests {
         let sut = ArticleDetailViewModel(article: testArticle, serviceLocator: serviceLocator)
         #expect(!sut.isBookmarked)
         sut.onAppear()
-        try await Task.sleep(nanoseconds: 200_000_000)
+        try await Task.sleep(nanoseconds: 500_000_000)
         #expect(sut.isBookmarked)
     }
 

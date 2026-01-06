@@ -2,6 +2,7 @@ import Combine
 import Foundation
 import UIKit
 
+@MainActor
 final class ArticleDetailViewModel: ObservableObject {
     @Published var isBookmarked = false
     @Published var showShareSheet = false
@@ -53,7 +54,7 @@ final class ArticleDetailViewModel: ObservableObject {
         }
     }
 
-    private func createProcessedContent(from content: String?) -> AttributedString? {
+    private nonisolated func createProcessedContent(from content: String?) -> AttributedString? {
         guard let content else { return nil }
 
         let strippedContent = stripTruncationMarker(from: content)
@@ -69,7 +70,7 @@ final class ArticleDetailViewModel: ObservableObject {
         return attributedString
     }
 
-    private func createProcessedDescription(from description: String?) -> AttributedString? {
+    private nonisolated func createProcessedDescription(from description: String?) -> AttributedString? {
         guard let description else { return nil }
 
         let cleanText = stripHTML(from: description)
@@ -92,7 +93,7 @@ final class ArticleDetailViewModel: ObservableObject {
         return attributedString
     }
 
-    private func formatIntoParagraphs(_ text: String) -> String {
+    private nonisolated func formatIntoParagraphs(_ text: String) -> String {
         // Split into sentences using regex pattern for sentence boundaries
         let pattern = #"(?<=[.!?])\s+"#
         guard let regex = try? NSRegularExpression(pattern: pattern) else { return text }
@@ -124,7 +125,7 @@ final class ArticleDetailViewModel: ObservableObject {
         return paragraphs.joined(separator: "\n\n")
     }
 
-    private func stripHTML(from html: String) -> String {
+    private nonisolated func stripHTML(from html: String) -> String {
         html.replacingOccurrences(of: #"<[^>]+>"#, with: " ", options: .regularExpression)
             .replacingOccurrences(of: "&nbsp;", with: " ")
             .replacingOccurrences(of: "&amp;", with: "&")
@@ -135,7 +136,7 @@ final class ArticleDetailViewModel: ObservableObject {
             .replacingOccurrences(of: #"\s+"#, with: " ", options: .regularExpression)
     }
 
-    private func stripTruncationMarker(from content: String) -> String {
+    private nonisolated func stripTruncationMarker(from content: String) -> String {
         let pattern = #"\s*\[\+\d+ chars\]"#
         return content.replacingOccurrences(of: pattern, with: "", options: .regularExpression)
     }

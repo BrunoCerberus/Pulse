@@ -59,11 +59,15 @@ struct ArticleDetailView: View {
                         viewModel.toggleBookmark()
                     }
                     .accessibilityIdentifier(viewModel.isBookmarked ? "bookmark.fill" : "bookmark")
+                    .accessibilityLabel(viewModel.isBookmarked ? "Remove bookmark" : "Add bookmark")
+                    .accessibilityHint("Save article for offline reading")
 
                     Button("", systemImage: "square.and.arrow.up") {
                         viewModel.share()
                     }
                     .accessibilityIdentifier("square.and.arrow.up")
+                    .accessibilityLabel("Share article")
+                    .accessibilityHint("Share this article with others")
                 }
             }
         }
