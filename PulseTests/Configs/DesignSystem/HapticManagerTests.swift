@@ -3,6 +3,7 @@ import Foundation
 import Testing
 
 @Suite("HapticManager Tests")
+@MainActor
 struct HapticManagerTests {
     let sut = HapticManager.shared
 

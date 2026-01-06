@@ -16,7 +16,7 @@ struct BreakingNewsCard: View {
         Button(action: onTap) {
             ZStack(alignment: .bottomLeading) {
                 if let imageURL = item.imageURL {
-                    CachedAsyncImage(url: imageURL) { image in
+                    CachedAsyncImage(url: imageURL, accessibilityLabel: item.title) { image in
                         image
                             .resizable()
                             .aspectRatio(contentMode: .fill)

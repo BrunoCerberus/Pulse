@@ -45,7 +45,7 @@ struct HeroNewsCard: View {
     @ViewBuilder
     private var imageBackground: some View {
         if let imageURL = item.imageURL {
-            CachedAsyncImage(url: imageURL) { image in
+            CachedAsyncImage(url: imageURL, accessibilityLabel: item.title) { image in
                 image
                     .resizable()
                     .aspectRatio(contentMode: .fill)
@@ -191,7 +191,7 @@ struct FeaturedArticleCard: View {
     @ViewBuilder
     private var imageSection: some View {
         if let imageURL = item.imageURL {
-            CachedAsyncImage(url: imageURL) { image in
+            CachedAsyncImage(url: imageURL, accessibilityLabel: item.title) { image in
                 image
                     .resizable()
                     .aspectRatio(contentMode: .fill)

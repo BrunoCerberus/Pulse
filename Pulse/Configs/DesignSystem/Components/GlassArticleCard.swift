@@ -109,7 +109,7 @@ struct GlassArticleCard: View {
     @ViewBuilder
     private var articleImage: some View {
         if let imageURL {
-            CachedAsyncImage(url: imageURL) { image in
+            CachedAsyncImage(url: imageURL, accessibilityLabel: title) { image in
                 image
                     .resizable()
                     .aspectRatio(contentMode: .fill)
@@ -180,7 +180,7 @@ struct GlassArticleCardCompact: View {
         } label: {
             HStack(spacing: Spacing.sm) {
                 if let imageURL {
-                    CachedAsyncImage(url: imageURL) { image in
+                    CachedAsyncImage(url: imageURL, accessibilityLabel: title) { image in
                         image
                             .resizable()
                             .aspectRatio(contentMode: .fill)

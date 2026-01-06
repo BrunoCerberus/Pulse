@@ -65,8 +65,10 @@ private struct ProfileImageView: View {
             .scaledToFill()
             .frame(width: 64, height: 64)
             .clipShape(Circle())
+            .accessibilityLabel("Profile photo")
         } else {
             InitialPlaceholderView(user: user)
+                .accessibilityLabel("User initial")
         }
     }
 }

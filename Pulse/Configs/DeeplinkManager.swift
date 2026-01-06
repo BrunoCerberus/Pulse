@@ -10,6 +10,7 @@ enum Deeplink: Equatable {
     case category(name: String)
 }
 
+@MainActor
 final class DeeplinkManager: ObservableObject {
     static let shared = DeeplinkManager()
 

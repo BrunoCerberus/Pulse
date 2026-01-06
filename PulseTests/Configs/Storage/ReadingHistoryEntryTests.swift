@@ -3,6 +3,7 @@ import Foundation
 import Testing
 
 @Suite("ReadingHistoryEntry Tests")
+@MainActor
 struct ReadingHistoryEntryTests {
     // MARK: - Initialization Tests
 

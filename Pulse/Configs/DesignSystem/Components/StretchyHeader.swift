@@ -61,17 +61,20 @@ struct StretchyAsyncImage: View {
     let baseHeight: CGFloat
     let showGradientOverlay: Bool
     let gradientHeight: CGFloat
+    let accessibilityLabel: String?
 
     init(
         url: URL?,
         baseHeight: CGFloat = 280,
         showGradientOverlay: Bool = true,
-        gradientHeight: CGFloat = 120
+        gradientHeight: CGFloat = 120,
+        accessibilityLabel: String? = nil
     ) {
         self.url = url
         self.baseHeight = baseHeight
         self.showGradientOverlay = showGradientOverlay
         self.gradientHeight = gradientHeight
+        self.accessibilityLabel = accessibilityLabel
     }
 
     var body: some View {
@@ -80,7 +83,7 @@ struct StretchyAsyncImage: View {
             showGradientOverlay: showGradientOverlay,
             gradientHeight: gradientHeight
         ) {
-            CachedAsyncImage(url: url) { image in
+            CachedAsyncImage(url: url, accessibilityLabel: accessibilityLabel) { image in
                 image
                     .resizable()
                     .scaledToFill()

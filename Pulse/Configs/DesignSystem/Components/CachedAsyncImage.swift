@@ -70,16 +70,19 @@ struct CachedAsyncImage<Content: View, Placeholder: View>: View {
     let url: URL?
     let content: (Image) -> Content
     let placeholder: () -> Placeholder
+    let accessibilityLabel: String?
 
     @State private var image: UIImage?
     @State private var isLoading = false
 
     init(
         url: URL?,
+        accessibilityLabel: String? = nil,
         @ViewBuilder content: @escaping (Image) -> Content,
         @ViewBuilder placeholder: @escaping () -> Placeholder
     ) {
         self.url = url
+        self.accessibilityLabel = accessibilityLabel
         self.content = content
         self.placeholder = placeholder
     }
@@ -88,8 +91,10 @@ struct CachedAsyncImage<Content: View, Placeholder: View>: View {
         Group {
             if let image {
                 content(Image(uiImage: image))
+                    .accessibilityLabel(accessibilityLabel ?? "Image")
             } else {
                 placeholder()
+                    .accessibilityHidden(true)
             }
         }
         .onAppear {
@@ -129,14 +134,15 @@ struct CachedAsyncImage<Content: View, Placeholder: View>: View {
 extension CachedAsyncImage where Placeholder == ProgressView<EmptyView, EmptyView> {
     init(
         url: URL?,
+        accessibilityLabel: String? = nil,
         @ViewBuilder content: @escaping (Image) -> Content
     ) {
-        self.init(url: url, content: content, placeholder: { ProgressView() })
+        self.init(url: url, accessibilityLabel: accessibilityLabel, content: content, placeholder: { ProgressView() })
     }
 }
 
 extension CachedAsyncImage where Content == Image, Placeholder == ProgressView<EmptyView, EmptyView> {
-    init(url: URL?) {
-        self.init(url: url, content: { $0 }, placeholder: { ProgressView() })
+    init(url: URL?, accessibilityLabel: String? = nil) {
+        self.init(url: url, accessibilityLabel: accessibilityLabel, content: { $0 }, placeholder: { ProgressView() })
     }
 }

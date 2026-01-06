@@ -31,7 +31,7 @@ struct ArticleDetailView: View {
             ScrollView {
                 VStack(alignment: .leading, spacing: 0) {
                     if let imageURL = article.imageURL, let url = URL(string: imageURL) {
-                        StretchyAsyncImage(url: url, baseHeight: heroBaseHeight)
+                        StretchyAsyncImage(url: url, baseHeight: heroBaseHeight, accessibilityLabel: article.title)
                     }
 
                     contentCard
