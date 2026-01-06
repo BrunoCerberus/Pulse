@@ -9,7 +9,7 @@ import Testing
 /// - Deeplink queuing when coordinator unavailable
 /// - Integration with DeeplinkManager publisher
 /// - Deeplink clearing after routing
-@Suite("DeeplinkRouter Tests")
+@Suite("DeeplinkRouter Tests", .serialized)
 @MainActor
 struct DeeplinkRouterTests {
     let serviceLocator: ServiceLocator
@@ -17,6 +17,9 @@ struct DeeplinkRouterTests {
     let sut: DeeplinkRouter
 
     init() {
+        // Clear any lingering deeplinks from previous tests
+        DeeplinkManager.shared.clearDeeplink()
+
         serviceLocator = TestServiceLocatorFactory.createFullyMocked()
         coordinator = Coordinator(serviceLocator: serviceLocator)
         sut = DeeplinkRouter()
@@ -26,14 +29,8 @@ struct DeeplinkRouterTests {
 
     @Test("Route home deeplink switches to home tab and pops to root")
     func routeHomeDeeplink() async throws {
-        // Notify router that coordinator is available
-        NotificationCenter.default.post(
-            name: .coordinatorDidBecomeAvailable,
-            object: coordinator
-        )
-
-        // Wait for notification to be processed
-        try await waitForStateUpdate()
+        // Set coordinator directly for synchronous test
+        sut.setCoordinator(coordinator)
 
         // Set different tab initially
         coordinator.selectedTab = .search
@@ -48,13 +45,7 @@ struct DeeplinkRouterTests {
 
     @Test("Route search deeplink without query switches to search tab")
     func routeSearchDeeplinkWithoutQuery() async throws {
-        NotificationCenter.default.post(
-            name: .coordinatorDidBecomeAvailable,
-            object: coordinator
-        )
-
-        try await waitForStateUpdate()
-
+        sut.setCoordinator(coordinator)
         coordinator.selectedTab = .home
 
         sut.route(deeplink: .search(query: nil))
@@ -64,31 +55,22 @@ struct DeeplinkRouterTests {
 
     @Test("Route search deeplink with query sets query and searches")
     func routeSearchDeeplinkWithQuery() async throws {
-        NotificationCenter.default.post(
-            name: .coordinatorDidBecomeAvailable,
-            object: coordinator
-        )
-
-        try await waitForStateUpdate()
-
+        sut.setCoordinator(coordinator)
         coordinator.selectedTab = .home
 
         sut.route(deeplink: .search(query: "technology"))
 
-        try await waitForStateUpdate()
-
+        // Tab switch is synchronous
         #expect(coordinator.selectedTab == .search)
+
+        // ViewModel state update needs time to propagate through Combine
+        try await waitForStateUpdate()
         #expect(coordinator.searchViewModel.viewState.query == "technology")
     }
 
     @Test("Route search deeplink with empty query does not set query")
     func routeSearchDeeplinkWithEmptyQuery() async throws {
-        NotificationCenter.default.post(
-            name: .coordinatorDidBecomeAvailable,
-            object: coordinator
-        )
-
-        try await waitForStateUpdate()
+        sut.setCoordinator(coordinator)
 
         sut.route(deeplink: .search(query: ""))
 
@@ -99,13 +81,7 @@ struct DeeplinkRouterTests {
 
     @Test("Route bookmarks deeplink switches to bookmarks tab and pops to root")
     func routeBookmarksDeeplink() async throws {
-        NotificationCenter.default.post(
-            name: .coordinatorDidBecomeAvailable,
-            object: coordinator
-        )
-
-        try await waitForStateUpdate()
-
+        sut.setCoordinator(coordinator)
         coordinator.selectedTab = .home
 
         sut.route(deeplink: .bookmarks)
@@ -118,13 +94,7 @@ struct DeeplinkRouterTests {
 
     @Test("Route settings deeplink switches to home and pushes settings")
     func routeSettingsDeeplink() async throws {
-        NotificationCenter.default.post(
-            name: .coordinatorDidBecomeAvailable,
-            object: coordinator
-        )
-
-        try await waitForStateUpdate()
-
+        sut.setCoordinator(coordinator)
         coordinator.selectedTab = .search
 
         sut.route(deeplink: .settings)
@@ -137,13 +107,7 @@ struct DeeplinkRouterTests {
 
     @Test("Route article deeplink switches to home tab")
     func routeArticleDeeplink() async throws {
-        NotificationCenter.default.post(
-            name: .coordinatorDidBecomeAvailable,
-            object: coordinator
-        )
-
-        try await waitForStateUpdate()
-
+        sut.setCoordinator(coordinator)
         coordinator.selectedTab = .search
 
         sut.route(deeplink: .article(id: "article-123"))
@@ -155,13 +119,7 @@ struct DeeplinkRouterTests {
 
     @Test("Route category deeplink with valid category switches and selects category")
     func routeCategoryDeeplinkValid() async throws {
-        NotificationCenter.default.post(
-            name: .coordinatorDidBecomeAvailable,
-            object: coordinator
-        )
-
-        try await waitForStateUpdate()
-
+        sut.setCoordinator(coordinator)
         coordinator.selectedTab = .home
 
         sut.route(deeplink: .category(name: "technology"))
@@ -174,13 +132,7 @@ struct DeeplinkRouterTests {
 
     @Test("Route category deeplink with invalid category switches but does not select")
     func routeCategoryDeeplinkInvalid() async throws {
-        NotificationCenter.default.post(
-            name: .coordinatorDidBecomeAvailable,
-            object: coordinator
-        )
-
-        try await waitForStateUpdate()
-
+        sut.setCoordinator(coordinator)
         coordinator.selectedTab = .home
 
         sut.route(deeplink: .category(name: "invalid-category"))
@@ -205,21 +157,15 @@ struct DeeplinkRouterTests {
 
     @Test("Queued deeplink is processed when coordinator becomes available")
     func queuedDeeplinkIsProcessed() async throws {
-        // Create new router without posting coordinator notification
+        // Create new router without setting coordinator
         let newRouter = DeeplinkRouter()
 
         // Route deeplink before coordinator is available
         coordinator.selectedTab = .search
         newRouter.route(deeplink: .home)
 
-        // Now make coordinator available
-        NotificationCenter.default.post(
-            name: .coordinatorDidBecomeAvailable,
-            object: coordinator
-        )
-
-        // Give notification time to process
-        try await waitForStateUpdate()
+        // Now make coordinator available using direct setter
+        newRouter.setCoordinator(coordinator)
 
         // Queued deeplink should have been processed
         #expect(coordinator.selectedTab == .home)
@@ -229,23 +175,13 @@ struct DeeplinkRouterTests {
 
     @Test("Multiple deeplinks are processed in sequence")
     func multipleDeeplinksProcessed() async throws {
-        NotificationCenter.default.post(
-            name: .coordinatorDidBecomeAvailable,
-            object: coordinator
-        )
-
-        try await waitForStateUpdate()
-
+        sut.setCoordinator(coordinator)
         coordinator.selectedTab = .home
 
         sut.route(deeplink: .search(query: "test"))
-        try await waitForStateUpdate()
-
         #expect(coordinator.selectedTab == .search)
 
         sut.route(deeplink: .bookmarks)
-        try await waitForStateUpdate()
-
         #expect(coordinator.selectedTab == .bookmarks)
     }
 
@@ -253,13 +189,7 @@ struct DeeplinkRouterTests {
 
     @Test("Router responds to DeeplinkManager publisher")
     func routerRespondsToDeeplinkPublisher() async throws {
-        NotificationCenter.default.post(
-            name: .coordinatorDidBecomeAvailable,
-            object: coordinator
-        )
-
-        try await waitForStateUpdate()
-
+        sut.setCoordinator(coordinator)
         coordinator.selectedTab = .home
 
         // Simulate DeeplinkManager sending a deeplink
@@ -274,12 +204,7 @@ struct DeeplinkRouterTests {
 
     @Test("Deeplink is cleared after routing")
     func deeplinkIsClearedAfterRouting() async throws {
-        NotificationCenter.default.post(
-            name: .coordinatorDidBecomeAvailable,
-            object: coordinator
-        )
-
-        try await waitForStateUpdate()
+        sut.setCoordinator(coordinator)
 
         DeeplinkManager.shared.handle(deeplink: .home)
 
@@ -292,13 +217,7 @@ struct DeeplinkRouterTests {
 
     @Test("Rapid tab switching handles concurrent deeplinks correctly")
     func rapidTabSwitchingHandlesConcurrentDeeplinks() async throws {
-        NotificationCenter.default.post(
-            name: .coordinatorDidBecomeAvailable,
-            object: coordinator
-        )
-
-        try await waitForStateUpdate()
-
+        sut.setCoordinator(coordinator)
         coordinator.selectedTab = .home
 
         // Rapidly fire multiple deeplinks to different tabs
@@ -307,20 +226,13 @@ struct DeeplinkRouterTests {
         sut.route(deeplink: .home)
         sut.route(deeplink: .search(query: "test"))
 
-        try await waitForStateUpdate(duration: TestWaitDuration.long)
-
         // Last deeplink should win
         #expect(coordinator.selectedTab == .search)
     }
 
     @Test("Concurrent deeplinks during active navigation complete without crash")
     func concurrentDeeplinksDuringActiveNavigation() async throws {
-        NotificationCenter.default.post(
-            name: .coordinatorDidBecomeAvailable,
-            object: coordinator
-        )
-
-        try await waitForStateUpdate()
+        sut.setCoordinator(coordinator)
 
         // Start with a navigation in progress
         coordinator.selectedTab = .home
@@ -329,8 +241,6 @@ struct DeeplinkRouterTests {
         // Fire deeplinks while navigation is active
         sut.route(deeplink: .bookmarks)
         sut.route(deeplink: .category(name: "technology"))
-
-        try await waitForStateUpdate(duration: TestWaitDuration.long)
 
         // Should complete without crash - final tab should be categories
         #expect(coordinator.selectedTab == .categories)
@@ -343,23 +253,16 @@ struct DeeplinkRouterTests {
         // Queue a deeplink before coordinator is available
         newRouter.route(deeplink: .bookmarks)
 
-        // Post coordinator available notification twice (simulating edge case)
-        NotificationCenter.default.post(
-            name: .coordinatorDidBecomeAvailable,
-            object: coordinator
-        )
+        // Set coordinator - should process queued deeplink
+        newRouter.setCoordinator(coordinator)
 
-        try await waitForStateUpdate()
-
-        // Post again to verify no duplicate processing
-        NotificationCenter.default.post(
-            name: .coordinatorDidBecomeAvailable,
-            object: coordinator
-        )
-
-        try await waitForStateUpdate()
-
-        // Should only have processed once
         #expect(coordinator.selectedTab == .bookmarks)
+
+        // Set coordinator again - should not reprocess (deeplink was cleared)
+        coordinator.selectedTab = .home
+        newRouter.setCoordinator(coordinator)
+
+        // Should still be home since no new deeplink was queued
+        #expect(coordinator.selectedTab == .home)
     }
 }

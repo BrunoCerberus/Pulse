@@ -20,23 +20,34 @@ final class DeeplinkRouter {
         setupObservers()
     }
 
+    /// Sets the coordinator directly (used for testing).
+    /// - Parameter coordinator: The coordinator to use for navigation
+    func setCoordinator(_ coordinator: Coordinator) {
+        self.coordinator = coordinator
+        processQueuedDeeplink()
+    }
+
     /// Sets up observers for coordinator availability and deeplinks.
     private func setupObservers() {
         // Listen for coordinator availability
         NotificationCenter.default.publisher(for: .coordinatorDidBecomeAvailable)
-            .receive(on: DispatchQueue.main)
             .compactMap { $0.object as? Coordinator }
             .sink { [weak self] coordinator in
-                self?.coordinator = coordinator
-                self?.processQueuedDeeplink()
+                guard let self else { return }
+                Task { @MainActor in
+                    self.coordinator = coordinator
+                    self.processQueuedDeeplink()
+                }
             }
             .store(in: &cancellables)
 
         // Listen for deeplinks
         DeeplinkManager.shared.deeplinkPublisher
-            .receive(on: DispatchQueue.main)
             .sink { [weak self] deeplink in
-                self?.route(deeplink: deeplink)
+                guard let self else { return }
+                Task { @MainActor in
+                    self.route(deeplink: deeplink)
+                }
             }
             .store(in: &cancellables)
     }

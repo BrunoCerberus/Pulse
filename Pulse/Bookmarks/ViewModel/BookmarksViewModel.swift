@@ -1,6 +1,7 @@
 import Combine
 import Foundation
 
+@MainActor
 final class BookmarksViewModel: CombineViewModel, ObservableObject {
     typealias ViewState = BookmarksViewState
     typealias ViewEvent = BookmarksViewEvent

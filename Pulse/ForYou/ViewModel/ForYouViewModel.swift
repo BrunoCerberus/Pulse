@@ -1,6 +1,7 @@
 import Combine
 import Foundation
 
+@MainActor
 final class ForYouViewModel: CombineViewModel, ObservableObject {
     typealias ViewState = ForYouViewState
     typealias ViewEvent = ForYouViewEvent

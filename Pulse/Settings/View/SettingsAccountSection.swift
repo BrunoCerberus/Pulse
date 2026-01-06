@@ -81,7 +81,7 @@ private struct InitialPlaceholderView: View {
                 .frame(width: 64, height: 64)
 
             Text(userInitial)
-                .font(.system(size: 24, weight: .semibold))
+                .font(.title3)
                 .foregroundStyle(.blue)
         }
     }

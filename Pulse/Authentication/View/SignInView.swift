@@ -83,7 +83,7 @@ struct SignInView: View {
                     .frame(width: 100, height: 100)
 
                 Image(systemName: "newspaper.fill")
-                    .font(.system(size: 48))
+                    .font(.title)
                     .foregroundStyle(.white)
             }
             .glowEffect(color: Color.Accent.primary, radius: 20)
@@ -109,7 +109,7 @@ struct SignInView: View {
             } label: {
                 HStack(spacing: Spacing.sm) {
                     Image(systemName: "apple.logo")
-                        .font(.system(size: 20))
+                        .font(.headline)
 
                     Text(Constants.signInApple)
                         .font(Typography.labelLarge)
@@ -152,7 +152,7 @@ struct SignInView: View {
         // Google "G" logo using SF Symbol as fallback
         // In production, add a google_logo image to Assets
         Image(systemName: "g.circle.fill")
-            .font(.system(size: 20))
+            .font(.headline)
             .foregroundStyle(
                 .linearGradient(
                     colors: [.red, .yellow, .green, .blue],

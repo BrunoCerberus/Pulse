@@ -134,7 +134,8 @@ final class BookmarksDomainInteractor: CombineInteractor {
             try? await storageService.saveReadingHistory(article)
         }
         backgroundTasks.insert(task)
-        Task {
+        Task { [weak self] in
+            guard let self else { return }
             await task.value
             backgroundTasks.remove(task)
         }

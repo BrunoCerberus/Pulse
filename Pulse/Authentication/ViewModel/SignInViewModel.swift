@@ -2,6 +2,7 @@ import Combine
 import Foundation
 import UIKit
 
+@MainActor
 final class SignInViewModel: CombineViewModel, ObservableObject {
     typealias ViewState = SignInViewState
     typealias ViewEvent = SignInViewEvent

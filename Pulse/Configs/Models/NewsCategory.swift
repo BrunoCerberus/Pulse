@@ -1,5 +1,4 @@
 import Foundation
-import SwiftUI
 
 enum NewsCategory: String, CaseIterable, Codable, Identifiable {
     case world
@@ -33,18 +32,6 @@ enum NewsCategory: String, CaseIterable, Codable, Identifiable {
         case .health: return "heart.text.square"
         case .sports: return "sportscourt"
         case .entertainment: return "film"
-        }
-    }
-
-    var color: Color {
-        switch self {
-        case .world: return .blue
-        case .business: return .green
-        case .technology: return .purple
-        case .science: return .orange
-        case .health: return .red
-        case .sports: return .cyan
-        case .entertainment: return .pink
         }
     }
 

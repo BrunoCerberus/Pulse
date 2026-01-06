@@ -1,6 +1,7 @@
 import Combine
 import Foundation
 
+@MainActor
 final class CategoriesViewModel: CombineViewModel, ObservableObject {
     typealias ViewState = CategoriesViewState
     typealias ViewEvent = CategoriesViewEvent
