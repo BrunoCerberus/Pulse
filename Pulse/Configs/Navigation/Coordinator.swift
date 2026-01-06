@@ -7,7 +7,7 @@ protocol AnimatedTabSelectionProtocol: CaseIterable, Hashable {
 }
 
 /// Tab selection enum for the main TabView.
-enum AppTab: CaseIterable, AnimatedTabSelectionProtocol {
+enum AppTab: String, CaseIterable, AnimatedTabSelectionProtocol {
     case home
     case forYou
     case categories

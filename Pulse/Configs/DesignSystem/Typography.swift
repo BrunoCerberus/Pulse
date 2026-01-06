@@ -5,39 +5,39 @@ import SwiftUI
 enum Typography {
     // MARK: - Display (Large headers with rounded design)
 
-    static let displayLarge = Font.system(size: 34, weight: .bold, design: .rounded)
-    static let displayMedium = Font.system(size: 28, weight: .bold, design: .rounded)
-    static let displaySmall = Font.system(size: 24, weight: .semibold, design: .rounded)
+    static let displayLarge = Font.system(.largeTitle, design: .rounded)
+    static let displayMedium = Font.system(.title, design: .rounded)
+    static let displaySmall = Font.system(.title2, design: .rounded)
 
     // MARK: - Title (Section headers)
 
-    static let titleLarge = Font.system(size: 22, weight: .semibold)
-    static let titleMedium = Font.system(size: 18, weight: .semibold)
-    static let titleSmall = Font.system(size: 16, weight: .semibold)
+    static let titleLarge = Font.system(.title2)
+    static let titleMedium = Font.system(.title3)
+    static let titleSmall = Font.system(.headline)
 
     // MARK: - Headline (Article titles, emphasis)
 
-    static let headlineLarge = Font.system(size: 17, weight: .semibold)
-    static let headlineMedium = Font.system(size: 15, weight: .semibold)
-    static let headlineSmall = Font.system(size: 14, weight: .semibold)
+    static let headlineLarge = Font.system(.headline)
+    static let headlineMedium = Font.system(.headline)
+    static let headlineSmall = Font.system(.subheadline)
 
     // MARK: - Body (Content text)
 
-    static let bodyLarge = Font.system(size: 17, weight: .regular)
-    static let bodyMedium = Font.system(size: 15, weight: .regular)
-    static let bodySmall = Font.system(size: 13, weight: .regular)
+    static let bodyLarge = Font.system(.body)
+    static let bodyMedium = Font.system(.body)
+    static let bodySmall = Font.system(.callout)
 
     // MARK: - Caption (Supporting text)
 
-    static let captionLarge = Font.system(size: 12, weight: .medium)
-    static let captionMedium = Font.system(size: 11, weight: .medium)
-    static let captionSmall = Font.system(size: 10, weight: .regular)
+    static let captionLarge = Font.system(.caption)
+    static let captionMedium = Font.system(.caption2)
+    static let captionSmall = Font.system(.caption2)
 
     // MARK: - Label (Buttons, badges)
 
-    static let labelLarge = Font.system(size: 14, weight: .semibold)
-    static let labelMedium = Font.system(size: 12, weight: .semibold)
-    static let labelSmall = Font.system(size: 10, weight: .bold)
+    static let labelLarge = Font.system(.subheadline)
+    static let labelMedium = Font.system(.caption)
+    static let labelSmall = Font.system(.caption2)
 }
 
 // MARK: - Text Style Modifiers

@@ -26,13 +26,9 @@ struct GuardianArticleDTO: Codable {
     let fields: GuardianFieldsDTO?
 
     func toArticle(category: NewsCategory? = nil) -> Article? {
-        let dateFormatter = ISO8601DateFormatter()
-        dateFormatter.formatOptions = [.withInternetDateTime, .withFractionalSeconds]
-
-        var publishedDate = dateFormatter.date(from: webPublicationDate)
+        var publishedDate = Self.dateFormatterWithFractional.date(from: webPublicationDate)
         if publishedDate == nil {
-            dateFormatter.formatOptions = [.withInternetDateTime]
-            publishedDate = dateFormatter.date(from: webPublicationDate)
+            publishedDate = Self.dateFormatterBasic.date(from: webPublicationDate)
         }
 
         guard let date = publishedDate else { return nil }
@@ -52,6 +48,18 @@ struct GuardianArticleDTO: Codable {
             category: resolvedCategory
         )
     }
+
+    private static let dateFormatterWithFractional: ISO8601DateFormatter = {
+        let formatter = ISO8601DateFormatter()
+        formatter.formatOptions = [.withInternetDateTime, .withFractionalSeconds]
+        return formatter
+    }()
+
+    private static let dateFormatterBasic: ISO8601DateFormatter = {
+        let formatter = ISO8601DateFormatter()
+        formatter.formatOptions = [.withInternetDateTime]
+        return formatter
+    }()
 }
 
 struct GuardianFieldsDTO: Codable {

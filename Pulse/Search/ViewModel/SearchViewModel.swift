@@ -1,6 +1,7 @@
 import Combine
 import Foundation
 
+@MainActor
 final class SearchViewModel: CombineViewModel, ObservableObject {
     typealias ViewState = SearchViewState
     typealias ViewEvent = SearchViewEvent

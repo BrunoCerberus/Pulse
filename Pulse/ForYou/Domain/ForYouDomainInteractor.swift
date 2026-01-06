@@ -59,7 +59,8 @@ final class ForYouDomainInteractor: CombineInteractor {
     private func loadFeed() {
         guard !currentState.isLoading else { return }
 
-        Task {
+        Task { [weak self] in
+            guard let self else { return }
             let preferences = try? await storageService.fetchUserPreferences() ?? .default
             let currentPreferences = preferences ?? .default
             let previousPreferences = currentState.preferences
@@ -133,7 +134,8 @@ final class ForYouDomainInteractor: CombineInteractor {
     }
 
     private func refresh() {
-        Task {
+        Task { [weak self] in
+            guard let self else { return }
             let preferences = try? await storageService.fetchUserPreferences() ?? .default
             let currentPreferences = preferences ?? .default
 
@@ -187,7 +189,8 @@ final class ForYouDomainInteractor: CombineInteractor {
             try? await storageService.saveReadingHistory(article)
         }
         backgroundTasks.insert(task)
-        Task {
+        Task { [weak self] in
+            guard let self else { return }
             await task.value
             backgroundTasks.remove(task)
         }

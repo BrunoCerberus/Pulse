@@ -11,13 +11,9 @@ struct ArticleDTO: Codable {
     let content: String?
 
     func toArticle(category: NewsCategory? = nil) -> Article? {
-        let dateFormatter = ISO8601DateFormatter()
-        dateFormatter.formatOptions = [.withInternetDateTime, .withFractionalSeconds]
-
-        var publishedDate = dateFormatter.date(from: publishedAt)
+        var publishedDate = Self.dateFormatterWithFractional.date(from: publishedAt)
         if publishedDate == nil {
-            dateFormatter.formatOptions = [.withInternetDateTime]
-            publishedDate = dateFormatter.date(from: publishedAt)
+            publishedDate = Self.dateFormatterBasic.date(from: publishedAt)
         }
 
         guard let date = publishedDate else { return nil }
@@ -35,6 +31,18 @@ struct ArticleDTO: Codable {
             category: category
         )
     }
+
+    private static let dateFormatterWithFractional: ISO8601DateFormatter = {
+        let formatter = ISO8601DateFormatter()
+        formatter.formatOptions = [.withInternetDateTime, .withFractionalSeconds]
+        return formatter
+    }()
+
+    private static let dateFormatterBasic: ISO8601DateFormatter = {
+        let formatter = ISO8601DateFormatter()
+        formatter.formatOptions = [.withInternetDateTime]
+        return formatter
+    }()
 }
 
 struct SourceDTO: Codable {

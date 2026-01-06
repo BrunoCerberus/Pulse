@@ -207,7 +207,8 @@ final class HomeDomainInteractor: CombineInteractor {
             try? await storageService.saveReadingHistory(article)
         }
         backgroundTasks.insert(task)
-        Task {
+        Task { [weak self] in
+            guard let self else { return }
             await task.value
             backgroundTasks.remove(task)
         }
@@ -224,7 +225,8 @@ final class HomeDomainInteractor: CombineInteractor {
             }
         }
         backgroundTasks.insert(task)
-        Task {
+        Task { [weak self] in
+            guard let self else { return }
             await task.value
             backgroundTasks.remove(task)
         }

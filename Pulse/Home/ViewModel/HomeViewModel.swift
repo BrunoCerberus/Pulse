@@ -1,6 +1,7 @@
 import Combine
 import Foundation
 
+@MainActor
 final class HomeViewModel: CombineViewModel, ObservableObject {
     typealias ViewState = HomeViewState
     typealias ViewEvent = HomeViewEvent

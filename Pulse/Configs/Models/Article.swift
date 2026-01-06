@@ -37,10 +37,14 @@ struct Article: Identifiable, Equatable, Codable, Hashable {
     }
 
     var formattedDate: String {
+        Self.relativeFormatter.localizedString(for: publishedAt, relativeTo: Date())
+    }
+
+    private static let relativeFormatter: RelativeDateTimeFormatter = {
         let formatter = RelativeDateTimeFormatter()
         formatter.unitsStyle = .abbreviated
-        return formatter.localizedString(for: publishedAt, relativeTo: Date())
-    }
+        return formatter
+    }()
 }
 
 struct ArticleSource: Equatable, Codable, Hashable {

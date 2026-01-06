@@ -49,6 +49,8 @@ struct HomeView<R: HomeNavigationRouter>: View {
                         .font(.system(size: IconSize.md))
                         .foregroundStyle(.primary)
                 }
+                .accessibilityLabel("Settings")
+                .accessibilityHint("Opens your preferences and account settings")
             }
         }
         .refreshable {
