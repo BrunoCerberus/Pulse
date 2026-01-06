@@ -7,13 +7,6 @@ import XCTest
 final class SettingsViewSnapshotTests: XCTestCase {
     private var window: UIWindow!
 
-    // Custom device config matching CI's iPhone Air simulator
-    private let iPhoneAirConfig = ViewImageConfig(
-        safeArea: UIEdgeInsets(top: 59, left: 0, bottom: 34, right: 0),
-        size: CGSize(width: 393, height: 852),
-        traits: UITraitCollection(userInterfaceStyle: .dark)
-    )
-
     override func setUp() {
         super.setUp()
         // Set authenticated state before SettingsViewModel is created
@@ -54,7 +47,152 @@ final class SettingsViewSnapshotTests: XCTestCase {
 
         assertSnapshot(
             of: controller,
-            as: .image(on: iPhoneAirConfig, precision: 0.99),
+            as: .image(on: SnapshotConfig.iPhoneAir, precision: SnapshotConfig.standardPrecision),
+            record: false
+        )
+    }
+
+    // MARK: - SettingsAccountSection Tests
+
+    func testSettingsAccountSectionWithUser() {
+        let user = AuthUser.mock
+        let view = Form {
+            SettingsAccountSection(
+                currentUser: user,
+                onSignOutTapped: {}
+            )
+        }
+        .frame(width: 393, height: 300)
+
+        let controller = UIHostingController(rootView: view)
+
+        assertSnapshot(
+            of: controller,
+            as: .wait(for: 1.0, on: .image(on: SnapshotConfig.iPhoneAir, precision: SnapshotConfig.standardPrecision)),
+            record: false
+        )
+    }
+
+    func testSettingsAccountSectionWithoutUser() {
+        let view = Form {
+            SettingsAccountSection(
+                currentUser: nil,
+                onSignOutTapped: {}
+            )
+        }
+        .frame(width: 393, height: 200)
+
+        let controller = UIHostingController(rootView: view)
+
+        assertSnapshot(
+            of: controller,
+            as: .wait(for: 1.0, on: .image(on: SnapshotConfig.iPhoneAir, precision: SnapshotConfig.standardPrecision)),
+            record: false
+        )
+    }
+
+    // MARK: - SettingsMutedContentSection Tests
+
+    func testSettingsMutedContentSectionEmpty() {
+        struct TestWrapper: View {
+            @State var newSource = ""
+            @State var newKeyword = ""
+
+            var body: some View {
+                Form {
+                    SettingsMutedContentSection(
+                        mutedSources: [],
+                        mutedKeywords: [],
+                        newMutedSource: $newSource,
+                        newMutedKeyword: $newKeyword,
+                        onAddMutedSource: {},
+                        onRemoveMutedSource: { _ in },
+                        onAddMutedKeyword: {},
+                        onRemoveMutedKeyword: { _ in }
+                    )
+                }
+            }
+        }
+
+        let view = TestWrapper()
+            .frame(width: 393, height: 300)
+
+        let controller = UIHostingController(rootView: view)
+
+        assertSnapshot(
+            of: controller,
+            as: .wait(for: 1.0, on: .image(on: SnapshotConfig.iPhoneAir, precision: SnapshotConfig.standardPrecision)),
+            record: false
+        )
+    }
+
+    func testSettingsMutedContentSectionWithItems() {
+        struct TestWrapper: View {
+            @State var newSource = ""
+            @State var newKeyword = ""
+
+            var body: some View {
+                Form {
+                    SettingsMutedContentSection(
+                        mutedSources: ["CNN", "Fox News"],
+                        mutedKeywords: ["politics", "celebrity"],
+                        newMutedSource: $newSource,
+                        newMutedKeyword: $newKeyword,
+                        onAddMutedSource: {},
+                        onRemoveMutedSource: { _ in },
+                        onAddMutedKeyword: {},
+                        onRemoveMutedKeyword: { _ in }
+                    )
+                }
+            }
+        }
+
+        let view = TestWrapper()
+            .frame(width: 393, height: 400)
+
+        let controller = UIHostingController(rootView: view)
+
+        assertSnapshot(
+            of: controller,
+            as: .wait(for: 1.0, on: .image(on: SnapshotConfig.iPhoneAir, precision: SnapshotConfig.standardPrecision)),
+            record: false
+        )
+    }
+
+    // MARK: - SettingsPremiumSection Tests
+
+    func testSettingsPremiumSectionNotPremium() {
+        let view = Form {
+            SettingsPremiumSection(
+                isPremium: false,
+                onUpgradeTapped: {}
+            )
+        }
+        .frame(width: 393, height: 200)
+
+        let controller = UIHostingController(rootView: view)
+
+        assertSnapshot(
+            of: controller,
+            as: .wait(for: 1.0, on: .image(on: SnapshotConfig.iPhoneAir, precision: SnapshotConfig.standardPrecision)),
+            record: false
+        )
+    }
+
+    func testSettingsPremiumSectionPremium() {
+        let view = Form {
+            SettingsPremiumSection(
+                isPremium: true,
+                onUpgradeTapped: {}
+            )
+        }
+        .frame(width: 393, height: 200)
+
+        let controller = UIHostingController(rootView: view)
+
+        assertSnapshot(
+            of: controller,
+            as: .wait(for: 1.0, on: .image(on: SnapshotConfig.iPhoneAir, precision: SnapshotConfig.standardPrecision)),
             record: false
         )
     }
