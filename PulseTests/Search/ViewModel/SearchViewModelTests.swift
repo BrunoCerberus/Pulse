@@ -97,11 +97,12 @@ struct SearchViewModelTests {
 
         sut.handle(event: .onQueryChanged("technology"))
 
-        // Wait for debounce (300ms) + processing
-        try await Task.sleep(nanoseconds: 600_000_000)
+        // Wait for debounce (300ms) + processing with condition-based waiting
+        let searched = await waitForCondition(timeout: 1_000_000_000) { [sut] in
+            sut.viewState.hasSearched && !sut.viewState.results.isEmpty
+        }
 
-        #expect(sut.viewState.hasSearched)
-        #expect(!sut.viewState.results.isEmpty)
+        #expect(searched)
     }
 
     @Test("Manual search cancels pending debounce")
