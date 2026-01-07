@@ -155,7 +155,9 @@ final class MockDigestService: DigestService {
 
 final class MockLLMService: LLMService {
     var modelStatus: LLMModelStatus = .notLoaded
-    var generateResult: Result<String, Error> = .success("Mock AI digest content...")
+    var generateResult: Result<String, Error> = .success(
+        "Mock AI digest content with enough words to trigger progress updates during generation."
+    )
     var loadDelay: TimeInterval = 0.1
     var generateDelay: TimeInterval = 0.1
     var shouldSimulateMemoryPressure = false

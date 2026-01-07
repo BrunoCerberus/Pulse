@@ -1,7 +1,9 @@
 import Foundation
 import llama
+import os.log
 
 class LlamaModel {
+    private static let logger = OSLog(subsystem: "com.localllama", category: "LlamaModel")
     private let model: Model
     private let vocab: OpaquePointer
     private let configuration: Configuration
@@ -44,7 +46,7 @@ class LlamaModel {
         let vocabSize = llama_vocab_n_tokens(vocab)
         let bosToken = llama_vocab_bos(vocab)
         let eosToken = llama_vocab_eos(vocab)
-        print("[LlamaModel] Vocab size: \(vocabSize), BOS: \(bosToken), EOS: \(eosToken)")
+        os_log(.debug, log: Self.logger, "Vocab size: %d, BOS: %d, EOS: %d", vocabSize, bosToken, eosToken)
 
         guard vocabSize > 0 else {
             llama_model_free(model)
@@ -144,14 +146,13 @@ class LlamaModel {
         let utf8Count = text.utf8.count
         let n_tokens = utf8Count + (addBos ? 1 : 0) + 1
 
-        print("[LlamaModel] tokenize called with text length: \(utf8Count), addBos: \(addBos)")
+        os_log(.debug, log: Self.logger, "Tokenizing text with length: %d, addBos: %{public}@", utf8Count, addBos ? "true" : "false")
 
         return text.withCString { cString in
             Array(unsafeUninitializedCapacity: n_tokens) { buffer, initializedCount in
-                print("[LlamaModel] calling llama_tokenize with vocab pointer...")
                 // Use new API with vocab pointer
                 let result = llama_tokenize(vocab, cString, Int32(utf8Count), buffer.baseAddress, Int32(n_tokens), addBos, false)
-                print("[LlamaModel] llama_tokenize returned: \(result)")
+                os_log(.debug, log: Self.logger, "Tokenization result: %d tokens", result)
                 initializedCount = max(0, Int(result))
             }
         }

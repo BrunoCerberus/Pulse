@@ -2,6 +2,12 @@ import Foundation
 
 /// Builds prompts for the LLM to generate news digests
 enum DigestPromptBuilder {
+    /// System prompt for the LLM - defines the assistant's role and behavior
+    static let systemPrompt = """
+    You are a helpful news digest assistant. Your role is to analyze news articles \
+    and create concise, informative summaries that help users stay informed. \
+    Be accurate, objective, and highlight the most important information.
+    """
     /// Build a prompt for digest generation
     static func buildPrompt(for articles: [Article], source: DigestSource) -> String {
         let articlesText = formatArticles(articles)

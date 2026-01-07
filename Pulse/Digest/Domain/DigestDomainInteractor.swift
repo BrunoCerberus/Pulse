@@ -190,19 +190,31 @@ final class DigestDomainInteractor: CombineInteractor {
             let prompt = DigestPromptBuilder.buildPrompt(for: articles, source: source)
 
             do {
-                var fullText = ""
+                // Use array for O(n) concatenation instead of O(n²) string +=
+                var tokenBuffer: [String] = []
+                var tokensSinceLastUpdate = 0
+                let updateBatchSize = 5 // Update UI every N tokens to reduce MainActor overhead
 
                 for try await token in llmService.generateStream(
                     prompt: prompt,
                     config: .default
                 ) {
                     if Task.isCancelled { break }
-                    fullText += token
+                    tokenBuffer.append(token)
+                    tokensSinceLastUpdate += 1
 
-                    await MainActor.run {
-                        self.updateState { $0.generationProgress = fullText }
+                    // Batch UI updates for better performance
+                    if tokensSinceLastUpdate >= updateBatchSize {
+                        let currentText = tokenBuffer.joined()
+                        await MainActor.run {
+                            self.updateState { $0.generationProgress = currentText }
+                        }
+                        tokensSinceLastUpdate = 0
                     }
                 }
+
+                // Final update with complete text
+                let fullText = tokenBuffer.joined()
 
                 let result = DigestResult(
                     source: source,

@@ -29,9 +29,9 @@ public final class SwiftLlama: @unchecked Sendable {
     }
 
     private func startDedicatedThread() {
-        llamaThread = Thread { [weak self] in
-            guard let self = self else { return }
-
+        // Use unowned to avoid race condition - thread lifecycle is tied to SwiftLlama instance
+        // Safe because we wait for threadReady before returning from init
+        llamaThread = Thread { [unowned self] in
             // Get the run loop for this thread
             self.runLoop = CFRunLoopGetCurrent()
 
@@ -79,7 +79,11 @@ public final class SwiftLlama: @unchecked Sendable {
 
         semaphore.wait()
 
-        switch result! {
+        guard let result = result else {
+            throw SwiftLlamaError.others("Execution result was unexpectedly nil")
+        }
+
+        switch result {
         case .success(let value):
             return value
         case .failure(let error):

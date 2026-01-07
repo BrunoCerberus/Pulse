@@ -101,8 +101,16 @@ final class LLMModelManager: @unchecked Sendable {
     }
 
     /// Generate text from prompt
+    /// - Parameters:
+    ///   - prompt: The user prompt/message to generate from
+    ///   - systemPrompt: System prompt defining assistant behavior
+    ///   - maxTokens: Maximum tokens to generate
+    ///   - temperature: Sampling temperature (currently unused - uses model default)
+    ///   - topP: Top-p sampling (currently unused - uses model default)
+    ///   - stopSequences: Sequences that stop generation when encountered
     func generate(
         prompt: String,
+        systemPrompt: String = DigestPromptBuilder.systemPrompt,
         maxTokens: Int,
         temperature _: Float,
         topP _: Float,
@@ -117,6 +125,7 @@ final class LLMModelManager: @unchecked Sendable {
             Task {
                 await self.runInference(
                     prompt: prompt,
+                    systemPrompt: systemPrompt,
                     maxTokens: maxTokens,
                     stopSequences: stopSequences,
                     continuation: continuation
@@ -129,6 +138,7 @@ final class LLMModelManager: @unchecked Sendable {
 
     private func runInference(
         prompt: String,
+        systemPrompt: String,
         maxTokens: Int,
         stopSequences: [String],
         continuation: AsyncThrowingStream<String, Error>.Continuation
@@ -146,7 +156,7 @@ final class LLMModelManager: @unchecked Sendable {
         // Create Prompt for Llama 3.2 model
         let llamaPrompt = Prompt(
             type: .llama3,
-            systemPrompt: "You are a helpful news digest assistant that summarizes articles concisely.",
+            systemPrompt: systemPrompt,
             userMessage: prompt
         )
 
@@ -156,7 +166,9 @@ final class LLMModelManager: @unchecked Sendable {
             // Generate on the SwiftLlama actor - fully thread-safe
             let result = try await llama.generate(for: llamaPrompt)
 
+            // Check cancellation before processing results to avoid yielding cancelled output
             if isCancelled {
+                logger.info("Generation cancelled by user", category: logCategory)
                 continuation.finish(throwing: LLMError.generationCancelled)
                 return
             }
@@ -170,9 +182,17 @@ final class LLMModelManager: @unchecked Sendable {
                 }
             }
 
-            // Trim to approximate max tokens
-            if processedResult.count > maxTokens * 4 {
-                processedResult = String(processedResult.prefix(maxTokens * 4))
+            // Trim to approximate max tokens (multiply by 4 as rough chars-per-token estimate)
+            let maxCharacters = maxTokens * 4
+            if processedResult.count > maxCharacters {
+                processedResult = String(processedResult.prefix(maxCharacters))
+            }
+
+            // Final cancellation check before yielding
+            if isCancelled {
+                logger.info("Generation cancelled before yielding result", category: logCategory)
+                continuation.finish(throwing: LLMError.generationCancelled)
+                return
             }
 
             // Yield the entire result at once
