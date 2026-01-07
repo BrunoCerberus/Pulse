@@ -10,6 +10,7 @@
 "common.back" = "Back";
 "common.loading_more" = "Loading more...";
 "common.version" = "Version";
+"common.share" = "Share";
 
 /* ==================== */
 /* MARK: - Tab Bar      */
@@ -60,28 +61,38 @@
 /* ==================== */
 
 "digest.title" = "Digest";
-"digest.onboarding.title" = "AI-Powered News Digest";
-"digest.onboarding.subtitle" = "Generate a personalized summary from your saved articles";
-"digest.source.bookmarks" = "Bookmarks";
-"digest.source.readingHistory" = "Reading History";
-"digest.source.freshNews" = "Fresh News";
-"digest.source.bookmarks.description" = "Articles you've saved";
-"digest.source.readingHistory.description" = "Recently read articles";
-"digest.source.freshNews.description" = "Latest by your topics";
-"digest.loading.articles" = "Loading articles...";
-"digest.ready.title" = "Ready to Generate";
-"digest.ready.subtitle" = "%d articles available";
+"digest.subtitle" = "Generate a personalized summary from your saved articles";
+"digest.select_source" = "Select a Source";
 "digest.generate" = "Generate Digest";
 "digest.generating" = "Generating your digest...";
-"digest.cancel" = "Cancel";
-"digest.result.title" = "Your AI Digest";
-"digest.result.share" = "Share";
-"digest.result.clear" = "Clear";
-"digest.empty.title" = "No Articles";
+"digest.clear" = "Clear";
+"digest.new" = "New Digest";
+"digest.model_loading" = "Loading AI model...";
+"digest.model_ready" = "AI model ready";
+"digest.no_articles" = "No Articles";
+"digest.configure_topics" = "Configure Topics";
+"digest.no_topics.title" = "No Topics Selected";
+"digest.no_topics.message" = "Select topics in Settings to get fresh news for your digest.";
+"digest.articles_available" = "articles available";
+"digest.more_articles" = "more articles";
+"digest.from_articles" = "From";
+"digest.loading_articles" = "Loading articles...";
 "digest.empty.message" = "No articles available for this source.";
-"digest.error.noTopics" = "Configure topics in Settings first";
-"digest.error.modelNotReady" = "AI model is loading, please wait";
-"digest.error.noArticles" = "No articles available to generate digest";
+
+/* Digest Sources */
+"digest.source.bookmarks" = "Bookmarks";
+"digest.source.reading_history" = "Reading History";
+"digest.source.fresh_news" = "Fresh News";
+"digest.source.bookmarks.description" = "Articles you've saved";
+"digest.source.reading_history.description" = "Recently read articles";
+"digest.source.fresh_news.description" = "Latest by your topics";
+
+/* Digest Errors */
+"digest.error.no_articles" = "No articles available to generate digest";
+"digest.error.model_not_ready" = "AI model is loading, please wait";
+"digest.error.generation_failed %@" = "Generation failed: %@";
+"digest.error.loading_failed %@" = "Loading failed: %@";
+"digest.error.no_topics" = "Configure topics in Settings first";
 
 /* ==================== */
 /* MARK: - Search       */

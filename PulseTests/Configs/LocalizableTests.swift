@@ -258,11 +258,11 @@ struct DigestScreenLocalizableTests {
         #expect(value == "Digest")
     }
 
-    @Test("Digest onboarding title is not empty")
-    func digestOnboardingTitleIsNotEmpty() {
-        let value = String(localized: "digest.onboarding.title")
+    @Test("Digest subtitle is not empty")
+    func digestSubtitleIsNotEmpty() {
+        let value = String(localized: "digest.subtitle")
         #expect(!value.isEmpty)
-        #expect(value == "AI-Powered News Digest")
+        #expect(value == "Generate a personalized summary from your saved articles")
     }
 
     @Test("Digest generate button is not empty")
@@ -278,9 +278,9 @@ struct DigestScreenLocalizableTests {
         #expect(!value.isEmpty)
     }
 
-    @Test("Digest empty title is not empty")
-    func digestEmptyTitleIsNotEmpty() {
-        let value = String(localized: "digest.empty.title")
+    @Test("Digest no articles is not empty")
+    func digestNoArticlesIsNotEmpty() {
+        let value = String(localized: "digest.no_articles")
         #expect(!value.isEmpty)
         #expect(value == "No Articles")
     }
@@ -628,6 +628,7 @@ struct LocalizationKeysExistenceTests {
         "common.back",
         "common.loading_more",
         "common.version",
+        "common.share",
         // Tab Bar
         "tab.home",
         "tab.for_you",
@@ -658,11 +659,32 @@ struct LocalizationKeysExistenceTests {
         "for_you.no_articles.message",
         // Digest Screen
         "digest.title",
-        "digest.onboarding.title",
+        "digest.subtitle",
+        "digest.select_source",
         "digest.generate",
         "digest.generating",
-        "digest.empty.title",
+        "digest.clear",
+        "digest.new",
+        "digest.model_loading",
+        "digest.model_ready",
+        "digest.no_articles",
+        "digest.configure_topics",
+        "digest.no_topics.title",
+        "digest.no_topics.message",
+        "digest.articles_available",
+        "digest.more_articles",
+        "digest.from_articles",
+        "digest.loading_articles",
         "digest.empty.message",
+        "digest.source.bookmarks",
+        "digest.source.reading_history",
+        "digest.source.fresh_news",
+        "digest.source.bookmarks.description",
+        "digest.source.reading_history.description",
+        "digest.source.fresh_news.description",
+        "digest.error.no_articles",
+        "digest.error.model_not_ready",
+        "digest.error.no_topics",
         // Search
         "search.title",
         "search.searching",
