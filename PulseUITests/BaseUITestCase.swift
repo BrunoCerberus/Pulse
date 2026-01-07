@@ -108,13 +108,13 @@ class BaseUITestCase: XCTestCase {
         _ = app.navigationBars["For You"].waitForExistence(timeout: Self.shortTimeout)
     }
 
-    /// Navigate to Categories tab and verify navigation bar appears
-    func navigateToCategoriesTab() {
-        let categoriesTab = app.tabBars.buttons["Categories"]
-        if categoriesTab.exists, !categoriesTab.isSelected {
-            categoriesTab.tap()
+    /// Navigate to Digest tab and verify navigation bar appears
+    func navigateToDigestTab() {
+        let digestTab = app.tabBars.buttons["Digest"]
+        if digestTab.exists, !digestTab.isSelected {
+            digestTab.tap()
         }
-        _ = app.navigationBars["Categories"].waitForExistence(timeout: Self.shortTimeout)
+        _ = app.navigationBars["Digest"].waitForExistence(timeout: Self.shortTimeout)
     }
 
     /// Navigate to Bookmarks tab and verify navigation bar appears
