@@ -35,28 +35,25 @@ final class LLMModelManager: @unchecked Sendable {
 
     /// Load the GGUF model into memory
     func loadModel(progressHandler: @escaping @Sendable (Double) -> Void) async throws {
+        // Quick check if already loaded (minimal lock time)
         lock.lock()
-
-        // Already loaded
         if swiftLlama != nil {
             lock.unlock()
             return
         }
+        lock.unlock()
 
-        // Check available memory
+        // Perform validations outside the lock to reduce contention
         guard hasAdequateMemory() else {
-            lock.unlock()
             logger.warning("Insufficient memory to load model", category: logCategory)
             throw LLMError.memoryPressure
         }
 
         progressHandler(0.1)
 
-        // Verify model file exists
         guard let modelPath = LLMConfiguration.modelURL?.path,
               FileManager.default.fileExists(atPath: modelPath)
         else {
-            lock.unlock()
             logger.warning("Model file not found at expected path", category: logCategory)
             throw LLMError.modelLoadFailed(
                 "Model file not bundled. Please add the GGUF model to Resources/Models/"
@@ -66,22 +63,28 @@ final class LLMModelManager: @unchecked Sendable {
         logger.info("Loading model from: \(modelPath)", category: logCategory)
         progressHandler(0.3)
 
-        // Create SwiftLlama actor instance
+        // Create and initialize outside the lock (expensive operation)
         let llama = SwiftLlama(modelPath: modelPath)
 
         do {
-            // Initialize model ON THE ACTOR - this ensures thread safety
             progressHandler(0.5)
             try await llama.initialize()
             progressHandler(0.8)
 
+            // Only lock when setting the shared state
+            lock.lock()
+            // Double-check: another caller may have loaded while we were initializing
+            if swiftLlama != nil {
+                lock.unlock()
+                // Another thread loaded first, discard our instance
+                return
+            }
             swiftLlama = llama
             lock.unlock()
 
             progressHandler(1.0)
             logger.info("Model loaded successfully", category: logCategory)
         } catch {
-            lock.unlock()
             logger.error("Failed to load model: \(error)", category: logCategory)
             throw LLMError.modelLoadFailed(error.localizedDescription)
         }
@@ -105,9 +108,11 @@ final class LLMModelManager: @unchecked Sendable {
     ///   - prompt: The user prompt/message to generate from
     ///   - systemPrompt: System prompt defining assistant behavior
     ///   - maxTokens: Maximum tokens to generate
-    ///   - temperature: Sampling temperature (currently unused - uses model default)
-    ///   - topP: Top-p sampling (currently unused - uses model default)
+    ///   - temperature: Sampling temperature (unused - LocalLlama Configuration.temperature is used instead)
+    ///   - topP: Top-p sampling (unused - LocalLlama Configuration.topP is used instead)
     ///   - stopSequences: Sequences that stop generation when encountered
+    /// - Note: temperature and topP are kept for API compatibility. To customize these values,
+    ///   configure them when creating the SwiftLlama instance via Configuration.
     func generate(
         prompt: String,
         systemPrompt: String = DigestPromptBuilder.systemPrompt,

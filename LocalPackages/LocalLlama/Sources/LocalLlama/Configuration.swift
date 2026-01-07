@@ -11,6 +11,8 @@ public struct Configuration {
     public let maxTokenCount: Int
     public let batchSize: Int
     public let stopTokens: [String]
+    /// Timeout for inference operations in seconds
+    public let timeout: TimeInterval
 
     public init(seed: Int = 1234,
                 topK: Int = 40,
@@ -20,7 +22,8 @@ public struct Configuration {
                 batchSize: Int = 2048,
                 stopSequence: String? = nil,
                 maxTokenCount: Int = 1024,
-                stopTokens: [String] = []) {
+                stopTokens: [String] = [],
+                timeout: TimeInterval = 30.0) {
         self.seed = seed
         self.topK = topK
         self.topP = topP
@@ -29,6 +32,7 @@ public struct Configuration {
         self.temperature = temperature
         self.maxTokenCount = maxTokenCount
         self.stopTokens = stopTokens
+        self.timeout = timeout
     }
 }
 

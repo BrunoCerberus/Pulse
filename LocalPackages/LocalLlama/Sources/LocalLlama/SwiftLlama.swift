@@ -29,9 +29,10 @@ public final class SwiftLlama: @unchecked Sendable {
     }
 
     private func startDedicatedThread() {
-        // Use unowned to avoid race condition - thread lifecycle is tied to SwiftLlama instance
-        // Safe because we wait for threadReady before returning from init
-        llamaThread = Thread { [unowned self] in
+        // Use weak self to avoid potential crashes if instance is deallocated during thread startup
+        llamaThread = Thread { [weak self] in
+            guard let self = self else { return }
+
             // Get the run loop for this thread
             self.runLoop = CFRunLoopGetCurrent()
 
@@ -41,7 +42,7 @@ public final class SwiftLlama: @unchecked Sendable {
             self.threadReadyLock.signal()
             self.threadReadyLock.unlock()
 
-            // Keep the thread alive
+            // Keep the thread alive until cancelled or self is deallocated
             while !Thread.current.isCancelled {
                 CFRunLoopRunInMode(.defaultMode, 0.1, false)
             }
@@ -77,7 +78,10 @@ public final class SwiftLlama: @unchecked Sendable {
         }
         CFRunLoopWakeUp(runLoop)
 
-        semaphore.wait()
+        let timeout = DispatchTime.now() + configuration.timeout
+        if semaphore.wait(timeout: timeout) == .timedOut {
+            throw SwiftLlamaError.others("Inference timed out after \(Int(configuration.timeout)) seconds")
+        }
 
         guard let result = result else {
             throw SwiftLlamaError.others("Execution result was unexpectedly nil")
