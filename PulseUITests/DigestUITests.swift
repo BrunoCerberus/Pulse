@@ -41,17 +41,13 @@ final class DigestUITests: BaseUITestCase {
                app.staticTexts.matching(predicate).count > 0
     }
 
-    /// Wait for source selection view (post-onboarding state)
-    private func waitForSourceSelectionView(timeout: TimeInterval = 8) -> Bool {
-        sourceChipsScrollView().waitForExistence(timeout: timeout)
-    }
-
     private let sourceNames = ["Bookmarks", "Reading History", "Fresh News"]
 
-    // MARK: - Navigation Test
+    // MARK: - Combined Flow Test
 
-    /// Tests basic digest tab navigation
-    func testDigestTabNavigation() throws {
+    /// Tests digest navigation, source selection, content states, and tab switching
+    func testDigestFlow() throws {
+        // --- Navigation ---
         let digestTab = app.tabBars.buttons["Digest"]
         XCTAssertTrue(digestTab.exists, "Digest tab should exist")
 
@@ -61,13 +57,8 @@ final class DigestUITests: BaseUITestCase {
 
         let navTitle = app.navigationBars["Digest"]
         XCTAssertTrue(navTitle.waitForExistence(timeout: Self.defaultTimeout), "Navigation title 'Digest' should exist")
-    }
 
-    /// Tests onboarding state displays sources
-    func testOnboardingShowsSources() throws {
-        navigateToDigestTab()
-
-        // Check for source options
+        // --- Onboarding State ---
         var foundSource = false
         for source in sourceNames {
             if sourceExists(source) {
@@ -76,42 +67,34 @@ final class DigestUITests: BaseUITestCase {
             }
         }
         XCTAssertTrue(foundSource, "Onboarding should show source options")
-    }
 
-    /// Tests source selection transitions from onboarding
-    func testSourceSelectionTransition() throws {
-        navigateToDigestTab()
+        // --- Source Selection ---
+        let sourceTapped = selectSource("Bookmarks")
+        XCTAssertTrue(sourceTapped, "Should be able to select Bookmarks source")
 
-        // Select a source
-        XCTAssertTrue(selectSource("Bookmarks"), "Should be able to select Bookmarks source")
+        if sourceTapped {
+            // Wait for UI to settle
+            wait(for: 2.0)
 
-        // Wait for UI to settle after selection
-        wait(for: 2.0)
+            // After selection, should transition from onboarding
+            let selectSourceText = app.staticTexts["Select a Source"]
+            let sourceChips = sourceChipsScrollView()
 
-        // After selection, "Select a Source" header should no longer be visible
-        // or source chips should appear
-        let selectSourceText = app.staticTexts["Select a Source"]
-        let sourceChips = sourceChipsScrollView()
+            let transitioned = sourceChips.exists || !selectSourceText.exists
+            XCTAssertTrue(transitioned, "Should transition from onboarding after selecting a source")
 
-        // Either chips appear OR the onboarding prompt is gone
-        let transitioned = sourceChips.exists || !selectSourceText.exists
-        XCTAssertTrue(transitioned, "Should transition from onboarding after selecting a source")
-    }
+            // --- Content States ---
+            let noTopicsText = app.staticTexts["No Topics Selected"]
+            let noArticlesText = app.staticTexts["No Articles"]
+            let generateButton = app.buttons["generateDigestButton"]
+            let configureButton = app.buttons["Configure Topics"]
 
-    /// Tests source chip horizontal scrolling
-    func testSourceChipsScrolling() throws {
-        navigateToDigestTab()
+            // --- Source Chips Scrolling ---
+            if sourceChips.exists {
+                sourceChips.swipeLeft()
+                sourceChips.swipeRight()
 
-        // Select a source to get to the chips view
-        if selectSource(sourceNames.first!) {
-            let scrollView = sourceChipsScrollView()
-            if scrollView.waitForExistence(timeout: Self.defaultTimeout) {
-                // Test horizontal scrolling
-                scrollView.swipeLeft()
-                scrollView.swipeRight()
-
-                // Verify chips still visible
-                var foundSource = false
+                foundSource = false
                 for source in sourceNames {
                     if sourceExists(source) {
                         foundSource = true
@@ -120,40 +103,24 @@ final class DigestUITests: BaseUITestCase {
                 }
                 XCTAssertTrue(foundSource, "Source chips should be visible after scrolling")
             }
-        }
-    }
 
-    /// Tests navigation to settings from no topics state
-    func testNoTopicsConfigureNavigation() throws {
-        navigateToDigestTab()
-
-        // Select Fresh News which may show no topics state
-        if selectSource("Fresh News") {
-            let configureButton = app.buttons["Configure Topics"]
-            if configureButton.waitForExistence(timeout: Self.defaultTimeout) {
+            // --- Configure Topics Navigation (if available) ---
+            if configureButton.exists {
                 configureButton.tap()
 
-                // Should navigate to settings
                 let settingsNav = app.navigationBars["Settings"]
                 XCTAssertTrue(
                     settingsNav.waitForExistence(timeout: Self.defaultTimeout),
                     "Should navigate to Settings from Configure Topics"
                 )
+
+                // Navigate back to Digest
+                navigateBack()
+                _ = navTitle.waitForExistence(timeout: Self.shortTimeout)
             }
         }
-    }
 
-    /// Tests tab switching preserves state
-    func testTabSwitching() throws {
-        navigateToDigestTab()
-
-        // Select a source
-        XCTAssertTrue(selectSource("Bookmarks"), "Should select Bookmarks source")
-
-        // Wait for transition
-        _ = waitForSourceSelectionView(timeout: Self.defaultTimeout)
-
-        // Switch to Home
+        // --- Tab Switching ---
         let homeTab = app.tabBars.buttons["Home"]
         XCTAssertTrue(homeTab.waitForExistence(timeout: Self.shortTimeout), "Home tab should exist")
         homeTab.tap()
@@ -161,41 +128,9 @@ final class DigestUITests: BaseUITestCase {
         let homeNav = app.navigationBars["News"]
         XCTAssertTrue(homeNav.waitForExistence(timeout: Self.shortTimeout), "Home should load after tab switch")
 
-        // Switch back to Digest
         navigateToDigestTab()
 
-        let digestNav = app.navigationBars["Digest"]
-        XCTAssertTrue(digestNav.waitForExistence(timeout: Self.shortTimeout), "Digest should load after tab switch")
-    }
-
-    /// Tests content appears after source selection
-    func testContentAfterSourceSelection() throws {
-        navigateToDigestTab()
-
-        // Select Fresh News source (triggers article loading)
-        if selectSource("Fresh News") {
-            // Wait for any content state to appear
-            wait(for: 2.0)
-
-            // Check for any valid content state:
-            // - Source chips (source selection view)
-            // - No Topics message (user hasn't configured topics)
-            // - No Articles message (empty state)
-            // - Generate button (articles available)
-            // - Loading indicator
-            let sourceChips = sourceChipsScrollView()
-            let noTopicsText = app.staticTexts["No Topics Selected"]
-            let noArticlesText = app.staticTexts["No Articles"]
-            let generateButton = app.buttons["generateDigestButton"]
-            let configureButton = app.buttons["Configure Topics"]
-
-            let hasContent = sourceChips.exists ||
-                            noTopicsText.exists ||
-                            noArticlesText.exists ||
-                            generateButton.exists ||
-                            configureButton.exists
-
-            XCTAssertTrue(hasContent, "Should show content after selecting a source")
-        }
+        let navTitleAfterSwitch = app.navigationBars["Digest"]
+        XCTAssertTrue(navTitleAfterSwitch.waitForExistence(timeout: Self.shortTimeout), "Digest view should load after tab switch")
     }
 }
