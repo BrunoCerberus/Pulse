@@ -2,115 +2,110 @@ import Foundation
 #if canImport(UIKit)
     import UIKit
 #endif
-import SwiftLlama
+import LocalLlama
 
 /// Manages the lifecycle of the LLM model (loading, inference, unloading)
 ///
-/// Uses SwiftLlama for on-device inference with GGUF models.
+/// Uses SwiftLlama actor for thread-safe on-device inference with GGUF models.
 final class LLMModelManager: @unchecked Sendable {
     static let shared = LLMModelManager()
 
-    private let queue = DispatchQueue(label: "com.pulse.llm", qos: .userInitiated)
     private let logger = Logger.shared
     private let logCategory = "LLMModelManager"
 
-    // SwiftLlama instance
+    /// SwiftLlama actor instance - all operations are thread-safe
     private var swiftLlama: SwiftLlama?
     private var isCancelled = false
 
+    /// Lock for protecting swiftLlama reference changes only
+    private let lock = NSLock()
+
     private init() {
         setupMemoryWarningObserver()
-    }
-
-    deinit {
-        swiftLlama = nil
     }
 
     // MARK: - Public API
 
     /// Check if model is currently loaded
     var modelIsLoaded: Bool {
-        queue.sync { swiftLlama != nil }
+        lock.lock()
+        defer { lock.unlock() }
+        return swiftLlama != nil
     }
 
     /// Load the GGUF model into memory
-    func loadModel(progressHandler: @escaping (Double) -> Void) async throws {
-        try await withCheckedThrowingContinuation { (continuation: CheckedContinuation<Void, Error>) in
-            queue.async { [weak self] in
-                guard let self else {
-                    continuation.resume(throwing: LLMError.serviceUnavailable)
-                    return
-                }
+    func loadModel(progressHandler: @escaping @Sendable (Double) -> Void) async throws {
+        lock.lock()
 
-                // Already loaded
-                if self.swiftLlama != nil {
-                    continuation.resume()
-                    return
-                }
+        // Already loaded
+        if swiftLlama != nil {
+            lock.unlock()
+            return
+        }
 
-                // Check available memory
-                guard self.hasAdequateMemory() else {
-                    self.logger.warning("Insufficient memory to load model", category: self.logCategory)
-                    continuation.resume(throwing: LLMError.memoryPressure)
-                    return
-                }
+        // Check available memory
+        guard hasAdequateMemory() else {
+            lock.unlock()
+            logger.warning("Insufficient memory to load model", category: logCategory)
+            throw LLMError.memoryPressure
+        }
 
-                progressHandler(0.1)
+        progressHandler(0.1)
 
-                // Verify model file exists
-                guard let modelPath = LLMConfiguration.modelURL?.path,
-                      FileManager.default.fileExists(atPath: modelPath)
-                else {
-                    self.logger.warning("Model file not found", category: self.logCategory)
-                    continuation.resume(throwing: LLMError.modelLoadFailed(
-                        "Model file not bundled. Please add the GGUF model to Resources/Models/"
-                    ))
-                    return
-                }
+        // Verify model file exists
+        guard let modelPath = LLMConfiguration.modelURL?.path,
+              FileManager.default.fileExists(atPath: modelPath)
+        else {
+            lock.unlock()
+            logger.warning("Model file not found at expected path", category: logCategory)
+            throw LLMError.modelLoadFailed(
+                "Model file not bundled. Please add the GGUF model to Resources/Models/"
+            )
+        }
 
-                progressHandler(0.3)
+        logger.info("Loading model from: \(modelPath)", category: logCategory)
+        progressHandler(0.3)
 
-                // Load model using SwiftLlama
-                do {
-                    let llama = try SwiftLlama(modelPath: modelPath)
-                    progressHandler(0.7)
+        // Create SwiftLlama actor instance
+        let llama = SwiftLlama(modelPath: modelPath)
 
-                    self.swiftLlama = llama
-                    progressHandler(1.0)
-                    self.logger.info("Model loaded successfully", category: self.logCategory)
-                    continuation.resume()
-                } catch {
-                    self.logger.error("Failed to load model: \(error)", category: self.logCategory)
-                    continuation.resume(throwing: LLMError.modelLoadFailed(error.localizedDescription))
-                }
-            }
+        do {
+            // Initialize model ON THE ACTOR - this ensures thread safety
+            progressHandler(0.5)
+            try await llama.initialize()
+            progressHandler(0.8)
+
+            swiftLlama = llama
+            lock.unlock()
+
+            progressHandler(1.0)
+            logger.info("Model loaded successfully", category: logCategory)
+        } catch {
+            lock.unlock()
+            logger.error("Failed to load model: \(error)", category: logCategory)
+            throw LLMError.modelLoadFailed(error.localizedDescription)
         }
     }
 
     /// Unload model and free memory
     func unloadModel() async {
-        await withCheckedContinuation { (continuation: CheckedContinuation<Void, Never>) in
-            queue.async { [weak self] in
-                self?.swiftLlama = nil
-                self?.logger.info("Model unloaded", category: self?.logCategory ?? "")
-                continuation.resume()
-            }
-        }
+        lock.lock()
+        swiftLlama = nil
+        lock.unlock()
+        logger.info("Model unloaded", category: logCategory)
     }
 
     /// Cancel current generation
     func cancelGeneration() {
-        queue.async { [weak self] in
-            self?.isCancelled = true
-        }
+        isCancelled = true
     }
 
-    /// Generate tokens from prompt
+    /// Generate text from prompt
     func generate(
         prompt: String,
         maxTokens: Int,
-        temperature: Float,
-        topP: Float,
+        temperature _: Float,
+        topP _: Float,
         stopSequences: [String]
     ) -> AsyncThrowingStream<String, Error> {
         AsyncThrowingStream { [weak self] continuation in
@@ -120,18 +115,12 @@ final class LLMModelManager: @unchecked Sendable {
             }
 
             Task {
-                do {
-                    try await self.runInference(
-                        prompt: prompt,
-                        maxTokens: maxTokens,
-                        temperature: temperature,
-                        topP: topP,
-                        stopSequences: stopSequences,
-                        continuation: continuation
-                    )
-                } catch {
-                    continuation.finish(throwing: error)
-                }
+                await self.runInference(
+                    prompt: prompt,
+                    maxTokens: maxTokens,
+                    stopSequences: stopSequences,
+                    continuation: continuation
+                )
             }
         }
     }
@@ -141,61 +130,60 @@ final class LLMModelManager: @unchecked Sendable {
     private func runInference(
         prompt: String,
         maxTokens: Int,
-        temperature _: Float,
-        topP _: Float,
         stopSequences: [String],
         continuation: AsyncThrowingStream<String, Error>.Continuation
-    ) async throws {
-        guard let llama = queue.sync(execute: { swiftLlama }) else {
-            throw LLMError.modelNotLoaded
+    ) async {
+        lock.lock()
+        guard let llama = swiftLlama else {
+            lock.unlock()
+            continuation.finish(throwing: LLMError.modelNotLoaded)
+            return
         }
+        lock.unlock()
 
-        // Reset cancellation flag
-        queue.sync { isCancelled = false }
-
-        var generatedText = ""
+        isCancelled = false
 
         // Create Prompt for Llama 3.2 model
         let llamaPrompt = Prompt(
             type: .llama3,
-            systemPrompt: "You are a helpful news digest assistant.",
+            systemPrompt: "You are a helpful news digest assistant that summarizes articles concisely.",
             userMessage: prompt
         )
 
-        // Use SwiftLlama's AsyncStream for token generation
-        // Explicitly type to get the AsyncThrowingStream overload
-        let stream: AsyncThrowingStream<String, Error> = await llama.start(for: llamaPrompt)
+        logger.info("Starting inference...", category: logCategory)
 
-        for try await token in stream {
-            // Check cancellation
-            if queue.sync(execute: { isCancelled }) {
-                throw LLMError.generationCancelled
+        do {
+            // Generate on the SwiftLlama actor - fully thread-safe
+            let result = try await llama.generate(for: llamaPrompt)
+
+            if isCancelled {
+                continuation.finish(throwing: LLMError.generationCancelled)
+                return
             }
 
-            generatedText += token
-
-            // Check stop sequences
-            var shouldStop = false
+            // Process result - apply stop sequences and max length
+            var processedResult = result
             for stop in stopSequences {
-                if generatedText.contains(stop) {
-                    shouldStop = true
+                if let range = processedResult.range(of: stop) {
+                    processedResult = String(processedResult[..<range.lowerBound])
                     break
                 }
             }
 
-            if shouldStop {
-                break
+            // Trim to approximate max tokens
+            if processedResult.count > maxTokens * 4 {
+                processedResult = String(processedResult.prefix(maxTokens * 4))
             }
 
-            // Check max tokens (approximate by character count)
-            if generatedText.count > maxTokens * 4 {
-                break
-            }
+            // Yield the entire result at once
+            continuation.yield(processedResult)
+            continuation.finish()
 
-            continuation.yield(token)
+            logger.info("Inference completed, generated \(processedResult.count) characters", category: logCategory)
+        } catch {
+            logger.error("Inference failed: \(error)", category: logCategory)
+            continuation.finish(throwing: error)
         }
-
-        continuation.finish()
     }
 
     // MARK: - Private Helpers

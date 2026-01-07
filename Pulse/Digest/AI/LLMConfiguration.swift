@@ -3,7 +3,8 @@ import Foundation
 /// Configuration for the bundled LLM model
 enum LLMConfiguration {
     /// Model file name without extension
-    static var modelFileName: String { "llama-3.2-1b-instruct-q4_k_m" }
+    /// Note: Download from https://huggingface.co/bartowski/Llama-3.2-1B-Instruct-GGUF
+    static var modelFileName: String { "Llama-3.2-1B-Instruct-Q4_K_M" }
 
     /// Model file extension
     static var modelExtension: String { "gguf" }

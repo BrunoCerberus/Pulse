@@ -18,13 +18,13 @@ final class PulseUITests: BaseUITestCase {
 
         XCTAssertTrue(bookmarksTab.isSelected, "Bookmarks tab should be selected")
 
-        // --- Categories Tab ---
-        let categoriesTab = app.tabBars.buttons["Categories"]
-        XCTAssertTrue(categoriesTab.waitForExistence(timeout: 5), "Categories tab should exist")
+        // --- Digest Tab ---
+        let digestTab = app.tabBars.buttons["Digest"]
+        XCTAssertTrue(digestTab.waitForExistence(timeout: 5), "Digest tab should exist")
 
-        categoriesTab.tap()
+        digestTab.tap()
 
-        XCTAssertTrue(categoriesTab.isSelected, "Categories tab should be selected")
+        XCTAssertTrue(digestTab.isSelected, "Digest tab should be selected")
 
         // --- For You Tab ---
         let forYouTab = app.tabBars.buttons["For You"]

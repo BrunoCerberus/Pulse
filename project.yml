@@ -9,6 +9,8 @@ options:
   fileTypes:
     xcassets:
       buildPhase: resources
+    gguf:
+      buildPhase: resources
   createIntermediateGroups: true
 
 packages:
@@ -27,9 +29,8 @@ packages:
   GoogleSignIn:
     url: https://github.com/google/GoogleSignIn-iOS.git
     from: 8.0.0
-  SwiftLlama:
-    url: https://github.com/ShenghaiWang/SwiftLlama.git
-    from: 0.4.0
+  LocalLlama:
+    path: LocalPackages/LocalLlama
 
 settings:
   base:
@@ -142,8 +143,8 @@ targets:
       - package: firebase-ios-sdk
         product: FirebaseRemoteConfig
       - package: GoogleSignIn
-      - package: SwiftLlama
-        product: SwiftLlama
+      - package: LocalLlama
+        product: LocalLlama
       - target: PulseWidgetExtension
         embed: true
 
