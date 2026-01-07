@@ -28,7 +28,7 @@ enum DigestConstants {
 // MARK: - Model Status Indicator
 
 struct DigestModelStatusIndicator: View {
-    let modelStatus: LLMModelStatus
+    let modelStatus: DigestModelStatus
 
     var body: some View {
         Group {
