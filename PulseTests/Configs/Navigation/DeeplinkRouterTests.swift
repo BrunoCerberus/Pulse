@@ -121,36 +121,28 @@ struct DeeplinkRouterTests {
         #expect(coordinator.selectedTab == .home)
     }
 
-    // MARK: - Category Deeplink Tests
+    // MARK: - Category Deeplink Tests (Legacy - redirects to Digest)
 
-    @Test("Route category deeplink with valid category switches and selects category")
+    @Test("Route category deeplink switches to digest tab")
     func routeCategoryDeeplinkValid() async throws {
         sut.setCoordinator(coordinator)
         coordinator.selectedTab = .home
 
         sut.route(deeplink: .category(name: "technology"))
 
-        // Use condition-based wait for more reliable state verification
-        let tabSuccess = await waitForCondition { [coordinator] in
-            coordinator.selectedTab == .categories
-        }
-        #expect(tabSuccess, "Tab should switch to categories")
-
-        let categorySuccess = await waitForCondition { [coordinator] in
-            coordinator.categoriesViewModel.viewState.selectedCategory == .technology
-        }
-        #expect(categorySuccess, "Category should be technology")
+        // Category deeplinks now redirect to the Digest tab
+        #expect(coordinator.selectedTab == .digest)
     }
 
-    @Test("Route category deeplink with invalid category switches but does not select")
+    @Test("Route category deeplink with any name switches to digest")
     func routeCategoryDeeplinkInvalid() async throws {
         sut.setCoordinator(coordinator)
         coordinator.selectedTab = .home
 
         sut.route(deeplink: .category(name: "invalid-category"))
 
-        #expect(coordinator.selectedTab == .categories)
-        #expect(coordinator.categoriesViewModel.viewState.selectedCategory == nil)
+        // All category deeplinks redirect to Digest tab
+        #expect(coordinator.selectedTab == .digest)
     }
 
     // MARK: - Queued Deeplink Tests
@@ -257,8 +249,8 @@ struct DeeplinkRouterTests {
         sut.route(deeplink: .bookmarks)
         sut.route(deeplink: .category(name: "technology"))
 
-        // Should complete without crash - final tab should be categories
-        #expect(coordinator.selectedTab == .categories)
+        // Should complete without crash - final tab should be digest
+        #expect(coordinator.selectedTab == .digest)
     }
 
     @Test("Multiple coordinators becoming available handles queued deeplinks correctly")

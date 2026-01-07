@@ -57,6 +57,10 @@ Pulse.xcodeproj/
 Credentials.swift
 Secrets.plist
 
+# LLM Models (too large for git, download separately)
+*.gguf
+Pulse/Resources/Models/
+
 # Archives
 *.zip
 *.tar.gz

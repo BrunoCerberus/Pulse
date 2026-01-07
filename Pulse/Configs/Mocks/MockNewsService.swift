@@ -66,14 +66,6 @@ final class MockBookmarksService: BookmarksService {
     }
 }
 
-final class MockCategoriesService: CategoriesService {
-    var articlesResult: Result<[Article], Error> = .success(Article.mockArticles)
-
-    func fetchArticles(for _: NewsCategory, page _: Int) -> AnyPublisher<[Article], Error> {
-        articlesResult.publisher.eraseToAnyPublisher()
-    }
-}
-
 final class MockForYouService: ForYouService {
     var feedResult: Result<[Article], Error> = .success(Article.mockArticles)
 
@@ -148,6 +140,87 @@ final class MockStorageService: StorageService {
     }
 }
 
+final class MockDigestService: DigestService {
+    var freshNewsResult: Result<[Article], Error> = .success(Article.mockArticles)
+
+    func fetchFreshNews(for _: [NewsCategory]) async throws -> [Article] {
+        switch freshNewsResult {
+        case let .success(articles):
+            return articles
+        case let .failure(error):
+            throw error
+        }
+    }
+}
+
+final class MockLLMService: LLMService {
+    var modelStatus: LLMModelStatus = .notLoaded
+    var generateResult: Result<String, Error> = .success(
+        "Mock AI digest content with enough words to trigger progress updates during generation."
+    )
+    var loadDelay: TimeInterval = 0.1
+    var generateDelay: TimeInterval = 0.1
+    var shouldSimulateMemoryPressure = false
+
+    private let modelStatusSubject = CurrentValueSubject<LLMModelStatus, Never>(.notLoaded)
+
+    var modelStatusPublisher: AnyPublisher<LLMModelStatus, Never> {
+        modelStatusSubject.eraseToAnyPublisher()
+    }
+
+    var isModelLoaded: Bool {
+        if case .ready = modelStatusSubject.value { return true }
+        return false
+    }
+
+    func loadModel() async throws {
+        modelStatusSubject.send(.loading(progress: 0.5))
+        try await Task.sleep(nanoseconds: UInt64(loadDelay * 1_000_000_000))
+
+        if shouldSimulateMemoryPressure {
+            modelStatusSubject.send(.error("Memory pressure"))
+            throw LLMError.memoryPressure
+        }
+
+        modelStatusSubject.send(.ready)
+    }
+
+    func unloadModel() async {
+        modelStatusSubject.send(.notLoaded)
+    }
+
+    func generate(prompt _: String, config _: LLMInferenceConfig) -> AnyPublisher<String, Error> {
+        Just(())
+            .delay(for: .seconds(generateDelay), scheduler: DispatchQueue.main)
+            .flatMap { [self] _ in
+                generateResult.publisher
+            }
+            .eraseToAnyPublisher()
+    }
+
+    func generateStream(prompt _: String, config _: LLMInferenceConfig) -> AsyncThrowingStream<String, Error> {
+        AsyncThrowingStream { [self] continuation in
+            Task {
+                // Use generateDelay per word for longer running stream
+                let delayPerWord = UInt64(generateDelay * 1_000_000_000 / 4)
+
+                switch generateResult {
+                case let .success(text):
+                    for word in text.split(separator: " ") {
+                        try? await Task.sleep(nanoseconds: delayPerWord)
+                        continuation.yield(String(word) + " ")
+                    }
+                    continuation.finish()
+                case let .failure(error):
+                    continuation.finish(throwing: error)
+                }
+            }
+        }
+    }
+
+    func cancelGeneration() {}
+}
+
 final class MockRemoteConfigService: RemoteConfigService {
     var guardianAPIKeyValue: String?
     var newsAPIKeyValue: String?
@@ -179,12 +252,13 @@ extension ServiceLocator {
         locator.register(NewsService.self, instance: MockNewsService())
         locator.register(SearchService.self, instance: MockSearchService())
         locator.register(BookmarksService.self, instance: MockBookmarksService())
-        locator.register(CategoriesService.self, instance: MockCategoriesService())
         locator.register(ForYouService.self, instance: MockForYouService())
         locator.register(SettingsService.self, instance: MockSettingsService())
         locator.register(StorageService.self, instance: MockStorageService())
         locator.register(StoreKitService.self, instance: MockStoreKitService())
         locator.register(RemoteConfigService.self, instance: MockRemoteConfigService())
+        locator.register(LLMService.self, instance: MockLLMService())
+        locator.register(DigestService.self, instance: MockDigestService())
 
         // Auth service with mock signed-in user
         let mockAuth = MockAuthService()
@@ -199,12 +273,13 @@ extension ServiceLocator {
         locator.register(NewsService.self, instance: MockNewsService())
         locator.register(SearchService.self, instance: MockSearchService())
         locator.register(BookmarksService.self, instance: MockBookmarksService())
-        locator.register(CategoriesService.self, instance: MockCategoriesService())
         locator.register(ForYouService.self, instance: MockForYouService())
         locator.register(SettingsService.self, instance: MockSettingsService())
         locator.register(StorageService.self, instance: MockStorageService())
         locator.register(StoreKitService.self, instance: MockStoreKitService())
         locator.register(RemoteConfigService.self, instance: MockRemoteConfigService())
+        locator.register(LLMService.self, instance: MockLLMService())
+        locator.register(DigestService.self, instance: MockDigestService())
         locator.register(AuthService.self, instance: MockAuthService())
         return locator
     }

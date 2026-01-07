@@ -116,7 +116,7 @@ Pulse is an iOS news aggregation app built with **Unidirectional Data Flow Archi
       TabView (selection: $coordinator.selectedTab)
           │
       ┌───┴───┬───────┬─────────┬─────────┐
-    Home   ForYou  Categories Bookmarks Search
+    Home   ForYou   Digest  Bookmarks Search
       │       │        │          │        │
    NavigationStack(path: $coordinator.homePath)
           │
@@ -176,7 +176,14 @@ Pulse/
 │   ├── ViewStates/             # HomeViewState
 │   └── Router/                 # HomeNavigationRouter
 ├── ForYou/                     # Personalized feed (same pattern)
-├── Categories/                 # Category browsing
+├── Digest/                     # AI-powered personalized digest
+│   ├── API/                    # DigestService protocol + Live/Mock
+│   ├── AI/                     # LLMService, LLMModelManager, LLMConfiguration
+│   ├── Domain/                 # DigestDomainInteractor, State, Action
+│   ├── ViewModel/              # DigestViewModel
+│   ├── View/                   # DigestView, DigestSourceCard, DigestSourceChip
+│   ├── Router/                 # DigestNavigationRouter
+│   └── Models/                 # DigestResult, DigestPromptBuilder
 ├── Search/                     # Search feature
 ├── Bookmarks/                  # Offline reading
 ├── Settings/                   # User preferences (includes account/logout)
@@ -200,7 +207,7 @@ Pulse/
 | **Authentication** | Firebase Auth with Google and Apple Sign-In (required before accessing app) |
 | **Home** | Breaking news carousel, top headlines with infinite scroll, settings access via gear icon |
 | **For You** | Personalized feed based on followed topics |
-| **Categories** | Browse by World, Business, Tech, Science, Health, Sports, Entertainment |
+| **Digest** | AI-powered digest using on-device Llama 3.2 1B (Q4_K_M ~700MB GGUF) via llama.cpp; sources: bookmarks, reading history, or fresh news |
 | **Search** | Full-text search with 300ms debounce, suggestions, and sort options (last tab with liquid glass style) |
 | **Bookmarks** | Save articles for offline reading (SwiftData) |
 | **Settings** | Topics, notifications, theme, muted content, account/logout (accessed from Home navigation bar) |
@@ -311,6 +318,11 @@ final class LiveNewsService: APIRequest, NewsService {
 | `StorageService.swift` | SwiftData persistence |
 | `NewsAPI.swift` | API endpoint definitions |
 | `GoogleService-Info.plist` | Firebase configuration |
+| **AI/LLM** | |
+| `LLMService.swift` | Protocol for LLM operations (load, generate, cancel) |
+| `LiveLLMService.swift` | llama.cpp implementation via LocalLlama package |
+| `LLMModelManager.swift` | Model lifecycle (load/unload, memory checks) |
+| `LLMConfiguration.swift` | Model paths, inference parameters |
 
 ## Troubleshooting
 
@@ -352,5 +364,5 @@ pulse://search?q=query
 pulse://bookmarks
 pulse://settings
 pulse://article?id=123
-pulse://category?name=technology
+pulse://digest
 ```

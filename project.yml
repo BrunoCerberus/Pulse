@@ -9,6 +9,8 @@ options:
   fileTypes:
     xcassets:
       buildPhase: resources
+    gguf:
+      buildPhase: resources
   createIntermediateGroups: true
 
 packages:
@@ -27,6 +29,8 @@ packages:
   GoogleSignIn:
     url: https://github.com/google/GoogleSignIn-iOS.git
     from: 8.0.0
+  LocalLlama:
+    path: LocalPackages/LocalLlama
 
 settings:
   base:
@@ -93,6 +97,7 @@ targets:
         ENABLE_PREVIEWS: YES
         CODE_SIGN_ENTITLEMENTS: Pulse/Pulse.entitlements
         CODE_SIGN_ALLOW_ENTITLEMENTS_MODIFICATION: YES
+        SWIFT_OBJC_INTEROP_MODE: objcxx
       configs:
         Debug:
           ENABLE_TESTABILITY: YES
@@ -138,6 +143,8 @@ targets:
       - package: firebase-ios-sdk
         product: FirebaseRemoteConfig
       - package: GoogleSignIn
+      - package: LocalLlama
+        product: LocalLlama
       - target: PulseWidgetExtension
         embed: true
 
@@ -154,6 +161,7 @@ targets:
         BUNDLE_LOADER: $(TEST_HOST)
         CODE_SIGN_STYLE: Automatic
         DEVELOPMENT_TEAM: RDTR6557FX
+        SWIFT_OBJC_INTEROP_MODE: objcxx
     dependencies:
       - target: Pulse
       - sdk: XCTest.framework
@@ -179,6 +187,7 @@ targets:
         TEST_TARGET_NAME: Pulse
         CODE_SIGN_STYLE: Automatic
         DEVELOPMENT_TEAM: RDTR6557FX
+        SWIFT_OBJC_INTEROP_MODE: objcxx
     dependencies:
       - target: Pulse
       - sdk: XCTest.framework
@@ -204,6 +213,7 @@ targets:
         BUNDLE_LOADER: $(TEST_HOST)
         CODE_SIGN_STYLE: Automatic
         DEVELOPMENT_TEAM: RDTR6557FX
+        SWIFT_OBJC_INTEROP_MODE: objcxx
     dependencies:
       - target: Pulse
       - sdk: XCTest.framework

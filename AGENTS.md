@@ -15,7 +15,15 @@ Pulse/
 │   │   ├── ViewModel/          # SignInViewModel
 │   │   ├── View/               # SignInView
 │   │   └── Manager/            # AuthenticationManager (global state)
-│   ├── [Feature]/              # Feature modules (Home, ForYou, Categories, etc.)
+│   ├── [Feature]/              # Feature modules (Home, ForYou, Search, Bookmarks, etc.)
+│   ├── Digest/                 # AI-powered digest (special structure)
+│   │   ├── API/                # DigestService protocol + Live/Mock
+│   │   ├── AI/                 # LLMService, LLMModelManager (llama.cpp via LocalLlama)
+│   │   ├── Domain/             # DigestDomainInteractor, State, Action
+│   │   ├── ViewModel/          # DigestViewModel
+│   │   ├── View/               # DigestView, source selection components
+│   │   ├── Router/             # DigestNavigationRouter
+│   │   └── Models/             # DigestResult, DigestPromptBuilder
 │   │   ├── API/                # Service protocols + implementations
 │   │   ├── Domain/             # Interactor, State, Action, Reducer, EventActionMap
 │   │   ├── ViewModel/          # CombineViewModel implementation
@@ -176,6 +184,26 @@ struct HomeDomainInteractorTests {
 7. **Authentication is required** - RootView gates access via AuthenticationManager
 8. **AuthenticationManager is a singleton** - observed by RootView to switch between SignInView and CoordinatorView
 
+## On-Device AI (Digest Feature)
+
+The Digest feature uses **Llama 3.2 1B Instruct** (Q4_K_M quantization, ~700MB GGUF) for on-device inference:
+
+| Component | Purpose |
+|-----------|---------|
+| `LocalLlama` | Local Swift package wrapping llama.cpp b5046 XCFramework |
+| `SwiftLlama` | Thread-safe wrapper using dedicated pinned Thread + CFRunLoop |
+| `LlamaModel` | Low-level llama.cpp bindings with vocab-based API |
+| `LLMService` | Protocol for model load/unload/generate operations |
+| `LLMModelManager` | Singleton managing model lifecycle and memory pressure |
+
+### Threading Model
+All llama.cpp operations run on a **dedicated pinned thread** (not just serialized) because llama.cpp uses thread-local state. The `SwiftLlama` class uses `CFRunLoop` to ensure the exact same OS thread handles all inference calls.
+
+### Memory Management
+- Model requires ~700MB RAM when loaded
+- `LLMModelManager` checks available memory before loading
+- Auto-unloads on `UIApplication.didReceiveMemoryWarningNotification`
+
 ## Navigation Architecture
 
 Pulse uses a **Coordinator + Router** pattern with per-tab NavigationPaths:
@@ -186,7 +214,7 @@ CoordinatorView (@StateObject Coordinator)
    TabView (selection: $coordinator.selectedTab)
        │
    ┌───┴───┬───────┬─────────┬─────────┐
- Home   ForYou  Categories Bookmarks Search
+ Home   ForYou   Digest  Bookmarks Search
    │       │        │          │        │
 NavigationStack(path: $coordinator.homePath)
        │

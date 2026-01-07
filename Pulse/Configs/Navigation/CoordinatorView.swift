@@ -42,11 +42,11 @@ struct CoordinatorView: View {
                 }
             }
 
-            Tab("Categories", systemImage: AppTab.categories.symbolImage, value: .categories) {
-                NavigationStack(path: $coordinator.categoriesPath) {
-                    CategoriesView(
-                        router: CategoriesNavigationRouter(coordinator: coordinator),
-                        viewModel: coordinator.categoriesViewModel
+            Tab("Digest", systemImage: AppTab.digest.symbolImage, value: .digest) {
+                NavigationStack(path: $coordinator.digestPath) {
+                    DigestView(
+                        router: DigestNavigationRouter(coordinator: coordinator),
+                        viewModel: coordinator.digestViewModel
                     )
                     .navigationDestination(for: Page.self) { page in
                         coordinator.build(page: page)

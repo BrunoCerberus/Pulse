@@ -74,9 +74,10 @@ enum TestServiceLocatorFactory {
         serviceLocator.register(StorageService.self, instance: MockStorageService())
         serviceLocator.register(SearchService.self, instance: MockSearchService())
         serviceLocator.register(ForYouService.self, instance: MockForYouService())
-        serviceLocator.register(CategoriesService.self, instance: MockCategoriesService())
         serviceLocator.register(BookmarksService.self, instance: MockBookmarksService())
         serviceLocator.register(SettingsService.self, instance: MockSettingsService())
+        serviceLocator.register(LLMService.self, instance: MockLLMService())
+        serviceLocator.register(DigestService.self, instance: MockDigestService())
 
         return serviceLocator
     }
@@ -93,9 +94,10 @@ enum TestServiceLocatorFactory {
         serviceLocator.register(StorageService.self, instance: storageService)
         serviceLocator.register(SearchService.self, instance: MockSearchService())
         serviceLocator.register(ForYouService.self, instance: MockForYouService())
-        serviceLocator.register(CategoriesService.self, instance: MockCategoriesService())
         serviceLocator.register(BookmarksService.self, instance: MockBookmarksService())
         serviceLocator.register(SettingsService.self, instance: MockSettingsService())
+        serviceLocator.register(LLMService.self, instance: MockLLMService())
+        serviceLocator.register(DigestService.self, instance: MockDigestService())
 
         return TestMockServices(
             serviceLocator: serviceLocator,
@@ -115,10 +117,22 @@ extension MockForYouService {
     }
 }
 
-extension MockCategoriesService {
-    /// Convenience property for setting category articles result
-    var categoryArticlesResult: Result<[Article], Error> {
-        get { articlesResult }
-        set { articlesResult = newValue }
+extension MockStorageService {
+    /// Convenience property for setting mocked bookmarked articles
+    var mockBookmarkedArticles: [Article] {
+        get { bookmarkedArticles }
+        set { bookmarkedArticles = newValue }
+    }
+
+    /// Convenience property for setting mocked reading history
+    var mockReadingHistory: [Article] {
+        get { readingHistory }
+        set { readingHistory = newValue }
+    }
+
+    /// Convenience property for setting mocked user preferences
+    var mockUserPreferences: UserPreferences? {
+        get { userPreferences }
+        set { userPreferences = newValue }
     }
 }

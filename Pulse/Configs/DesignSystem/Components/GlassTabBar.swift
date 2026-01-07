@@ -17,10 +17,10 @@ struct GlassTabItem: Identifiable {
             selectedIcon: "heart.text.square.fill"
         ),
         GlassTabItem(
-            id: .categories,
-            title: "Categories",
-            icon: "square.grid.2x2",
-            selectedIcon: "square.grid.2x2.fill"
+            id: .digest,
+            title: "Digest",
+            icon: "sparkles",
+            selectedIcon: "sparkles"
         ),
         GlassTabItem(id: .bookmarks, title: "Bookmarks", icon: "bookmark", selectedIcon: "bookmark.fill"),
         GlassTabItem(id: .search, title: "Search", icon: "magnifyingglass", selectedIcon: "magnifyingglass"),

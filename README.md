@@ -7,12 +7,12 @@ A modern iOS news aggregation app built with Clean Architecture, SwiftUI, and Co
 - **Authentication**: Firebase Auth with Google and Apple Sign-In (required before accessing app)
 - **Home Feed**: Breaking news carousel and top headlines with infinite scrolling (settings accessible via gear icon)
 - **For You**: Personalized feed based on followed topics and reading history
-- **Categories**: Browse news by World, Business, Technology, Science, Health, Sports, Entertainment
+- **Digest**: AI-powered personalized digest using on-device **Llama 3.2 1B** (Q4_K_M, ~700MB GGUF) via llama.cpp
 - **Search**: Full-text search with 300ms debounce, suggestions, recent searches, and sort options
 - **Bookmarks**: Save articles for offline reading with SwiftData persistence
 - **Settings**: Customize topics, notifications, theme, content filters, and account/logout (accessed from Home navigation bar)
 
-The app uses iOS 26's liquid glass TabView style with tabs: Home, For You, Categories, Bookmarks, and Search. Users must sign in with Google or Apple before accessing the main app.
+The app uses iOS 26's liquid glass TabView style with tabs: Home, For You, Digest, Bookmarks, and Search. Users must sign in with Google or Apple before accessing the main app.
 
 ## Architecture
 
@@ -68,7 +68,7 @@ CoordinatorView (@StateObject Coordinator)
    TabView (selection: $coordinator.selectedTab)
        │
    ┌───┴───┬───────┬─────────┬─────────┐
- Home   ForYou  Categories Bookmarks Search
+ Home   ForYou   Digest  Bookmarks Search
    │       │        │          │        │
 NavigationStack(path: $coordinator.homePath)
        │
@@ -157,7 +157,7 @@ Pulse/
 │   │   ├── ViewStates/     # HomeViewState
 │   │   └── Router/         # HomeNavigationRouter
 │   ├── ForYou/             # Personalized feed (same pattern)
-│   ├── Categories/         # Category browsing
+│   ├── Digest/             # AI-powered personalized digest
 │   ├── Search/             # Search functionality
 │   ├── Bookmarks/          # Saved articles
 │   ├── Settings/           # User preferences + account/logout
@@ -188,6 +188,7 @@ Pulse/
 | [GoogleSignIn](https://github.com/google/GoogleSignIn-iOS) | Google Sign-In SDK |
 | [SnapshotTesting](https://github.com/pointfreeco/swift-snapshot-testing) | Snapshot testing |
 | [Lottie](https://github.com/airbnb/lottie-ios) | Animations |
+| LocalLlama (local package) | On-device LLM inference via [llama.cpp](https://github.com/ggml-org/llama.cpp) |
 
 ## CI/CD
 
@@ -214,7 +215,7 @@ pulse://search?q=query          # Search with query
 pulse://bookmarks               # Open bookmarks
 pulse://settings                # Open settings
 pulse://article?id=123          # Open specific article
-pulse://category?name=tech      # Open category
+pulse://digest                  # Open digest
 ```
 
 ## Testing
