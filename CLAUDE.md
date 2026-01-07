@@ -116,7 +116,7 @@ Pulse is an iOS news aggregation app built with **Unidirectional Data Flow Archi
       TabView (selection: $coordinator.selectedTab)
           │
       ┌───┴───┬───────┬─────────┬─────────┐
-    Home   ForYou  Categories Bookmarks Search
+    Home   ForYou   Digest  Bookmarks Search
       │       │        │          │        │
    NavigationStack(path: $coordinator.homePath)
           │
@@ -176,7 +176,7 @@ Pulse/
 │   ├── ViewStates/             # HomeViewState
 │   └── Router/                 # HomeNavigationRouter
 ├── ForYou/                     # Personalized feed (same pattern)
-├── Categories/                 # Category browsing
+├── Digest/                     # AI-powered personalized digest
 ├── Search/                     # Search feature
 ├── Bookmarks/                  # Offline reading
 ├── Settings/                   # User preferences (includes account/logout)
@@ -200,7 +200,7 @@ Pulse/
 | **Authentication** | Firebase Auth with Google and Apple Sign-In (required before accessing app) |
 | **Home** | Breaking news carousel, top headlines with infinite scroll, settings access via gear icon |
 | **For You** | Personalized feed based on followed topics |
-| **Categories** | Browse by World, Business, Tech, Science, Health, Sports, Entertainment |
+| **Digest** | AI-powered personalized digest from bookmarks, reading history, or fresh news by followed topics |
 | **Search** | Full-text search with 300ms debounce, suggestions, and sort options (last tab with liquid glass style) |
 | **Bookmarks** | Save articles for offline reading (SwiftData) |
 | **Settings** | Topics, notifications, theme, muted content, account/logout (accessed from Home navigation bar) |
@@ -352,5 +352,5 @@ pulse://search?q=query
 pulse://bookmarks
 pulse://settings
 pulse://article?id=123
-pulse://category?name=technology
+pulse://digest
 ```

@@ -15,7 +15,7 @@ Pulse/
 │   │   ├── ViewModel/          # SignInViewModel
 │   │   ├── View/               # SignInView
 │   │   └── Manager/            # AuthenticationManager (global state)
-│   ├── [Feature]/              # Feature modules (Home, ForYou, Categories, etc.)
+│   ├── [Feature]/              # Feature modules (Home, ForYou, Digest, etc.)
 │   │   ├── API/                # Service protocols + implementations
 │   │   ├── Domain/             # Interactor, State, Action, Reducer, EventActionMap
 │   │   ├── ViewModel/          # CombineViewModel implementation
@@ -186,7 +186,7 @@ CoordinatorView (@StateObject Coordinator)
    TabView (selection: $coordinator.selectedTab)
        │
    ┌───┴───┬───────┬─────────┬─────────┐
- Home   ForYou  Categories Bookmarks Search
+ Home   ForYou   Digest  Bookmarks Search
    │       │        │          │        │
 NavigationStack(path: $coordinator.homePath)
        │
