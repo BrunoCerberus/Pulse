@@ -7,7 +7,7 @@ A modern iOS news aggregation app built with Clean Architecture, SwiftUI, and Co
 - **Authentication**: Firebase Auth with Google and Apple Sign-In (required before accessing app)
 - **Home Feed**: Breaking news carousel and top headlines with infinite scrolling (settings accessible via gear icon)
 - **For You**: Personalized feed based on followed topics and reading history
-- **Digest**: AI-powered personalized digest from bookmarks, reading history, or fresh news by followed topics
+- **Digest**: AI-powered personalized digest using on-device **Llama 3.2 1B** (Q4_K_M, ~700MB GGUF) via llama.cpp
 - **Search**: Full-text search with 300ms debounce, suggestions, recent searches, and sort options
 - **Bookmarks**: Save articles for offline reading with SwiftData persistence
 - **Settings**: Customize topics, notifications, theme, content filters, and account/logout (accessed from Home navigation bar)
@@ -188,6 +188,7 @@ Pulse/
 | [GoogleSignIn](https://github.com/google/GoogleSignIn-iOS) | Google Sign-In SDK |
 | [SnapshotTesting](https://github.com/pointfreeco/swift-snapshot-testing) | Snapshot testing |
 | [Lottie](https://github.com/airbnb/lottie-ios) | Animations |
+| LocalLlama (local package) | On-device LLM inference via [llama.cpp](https://github.com/ggml-org/llama.cpp) |
 
 ## CI/CD
 
