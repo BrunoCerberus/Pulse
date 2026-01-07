@@ -1,5 +1,5 @@
 {
-  "originHash" : "6b56edf4ec6b18487aa12ef9e22c9feed45c5c3ab0d73cdf41778e203bc78e0d",
+  "originHash" : "cdd0f763642a518bffcfc510d0bdcbb271430b728ebbee196b5a4b5f98a2977b",
   "pins" : [
     {
       "identity" : "abseil-cpp-binary",
@@ -136,15 +136,6 @@
       }
     },
     {
-      "identity" : "llama.cpp",
-      "kind" : "remoteSourceControl",
-      "location" : "https://github.com/StanfordBDHG/llama.cpp",
-      "state" : {
-        "revision" : "6839853a321778906e210a33ee2c6aec52f34c97",
-        "version" : "0.3.3"
-      }
-    },
-    {
       "identity" : "lottie-ios",
       "kind" : "remoteSourceControl",
       "location" : "https://github.com/airbnb/lottie-ios.git",
@@ -205,6 +196,15 @@
       "state" : {
         "revision" : "4799286537280063c85a32f09884cfbca301b1a1",
         "version" : "602.0.0"
+      }
+    },
+    {
+      "identity" : "swiftllama",
+      "kind" : "remoteSourceControl",
+      "location" : "https://github.com/ShenghaiWang/SwiftLlama.git",
+      "state" : {
+        "revision" : "469310012506c307f3f6800d9c5f31e670ff068d",
+        "version" : "0.4.0"
       }
     },
     {

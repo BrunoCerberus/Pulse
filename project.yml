@@ -27,9 +27,9 @@ packages:
   GoogleSignIn:
     url: https://github.com/google/GoogleSignIn-iOS.git
     from: 8.0.0
-  llama-cpp:
-    url: https://github.com/StanfordBDHG/llama.cpp
-    from: 0.1.0
+  SwiftLlama:
+    url: https://github.com/ShenghaiWang/SwiftLlama.git
+    from: 0.4.0
 
 settings:
   base:
@@ -142,8 +142,8 @@ targets:
       - package: firebase-ios-sdk
         product: FirebaseRemoteConfig
       - package: GoogleSignIn
-      - package: llama-cpp
-        product: llama
+      - package: SwiftLlama
+        product: SwiftLlama
       - target: PulseWidgetExtension
         embed: true
 
