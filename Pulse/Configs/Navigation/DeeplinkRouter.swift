@@ -93,12 +93,10 @@ final class DeeplinkRouter {
             coordinator.switchTab(to: .home, popToRoot: true)
             debugPrint("DeeplinkRouter: Article deeplink received with ID: \(id)")
 
-        case let .category(name):
-            coordinator.switchTab(to: .categories, popToRoot: true)
-            // Update the categories view model with the selected category
-            if let category = NewsCategory(rawValue: name.lowercased()) {
-                coordinator.categoriesViewModel.handle(event: .onCategorySelected(category))
-            }
+        case .category:
+            // Categories feature has been replaced with Digest
+            // Category deeplinks now navigate to the Digest tab
+            coordinator.switchTab(to: .digest, popToRoot: true)
         }
 
         // Clear the deeplink after processing

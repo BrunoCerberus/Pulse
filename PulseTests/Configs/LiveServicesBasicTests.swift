@@ -117,32 +117,6 @@ struct LiveServicesBasicTests {
         #expect(true)
     }
 
-    // MARK: - LiveCategoriesService Tests
-
-    @Test("LiveCategoriesService can be instantiated")
-    func liveCategoriesServiceInstantiation() {
-        let sut = LiveCategoriesService()
-        #expect(sut != nil)
-    }
-
-    @Test("LiveCategoriesService fetchArticles returns publisher")
-    func liveCategoriesServiceFetchArticles() {
-        let sut = LiveCategoriesService()
-        var cancellables = Set<AnyCancellable>()
-
-        let publisher = sut.fetchArticles(for: .technology, page: 1)
-
-        publisher
-            .sink(
-                receiveCompletion: { _ in },
-                receiveValue: { (_: [Article]) in }
-            )
-            .store(in: &cancellables)
-
-        // Smoke test: Verifies method signature and return type contract
-        #expect(true)
-    }
-
     // MARK: - LiveBookmarksService Tests
 
     @Test("LiveBookmarksService can be instantiated")

@@ -81,11 +81,11 @@ struct TabBarLocalizableTests {
         #expect(value == "For You")
     }
 
-    @Test("Categories tab is not empty")
-    func categoriesTabIsNotEmpty() {
-        let value = String(localized: "tab.categories")
+    @Test("Digest tab is not empty")
+    func digestTabIsNotEmpty() {
+        let value = String(localized: "tab.digest")
         #expect(!value.isEmpty)
-        #expect(value == "Categories")
+        #expect(value == "Digest")
     }
 
     @Test("Search tab is not empty")
@@ -247,47 +247,47 @@ struct ForYouLocalizableTests {
     }
 }
 
-// MARK: - Categories Screen Tests
+// MARK: - Digest Screen Tests
 
-@Suite("Categories Screen Localization Tests")
-struct CategoriesScreenLocalizableTests {
-    @Test("Categories title is not empty")
-    func categoriesTitleIsNotEmpty() {
-        let value = String(localized: "categories.title")
+@Suite("Digest Screen Localization Tests")
+struct DigestScreenLocalizableTests {
+    @Test("Digest title is not empty")
+    func digestTitleIsNotEmpty() {
+        let value = String(localized: "digest.title")
         #expect(!value.isEmpty)
-        #expect(value == "Categories")
+        #expect(value == "Digest")
     }
 
-    @Test("Categories loading is not empty")
-    func categoriesLoadingIsNotEmpty() {
-        let value = String(localized: "categories.loading")
+    @Test("Digest onboarding title is not empty")
+    func digestOnboardingTitleIsNotEmpty() {
+        let value = String(localized: "digest.onboarding.title")
         #expect(!value.isEmpty)
-        #expect(value == "Loading articles...")
+        #expect(value == "AI-Powered News Digest")
     }
 
-    @Test("Select category title is not empty")
-    func selectCategoryTitleIsNotEmpty() {
-        let value = String(localized: "categories.select.title")
+    @Test("Digest generate button is not empty")
+    func digestGenerateButtonIsNotEmpty() {
+        let value = String(localized: "digest.generate")
         #expect(!value.isEmpty)
-        #expect(value == "Select a Category")
+        #expect(value == "Generate Digest")
     }
 
-    @Test("Select category message is not empty")
-    func selectCategoryMessageIsNotEmpty() {
-        let value = String(localized: "categories.select.message")
+    @Test("Digest generating text is not empty")
+    func digestGeneratingTextIsNotEmpty() {
+        let value = String(localized: "digest.generating")
         #expect(!value.isEmpty)
     }
 
-    @Test("Categories empty title is not empty")
-    func categoriesEmptyTitleIsNotEmpty() {
-        let value = String(localized: "categories.empty.title")
+    @Test("Digest empty title is not empty")
+    func digestEmptyTitleIsNotEmpty() {
+        let value = String(localized: "digest.empty.title")
         #expect(!value.isEmpty)
         #expect(value == "No Articles")
     }
 
-    @Test("Categories empty message is not empty")
-    func categoriesEmptyMessageIsNotEmpty() {
-        let value = String(localized: "categories.empty.message")
+    @Test("Digest empty message is not empty")
+    func digestEmptyMessageIsNotEmpty() {
+        let value = String(localized: "digest.empty.message")
         #expect(!value.isEmpty)
     }
 }
@@ -631,7 +631,7 @@ struct LocalizationKeysExistenceTests {
         // Tab Bar
         "tab.home",
         "tab.for_you",
-        "tab.categories",
+        "tab.digest",
         "tab.search",
         "tab.bookmarks",
         // Categories
@@ -656,13 +656,13 @@ struct LocalizationKeysExistenceTests {
         "for_you.set_preferences",
         "for_you.no_articles.title",
         "for_you.no_articles.message",
-        // Categories Screen
-        "categories.title",
-        "categories.loading",
-        "categories.select.title",
-        "categories.select.message",
-        "categories.empty.title",
-        "categories.empty.message",
+        // Digest Screen
+        "digest.title",
+        "digest.onboarding.title",
+        "digest.generate",
+        "digest.generating",
+        "digest.empty.title",
+        "digest.empty.message",
         // Search
         "search.title",
         "search.searching",

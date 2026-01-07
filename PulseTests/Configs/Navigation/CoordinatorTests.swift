@@ -16,7 +16,8 @@ struct CoordinatorTests {
         serviceLocator.register(StorageService.self, instance: MockStorageService())
         serviceLocator.register(SearchService.self, instance: MockSearchService())
         serviceLocator.register(ForYouService.self, instance: MockForYouService())
-        serviceLocator.register(CategoriesService.self, instance: MockCategoriesService())
+        serviceLocator.register(LLMService.self, instance: MockLLMService())
+        serviceLocator.register(DigestService.self, instance: MockDigestService())
         serviceLocator.register(BookmarksService.self, instance: MockBookmarksService())
         serviceLocator.register(SettingsService.self, instance: MockSettingsService())
 
@@ -30,7 +31,7 @@ struct CoordinatorTests {
         #expect(sut.selectedTab == .home)
         #expect(sut.homePath.isEmpty)
         #expect(sut.forYouPath.isEmpty)
-        #expect(sut.categoriesPath.isEmpty)
+        #expect(sut.digestPath.isEmpty)
         #expect(sut.bookmarksPath.isEmpty)
         #expect(sut.searchPath.isEmpty)
     }
@@ -197,11 +198,11 @@ struct CoordinatorTests {
         sut.push(page: .articleDetail(article), in: .home)
         sut.push(page: .settings, in: .home)
         sut.push(page: .articleDetail(article), in: .forYou)
-        sut.push(page: .articleDetail(article), in: .categories)
+        sut.push(page: .articleDetail(article), in: .digest)
 
         #expect(sut.homePath.count == 2)
         #expect(sut.forYouPath.count == 1)
-        #expect(sut.categoriesPath.count == 1)
+        #expect(sut.digestPath.count == 1)
         #expect(sut.bookmarksPath.isEmpty)
         #expect(sut.searchPath.isEmpty)
     }
@@ -227,7 +228,7 @@ struct CoordinatorTests {
         // Access each viewModel and verify it's not nil
         #expect(sut.homeViewModel != nil)
         #expect(sut.forYouViewModel != nil)
-        #expect(sut.categoriesViewModel != nil)
+        #expect(sut.digestViewModel != nil)
         #expect(sut.bookmarksViewModel != nil)
         #expect(sut.searchViewModel != nil)
         #expect(sut.settingsViewModel != nil)
@@ -241,7 +242,7 @@ struct CoordinatorTests {
         #expect(allTabs.count == 5)
         #expect(allTabs.contains(.home))
         #expect(allTabs.contains(.forYou))
-        #expect(allTabs.contains(.categories))
+        #expect(allTabs.contains(.digest))
         #expect(allTabs.contains(.bookmarks))
         #expect(allTabs.contains(.search))
 
