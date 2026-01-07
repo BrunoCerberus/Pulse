@@ -3,9 +3,16 @@ import SwiftUI
 // MARK: - DigestView
 
 struct DigestView<R: DigestNavigationRouter>: View {
+    /// Router responsible for navigation actions
     private var router: R
+
+    /// Backing ViewModel managing data and actions
     @ObservedObject var viewModel: DigestViewModel
 
+    /// Creates the view with a router and ViewModel.
+    /// - Parameters:
+    ///   - router: Navigation router for routing actions
+    ///   - viewModel: ViewModel for managing data and actions
     init(router: R, viewModel: DigestViewModel) {
         self.router = router
         self.viewModel = viewModel
@@ -19,7 +26,6 @@ struct DigestView<R: DigestNavigationRouter>: View {
             content
         }
         .navigationTitle(DigestConstants.title)
-        .navigationBarTitleDisplayMode(.large)
         .toolbarBackground(.hidden, for: .navigationBar)
         .onAppear {
             viewModel.handle(event: .onAppear)

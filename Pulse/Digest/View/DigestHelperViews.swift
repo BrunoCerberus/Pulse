@@ -45,7 +45,7 @@ struct DigestModelStatusIndicator: View {
             case .ready:
                 HStack(spacing: Spacing.xs) {
                     Image(systemName: "checkmark.circle.fill")
-                        .foregroundStyle(.green)
+                        .foregroundStyle(Color.Semantic.success)
                     Text(DigestConstants.modelReady)
                         .font(Typography.captionLarge)
                         .foregroundStyle(.secondary)
@@ -249,7 +249,7 @@ struct DigestGeneratingView: View {
             ZStack {
                 ForEach(0 ..< 3, id: \.self) { _ in
                     Image(systemName: "sparkle")
-                        .font(.system(size: 30))
+                        .font(.system(size: IconSize.xl))
                         .foregroundStyle(Color.Accent.primary)
                         .offset(
                             x: CGFloat.random(in: -30 ... 30),
