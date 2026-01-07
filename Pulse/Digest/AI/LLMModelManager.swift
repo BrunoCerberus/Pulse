@@ -2,12 +2,11 @@ import Foundation
 #if canImport(UIKit)
     import UIKit
 #endif
+import llama
 
 /// Manages the lifecycle of the LLM model (loading, inference, unloading)
 ///
-/// NOTE: This is a stub implementation. The actual llama.cpp integration requires
-/// additional C++ interop configuration. For now, this manager returns placeholder
-/// errors. The MockLLMService should be used for testing and development.
+/// Uses llama.cpp for on-device inference with GGUF models.
 final class LLMModelManager: @unchecked Sendable {
     static let shared = LLMModelManager()
 
@@ -15,20 +14,41 @@ final class LLMModelManager: @unchecked Sendable {
     private let logger = Logger.shared
     private let logCategory = "LLMModelManager"
 
-    private var isLoaded = false
+    // llama.cpp state
+    private var model: OpaquePointer?
+    private var context: OpaquePointer?
+    private var isCancelled = false
 
     private init() {
         setupMemoryWarningObserver()
+        // Initialize llama backend
+        llama_backend_init()
+    }
+
+    deinit {
+        unloadModelSync()
+        llama_backend_free()
+    }
+
+    // MARK: - Public API
+
+    /// Check if model is currently loaded
+    var modelIsLoaded: Bool {
+        queue.sync { model != nil && context != nil }
     }
 
     /// Load the GGUF model into memory
-    ///
-    /// - Note: Stub implementation - actual llama.cpp integration pending
     func loadModel(progressHandler: @escaping (Double) -> Void) async throws {
         try await withCheckedThrowingContinuation { (continuation: CheckedContinuation<Void, Error>) in
             queue.async { [weak self] in
                 guard let self else {
                     continuation.resume(throwing: LLMError.serviceUnavailable)
+                    return
+                }
+
+                // Already loaded
+                if self.model != nil {
+                    continuation.resume()
                     return
                 }
 
@@ -42,24 +62,49 @@ final class LLMModelManager: @unchecked Sendable {
                 progressHandler(0.1)
 
                 // Verify model file exists
-                guard let modelURL = LLMConfiguration.modelURL,
-                      FileManager.default.fileExists(atPath: modelURL.path)
+                guard let modelPath = LLMConfiguration.modelURL?.path,
+                      FileManager.default.fileExists(atPath: modelPath)
                 else {
-                    // Model file not bundled yet - this is expected during development
-                    self.logger.info("Model file not found - using stub implementation", category: self.logCategory)
+                    self.logger.warning("Model file not found", category: self.logCategory)
                     continuation.resume(throwing: LLMError.modelLoadFailed(
                         "Model file not bundled. Please add the GGUF model to Resources/Models/"
                     ))
                     return
                 }
 
-                progressHandler(0.5)
+                progressHandler(0.3)
 
-                // TODO: Integrate llama.cpp when C++ interop is configured
-                // For now, simulate successful load for testing
-                self.isLoaded = true
+                // Load model
+                var modelParams = llama_model_default_params()
+                modelParams.n_gpu_layers = 0 // CPU only for iOS compatibility
+
+                guard let loadedModel = llama_load_model_from_file(modelPath, modelParams) else {
+                    self.logger.error("Failed to load model from file", category: self.logCategory)
+                    continuation.resume(throwing: LLMError.modelLoadFailed("Failed to load GGUF model"))
+                    return
+                }
+
+                self.model = loadedModel
+                progressHandler(0.7)
+
+                // Create context
+                var contextParams = llama_context_default_params()
+                contextParams.n_ctx = UInt32(LLMConfiguration.contextSize)
+                contextParams.n_batch = UInt32(LLMConfiguration.batchSize)
+                contextParams.n_threads = UInt32(LLMConfiguration.threadCount)
+                contextParams.n_threads_batch = UInt32(LLMConfiguration.threadCount)
+
+                guard let ctx = llama_new_context_with_model(loadedModel, contextParams) else {
+                    llama_free_model(loadedModel)
+                    self.model = nil
+                    self.logger.error("Failed to create context", category: self.logCategory)
+                    continuation.resume(throwing: LLMError.modelLoadFailed("Failed to create inference context"))
+                    return
+                }
+
+                self.context = ctx
                 progressHandler(1.0)
-                self.logger.info("Model loaded (stub)", category: self.logCategory)
+                self.logger.info("Model loaded successfully", category: self.logCategory)
                 continuation.resume()
             }
         }
@@ -69,32 +114,26 @@ final class LLMModelManager: @unchecked Sendable {
     func unloadModel() async {
         await withCheckedContinuation { (continuation: CheckedContinuation<Void, Never>) in
             queue.async { [weak self] in
-                guard let self else {
-                    continuation.resume()
-                    return
-                }
-
-                self.isLoaded = false
-                self.logger.info("Model unloaded", category: self.logCategory)
+                self?.unloadModelSync()
                 continuation.resume()
             }
         }
     }
 
-    /// Check if model is currently loaded
-    var modelIsLoaded: Bool {
-        queue.sync { isLoaded }
+    /// Cancel current generation
+    func cancelGeneration() {
+        queue.async { [weak self] in
+            self?.isCancelled = true
+        }
     }
 
     /// Generate tokens from prompt
-    ///
-    /// - Note: Stub implementation - returns placeholder text
     func generate(
         prompt: String,
         maxTokens: Int,
         temperature: Float,
         topP: Float,
-        stopSequences _: [String]
+        stopSequences: [String]
     ) -> AsyncThrowingStream<String, Error> {
         AsyncThrowingStream { [weak self] continuation in
             guard let self else {
@@ -102,51 +141,173 @@ final class LLMModelManager: @unchecked Sendable {
                 return
             }
 
-            queue.async {
-                guard self.isLoaded else {
+            queue.async { [weak self] in
+                guard let self else {
+                    continuation.finish(throwing: LLMError.serviceUnavailable)
+                    return
+                }
+
+                guard let model = self.model, let ctx = self.context else {
                     continuation.finish(throwing: LLMError.modelNotLoaded)
                     return
                 }
 
-                // Stub: Generate placeholder response
-                // In production, this will use llama.cpp for actual inference
-                let stubResponse = """
-                [AI Digest - Stub Response]
+                self.isCancelled = false
 
-                This is a placeholder response from the LLM stub implementation.
-
-                To enable actual AI generation:
-                1. Bundle a GGUF model in Resources/Models/
-                2. Configure C++ interop for llama.cpp
-                3. Update LLMModelManager with actual inference code
-
-                The prompt contained \(prompt.count) characters.
-                Max tokens requested: \(maxTokens)
-                Temperature: \(temperature)
-                Top-P: \(topP)
-                """
-
-                // Stream the response word by word
-                let words = stubResponse.split(separator: " ")
-                for (index, word) in words.enumerated() {
-                    if Task.isCancelled {
-                        continuation.finish(throwing: LLMError.generationCancelled)
-                        return
-                    }
-
-                    let text = String(word) + (index < words.count - 1 ? " " : "")
-                    continuation.yield(text)
-
-                    // Simulate token generation delay
-                    Thread.sleep(forTimeInterval: 0.02)
+                do {
+                    try self.runInference(
+                        model: model,
+                        context: ctx,
+                        prompt: prompt,
+                        maxTokens: maxTokens,
+                        temperature: temperature,
+                        topP: topP,
+                        stopSequences: stopSequences,
+                        continuation: continuation
+                    )
+                } catch {
+                    continuation.finish(throwing: error)
                 }
-
-                continuation.finish()
             }
         }
     }
 
+    // MARK: - Private Inference
+
+    private func runInference(
+        model: OpaquePointer,
+        context ctx: OpaquePointer,
+        prompt: String,
+        maxTokens: Int,
+        temperature: Float,
+        topP: Float,
+        stopSequences: [String],
+        continuation: AsyncThrowingStream<String, Error>.Continuation
+    ) throws {
+        // Tokenize prompt
+        let promptCString = prompt.cString(using: .utf8) ?? []
+        let maxTokenCount = Int32(prompt.count + 128)
+        var tokens = [llama_token](repeating: 0, count: Int(maxTokenCount))
+
+        let tokenCount = llama_tokenize(
+            model,
+            promptCString,
+            Int32(promptCString.count),
+            &tokens,
+            maxTokenCount,
+            true, // add_special (BOS)
+            false // parse_special
+        )
+
+        guard tokenCount > 0 else {
+            throw LLMError.generationFailed("Failed to tokenize prompt")
+        }
+
+        tokens = Array(tokens.prefix(Int(tokenCount)))
+        logger.info("Tokenized prompt: \(tokenCount) tokens", category: logCategory)
+
+        // Clear KV cache
+        llama_kv_cache_clear(ctx)
+
+        // Create batch for prompt processing
+        var batch = llama_batch_init(Int32(LLMConfiguration.batchSize), 0, 1)
+        defer { llama_batch_free(batch) }
+
+        // Add prompt tokens to batch
+        for (index, token) in tokens.enumerated() {
+            llama_batch_add_simple(&batch, token, Int32(index), index == tokens.count - 1)
+        }
+
+        // Process prompt
+        if llama_decode(ctx, batch) != 0 {
+            throw LLMError.generationFailed("Failed to process prompt")
+        }
+
+        // Create sampling context
+        var sparams = llama_sampling_params()
+        sparams.temp = temperature
+        sparams.top_p = topP
+        sparams.top_k = 40
+        sparams.seed = UInt32.random(in: 0 ... UInt32.max)
+
+        guard let samplingCtx = llama_sampling_init(sparams) else {
+            throw LLMError.generationFailed("Failed to initialize sampler")
+        }
+        defer { llama_sampling_free(samplingCtx) }
+
+        // Generate tokens
+        var generatedText = ""
+        var currentPos = Int32(tokens.count)
+        let eosToken = llama_token_eos(model)
+
+        for _ in 0 ..< maxTokens {
+            if isCancelled {
+                throw LLMError.generationCancelled
+            }
+
+            // Sample next token
+            let newToken = llama_sampling_sample(samplingCtx, ctx, nil, -1)
+            llama_sampling_accept(samplingCtx, ctx, newToken, true)
+
+            // Check for EOS
+            if newToken == eosToken {
+                break
+            }
+
+            // Convert token to text
+            let piece = tokenToString(model: model, token: newToken)
+
+            // Check stop sequences
+            generatedText += piece
+            if stopSequences.contains(where: { generatedText.contains($0) }) {
+                // Remove stop sequence from output
+                for stop in stopSequences {
+                    if let range = generatedText.range(of: stop) {
+                        generatedText = String(generatedText[..<range.lowerBound])
+                    }
+                }
+                continuation.yield(piece)
+                break
+            }
+
+            continuation.yield(piece)
+
+            // Prepare next batch
+            llama_batch_clear(&batch)
+            llama_batch_add_simple(&batch, newToken, currentPos, true)
+            currentPos += 1
+
+            // Decode
+            if llama_decode(ctx, batch) != 0 {
+                throw LLMError.generationFailed("Decode failed at position \(currentPos)")
+            }
+        }
+
+        continuation.finish()
+    }
+
+    private func tokenToString(model: OpaquePointer, token: llama_token) -> String {
+        var buffer = [CChar](repeating: 0, count: 256)
+        let length = llama_token_to_piece(model, token, &buffer, 256, false)
+        if length > 0 {
+            return String(cString: buffer)
+        }
+        return ""
+    }
+
     // MARK: - Private Helpers
+
+    private func unloadModelSync() {
+        if let ctx = context {
+            llama_free(ctx)
+            context = nil
+        }
+        if let model = model {
+            llama_free_model(model)
+            self.model = nil
+        }
+        logger.info("Model unloaded", category: logCategory)
+    }
 
     private func hasAdequateMemory() -> Bool {
         var info = mach_task_basic_info()
@@ -182,4 +343,19 @@ final class LLMModelManager: @unchecked Sendable {
             }
         #endif
     }
+}
+
+// MARK: - llama_batch helpers
+
+private func llama_batch_add_simple(_ batch: inout llama_batch, _ token: llama_token, _ pos: Int32, _ logits: Bool) {
+    batch.token[Int(batch.n_tokens)] = token
+    batch.pos[Int(batch.n_tokens)] = pos
+    batch.n_seq_id[Int(batch.n_tokens)] = 1
+    batch.seq_id[Int(batch.n_tokens)]![0] = 0
+    batch.logits[Int(batch.n_tokens)] = logits ? 1 : 0
+    batch.n_tokens += 1
+}
+
+private func llama_batch_clear(_ batch: inout llama_batch) {
+    batch.n_tokens = 0
 }

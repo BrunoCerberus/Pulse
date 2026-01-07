@@ -27,6 +27,9 @@ packages:
   GoogleSignIn:
     url: https://github.com/google/GoogleSignIn-iOS.git
     from: 8.0.0
+  llama-cpp:
+    url: https://github.com/StanfordBDHG/llama.cpp
+    from: 0.1.0
 
 settings:
   base:
@@ -93,6 +96,7 @@ targets:
         ENABLE_PREVIEWS: YES
         CODE_SIGN_ENTITLEMENTS: Pulse/Pulse.entitlements
         CODE_SIGN_ALLOW_ENTITLEMENTS_MODIFICATION: YES
+        SWIFT_OBJC_INTEROP_MODE: objcxx
       configs:
         Debug:
           ENABLE_TESTABILITY: YES
@@ -138,6 +142,8 @@ targets:
       - package: firebase-ios-sdk
         product: FirebaseRemoteConfig
       - package: GoogleSignIn
+      - package: llama-cpp
+        product: llama
       - target: PulseWidgetExtension
         embed: true
 
@@ -154,6 +160,7 @@ targets:
         BUNDLE_LOADER: $(TEST_HOST)
         CODE_SIGN_STYLE: Automatic
         DEVELOPMENT_TEAM: RDTR6557FX
+        SWIFT_OBJC_INTEROP_MODE: objcxx
     dependencies:
       - target: Pulse
       - sdk: XCTest.framework
@@ -179,6 +186,7 @@ targets:
         TEST_TARGET_NAME: Pulse
         CODE_SIGN_STYLE: Automatic
         DEVELOPMENT_TEAM: RDTR6557FX
+        SWIFT_OBJC_INTEROP_MODE: objcxx
     dependencies:
       - target: Pulse
       - sdk: XCTest.framework
@@ -204,6 +212,7 @@ targets:
         BUNDLE_LOADER: $(TEST_HOST)
         CODE_SIGN_STYLE: Automatic
         DEVELOPMENT_TEAM: RDTR6557FX
+        SWIFT_OBJC_INTEROP_MODE: objcxx
     dependencies:
       - target: Pulse
       - sdk: XCTest.framework

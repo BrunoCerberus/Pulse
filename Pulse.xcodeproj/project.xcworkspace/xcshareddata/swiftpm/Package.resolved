@@ -1,5 +1,5 @@
 {
-  "originHash" : "85088a0b469b717928d33cda3612dbfc0de8fe489473a4c308b72f24fce5e159",
+  "originHash" : "6b56edf4ec6b18487aa12ef9e22c9feed45c5c3ab0d73cdf41778e203bc78e0d",
   "pins" : [
     {
       "identity" : "abseil-cpp-binary",
@@ -133,6 +133,15 @@
       "state" : {
         "revision" : "a0bc79961d7be727d258d33d5a6b2f1023270ba1",
         "version" : "1.22.5"
+      }
+    },
+    {
+      "identity" : "llama.cpp",
+      "kind" : "remoteSourceControl",
+      "location" : "https://github.com/StanfordBDHG/llama.cpp",
+      "state" : {
+        "revision" : "6839853a321778906e210a33ee2c6aec52f34c97",
+        "version" : "0.3.3"
       }
     },
     {
