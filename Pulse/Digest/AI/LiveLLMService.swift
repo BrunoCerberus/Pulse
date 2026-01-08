@@ -41,6 +41,7 @@ final class LiveLLMService: LLMService {
 
     func generate(
         prompt: String,
+        systemPrompt: String?,
         config: LLMInferenceConfig
     ) -> AnyPublisher<String, Error> {
         Future { [weak self] promise in
@@ -52,7 +53,11 @@ final class LiveLLMService: LLMService {
             Task {
                 do {
                     var result = ""
-                    for try await token in self.generateStream(prompt: prompt, config: config) {
+                    for try await token in self.generateStream(
+                        prompt: prompt,
+                        systemPrompt: systemPrompt,
+                        config: config
+                    ) {
                         result += token
                     }
                     promise(.success(result))
@@ -66,6 +71,7 @@ final class LiveLLMService: LLMService {
 
     func generateStream(
         prompt: String,
+        systemPrompt: String?,
         config: LLMInferenceConfig
     ) -> AsyncThrowingStream<String, Error> {
         AsyncThrowingStream { [weak self] continuation in
@@ -84,6 +90,7 @@ final class LiveLLMService: LLMService {
                     // Get the token stream from the actor
                     let tokens = await self.modelManager.generate(
                         prompt: prompt,
+                        systemPrompt: systemPrompt ?? LLMModelManager.defaultSystemPrompt,
                         maxTokens: config.maxTokens,
                         temperature: config.temperature,
                         topP: config.topP,

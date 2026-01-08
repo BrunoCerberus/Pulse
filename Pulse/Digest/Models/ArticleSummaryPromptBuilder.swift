@@ -1,27 +1,26 @@
 import Foundation
 
 enum ArticleSummaryPromptBuilder {
-    static func buildPrompt(for article: Article) -> String {
-        let systemPrompt = """
-        You are a concise news summarizer. Your task is to create a brief, informative summary of the article provided.
-        Guidelines:
-        - Write 2-3 sentences maximum
-        - Focus on the key facts and main takeaway
-        - Use clear, accessible language
-        - Do not include opinions or commentary
-        - Start directly with the summary, no preamble
-        """
+    /// System prompt for article summarization
+    static let systemPrompt = """
+    You are a concise news summarizer. Your task is to create a brief, informative summary of the article provided.
+    Guidelines:
+    - Write 2-3 sentences maximum
+    - Focus on the key facts and main takeaway
+    - Use clear, accessible language
+    - Do not include opinions or commentary
+    - Start directly with the summary, no preamble
+    """
 
+    /// Builds the user message prompt for summarization (without chat template markers)
+    /// The LLM service will wrap this with the appropriate chat template
+    static func buildPrompt(for article: Article) -> String {
         let articleContent = buildArticleContent(article)
 
         return """
-        <|system|>
-        \(systemPrompt)
-        <|user|>
         Summarize this article:
 
         \(articleContent)
-        <|assistant|>
         """
     }
 

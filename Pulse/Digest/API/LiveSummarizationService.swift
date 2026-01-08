@@ -23,8 +23,9 @@ final class LiveSummarizationService: SummarizationService {
 
     func summarize(article: Article) -> AsyncThrowingStream<String, Error> {
         let prompt = ArticleSummaryPromptBuilder.buildPrompt(for: article)
+        let systemPrompt = ArticleSummaryPromptBuilder.systemPrompt
         let config = LLMInferenceConfig.summarization
-        return llmService.generateStream(prompt: prompt, config: config)
+        return llmService.generateStream(prompt: prompt, systemPrompt: systemPrompt, config: config)
     }
 
     func cancelSummarization() {
