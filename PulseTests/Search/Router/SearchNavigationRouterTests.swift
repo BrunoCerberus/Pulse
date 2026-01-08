@@ -16,7 +16,7 @@ struct SearchNavigationRouterTests {
         serviceLocator.register(SearchService.self, instance: MockSearchService())
         serviceLocator.register(ForYouService.self, instance: MockForYouService())
         serviceLocator.register(LLMService.self, instance: MockLLMService())
-        serviceLocator.register(DigestService.self, instance: MockDigestService())
+        serviceLocator.register(SummarizationService.self, instance: MockSummarizationService())
         serviceLocator.register(BookmarksService.self, instance: MockBookmarksService())
         serviceLocator.register(SettingsService.self, instance: MockSettingsService())
 

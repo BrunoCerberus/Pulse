@@ -6,20 +6,14 @@ import Testing
 @Suite("DigestDomainInteractor Tests")
 @MainActor
 struct DigestDomainInteractorTests {
-    let mockLLMService: MockLLMService
-    let mockDigestService: MockDigestService
     let mockStorageService: MockStorageService
     let serviceLocator: ServiceLocator
     let sut: DigestDomainInteractor
 
     init() {
-        mockLLMService = MockLLMService()
-        mockDigestService = MockDigestService()
         mockStorageService = MockStorageService()
         serviceLocator = ServiceLocator()
 
-        serviceLocator.register(LLMService.self, instance: mockLLMService)
-        serviceLocator.register(DigestService.self, instance: mockDigestService)
         serviceLocator.register(StorageService.self, instance: mockStorageService)
 
         sut = DigestDomainInteractor(serviceLocator: serviceLocator)
@@ -30,386 +24,161 @@ struct DigestDomainInteractorTests {
     @Test("Initial state is correct")
     func initialState() {
         let state = sut.currentState
-        #expect(state.selectedSource == nil)
-        #expect(state.sourceArticles.isEmpty)
-        #expect(!state.isLoadingArticles)
-        #expect(!state.isGenerating)
-        #expect(state.generatedDigest == nil)
+        #expect(state.summaries.isEmpty)
+        #expect(!state.isLoading)
         #expect(state.error == nil)
-        #expect(state.generationProgress.isEmpty)
     }
 
-    // MARK: - Source Selection Tests
+    // MARK: - Load Summaries Tests
 
-    @Test("Select source sets selected source")
-    func selectSourceSetsSelectedSource() async throws {
-        sut.dispatch(action: .selectSource(.bookmarks))
-
-        try await Task.sleep(nanoseconds: 100_000_000)
-
-        #expect(sut.currentState.selectedSource == .bookmarks)
-    }
-
-    @Test("Select bookmarks source loads bookmarked articles")
-    func selectBookmarksLoadsBookmarkedArticles() async throws {
+    @Test("Load summaries fetches from storage")
+    func loadSummariesFetchesFromStorage() async throws {
         let mockArticles = Article.mockArticles
-        mockStorageService.mockBookmarkedArticles = mockArticles
+        let summary1 = (article: mockArticles[0], summary: "Test summary 1", generatedAt: Date())
+        let summary2 = (article: mockArticles[1], summary: "Test summary 2", generatedAt: Date())
+        mockStorageService.summaries = [summary1, summary2]
 
-        sut.dispatch(action: .selectSource(.bookmarks))
+        sut.dispatch(action: .loadSummaries)
 
-        try await Task.sleep(nanoseconds: 500_000_000)
-
-        let state = sut.currentState
-        #expect(state.selectedSource == .bookmarks)
-        #expect(!state.isLoadingArticles)
-        #expect(state.sourceArticles.count == mockArticles.count)
-    }
-
-    @Test("Select reading history source loads history articles")
-    func selectReadingHistoryLoadsHistoryArticles() async throws {
-        let mockArticles = Article.mockArticles
-        mockStorageService.mockReadingHistory = mockArticles
-
-        sut.dispatch(action: .selectSource(.readingHistory))
-
-        try await Task.sleep(nanoseconds: 500_000_000)
+        try await Task.sleep(nanoseconds: 300_000_000)
 
         let state = sut.currentState
-        #expect(state.selectedSource == .readingHistory)
-        #expect(!state.isLoadingArticles)
-        #expect(state.sourceArticles.count == mockArticles.count)
+        #expect(!state.isLoading)
+        #expect(state.summaries.count == 2)
+        #expect(state.error == nil)
     }
 
-    @Test("Select fresh news source loads fresh articles")
-    func selectFreshNewsLoadsFreshArticles() async throws {
-        let mockArticles = Article.mockArticles
-        mockDigestService.freshNewsResult = .success(mockArticles)
-        mockStorageService.mockUserPreferences = UserPreferences(
-            followedTopics: [.technology, .science],
-            followedSources: [],
-            mutedSources: [],
-            mutedKeywords: [],
-            preferredLanguage: "en",
-            notificationsEnabled: true,
-            breakingNewsNotifications: true
-        )
-
-        sut.dispatch(action: .selectSource(.freshNews))
-
-        try await Task.sleep(nanoseconds: 500_000_000)
-
-        let state = sut.currentState
-        #expect(state.selectedSource == .freshNews)
-        #expect(!state.isLoadingArticles)
-        #expect(!state.sourceArticles.isEmpty)
-    }
-
-    @Test("Select fresh news with no topics shows error")
-    func selectFreshNewsNoTopicsShowsError() async throws {
-        mockStorageService.mockUserPreferences = UserPreferences(
-            followedTopics: [],
-            followedSources: [],
-            mutedSources: [],
-            mutedKeywords: [],
-            preferredLanguage: "en",
-            notificationsEnabled: true,
-            breakingNewsNotifications: true
-        )
-
-        sut.dispatch(action: .selectSource(.freshNews))
-
-        try await Task.sleep(nanoseconds: 500_000_000)
-
-        let state = sut.currentState
-        #expect(!state.isLoadingArticles)
-        #expect(state.error == .noTopicsConfigured)
-    }
-
-    @Test("Select source clears previous digest")
-    func selectSourceClearsPreviousDigest() async throws {
-        // Setup: generate a digest first
-        mockStorageService.mockBookmarkedArticles = Article.mockArticles
-        await loadModelAndWait()
-
-        sut.dispatch(action: .selectSource(.bookmarks))
-        try await Task.sleep(nanoseconds: 500_000_000)
-
-        sut.dispatch(action: .generateDigest)
-        try await Task.sleep(nanoseconds: 1_000_000_000)
-
-        #expect(sut.currentState.generatedDigest != nil)
-
-        // Act: select different source
-        sut.dispatch(action: .selectSource(.readingHistory))
-        try await Task.sleep(nanoseconds: 100_000_000)
-
-        // Assert: digest should be cleared
-        #expect(sut.currentState.generatedDigest == nil)
-    }
-
-    @Test("Select source sets loading state")
-    func selectSourceSetsLoadingState() async throws {
+    @Test("Load summaries sets loading state")
+    func loadSummariesSetsLoadingState() async throws {
         var cancellables = Set<AnyCancellable>()
         var loadingStates: [Bool] = []
 
         sut.statePublisher
-            .map(\.isLoadingArticles)
+            .map(\.isLoading)
             .sink { isLoading in
                 loadingStates.append(isLoading)
             }
             .store(in: &cancellables)
 
-        sut.dispatch(action: .selectSource(.bookmarks))
+        sut.dispatch(action: .loadSummaries)
 
-        try await Task.sleep(nanoseconds: 500_000_000)
+        try await Task.sleep(nanoseconds: 300_000_000)
 
         #expect(loadingStates.contains(true))
         #expect(loadingStates.last == false)
     }
 
-    // MARK: - Load Model Tests
+    @Test("Load summaries with empty storage returns empty list")
+    func loadSummariesWithEmptyStorageReturnsEmptyList() async throws {
+        mockStorageService.summaries = []
 
-    @Test("Load model updates model status")
-    func loadModelUpdatesStatus() async throws {
-        var cancellables = Set<AnyCancellable>()
-        var statusUpdates: [LLMModelStatus] = []
+        sut.dispatch(action: .loadSummaries)
 
-        sut.statePublisher
-            .map(\.modelStatus)
-            .sink { status in
-                statusUpdates.append(status)
-            }
-            .store(in: &cancellables)
-
-        sut.dispatch(action: .loadModelIfNeeded)
-
-        try await Task.sleep(nanoseconds: 500_000_000)
-
-        #expect(statusUpdates.contains { if case .loading = $0 { return true }; return false })
-        #expect(statusUpdates.last == .ready)
-    }
-
-    @Test("Load model handles memory pressure error")
-    func loadModelHandlesMemoryPressure() async throws {
-        mockLLMService.shouldSimulateMemoryPressure = true
-
-        sut.dispatch(action: .loadModelIfNeeded)
-
-        try await Task.sleep(nanoseconds: 500_000_000)
-
-        let state = sut.currentState
-        if case .error = state.modelStatus {
-            // Expected
-        } else {
-            Issue.record("Expected model status to be error")
-        }
-    }
-
-    // MARK: - Generate Digest Tests
-
-    @Test("Generate digest requires articles")
-    func generateDigestRequiresArticles() async throws {
-        await loadModelAndWait()
-
-        sut.dispatch(action: .generateDigest)
-
-        try await Task.sleep(nanoseconds: 200_000_000)
-
-        #expect(sut.currentState.error == .noArticlesAvailable)
-    }
-
-    @Test("Generate digest requires loaded model")
-    func generateDigestRequiresLoadedModel() async throws {
-        mockStorageService.mockBookmarkedArticles = Article.mockArticles
-
-        sut.dispatch(action: .selectSource(.bookmarks))
-        try await Task.sleep(nanoseconds: 500_000_000)
-
-        sut.dispatch(action: .generateDigest)
-        try await Task.sleep(nanoseconds: 200_000_000)
-
-        #expect(sut.currentState.error == .modelNotReady)
-    }
-
-    @Test("Generate digest produces result")
-    func generateDigestProducesResult() async throws {
-        mockStorageService.mockBookmarkedArticles = Article.mockArticles
-        await loadModelAndWait()
-
-        sut.dispatch(action: .selectSource(.bookmarks))
-        try await Task.sleep(nanoseconds: 500_000_000)
-
-        sut.dispatch(action: .generateDigest)
-        try await Task.sleep(nanoseconds: 1_000_000_000)
-
-        let state = sut.currentState
-        #expect(!state.isGenerating)
-        #expect(state.generatedDigest != nil)
-        #expect(!state.generatedDigest!.content.isEmpty)
-        #expect(state.generatedDigest!.source == .bookmarks)
-        #expect(state.generatedDigest!.articleCount > 0)
-    }
-
-    @Test("Generate digest sets generating state")
-    func generateDigestSetsGeneratingState() async throws {
-        mockStorageService.mockBookmarkedArticles = Article.mockArticles
-        await loadModelAndWait()
-
-        sut.dispatch(action: .selectSource(.bookmarks))
-        try await Task.sleep(nanoseconds: 500_000_000)
-
-        var cancellables = Set<AnyCancellable>()
-        var generatingStates: [Bool] = []
-
-        sut.statePublisher
-            .map(\.isGenerating)
-            .sink { isGenerating in
-                generatingStates.append(isGenerating)
-            }
-            .store(in: &cancellables)
-
-        sut.dispatch(action: .generateDigest)
-
-        try await Task.sleep(nanoseconds: 1_000_000_000)
-
-        #expect(generatingStates.contains(true))
-        #expect(generatingStates.last == false)
-    }
-
-    @Test("Generate digest streams progress")
-    func generateDigestStreamsProgress() async throws {
-        mockStorageService.mockBookmarkedArticles = Article.mockArticles
-        await loadModelAndWait()
-
-        sut.dispatch(action: .selectSource(.bookmarks))
-        try await Task.sleep(nanoseconds: 500_000_000)
-
-        var cancellables = Set<AnyCancellable>()
-        var progressUpdates: [String] = []
-
-        sut.statePublisher
-            .map(\.generationProgress)
-            .sink { progress in
-                if !progress.isEmpty {
-                    progressUpdates.append(progress)
-                }
-            }
-            .store(in: &cancellables)
-
-        sut.dispatch(action: .generateDigest)
-
-        try await Task.sleep(nanoseconds: 1_000_000_000)
-
-        #expect(!progressUpdates.isEmpty)
-    }
-
-    @Test("Generate digest handles generation error")
-    func generateDigestHandlesError() async throws {
-        mockStorageService.mockBookmarkedArticles = Article.mockArticles
-        mockLLMService.generateResult = .failure(LLMError.inferenceTimeout)
-        await loadModelAndWait()
-
-        sut.dispatch(action: .selectSource(.bookmarks))
-        try await Task.sleep(nanoseconds: 500_000_000)
-
-        sut.dispatch(action: .generateDigest)
-        try await Task.sleep(nanoseconds: 1_000_000_000)
-
-        let state = sut.currentState
-        #expect(!state.isGenerating)
-        if case .generationFailed = state.error {
-            // Expected
-        } else {
-            Issue.record("Expected generationFailed error")
-        }
-    }
-
-    // MARK: - Cancel Generation Tests
-
-    @Test("Cancel generation stops generation")
-    func cancelGenerationStopsGeneration() async throws {
-        mockStorageService.mockBookmarkedArticles = Article.mockArticles
-        mockLLMService.generateDelay = 2.0 // Long delay to ensure we can cancel
-        await loadModelAndWait()
-
-        sut.dispatch(action: .selectSource(.bookmarks))
-        try await Task.sleep(nanoseconds: 500_000_000)
-
-        sut.dispatch(action: .generateDigest)
-        try await Task.sleep(nanoseconds: 100_000_000)
-
-        #expect(sut.currentState.isGenerating)
-
-        sut.dispatch(action: .cancelGeneration)
-        try await Task.sleep(nanoseconds: 200_000_000)
-
-        #expect(!sut.currentState.isGenerating)
-    }
-
-    // MARK: - Clear Digest Tests
-
-    @Test("Clear digest removes generated digest")
-    func clearDigestRemovesDigest() async throws {
-        mockStorageService.mockBookmarkedArticles = Article.mockArticles
-        await loadModelAndWait()
-
-        sut.dispatch(action: .selectSource(.bookmarks))
-        try await Task.sleep(nanoseconds: 500_000_000)
-
-        sut.dispatch(action: .generateDigest)
-        try await Task.sleep(nanoseconds: 1_000_000_000)
-
-        #expect(sut.currentState.generatedDigest != nil)
-
-        sut.dispatch(action: .clearDigest)
-
-        #expect(sut.currentState.generatedDigest == nil)
-    }
-
-    // MARK: - Unload Model Tests
-
-    @Test("Unload model updates status")
-    func unloadModelUpdatesStatus() async throws {
-        await loadModelAndWait()
-
-        #expect(sut.currentState.modelStatus == .ready)
-
-        sut.dispatch(action: .unloadModel)
         try await Task.sleep(nanoseconds: 300_000_000)
 
-        #expect(sut.currentState.modelStatus == .notLoaded)
+        let state = sut.currentState
+        #expect(state.summaries.isEmpty)
+        #expect(!state.isLoading)
+        #expect(state.error == nil)
     }
 
-    // MARK: - All Sources Tests
+    // MARK: - Delete Summary Tests
 
-    @Test("All digest sources can be selected")
-    func allSourcesCanBeSelected() async throws {
-        mockStorageService.mockBookmarkedArticles = Article.mockArticles
-        mockStorageService.mockReadingHistory = Article.mockArticles
-        mockStorageService.mockUserPreferences = UserPreferences(
-            followedTopics: [.technology],
-            followedSources: [],
-            mutedSources: [],
-            mutedKeywords: [],
-            preferredLanguage: "en",
-            notificationsEnabled: true,
-            breakingNewsNotifications: true
-        )
-        mockDigestService.freshNewsResult = .success(Article.mockArticles)
+    @Test("Delete summary removes from state")
+    func deleteSummaryRemovesFromState() async throws {
+        let mockArticles = Article.mockArticles
+        let summary1 = (article: mockArticles[0], summary: "Test summary 1", generatedAt: Date())
+        let summary2 = (article: mockArticles[1], summary: "Test summary 2", generatedAt: Date())
+        mockStorageService.summaries = [summary1, summary2]
 
-        for source in DigestSource.allCases {
-            sut.dispatch(action: .selectSource(source))
-            try await Task.sleep(nanoseconds: 500_000_000)
+        // Load first
+        sut.dispatch(action: .loadSummaries)
+        try await Task.sleep(nanoseconds: 300_000_000)
 
-            let state = sut.currentState
-            #expect(state.selectedSource == source)
-        }
+        #expect(sut.currentState.summaries.count == 2)
+
+        // Delete
+        sut.dispatch(action: .deleteSummary(articleID: mockArticles[0].id))
+        try await Task.sleep(nanoseconds: 300_000_000)
+
+        let state = sut.currentState
+        #expect(state.summaries.count == 1)
+        #expect(!state.summaries.contains { $0.id == mockArticles[0].id })
     }
 
-    // MARK: - Helpers
+    @Test("Delete summary updates storage")
+    func deleteSummaryUpdatesStorage() async throws {
+        let mockArticles = Article.mockArticles
+        let summary1 = (article: mockArticles[0], summary: "Test summary 1", generatedAt: Date())
+        mockStorageService.summaries = [summary1]
 
-    private func loadModelAndWait() async {
-        sut.dispatch(action: .loadModelIfNeeded)
-        try? await Task.sleep(nanoseconds: 300_000_000)
+        // Load first
+        sut.dispatch(action: .loadSummaries)
+        try await Task.sleep(nanoseconds: 300_000_000)
+
+        // Delete
+        sut.dispatch(action: .deleteSummary(articleID: mockArticles[0].id))
+        try await Task.sleep(nanoseconds: 300_000_000)
+
+        // Verify storage was updated
+        #expect(mockStorageService.summaries.isEmpty)
+    }
+
+    // MARK: - Clear Error Tests
+
+    @Test("Clear error removes error state")
+    func clearErrorRemovesErrorState() async throws {
+        // Manually set error state via the interactor's internal state
+        // First trigger an action that might set error
+        sut.dispatch(action: .loadSummaries)
+        try await Task.sleep(nanoseconds: 300_000_000)
+
+        // Clear error
+        sut.dispatch(action: .clearError)
+
+        #expect(sut.currentState.error == nil)
+    }
+
+    // MARK: - Summary Item Tests
+
+    @Test("Summary items have correct properties")
+    func summaryItemsHaveCorrectProperties() async throws {
+        let mockArticle = Article.mockArticles[0]
+        let summaryText = "This is a test summary"
+        let generatedDate = Date()
+        mockStorageService.summaries = [(article: mockArticle, summary: summaryText, generatedAt: generatedDate)]
+
+        sut.dispatch(action: .loadSummaries)
+        try await Task.sleep(nanoseconds: 300_000_000)
+
+        let state = sut.currentState
+        #expect(state.summaries.count == 1)
+
+        let item = state.summaries[0]
+        #expect(item.id == mockArticle.id)
+        #expect(item.article.title == mockArticle.title)
+        #expect(item.summary == summaryText)
+        #expect(item.generatedAt == generatedDate)
+    }
+
+    // MARK: - State Publisher Tests
+
+    @Test("State publisher emits updates")
+    func statePublisherEmitsUpdates() async throws {
+        var cancellables = Set<AnyCancellable>()
+        var receivedStates: [DigestDomainState] = []
+
+        sut.statePublisher
+            .sink { state in
+                receivedStates.append(state)
+            }
+            .store(in: &cancellables)
+
+        mockStorageService.summaries = [(article: Article.mockArticles[0], summary: "Test", generatedAt: Date())]
+        sut.dispatch(action: .loadSummaries)
+
+        try await Task.sleep(nanoseconds: 300_000_000)
+
+        #expect(receivedStates.count > 1)
     }
 }

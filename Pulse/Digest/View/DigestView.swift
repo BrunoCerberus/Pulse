@@ -1,18 +1,19 @@
 import SwiftUI
 
+// MARK: - Constants
+
+private enum DigestConstants {
+    static let title = String(localized: "digest.title")
+    static let emptyTitle = String(localized: "digest.empty.title")
+    static let emptySubtitle = String(localized: "digest.empty.subtitle")
+}
+
 // MARK: - DigestView
 
 struct DigestView<R: DigestNavigationRouter>: View {
-    /// Router responsible for navigation actions
     private var router: R
-
-    /// Backing ViewModel managing data and actions
     @ObservedObject var viewModel: DigestViewModel
 
-    /// Creates the view with a router and ViewModel.
-    /// - Parameters:
-    ///   - router: Navigation router for routing actions
-    ///   - viewModel: ViewModel for managing data and actions
     init(router: R, viewModel: DigestViewModel) {
         self.router = router
         self.viewModel = viewModel
@@ -30,174 +31,117 @@ struct DigestView<R: DigestNavigationRouter>: View {
         .onAppear {
             viewModel.handle(event: .onAppear)
         }
-        .onDisappear {
-            viewModel.handle(event: .onDisappear)
-        }
     }
 
     @ViewBuilder
     private var content: some View {
-        if viewModel.viewState.showOnboarding {
-            onboardingView
-        } else if viewModel.viewState.isGenerating {
-            DigestGeneratingView(
-                generationProgress: viewModel.viewState.generationProgress,
-                onCancel: { viewModel.handle(event: .onCancelTapped) }
-            )
-        } else if let digest = viewModel.viewState.digest {
-            DigestResultView(
-                digest: digest,
-                onClear: { viewModel.handle(event: .onClearTapped) }
-            )
+        if viewModel.viewState.isLoading {
+            loadingView
+        } else if let error = viewModel.viewState.errorMessage {
+            errorView(message: error)
+        } else if viewModel.viewState.isEmpty {
+            emptyView
         } else {
-            sourceSelectionView
+            summariesList
         }
     }
 
-    // MARK: - Onboarding View
+    // MARK: - Loading View
 
-    private var onboardingView: some View {
-        ScrollView {
-            VStack(spacing: Spacing.xl) {
-                // Hero section
-                GlassCard(style: .regular, shadowStyle: .elevated, padding: Spacing.xl) {
-                    VStack(spacing: Spacing.lg) {
-                        ZStack {
-                            Circle()
-                                .fill(Color.Accent.gradient)
-                                .frame(width: 100, height: 100)
+    private var loadingView: some View {
+        VStack(spacing: Spacing.md) {
+            ProgressView()
+                .tint(Color.Accent.primary)
+            Text("Loading summaries...")
+                .font(Typography.bodySmall)
+                .foregroundStyle(.secondary)
+        }
+    }
 
-                            Image(systemName: "sparkles")
-                                .font(.system(size: IconSize.xxl))
-                                .foregroundStyle(.white)
-                        }
-                        .glowEffect(color: Color.Accent.primary, radius: 16)
+    // MARK: - Empty View
 
-                        Text(DigestConstants.title)
-                            .font(Typography.displaySmall)
+    private var emptyView: some View {
+        VStack(spacing: Spacing.lg) {
+            ZStack {
+                Circle()
+                    .fill(Color.Accent.gradient.opacity(0.2))
+                    .frame(width: 100, height: 100)
 
-                        Text(DigestConstants.subtitle)
-                            .font(Typography.bodyMedium)
-                            .foregroundStyle(.secondary)
-                            .multilineTextAlignment(.center)
-                    }
-                }
-                .padding(.horizontal, Spacing.lg)
-
-                // Source selection
-                VStack(alignment: .leading, spacing: Spacing.md) {
-                    Text(DigestConstants.selectSource)
-                        .font(Typography.titleSmall)
-                        .padding(.horizontal, Spacing.lg)
-
-                    ForEach(viewModel.viewState.sources) { source in
-                        DigestSourceCard(
-                            source: source,
-                            isSelected: source == viewModel.viewState.selectedSource,
-                            onTap: {
-                                HapticManager.shared.selectionChanged()
-                                viewModel.handle(event: .onSourceSelected(source))
-                            }
-                        )
-                    }
-                }
-
-                DigestModelStatusIndicator(modelStatus: viewModel.viewState.modelStatus)
+                Image(systemName: "sparkles")
+                    .font(.system(size: IconSize.xxl))
+                    .foregroundStyle(Color.Accent.gradient)
             }
-            .padding(.vertical, Spacing.lg)
-        }
-    }
 
-    // MARK: - Source Selection with Articles
+            VStack(spacing: Spacing.sm) {
+                Text(DigestConstants.emptyTitle)
+                    .font(Typography.titleMedium)
 
-    private var sourceSelectionView: some View {
-        ScrollView {
-            VStack(spacing: Spacing.lg) {
-                sourceChipsRow
-
-                if case let .loading(progress) = viewModel.viewState.modelStatus {
-                    DigestModelLoadingBar(progress: progress)
-                }
-
-                if let error = viewModel.viewState.errorMessage {
-                    DigestErrorView(
-                        message: error,
-                        onRetry: { viewModel.handle(event: .onRetryTapped) }
-                    )
-                } else if viewModel.viewState.showNoTopicsError {
-                    DigestNoTopicsView(
-                        onConfigureTopics: { router.route(navigationEvent: .settings) }
-                    )
-                } else if viewModel.viewState.showEmptyState {
-                    DigestEmptyStateView()
-                } else if viewModel.viewState.isLoadingArticles {
-                    DigestLoadingView()
-                } else {
-                    articlesPreview
-                }
+                Text(DigestConstants.emptySubtitle)
+                    .font(Typography.bodyMedium)
+                    .foregroundStyle(.secondary)
+                    .multilineTextAlignment(.center)
             }
-            .padding(.vertical, Spacing.lg)
+
+            Text("Open an article and tap the sparkles button to create a summary")
+                .font(Typography.captionLarge)
+                .foregroundStyle(.tertiary)
+                .multilineTextAlignment(.center)
+                .padding(.horizontal, Spacing.xl)
         }
+        .padding(Spacing.xl)
     }
 
-    private var sourceChipsRow: some View {
-        ScrollView(.horizontal, showsIndicators: false) {
-            HStack(spacing: Spacing.sm) {
-                ForEach(viewModel.viewState.sources) { source in
-                    DigestSourceChip(
-                        source: source,
-                        isSelected: source == viewModel.viewState.selectedSource,
+    // MARK: - Error View
+
+    private func errorView(message: String) -> some View {
+        VStack(spacing: Spacing.md) {
+            Image(systemName: "exclamationmark.triangle.fill")
+                .font(.system(size: IconSize.xl))
+                .foregroundStyle(.orange)
+
+            Text(message)
+                .font(Typography.bodySmall)
+                .foregroundStyle(.secondary)
+                .multilineTextAlignment(.center)
+
+            Button {
+                HapticManager.shared.tap()
+                viewModel.handle(event: .onRetryTapped)
+            } label: {
+                HStack(spacing: Spacing.sm) {
+                    Image(systemName: "arrow.clockwise")
+                    Text("Try Again")
+                }
+                .font(Typography.labelMedium)
+                .foregroundStyle(Color.Accent.primary)
+            }
+        }
+        .padding(Spacing.xl)
+    }
+
+    // MARK: - Summaries List
+
+    private var summariesList: some View {
+        ScrollView {
+            LazyVStack(spacing: Spacing.md) {
+                ForEach(viewModel.viewState.summaries) { item in
+                    DigestSummaryCard(
+                        item: item,
                         onTap: {
-                            HapticManager.shared.selectionChanged()
-                            viewModel.handle(event: .onSourceSelected(source))
+                            HapticManager.shared.tap()
+                            router.route(navigationEvent: .articleDetail(item.article))
+                        },
+                        onDelete: {
+                            HapticManager.shared.warning()
+                            viewModel.handle(event: .onDeleteSummary(articleID: item.id))
                         }
                     )
                 }
             }
             .padding(.horizontal, Spacing.md)
+            .padding(.vertical, Spacing.lg)
         }
-        .padding(.vertical, Spacing.sm)
-        .background(.ultraThinMaterial)
-        .accessibilityIdentifier("digestSourceChipsScrollView")
-    }
-
-    private var articlesPreview: some View {
-        VStack(spacing: Spacing.md) {
-            HStack {
-                Text("\(viewModel.viewState.articleCount) \(DigestConstants.articlesAvailable)")
-                    .font(Typography.captionLarge)
-                    .foregroundStyle(.secondary)
-                Spacer()
-            }
-            .padding(.horizontal, Spacing.lg)
-
-            ForEach(viewModel.viewState.articlePreviews.prefix(3)) { article in
-                GlassCard(style: .thin, padding: Spacing.md) {
-                    VStack(alignment: .leading, spacing: Spacing.xs) {
-                        Text(article.title)
-                            .font(Typography.bodyMedium)
-                            .lineLimit(2)
-                        Text(article.source.name)
-                            .font(Typography.captionLarge)
-                            .foregroundStyle(.secondary)
-                    }
-                }
-                .padding(.horizontal, Spacing.lg)
-            }
-
-            if viewModel.viewState.articleCount > 3 {
-                Text("+ \(viewModel.viewState.articleCount - 3) \(DigestConstants.moreArticles)")
-                    .font(Typography.captionLarge)
-                    .foregroundStyle(.secondary)
-            }
-
-            DigestGenerateButton(
-                canGenerate: viewModel.viewState.canGenerate,
-                onTap: { viewModel.handle(event: .onGenerateTapped) }
-            )
-            .padding(.horizontal, Spacing.lg)
-            .padding(.top, Spacing.md)
-        }
+        .accessibilityIdentifier("digestSummariesList")
     }
 }
 

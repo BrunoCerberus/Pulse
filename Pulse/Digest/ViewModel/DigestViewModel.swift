@@ -8,12 +8,10 @@ final class DigestViewModel: CombineViewModel, ObservableObject {
 
     @Published private(set) var viewState: DigestViewState = .initial
 
-    private let serviceLocator: ServiceLocator
     private let interactor: DigestDomainInteractor
     private var cancellables = Set<AnyCancellable>()
 
     init(serviceLocator: ServiceLocator) {
-        self.serviceLocator = serviceLocator
         interactor = DigestDomainInteractor(serviceLocator: serviceLocator)
         setupBindings()
     }
@@ -21,120 +19,55 @@ final class DigestViewModel: CombineViewModel, ObservableObject {
     func handle(event: DigestViewEvent) {
         switch event {
         case .onAppear:
-            interactor.dispatch(action: .loadModelIfNeeded)
-        case .onDisappear:
-            // Keep model loaded for quick re-access
-            break
-        case let .onSourceSelected(source):
-            interactor.dispatch(action: .selectSource(source))
-        case .onGenerateTapped:
-            interactor.dispatch(action: .generateDigest)
-        case .onCancelTapped:
-            interactor.dispatch(action: .cancelGeneration)
-        case .onClearTapped:
-            interactor.dispatch(action: .clearDigest)
+            interactor.dispatch(action: .loadSummaries)
+        case let .onDeleteSummary(articleID):
+            interactor.dispatch(action: .deleteSummary(articleID: articleID))
         case .onRetryTapped:
-            interactor.dispatch(action: .retryGeneration)
-        case .onSettingsTapped:
-            // Handled by router
-            break
+            interactor.dispatch(action: .loadSummaries)
+        case .onClearError:
+            interactor.dispatch(action: .clearError)
         }
     }
 
     private func setupBindings() {
         interactor.statePublisher
-            .map { [weak self] state in
+            .map { state in
                 DigestViewState(
-                    sources: DigestSource.allCases,
-                    selectedSource: state.selectedSource,
-                    articleCount: state.sourceArticles.count,
-                    articlePreviews: Array(state.sourceArticles.prefix(3)),
-                    modelStatus: self?.mapModelStatus(state.modelStatus) ?? .notLoaded,
-                    isLoadingArticles: state.isLoadingArticles,
-                    isGenerating: state.isGenerating,
-                    generationProgress: state.generationProgress,
-                    digest: state.generatedDigest,
-                    errorMessage: state.error?.localizedDescription,
-                    showOnboarding: state.selectedSource == nil,
-                    showEmptyState: state.selectedSource != nil
-                        && !state.isLoadingArticles
-                        && state.sourceArticles.isEmpty
-                        && state.error == nil,
-                    showNoTopicsError: state.error == .noTopicsConfigured,
-                    canGenerate: !state.sourceArticles.isEmpty
-                        && state.modelStatus == .ready
-                        && !state.isGenerating
+                    summaries: state.summaries,
+                    isLoading: state.isLoading,
+                    isEmpty: state.summaries.isEmpty && !state.isLoading,
+                    errorMessage: state.error?.localizedDescription
                 )
             }
             .removeDuplicates()
             .receive(on: DispatchQueue.main)
             .assign(to: &$viewState)
     }
-
-    private func mapModelStatus(_ status: LLMModelStatus) -> DigestModelStatus {
-        switch status {
-        case .notLoaded: return .notLoaded
-        case let .loading(progress): return .loading(progress: progress)
-        case .ready: return .ready
-        case let .error(message): return .error(message)
-        }
-    }
 }
 
 // MARK: - ViewState
 
 struct DigestViewState: Equatable {
-    var sources: [DigestSource]
-    var selectedSource: DigestSource?
-    var articleCount: Int
-    var articlePreviews: [Article]
-    var modelStatus: DigestModelStatus
-    var isLoadingArticles: Bool
-    var isGenerating: Bool
-    var generationProgress: String
-    var digest: DigestResult?
+    var summaries: [SummaryItem]
+    var isLoading: Bool
+    var isEmpty: Bool
     var errorMessage: String?
-    var showOnboarding: Bool
-    var showEmptyState: Bool
-    var showNoTopicsError: Bool
-    var canGenerate: Bool
 
     static var initial: DigestViewState {
         DigestViewState(
-            sources: DigestSource.allCases,
-            selectedSource: nil,
-            articleCount: 0,
-            articlePreviews: [],
-            modelStatus: .notLoaded,
-            isLoadingArticles: false,
-            isGenerating: false,
-            generationProgress: "",
-            digest: nil,
-            errorMessage: nil,
-            showOnboarding: true,
-            showEmptyState: false,
-            showNoTopicsError: false,
-            canGenerate: false
+            summaries: [],
+            isLoading: false,
+            isEmpty: true,
+            errorMessage: nil
         )
     }
-}
-
-enum DigestModelStatus: Equatable {
-    case notLoaded
-    case loading(progress: Double)
-    case ready
-    case error(String)
 }
 
 // MARK: - ViewEvent
 
 enum DigestViewEvent: Equatable {
     case onAppear
-    case onDisappear
-    case onSourceSelected(DigestSource)
-    case onGenerateTapped
-    case onCancelTapped
-    case onClearTapped
+    case onDeleteSummary(articleID: String)
     case onRetryTapped
-    case onSettingsTapped
+    case onClearError
 }

@@ -5,6 +5,7 @@ import SwiftUI
 private enum Constants {
     static let back = String(localized: "common.back")
     static let readFull = String(localized: "article.read_full")
+    static let summarize = String(localized: "summarization.button")
 }
 
 // MARK: - ArticleDetailView
@@ -12,8 +13,10 @@ private enum Constants {
 struct ArticleDetailView: View {
     let article: Article
     @StateObject private var viewModel: ArticleDetailViewModel
+    @StateObject private var summarizationViewModel: SummarizationViewModel
     @Environment(\.dismiss) private var dismiss
     @Environment(\.colorScheme) private var colorScheme
+    @State private var showSummarizationSheet = false
     private let serviceLocator: ServiceLocator
     private let heroBaseHeight: CGFloat = 280
 
@@ -21,6 +24,7 @@ struct ArticleDetailView: View {
         self.article = article
         self.serviceLocator = serviceLocator
         _viewModel = StateObject(wrappedValue: ArticleDetailViewModel(article: article, serviceLocator: serviceLocator))
+        _summarizationViewModel = StateObject(wrappedValue: SummarizationViewModel(serviceLocator: serviceLocator))
     }
 
     var body: some View {
@@ -55,6 +59,13 @@ struct ArticleDetailView: View {
 
             ToolbarItem(placement: .topBarTrailing) {
                 HStack(spacing: Spacing.sm) {
+                    Button("", systemImage: "sparkles") {
+                        showSummarizationSheet = true
+                    }
+                    .accessibilityIdentifier("summarizeButton")
+                    .accessibilityLabel(Constants.summarize)
+                    .accessibilityHint("Generate AI summary of this article")
+
                     Button("", systemImage: viewModel.isBookmarked ? "bookmark.fill" : "bookmark") {
                         viewModel.toggleBookmark()
                     }
@@ -75,6 +86,9 @@ struct ArticleDetailView: View {
             if let url = URL(string: article.url) {
                 ShareSheet(activityItems: [url])
             }
+        }
+        .sheet(isPresented: $showSummarizationSheet) {
+            SummarizationSheet(article: article, viewModel: summarizationViewModel)
         }
         .onAppear {
             viewModel.onAppear()

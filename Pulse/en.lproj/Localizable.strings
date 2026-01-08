@@ -11,6 +11,7 @@
 "common.loading_more" = "Loading more...";
 "common.version" = "Version";
 "common.share" = "Share";
+"common.done" = "Done";
 
 /* ==================== */
 /* MARK: - Tab Bar      */
@@ -93,6 +94,24 @@
 "digest.error.generation_failed %@" = "Generation failed: %@";
 "digest.error.loading_failed %@" = "Loading failed: %@";
 "digest.error.no_topics" = "Configure topics in Settings first";
+"digest.empty.title" = "No Summaries Yet";
+"digest.empty.subtitle" = "Summarize articles to see them here";
+
+/* ==================== */
+/* MARK: - Summarization */
+/* ==================== */
+
+"summarization.title" = "Summarize";
+"summarization.subtitle" = "Generate an AI summary of this article";
+"summarization.generate" = "Generate Summary";
+"summarization.cancel" = "Cancel";
+"summarization.save" = "Save to Digest";
+"summarization.retry" = "Try Again";
+"summarization.loading_model" = "Loading AI model...";
+"summarization.generating" = "Generating...";
+"summarization.saved" = "Saved to Digest";
+"summarization.button" = "Summarize";
+"summarization.has_summary" = "Summary available";
 
 /* ==================== */
 /* MARK: - Search       */
