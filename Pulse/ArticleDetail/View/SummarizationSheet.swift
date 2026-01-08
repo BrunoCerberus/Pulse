@@ -142,6 +142,7 @@ struct SummarizationSheet: View {
                 .foregroundStyle(.tertiary)
                 .monospacedDigit()
         }
+        .frame(maxWidth: .infinity)
         .padding(Spacing.lg)
         .glassBackground(style: .regular, cornerRadius: CornerRadius.lg)
     }
@@ -176,6 +177,7 @@ struct SummarizationSheet: View {
                     .foregroundStyle(.secondary)
             }
         }
+        .frame(maxWidth: .infinity)
         .padding(Spacing.lg)
         .glassBackground(style: .regular, cornerRadius: CornerRadius.lg)
     }
@@ -227,6 +229,7 @@ struct SummarizationSheet: View {
                 .foregroundStyle(Color.Accent.primary)
             }
         }
+        .frame(maxWidth: .infinity)
         .padding(Spacing.lg)
         .glassBackground(style: .regular, cornerRadius: CornerRadius.lg)
     }
