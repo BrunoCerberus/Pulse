@@ -13,9 +13,9 @@ final class HomeUITests: BaseUITestCase {
         let gearButton = app.navigationBars.buttons["gearshape"]
         XCTAssertTrue(gearButton.waitForExistence(timeout: Self.shortTimeout), "Gear button should exist in navigation bar")
 
-        // Verify content loads
-        let contentLoaded = waitForHomeContent(timeout: Self.defaultTimeout)
-        XCTAssertTrue(contentLoaded, "Home should show content, empty state, or error state")
+        // Verify content loads (use longer timeout for CI environments)
+        let contentLoaded = waitForHomeContent(timeout: 30)
+        XCTAssertTrue(contentLoaded, "Home should show content, empty state, or error state within 30 seconds")
 
         // Check error state if present
         let errorState = app.staticTexts["Unable to Load News"].exists

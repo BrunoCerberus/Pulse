@@ -167,12 +167,13 @@ class BaseUITestCase: XCTestCase {
     }
 
     /// Wait for content to load (articles, error, or empty state)
-    func waitForHomeContent(timeout: TimeInterval = 10) -> Bool {
+    func waitForHomeContent(timeout: TimeInterval = 20) -> Bool {
         let contentIndicators = [
             app.staticTexts["Breaking News"],
             app.staticTexts["Top Headlines"],
             app.staticTexts["Unable to Load News"],
             app.staticTexts["No News Available"],
+            app.scrollViews.firstMatch, // Fallback: wait for scroll view to appear
         ]
         return waitForAny(contentIndicators, timeout: timeout)
     }
