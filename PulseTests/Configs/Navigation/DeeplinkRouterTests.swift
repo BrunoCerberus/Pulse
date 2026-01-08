@@ -121,28 +121,28 @@ struct DeeplinkRouterTests {
         #expect(coordinator.selectedTab == .home)
     }
 
-    // MARK: - Category Deeplink Tests (Legacy - redirects to Digest)
+    // MARK: - Category Deeplink Tests (Legacy - redirects to Home)
 
-    @Test("Route category deeplink switches to digest tab")
+    @Test("Route category deeplink switches to home tab")
     func routeCategoryDeeplinkValid() async throws {
         sut.setCoordinator(coordinator)
-        coordinator.selectedTab = .home
+        coordinator.selectedTab = .search
 
         sut.route(deeplink: .category(name: "technology"))
 
-        // Category deeplinks now redirect to the Digest tab
-        #expect(coordinator.selectedTab == .digest)
+        // Category deeplinks now redirect to the Home tab
+        #expect(coordinator.selectedTab == .home)
     }
 
-    @Test("Route category deeplink with any name switches to digest")
+    @Test("Route category deeplink with any name switches to home")
     func routeCategoryDeeplinkInvalid() async throws {
         sut.setCoordinator(coordinator)
-        coordinator.selectedTab = .home
+        coordinator.selectedTab = .search
 
         sut.route(deeplink: .category(name: "invalid-category"))
 
-        // All category deeplinks redirect to Digest tab
-        #expect(coordinator.selectedTab == .digest)
+        // All category deeplinks redirect to Home tab
+        #expect(coordinator.selectedTab == .home)
     }
 
     // MARK: - Queued Deeplink Tests
@@ -249,8 +249,8 @@ struct DeeplinkRouterTests {
         sut.route(deeplink: .bookmarks)
         sut.route(deeplink: .category(name: "technology"))
 
-        // Should complete without crash - final tab should be digest
-        #expect(coordinator.selectedTab == .digest)
+        // Should complete without crash - final tab should be home (category redirects to home)
+        #expect(coordinator.selectedTab == .home)
     }
 
     @Test("Multiple coordinators becoming available handles queued deeplinks correctly")

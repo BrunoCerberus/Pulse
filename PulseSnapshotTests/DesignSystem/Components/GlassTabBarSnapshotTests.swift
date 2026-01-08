@@ -40,19 +40,6 @@ final class GlassTabBarSnapshotTests: XCTestCase {
         )
     }
 
-    func testGlassTabBarDigestSelected() {
-        let view = TabBarTestWrapper(selectedTab: .digest)
-            .background(LinearGradient.meshFallback)
-
-        let controller = UIHostingController(rootView: view)
-
-        assertSnapshot(
-            of: controller,
-            as: .wait(for: 0.5, on: .image(on: iPhoneAirConfig, precision: 0.99)),
-            record: false
-        )
-    }
-
     func testGlassTabBarBookmarksSelected() {
         let view = TabBarTestWrapper(selectedTab: .bookmarks)
             .background(LinearGradient.meshFallback)

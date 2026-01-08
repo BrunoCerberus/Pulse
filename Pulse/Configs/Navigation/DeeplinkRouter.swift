@@ -94,9 +94,9 @@ final class DeeplinkRouter {
             debugPrint("DeeplinkRouter: Article deeplink received with ID: \(id)")
 
         case .category:
-            // Categories feature has been replaced with Digest
-            // Category deeplinks now navigate to the Digest tab
-            coordinator.switchTab(to: .digest, popToRoot: true)
+            // Categories feature has been removed
+            // Category deeplinks now navigate to home tab
+            coordinator.switchTab(to: .home, popToRoot: true)
         }
 
         // Clear the deeplink after processing

@@ -16,12 +16,6 @@ struct GlassTabItem: Identifiable {
             icon: "heart.text.square",
             selectedIcon: "heart.text.square.fill"
         ),
-        GlassTabItem(
-            id: .digest,
-            title: "Digest",
-            icon: "sparkles",
-            selectedIcon: "sparkles"
-        ),
         GlassTabItem(id: .bookmarks, title: "Bookmarks", icon: "bookmark", selectedIcon: "bookmark.fill"),
         GlassTabItem(id: .search, title: "Search", icon: "magnifyingglass", selectedIcon: "magnifyingglass"),
     ]

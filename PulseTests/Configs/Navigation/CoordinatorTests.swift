@@ -31,7 +31,6 @@ struct CoordinatorTests {
         #expect(sut.selectedTab == .home)
         #expect(sut.homePath.isEmpty)
         #expect(sut.forYouPath.isEmpty)
-        #expect(sut.digestPath.isEmpty)
         #expect(sut.bookmarksPath.isEmpty)
         #expect(sut.searchPath.isEmpty)
     }
@@ -198,12 +197,11 @@ struct CoordinatorTests {
         sut.push(page: .articleDetail(article), in: .home)
         sut.push(page: .settings, in: .home)
         sut.push(page: .articleDetail(article), in: .forYou)
-        sut.push(page: .articleDetail(article), in: .digest)
+        sut.push(page: .articleDetail(article), in: .bookmarks)
 
         #expect(sut.homePath.count == 2)
         #expect(sut.forYouPath.count == 1)
-        #expect(sut.digestPath.count == 1)
-        #expect(sut.bookmarksPath.isEmpty)
+        #expect(sut.bookmarksPath.count == 1)
         #expect(sut.searchPath.isEmpty)
     }
 
@@ -228,7 +226,6 @@ struct CoordinatorTests {
         // Access each viewModel and verify it's not nil
         #expect(sut.homeViewModel != nil)
         #expect(sut.forYouViewModel != nil)
-        #expect(sut.digestViewModel != nil)
         #expect(sut.bookmarksViewModel != nil)
         #expect(sut.searchViewModel != nil)
         #expect(sut.settingsViewModel != nil)
@@ -239,10 +236,9 @@ struct CoordinatorTests {
     @Test("AppTab has all expected cases with symbol images")
     func appTabHasAllExpectedCasesWithSymbols() {
         let allTabs = AppTab.allCases
-        #expect(allTabs.count == 5)
+        #expect(allTabs.count == 4)
         #expect(allTabs.contains(.home))
         #expect(allTabs.contains(.forYou))
-        #expect(allTabs.contains(.digest))
         #expect(allTabs.contains(.bookmarks))
         #expect(allTabs.contains(.search))
 
