@@ -8,7 +8,6 @@ private enum Constants {
     static let generateButton = String(localized: "summarization.generate")
     static let cancelButton = String(localized: "summarization.cancel")
     static let retryButton = String(localized: "summarization.retry")
-    static let doneButton = String(localized: "common.done")
     static let loadingModel = String(localized: "summarization.loading_model")
     static let generating = String(localized: "summarization.generating")
 }
@@ -17,7 +16,6 @@ private enum Constants {
 
 struct SummarizationSheet: View {
     @ObservedObject var viewModel: ArticleDetailViewModel
-    @Environment(\.dismiss) private var dismiss
 
     var body: some View {
         NavigationStack {
@@ -31,13 +29,6 @@ struct SummarizationSheet: View {
             .background(Color.Glass.background)
             .navigationTitle(Constants.title)
             .navigationBarTitleDisplayMode(.inline)
-            .toolbar {
-                ToolbarItem(placement: .topBarTrailing) {
-                    Button(Constants.doneButton) {
-                        dismiss()
-                    }
-                }
-            }
         }
         .presentationDetents([.medium, .large])
         .presentationDragIndicator(.visible)
