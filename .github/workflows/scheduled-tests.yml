@@ -320,8 +320,9 @@ jobs:
     name: Auto-Fix Failing Tests
     runs-on: macos-26
     needs: [test-results]
-    if: failure() && needs.test-results.result == 'failure'
+    if: always() && needs.test-results.result == 'failure'
     permissions:
+      actions: read
       contents: write
       pull-requests: write
       id-token: write
