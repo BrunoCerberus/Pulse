@@ -10,12 +10,14 @@ private enum Constants {
     static let retryButton = String(localized: "summarization.retry")
     static let loadingModel = String(localized: "summarization.loading_model")
     static let generating = String(localized: "summarization.generating")
+    static let aiSummary = String(localized: "summarization.ai_summary")
 }
 
 // MARK: - SummarizationSheet
 
 struct SummarizationSheet: View {
     @ObservedObject var viewModel: ArticleDetailViewModel
+    @Environment(\.accessibilityReduceMotion) private var reduceMotion
 
     var body: some View {
         NavigationStack {
@@ -41,7 +43,7 @@ struct SummarizationSheet: View {
             Image(systemName: "sparkles")
                 .font(.system(size: IconSize.xxl))
                 .foregroundStyle(Color.Accent.gradient)
-                .symbolEffect(.bounce, options: .repeat(2))
+                .symbolEffect(.bounce, options: reduceMotion ? .repeat(1) : .repeat(2))
 
             Text(Constants.subtitle)
                 .font(Typography.bodyMedium)
@@ -179,7 +181,7 @@ struct SummarizationSheet: View {
             HStack(spacing: Spacing.xs) {
                 Image(systemName: "sparkles")
                     .foregroundStyle(Color.Accent.primary)
-                Text("AI Summary")
+                Text(Constants.aiSummary)
                     .font(Typography.labelMedium)
                     .foregroundStyle(Color.Accent.primary)
             }

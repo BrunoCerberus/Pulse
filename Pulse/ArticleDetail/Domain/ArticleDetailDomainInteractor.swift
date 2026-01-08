@@ -288,9 +288,8 @@ final class ArticleDetailDomainInteractor: CombineInteractor {
             guard let self else { return }
 
             do {
-                if !summarizationService.isModelLoaded {
-                    try await summarizationService.loadModelIfNeeded()
-                }
+                // loadModelIfNeeded is idempotent and handles concurrent calls
+                try await summarizationService.loadModelIfNeeded()
 
                 guard !Task.isCancelled else { return }
 
@@ -298,25 +297,28 @@ final class ArticleDetailDomainInteractor: CombineInteractor {
                     self?.dispatch(action: .summarizationStateChanged(.generating))
                 }
 
-                var tokenBuffer: [String] = []
+                var fullText = ""
+                var tokensSinceLastUpdate = 0
                 let updateBatchSize = 3
 
                 for try await token in summarizationService.summarize(article: currentState.article) {
                     guard !Task.isCancelled else { break }
 
-                    tokenBuffer.append(token)
+                    fullText += token
+                    tokensSinceLastUpdate += 1
 
-                    if tokenBuffer.count >= updateBatchSize {
-                        let currentText = cleanLLMOutput(tokenBuffer.joined())
+                    if tokensSinceLastUpdate >= updateBatchSize {
+                        let currentText = cleanLLMOutput(fullText)
                         await MainActor.run { [weak self] in
                             self?.updateState { $0.generatedSummary = currentText }
                         }
+                        tokensSinceLastUpdate = 0
                     }
                 }
 
                 guard !Task.isCancelled else { return }
 
-                let finalSummary = cleanLLMOutput(tokenBuffer.joined())
+                let finalSummary = cleanLLMOutput(fullText)
                 await MainActor.run { [weak self] in
                     self?.updateState { state in
                         state.generatedSummary = finalSummary
@@ -343,10 +345,26 @@ final class ArticleDetailDomainInteractor: CombineInteractor {
 
     private nonisolated func cleanLLMOutput(_ text: String) -> String {
         var cleaned = text
-        let markers = ["<|system|>", "<|user|>", "<|assistant|>", "<|end|>", "</s>", "<s>"]
+
+        // Remove chat template markers
+        let markers = [
+            "<|system|>", "<|user|>", "<|assistant|>", "<|end|>",
+            "</s>", "<s>", "<|eot_id|>", "<|start_header_id|>", "<|end_header_id|>",
+        ]
         for marker in markers {
             cleaned = cleaned.replacingOccurrences(of: marker, with: "")
         }
+
+        // Remove common instruction artifacts (case-insensitive, at start)
+        let prefixes = ["here's the summary:", "here is the summary:", "summary:"]
+        let lowercased = cleaned.lowercased()
+        for prefix in prefixes {
+            if lowercased.hasPrefix(prefix) {
+                cleaned = String(cleaned.dropFirst(prefix.count))
+                break
+            }
+        }
+
         return cleaned.trimmingCharacters(in: .whitespacesAndNewlines)
     }
 
