@@ -85,14 +85,15 @@ final class SummarizationViewModel: ObservableObject {
                     tokenBuffer.append(token)
 
                     if tokenBuffer.count >= updateBatchSize {
-                        let currentText = tokenBuffer.joined()
+                        let currentText = cleanLLMOutput(tokenBuffer.joined())
                         generatedSummary = currentText
                     }
                 }
 
                 if !Task.isCancelled {
-                    generatedSummary = tokenBuffer.joined().trimmingCharacters(in: .whitespacesAndNewlines)
-                    state = .completed
+                    let finalSummary = cleanLLMOutput(tokenBuffer.joined())
+                    generatedSummary = finalSummary
+                    state = finalSummary.isEmpty ? .error("No summary generated") : .completed
                 }
             } catch {
                 if !Task.isCancelled {
@@ -100,6 +101,17 @@ final class SummarizationViewModel: ObservableObject {
                 }
             }
         }
+    }
+
+    /// Cleans up LLM output by removing prompt template markers and trimming whitespace
+    private func cleanLLMOutput(_ text: String) -> String {
+        var cleaned = text
+        // Remove common prompt template markers
+        let markers = ["<|system|>", "<|user|>", "<|assistant|>", "<|end|>", "</s>", "<s>"]
+        for marker in markers {
+            cleaned = cleaned.replacingOccurrences(of: marker, with: "")
+        }
+        return cleaned.trimmingCharacters(in: .whitespacesAndNewlines)
     }
 
     func cancel() {
@@ -110,8 +122,9 @@ final class SummarizationViewModel: ObservableObject {
     }
 
     func saveSummary(article: Article) async throws {
-        guard !generatedSummary.isEmpty else { return }
-        try await storageService.saveSummary(article, summary: generatedSummary)
+        let trimmedSummary = generatedSummary.trimmingCharacters(in: .whitespacesAndNewlines)
+        guard !trimmedSummary.isEmpty else { return }
+        try await storageService.saveSummary(article, summary: trimmedSummary)
     }
 
     func reset() {

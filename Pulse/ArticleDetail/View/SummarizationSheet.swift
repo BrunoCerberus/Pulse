@@ -214,7 +214,7 @@ struct SummarizationSheet: View {
                         .foregroundStyle(.green)
                 }
                 .transition(.scale.combined(with: .opacity))
-            } else {
+            } else if !viewModel.generatedSummary.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty {
                 Button {
                     HapticManager.shared.success()
                     Task {
