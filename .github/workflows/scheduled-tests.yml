@@ -315,3 +315,228 @@ jobs:
       run: |
         echo "::error::Test suite failed or was cancelled"
         exit 1
+
+  auto-fix-tests:
+    name: Auto-Fix Failing Tests
+    runs-on: macos-26
+    needs: [test-results]
+    if: always() && needs.test-results.result == 'failure'
+    concurrency:
+      group: auto-fix-tests
+      cancel-in-progress: true
+    permissions:
+      actions: read
+      contents: write
+      pull-requests: write
+      id-token: write
+
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v4
+      with:
+        fetch-depth: 0
+
+    - name: Setup Xcode
+      uses: maxim-lobanov/setup-xcode@60606e260d2fc5762a71e64e74b2174e8ea3c8bd # v1
+      with:
+        xcode-version: '26.2'
+
+    - name: Cache Homebrew packages
+      uses: actions/cache@v4
+      with:
+        path: |
+          ~/Library/Caches/Homebrew
+          /usr/local/Homebrew
+        key: ${{ runner.os }}-brew-v1
+        restore-keys: |
+          ${{ runner.os }}-brew-
+
+    - name: Cache SPM dependencies
+      uses: actions/cache@v4
+      with:
+        path: |
+          Pulse.xcodeproj/project.xcworkspace/xcshareddata/swiftpm
+        key: ${{ runner.os }}-spm-v2
+
+    - name: Install dependencies
+      run: |
+        brew install xcodegen
+
+    - name: Generate Xcode project
+      run: |
+        make generate
+
+    - name: Download unit test results
+      uses: actions/download-artifact@v4
+      continue-on-error: true
+      with:
+        name: scheduled-unit-test-results
+        path: unit-test-results
+
+    - name: Download UI test results
+      uses: actions/download-artifact@v4
+      continue-on-error: true
+      with:
+        name: scheduled-ui-test-results
+        path: ui-test-results
+
+    - name: Download snapshot test results
+      uses: actions/download-artifact@v4
+      continue-on-error: true
+      with:
+        name: scheduled-snapshot-test-results
+        path: snapshot-test-results
+
+    - name: Extract test failure details
+      id: extract-failures
+      run: |
+        echo "Extracting test failure information..."
+        FAILURE_LOG=""
+
+        # Extract failures from xcresult bundles using xcresulttool
+        for result_dir in unit-test-results ui-test-results snapshot-test-results; do
+          if [ -d "$result_dir" ]; then
+            for xcresult in "$result_dir"/*.xcresult; do
+              if [ -d "$xcresult" ]; then
+                echo "Processing $xcresult..."
+                # Get test failures with detailed context (name, message, file location)
+                xcrun xcresulttool get --format json --path "$xcresult" 2>/dev/null | \
+                  jq -r '.. | objects | select(.testStatus == "Failure") | "Test: \(.identifier // "unknown")\nName: \(.name // "unknown")\nMessage: \(.failureSummaries // [] | .[0]?.message // "No message")\nFile: \(.failureSummaries // [] | .[0]?.fileName // "Unknown") line \(.failureSummaries // [] | .[0]?.lineNumber // "?")\n---"' 2>/dev/null >> /tmp/failures.txt || true
+              fi
+            done
+          fi
+        done
+
+        if [ -f /tmp/failures.txt ] && [ -s /tmp/failures.txt ]; then
+          FAILURE_LOG=$(cat /tmp/failures.txt | head -100)
+          echo "Found failures:"
+          echo "$FAILURE_LOG"
+        else
+          FAILURE_LOG="Test failures detected but details could not be extracted from xcresult bundles."
+        fi
+
+        # Save to file for Claude to read
+        echo "$FAILURE_LOG" > /tmp/test_failures.txt
+        echo "failures_found=true" >> $GITHUB_OUTPUT
+
+    - name: Create fix branch
+      id: create-branch
+      env:
+        RUN_ID: ${{ github.run_id }}
+      run: |
+        BRANCH_NAME="auto-fix/test-failures-${RUN_ID}"
+        git checkout -b "$BRANCH_NAME"
+        echo "branch_name=$BRANCH_NAME" >> $GITHUB_OUTPUT
+
+    - name: Run Claude to analyze and fix tests
+      uses: anthropics/claude-code-action@v1
+      with:
+        claude_code_oauth_token: ${{ secrets.CLAUDE_CODE_OAUTH_TOKEN }}
+        prompt: |
+          You are analyzing failing tests in a scheduled CI run for the Pulse iOS app.
+
+          ## Test Failure Details
+          Read the file /tmp/test_failures.txt to see what tests failed.
+
+          ## Your Task
+          1. Read /tmp/test_failures.txt to see which tests failed
+          2. Analyze the failing tests to understand what's broken
+          3. Look at the relevant test files and source code
+          4. Fix the issues causing test failures
+
+          ## Guidelines
+          - Focus only on fixing the failing tests, don't refactor unrelated code
+          - If a test is flaky, consider adding retry logic or fixing the race condition
+          - For snapshot test failures, regenerate snapshots if the UI change was intentional
+          - For unit test failures, fix either the test or the source code depending on what's correct
+          - If you cannot fix a test, document why in a comment
+
+          ## After fixing
+          - Stage all changes with git add
+          - Do NOT commit - the workflow will handle that
+        claude_args: '--dangerously-skip-permissions'
+
+    - name: Check for changes
+      id: check-changes
+      run: |
+        if git diff --quiet && git diff --staged --quiet; then
+          echo "has_changes=false" >> $GITHUB_OUTPUT
+          echo "No changes made by Claude"
+        else
+          echo "has_changes=true" >> $GITHUB_OUTPUT
+          echo "Changes detected:"
+          git status --short
+        fi
+
+    - name: Validate fixes (build project)
+      id: validate-fixes
+      if: steps.check-changes.outputs.has_changes == 'true'
+      run: |
+        echo "Validating Claude's fixes by building the project..."
+        xcodebuild build \
+          -project Pulse.xcodeproj \
+          -scheme PulseDev \
+          -destination 'platform=iOS Simulator,name=iPhone Air,OS=26.2' \
+          -quiet \
+          CODE_SIGNING_ALLOWED=NO || {
+            echo "build_failed=true" >> $GITHUB_OUTPUT
+            echo "::warning::Build failed after Claude's fixes - changes may be incomplete"
+            exit 0
+          }
+        echo "build_failed=false" >> $GITHUB_OUTPUT
+        echo "Build successful - fixes validated"
+
+    - name: Commit and push changes
+      if: steps.check-changes.outputs.has_changes == 'true'
+      env:
+        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        BRANCH_NAME: ${{ steps.create-branch.outputs.branch_name }}
+      run: |
+        git config user.name "github-actions[bot]"
+        git config user.email "github-actions[bot]@users.noreply.github.com"
+
+        git add -A
+        git commit -m "fix: auto-fix failing tests from scheduled run
+
+        This commit contains automated fixes for test failures detected
+        in the scheduled nightly test run.
+
+        Fixes generated by Claude Code CLI."
+
+        git push origin "$BRANCH_NAME"
+
+    - name: Create Pull Request
+      if: steps.check-changes.outputs.has_changes == 'true'
+      env:
+        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        GH_SERVER_URL: ${{ github.server_url }}
+        GH_REPOSITORY: ${{ github.repository }}
+        GH_RUN_ID: ${{ github.run_id }}
+        BRANCH_NAME: ${{ steps.create-branch.outputs.branch_name }}
+      run: |
+        gh pr create \
+          --draft \
+          --title "fix: Auto-fix test failures from $(date +%Y-%m-%d) scheduled run" \
+          --body "## Automated Test Fix PR
+
+        This PR was automatically generated by Claude Code in response to failing tests
+        in the scheduled nightly test run.
+
+        ### What happened
+        - Scheduled tests ran and detected failures
+        - Claude analyzed the test failures and attempted fixes
+        - Build validation: ${{ steps.validate-fixes.outputs.build_failed == 'true' && 'FAILED' || 'PASSED' }}
+        - This PR contains the proposed fixes
+
+        ### Review checklist
+        - [ ] Verify the fixes are correct and don't mask real bugs
+        - [ ] Check that no unintended changes were made
+        - [ ] Run tests locally to confirm fixes work
+
+        ### Test failure details
+        See the [workflow run](${GH_SERVER_URL}/${GH_REPOSITORY}/actions/runs/${GH_RUN_ID}) for full details.
+
+        ---
+        *This draft PR was auto-generated by the scheduled-tests workflow.*" \
+          --base master \
+          --head "$BRANCH_NAME"
