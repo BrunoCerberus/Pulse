@@ -7,12 +7,10 @@ private enum Constants {
     static let subtitle = String(localized: "summarization.subtitle")
     static let generateButton = String(localized: "summarization.generate")
     static let cancelButton = String(localized: "summarization.cancel")
-    static let saveButton = String(localized: "summarization.save")
     static let retryButton = String(localized: "summarization.retry")
     static let doneButton = String(localized: "common.done")
     static let loadingModel = String(localized: "summarization.loading_model")
     static let generating = String(localized: "summarization.generating")
-    static let saved = String(localized: "summarization.saved")
 }
 
 // MARK: - SummarizationSheet
@@ -21,7 +19,6 @@ struct SummarizationSheet: View {
     let article: Article
     @ObservedObject var viewModel: SummarizationViewModel
     @Environment(\.dismiss) private var dismiss
-    @State private var isSaved = false
 
     var body: some View {
         NavigationStack {
@@ -186,58 +183,23 @@ struct SummarizationSheet: View {
     // MARK: - Completed State
 
     private var completedContent: some View {
-        VStack(spacing: Spacing.lg) {
-            VStack(alignment: .leading, spacing: Spacing.sm) {
-                HStack(spacing: Spacing.xs) {
-                    Image(systemName: "sparkles")
-                        .foregroundStyle(Color.Accent.primary)
-                    Text("AI Summary")
-                        .font(Typography.labelMedium)
-                        .foregroundStyle(Color.Accent.primary)
-                }
-
-                Text(viewModel.generatedSummary)
-                    .font(Typography.bodyMedium)
-                    .foregroundStyle(.primary)
-                    .lineSpacing(4)
+        VStack(alignment: .leading, spacing: Spacing.sm) {
+            HStack(spacing: Spacing.xs) {
+                Image(systemName: "sparkles")
+                    .foregroundStyle(Color.Accent.primary)
+                Text("AI Summary")
+                    .font(Typography.labelMedium)
+                    .foregroundStyle(Color.Accent.primary)
             }
-            .frame(maxWidth: .infinity, alignment: .leading)
-            .padding(Spacing.md)
-            .glassBackground(style: .thin, cornerRadius: CornerRadius.lg)
 
-            if isSaved {
-                HStack(spacing: Spacing.sm) {
-                    Image(systemName: "checkmark.circle.fill")
-                        .foregroundStyle(.green)
-                    Text(Constants.saved)
-                        .font(Typography.labelMedium)
-                        .foregroundStyle(.green)
-                }
-                .transition(.scale.combined(with: .opacity))
-            } else if !viewModel.generatedSummary.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty {
-                Button {
-                    HapticManager.shared.success()
-                    Task {
-                        try? await viewModel.saveSummary(article: article)
-                        withAnimation(.spring(response: 0.3, dampingFraction: 0.7)) {
-                            isSaved = true
-                        }
-                    }
-                } label: {
-                    HStack(spacing: Spacing.sm) {
-                        Image(systemName: "square.and.arrow.down")
-                        Text(Constants.saveButton)
-                    }
-                    .font(Typography.labelLarge)
-                    .foregroundStyle(.white)
-                    .frame(maxWidth: .infinity)
-                    .padding(.vertical, Spacing.md)
-                    .background(Color.Accent.gradient)
-                    .clipShape(RoundedRectangle(cornerRadius: CornerRadius.md, style: .continuous))
-                }
-                .pressEffect()
-            }
+            Text(viewModel.generatedSummary)
+                .font(Typography.bodyMedium)
+                .foregroundStyle(.primary)
+                .lineSpacing(4)
         }
+        .frame(maxWidth: .infinity, alignment: .leading)
+        .padding(Spacing.md)
+        .glassBackground(style: .thin, cornerRadius: CornerRadius.lg)
     }
 
     // MARK: - Error State

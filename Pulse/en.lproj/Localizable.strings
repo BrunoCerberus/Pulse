@@ -64,15 +64,11 @@
 "summarization.subtitle" = "Generate an AI summary of this article";
 "summarization.generate" = "Generate Summary";
 "summarization.cancel" = "Cancel";
-"summarization.save" = "Save to Digest";
 "summarization.retry" = "Try Again";
 "summarization.loading_model" = "Loading AI model...";
 "summarization.generating" = "Generating...";
-"summarization.saved" = "Saved to Digest";
 "summarization.button" = "Summarize";
-"summarization.has_summary" = "Summary available";
 "summarization.ai_summary" = "AI Summary";
-"summarization.generated_on" = "Generated on";
 
 /* ==================== */
 /* MARK: - Search       */

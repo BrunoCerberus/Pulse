@@ -16,7 +16,6 @@ final class SummarizationViewModel: ObservableObject {
     @Published private(set) var modelStatus: LLMModelStatus = .notLoaded
 
     private let summarizationService: SummarizationService
-    private let storageService: StorageService
     private var generationTask: Task<Void, Never>?
     private var cancellables = Set<AnyCancellable>()
 
@@ -26,13 +25,6 @@ final class SummarizationViewModel: ObservableObject {
         } catch {
             Logger.shared.service("Failed to retrieve SummarizationService: \(error)", level: .warning)
             summarizationService = LiveSummarizationService()
-        }
-
-        do {
-            storageService = try serviceLocator.retrieve(StorageService.self)
-        } catch {
-            Logger.shared.service("Failed to retrieve StorageService: \(error)", level: .warning)
-            storageService = LiveStorageService()
         }
 
         setupBindings()
@@ -119,12 +111,6 @@ final class SummarizationViewModel: ObservableObject {
         summarizationService.cancelSummarization()
         state = .idle
         generatedSummary = ""
-    }
-
-    func saveSummary(article: Article) async throws {
-        let trimmedSummary = generatedSummary.trimmingCharacters(in: .whitespacesAndNewlines)
-        guard !trimmedSummary.isEmpty else { return }
-        try await storageService.saveSummary(article, summary: trimmedSummary)
     }
 
     func reset() {

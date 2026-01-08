@@ -101,7 +101,6 @@ final class MockStorageService: StorageService {
     var bookmarkedArticles: [Article] = []
     var readingHistory: [Article] = []
     var userPreferences: UserPreferences?
-    var summaries: [(article: Article, summary: String, generatedAt: Date)] = []
 
     func saveArticle(_ article: Article) async throws {
         bookmarkedArticles.append(article)
@@ -138,25 +137,6 @@ final class MockStorageService: StorageService {
 
     func fetchUserPreferences() async throws -> UserPreferences? {
         userPreferences
-    }
-
-    // MARK: - Article Summaries
-
-    func saveSummary(_ article: Article, summary: String) async throws {
-        summaries.removeAll { $0.article.id == article.id }
-        summaries.insert((article, summary, Date()), at: 0)
-    }
-
-    func fetchAllSummaries() async throws -> [(article: Article, summary: String, generatedAt: Date)] {
-        summaries
-    }
-
-    func deleteSummary(articleID: String) async throws {
-        summaries.removeAll { $0.article.id == articleID }
-    }
-
-    func hasSummary(_ articleID: String) async -> Bool {
-        summaries.contains { $0.article.id == articleID }
     }
 }
 
