@@ -324,6 +324,7 @@ jobs:
     permissions:
       contents: write
       pull-requests: write
+      id-token: write
 
     steps:
     - name: Checkout code
@@ -356,7 +357,6 @@ jobs:
     - name: Install dependencies
       run: |
         brew install xcodegen
-        npm install -g @anthropic-ai/claude-code
 
     - name: Generate Xcode project
       run: |
@@ -423,38 +423,32 @@ jobs:
         echo "branch_name=$BRANCH_NAME" >> $GITHUB_OUTPUT
 
     - name: Run Claude to analyze and fix tests
-      env:
-        ANTHROPIC_API_KEY: ${{ secrets.ANTHROPIC_API_KEY }}
-      run: |
-        echo "Running Claude Code to analyze and fix test failures..."
+      uses: anthropics/claude-code-action@v1
+      with:
+        claude_code_oauth_token: ${{ secrets.CLAUDE_CODE_OAUTH_TOKEN }}
+        prompt: |
+          You are analyzing failing tests in a scheduled CI run for the Pulse iOS app.
 
-        # Create prompt file for Claude
-        cat > /tmp/claude_prompt.txt << 'PROMPT_EOF'
-        You are analyzing failing tests in a scheduled CI run for the Pulse iOS app.
+          ## Test Failure Details
+          Read the file /tmp/test_failures.txt to see what tests failed.
 
-        ## Your Task
-        1. Read the test failure details in /tmp/test_failures.txt
-        2. Analyze the failing tests to understand what's broken
-        3. Look at the relevant test files and source code
-        4. Fix the issues causing test failures
-        5. Run the tests locally to verify fixes work
+          ## Your Task
+          1. Read /tmp/test_failures.txt to see which tests failed
+          2. Analyze the failing tests to understand what's broken
+          3. Look at the relevant test files and source code
+          4. Fix the issues causing test failures
 
-        ## Guidelines
-        - Focus only on fixing the failing tests, don't refactor unrelated code
-        - If a test is flaky, consider adding retry logic or fixing the race condition
-        - For snapshot test failures, regenerate snapshots if the UI change was intentional
-        - For unit test failures, fix either the test or the source code depending on what's correct
-        - If you cannot fix a test, document why in a comment
+          ## Guidelines
+          - Focus only on fixing the failing tests, don't refactor unrelated code
+          - If a test is flaky, consider adding retry logic or fixing the race condition
+          - For snapshot test failures, regenerate snapshots if the UI change was intentional
+          - For unit test failures, fix either the test or the source code depending on what's correct
+          - If you cannot fix a test, document why in a comment
 
-        ## After fixing
-        - Stage all changes with git add
-        - Do NOT commit - the workflow will handle that
-
-        Start by reading /tmp/test_failures.txt to see what failed.
-        PROMPT_EOF
-
-        # Run Claude Code with the prompt
-        claude --print --dangerously-skip-permissions < /tmp/claude_prompt.txt || true
+          ## After fixing
+          - Stage all changes with git add
+          - Do NOT commit - the workflow will handle that
+        claude_args: '--dangerously-skip-permissions'
 
     - name: Check for changes
       id: check-changes
