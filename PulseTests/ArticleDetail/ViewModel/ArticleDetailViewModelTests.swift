@@ -43,7 +43,7 @@ private func contentString(from attributedString: AttributedString?) -> String? 
 private func waitForContentProcessing(_ viewModel: ArticleDetailViewModel) async {
     // Wait up to 2 seconds for content processing
     for _ in 0 ..< 20 {
-        if !viewModel.isProcessingContent {
+        if !viewModel.viewState.isProcessingContent {
             return
         }
         try? await Task.sleep(nanoseconds: 100_000_000) // 0.1 seconds
@@ -63,8 +63,8 @@ struct ArticleDetailVMInitialTests {
 
         await waitForContentProcessing(sut)
 
-        #expect(sut.processedContent != nil)
-        let content = contentString(from: sut.processedContent)
+        #expect(sut.viewState.processedContent != nil)
+        let content = contentString(from: sut.viewState.processedContent)
         #expect(content == "This is the full article content with some text.")
     }
 
@@ -74,7 +74,7 @@ struct ArticleDetailVMInitialTests {
         let testArticle = createTestArticle()
         let sut = ArticleDetailViewModel(article: testArticle, serviceLocator: serviceLocator)
 
-        #expect(!sut.isBookmarked)
+        #expect(!sut.viewState.isBookmarked)
     }
 }
 
@@ -91,7 +91,7 @@ struct ArticleDetailVMHTMLTests {
         )
         let sut = ArticleDetailViewModel(article: article, serviceLocator: serviceLocator)
         await waitForContentProcessing(sut)
-        let content = contentString(from: sut.processedContent)
+        let content = contentString(from: sut.viewState.processedContent)
         #expect(content != nil)
         #expect(content?.contains("<") == false)
         #expect(content?.contains(">") == false)
@@ -103,7 +103,7 @@ struct ArticleDetailVMHTMLTests {
         let article = createTestArticle(content: "Tom &amp; Jerry")
         let sut = ArticleDetailViewModel(article: article, serviceLocator: serviceLocator)
         await waitForContentProcessing(sut)
-        let content = contentString(from: sut.processedContent)
+        let content = contentString(from: sut.viewState.processedContent)
         #expect(content?.contains("Tom & Jerry") == true)
     }
 
@@ -113,7 +113,7 @@ struct ArticleDetailVMHTMLTests {
         let article = createTestArticle(content: "5 &lt; 10 &gt; 3")
         let sut = ArticleDetailViewModel(article: article, serviceLocator: serviceLocator)
         await waitForContentProcessing(sut)
-        let content = contentString(from: sut.processedContent)
+        let content = contentString(from: sut.viewState.processedContent)
         #expect(content?.contains("5 < 10 > 3") == true)
     }
 
@@ -123,7 +123,7 @@ struct ArticleDetailVMHTMLTests {
         let article = createTestArticle(content: "Hello&nbsp;World")
         let sut = ArticleDetailViewModel(article: article, serviceLocator: serviceLocator)
         await waitForContentProcessing(sut)
-        let content = contentString(from: sut.processedContent)
+        let content = contentString(from: sut.viewState.processedContent)
         #expect(content?.contains("Hello World") == true)
     }
 
@@ -133,7 +133,7 @@ struct ArticleDetailVMHTMLTests {
         let article = createTestArticle(content: "He said &quot;Hello&quot;")
         let sut = ArticleDetailViewModel(article: article, serviceLocator: serviceLocator)
         await waitForContentProcessing(sut)
-        let content = contentString(from: sut.processedContent)
+        let content = contentString(from: sut.viewState.processedContent)
         #expect(content?.contains("He said \"Hello\"") == true)
     }
 
@@ -143,7 +143,7 @@ struct ArticleDetailVMHTMLTests {
         let article = createTestArticle(content: "It&#39;s working")
         let sut = ArticleDetailViewModel(article: article, serviceLocator: serviceLocator)
         await waitForContentProcessing(sut)
-        let content = contentString(from: sut.processedContent)
+        let content = contentString(from: sut.viewState.processedContent)
         #expect(content?.contains("It's working") == true)
     }
 }
@@ -161,7 +161,7 @@ struct ArticleDetailVMContentTests {
         )
         let sut = ArticleDetailViewModel(article: article, serviceLocator: serviceLocator)
         await waitForContentProcessing(sut)
-        let content = contentString(from: sut.processedContent)
+        let content = contentString(from: sut.viewState.processedContent)
         #expect(content != nil)
         #expect(content?.contains("[+") == false)
         #expect(content?.contains("chars]") == false)
@@ -173,7 +173,7 @@ struct ArticleDetailVMContentTests {
         let article = createTestArticle(content: "This   has    multiple     spaces")
         let sut = ArticleDetailViewModel(article: article, serviceLocator: serviceLocator)
         await waitForContentProcessing(sut)
-        let content = contentString(from: sut.processedContent)
+        let content = contentString(from: sut.viewState.processedContent)
         #expect(content == "This has multiple spaces")
     }
 
@@ -183,7 +183,7 @@ struct ArticleDetailVMContentTests {
         let article = createTestArticle(content: nil, description: "Has description")
         let sut = ArticleDetailViewModel(article: article, serviceLocator: serviceLocator)
         await waitForContentProcessing(sut)
-        #expect(sut.processedContent == nil)
+        #expect(sut.viewState.processedContent == nil)
     }
 
     @Test("Empty content results in nil processed content")
@@ -192,7 +192,7 @@ struct ArticleDetailVMContentTests {
         let article = createTestArticle(content: "   ")
         let sut = ArticleDetailViewModel(article: article, serviceLocator: serviceLocator)
         await waitForContentProcessing(sut)
-        #expect(sut.processedContent == nil)
+        #expect(sut.viewState.processedContent == nil)
     }
 
     @Test("Description is processed into AttributedString")
@@ -201,8 +201,8 @@ struct ArticleDetailVMContentTests {
         let testArticle = createTestArticle()
         let sut = ArticleDetailViewModel(article: testArticle, serviceLocator: serviceLocator)
         await waitForContentProcessing(sut)
-        #expect(sut.processedDescription != nil)
-        let description = contentString(from: sut.processedDescription)
+        #expect(sut.viewState.processedDescription != nil)
+        let description = contentString(from: sut.viewState.processedDescription)
         #expect(description == "Test article description")
     }
 
@@ -212,7 +212,7 @@ struct ArticleDetailVMContentTests {
         let article = createTestArticle(description: nil)
         let sut = ArticleDetailViewModel(article: article, serviceLocator: serviceLocator)
         await waitForContentProcessing(sut)
-        #expect(sut.processedDescription == nil)
+        #expect(sut.viewState.processedDescription == nil)
     }
 
     @Test("Content with multiple sentences is formatted into paragraphs")
@@ -223,7 +223,7 @@ struct ArticleDetailVMContentTests {
         let article = createTestArticle(content: multiSentenceContent)
         let sut = ArticleDetailViewModel(article: article, serviceLocator: serviceLocator)
         await waitForContentProcessing(sut)
-        let content = contentString(from: sut.processedContent)
+        let content = contentString(from: sut.viewState.processedContent)
         #expect(content != nil)
         #expect(content?.contains("\n\n") == true)
     }
@@ -239,10 +239,10 @@ struct ArticleDetailVMBookmarkTests {
         let (serviceLocator, mockStorageService) = createTestServiceLocator()
         let testArticle = createTestArticle()
         let sut = ArticleDetailViewModel(article: testArticle, serviceLocator: serviceLocator)
-        #expect(!sut.isBookmarked)
-        sut.toggleBookmark()
+        #expect(!sut.viewState.isBookmarked)
+        sut.handle(event: .onBookmarkTapped)
         try await Task.sleep(nanoseconds: 200_000_000)
-        #expect(sut.isBookmarked)
+        #expect(sut.viewState.isBookmarked)
         let isBookmarked = await mockStorageService.isBookmarked(testArticle.id)
         #expect(isBookmarked)
     }
@@ -253,12 +253,12 @@ struct ArticleDetailVMBookmarkTests {
         let testArticle = createTestArticle()
         try await mockStorageService.saveArticle(testArticle)
         let sut = ArticleDetailViewModel(article: testArticle, serviceLocator: serviceLocator)
-        sut.onAppear()
+        sut.handle(event: .onAppear)
         try await Task.sleep(nanoseconds: 500_000_000)
-        #expect(sut.isBookmarked)
-        sut.toggleBookmark()
+        #expect(sut.viewState.isBookmarked)
+        sut.handle(event: .onBookmarkTapped)
         try await Task.sleep(nanoseconds: 500_000_000)
-        #expect(!sut.isBookmarked)
+        #expect(!sut.viewState.isBookmarked)
     }
 
     @Test("OnAppear saves to reading history")
@@ -266,7 +266,7 @@ struct ArticleDetailVMBookmarkTests {
         let (serviceLocator, mockStorageService) = createTestServiceLocator()
         let testArticle = createTestArticle()
         let sut = ArticleDetailViewModel(article: testArticle, serviceLocator: serviceLocator)
-        sut.onAppear()
+        sut.handle(event: .onAppear)
         try await Task.sleep(nanoseconds: 200_000_000)
         let history = try await mockStorageService.fetchReadingHistory()
         #expect(history.contains(where: { $0.id == testArticle.id }))
@@ -278,19 +278,21 @@ struct ArticleDetailVMBookmarkTests {
         let testArticle = createTestArticle()
         try await mockStorageService.saveArticle(testArticle)
         let sut = ArticleDetailViewModel(article: testArticle, serviceLocator: serviceLocator)
-        #expect(!sut.isBookmarked)
-        sut.onAppear()
+        #expect(!sut.viewState.isBookmarked)
+        sut.handle(event: .onAppear)
         try await Task.sleep(nanoseconds: 500_000_000)
-        #expect(sut.isBookmarked)
+        #expect(sut.viewState.isBookmarked)
     }
 
     @Test("Share sets showShareSheet to true")
-    func shareShowsShareSheet() {
+    func shareShowsShareSheet() async throws {
         let (serviceLocator, _) = createTestServiceLocator()
         let testArticle = createTestArticle()
         let sut = ArticleDetailViewModel(article: testArticle, serviceLocator: serviceLocator)
-        #expect(!sut.showShareSheet)
-        sut.share()
-        #expect(sut.showShareSheet)
+        #expect(!sut.viewState.showShareSheet)
+        sut.handle(event: .onShareTapped)
+        // Wait for async state update via Combine publisher
+        try await Task.sleep(nanoseconds: 100_000_000)
+        #expect(sut.viewState.showShareSheet)
     }
 }

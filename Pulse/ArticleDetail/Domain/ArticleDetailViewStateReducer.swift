@@ -1,0 +1,18 @@
+import Foundation
+
+struct ArticleDetailViewStateReducer: ViewStateReducing {
+    func reduce(domainState: ArticleDetailDomainState) -> ArticleDetailViewState {
+        ArticleDetailViewState(
+            article: domainState.article,
+            isProcessingContent: domainState.isProcessingContent,
+            processedContent: domainState.processedContent,
+            processedDescription: domainState.processedDescription,
+            isBookmarked: domainState.isBookmarked,
+            showShareSheet: domainState.showShareSheet,
+            summarizationState: domainState.summarizationState,
+            generatedSummary: domainState.generatedSummary,
+            modelStatus: domainState.modelStatus,
+            showSummarizationSheet: domainState.showSummarizationSheet
+        )
+    }
+}

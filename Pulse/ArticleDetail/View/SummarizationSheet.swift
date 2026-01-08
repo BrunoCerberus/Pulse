@@ -16,8 +16,7 @@ private enum Constants {
 // MARK: - SummarizationSheet
 
 struct SummarizationSheet: View {
-    let article: Article
-    @ObservedObject var viewModel: SummarizationViewModel
+    @ObservedObject var viewModel: ArticleDetailViewModel
     @Environment(\.dismiss) private var dismiss
 
     var body: some View {
@@ -65,7 +64,7 @@ struct SummarizationSheet: View {
 
     @ViewBuilder
     private var contentSection: some View {
-        switch viewModel.state {
+        switch viewModel.viewState.summarizationState {
         case .idle:
             idleContent
         case let .loadingModel(progress):
@@ -87,7 +86,7 @@ struct SummarizationSheet: View {
 
             Button {
                 HapticManager.shared.buttonPress()
-                viewModel.startSummarization(article: article)
+                viewModel.handle(event: .onSummarizationStarted)
             } label: {
                 HStack(spacing: Spacing.sm) {
                     Image(systemName: "sparkles")
@@ -106,16 +105,16 @@ struct SummarizationSheet: View {
 
     private var articlePreview: some View {
         VStack(alignment: .leading, spacing: Spacing.sm) {
-            Text(article.title)
+            Text(viewModel.viewState.article.title)
                 .font(Typography.headlineSmall)
                 .lineLimit(3)
 
             HStack(spacing: Spacing.xs) {
-                Text(article.source.name)
+                Text(viewModel.viewState.article.source.name)
                 Circle()
                     .fill(.secondary)
                     .frame(width: 3, height: 3)
-                Text(article.formattedDate)
+                Text(viewModel.viewState.article.formattedDate)
             }
             .font(Typography.captionLarge)
             .foregroundStyle(.secondary)
@@ -159,8 +158,8 @@ struct SummarizationSheet: View {
                     .foregroundStyle(.secondary)
             }
 
-            if !viewModel.generatedSummary.isEmpty {
-                Text(viewModel.generatedSummary)
+            if !viewModel.viewState.generatedSummary.isEmpty {
+                Text(viewModel.viewState.generatedSummary)
                     .font(Typography.bodyMedium)
                     .foregroundStyle(.primary)
                     .frame(maxWidth: .infinity, alignment: .leading)
@@ -170,7 +169,7 @@ struct SummarizationSheet: View {
 
             Button {
                 HapticManager.shared.tap()
-                viewModel.cancel()
+                viewModel.handle(event: .onSummarizationCancelled)
             } label: {
                 Text(Constants.cancelButton)
                     .font(Typography.labelMedium)
@@ -194,7 +193,7 @@ struct SummarizationSheet: View {
                     .foregroundStyle(Color.Accent.primary)
             }
 
-            Text(viewModel.generatedSummary)
+            Text(viewModel.viewState.generatedSummary)
                 .font(Typography.bodyMedium)
                 .foregroundStyle(.primary)
                 .lineSpacing(4)
@@ -219,7 +218,7 @@ struct SummarizationSheet: View {
 
             Button {
                 HapticManager.shared.tap()
-                viewModel.startSummarization(article: article)
+                viewModel.handle(event: .onSummarizationStarted)
             } label: {
                 HStack(spacing: Spacing.sm) {
                     Image(systemName: "arrow.clockwise")
@@ -237,7 +236,9 @@ struct SummarizationSheet: View {
 
 #Preview {
     SummarizationSheet(
-        article: Article.mockArticles[0],
-        viewModel: SummarizationViewModel(serviceLocator: .preview)
+        viewModel: ArticleDetailViewModel(
+            article: Article.mockArticles[0],
+            serviceLocator: .preview
+        )
     )
 }
