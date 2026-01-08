@@ -112,6 +112,8 @@
 "summarization.saved" = "Saved to Digest";
 "summarization.button" = "Summarize";
 "summarization.has_summary" = "Summary available";
+"summarization.ai_summary" = "AI Summary";
+"summarization.generated_on" = "Generated on";
 
 /* ==================== */
 /* MARK: - Search       */

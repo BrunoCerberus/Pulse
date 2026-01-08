@@ -1,7 +1,7 @@
 import Foundation
 
 /// Represents a summarized article item for display
-struct SummaryItem: Equatable, Identifiable {
+struct SummaryItem: Equatable, Identifiable, Hashable {
     let id: String
     let article: Article
     let summary: String
@@ -18,6 +18,10 @@ struct SummaryItem: Equatable, Identifiable {
         let formatter = RelativeDateTimeFormatter()
         formatter.unitsStyle = .abbreviated
         return formatter.localizedString(for: generatedAt, relativeTo: Date())
+    }
+
+    func hash(into hasher: inout Hasher) {
+        hasher.combine(id)
     }
 }
 

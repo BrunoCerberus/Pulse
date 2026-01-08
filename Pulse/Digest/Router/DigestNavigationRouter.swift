@@ -6,8 +6,8 @@ import UIKit
 enum DigestNavigationEvent {
     /// Navigate to settings to configure topics
     case settings
-    /// Navigate to article detail
-    case articleDetail(Article)
+    /// Navigate to summary detail view
+    case summaryDetail(SummaryItem)
 }
 
 /// Router for Digest module navigation.
@@ -35,8 +35,8 @@ final class DigestNavigationRouter: NavigationRouter, Equatable {
         switch navigationEvent {
         case .settings:
             coordinator.push(page: .settings)
-        case let .articleDetail(article):
-            coordinator.push(page: .articleDetail(article))
+        case let .summaryDetail(summaryItem):
+            coordinator.push(page: .summaryDetail(summaryItem))
         }
     }
 }

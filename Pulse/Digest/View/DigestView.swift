@@ -129,7 +129,7 @@ struct DigestView<R: DigestNavigationRouter>: View {
                         item: item,
                         onTap: {
                             HapticManager.shared.tap()
-                            router.route(navigationEvent: .articleDetail(item.article))
+                            router.route(navigationEvent: .summaryDetail(item))
                         },
                         onDelete: {
                             HapticManager.shared.warning()

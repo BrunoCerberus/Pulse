@@ -184,6 +184,9 @@ final class Coordinator: ObservableObject {
         case let .articleDetail(article):
             ArticleDetailView(article: article, serviceLocator: serviceLocator)
 
+        case let .summaryDetail(summaryItem):
+            SummaryDetailView(summaryItem: summaryItem)
+
         case .settings:
             SettingsView(serviceLocator: serviceLocator)
         }
