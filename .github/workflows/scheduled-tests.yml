@@ -391,7 +391,14 @@ jobs:
       id: extract-failures
       run: |
         echo "Extracting test failure information..."
-        FAILURE_LOG=""
+        echo "======================================="
+
+        # Check what test result directories exist
+        echo "Available test result directories:"
+        ls -la unit-test-results/ 2>/dev/null || echo "  unit-test-results: not found"
+        ls -la ui-test-results/ 2>/dev/null || echo "  ui-test-results: not found"
+        ls -la snapshot-test-results/ 2>/dev/null || echo "  snapshot-test-results: not found"
+        echo ""
 
         # Extract failures from xcresult bundles using xcresulttool
         for result_dir in unit-test-results ui-test-results snapshot-test-results; do
@@ -399,24 +406,50 @@ jobs:
             for xcresult in "$result_dir"/*.xcresult; do
               if [ -d "$xcresult" ]; then
                 echo "Processing $xcresult..."
-                # Get test failures with detailed context (name, message, file location)
+
+                # Method 1: Try to get test results summary first
+                echo "  Attempting test-results extraction..."
+                xcrun xcresulttool get test-results summary --path "$xcresult" 2>/dev/null | head -50 || echo "  test-results summary not available"
+
+                # Method 2: Get failures using JSON query
+                echo "  Attempting JSON extraction..."
                 xcrun xcresulttool get --format json --path "$xcresult" 2>/dev/null | \
                   jq -r '.. | objects | select(.testStatus == "Failure") | "Test: \(.identifier // "unknown")\nName: \(.name // "unknown")\nMessage: \(.failureSummaries // [] | .[0]?.message // "No message")\nFile: \(.failureSummaries // [] | .[0]?.fileName // "Unknown") line \(.failureSummaries // [] | .[0]?.lineNumber // "?")\n---"' 2>/dev/null >> /tmp/failures.txt || true
+
+                # Method 3: Alternative - look for issues in the result bundle
+                echo "  Attempting issues extraction..."
+                xcrun xcresulttool get --format json --path "$xcresult" 2>/dev/null | \
+                  jq -r '.. | objects | select(.issueType? != null) | "Issue: \(.issueType // "unknown")\nMessage: \(.message // "No message")\nFile: \(.documentLocationInCreatingWorkspace?.url // "Unknown")\n---"' 2>/dev/null >> /tmp/failures.txt || true
+
+                echo ""
               fi
             done
           fi
         done
 
+        echo "======================================="
+        echo "Extraction complete. Checking results..."
+        echo ""
+
         if [ -f /tmp/failures.txt ] && [ -s /tmp/failures.txt ]; then
-          FAILURE_LOG=$(cat /tmp/failures.txt | head -100)
-          echo "Found failures:"
-          echo "$FAILURE_LOG"
+          echo "Found failures in /tmp/failures.txt:"
+          echo "--------------------------------------"
+          cat /tmp/failures.txt | head -100
+          echo "--------------------------------------"
         else
-          FAILURE_LOG="Test failures detected but details could not be extracted from xcresult bundles."
+          echo "WARNING: No failures extracted from xcresult bundles"
+          echo "Creating fallback failure message..."
+          echo "Test failures detected but details could not be extracted from xcresult bundles." > /tmp/failures.txt
+          echo "Please check the workflow logs and xcresult artifacts for details." >> /tmp/failures.txt
         fi
 
-        # Save to file for Claude to read
-        echo "$FAILURE_LOG" > /tmp/test_failures.txt
+        # Copy to the file Claude will read
+        cp /tmp/failures.txt /tmp/test_failures.txt
+        echo ""
+        echo "Final content of /tmp/test_failures.txt:"
+        echo "--------------------------------------"
+        cat /tmp/test_failures.txt
+        echo "--------------------------------------"
         echo "failures_found=true" >> $GITHUB_OUTPUT
 
     - name: Create fix branch
@@ -459,14 +492,45 @@ jobs:
     - name: Check for changes
       id: check-changes
       run: |
-        if git diff --quiet && git diff --staged --quiet; then
+        echo "======================================="
+        echo "Checking for source code changes made by Claude..."
+        echo "======================================="
+        echo ""
+
+        # Show all changes (for debugging)
+        echo "All git status (including artifacts):"
+        git status --short | head -50
+        echo ""
+
+        # Only check for changes in source code, not test result artifacts
+        # Exclude test result directories from the check
+        echo "Source code changes only (excluding test artifacts):"
+        git status --short -- ':!unit-test-results' ':!ui-test-results' ':!snapshot-test-results'
+        echo ""
+
+        if git diff --quiet -- ':!unit-test-results' ':!ui-test-results' ':!snapshot-test-results' && \
+           git diff --staged --quiet -- ':!unit-test-results' ':!ui-test-results' ':!snapshot-test-results'; then
           echo "has_changes=false" >> $GITHUB_OUTPUT
-          echo "No changes made by Claude"
+          echo "RESULT: No source code changes made by Claude"
+          echo ""
+          echo "This could mean:"
+          echo "  - Claude couldn't determine a fix for the failing tests"
+          echo "  - The test failure info wasn't detailed enough"
+          echo "  - The issue requires manual intervention"
         else
           echo "has_changes=true" >> $GITHUB_OUTPUT
-          echo "Changes detected:"
-          git status --short
+          echo "RESULT: Source code changes detected!"
+          echo ""
+          echo "Changed files:"
+          git diff --name-only -- ':!unit-test-results' ':!ui-test-results' ':!snapshot-test-results'
+          echo ""
+          echo "Staged files:"
+          git diff --staged --name-only -- ':!unit-test-results' ':!ui-test-results' ':!snapshot-test-results'
+          echo ""
+          echo "Diff preview (first 100 lines):"
+          git diff -- ':!unit-test-results' ':!ui-test-results' ':!snapshot-test-results' | head -100
         fi
+        echo "======================================="
 
     - name: Validate fixes (build project)
       id: validate-fixes
@@ -491,11 +555,16 @@ jobs:
       env:
         GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         BRANCH_NAME: ${{ steps.create-branch.outputs.branch_name }}
+        GH_REPO: ${{ github.repository }}
       run: |
         git config user.name "github-actions[bot]"
         git config user.email "github-actions[bot]@users.noreply.github.com"
 
-        git add -A
+        # Configure git to use the token for authentication
+        git remote set-url origin "https://x-access-token:${GITHUB_TOKEN}@github.com/${GH_REPO}.git"
+
+        # Only add source code changes, not test result artifacts
+        git add -A -- ':!unit-test-results' ':!ui-test-results' ':!snapshot-test-results'
         git commit -m "fix: auto-fix failing tests from scheduled run
 
         This commit contains automated fixes for test failures detected
