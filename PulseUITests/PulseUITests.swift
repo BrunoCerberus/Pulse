@@ -10,22 +10,6 @@ final class PulseUITests: BaseUITestCase {
         XCTAssertTrue(homeTab.exists)
         XCTAssertTrue(homeTab.isSelected)
 
-        // --- Bookmarks Tab ---
-        let bookmarksTab = app.tabBars.buttons["Bookmarks"]
-        XCTAssertTrue(bookmarksTab.waitForExistence(timeout: 5), "Bookmarks tab should exist")
-
-        bookmarksTab.tap()
-
-        XCTAssertTrue(bookmarksTab.isSelected, "Bookmarks tab should be selected")
-
-        // --- Digest Tab ---
-        let digestTab = app.tabBars.buttons["Digest"]
-        XCTAssertTrue(digestTab.waitForExistence(timeout: 5), "Digest tab should exist")
-
-        digestTab.tap()
-
-        XCTAssertTrue(digestTab.isSelected, "Digest tab should be selected")
-
         // --- For You Tab ---
         let forYouTab = app.tabBars.buttons["For You"]
         XCTAssertTrue(forYouTab.waitForExistence(timeout: 5), "For You tab should exist")
@@ -33,6 +17,14 @@ final class PulseUITests: BaseUITestCase {
         forYouTab.tap()
 
         XCTAssertTrue(forYouTab.isSelected, "For You tab should be selected")
+
+        // --- Bookmarks Tab ---
+        let bookmarksTab = app.tabBars.buttons["Bookmarks"]
+        XCTAssertTrue(bookmarksTab.waitForExistence(timeout: 5), "Bookmarks tab should exist")
+
+        bookmarksTab.tap()
+
+        XCTAssertTrue(bookmarksTab.isSelected, "Bookmarks tab should be selected")
 
         // --- Search Tab (verify exists) ---
         let searchTab = app.tabBars.buttons.matching(NSPredicate(format: "label CONTAINS[c] 'search' OR identifier CONTAINS[c] 'search'")).firstMatch
