@@ -92,11 +92,37 @@ class BaseUITestCase: XCTestCase {
 
     /// Navigate to Search tab (handles role: .search accessibility)
     func navigateToSearchTab() {
+        // Try multiple strategies to find the Search tab button
+        // Strategy 1: Try by label "Search"
         let searchTab = app.tabBars.buttons["Search"]
-        if searchTab.exists, !searchTab.isSelected {
+        if searchTab.waitForExistence(timeout: Self.shortTimeout), !searchTab.isSelected {
             searchTab.tap()
+            _ = app.navigationBars["Search"].waitForExistence(timeout: Self.shortTimeout)
+            return
         }
-        _ = app.navigationBars["Search"].waitForExistence(timeout: Self.shortTimeout)
+
+        // Strategy 2: Try by matching predicate (label or identifier contains "search")
+        let searchTabPredicate = app.tabBars.buttons.matching(
+            NSPredicate(format: "label CONTAINS[c] 'search' OR identifier CONTAINS[c] 'search'")
+        ).firstMatch
+        if searchTabPredicate.exists, !searchTabPredicate.isSelected {
+            searchTabPredicate.tap()
+            _ = app.navigationBars["Search"].waitForExistence(timeout: Self.shortTimeout)
+            return
+        }
+
+        // Strategy 3: Try by position (Search is the 4th tab: Home, For You, Bookmarks, Search)
+        let tabBar = app.tabBars.firstMatch
+        if tabBar.exists {
+            let buttons = tabBar.buttons
+            if buttons.count >= 4 {
+                let fourthTab = buttons.element(boundBy: 3)
+                if fourthTab.exists, !fourthTab.isSelected {
+                    fourthTab.tap()
+                    _ = app.navigationBars["Search"].waitForExistence(timeout: Self.shortTimeout)
+                }
+            }
+        }
     }
 
     /// Navigate to For You tab and verify navigation bar appears
