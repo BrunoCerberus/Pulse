@@ -3,6 +3,7 @@ name: CI Pipeline
 on:
   pull_request:
     branches: [develop, master, main]
+    types: [opened, synchronize, reopened, ready_for_review]
 
 concurrency:
   group: ${{ github.workflow }}-${{ github.ref }}
