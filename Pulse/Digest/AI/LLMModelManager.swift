@@ -10,6 +10,9 @@ import LocalLlama
 final class LLMModelManager: @unchecked Sendable {
     static let shared = LLMModelManager()
 
+    /// Default system prompt for general-purpose LLM interactions
+    static let defaultSystemPrompt = "You are a helpful assistant that provides clear, concise responses."
+
     private let logger = Logger.shared
     private let logCategory = "LLMModelManager"
 
@@ -115,7 +118,7 @@ final class LLMModelManager: @unchecked Sendable {
     ///   configure them when creating the SwiftLlama instance via Configuration.
     func generate(
         prompt: String,
-        systemPrompt: String = DigestPromptBuilder.systemPrompt,
+        systemPrompt: String = LLMModelManager.defaultSystemPrompt,
         maxTokens: Int,
         temperature _: Float,
         topP _: Float,

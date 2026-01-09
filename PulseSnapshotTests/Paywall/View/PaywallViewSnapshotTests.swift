@@ -104,7 +104,7 @@ final class PaywallViewSnapshotTests: XCTestCase {
         serviceLocator.register(SearchService.self, instance: MockSearchService())
         serviceLocator.register(BookmarksService.self, instance: MockBookmarksService())
         serviceLocator.register(LLMService.self, instance: MockLLMService())
-        serviceLocator.register(DigestService.self, instance: MockDigestService())
+        serviceLocator.register(SummarizationService.self, instance: MockSummarizationService())
         serviceLocator.register(ForYouService.self, instance: MockForYouService())
         serviceLocator.register(SettingsService.self, instance: MockSettingsService())
         serviceLocator.register(StorageService.self, instance: MockStorageService())

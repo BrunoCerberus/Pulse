@@ -140,17 +140,50 @@ final class MockStorageService: StorageService {
     }
 }
 
-final class MockDigestService: DigestService {
-    var freshNewsResult: Result<[Article], Error> = .success(Article.mockArticles)
+final class MockSummarizationService: SummarizationService {
+    private let modelStatusSubject = CurrentValueSubject<LLMModelStatus, Never>(.notLoaded)
+    var generateResult: Result<String, Error> = .success(
+        "This is a mock AI-generated summary of the article providing key insights and main points."
+    )
+    var loadDelay: TimeInterval = 0.1
+    var generateDelay: TimeInterval = 0.1
 
-    func fetchFreshNews(for _: [NewsCategory]) async throws -> [Article] {
-        switch freshNewsResult {
-        case let .success(articles):
-            return articles
-        case let .failure(error):
-            throw error
+    var modelStatusPublisher: AnyPublisher<LLMModelStatus, Never> {
+        modelStatusSubject.eraseToAnyPublisher()
+    }
+
+    var isModelLoaded: Bool {
+        if case .ready = modelStatusSubject.value { return true }
+        return false
+    }
+
+    func loadModelIfNeeded() async throws {
+        guard !isModelLoaded else { return }
+        modelStatusSubject.send(.loading(progress: 0.5))
+        try await Task.sleep(nanoseconds: UInt64(loadDelay * 1_000_000_000))
+        modelStatusSubject.send(.ready)
+    }
+
+    func summarize(article _: Article) -> AsyncThrowingStream<String, Error> {
+        AsyncThrowingStream { [self] continuation in
+            Task {
+                let delayPerWord = UInt64(generateDelay * 1_000_000_000 / 4)
+
+                switch generateResult {
+                case let .success(text):
+                    for word in text.split(separator: " ") {
+                        try? await Task.sleep(nanoseconds: delayPerWord)
+                        continuation.yield(String(word) + " ")
+                    }
+                    continuation.finish()
+                case let .failure(error):
+                    continuation.finish(throwing: error)
+                }
+            }
         }
     }
+
+    func cancelSummarization() {}
 }
 
 final class MockLLMService: LLMService {
@@ -189,7 +222,7 @@ final class MockLLMService: LLMService {
         modelStatusSubject.send(.notLoaded)
     }
 
-    func generate(prompt _: String, config _: LLMInferenceConfig) -> AnyPublisher<String, Error> {
+    func generate(prompt _: String, systemPrompt _: String?, config _: LLMInferenceConfig) -> AnyPublisher<String, Error> {
         Just(())
             .delay(for: .seconds(generateDelay), scheduler: DispatchQueue.main)
             .flatMap { [self] _ in
@@ -198,7 +231,7 @@ final class MockLLMService: LLMService {
             .eraseToAnyPublisher()
     }
 
-    func generateStream(prompt _: String, config _: LLMInferenceConfig) -> AsyncThrowingStream<String, Error> {
+    func generateStream(prompt _: String, systemPrompt _: String?, config _: LLMInferenceConfig) -> AsyncThrowingStream<String, Error> {
         AsyncThrowingStream { [self] continuation in
             Task {
                 // Use generateDelay per word for longer running stream
@@ -258,7 +291,7 @@ extension ServiceLocator {
         locator.register(StoreKitService.self, instance: MockStoreKitService())
         locator.register(RemoteConfigService.self, instance: MockRemoteConfigService())
         locator.register(LLMService.self, instance: MockLLMService())
-        locator.register(DigestService.self, instance: MockDigestService())
+        locator.register(SummarizationService.self, instance: MockSummarizationService())
 
         // Auth service with mock signed-in user
         let mockAuth = MockAuthService()
@@ -279,7 +312,7 @@ extension ServiceLocator {
         locator.register(StoreKitService.self, instance: MockStoreKitService())
         locator.register(RemoteConfigService.self, instance: MockRemoteConfigService())
         locator.register(LLMService.self, instance: MockLLMService())
-        locator.register(DigestService.self, instance: MockDigestService())
+        locator.register(SummarizationService.self, instance: MockSummarizationService())
         locator.register(AuthService.self, instance: MockAuthService())
         return locator
     }

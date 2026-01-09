@@ -52,14 +52,18 @@ public struct Prompt {
     }
 
     private func encodeLlama3Prompt() -> String {
-        let prompt = """
-        <|start_header_id|>system<|end_header_id|>\(systemPrompt)<|eot_id|>
+        var prompt = "<|begin_of_text|><|start_header_id|>system<|end_header_id|>\n\n"
+        prompt += systemPrompt
+        prompt += "<|eot_id|>"
 
-        \(history.suffix(Configuration.historySize).map { $0.llama3Prompt }.joined())
+        for chat in history.suffix(Configuration.historySize) {
+            prompt += chat.llama3Prompt
+        }
 
-        <|start_header_id|>user<|end_header_id|>\(userMessage)<|eot_id|>
-        <|start_header_id|>assistant<|end_header_id|>
-        """
+        prompt += "<|start_header_id|>user<|end_header_id|>\n\n"
+        prompt += userMessage
+        prompt += "<|eot_id|><|start_header_id|>assistant<|end_header_id|>\n\n"
+
         return prompt
     }
 

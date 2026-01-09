@@ -81,13 +81,6 @@ struct TabBarLocalizableTests {
         #expect(value == "For You")
     }
 
-    @Test("Digest tab is not empty")
-    func digestTabIsNotEmpty() {
-        let value = String(localized: "tab.digest")
-        #expect(!value.isEmpty)
-        #expect(value == "Digest")
-    }
-
     @Test("Search tab is not empty")
     func searchTabIsNotEmpty() {
         let value = String(localized: "tab.search")
@@ -243,51 +236,6 @@ struct ForYouLocalizableTests {
     @Test("No articles message is not empty")
     func noArticlesMessageIsNotEmpty() {
         let value = String(localized: "for_you.no_articles.message")
-        #expect(!value.isEmpty)
-    }
-}
-
-// MARK: - Digest Screen Tests
-
-@Suite("Digest Screen Localization Tests")
-struct DigestScreenLocalizableTests {
-    @Test("Digest title is not empty")
-    func digestTitleIsNotEmpty() {
-        let value = String(localized: "digest.title")
-        #expect(!value.isEmpty)
-        #expect(value == "Digest")
-    }
-
-    @Test("Digest subtitle is not empty")
-    func digestSubtitleIsNotEmpty() {
-        let value = String(localized: "digest.subtitle")
-        #expect(!value.isEmpty)
-        #expect(value == "Generate a personalized summary from your saved articles")
-    }
-
-    @Test("Digest generate button is not empty")
-    func digestGenerateButtonIsNotEmpty() {
-        let value = String(localized: "digest.generate")
-        #expect(!value.isEmpty)
-        #expect(value == "Generate Digest")
-    }
-
-    @Test("Digest generating text is not empty")
-    func digestGeneratingTextIsNotEmpty() {
-        let value = String(localized: "digest.generating")
-        #expect(!value.isEmpty)
-    }
-
-    @Test("Digest no articles is not empty")
-    func digestNoArticlesIsNotEmpty() {
-        let value = String(localized: "digest.no_articles")
-        #expect(!value.isEmpty)
-        #expect(value == "No Articles")
-    }
-
-    @Test("Digest empty message is not empty")
-    func digestEmptyMessageIsNotEmpty() {
-        let value = String(localized: "digest.empty.message")
         #expect(!value.isEmpty)
     }
 }
@@ -632,7 +580,6 @@ struct LocalizationKeysExistenceTests {
         // Tab Bar
         "tab.home",
         "tab.for_you",
-        "tab.digest",
         "tab.search",
         "tab.bookmarks",
         // Categories
@@ -657,34 +604,6 @@ struct LocalizationKeysExistenceTests {
         "for_you.set_preferences",
         "for_you.no_articles.title",
         "for_you.no_articles.message",
-        // Digest Screen
-        "digest.title",
-        "digest.subtitle",
-        "digest.select_source",
-        "digest.generate",
-        "digest.generating",
-        "digest.clear",
-        "digest.new",
-        "digest.model_loading",
-        "digest.model_ready",
-        "digest.no_articles",
-        "digest.configure_topics",
-        "digest.no_topics.title",
-        "digest.no_topics.message",
-        "digest.articles_available",
-        "digest.more_articles",
-        "digest.from_articles",
-        "digest.loading_articles",
-        "digest.empty.message",
-        "digest.source.bookmarks",
-        "digest.source.reading_history",
-        "digest.source.fresh_news",
-        "digest.source.bookmarks.description",
-        "digest.source.reading_history.description",
-        "digest.source.fresh_news.description",
-        "digest.error.no_articles",
-        "digest.error.model_not_ready",
-        "digest.error.no_topics",
         // Search
         "search.title",
         "search.searching",

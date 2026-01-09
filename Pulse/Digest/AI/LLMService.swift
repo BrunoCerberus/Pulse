@@ -76,12 +76,14 @@ protocol LLMService {
     /// Generate text from prompt (returns complete result)
     func generate(
         prompt: String,
+        systemPrompt: String?,
         config: LLMInferenceConfig
     ) -> AnyPublisher<String, Error>
 
     /// Stream generation token by token
     func generateStream(
         prompt: String,
+        systemPrompt: String?,
         config: LLMInferenceConfig
     ) -> AsyncThrowingStream<String, Error>
 
