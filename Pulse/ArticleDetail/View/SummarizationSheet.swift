@@ -19,7 +19,6 @@ private enum AnimationConstants {
     static let stateTransition: Animation = .spring(response: 0.5, dampingFraction: 0.8)
     static let contentAppear: Animation = .easeOut(duration: 0.4)
     static let shimmerDuration: Double = 1.5
-    static let pulseScale: CGFloat = 1.05
 }
 
 // MARK: - SummarizationSheet
@@ -314,7 +313,6 @@ struct SummarizationSheet: View {
 
 private struct GenerateButton: View {
     let action: () -> Void
-    @State private var isHovered = false
     @Environment(\.accessibilityReduceMotion) private var reduceMotion
 
     var body: some View {
@@ -392,15 +390,12 @@ private struct TypingIndicator: View {
                     .opacity(animatingDot == index ? 1 : 0.5)
             }
         }
-        .onAppear {
-            startAnimation()
-        }
-    }
-
-    private func startAnimation() {
-        Timer.scheduledTimer(withTimeInterval: 0.3, repeats: true) { _ in
-            withAnimation(.easeInOut(duration: 0.2)) {
-                animatingDot = (animatingDot + 1) % 3
+        .task {
+            while !Task.isCancelled {
+                try? await Task.sleep(for: .milliseconds(300))
+                withAnimation(.easeInOut(duration: 0.2)) {
+                    animatingDot = (animatingDot + 1) % 3
+                }
             }
         }
     }
