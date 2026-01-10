@@ -44,19 +44,13 @@ final class HomeDomainInteractor: CombineInteractor {
         case .refresh:
             refresh()
         case let .selectArticle(articleId):
-            if let article = findArticle(by: articleId) {
-                selectArticle(article)
-            }
+            findArticle(by: articleId).map { selectArticle($0) }
         case .clearSelectedArticle:
             clearSelectedArticle()
         case let .bookmarkArticle(articleId):
-            if let article = findArticle(by: articleId) {
-                toggleBookmark(article)
-            }
+            findArticle(by: articleId).map { toggleBookmark($0) }
         case let .shareArticle(articleId):
-            if let article = findArticle(by: articleId) {
-                shareArticle(article)
-            }
+            findArticle(by: articleId).map { shareArticle($0) }
         case .clearArticleToShare:
             clearArticleToShare()
         }

@@ -150,11 +150,9 @@ final class SummarizationDomainInteractor: CombineInteractor {
         // Remove common instruction artifacts (case-insensitive, at start)
         let prefixes = ["here's the summary:", "here is the summary:", "summary:"]
         let lowercased = cleaned.lowercased()
-        for prefix in prefixes {
-            if lowercased.hasPrefix(prefix) {
-                cleaned = String(cleaned.dropFirst(prefix.count))
-                break
-            }
+        for prefix in prefixes where lowercased.hasPrefix(prefix) {
+            cleaned = String(cleaned.dropFirst(prefix.count))
+            break
         }
 
         return cleaned.trimmingCharacters(in: .whitespacesAndNewlines)

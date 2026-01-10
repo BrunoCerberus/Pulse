@@ -81,7 +81,8 @@ struct SummarizationViewStateReducerTests {
         let withSummaryState = makeDomainState(generatedSummary: "This is a detailed summary of the article.")
 
         #expect(sut.reduce(domainState: emptyState).generatedSummary == "")
-        #expect(sut.reduce(domainState: withSummaryState).generatedSummary == "This is a detailed summary of the article.")
+        let expectedSummary = "This is a detailed summary of the article."
+        #expect(sut.reduce(domainState: withSummaryState).generatedSummary == expectedSummary)
     }
 
     // MARK: - Initial State

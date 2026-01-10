@@ -245,10 +245,18 @@ make coverage-badge     # Generate SVG badge
 | `/test-unit` | Run unit tests |
 | `/test-ui` | Run UI tests |
 | `/test-snapshot` | Run snapshot tests |
+| `/test-debug` | Run tests with verbose output |
 | `/coverage` | Generate coverage report |
+| `/build` | Debug build |
+| `/build-release` | Release build |
 | `/run` | Build and open in Xcode |
+| `/setup` | Install XcodeGen + generate project |
+| `/clean` | Clean and regenerate project |
+| `/lint` | Check code style (SwiftFormat + SwiftLint) |
+| `/format` | Auto-fix formatting issues |
+| `/fix-packages` | Fix SPM resolution issues |
 | `/push` | Stage, commit, and push |
-| `/reset` | Discard all changes |
+| `/reset` | Discard all changes (DESTRUCTIVE) |
 
 ## Network Layer (EntropyCore)
 
