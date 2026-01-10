@@ -15,8 +15,10 @@ struct ArticleDetailView: View {
     @Environment(\.dismiss) private var dismiss
     @Environment(\.colorScheme) private var colorScheme
     private let heroBaseHeight: CGFloat = 280
+    private let serviceLocator: ServiceLocator
 
     init(article: Article, serviceLocator: ServiceLocator) {
+        self.serviceLocator = serviceLocator
         _viewModel = StateObject(wrappedValue: ArticleDetailViewModel(
             article: article,
             serviceLocator: serviceLocator
@@ -90,7 +92,12 @@ struct ArticleDetailView: View {
             get: { viewModel.viewState.showSummarizationSheet },
             set: { if !$0 { viewModel.handle(event: .onSummarizationSheetDismissed) } }
         )) {
-            SummarizationSheet(viewModel: viewModel)
+            SummarizationSheet(
+                viewModel: SummarizationViewModel(
+                    article: viewModel.viewState.article,
+                    serviceLocator: serviceLocator
+                )
+            )
         }
         .onAppear {
             viewModel.handle(event: .onAppear)

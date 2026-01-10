@@ -17,10 +17,6 @@ struct ArticleDetailEventActionMap: DomainEventActionMap {
             return .dismissShareSheet
         case .onSummarizationSheetDismissed:
             return .dismissSummarizationSheet
-        case .onSummarizationStarted:
-            return .startSummarization
-        case .onSummarizationCancelled:
-            return .cancelSummarization
         }
     }
 }

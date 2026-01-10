@@ -29,7 +29,7 @@ private enum AnimationConstants {
 // MARK: - SummarizationSheet
 
 struct SummarizationSheet: View {
-    @ObservedObject var viewModel: ArticleDetailViewModel
+    @ObservedObject var viewModel: SummarizationViewModel
     @Environment(\.accessibilityReduceMotion) private var reduceMotion
     @State private var headerAppeared = false
     @State private var contentAppeared = false
@@ -486,7 +486,7 @@ private struct BlinkingCursor: View {
 
 #Preview {
     SummarizationSheet(
-        viewModel: ArticleDetailViewModel(
+        viewModel: SummarizationViewModel(
             article: Article.mockArticles[0],
             serviceLocator: .preview
         )

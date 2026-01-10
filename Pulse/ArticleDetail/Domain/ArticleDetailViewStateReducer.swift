@@ -9,9 +9,6 @@ struct ArticleDetailViewStateReducer: ViewStateReducing {
             processedDescription: domainState.processedDescription,
             isBookmarked: domainState.isBookmarked,
             showShareSheet: domainState.showShareSheet,
-            summarizationState: domainState.summarizationState,
-            generatedSummary: domainState.generatedSummary,
-            modelStatus: domainState.modelStatus,
             showSummarizationSheet: domainState.showSummarizationSheet
         )
     }

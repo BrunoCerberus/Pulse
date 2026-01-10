@@ -18,12 +18,7 @@ enum ArticleDetailDomainAction: Equatable {
     // Content processing
     case contentProcessingCompleted(content: AttributedString?, description: AttributedString?)
 
-    // Summarization
+    // Summarization sheet
     case showSummarizationSheet
     case dismissSummarizationSheet
-    case startSummarization
-    case cancelSummarization
-    case summarizationStateChanged(SummarizationState)
-    case summarizationTokenReceived(String)
-    case modelStatusChanged(LLMModelStatus)
 }
