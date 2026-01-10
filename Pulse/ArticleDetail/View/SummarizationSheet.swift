@@ -19,6 +19,11 @@ private enum AnimationConstants {
     static let stateTransition: Animation = .spring(response: 0.5, dampingFraction: 0.8)
     static let contentAppear: Animation = .easeOut(duration: 0.4)
     static let shimmerDuration: Double = 1.5
+    static let iconGlowRadius: CGFloat = 20
+    static let typingDotSize: CGFloat = 6
+    static let typingDotSpacing: CGFloat = 4
+    static let bulletPointSize: CGFloat = 6
+    static let bulletPointTopPadding: CGFloat = 7
 }
 
 // MARK: - SummarizationSheet
@@ -72,7 +77,7 @@ struct SummarizationSheet: View {
                 Image(systemName: "sparkles")
                     .font(.system(size: IconSize.xxl))
                     .foregroundStyle(Color.Accent.primary.opacity(0.3))
-                    .blur(radius: 20)
+                    .blur(radius: AnimationConstants.iconGlowRadius)
 
                 Image(systemName: "sparkles")
                     .font(.system(size: IconSize.xxl))
@@ -385,11 +390,11 @@ private struct TypingIndicator: View {
     @State private var animatingDot = 0
 
     var body: some View {
-        HStack(spacing: 4) {
+        HStack(spacing: AnimationConstants.typingDotSpacing) {
             ForEach(0 ..< 3) { index in
                 Circle()
                     .fill(Color.Accent.primary)
-                    .frame(width: 6, height: 6)
+                    .frame(width: AnimationConstants.typingDotSize, height: AnimationConstants.typingDotSize)
                     .scaleEffect(animatingDot == index ? 1.3 : 0.8)
                     .opacity(animatingDot == index ? 1 : 0.5)
             }
@@ -429,8 +434,11 @@ private struct FormattedSummaryText: View {
                     HStack(alignment: .top, spacing: Spacing.sm) {
                         Circle()
                             .fill(Color.Accent.primary)
-                            .frame(width: 6, height: 6)
-                            .padding(.top, 7)
+                            .frame(
+                                width: AnimationConstants.bulletPointSize,
+                                height: AnimationConstants.bulletPointSize
+                            )
+                            .padding(.top, AnimationConstants.bulletPointTopPadding)
 
                         Text(paragraph.text)
                             .font(Typography.bodyMedium)
@@ -450,60 +458,12 @@ private struct FormattedSummaryText: View {
             }
         }
         .onAppear {
-            cachedParagraphs = formatText(text)
+            cachedParagraphs = SummarizationTextFormatter.format(text)
         }
         .onChange(of: text) { _, newValue in
-            cachedParagraphs = formatText(newValue)
+            cachedParagraphs = SummarizationTextFormatter.format(newValue)
         }
     }
-
-    private func formatText(_ text: String) -> [FormattedParagraph] {
-        // Split by explicit newlines and bullet markers only
-        // Avoid splitting on ". " to preserve abbreviations like "Dr. Smith" or "U.S.A."
-        let components = text
-            .replacingOccurrences(of: "\\n", with: "\n")
-            .replacingOccurrences(of: "\n- ", with: "\n• ")
-            .components(separatedBy: "\n")
-            .map { $0.trimmingCharacters(in: .whitespaces) }
-            .filter { !$0.isEmpty }
-
-        return components.map { component in
-            if component.hasPrefix("•") {
-                return FormattedParagraph(
-                    text: String(component.dropFirst()).trimmingCharacters(in: .whitespaces),
-                    isHeading: false,
-                    isBullet: true
-                )
-            } else if component.hasPrefix("**"), component.hasSuffix("**") {
-                return FormattedParagraph(
-                    text: String(component.dropFirst(2).dropLast(2)),
-                    isHeading: true,
-                    isBullet: false
-                )
-            } else if component.count < 50, component.hasSuffix(":") {
-                return FormattedParagraph(
-                    text: component,
-                    isHeading: true,
-                    isBullet: false
-                )
-            } else {
-                return FormattedParagraph(
-                    text: component,
-                    isHeading: false,
-                    isBullet: false
-                )
-            }
-        }
-    }
-}
-
-// MARK: - Formatted Paragraph Model
-
-private struct FormattedParagraph: Identifiable {
-    let id = UUID()
-    let text: String
-    let isHeading: Bool
-    let isBullet: Bool
 }
 
 // MARK: - Blinking Cursor
