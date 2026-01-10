@@ -73,6 +73,7 @@ struct ShimmerModifier: ViewModifier {
 
     @State private var phase: CGFloat = 0
     @State private var isAnimating = false
+    @Environment(\.accessibilityReduceMotion) private var reduceMotion
 
     func body(content: Content) -> some View {
         content
@@ -84,16 +85,20 @@ struct ShimmerModifier: ViewModifier {
             .onAppear {
                 guard isActive, !isAnimating else { return }
                 isAnimating = true
-                withAnimation(
-                    .linear(duration: duration)
-                        .repeatForever(autoreverses: false)
-                ) {
-                    phase = 1
+                if !reduceMotion {
+                    withAnimation(
+                        .linear(duration: duration)
+                            .repeatForever(autoreverses: false)
+                    ) {
+                        phase = 1
+                    }
                 }
             }
             .onDisappear {
-                withAnimation(.linear(duration: 0.1)) {
-                    phase = 0
+                if !reduceMotion {
+                    withAnimation(.linear(duration: 0.1)) {
+                        phase = 0
+                    }
                 }
                 isAnimating = false
             }
@@ -134,10 +139,12 @@ struct PressEffectButtonStyle: ButtonStyle {
     let scale: CGFloat
     let enableHaptic: Bool
 
+    @Environment(\.accessibilityReduceMotion) private var reduceMotion
+
     func makeBody(configuration: Configuration) -> some View {
         configuration.label
             .scaleEffect(configuration.isPressed ? scale : 1.0)
-            .animation(AnimationTiming.springQuick, value: configuration.isPressed)
+            .animation(reduceMotion ? nil : AnimationTiming.springQuick, value: configuration.isPressed)
             .onChange(of: configuration.isPressed) { _, isPressed in
                 if isPressed && enableHaptic {
                     HapticManager.shared.cardPress()
@@ -237,17 +244,23 @@ struct BounceEffectModifier: ViewModifier {
     @Binding var trigger: Bool
 
     @State private var scale: CGFloat = 1.0
+    @Environment(\.accessibilityReduceMotion) private var reduceMotion
 
     func body(content: Content) -> some View {
         content
             .scaleEffect(scale)
             .onChange(of: trigger) { _, newValue in
                 if newValue {
-                    withAnimation(AnimationTiming.springBouncy) {
+                    if reduceMotion {
                         scale = 1.2
-                    }
-                    withAnimation(AnimationTiming.springBouncy.delay(0.1)) {
                         scale = 1.0
+                    } else {
+                        withAnimation(AnimationTiming.springBouncy) {
+                            scale = 1.2
+                        }
+                        withAnimation(AnimationTiming.springBouncy.delay(0.1)) {
+                            scale = 1.0
+                        }
                     }
                 }
             }

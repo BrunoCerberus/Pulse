@@ -2,6 +2,7 @@ import SwiftUI
 
 struct ArticleSkeletonView: View {
     @State private var isAnimating = false
+    @Environment(\.accessibilityReduceMotion) private var reduceMotion
 
     var body: some View {
         HStack(alignment: .top, spacing: 12) {
@@ -22,13 +23,21 @@ struct ArticleSkeletonView: View {
         }
         .padding()
         .onAppear {
-            withAnimation(.easeInOut(duration: 1.0).repeatForever(autoreverses: true)) {
-                isAnimating = true
+            if reduceMotion {
+                isAnimating = false
+            } else {
+                withAnimation(.easeInOut(duration: 1.0).repeatForever(autoreverses: true)) {
+                    isAnimating = true
+                }
             }
         }
         .onDisappear {
-            withAnimation(.linear(duration: 0.1)) {
+            if reduceMotion {
                 isAnimating = false
+            } else {
+                withAnimation(.linear(duration: 0.1)) {
+                    isAnimating = false
+                }
             }
         }
     }

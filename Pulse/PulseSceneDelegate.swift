@@ -145,18 +145,25 @@ final class PulseSceneDelegate: UIResponder, UIWindowSceneDelegate {
         )
         rootView.overrideUserInterfaceStyle = ThemeManager.shared.colorScheme == .dark ? .dark : .light
 
-        // Animate transition from splash to main app
-        UIView.transition(
-            with: window,
-            duration: 0.3,
-            options: .transitionCrossDissolve,
-            animations: {
-                window.rootViewController = rootView
-            },
-            completion: { [weak self] _ in
-                self?.hasSplashBeenShown = true
-            }
-        )
+        // Animate transition from splash to main app, respecting reduce motion preference
+        let shouldReduceMotion = UIAccessibility.isReduceMotionEnabled
+        if shouldReduceMotion {
+            // No animation for reduce motion
+            window.rootViewController = rootView
+            hasSplashBeenShown = true
+        } else {
+            UIView.transition(
+                with: window,
+                duration: 0.3,
+                options: .transitionCrossDissolve,
+                animations: {
+                    window.rootViewController = rootView
+                },
+                completion: { [weak self] _ in
+                    self?.hasSplashBeenShown = true
+                }
+            )
+        }
     }
 
     /**

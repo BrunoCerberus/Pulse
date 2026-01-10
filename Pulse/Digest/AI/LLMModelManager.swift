@@ -19,12 +19,21 @@ final class LLMModelManager: @unchecked Sendable {
     /// SwiftLlama actor instance - all operations are thread-safe
     private var swiftLlama: SwiftLlama?
     private var isCancelled = false
+    private var memoryWarningObserverToken: NSObjectProtocol?
 
     /// Lock for protecting swiftLlama reference changes only
     private let lock = NSLock()
 
     private init() {
         setupMemoryWarningObserver()
+    }
+
+    deinit {
+        #if canImport(UIKit)
+            if let token = memoryWarningObserverToken {
+                NotificationCenter.default.removeObserver(token)
+            }
+        #endif
     }
 
     // MARK: - Public API
@@ -237,7 +246,7 @@ final class LLMModelManager: @unchecked Sendable {
 
     private func setupMemoryWarningObserver() {
         #if canImport(UIKit)
-            NotificationCenter.default.addObserver(
+            memoryWarningObserverToken = NotificationCenter.default.addObserver(
                 forName: UIApplication.didReceiveMemoryWarningNotification,
                 object: nil,
                 queue: .main

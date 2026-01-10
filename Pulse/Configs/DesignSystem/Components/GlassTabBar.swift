@@ -28,6 +28,7 @@ struct GlassTabBar: View {
     var items: [GlassTabItem] = GlassTabItem.items
 
     @Environment(\.colorScheme) private var colorScheme
+    @Environment(\.accessibilityReduceMotion) private var reduceMotion
     @Namespace private var tabAnimation
 
     var body: some View {
@@ -53,8 +54,12 @@ struct GlassTabBar: View {
         let isSelected = selectedTab == item.id
 
         return Button {
-            withAnimation(AnimationTiming.springSmooth) {
+            if reduceMotion {
                 selectedTab = item.id
+            } else {
+                withAnimation(AnimationTiming.springSmooth) {
+                    selectedTab = item.id
+                }
             }
             HapticManager.shared.tabChange()
         } label: {

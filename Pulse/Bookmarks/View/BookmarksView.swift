@@ -77,7 +77,7 @@ struct BookmarksView<R: BookmarksNavigationRouter>: View {
         GlassCard(style: .thin, shadowStyle: .medium, padding: Spacing.xl) {
             VStack(spacing: Spacing.md) {
                 Image(systemName: "exclamationmark.triangle.fill")
-                    .font(.system(size: IconSize.xxl))
+                    .font(.largeTitle)
                     .foregroundStyle(Color.Semantic.warning)
 
                 Text(Constants.errorTitle)
@@ -111,7 +111,7 @@ struct BookmarksView<R: BookmarksNavigationRouter>: View {
         GlassCard(style: .thin, shadowStyle: .medium, padding: Spacing.xl) {
             VStack(spacing: Spacing.md) {
                 Image(systemName: "bookmark")
-                    .font(.system(size: IconSize.xxl))
+                    .font(.largeTitle)
                     .foregroundStyle(Color.Accent.primary)
 
                 Text(Constants.emptyTitle)

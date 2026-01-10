@@ -32,6 +32,7 @@ struct SettingsMutedContentSection: View {
                 } label: {
                     Image(systemName: "plus.circle.fill")
                 }
+                .accessibilityLabel("Add source")
                 .disabled(newMutedSource.isEmpty)
             }
 
@@ -45,6 +46,7 @@ struct SettingsMutedContentSection: View {
                         Image(systemName: "xmark.circle")
                             .foregroundStyle(.secondary)
                     }
+                    .accessibilityLabel("Remove source")
                 }
             }
         }
@@ -61,6 +63,7 @@ struct SettingsMutedContentSection: View {
                 } label: {
                     Image(systemName: "plus.circle.fill")
                 }
+                .accessibilityLabel("Add keyword")
                 .disabled(newMutedKeyword.isEmpty)
             }
 
@@ -74,6 +77,7 @@ struct SettingsMutedContentSection: View {
                         Image(systemName: "xmark.circle")
                             .foregroundStyle(.secondary)
                     }
+                    .accessibilityLabel("Remove keyword")
                 }
             }
         }

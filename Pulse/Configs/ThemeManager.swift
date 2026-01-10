@@ -1,6 +1,7 @@
 import Combine
 import SwiftUI
 
+@MainActor
 final class ThemeManager: ObservableObject {
     static let shared = ThemeManager()
 
