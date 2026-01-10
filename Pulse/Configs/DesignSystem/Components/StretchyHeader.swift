@@ -26,20 +26,25 @@ struct StretchyHeader<Content: View>: View {
         GeometryReader { proxy in
             let minY = proxy.frame(in: .global).minY
             let stretchAmount = max(0, minY)
-            let height = baseHeight + stretchAmount
+            // Ensure height never goes below baseHeight to prevent zero-dimension issues during transitions
+            let height = max(baseHeight, baseHeight + stretchAmount)
 
-            stretchyContent(height: height, width: proxy.size.width)
+            stretchyContent(height: height, width: max(1, proxy.size.width))
                 .offset(y: -minY)
         }
         .frame(height: baseHeight)
+        .frame(minHeight: baseHeight)
     }
 
     @ViewBuilder
     private func stretchyContent(height: CGFloat, width _: CGFloat) -> some View {
         GeometryReader { geo in
+            let safeWidth = max(1, geo.size.width)
+            let safeHeight = max(baseHeight, height)
+
             ZStack(alignment: .bottom) {
                 content
-                    .frame(width: geo.size.width, height: height)
+                    .frame(width: safeWidth, height: safeHeight)
                     .clipped()
 
                 if showGradientOverlay {
@@ -47,9 +52,9 @@ struct StretchyHeader<Content: View>: View {
                         .frame(height: gradientHeight)
                 }
             }
-            .frame(width: geo.size.width, height: height)
+            .frame(width: safeWidth, height: safeHeight)
         }
-        .frame(height: height)
+        .frame(height: max(baseHeight, height))
     }
 }
 

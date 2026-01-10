@@ -6,12 +6,17 @@ import SwiftUI
 struct HeroTransitionSourceModifier: ViewModifier {
     let articleId: String
     let hasImage: Bool
+    let cornerRadius: CGFloat
     @Environment(\.heroTransitionNamespace) private var namespace
 
     func body(content: Content) -> some View {
         if let namespace, hasImage {
             content
-                .matchedTransitionSource(id: articleId, in: namespace)
+                .matchedTransitionSource(id: articleId, in: namespace) { configuration in
+                    configuration
+                        .background(.clear)
+                        .clipShape(RoundedRectangle(cornerRadius: cornerRadius, style: .continuous))
+                }
         } else {
             content
         }
@@ -43,8 +48,17 @@ extension View {
     /// - Parameters:
     ///   - articleId: Unique identifier for the article
     ///   - hasImage: Whether the article has an image to animate
-    func heroTransitionSource(articleId: String, hasImage: Bool) -> some View {
-        modifier(HeroTransitionSourceModifier(articleId: articleId, hasImage: hasImage))
+    ///   - cornerRadius: Corner radius for the transition clip shape
+    func heroTransitionSource(
+        articleId: String,
+        hasImage: Bool,
+        cornerRadius: CGFloat = CornerRadius.sm
+    ) -> some View {
+        modifier(HeroTransitionSourceModifier(
+            articleId: articleId,
+            hasImage: hasImage,
+            cornerRadius: cornerRadius
+        ))
     }
 
     /// Marks this view as the destination for a hero transition.

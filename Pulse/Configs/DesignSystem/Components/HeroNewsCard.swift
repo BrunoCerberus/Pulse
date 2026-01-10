@@ -34,7 +34,7 @@ struct HeroNewsCard: View {
             .depthShadow(.elevated)
         }
         .pressEffect()
-        .heroTransitionSource(articleId: item.id, hasImage: item.imageURL != nil)
+        .heroTransitionSource(articleId: item.id, hasImage: item.imageURL != nil, cornerRadius: CornerRadius.lg)
         .onAppear {
             startPulseAnimation()
         }
@@ -187,7 +187,7 @@ struct FeaturedArticleCard: View {
             .depthShadow(.medium)
         }
         .pressEffect()
-        .heroTransitionSource(articleId: item.id, hasImage: item.imageURL != nil)
+        .heroTransitionSource(articleId: item.id, hasImage: item.imageURL != nil, cornerRadius: CornerRadius.lg)
     }
 
     @ViewBuilder
