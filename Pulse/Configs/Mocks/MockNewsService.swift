@@ -222,7 +222,11 @@ final class MockLLMService: LLMService {
         modelStatusSubject.send(.notLoaded)
     }
 
-    func generate(prompt _: String, systemPrompt _: String?, config _: LLMInferenceConfig) -> AnyPublisher<String, Error> {
+    func generate(
+        prompt _: String,
+        systemPrompt _: String?,
+        config _: LLMInferenceConfig
+    ) -> AnyPublisher<String, Error> {
         Just(())
             .delay(for: .seconds(generateDelay), scheduler: DispatchQueue.main)
             .flatMap { [self] _ in
@@ -231,7 +235,11 @@ final class MockLLMService: LLMService {
             .eraseToAnyPublisher()
     }
 
-    func generateStream(prompt _: String, systemPrompt _: String?, config _: LLMInferenceConfig) -> AsyncThrowingStream<String, Error> {
+    func generateStream(
+        prompt _: String,
+        systemPrompt _: String?,
+        config _: LLMInferenceConfig
+    ) -> AsyncThrowingStream<String, Error> {
         AsyncThrowingStream { [self] continuation in
             Task {
                 // Use generateDelay per word for longer running stream
