@@ -28,6 +28,14 @@ final class LLMModelManager: @unchecked Sendable {
         setupMemoryWarningObserver()
     }
 
+    deinit {
+        #if canImport(UIKit)
+            if let token = memoryWarningObserverToken {
+                NotificationCenter.default.removeObserver(token)
+            }
+        #endif
+    }
+
     // MARK: - Public API
 
     /// Check if model is currently loaded
