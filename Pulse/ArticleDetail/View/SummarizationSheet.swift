@@ -407,9 +407,11 @@ private struct FormattedSummaryText: View {
     let text: String
     let isGenerating: Bool
 
+    @State private var cachedParagraphs: [FormattedParagraph] = []
+
     var body: some View {
         VStack(alignment: .leading, spacing: Spacing.md) {
-            ForEach(Array(formattedParagraphs.enumerated()), id: \.offset) { index, paragraph in
+            ForEach(Array(cachedParagraphs.enumerated()), id: \.offset) { index, paragraph in
                 if paragraph.isHeading {
                     Text(paragraph.text)
                         .font(Typography.labelLarge)
@@ -436,23 +438,24 @@ private struct FormattedSummaryText: View {
             }
 
             if isGenerating {
-                // Cursor blink effect
                 BlinkingCursor()
             }
         }
-    }
-
-    private var formattedParagraphs: [FormattedParagraph] {
-        formatText(text)
+        .onAppear {
+            cachedParagraphs = formatText(text)
+        }
+        .onChange(of: text) { _, newValue in
+            cachedParagraphs = formatText(newValue)
+        }
     }
 
     private func formatText(_ text: String) -> [FormattedParagraph] {
-        // Split by common separators and clean up
+        // Split by explicit newlines and bullet markers only
+        // Avoid splitting on ". " to preserve abbreviations like "Dr. Smith" or "U.S.A."
         let components = text
             .replacingOccurrences(of: "\\n", with: "\n")
-            .replacingOccurrences(of: "- ", with: "\n• ")
-            .replacingOccurrences(of: "• ", with: "\n• ")
-            .replacingOccurrences(of: ". ", with: ".\n")
+            .replacingOccurrences(of: "\n- ", with: "\n• ")
+            .replacingOccurrences(of: "\n• ", with: "\n• ")
             .components(separatedBy: "\n")
             .map { $0.trimmingCharacters(in: .whitespaces) }
             .filter { !$0.isEmpty }
