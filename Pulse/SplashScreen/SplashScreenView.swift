@@ -25,7 +25,7 @@ struct SplashScreenView: View {
 
             LottieView(animation: .named("splash_animation"))
                 .playing(loopMode: .playOnce)
-                .animationSpeed(reduceMotion ? 4.0 : 2.0)
+                .animationSpeed(reduceMotion ? 100.0 : 2.0)
                 .animationDidFinish { _ in
                     if reduceMotion {
                         isAnimationComplete = true
