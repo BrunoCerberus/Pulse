@@ -57,6 +57,10 @@ struct SummarizationSheet: View {
                 contentAppeared = true
             }
         }
+        .onDisappear {
+            headerAppeared = false
+            contentAppeared = false
+        }
     }
 
     // MARK: - Header Section
@@ -181,7 +185,7 @@ struct SummarizationSheet: View {
                     .foregroundStyle(.secondary)
             }
 
-            Text("\(Int(progress * 100))%")
+            Text("\(Int((progress * 100).rounded()))%")
                 .font(Typography.headlineSmall)
                 .foregroundStyle(Color.Accent.primary)
                 .monospacedDigit()
@@ -392,9 +396,13 @@ private struct TypingIndicator: View {
         }
         .task {
             while !Task.isCancelled {
-                try? await Task.sleep(for: .milliseconds(300))
-                withAnimation(.easeInOut(duration: 0.2)) {
-                    animatingDot = (animatingDot + 1) % 3
+                do {
+                    try await Task.sleep(for: .milliseconds(300))
+                    withAnimation(.easeInOut(duration: 0.2)) {
+                        animatingDot = (animatingDot + 1) % 3
+                    }
+                } catch {
+                    break
                 }
             }
         }
@@ -411,7 +419,7 @@ private struct FormattedSummaryText: View {
 
     var body: some View {
         VStack(alignment: .leading, spacing: Spacing.md) {
-            ForEach(Array(cachedParagraphs.enumerated()), id: \.offset) { index, paragraph in
+            ForEach(Array(cachedParagraphs.enumerated()), id: \.element.id) { index, paragraph in
                 if paragraph.isHeading {
                     Text(paragraph.text)
                         .font(Typography.labelLarge)
@@ -455,7 +463,6 @@ private struct FormattedSummaryText: View {
         let components = text
             .replacingOccurrences(of: "\\n", with: "\n")
             .replacingOccurrences(of: "\n- ", with: "\n• ")
-            .replacingOccurrences(of: "\n• ", with: "\n• ")
             .components(separatedBy: "\n")
             .map { $0.trimmingCharacters(in: .whitespaces) }
             .filter { !$0.isEmpty }
@@ -492,7 +499,8 @@ private struct FormattedSummaryText: View {
 
 // MARK: - Formatted Paragraph Model
 
-private struct FormattedParagraph {
+private struct FormattedParagraph: Identifiable {
+    let id = UUID()
     let text: String
     let isHeading: Bool
     let isBullet: Bool
