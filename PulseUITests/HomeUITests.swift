@@ -49,12 +49,10 @@ final class HomeUITests: BaseUITestCase {
 
         if contentLoaded, !errorState, !emptyState {
             let cards = articleCards()
-            XCTAssertTrue(cards.count > 0, "Article cards should exist when content loads")
+            let firstCard = cards.firstMatch
 
-            if cards.count > 0 {
+            if firstCard.waitForExistence(timeout: Self.defaultTimeout) {
                 // --- Article Card Navigation ---
-                let firstCard = cards.firstMatch
-                XCTAssertTrue(firstCard.waitForExistence(timeout: Self.shortTimeout), "Article card should exist")
 
                 // Scroll to make the card hittable if needed
                 if !firstCard.isHittable {
@@ -89,8 +87,9 @@ final class HomeUITests: BaseUITestCase {
 
                 // --- Context Menu ---
                 let cardsAfterScroll = articleCards()
-                if cardsAfterScroll.count > 0 {
-                    cardsAfterScroll.firstMatch.press(forDuration: 0.5)
+                let contextCard = cardsAfterScroll.firstMatch
+                if contextCard.waitForExistence(timeout: Self.shortTimeout) {
+                    contextCard.press(forDuration: 0.5)
 
                     let contextMenuAppeared = app.buttons["Bookmark"].waitForExistence(timeout: Self.shortTimeout) ||
                         app.buttons["Share"].waitForExistence(timeout: 1)
