@@ -100,7 +100,7 @@ struct SearchView<R: SearchNavigationRouter>: View {
             GlassCard(style: .thin, shadowStyle: .medium, padding: Spacing.xl) {
                 VStack(spacing: Spacing.md) {
                     Image(systemName: "magnifyingglass")
-                        .font(.system(size: IconSize.xxl))
+                        .font(.largeTitle)
                         .foregroundStyle(Color.Accent.primary)
 
                     Text(Constants.placeholderTitle)
@@ -132,7 +132,7 @@ struct SearchView<R: SearchNavigationRouter>: View {
                                     } label: {
                                         HStack(spacing: Spacing.xs) {
                                             Image(systemName: "clock")
-                                                .font(.system(size: IconSize.sm))
+                                                .font(.body)
                                             Text(suggestion)
                                                 .font(Typography.labelMedium)
                                         }
@@ -171,7 +171,7 @@ struct SearchView<R: SearchNavigationRouter>: View {
         GlassCard(style: .thin, shadowStyle: .medium, padding: Spacing.xl) {
             VStack(spacing: Spacing.md) {
                 Image(systemName: "exclamationmark.triangle.fill")
-                    .font(.system(size: IconSize.xxl))
+                    .font(.largeTitle)
                     .foregroundStyle(Color.Semantic.error)
 
                 Text(Constants.errorTitle)
@@ -204,7 +204,7 @@ struct SearchView<R: SearchNavigationRouter>: View {
         GlassCard(style: .thin, shadowStyle: .medium, padding: Spacing.xl) {
             VStack(spacing: Spacing.md) {
                 Image(systemName: "doc.text.magnifyingglass")
-                    .font(.system(size: IconSize.xxl))
+                    .font(.largeTitle)
                     .foregroundStyle(.secondary)
 
                 Text(Constants.emptyTitle)

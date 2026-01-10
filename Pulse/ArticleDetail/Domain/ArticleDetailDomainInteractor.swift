@@ -373,8 +373,9 @@ final class ArticleDetailDomainInteractor: CombineInteractor {
     private func trackBackgroundTask(_ task: Task<Void, Never>) {
         backgroundTasks.insert(task)
         Task { [weak self] in
+            guard let self else { return }
             await task.value
-            self?.backgroundTasks.remove(task)
+            backgroundTasks.remove(task)
         }
     }
 

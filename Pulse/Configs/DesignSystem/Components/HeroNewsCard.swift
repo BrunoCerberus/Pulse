@@ -9,6 +9,7 @@ struct HeroNewsCard: View {
     @State private var isPulsing = false
     @State private var hasStartedPulsing = false
     @Environment(\.colorScheme) private var colorScheme
+    @Environment(\.accessibilityReduceMotion) private var reduceMotion
 
     private let cardWidth: CGFloat = 300
     private let cardHeight: CGFloat = 200
@@ -147,17 +148,25 @@ struct HeroNewsCard: View {
     private func startPulseAnimation() {
         guard !hasStartedPulsing else { return }
         hasStartedPulsing = true
-        withAnimation(
-            .easeInOut(duration: 1.0)
-                .repeatForever(autoreverses: true)
-        ) {
-            isPulsing = true
+        if reduceMotion {
+            isPulsing = false
+        } else {
+            withAnimation(
+                .easeInOut(duration: 1.0)
+                    .repeatForever(autoreverses: true)
+            ) {
+                isPulsing = true
+            }
         }
     }
 
     private func stopPulseAnimation() {
-        withAnimation(.linear(duration: 0.1)) {
+        if reduceMotion {
             isPulsing = false
+        } else {
+            withAnimation(.linear(duration: 0.1)) {
+                isPulsing = false
+            }
         }
         hasStartedPulsing = false
     }

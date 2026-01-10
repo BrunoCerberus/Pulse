@@ -12,6 +12,8 @@ struct RootView: View {
 
     let serviceLocator: ServiceLocator
 
+    @Environment(\.accessibilityReduceMotion) private var reduceMotion
+
     var body: some View {
         Group {
             switch authManager.authState {
@@ -24,7 +26,7 @@ struct RootView: View {
             }
         }
         .preferredColorScheme(themeManager.colorScheme)
-        .animation(.easeInOut(duration: 0.3), value: authManager.authState)
+        .animation(reduceMotion ? nil : .easeInOut(duration: 0.3), value: authManager.authState)
     }
 
     private var loadingView: some View {

@@ -16,6 +16,8 @@ struct SplashScreenView: View {
     @State private var logoScale: CGFloat = 0.8
     @State private var logoOpacity: Double = 0
 
+    @Environment(\.accessibilityReduceMotion) private var reduceMotion
+
     var body: some View {
         ZStack {
             meshBackground
@@ -23,10 +25,14 @@ struct SplashScreenView: View {
 
             LottieView(animation: .named("splash_animation"))
                 .playing(loopMode: .playOnce)
-                .animationSpeed(2.0)
+                .animationSpeed(reduceMotion ? 4.0 : 2.0)
                 .animationDidFinish { _ in
-                    withAnimation(.easeOut(duration: AnimationTiming.normal)) {
+                    if reduceMotion {
                         isAnimationComplete = true
+                    } else {
+                        withAnimation(.easeOut(duration: AnimationTiming.normal)) {
+                            isAnimationComplete = true
+                        }
                     }
                     DispatchQueue.main.asyncAfter(deadline: .now() + 0.3) {
                         onComplete()
@@ -40,9 +46,14 @@ struct SplashScreenView: View {
         }
         .opacity(isAnimationComplete ? 0 : 1)
         .onAppear {
-            withAnimation(AnimationTiming.springBouncy.delay(0.2)) {
+            if reduceMotion {
                 logoScale = 1.0
                 logoOpacity = 1.0
+            } else {
+                withAnimation(AnimationTiming.springBouncy.delay(0.2)) {
+                    logoScale = 1.0
+                    logoOpacity = 1.0
+                }
             }
         }
     }
