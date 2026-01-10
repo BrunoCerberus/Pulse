@@ -15,6 +15,4 @@ enum ArticleDetailViewEvent: Equatable {
     // Sheet management
     case onShareSheetDismissed
     case onSummarizationSheetDismissed
-    case onSummarizationStarted
-    case onSummarizationCancelled
 }

@@ -14,10 +14,7 @@ struct ArticleDetailViewState: Equatable {
     // Share sheet
     var showShareSheet: Bool
 
-    // Summarization
-    var summarizationState: SummarizationState
-    var generatedSummary: String
-    var modelStatus: LLMModelStatus
+    // Summarization sheet visibility
     var showSummarizationSheet: Bool
 
     static func initial(article: Article) -> ArticleDetailViewState {
@@ -28,9 +25,6 @@ struct ArticleDetailViewState: Equatable {
             processedDescription: nil,
             isBookmarked: false,
             showShareSheet: false,
-            summarizationState: .idle,
-            generatedSummary: "",
-            modelStatus: .notLoaded,
             showSummarizationSheet: false
         )
     }
