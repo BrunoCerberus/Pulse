@@ -96,6 +96,7 @@ struct ArticleDetailView: View {
             viewModel.handle(event: .onAppear)
         }
         .enableSwipeBack()
+        .heroTransitionDestination(articleId: viewModel.viewState.article.id, hasImage: viewModel.viewState.article.imageURL != nil)
     }
 
     private var contentCard: some View {

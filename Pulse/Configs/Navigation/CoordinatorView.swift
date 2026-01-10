@@ -8,6 +8,7 @@ import SwiftUI
 struct CoordinatorView: View {
     @StateObject private var coordinator: Coordinator
     @StateObject private var themeManager = ThemeManager.shared
+    @Namespace private var heroNamespace
 
     /// Creates the view with an injected ServiceLocator.
     /// - Parameter serviceLocator: Shared dependency resolver for the app
@@ -68,6 +69,7 @@ struct CoordinatorView: View {
         } effects: { tab in
             tab.symbolEffect
         }
+        .heroTransitionNamespace(heroNamespace)
         .preferredColorScheme(themeManager.colorScheme)
         .onChange(of: coordinator.selectedTab) { _, _ in
             HapticManager.shared.tabChange()

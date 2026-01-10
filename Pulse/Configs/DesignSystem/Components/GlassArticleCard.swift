@@ -10,6 +10,7 @@ struct GlassArticleCard: View {
     let imageURL: URL?
     let category: NewsCategory?
     let isBookmarked: Bool
+    let articleId: String
     let onTap: () -> Void
     let onBookmark: () -> Void
     let onShare: () -> Void
@@ -24,6 +25,7 @@ struct GlassArticleCard: View {
         imageURL: URL? = nil,
         category: NewsCategory? = nil,
         isBookmarked: Bool = false,
+        articleId: String,
         onTap: @escaping () -> Void,
         onBookmark: @escaping () -> Void,
         onShare: @escaping () -> Void
@@ -35,6 +37,7 @@ struct GlassArticleCard: View {
         self.imageURL = imageURL
         self.category = category
         self.isBookmarked = isBookmarked
+        self.articleId = articleId
         self.onTap = onTap
         self.onBookmark = onBookmark
         self.onShare = onShare
@@ -82,6 +85,7 @@ struct GlassArticleCard: View {
                 Spacer(minLength: Spacing.xs)
 
                 articleImage
+                    .heroTransitionSource(articleId: articleId, hasImage: imageURL != nil)
             }
             .padding(Spacing.md)
             .glassBackground(style: .solid, cornerRadius: CornerRadius.lg)
@@ -156,6 +160,7 @@ extension GlassArticleCard {
             imageURL: item.imageURL,
             category: item.category,
             isBookmarked: isBookmarked,
+            articleId: item.id,
             onTap: onTap,
             onBookmark: onBookmark,
             onShare: onShare
@@ -232,6 +237,7 @@ struct GlassArticleCardCompact: View {
                     imageURL: URL(string: "https://picsum.photos/200"),
                     category: .technology,
                     isBookmarked: false,
+                    articleId: "preview-1",
                     onTap: {},
                     onBookmark: {},
                     onShare: {}
@@ -245,6 +251,7 @@ struct GlassArticleCardCompact: View {
                     imageURL: nil,
                     category: .world,
                     isBookmarked: true,
+                    articleId: "preview-2",
                     onTap: {},
                     onBookmark: {},
                     onShare: {}
