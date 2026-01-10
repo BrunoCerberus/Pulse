@@ -15,7 +15,7 @@ final class NavigationUITests: BaseUITestCase {
         let tabBar = app.tabBars.firstMatch
         XCTAssertTrue(tabBar.exists, "Tab bar should exist")
 
-        let expectedTabs = ["Home", "For You", "Digest", "Bookmarks", "Search"]
+        let expectedTabs = ["Home", "For You", "Bookmarks", "Search"]
         for tabName in expectedTabs {
             let tab = tabBar.buttons[tabName]
             XCTAssertTrue(tab.exists, "Tab '\(tabName)' should exist in tab bar")
@@ -32,12 +32,6 @@ final class NavigationUITests: BaseUITestCase {
         navigateToForYouTab()
         let navBar = app.navigationBars["For You"]
         XCTAssertTrue(navBar.exists, "For You tab should display For You navigation bar")
-    }
-
-    func testNavigateToDigestTab() {
-        navigateToDigestTab()
-        let navBar = app.navigationBars["Digest"]
-        XCTAssertTrue(navBar.exists, "Digest tab should display Digest navigation bar")
     }
 
     func testNavigateToBookmarksTab() {
@@ -167,7 +161,7 @@ final class NavigationUITests: BaseUITestCase {
 
     func testTabBarRemainsVisibleOnAllTabs() {
         let tabBar = app.tabBars.firstMatch
-        let tabs = ["Home", "For You", "Digest", "Bookmarks", "Search"]
+        let tabs = ["Home", "For You", "Bookmarks", "Search"]
 
         for tabName in tabs {
             navigateToTab(tabName)
