@@ -199,11 +199,9 @@ class BaseUITestCase: XCTestCase {
 
     // MARK: - Element Helpers
 
-    /// Find article cards
+    /// Find article cards by accessibility identifier
     func articleCards() -> XCUIElementQuery {
-        app.buttons.matching(
-            NSPredicate(format: "label CONTAINS[c] 'ago' OR label CONTAINS[c] 'hour' OR label CONTAINS[c] 'minute'")
-        )
+        app.buttons.matching(identifier: "articleCard")
     }
 
     /// Check if element is visible in the viewport

@@ -47,7 +47,7 @@ Pulse is an iOS news aggregation app built with **Unidirectional Data Flow Archi
    - **Domain Layer**: Interactors implementing `CombineInteractor`
    - **Service Layer**: Protocol-based services with Live/Mock implementations
 
-2. **Core Protocols** (in `Configs/Extensions/`):
+2. **Core Protocols** (from `EntropyCore` package):
    ```swift
    // ViewModel protocol
    protocol CombineViewModel: ObservableObject {
@@ -302,11 +302,12 @@ final class LiveNewsService: APIRequest, NewsService {
 
 | File | Purpose |
 |------|---------|
-| **Architecture Protocols** | |
-| `CombineViewModel.swift` | Base protocol for ViewModels |
-| `CombineInteractor.swift` | Base protocol for domain interactors |
-| `ViewStateReducing.swift` | Protocol for state transformation |
-| `DomainEventActionMap.swift` | Protocol for event-to-action mapping |
+| **Architecture Protocols (EntropyCore)** | |
+| `CombineViewModel` | Base protocol for ViewModels |
+| `CombineInteractor` | Base protocol for domain interactors |
+| `ViewStateReducing` | Protocol for state transformation |
+| `DomainEventActionMap` | Protocol for event-to-action mapping |
+| `ServiceLocator` | Dependency injection container |
 | **Authentication** | |
 | `AuthService.swift` | Protocol for authentication operations |
 | `LiveAuthService.swift` | Firebase Auth implementation (Google + Apple) |
@@ -320,7 +321,6 @@ final class LiveNewsService: APIRequest, NewsService {
 | `DeeplinkRouter.swift` | Routes deeplinks to coordinator |
 | `*NavigationRouter.swift` | Feature-specific navigation routers |
 | **Infrastructure** | |
-| `ServiceLocator.swift` | Dependency injection container |
 | `DeeplinkManager.swift` | URL scheme handling |
 | `ThemeManager.swift` | Dark/light mode management |
 | `StorageService.swift` | SwiftData persistence |

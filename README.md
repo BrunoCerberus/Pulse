@@ -166,7 +166,7 @@ Pulse/
 │   └── Configs/
 │       ├── Navigation/     # Coordinator, Page, CoordinatorView, DeeplinkRouter
 │       ├── DesignSystem/   # ColorSystem, Typography, Components, HapticManager
-│       ├── Extensions/     # CombineViewModel, CombineInteractor, ViewStateReducing
+│       ├── Extensions/     # SwipeBackGesture and other utilities
 │       ├── Models/         # Article, NewsCategory, UserPreferences
 │       ├── Networking/     # APIKeysProvider, BaseURLs
 │       ├── Storage/        # StorageService (SwiftData)
@@ -183,7 +183,7 @@ Pulse/
 
 | Package | Purpose |
 |---------|---------|
-| [EntropyCore](https://github.com/BrunoCerberus/EntropyCore) | Network layer abstraction |
+| [EntropyCore](https://github.com/BrunoCerberus/EntropyCore) | UDF architecture protocols, networking, DI container |
 | [Firebase](https://github.com/firebase/firebase-ios-sdk) | Authentication (Google + Apple Sign-In) |
 | [GoogleSignIn](https://github.com/google/GoogleSignIn-iOS) | Google Sign-In SDK |
 | [SnapshotTesting](https://github.com/pointfreeco/swift-snapshot-testing) | Snapshot testing |

@@ -1,3 +1,4 @@
+import EntropyCore
 import Foundation
 
 struct HomeEventActionMap: DomainEventActionMap {

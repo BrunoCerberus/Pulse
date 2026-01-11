@@ -1,3 +1,4 @@
+import EntropyCore
 import SwiftUI
 
 /// Protocol for tabs that support animated symbol effects.

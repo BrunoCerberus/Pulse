@@ -1,4 +1,5 @@
 import Combine
+import EntropyCore
 import Foundation
 
 final class SummarizationDomainInteractor: CombineInteractor {

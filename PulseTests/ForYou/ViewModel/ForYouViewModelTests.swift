@@ -1,4 +1,5 @@
 import Combine
+import EntropyCore
 import Foundation
 @testable import Pulse
 import Testing
@@ -294,8 +295,8 @@ struct ForYouViewModelTests {
         mockForYouService.feedResult = .success(Article.mockArticles)
         sut.handle(event: .onAppear)
 
-        // Wait for articles to load
-        let loaded = await waitForCondition { [sut] in
+        // Wait for articles to load (1 second timeout for CI reliability)
+        let loaded = await waitForCondition(timeout: 1_000_000_000) { [sut] in
             !sut.viewState.articles.isEmpty
         }
         #expect(loaded)
@@ -313,7 +314,7 @@ struct ForYouViewModelTests {
         sut.handle(event: .onLoadMore)
 
         // Wait for loading to stop (load more silently fails, preserving existing articles)
-        let loadingStopped = await waitForCondition { [sut] in
+        let loadingStopped = await waitForCondition(timeout: 1_000_000_000) { [sut] in
             !sut.viewState.isLoadingMore
         }
         #expect(loadingStopped)
@@ -328,8 +329,8 @@ struct ForYouViewModelTests {
         mockForYouService.feedResult = .success(Article.mockArticles)
         sut.handle(event: .onAppear)
 
-        // Wait for articles to load
-        let loaded = await waitForCondition { [sut] in
+        // Wait for articles to load (1 second timeout for CI reliability)
+        let loaded = await waitForCondition(timeout: 1_000_000_000) { [sut] in
             !sut.viewState.articles.isEmpty
         }
         #expect(loaded)
@@ -344,8 +345,8 @@ struct ForYouViewModelTests {
 
         sut.handle(event: .onRefresh)
 
-        // Wait for error message to appear
-        let hasError = await waitForCondition { [sut] in
+        // Wait for error message to appear (1 second timeout for CI reliability)
+        let hasError = await waitForCondition(timeout: 1_000_000_000) { [sut] in
             sut.viewState.errorMessage == "Refresh failed"
         }
         #expect(hasError)
@@ -363,8 +364,8 @@ struct ForYouViewModelTests {
 
         sut.handle(event: .onAppear)
 
-        // Wait for error message to appear
-        let hasError = await waitForCondition { [sut] in
+        // Wait for error message to appear (1 second timeout for CI reliability)
+        let hasError = await waitForCondition(timeout: 1_000_000_000) { [sut] in
             sut.viewState.errorMessage == "Initial error"
         }
         #expect(hasError)
@@ -374,8 +375,8 @@ struct ForYouViewModelTests {
 
         sut.handle(event: .onRefresh)
 
-        // Wait for error to be cleared and articles to load
-        let recovered = await waitForCondition { [sut] in
+        // Wait for error to be cleared and articles to load (1 second timeout for CI reliability)
+        let recovered = await waitForCondition(timeout: 1_000_000_000) { [sut] in
             sut.viewState.errorMessage == nil && !sut.viewState.articles.isEmpty
         }
         #expect(recovered)

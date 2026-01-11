@@ -1,5 +1,6 @@
 @testable import Pulse
 import Combine
+import EntropyCore
 import SnapshotTesting
 import StoreKit
 import SwiftUI

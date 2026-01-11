@@ -33,7 +33,7 @@
       "kind" : "remoteSourceControl",
       "location" : "https://github.com/BrunoCerberus/EntropyCore.git",
       "state" : {
-        "revision" : "7603844047743446715de4069799b086fa90204c"
+        "revision" : "29a981230b89ef26fba90094ed81be79e996557e"
       }
     },
     {

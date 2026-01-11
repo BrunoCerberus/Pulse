@@ -1,3 +1,4 @@
+import EntropyCore
 import SwiftUI
 
 /// Root view that switches between SignIn and main app based on auth state.

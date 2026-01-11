@@ -1,4 +1,5 @@
 import Combine
+import EntropyCore
 import Foundation
 @testable import Pulse
 import Testing
@@ -69,16 +70,20 @@ struct SummarizationViewModelTests {
         // Start summarization
         sut.handle(event: .onSummarizationStarted)
 
-        // Wait for it to start
-        try await Task.sleep(nanoseconds: 50_000_000)
+        // Wait for it to start (not idle anymore)
+        let started = await waitForCondition(timeout: 500_000_000) { [sut] in
+            sut.viewState.summarizationState != .idle
+        }
+        #expect(started, "Summarization should have started")
 
         // Cancel it
         sut.handle(event: .onSummarizationCancelled)
 
-        // Wait for state to propagate
-        try await Task.sleep(nanoseconds: 100_000_000)
-
-        #expect(sut.viewState.summarizationState == .idle)
+        // Wait for state to reset to idle
+        let cancelled = await waitForCondition(timeout: 500_000_000) { [sut] in
+            sut.viewState.summarizationState == .idle
+        }
+        #expect(cancelled, "Summarization should be cancelled")
         #expect(sut.viewState.generatedSummary == "")
     }
 
@@ -153,7 +158,11 @@ struct SummarizationViewModelTests {
 
         sut.handle(event: .onSummarizationStarted)
 
-        try await Task.sleep(nanoseconds: 300_000_000)
+        // Wait for summarization to complete
+        let completed = await waitForCondition(timeout: 1_000_000_000) { [sut] in
+            sut.viewState.summarizationState == .completed
+        }
+        #expect(completed, "Summarization should complete")
 
         // Article is still present after summarization
         #expect(sut.viewState.article == article)

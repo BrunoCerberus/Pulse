@@ -33,7 +33,7 @@ Pulse/
 │   │   └── Router/             # Navigation routers (NavigationRouter protocol)
 │   └── Configs/
 │       ├── Navigation/         # Coordinator, Page, CoordinatorView, DeeplinkRouter
-│       ├── Extensions/         # CombineViewModel, CombineInteractor, ViewStateReducing
+│       ├── Extensions/         # SwipeBackGesture and other utilities
 │       ├── DesignSystem/       # ColorSystem, Typography, Components
 │       ├── Models/             # Article, NewsCategory, UserPreferences
 │       ├── Storage/            # StorageService (SwiftData)
@@ -311,10 +311,11 @@ final class HomeNavigationRouter: NavigationRouter {
 
 | Protocol | Purpose | Location |
 |----------|---------|----------|
-| `CombineViewModel` | Base for ViewModels with `viewState` and `handle(event:)` | `Configs/Extensions/` |
-| `CombineInteractor` | Base for Interactors with `statePublisher` and `dispatch(action:)` | `Configs/Extensions/` |
-| `ViewStateReducing` | Transforms DomainState → ViewState | `Configs/Extensions/` |
-| `DomainEventActionMap` | Maps ViewEvent → DomainAction | `Configs/Extensions/` |
+| `CombineViewModel` | Base for ViewModels with `viewState` and `handle(event:)` | `EntropyCore` |
+| `CombineInteractor` | Base for Interactors with `statePublisher` and `dispatch(action:)` | `EntropyCore` |
+| `ViewStateReducing` | Transforms DomainState → ViewState | `EntropyCore` |
+| `DomainEventActionMap` | Maps ViewEvent → DomainAction | `EntropyCore` |
+| `ServiceLocator` | Dependency injection container | `EntropyCore` |
 
 ## Commit Guidelines
 

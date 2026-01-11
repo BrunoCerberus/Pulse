@@ -1,3 +1,4 @@
+import EntropyCore
 import Foundation
 @testable import Pulse
 import SwiftUI
