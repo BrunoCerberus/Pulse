@@ -1,4 +1,5 @@
 import Combine
+import EntropyCore
 import Foundation
 @testable import Pulse
 import Testing

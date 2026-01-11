@@ -1,3 +1,4 @@
+import EntropyCore
 import SwiftUI
 
 /// Root SwiftUI view that wires the Coordinator into the UI.

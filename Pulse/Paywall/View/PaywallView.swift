@@ -5,6 +5,7 @@
 //  Created by bruno on paywall functionality.
 //
 
+import EntropyCore
 import StoreKit
 import SwiftUI
 

@@ -1,3 +1,4 @@
+import EntropyCore
 import GoogleSignIn
 import SwiftUI
 import UIKit
