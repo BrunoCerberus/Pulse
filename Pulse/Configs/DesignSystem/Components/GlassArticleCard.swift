@@ -88,6 +88,7 @@ struct GlassArticleCard: View {
             .depthShadow(.subtle)
         }
         .pressEffect()
+        .accessibilityIdentifier("articleCard")
         .contextMenu {
             Button {
                 onBookmark()
@@ -209,6 +210,7 @@ struct GlassArticleCardCompact: View {
             .glassBackground(style: .solid, cornerRadius: CornerRadius.md)
         }
         .pressEffect()
+        .accessibilityIdentifier("articleCard")
     }
 }
 
