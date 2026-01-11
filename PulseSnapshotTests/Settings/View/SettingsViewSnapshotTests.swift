@@ -1,4 +1,5 @@
 @testable import Pulse
+import EntropyCore
 import SnapshotTesting
 import SwiftUI
 import XCTest
