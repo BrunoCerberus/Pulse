@@ -36,27 +36,27 @@ final class NavigationUITests: BaseUITestCase {
 
         // --- Tab Switching (Home <-> For You) ---
         navigateToTab("Home")
-        XCTAssertTrue(app.navigationBars["News"].exists, "Should start on Home tab")
+        XCTAssertTrue(app.navigationBars["News"].waitForExistence(timeout: Self.shortTimeout), "Should be on Home tab")
 
         navigateToForYouTab()
-        XCTAssertTrue(app.navigationBars["For You"].exists, "Should switch to For You tab")
+        XCTAssertTrue(app.navigationBars["For You"].waitForExistence(timeout: Self.shortTimeout), "Should switch to For You tab")
 
         navigateToTab("Home")
-        XCTAssertTrue(app.navigationBars["News"].exists, "Should switch back to Home tab")
+        XCTAssertTrue(app.navigationBars["News"].waitForExistence(timeout: Self.shortTimeout), "Should switch back to Home tab")
 
         // --- Tab Persistence ---
         navigateToForYouTab()
-        XCTAssertTrue(app.navigationBars["For You"].exists, "Should be on For You tab")
+        XCTAssertTrue(app.navigationBars["For You"].waitForExistence(timeout: Self.shortTimeout), "Should be on For You tab")
 
         navigateToBookmarksTab()
-        XCTAssertTrue(app.navigationBars["Bookmarks"].exists, "Should be on Bookmarks tab")
+        XCTAssertTrue(app.navigationBars["Bookmarks"].waitForExistence(timeout: Self.shortTimeout), "Should be on Bookmarks tab")
 
         navigateToForYouTab()
-        XCTAssertTrue(app.navigationBars["For You"].exists, "Should return to For You tab")
+        XCTAssertTrue(app.navigationBars["For You"].waitForExistence(timeout: Self.shortTimeout), "Should return to For You tab")
 
         // --- Settings Navigation ---
         navigateToSettings()
-        XCTAssertTrue(app.navigationBars["Settings"].exists, "Settings should be accessible from Home")
+        XCTAssertTrue(app.navigationBars["Settings"].waitForExistence(timeout: Self.shortTimeout), "Settings should be accessible from Home")
 
         navigateBack()
         XCTAssertTrue(app.navigationBars["News"].waitForExistence(timeout: Self.shortTimeout), "Should return to Home after navigating back from Settings")
@@ -92,7 +92,7 @@ final class NavigationUITests: BaseUITestCase {
                 XCTAssertTrue(waitForArticleDetail(), "Should navigate to article detail again")
 
                 navigateBack()
-                XCTAssertTrue(app.navigationBars["News"].exists, "Should return to Home tab after deep navigation")
+                XCTAssertTrue(app.navigationBars["News"].waitForExistence(timeout: Self.shortTimeout), "Should return to Home tab after deep navigation")
             }
         }
     }
