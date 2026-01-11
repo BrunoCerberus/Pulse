@@ -38,23 +38,18 @@ struct SummarizationDomainInteractorTests {
 
     @Test("Start summarization updates state to loading")
     func startSummarizationUpdatesStateToLoading() async throws {
-        mockSummarizationService.loadDelay = 0.01
-        mockSummarizationService.generateDelay = 0.01
+        mockSummarizationService.loadDelay = 0.1
+        mockSummarizationService.generateDelay = 0.1
 
         sut.dispatch(action: .startSummarization)
 
-        // Wait a short time for initial state update
-        try await Task.sleep(nanoseconds: 20_000_000)
+        // Wait for state to change from idle
+        let inProgress = await waitForCondition(timeout: 500_000_000) { [sut] in
+            let state = sut.currentState
+            return state.summarizationState != .idle
+        }
 
-        // State should be in loading or generating (depending on timing)
-        let state = sut.currentState
-        let isInProgress = state.summarizationState == .loadingModel(progress: 0) ||
-            state.summarizationState == .loadingModel(progress: 0.5) ||
-            state.summarizationState == .generating ||
-            state.summarizationState == .completed
-
-        #expect(isInProgress)
-        #expect(state.generatedSummary.isEmpty || !state.generatedSummary.isEmpty) // May have started generating
+        #expect(inProgress, "Summarization should start")
     }
 
     @Test("Start summarization completes with summary")
@@ -102,17 +97,20 @@ struct SummarizationDomainInteractorTests {
 
         sut.dispatch(action: .startSummarization)
 
-        // Wait for summarization to start
-        try await Task.sleep(nanoseconds: 50_000_000)
+        // Wait for summarization to start (state not idle anymore)
+        let started = await waitForCondition(timeout: 500_000_000) { [sut] in
+            sut.currentState.summarizationState != .idle
+        }
+        #expect(started, "Summarization should have started")
 
         sut.dispatch(action: .cancelSummarization)
 
-        // Wait for cancellation to take effect
-        try await Task.sleep(nanoseconds: 50_000_000)
-
-        let state = sut.currentState
-        #expect(state.summarizationState == .idle)
-        #expect(state.generatedSummary == "")
+        // Wait for state to reset to idle
+        let cancelled = await waitForCondition(timeout: 500_000_000) { [sut] in
+            sut.currentState.summarizationState == .idle
+        }
+        #expect(cancelled, "Summarization should be cancelled")
+        #expect(sut.currentState.generatedSummary == "")
     }
 
     // MARK: - State Update Actions

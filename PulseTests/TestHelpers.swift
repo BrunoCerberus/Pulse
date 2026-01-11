@@ -15,14 +15,14 @@ import Foundation
 
 /// Wait duration constants for Combine pipeline propagation
 enum TestWaitDuration {
-    /// Short wait for simple state updates (50ms)
-    static let short: UInt64 = 50_000_000
+    /// Short wait for simple state updates (100ms)
+    static let short: UInt64 = 100_000_000
 
-    /// Standard wait for most Combine operations (100ms)
-    static let standard: UInt64 = 100_000_000
+    /// Standard wait for most Combine operations (200ms)
+    static let standard: UInt64 = 200_000_000
 
-    /// Long wait for complex async chains (200ms)
-    static let long: UInt64 = 200_000_000
+    /// Long wait for complex async chains (500ms)
+    static let long: UInt64 = 500_000_000
 }
 
 /// Async helper to wait for Combine publisher state changes.

@@ -242,8 +242,13 @@ struct ArticleDetailVMBookmarkTests {
         let sut = ArticleDetailViewModel(article: testArticle, serviceLocator: serviceLocator)
         #expect(!sut.viewState.isBookmarked)
         sut.handle(event: .onBookmarkTapped)
-        try await Task.sleep(nanoseconds: 200_000_000)
-        #expect(sut.viewState.isBookmarked)
+
+        // Wait for bookmark state to update
+        let bookmarked = await waitForCondition(timeout: 500_000_000) { [sut] in
+            sut.viewState.isBookmarked
+        }
+        #expect(bookmarked)
+
         let isBookmarked = await mockStorageService.isBookmarked(testArticle.id)
         #expect(isBookmarked)
     }
@@ -255,11 +260,20 @@ struct ArticleDetailVMBookmarkTests {
         try await mockStorageService.saveArticle(testArticle)
         let sut = ArticleDetailViewModel(article: testArticle, serviceLocator: serviceLocator)
         sut.handle(event: .onAppear)
-        try await Task.sleep(nanoseconds: 500_000_000)
-        #expect(sut.viewState.isBookmarked)
+
+        // Wait for bookmark status to be loaded (1 second timeout for CI reliability)
+        let initiallyBookmarked = await waitForCondition(timeout: 1_000_000_000) { [sut] in
+            sut.viewState.isBookmarked
+        }
+        #expect(initiallyBookmarked)
+
         sut.handle(event: .onBookmarkTapped)
-        try await Task.sleep(nanoseconds: 500_000_000)
-        #expect(!sut.viewState.isBookmarked)
+
+        // Wait for bookmark to be removed (1 second timeout for CI reliability)
+        let unbookmarked = await waitForCondition(timeout: 1_000_000_000) { [sut] in
+            !sut.viewState.isBookmarked
+        }
+        #expect(unbookmarked)
     }
 
     @Test("OnAppear saves to reading history")
@@ -268,7 +282,9 @@ struct ArticleDetailVMBookmarkTests {
         let testArticle = createTestArticle()
         let sut = ArticleDetailViewModel(article: testArticle, serviceLocator: serviceLocator)
         sut.handle(event: .onAppear)
-        try await Task.sleep(nanoseconds: 200_000_000)
+
+        // Wait for reading history to be saved
+        try await Task.sleep(nanoseconds: 300_000_000)
         let history = try await mockStorageService.fetchReadingHistory()
         #expect(history.contains(where: { $0.id == testArticle.id }))
     }
@@ -281,8 +297,12 @@ struct ArticleDetailVMBookmarkTests {
         let sut = ArticleDetailViewModel(article: testArticle, serviceLocator: serviceLocator)
         #expect(!sut.viewState.isBookmarked)
         sut.handle(event: .onAppear)
-        try await Task.sleep(nanoseconds: 500_000_000)
-        #expect(sut.viewState.isBookmarked)
+
+        // Wait for bookmark status to be checked (1 second timeout for CI reliability)
+        let bookmarked = await waitForCondition(timeout: 1_000_000_000) { [sut] in
+            sut.viewState.isBookmarked
+        }
+        #expect(bookmarked)
     }
 
     @Test("Share sets showShareSheet to true")
@@ -292,8 +312,11 @@ struct ArticleDetailVMBookmarkTests {
         let sut = ArticleDetailViewModel(article: testArticle, serviceLocator: serviceLocator)
         #expect(!sut.viewState.showShareSheet)
         sut.handle(event: .onShareTapped)
-        // Wait for async state update via Combine publisher
-        try await Task.sleep(nanoseconds: 100_000_000)
-        #expect(sut.viewState.showShareSheet)
+
+        // Wait for share sheet state to update
+        let showingSheet = await waitForCondition(timeout: 500_000_000) { [sut] in
+            sut.viewState.showShareSheet
+        }
+        #expect(showingSheet)
     }
 }

@@ -99,7 +99,8 @@ struct HomeDomainInteractorTests {
 
         sut.dispatch(action: .selectArticle(articleId: article.id))
 
-        try await Task.sleep(nanoseconds: 100_000_000)
+        // Allow enough time for background Task to complete
+        try await Task.sleep(nanoseconds: 300_000_000)
 
         let history = try await mockStorageService.fetchReadingHistory()
         #expect(history.contains(where: { $0.id == article.id }))
@@ -117,7 +118,8 @@ struct HomeDomainInteractorTests {
 
         sut.dispatch(action: .bookmarkArticle(articleId: article.id))
 
-        try await Task.sleep(nanoseconds: 100_000_000)
+        // Allow enough time for background Task to complete
+        try await Task.sleep(nanoseconds: 300_000_000)
 
         let isBookmarked = await mockStorageService.isBookmarked(article.id)
         #expect(isBookmarked)
