@@ -23,8 +23,12 @@ final class SearchViewModel: CombineViewModel, ObservableObject {
     func handle(event: SearchViewEvent) {
         switch event {
         case let .onQueryChanged(query):
+            let currentQuery = viewState.query
             interactor.dispatch(action: .updateQuery(query))
-            searchQuerySubject.send(query)
+            // Only trigger debounced search if query actually changed
+            if query != currentQuery {
+                searchQuerySubject.send(query)
+            }
         case .onSearch:
             interactor.dispatch(action: .search)
         case .onLoadMore:

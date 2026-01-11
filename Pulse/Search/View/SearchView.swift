@@ -22,18 +22,13 @@ struct SearchView<R: SearchNavigationRouter>: View {
     /// Backing ViewModel managing data and actions
     @ObservedObject var viewModel: SearchViewModel
 
-    /// Initial query for deeplink support
-    var initialQuery: String?
-
     /// Creates the view with a router and ViewModel.
     /// - Parameters:
     ///   - router: Navigation router for routing actions
     ///   - viewModel: ViewModel for managing data and actions
-    ///   - initialQuery: Optional initial query for deeplinks
-    init(router: R, viewModel: SearchViewModel, initialQuery: String? = nil) {
+    init(router: R, viewModel: SearchViewModel) {
         self.router = router
         self.viewModel = viewModel
-        self.initialQuery = initialQuery
     }
 
     var body: some View {
@@ -56,12 +51,6 @@ struct SearchView<R: SearchNavigationRouter>: View {
         .onSubmit(of: .search) {
             HapticManager.shared.tap()
             viewModel.handle(event: .onSearch)
-        }
-        .onAppear {
-            if let query = initialQuery, !query.isEmpty {
-                viewModel.handle(event: .onQueryChanged(query))
-                viewModel.handle(event: .onSearch)
-            }
         }
         .onChange(of: viewModel.viewState.selectedArticle) { _, newValue in
             if let article = newValue {
