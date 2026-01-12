@@ -43,6 +43,18 @@ struct CoordinatorView: View {
                 }
             }
 
+            Tab("Collections", systemImage: AppTab.collections.symbolImage, value: .collections) {
+                NavigationStack(path: $coordinator.collectionsPath) {
+                    CollectionsView(
+                        router: CollectionsNavigationRouter(coordinator: coordinator),
+                        viewModel: coordinator.collectionsViewModel
+                    )
+                    .navigationDestination(for: Page.self) { page in
+                        coordinator.build(page: page)
+                    }
+                }
+            }
+
             Tab("Bookmarks", systemImage: AppTab.bookmarks.symbolImage, value: .bookmarks) {
                 NavigationStack(path: $coordinator.bookmarksPath) {
                     BookmarksView(
