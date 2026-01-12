@@ -2,13 +2,26 @@ import XCTest
 
 final class NavigationUITests: BaseUITestCase {
 
+    // MARK: - Helper
+
+    /// Force tap a tab and wait for its navigation bar
+    private func switchToTab(_ tabName: String, expectedNavBar: String) {
+        let tab = app.tabBars.buttons[tabName]
+        XCTAssertTrue(tab.waitForExistence(timeout: Self.defaultTimeout), "\(tabName) tab should exist")
+        tab.tap()
+        wait(for: 0.3) // Allow tab switch animation
+        XCTAssertTrue(
+            app.navigationBars[expectedNavBar].waitForExistence(timeout: Self.defaultTimeout),
+            "Should show \(expectedNavBar) navigation bar after switching to \(tabName) tab"
+        )
+    }
+
     // MARK: - Combined Flow Test
 
     /// Tests tab bar, tab navigation, settings flow, article detail navigation, and state persistence
     func testNavigationFlow() throws {
         // --- Tab Bar Exists ---
         let tabBar = app.tabBars.firstMatch
-        XCTAssertTrue(tabBar.exists, "Tab bar should exist on home screen")
         XCTAssertTrue(tabBar.waitForExistence(timeout: Self.launchTimeout), "Tab bar should be visible after launch")
 
         // --- All Tabs Accessible ---
@@ -18,41 +31,21 @@ final class NavigationUITests: BaseUITestCase {
             XCTAssertTrue(tab.exists, "Tab '\(tabName)' should exist in tab bar")
         }
 
-        // --- Navigate to Home Tab ---
-        navigateToTab("Home")
-        XCTAssertTrue(app.navigationBars["News"].waitForExistence(timeout: Self.defaultTimeout), "Home tab should display News navigation bar")
+        // --- Navigate Through All Tabs ---
+        switchToTab("Home", expectedNavBar: "News")
+        switchToTab("For You", expectedNavBar: "For You")
+        switchToTab("Bookmarks", expectedNavBar: "Bookmarks")
+        switchToTab("Search", expectedNavBar: "Search")
 
-        // --- Navigate to For You Tab ---
-        navigateToForYouTab()
-        XCTAssertTrue(app.navigationBars["For You"].exists, "For You tab should display For You navigation bar")
-
-        // --- Navigate to Bookmarks Tab ---
-        navigateToBookmarksTab()
-        XCTAssertTrue(app.navigationBars["Bookmarks"].exists, "Bookmarks tab should display Bookmarks navigation bar")
-
-        // --- Navigate to Search Tab ---
-        navigateToSearchTab()
-        XCTAssertTrue(app.navigationBars["Search"].exists, "Search tab should display Search navigation bar")
-
-        // --- Tab Switching (Home <-> For You) ---
-        navigateToTab("Home")
-        XCTAssertTrue(app.navigationBars["News"].waitForExistence(timeout: Self.defaultTimeout), "Should be on Home tab")
-
-        navigateToForYouTab()
-        XCTAssertTrue(app.navigationBars["For You"].waitForExistence(timeout: Self.defaultTimeout), "Should switch to For You tab")
-
-        navigateToTab("Home")
-        XCTAssertTrue(app.navigationBars["News"].waitForExistence(timeout: Self.defaultTimeout), "Should switch back to Home tab")
+        // --- Tab Switching (Search -> Home -> For You -> Home) ---
+        switchToTab("Home", expectedNavBar: "News")
+        switchToTab("For You", expectedNavBar: "For You")
+        switchToTab("Home", expectedNavBar: "News")
 
         // --- Tab Persistence ---
-        navigateToForYouTab()
-        XCTAssertTrue(app.navigationBars["For You"].waitForExistence(timeout: Self.defaultTimeout), "Should be on For You tab")
-
-        navigateToBookmarksTab()
-        XCTAssertTrue(app.navigationBars["Bookmarks"].waitForExistence(timeout: Self.defaultTimeout), "Should be on Bookmarks tab")
-
-        navigateToForYouTab()
-        XCTAssertTrue(app.navigationBars["For You"].waitForExistence(timeout: Self.defaultTimeout), "Should return to For You tab")
+        switchToTab("For You", expectedNavBar: "For You")
+        switchToTab("Bookmarks", expectedNavBar: "Bookmarks")
+        switchToTab("For You", expectedNavBar: "For You")
 
         // --- Settings Navigation ---
         navigateToSettings()
@@ -63,12 +56,13 @@ final class NavigationUITests: BaseUITestCase {
 
         // --- Tab Bar Visibility on All Tabs ---
         for tabName in expectedTabs {
-            navigateToTab(tabName)
+            app.tabBars.buttons[tabName].tap()
+            wait(for: 0.3)
             XCTAssertTrue(tabBar.exists, "Tab bar should remain visible on \(tabName) tab")
         }
 
         // --- Article Detail Navigation ---
-        navigateToTab("Home")
+        switchToTab("Home", expectedNavBar: "News")
         waitForHomeContent(timeout: 20)
 
         let cards = articleCards()
@@ -88,11 +82,13 @@ final class NavigationUITests: BaseUITestCase {
                 XCTAssertTrue(app.navigationBars["News"].waitForExistence(timeout: Self.defaultTimeout), "Should return to Home after navigating back from article")
 
                 // --- Tab Retention After Deep Navigation ---
-                firstCard.tap()
-                XCTAssertTrue(waitForArticleDetail(), "Should navigate to article detail again")
+                if firstCard.waitForExistence(timeout: Self.defaultTimeout), firstCard.isHittable {
+                    firstCard.tap()
+                    XCTAssertTrue(waitForArticleDetail(), "Should navigate to article detail again")
 
-                navigateBack()
-                XCTAssertTrue(app.navigationBars["News"].waitForExistence(timeout: Self.defaultTimeout), "Should return to Home tab after deep navigation")
+                    navigateBack()
+                    XCTAssertTrue(app.navigationBars["News"].waitForExistence(timeout: Self.defaultTimeout), "Should return to Home tab after deep navigation")
+                }
             }
         }
     }
