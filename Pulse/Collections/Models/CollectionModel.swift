@@ -44,7 +44,7 @@ final class CollectionModel {
             name: collection.name,
             collectionDescription: collection.description,
             imageURL: collection.imageURL,
-            articleIDs: collection.articles.map(\.id),
+            articleIDs: Array(collection.articleIDs),
             readArticleIDs: Array(collection.readArticleIDs),
             collectionTypeRaw: collection.collectionType.rawValue,
             isPremium: collection.isPremium,
@@ -60,7 +60,7 @@ final class CollectionModel {
             description: collectionDescription,
             imageURL: imageURL,
             articles: articles,
-            articleCount: articleIDs.count,
+            articleIDs: Set(articleIDs),
             readArticleIDs: Set(readArticleIDs),
             collectionType: CollectionType(rawValue: collectionTypeRaw) ?? .user,
             isPremium: isPremium,
@@ -73,15 +73,8 @@ final class CollectionModel {
         name = collection.name
         collectionDescription = collection.description
         imageURL = collection.imageURL
-        // Only update articleIDs if collection has hydrated articles,
-        // or if explicitly clearing (articleCount == 0).
-        // This preserves stored IDs when collection is loaded without articles.
-        if !collection.articles.isEmpty {
-            articleIDs = collection.articles.map(\.id)
-        } else if collection.articleCount == 0 {
-            articleIDs = []
-        }
-        // Always preserve articleCount > 0 with empty articles (non-hydrated state)
+        // Use the articleIDs property directly - it's now the source of truth
+        articleIDs = Array(collection.articleIDs)
         readArticleIDs = Array(collection.readArticleIDs)
         collectionTypeRaw = collection.collectionType.rawValue
         isPremium = collection.isPremium

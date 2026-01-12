@@ -28,13 +28,14 @@ final class CollectionDetailViewSnapshotTests: XCTestCase {
     // MARK: - Collection Detail Tests
 
     func testCollectionDetailViewWithProgress() {
+        let articles = createSampleArticles()
         let collection = Collection(
             id: "climate-crisis",
             name: "Climate Crisis",
             description: "Understand the science, politics, and solutions to our planet's greatest challenge",
             imageURL: nil,
-            articles: createSampleArticles(),
-            articleCount: 5,
+            articles: articles,
+            articleIDs: Set(articles.map(\.id)),
             readArticleIDs: ["article-1", "article-2"],
             collectionType: .featured,
             isPremium: false,
@@ -66,7 +67,7 @@ final class CollectionDetailViewSnapshotTests: XCTestCase {
             description: "World affairs explained in depth",
             imageURL: nil,
             articles: articles,
-            articleCount: 5,
+            articleIDs: Set(articles.map(\.id)),
             readArticleIDs: Set(articles.map(\.id)),
             collectionType: .featured,
             isPremium: false,
@@ -91,13 +92,14 @@ final class CollectionDetailViewSnapshotTests: XCTestCase {
     }
 
     func testCollectionDetailViewNoProgress() {
+        let articles = createSampleArticles()
         let collection = Collection(
             id: "no-progress",
             name: "AI & Technology",
             description: "Latest developments in artificial intelligence and tech",
             imageURL: nil,
-            articles: createSampleArticles(),
-            articleCount: 5,
+            articles: articles,
+            articleIDs: Set(articles.map(\.id)),
             readArticleIDs: [],
             collectionType: .featured,
             isPremium: false,
@@ -122,13 +124,14 @@ final class CollectionDetailViewSnapshotTests: XCTestCase {
     }
 
     func testCollectionDetailViewPremium() {
+        let articles = createSampleArticles()
         let collection = Collection(
             id: "premium-collection",
             name: "Premium Insights",
             description: "Exclusive curated content for premium members",
             imageURL: nil,
-            articles: createSampleArticles(),
-            articleCount: 5,
+            articles: articles,
+            articleIDs: Set(articles.map(\.id)),
             readArticleIDs: ["article-1"],
             collectionType: .aiCurated,
             isPremium: true,
@@ -153,13 +156,14 @@ final class CollectionDetailViewSnapshotTests: XCTestCase {
     }
 
     func testCollectionDetailViewUserCollection() {
+        let articles = createSampleArticles()
         let collection = Collection(
             id: "user-collection",
             name: "My Research",
             description: "Articles saved for my research project",
             imageURL: nil,
-            articles: createSampleArticles(),
-            articleCount: 5,
+            articles: articles,
+            articleIDs: Set(articles.map(\.id)),
             readArticleIDs: ["article-1", "article-2", "article-3"],
             collectionType: .user,
             isPremium: false,

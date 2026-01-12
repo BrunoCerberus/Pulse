@@ -185,7 +185,7 @@ struct UserCollectionRow: View {
                 description: "Understand the science and solutions",
                 imageURL: nil,
                 articles: [],
-                articleCount: 10,
+                articleIDs: Set((1 ... 10).map { "\($0)" }),
                 readArticleIDs: ["1", "2", "3"],
                 collectionType: .featured,
                 isPremium: false,

@@ -230,7 +230,7 @@ final class LiveCollectionsService: APIRequest, CollectionsService {
             description: definition.description,
             imageURL: nil,
             articles: articles,
-            articleCount: articles.count,
+            articleIDs: Set(articles.map(\.id)),
             readArticleIDs: [],
             collectionType: definition.collectionType,
             isPremium: definition.isPremium,

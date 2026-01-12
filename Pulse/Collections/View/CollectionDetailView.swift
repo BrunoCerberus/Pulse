@@ -293,7 +293,7 @@ struct CollectionArticleRow: View {
                 description: "Understand the science, politics, and solutions to our planet's greatest challenge",
                 imageURL: nil,
                 articles: Article.samples,
-                articleCount: 5,
+                articleIDs: Set(Article.samples.map(\.id)),
                 readArticleIDs: ["1", "2"],
                 collectionType: .featured,
                 isPremium: false,

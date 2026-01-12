@@ -22,12 +22,18 @@ struct Collection: Identifiable, Equatable, Codable, Hashable {
     let description: String
     let imageURL: String?
     let articles: [Article]
-    let articleCount: Int
+    /// IDs of all articles in this collection (persisted separately from hydrated articles)
+    let articleIDs: Set<String>
     let readArticleIDs: Set<String>
     let collectionType: CollectionType
     let isPremium: Bool
     let createdAt: Date
     let updatedAt: Date
+
+    /// Number of articles in this collection
+    var articleCount: Int {
+        articleIDs.count
+    }
 
     var progress: Double {
         guard articleCount > 0 else { return 0 }
@@ -48,7 +54,7 @@ struct Collection: Identifiable, Equatable, Codable, Hashable {
             lhs.description == rhs.description &&
             lhs.imageURL == rhs.imageURL &&
             lhs.articles == rhs.articles &&
-            lhs.articleCount == rhs.articleCount &&
+            lhs.articleIDs == rhs.articleIDs &&
             lhs.readArticleIDs == rhs.readArticleIDs &&
             lhs.collectionType == rhs.collectionType &&
             lhs.isPremium == rhs.isPremium
@@ -73,7 +79,7 @@ extension Collection {
             description: description,
             imageURL: nil,
             articles: articles,
-            articleCount: articles.count,
+            articleIDs: Set(articles.map(\.id)),
             readArticleIDs: readArticleIDs,
             collectionType: .user,
             isPremium: false,
@@ -87,13 +93,15 @@ extension Collection {
         if !updatedArticles.contains(where: { $0.id == article.id }) {
             updatedArticles.append(article)
         }
+        var updatedArticleIDs = articleIDs
+        updatedArticleIDs.insert(article.id)
         return Collection(
             id: id,
             name: name,
             description: description,
             imageURL: imageURL,
             articles: updatedArticles,
-            articleCount: updatedArticles.count,
+            articleIDs: updatedArticleIDs,
             readArticleIDs: readArticleIDs,
             collectionType: collectionType,
             isPremium: isPremium,
@@ -104,6 +112,8 @@ extension Collection {
 
     func withoutArticle(_ articleID: String) -> Collection {
         let updatedArticles = articles.filter { $0.id != articleID }
+        var updatedArticleIDs = articleIDs
+        updatedArticleIDs.remove(articleID)
         var updatedReadIDs = readArticleIDs
         updatedReadIDs.remove(articleID)
         return Collection(
@@ -112,7 +122,7 @@ extension Collection {
             description: description,
             imageURL: imageURL,
             articles: updatedArticles,
-            articleCount: updatedArticles.count,
+            articleIDs: updatedArticleIDs,
             readArticleIDs: updatedReadIDs,
             collectionType: collectionType,
             isPremium: isPremium,
@@ -130,7 +140,7 @@ extension Collection {
             description: description,
             imageURL: imageURL,
             articles: articles,
-            articleCount: articleCount,
+            articleIDs: articleIDs,
             readArticleIDs: updatedReadIDs,
             collectionType: collectionType,
             isPremium: isPremium,
