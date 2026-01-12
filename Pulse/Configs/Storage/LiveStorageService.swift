@@ -12,6 +12,7 @@ final class LiveStorageService: StorageService {
                 ReadingHistoryEntry.self,
                 UserPreferencesModel.self,
                 CollectionModel.self,
+                CollectionArticleModel.self,
             ])
             let modelConfiguration = ModelConfiguration(schema: schema, isStoredInMemoryOnly: false)
             modelContainer = try ModelContainer(for: schema, configurations: [modelConfiguration])
@@ -151,10 +152,11 @@ final class LiveStorageService: StorageService {
         )
         let models = try context.fetch(descriptor)
 
-        // For user collections, we need to fetch the actual articles
-        // Since we only store article IDs, we return collections with empty articles
-        // The articles will be populated when viewing the collection detail
-        return models.map { $0.toCollection(articles: []) }
+        // Hydrate each collection with its stored articles
+        return try models.map { model in
+            let articles = try fetchCollectionArticlesSync(collectionID: model.collectionID, context: context)
+            return model.toCollection(articles: articles)
+        }
     }
 
     @MainActor
@@ -166,6 +168,71 @@ final class LiveStorageService: StorageService {
         guard let model = try context.fetch(descriptor).first else {
             return nil
         }
-        return model.toCollection(articles: [])
+        // Hydrate collection with stored articles
+        let articles = try fetchCollectionArticlesSync(collectionID: id, context: context)
+        return model.toCollection(articles: articles)
+    }
+
+    // MARK: - Collection Articles
+
+    @MainActor
+    func saveCollectionArticle(_ article: Article, collectionID: String, orderIndex: Int) async throws {
+        let context = modelContainer.mainContext
+        let compositeKey = "\(collectionID)_\(article.id)"
+
+        let descriptor = FetchDescriptor<CollectionArticleModel>(
+            predicate: #Predicate { $0.compositeKey == compositeKey }
+        )
+
+        // Only insert if not already exists
+        if try context.fetch(descriptor).first == nil {
+            let model = CollectionArticleModel(collectionID: collectionID, article: article, orderIndex: orderIndex)
+            context.insert(model)
+            try context.save()
+        }
+    }
+
+    @MainActor
+    func deleteCollectionArticle(articleID: String, collectionID: String) async throws {
+        let context = modelContainer.mainContext
+        let compositeKey = "\(collectionID)_\(articleID)"
+
+        let descriptor = FetchDescriptor<CollectionArticleModel>(
+            predicate: #Predicate { $0.compositeKey == compositeKey }
+        )
+
+        if let existing = try context.fetch(descriptor).first {
+            context.delete(existing)
+            try context.save()
+        }
+    }
+
+    @MainActor
+    func fetchCollectionArticles(collectionID: String) async throws -> [Article] {
+        let context = modelContainer.mainContext
+        return try fetchCollectionArticlesSync(collectionID: collectionID, context: context)
+    }
+
+    @MainActor
+    func fetchArticlesForIDs(_ articleIDs: [String]) async throws -> [Article] {
+        let context = modelContainer.mainContext
+        let descriptor = FetchDescriptor<CollectionArticleModel>(
+            predicate: #Predicate { articleIDs.contains($0.articleID) },
+            sortBy: [SortDescriptor(\.orderIndex)]
+        )
+        let models = try context.fetch(descriptor)
+        return models.map { $0.toArticle() }
+    }
+
+    // MARK: - Private Helpers
+
+    @MainActor
+    private func fetchCollectionArticlesSync(collectionID: String, context: ModelContext) throws -> [Article] {
+        let descriptor = FetchDescriptor<CollectionArticleModel>(
+            predicate: #Predicate { $0.collectionID == collectionID },
+            sortBy: [SortDescriptor(\.orderIndex)]
+        )
+        let models = try context.fetch(descriptor)
+        return models.map { $0.toArticle() }
     }
 }

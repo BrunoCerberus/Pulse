@@ -26,4 +26,11 @@ protocol StorageService {
     func deleteCollection(id: String) async throws
     func fetchUserCollections() async throws -> [Collection]
     func fetchCollection(id: String) async throws -> Collection?
+
+    // MARK: - Collection Articles
+
+    func saveCollectionArticle(_ article: Article, collectionID: String, orderIndex: Int) async throws
+    func deleteCollectionArticle(articleID: String, collectionID: String) async throws
+    func fetchCollectionArticles(collectionID: String) async throws -> [Article]
+    func fetchArticlesForIDs(_ articleIDs: [String]) async throws -> [Article]
 }

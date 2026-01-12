@@ -143,6 +143,10 @@ final class LiveCollectionsService: APIRequest, CollectionsService {
                         promise(.failure(CollectionsServiceError.collectionNotFound))
                         return
                     }
+                    // Save the article content for hydration after restart
+                    let orderIndex = collection.articleCount
+                    try await self.storageService.saveCollectionArticle(article, collectionID: collectionID, orderIndex: orderIndex)
+
                     collection = collection.withArticle(article)
                     try await self.saveCollectionToStorage(collection)
                     promise(.success(collection))
@@ -167,6 +171,9 @@ final class LiveCollectionsService: APIRequest, CollectionsService {
                         promise(.failure(CollectionsServiceError.collectionNotFound))
                         return
                     }
+                    // Remove the article content from storage
+                    try await self.storageService.deleteCollectionArticle(articleID: articleID, collectionID: collectionID)
+
                     collection = collection.withoutArticle(articleID)
                     try await self.saveCollectionToStorage(collection)
                     promise(.success(collection))
