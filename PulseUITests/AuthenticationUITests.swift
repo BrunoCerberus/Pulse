@@ -10,7 +10,8 @@ final class AuthenticationUITests: BaseUITestCase {
         let signInWithAppleButton = app.buttons["Sign in with Apple"]
         let signInWithGoogleButton = app.buttons["Sign in with Google"]
 
-        let stateResolved = tabBar.waitForExistence(timeout: 10) || signInWithAppleButton.waitForExistence(timeout: 10)
+        // Use waitForAny to check both elements concurrently, avoiding sequential timeout issues
+        let stateResolved = waitForAny([tabBar, signInWithAppleButton], timeout: Self.launchTimeout)
         XCTAssertTrue(stateResolved, "Either tab bar or sign in button should appear")
 
         if tabBar.exists {
