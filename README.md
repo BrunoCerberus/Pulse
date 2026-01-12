@@ -7,12 +7,12 @@ A modern iOS news aggregation app built with Clean Architecture, SwiftUI, and Co
 - **Authentication**: Firebase Auth with Google and Apple Sign-In (required before accessing app)
 - **Home Feed**: Breaking news carousel and top headlines with infinite scrolling (settings accessible via gear icon)
 - **For You**: Personalized feed based on followed topics and reading history
-- **Digest**: AI-powered personalized digest using on-device **Llama 3.2 1B** (Q4_K_M, ~700MB GGUF) via llama.cpp
-- **Search**: Full-text search with 300ms debounce, suggestions, recent searches, and sort options
+- **Collections**: Curated reading lists with progress tracking - featured editorial collections, user-created collections, and premium AI-curated collections
 - **Bookmarks**: Save articles for offline reading with SwiftData persistence
+- **Search**: Full-text search with 300ms debounce, suggestions, recent searches, and sort options
 - **Settings**: Customize topics, notifications, theme, content filters, and account/logout (accessed from Home navigation bar)
 
-The app uses iOS 26's liquid glass TabView style with tabs: Home, For You, Digest, Bookmarks, and Search. Users must sign in with Google or Apple before accessing the main app.
+The app uses iOS 26's liquid glass TabView style with tabs: Home, For You, Collections, Bookmarks, and Search. Users must sign in with Google or Apple before accessing the main app.
 
 ## Architecture
 
@@ -67,9 +67,9 @@ CoordinatorView (@StateObject Coordinator)
        │
    TabView (selection: $coordinator.selectedTab)
        │
-   ┌───┴───┬───────┬─────────┬─────────┐
- Home   ForYou   Digest  Bookmarks Search
-   │       │        │          │        │
+   ┌───┴───┬───────┬────────────┬─────────┬───────┐
+ Home   ForYou  Collections  Bookmarks  Search
+   │       │          │           │         │
 NavigationStack(path: $coordinator.homePath)
        │
 .navigationDestination(for: Page.self)
@@ -157,7 +157,7 @@ Pulse/
 │   │   ├── ViewStates/     # HomeViewState
 │   │   └── Router/         # HomeNavigationRouter
 │   ├── ForYou/             # Personalized feed (same pattern)
-│   ├── Digest/             # AI-powered personalized digest
+│   ├── Collections/        # Curated reading lists with progress tracking
 │   ├── Search/             # Search functionality
 │   ├── Bookmarks/          # Saved articles
 │   ├── Settings/           # User preferences + account/logout
@@ -213,9 +213,9 @@ GitHub Actions workflows:
 pulse://home                    # Open home tab
 pulse://search?q=query          # Search with query
 pulse://bookmarks               # Open bookmarks
+pulse://collections             # Open collections
 pulse://settings                # Open settings
 pulse://article?id=123          # Open specific article
-pulse://digest                  # Open digest
 ```
 
 ## Testing

@@ -115,9 +115,9 @@ Pulse is an iOS news aggregation app built with **Unidirectional Data Flow Archi
           │
       TabView (selection: $coordinator.selectedTab)
           │
-      ┌───┴───┬───────┬─────────┬─────────┐
-    Home   ForYou   Digest  Bookmarks Search
-      │       │        │          │        │
+      ┌───┴───┬───────┬────────────┬─────────┬───────┐
+    Home   ForYou  Collections  Bookmarks  Search
+      │       │          │           │         │
    NavigationStack(path: $coordinator.homePath)
           │
    .navigationDestination(for: Page.self)
@@ -176,7 +176,15 @@ Pulse/
 │   ├── ViewStates/             # HomeViewState
 │   └── Router/                 # HomeNavigationRouter
 ├── ForYou/                     # Personalized feed (same pattern)
-├── Digest/                     # AI-powered personalized digest
+├── Collections/                # Curated reading lists with progress tracking
+│   ├── API/                    # CollectionsService protocol + Live/Mock
+│   ├── Domain/                 # Interactor, State, Action, Reducer, EventActionMap
+│   ├── ViewModel/              # CollectionsViewModel
+│   ├── View/                   # CollectionsView, CollectionCard, CollectionDetailView
+│   ├── ViewEvents/             # CollectionsViewEvent
+│   ├── ViewStates/             # CollectionsViewState
+│   ├── Router/                 # CollectionsNavigationRouter
+│   └── Models/                 # Collection, CollectionDefinition
 │   ├── API/                    # DigestService protocol + Live/Mock
 │   ├── AI/                     # LLMService, LLMModelManager, LLMConfiguration
 │   ├── Domain/                 # DigestDomainInteractor, State, Action
@@ -207,7 +215,7 @@ Pulse/
 | **Authentication** | Firebase Auth with Google and Apple Sign-In (required before accessing app) |
 | **Home** | Breaking news carousel, top headlines with infinite scroll, settings access via gear icon |
 | **For You** | Personalized feed based on followed topics |
-| **Digest** | AI-powered digest using on-device Llama 3.2 1B (Q4_K_M ~700MB GGUF) via llama.cpp; sources: bookmarks, reading history, or fresh news |
+| **Collections** | Curated reading lists with progress tracking - featured, user-created, and AI-curated collections |
 | **Search** | Full-text search with 300ms debounce, suggestions, and sort options (last tab with liquid glass style) |
 | **Bookmarks** | Save articles for offline reading (SwiftData) |
 | **Settings** | Topics, notifications, theme, muted content, account/logout (accessed from Home navigation bar) |
@@ -370,7 +378,7 @@ See `APIKeysProvider.swift` for the fallback hierarchy implementation.
 pulse://home
 pulse://search?q=query
 pulse://bookmarks
+pulse://collections
 pulse://settings
 pulse://article?id=123
-pulse://digest
 ```
