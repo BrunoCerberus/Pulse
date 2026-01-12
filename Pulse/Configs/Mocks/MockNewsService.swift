@@ -102,6 +102,7 @@ final class MockStorageService: StorageService {
     var bookmarkedArticles: [Article] = []
     var readingHistory: [Article] = []
     var userPreferences: UserPreferences?
+    var collections: [Collection] = []
 
     func saveArticle(_ article: Article) async throws {
         bookmarkedArticles.append(article)
@@ -138,6 +139,28 @@ final class MockStorageService: StorageService {
 
     func fetchUserPreferences() async throws -> UserPreferences? {
         userPreferences
+    }
+
+    // MARK: - Collections
+
+    func saveCollection(_ collection: Collection) async throws {
+        if let index = collections.firstIndex(where: { $0.id == collection.id }) {
+            collections[index] = collection
+        } else {
+            collections.append(collection)
+        }
+    }
+
+    func deleteCollection(id: String) async throws {
+        collections.removeAll { $0.id == id }
+    }
+
+    func fetchUserCollections() async throws -> [Collection] {
+        collections.filter { $0.collectionType == .user }
+    }
+
+    func fetchCollection(id: String) async throws -> Collection? {
+        collections.first { $0.id == id }
     }
 }
 

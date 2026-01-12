@@ -11,6 +11,7 @@ final class LiveStorageService: StorageService {
                 BookmarkedArticle.self,
                 ReadingHistoryEntry.self,
                 UserPreferencesModel.self,
+                CollectionModel.self,
             ])
             let modelConfiguration = ModelConfiguration(schema: schema, isStoredInMemoryOnly: false)
             modelContainer = try ModelContainer(for: schema, configurations: [modelConfiguration])
@@ -106,5 +107,65 @@ final class LiveStorageService: StorageService {
         let context = modelContainer.mainContext
         let descriptor = FetchDescriptor<UserPreferencesModel>()
         return try context.fetch(descriptor).first?.toPreferences()
+    }
+
+    // MARK: - Collections
+
+    @MainActor
+    func saveCollection(_ collection: Collection) async throws {
+        let context = modelContainer.mainContext
+        let collectionID = collection.id
+
+        let descriptor = FetchDescriptor<CollectionModel>(
+            predicate: #Predicate { $0.collectionID == collectionID }
+        )
+
+        if let existing = try context.fetch(descriptor).first {
+            existing.update(from: collection)
+        } else {
+            let model = CollectionModel(from: collection)
+            context.insert(model)
+        }
+        try context.save()
+    }
+
+    @MainActor
+    func deleteCollection(id: String) async throws {
+        let context = modelContainer.mainContext
+        let descriptor = FetchDescriptor<CollectionModel>(
+            predicate: #Predicate { $0.collectionID == id }
+        )
+        if let existing = try context.fetch(descriptor).first {
+            context.delete(existing)
+            try context.save()
+        }
+    }
+
+    @MainActor
+    func fetchUserCollections() async throws -> [Collection] {
+        let context = modelContainer.mainContext
+        let userTypeRaw = CollectionType.user.rawValue
+        let descriptor = FetchDescriptor<CollectionModel>(
+            predicate: #Predicate { $0.collectionTypeRaw == userTypeRaw },
+            sortBy: [SortDescriptor(\.updatedAt, order: .reverse)]
+        )
+        let models = try context.fetch(descriptor)
+
+        // For user collections, we need to fetch the actual articles
+        // Since we only store article IDs, we return collections with empty articles
+        // The articles will be populated when viewing the collection detail
+        return models.map { $0.toCollection(articles: []) }
+    }
+
+    @MainActor
+    func fetchCollection(id: String) async throws -> Collection? {
+        let context = modelContainer.mainContext
+        let descriptor = FetchDescriptor<CollectionModel>(
+            predicate: #Predicate { $0.collectionID == id }
+        )
+        guard let model = try context.fetch(descriptor).first else {
+            return nil
+        }
+        return model.toCollection(articles: [])
     }
 }

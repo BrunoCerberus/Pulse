@@ -145,7 +145,6 @@ final class LiveCollectionsService: APIRequest, CollectionsService {
                     }
                     collection = collection.withArticle(article)
                     try await self.saveCollectionToStorage(collection)
-                    try await self.saveArticleToCollection(article, collectionID: collectionID)
                     promise(.success(collection))
                 } catch {
                     promise(.failure(error))
@@ -170,7 +169,6 @@ final class LiveCollectionsService: APIRequest, CollectionsService {
                     }
                     collection = collection.withoutArticle(articleID)
                     try await self.saveCollectionToStorage(collection)
-                    try await self.removeArticleFromCollectionStorage(articleID: articleID, collectionID: collectionID)
                     promise(.success(collection))
                 } catch {
                     promise(.failure(error))
@@ -241,23 +239,23 @@ final class LiveCollectionsService: APIRequest, CollectionsService {
         )
     }
 
-    // MARK: - Storage Operations (to be implemented via StorageService extension)
+    // MARK: - Storage Operations
 
     private func loadUserCollectionsFromStorage() async throws -> [Collection] {
-        []
+        try await storageService.fetchUserCollections()
     }
 
-    private func loadCollectionFromStorage(id _: String) async throws -> Collection? {
-        nil
+    private func loadCollectionFromStorage(id: String) async throws -> Collection? {
+        try await storageService.fetchCollection(id: id)
     }
 
-    private func saveCollectionToStorage(_: Collection) async throws {}
+    private func saveCollectionToStorage(_ collection: Collection) async throws {
+        try await storageService.saveCollection(collection)
+    }
 
-    private func deleteCollectionFromStorage(id _: String) async throws {}
-
-    private func saveArticleToCollection(_: Article, collectionID _: String) async throws {}
-
-    private func removeArticleFromCollectionStorage(articleID _: String, collectionID _: String) async throws {}
+    private func deleteCollectionFromStorage(id: String) async throws {
+        try await storageService.deleteCollection(id: id)
+    }
 }
 
 enum CollectionsServiceError: Error, LocalizedError {

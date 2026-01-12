@@ -5,6 +5,7 @@ enum Deeplink: Equatable {
     case home
     case search(query: String? = nil)
     case bookmarks
+    case collections
     case settings
     case article(id: String)
     case category(name: String)
@@ -39,6 +40,8 @@ final class DeeplinkManager: ObservableObject {
             deeplink = .search(query: query)
         case "bookmarks":
             deeplink = .bookmarks
+        case "collections":
+            deeplink = .collections
         case "settings":
             deeplink = .settings
         case "article":

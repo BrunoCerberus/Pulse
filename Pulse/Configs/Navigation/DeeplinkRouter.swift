@@ -83,6 +83,9 @@ final class DeeplinkRouter {
         case .bookmarks:
             coordinator.switchTab(to: .bookmarks, popToRoot: true)
 
+        case .collections:
+            coordinator.switchTab(to: .collections, popToRoot: true)
+
         case .settings:
             coordinator.switchTab(to: .home, popToRoot: true)
             coordinator.push(page: .settings)
