@@ -181,6 +181,13 @@ final class LLMModelManager: @unchecked Sendable {
         }
         lock.unlock()
 
+        // Pre-inference memory check to prevent crashes during generation
+        guard hasAdequateMemory() else {
+            logger.warning("Insufficient memory for inference", category: logCategory)
+            continuation.finish(throwing: LLMError.memoryPressure)
+            return
+        }
+
         isCancelled = false
 
         // Create Prompt for Llama 3.2 model
@@ -190,7 +197,20 @@ final class LLMModelManager: @unchecked Sendable {
             userMessage: prompt
         )
 
-        logger.info("Starting inference...", category: logCategory)
+        // Log prompt size for debugging context overflow issues
+        let estimatedPromptTokens = (systemPrompt.count + prompt.count) / 4
+        logger.info(
+            "Starting inference... (estimated prompt tokens: \(estimatedPromptTokens))",
+            category: logCategory
+        )
+
+        // Warn if prompt might be too large for context window
+        if estimatedPromptTokens > LLMConfiguration.contextSize - LLMConfiguration.reservedContextTokens {
+            logger.warning(
+                "Prompt may exceed safe context size (\(estimatedPromptTokens) estimated vs \(LLMConfiguration.contextSize) max)",
+                category: logCategory
+            )
+        }
 
         do {
             // Generate on the SwiftLlama actor - fully thread-safe
@@ -230,9 +250,22 @@ final class LLMModelManager: @unchecked Sendable {
             continuation.finish()
 
             logger.info("Inference completed, generated \(processedResult.count) characters", category: logCategory)
-        } catch {
+        } catch let error as NSError {
+            // Handle specific error cases that could indicate crashes
             logger.error("Inference failed: \(error)", category: logCategory)
-            continuation.finish(throwing: error)
+
+            if error.domain == "LocalLlama" || error.domain == NSPOSIXErrorDomain {
+                // Native library errors - may indicate memory or context issues
+                if error.code == ENOMEM || error.localizedDescription.lowercased().contains("memory") {
+                    continuation.finish(throwing: LLMError.memoryPressure)
+                    return
+                }
+            }
+
+            continuation.finish(throwing: LLMError.generationFailed(error.localizedDescription))
+        } catch {
+            logger.error("Inference failed with unexpected error: \(error)", category: logCategory)
+            continuation.finish(throwing: LLMError.generationFailed(error.localizedDescription))
         }
     }
 

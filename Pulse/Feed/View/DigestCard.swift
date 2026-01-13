@@ -18,18 +18,37 @@ struct DigestCard: View {
         VStack(alignment: .leading, spacing: Spacing.md) {
             header
 
-            Divider()
-                .background(Color.Accent.primary.opacity(0.3))
-
-            summaryText
+            summaryContent
         }
         .frame(maxWidth: .infinity, alignment: .leading)
         .padding(Spacing.md)
+        .background(gradientOverlay)
+        .glassBackground(style: .thin, cornerRadius: CornerRadius.lg, showBorder: false)
         .overlay(
             RoundedRectangle(cornerRadius: CornerRadius.lg, style: .continuous)
-                .stroke(Color.Accent.primary.opacity(0.2), lineWidth: 1)
+                .stroke(
+                    LinearGradient(
+                        colors: [Color.Accent.primary.opacity(0.3), Color.Accent.primary.opacity(0.1)],
+                        startPoint: .topLeading,
+                        endPoint: .bottomTrailing
+                    ),
+                    lineWidth: 1
+                )
         )
-        .glassBackground(style: .thin, cornerRadius: CornerRadius.lg)
+    }
+
+    // MARK: - Gradient Overlay
+
+    private var gradientOverlay: some View {
+        LinearGradient(
+            colors: [
+                Color.Accent.primary.opacity(0.05),
+                Color.clear,
+                Color.Accent.primary.opacity(0.03),
+            ],
+            startPoint: .topLeading,
+            endPoint: .bottomTrailing
+        )
     }
 
     // MARK: - Header
@@ -62,14 +81,52 @@ struct DigestCard: View {
         }
     }
 
-    // MARK: - Summary Text
+    // MARK: - Summary Content
 
-    private var summaryText: some View {
-        Text(digest.summary)
-            .font(Typography.bodyMedium)
-            .foregroundStyle(.primary)
-            .lineSpacing(4)
-            .frame(maxWidth: .infinity, alignment: .leading)
+    private var summaryContent: some View {
+        HStack(alignment: .top, spacing: 0) {
+            // Left accent border
+            RoundedRectangle(cornerRadius: 2)
+                .fill(
+                    LinearGradient(
+                        colors: [Color.Accent.primary, Color.Accent.primary.opacity(0.5)],
+                        startPoint: .top,
+                        endPoint: .bottom
+                    )
+                )
+                .frame(width: 3)
+                .padding(.trailing, Spacing.md)
+
+            // Content with drop cap
+            dropCapText
+        }
+    }
+
+    // MARK: - Drop Cap Text
+
+    private var dropCapText: some View {
+        let summary = digest.summary.trimmingCharacters(in: .whitespacesAndNewlines)
+        let firstChar = summary.isEmpty ? "" : String(summary.prefix(1))
+        let remainingText = summary.isEmpty ? "" : String(summary.dropFirst())
+
+        return HStack(alignment: .top, spacing: 0) {
+            // Drop cap
+            Text(firstChar)
+                .font(Typography.aiDropCap)
+                .foregroundStyle(Color.Accent.primary)
+                .frame(width: 44, alignment: .leading)
+                .padding(.trailing, Spacing.xs)
+                .accessibilityHidden(true)
+
+            // Remaining text
+            Text(remainingText)
+                .font(Typography.aiContentMedium)
+                .foregroundStyle(.primary.opacity(0.9))
+                .lineSpacing(6)
+                .frame(maxWidth: .infinity, alignment: .leading)
+        }
+        .accessibilityElement(children: .combine)
+        .accessibilityLabel(summary)
     }
 }
 

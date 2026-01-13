@@ -35,4 +35,15 @@ enum LLMConfiguration {
 
     /// Generation timeout in seconds
     static var generationTimeout: TimeInterval { 30.0 }
+
+    /// Maximum articles to include in digest prompt
+    /// Capped to prevent context overflow and ensure reasonable generation time
+    /// ~250 tokens per article, leaving room for system prompt (~100) and output (~1000)
+    static var maxArticlesForDigest: Int { 10 }
+
+    /// Estimated tokens per article in digest prompt
+    static var estimatedTokensPerArticle: Int { 250 }
+
+    /// Reserved tokens for system prompt and generation output
+    static var reservedContextTokens: Int { 1500 }
 }

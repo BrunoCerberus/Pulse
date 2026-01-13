@@ -15,7 +15,19 @@ enum FeedDigestPromptBuilder {
     - End with a brief insight or observation about the day's reading
     """
 
+    /// Caps articles to a safe limit and returns the subset for digest generation
+    /// - Parameter articles: Full list of articles from reading history
+    /// - Returns: Capped list of most recent articles, safe for context window
+    static func cappedArticles(from articles: [Article]) -> [Article] {
+        let maxArticles = LLMConfiguration.maxArticlesForDigest
+        guard articles.count > maxArticles else { return articles }
+
+        // Take the most recent articles (assuming already sorted by recency)
+        return Array(articles.prefix(maxArticles))
+    }
+
     /// Builds the user message prompt from reading history
+    /// - Parameter articles: Articles to include (should be pre-capped via `cappedArticles`)
     static func buildPrompt(for articles: [Article]) -> String {
         let articleSummaries = articles.enumerated().map { index, article in
             buildArticleSummary(article, index: index + 1)
@@ -33,6 +45,15 @@ enum FeedDigestPromptBuilder {
 
         Generate a cohesive summary highlighting the main themes and insights.
         """
+    }
+
+    /// Estimates the token count for a given set of articles
+    /// Used to verify prompt will fit within context window
+    static func estimatedTokenCount(for articles: [Article]) -> Int {
+        let systemTokens = 100 // Approximate system prompt tokens
+        let articleTokens = articles.count * LLMConfiguration.estimatedTokensPerArticle
+        let overheadTokens = 50 // Prompt structure overhead
+        return systemTokens + articleTokens + overheadTokens
     }
 
     private static func buildArticleSummary(_ article: Article, index: Int) -> String {

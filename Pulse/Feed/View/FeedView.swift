@@ -36,15 +36,6 @@ struct FeedView<R: FeedNavigationRouter>: View {
         }
         .navigationTitle(Constants.title)
         .toolbarBackground(.hidden, for: .navigationBar)
-        .toolbar {
-            ToolbarItem(placement: .topBarTrailing) {
-                refreshButton
-            }
-        }
-        .refreshable {
-            HapticManager.shared.refresh()
-            viewModel.handle(event: .onRefresh)
-        }
         .onAppear {
             viewModel.handle(event: .onAppear)
         }
@@ -82,20 +73,6 @@ struct FeedView<R: FeedNavigationRouter>: View {
         case .error:
             errorView
         }
-    }
-
-    // MARK: - Refresh Button
-
-    private var refreshButton: some View {
-        Button {
-            HapticManager.shared.tap()
-            viewModel.handle(event: .onRefresh)
-        } label: {
-            Image(systemName: "arrow.clockwise")
-                .font(.system(size: IconSize.md))
-                .foregroundStyle(.primary)
-        }
-        .accessibilityLabel("Refresh Digest")
     }
 
     // MARK: - Idle Content
