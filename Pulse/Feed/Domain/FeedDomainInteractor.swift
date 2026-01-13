@@ -194,8 +194,18 @@ final class FeedDomainInteractor: CombineInteractor {
                 // Create and save digest
                 let finalSummary = cleanLLMOutput(fullText)
 
+                // Log generation result for debugging
+                Logger.shared.info(
+                    "Digest generation: raw=\(fullText.count) chars, cleaned=\(finalSummary.count) chars",
+                    category: "FeedDomainInteractor"
+                )
+
                 // Validate that we got a non-empty summary
                 guard !finalSummary.isEmpty else {
+                    Logger.shared.warning(
+                        "Empty digest after cleaning. Raw output: \(fullText.prefix(200))",
+                        category: "FeedDomainInteractor"
+                    )
                     dispatch(action: .digestFailed("Unable to generate summary. Please try again."))
                     return
                 }
