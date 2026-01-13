@@ -110,6 +110,7 @@ final class CollectionsDomainInteractor: CombineInteractor {
                 state.featuredCollections = featured
                 state.userCollections = user
                 state.isRefreshing = false
+                state.hasLoadedInitialData = true
             }
         }
         .store(in: &cancellables)
