@@ -138,16 +138,21 @@ final class FeedUITests: BaseUITestCase {
             // Tap to expand
             sourceArticlesText.tap()
 
-            // Wait a moment for expansion animation
-            wait(for: 0.5)
+            // Wait for expansion animation to complete
+            wait(for: 1.0)
 
-            // Look for article rows that become visible
-            let buttons = app.buttons.allElementsBoundByIndex
+            // Look for article rows with chevron.right (source article rows have this indicator)
+            let chevronButtons = app.buttons.matching(
+                NSPredicate(format: "label CONTAINS[c] 'chevron' OR identifier CONTAINS[c] 'sourceArticle'")
+            )
 
-            for button in buttons {
-                // Find a button that looks like an article row (has reasonable size)
-                if button.frame.width > 200, button.frame.height > 50, button.isHittable {
-                    button.tap()
+            // Try to find and tap a source article button
+            let buttonCount = chevronButtons.count
+            if buttonCount > 0 {
+                // Tap the first available source article
+                let firstButton = chevronButtons.element(boundBy: 0)
+                if firstButton.waitForExistence(timeout: Self.shortTimeout), firstButton.isHittable {
+                    firstButton.tap()
 
                     // Check if we navigated to article detail
                     let backButton = app.buttons["backButton"]
@@ -159,7 +164,6 @@ final class FeedUITests: BaseUITestCase {
 
                         let navTitle = app.navigationBars["Daily Digest"]
                         XCTAssertTrue(navTitle.waitForExistence(timeout: Self.defaultTimeout), "Should return to Feed")
-                        break
                     }
                 }
             }
