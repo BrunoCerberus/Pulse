@@ -240,7 +240,7 @@ struct CoordinatorTests {
         #expect(allTabs.count == 5)
         #expect(allTabs.contains(.home))
         #expect(allTabs.contains(.forYou))
-        #expect(allTabs.contains(.collections))
+        #expect(allTabs.contains(.feed))
         #expect(allTabs.contains(.bookmarks))
         #expect(allTabs.contains(.search))
 

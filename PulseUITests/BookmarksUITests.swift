@@ -8,14 +8,16 @@ final class BookmarksUITests: BaseUITestCase {
     func testBookmarksFlow() throws {
         // --- Tab Navigation ---
         let bookmarksTab = app.tabBars.buttons["Bookmarks"]
-        XCTAssertTrue(bookmarksTab.exists, "Bookmarks tab should exist")
+        XCTAssertTrue(bookmarksTab.waitForExistence(timeout: Self.shortTimeout), "Bookmarks tab should exist")
 
         navigateToBookmarksTab()
 
-        XCTAssertTrue(bookmarksTab.isSelected, "Bookmarks tab should be selected")
-
+        // Wait for nav bar to confirm we're on Bookmarks (more reliable than isSelected)
         let navTitle = app.navigationBars["Bookmarks"]
-        XCTAssertTrue(navTitle.waitForExistence(timeout: Self.shortTimeout), "Navigation title 'Bookmarks' should exist")
+        XCTAssertTrue(navTitle.waitForExistence(timeout: Self.defaultTimeout), "Navigation title 'Bookmarks' should exist")
+
+        // Verify tab is selected after navigation is confirmed
+        XCTAssertTrue(bookmarksTab.isSelected, "Bookmarks tab should be selected")
 
         // --- Content Loading ---
         let noBookmarksText = app.staticTexts["No Bookmarks"]

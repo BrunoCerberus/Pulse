@@ -102,8 +102,6 @@ final class MockStorageService: StorageService {
     var bookmarkedArticles: [Article] = []
     var readingHistory: [Article] = []
     var userPreferences: UserPreferences?
-    var collections: [Collection] = []
-    var collectionArticles: [String: [Article]] = [:] // collectionID -> articles
 
     func saveArticle(_ article: Article) async throws {
         bookmarkedArticles.append(article)
@@ -130,6 +128,11 @@ final class MockStorageService: StorageService {
         readingHistory
     }
 
+    func fetchRecentReadingHistory(since _: Date) async throws -> [Article] {
+        // For tests, return all reading history (tests control the data)
+        readingHistory
+    }
+
     func clearReadingHistory() async throws {
         readingHistory.removeAll()
     }
@@ -140,51 +143,6 @@ final class MockStorageService: StorageService {
 
     func fetchUserPreferences() async throws -> UserPreferences? {
         userPreferences
-    }
-
-    // MARK: - Collections
-
-    func saveCollection(_ collection: Collection) async throws {
-        if let index = collections.firstIndex(where: { $0.id == collection.id }) {
-            collections[index] = collection
-        } else {
-            collections.append(collection)
-        }
-    }
-
-    func deleteCollection(id: String) async throws {
-        collections.removeAll { $0.id == id }
-        collectionArticles.removeValue(forKey: id)
-    }
-
-    func fetchUserCollections() async throws -> [Collection] {
-        collections.filter { $0.collectionType == .user }
-    }
-
-    func fetchCollection(id: String) async throws -> Collection? {
-        collections.first { $0.id == id }
-    }
-
-    // MARK: - Collection Articles
-
-    func saveCollectionArticle(_ article: Article, collectionID: String, orderIndex _: Int) async throws {
-        var articles = collectionArticles[collectionID] ?? []
-        if !articles.contains(where: { $0.id == article.id }) {
-            articles.append(article)
-            collectionArticles[collectionID] = articles
-        }
-    }
-
-    func deleteCollectionArticle(articleID: String, collectionID: String) async throws {
-        collectionArticles[collectionID]?.removeAll { $0.id == articleID }
-    }
-
-    func fetchCollectionArticles(collectionID: String) async throws -> [Article] {
-        collectionArticles[collectionID] ?? []
-    }
-
-    func fetchArticlesForIDs(_ articleIDs: [String]) async throws -> [Article] {
-        collectionArticles.values.flatMap { $0 }.filter { articleIDs.contains($0.id) }
     }
 }
 
@@ -348,6 +306,7 @@ extension ServiceLocator {
         locator.register(RemoteConfigService.self, instance: MockRemoteConfigService())
         locator.register(LLMService.self, instance: MockLLMService())
         locator.register(SummarizationService.self, instance: MockSummarizationService())
+        locator.register(FeedService.self, instance: MockFeedService())
 
         // Auth service with mock signed-in user
         let mockAuth = MockAuthService()
@@ -369,6 +328,7 @@ extension ServiceLocator {
         locator.register(RemoteConfigService.self, instance: MockRemoteConfigService())
         locator.register(LLMService.self, instance: MockLLMService())
         locator.register(SummarizationService.self, instance: MockSummarizationService())
+        locator.register(FeedService.self, instance: MockFeedService())
         locator.register(AuthService.self, instance: MockAuthService())
         return locator
     }

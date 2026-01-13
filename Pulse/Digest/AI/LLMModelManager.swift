@@ -75,8 +75,21 @@ final class LLMModelManager: @unchecked Sendable {
         logger.info("Loading model from: \(modelPath)", category: logCategory)
         progressHandler(0.3)
 
+        // Create configuration with adequate context size for prompt + generation
+        // The prompt can be ~2000 tokens, plus we want to generate ~500-1000 tokens
+        let config = Configuration(
+            topK: 40,
+            topP: 0.9,
+            nCTX: 4096, // Context window: enough for prompt + generated text
+            temperature: 0.6,
+            batchSize: 512,
+            maxTokenCount: 4096, // Must be >= prompt tokens + max generated tokens
+            stopTokens: ["</digest>", "\n\n\n", "---"],
+            timeout: 60.0
+        )
+
         // Create and initialize outside the lock (expensive operation)
-        let llama = SwiftLlama(modelPath: modelPath)
+        let llama = SwiftLlama(modelPath: modelPath, modelConfiguration: config)
 
         do {
             progressHandler(0.5)

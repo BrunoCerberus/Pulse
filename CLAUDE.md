@@ -115,8 +115,8 @@ Pulse is an iOS news aggregation app built with **Unidirectional Data Flow Archi
           │
       TabView (selection: $coordinator.selectedTab)
           │
-      ┌───┴───┬───────┬────────────┬─────────┬───────┐
-    Home   ForYou  Collections  Bookmarks  Search
+      ┌───┴───┬───────┬──────┬─────────┬───────┐
+    Home   ForYou   Feed   Bookmarks  Search
       │       │          │           │         │
    NavigationStack(path: $coordinator.homePath)
           │
@@ -176,22 +176,21 @@ Pulse/
 │   ├── ViewStates/             # HomeViewState
 │   └── Router/                 # HomeNavigationRouter
 ├── ForYou/                     # Personalized feed (same pattern)
-├── Collections/                # Curated reading lists with progress tracking
-│   ├── API/                    # CollectionsService protocol + Live/Mock
-│   ├── Domain/                 # Interactor, State, Action, Reducer, EventActionMap
-│   ├── ViewModel/              # CollectionsViewModel
-│   ├── View/                   # CollectionsView, CollectionCard, CollectionDetailView
-│   ├── ViewEvents/             # CollectionsViewEvent
-│   ├── ViewStates/             # CollectionsViewState
-│   ├── Router/                 # CollectionsNavigationRouter
-│   └── Models/                 # Collection, CollectionDefinition
-│   ├── API/                    # DigestService protocol + Live/Mock
+├── Feed/                       # AI-powered Daily Digest
+│   ├── API/                    # FeedService protocol + Live/Mock
+│   ├── Domain/                 # FeedDomainInteractor, State, Action, Reducer, EventActionMap
+│   ├── ViewModel/              # FeedViewModel
+│   ├── View/                   # FeedView, DigestCard, StreamingTextView, SourceArticlesSection
+│   ├── ViewEvents/             # FeedViewEvent
+│   ├── ViewStates/             # FeedViewState
+│   ├── Router/                 # FeedNavigationRouter
+│   └── Models/                 # DailyDigest, FeedDigestPromptBuilder
+├── Digest/                     # Article summarization (AI)
+│   ├── API/                    # SummarizationService protocol + Live/Mock
 │   ├── AI/                     # LLMService, LLMModelManager, LLMConfiguration
-│   ├── Domain/                 # DigestDomainInteractor, State, Action
-│   ├── ViewModel/              # DigestViewModel
-│   ├── View/                   # DigestView, DigestSourceCard, DigestSourceChip
-│   ├── Router/                 # DigestNavigationRouter
-│   └── Models/                 # DigestResult, DigestPromptBuilder
+│   ├── Domain/                 # SummarizationDomainInteractor, State, Action
+│   ├── ViewModel/              # SummarizationViewModel
+│   └── View/                   # SummarizationSheet
 ├── Search/                     # Search feature
 ├── Bookmarks/                  # Offline reading
 ├── Settings/                   # User preferences (includes account/logout)
@@ -215,7 +214,7 @@ Pulse/
 | **Authentication** | Firebase Auth with Google and Apple Sign-In (required before accessing app) |
 | **Home** | Breaking news carousel, top headlines with infinite scroll, settings access via gear icon |
 | **For You** | Personalized feed based on followed topics |
-| **Collections** | Curated reading lists with progress tracking - featured, user-created, and AI-curated collections |
+| **Feed** | AI-powered Daily Digest summarizing articles read in last 48 hours using on-device LLM (Llama 3.2-1B) |
 | **Search** | Full-text search with 300ms debounce, suggestions, and sort options (last tab with liquid glass style) |
 | **Bookmarks** | Save articles for offline reading (SwiftData) |
 | **Settings** | Topics, notifications, theme, muted content, account/logout (accessed from Home navigation bar) |
@@ -384,7 +383,7 @@ See `APIKeysProvider.swift` for the fallback hierarchy implementation.
 pulse://home
 pulse://search?q=query
 pulse://bookmarks
-pulse://collections
+pulse://feed
 pulse://settings
 pulse://article?id=123
 ```

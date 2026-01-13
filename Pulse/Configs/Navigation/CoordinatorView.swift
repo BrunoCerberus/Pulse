@@ -43,11 +43,11 @@ struct CoordinatorView: View {
                 }
             }
 
-            Tab("Collections", systemImage: AppTab.collections.symbolImage, value: .collections) {
-                NavigationStack(path: $coordinator.collectionsPath) {
-                    CollectionsView(
-                        router: CollectionsNavigationRouter(coordinator: coordinator),
-                        viewModel: coordinator.collectionsViewModel
+            Tab("Feed", systemImage: AppTab.feed.symbolImage, value: .feed) {
+                NavigationStack(path: $coordinator.feedPath) {
+                    FeedView(
+                        router: FeedNavigationRouter(coordinator: coordinator),
+                        viewModel: coordinator.feedViewModel
                     )
                     .navigationDestination(for: Page.self) { page in
                         coordinator.build(page: page)
