@@ -6,13 +6,56 @@ struct StreamingTextView: View {
     let text: String
 
     var body: some View {
-        VStack(alignment: .leading, spacing: Spacing.sm) {
-            Text(text)
-                .font(Typography.bodyMedium)
-                .foregroundStyle(.primary)
-                .lineSpacing(4)
+        HStack(alignment: .top, spacing: 0) {
+            // Left accent border (matching DigestCard style)
+            RoundedRectangle(cornerRadius: 2)
+                .fill(
+                    LinearGradient(
+                        colors: [Color.Accent.primary, Color.Accent.primary.opacity(0.5)],
+                        startPoint: .top,
+                        endPoint: .bottom
+                    )
+                )
+                .frame(width: 3)
+                .padding(.trailing, Spacing.md)
 
-            BlinkingCursor()
+            VStack(alignment: .leading, spacing: Spacing.sm) {
+                streamingContent
+
+                BlinkingCursor()
+            }
+        }
+    }
+
+    // MARK: - Streaming Content with Drop Cap
+
+    @ViewBuilder
+    private var streamingContent: some View {
+        let trimmedText = text.trimmingCharacters(in: .whitespacesAndNewlines)
+
+        if trimmedText.isEmpty {
+            // Show placeholder while waiting for first character
+            Text(" ")
+                .font(Typography.aiContentMedium)
+        } else {
+            let firstChar = String(trimmedText.prefix(1))
+            let remainingText = String(trimmedText.dropFirst())
+
+            HStack(alignment: .top, spacing: 0) {
+                // Drop cap
+                Text(firstChar)
+                    .font(Typography.aiDropCap)
+                    .foregroundStyle(Color.Accent.primary)
+                    .frame(width: 44, alignment: .leading)
+                    .padding(.trailing, Spacing.xs)
+
+                // Remaining text
+                Text(remainingText)
+                    .font(Typography.aiContentMedium)
+                    .foregroundStyle(.primary.opacity(0.9))
+                    .lineSpacing(6)
+                    .frame(maxWidth: .infinity, alignment: .leading)
+            }
         }
     }
 }

@@ -38,6 +38,13 @@ enum Typography {
     static let labelLarge = Font.system(.subheadline)
     static let labelMedium = Font.system(.caption)
     static let labelSmall = Font.system(.caption2)
+
+    // MARK: - AI Content (Serif editorial style)
+
+    static let aiContentLarge = Font.system(.title3, design: .serif)
+    static let aiContentMedium = Font.system(.body, design: .serif)
+    static let aiContentSmall = Font.system(.callout, design: .serif)
+    static let aiDropCap = Font.system(size: 48, weight: .medium, design: .serif)
 }
 
 // MARK: - Text Style Modifiers
