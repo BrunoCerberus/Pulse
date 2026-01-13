@@ -133,13 +133,25 @@ final class LiveStorageService: StorageService {
     @MainActor
     func deleteCollection(id: String) async throws {
         let context = modelContainer.mainContext
+
+        // Delete associated collection articles first
+        let articlesDescriptor = FetchDescriptor<CollectionArticleModel>(
+            predicate: #Predicate { $0.collectionID == id }
+        )
+        let articlesToDelete = try context.fetch(articlesDescriptor)
+        for article in articlesToDelete {
+            context.delete(article)
+        }
+
+        // Delete the collection itself
         let descriptor = FetchDescriptor<CollectionModel>(
             predicate: #Predicate { $0.collectionID == id }
         )
         if let existing = try context.fetch(descriptor).first {
             context.delete(existing)
-            try context.save()
         }
+
+        try context.save()
     }
 
     @MainActor
