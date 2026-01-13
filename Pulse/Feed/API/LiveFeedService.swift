@@ -33,7 +33,10 @@ final class LiveFeedService: FeedService {
     }
 
     func generateDigest(from articles: [Article]) -> AsyncThrowingStream<String, Error> {
-        let prompt = FeedDigestPromptBuilder.buildPrompt(for: articles)
+        // Cap articles to prevent context overflow and ensure reasonable generation time
+        let cappedArticles = FeedDigestPromptBuilder.cappedArticles(from: articles)
+
+        let prompt = FeedDigestPromptBuilder.buildPrompt(for: cappedArticles)
         let systemPrompt = FeedDigestPromptBuilder.systemPrompt
         let config = LLMInferenceConfig.dailyDigest
 

@@ -153,6 +153,19 @@ final class FeedDomainInteractor: CombineInteractor {
         }
 
         generationTask?.cancel()
+
+        // Cap articles to prevent context overflow and long generation times
+        let articlesToProcess = FeedDigestPromptBuilder.cappedArticles(from: currentState.readingHistory)
+        let totalArticles = currentState.readingHistory.count
+        let cappedCount = articlesToProcess.count
+
+        if totalArticles > cappedCount {
+            Logger.shared.info(
+                "Digest: capped articles from \(totalArticles) to \(cappedCount) for context safety",
+                category: "FeedDomainInteractor"
+            )
+        }
+
         updateState { state in
             state.streamingText = ""
             state.generationState = .loadingModel(progress: 0)
@@ -174,7 +187,7 @@ final class FeedDomainInteractor: CombineInteractor {
                 var tokensSinceLastUpdate = 0
                 let updateBatchSize = 3
 
-                for try await token in feedService.generateDigest(from: currentState.readingHistory) {
+                for try await token in feedService.generateDigest(from: articlesToProcess) {
                     guard !Task.isCancelled else { break }
 
                     fullText += token
@@ -213,7 +226,7 @@ final class FeedDomainInteractor: CombineInteractor {
                 let digest = DailyDigest(
                     id: UUID().uuidString,
                     summary: finalSummary,
-                    sourceArticles: currentState.readingHistory,
+                    sourceArticles: articlesToProcess,
                     generatedAt: Date()
                 )
                 feedService.saveDigest(digest)
@@ -221,6 +234,10 @@ final class FeedDomainInteractor: CombineInteractor {
 
             } catch {
                 guard !Task.isCancelled else { return }
+                Logger.shared.error(
+                    "Digest generation failed: \(error)",
+                    category: "FeedDomainInteractor"
+                )
                 dispatch(action: .digestFailed(error.localizedDescription))
             }
         }
