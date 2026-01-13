@@ -20,7 +20,10 @@ struct SourceArticlesSection: View {
 
             if isExpanded {
                 articlesList
-                    .transition(.opacity.combined(with: .move(edge: .top)))
+                    .transition(.asymmetric(
+                        insertion: .opacity.combined(with: .scale(scale: 0.95, anchor: .top)),
+                        removal: .opacity.combined(with: .scale(scale: 0.95, anchor: .top))
+                    ))
             }
         }
         .animation(.spring(response: 0.3, dampingFraction: 0.8), value: isExpanded)

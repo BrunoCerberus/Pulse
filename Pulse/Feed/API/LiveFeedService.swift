@@ -24,7 +24,8 @@ final class LiveFeedService: FeedService {
 
     func fetchTodaysDigest() -> DailyDigest? {
         guard let cached = cachedDigest,
-              Calendar.current.isDateInToday(cached.generatedAt)
+              Calendar.current.isDateInToday(cached.generatedAt),
+              !cached.summary.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty
         else {
             return nil
         }
@@ -48,6 +49,10 @@ final class LiveFeedService: FeedService {
     }
 
     func saveDigest(_ digest: DailyDigest) {
+        // Only cache digests with non-empty summaries
+        guard !digest.summary.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty else {
+            return
+        }
         cachedDigest = digest
     }
 }

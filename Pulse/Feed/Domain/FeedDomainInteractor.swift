@@ -193,6 +193,13 @@ final class FeedDomainInteractor: CombineInteractor {
 
                 // Create and save digest
                 let finalSummary = cleanLLMOutput(fullText)
+
+                // Validate that we got a non-empty summary
+                guard !finalSummary.isEmpty else {
+                    dispatch(action: .digestFailed("Unable to generate summary. Please try again."))
+                    return
+                }
+
                 let digest = DailyDigest(
                     id: UUID().uuidString,
                     summary: finalSummary,
