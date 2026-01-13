@@ -191,7 +191,7 @@ final class PulseSceneDelegate: UIResponder, UIWindowSceneDelegate {
                 serviceLocator.register(ForYouService.self, instance: MockForYouService())
                 serviceLocator.register(LLMService.self, instance: MockLLMService())
                 serviceLocator.register(SummarizationService.self, instance: MockSummarizationService())
-                serviceLocator.register(CollectionsService.self, instance: MockCollectionsService.withSampleData())
+                serviceLocator.register(FeedService.self, instance: MockFeedService.withSampleData())
                 serviceLocator.register(StoreKitService.self, instance: MockStoreKitService())
                 serviceLocator.register(RemoteConfigService.self, instance: MockRemoteConfigService())
                 serviceLocator.register(AuthService.self, instance: MockAuthService())
@@ -232,7 +232,7 @@ final class PulseSceneDelegate: UIResponder, UIWindowSceneDelegate {
         serviceLocator.register(StoreKitService.self, instance: LiveStoreKitService())
         serviceLocator.register(LLMService.self, instance: LiveLLMService())
         serviceLocator.register(SummarizationService.self, instance: LiveSummarizationService())
-        serviceLocator.register(CollectionsService.self, instance: LiveCollectionsService(storageService: storageService))
+        serviceLocator.register(FeedService.self, instance: LiveFeedService())
 
         // Register services that depend on StorageService
         serviceLocator.register(BookmarksService.self, instance: LiveBookmarksService(storageService: storageService))

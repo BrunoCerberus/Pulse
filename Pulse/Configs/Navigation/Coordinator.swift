@@ -11,7 +11,7 @@ protocol AnimatedTabSelectionProtocol: CaseIterable, Hashable {
 enum AppTab: String, CaseIterable, AnimatedTabSelectionProtocol {
     case home
     case forYou
-    case collections
+    case feed
     case bookmarks
     case search
 
@@ -19,7 +19,7 @@ enum AppTab: String, CaseIterable, AnimatedTabSelectionProtocol {
         switch self {
         case .home: "newspaper"
         case .forYou: "heart.text.square"
-        case .collections: "rectangle.stack"
+        case .feed: "text.document"
         case .bookmarks: "bookmark"
         case .search: "magnifyingglass"
         }
@@ -29,7 +29,7 @@ enum AppTab: String, CaseIterable, AnimatedTabSelectionProtocol {
         switch self {
         case .home: .bounce
         case .forYou: .bounce
-        case .collections: .bounce
+        case .feed: .bounce
         case .bookmarks: .bounce
         case .search: .bounce
         }
@@ -65,8 +65,8 @@ final class Coordinator: ObservableObject {
     /// Navigation path for the For You tab
     @Published var forYouPath = NavigationPath()
 
-    /// Navigation path for the Collections tab
-    @Published var collectionsPath = NavigationPath()
+    /// Navigation path for the Feed tab
+    @Published var feedPath = NavigationPath()
 
     /// Navigation path for the Bookmarks tab
     @Published var bookmarksPath = NavigationPath()
@@ -87,8 +87,8 @@ final class Coordinator: ObservableObject {
     /// Shared ForYouViewModel instance
     lazy var forYouViewModel: ForYouViewModel = .init(serviceLocator: serviceLocator)
 
-    /// Shared CollectionsViewModel instance
-    lazy var collectionsViewModel: CollectionsViewModel = .init(serviceLocator: serviceLocator)
+    /// Shared FeedViewModel instance
+    lazy var feedViewModel: FeedViewModel = .init(serviceLocator: serviceLocator)
 
     /// Shared BookmarksViewModel instance
     lazy var bookmarksViewModel: BookmarksViewModel = .init(serviceLocator: serviceLocator)
@@ -120,8 +120,8 @@ final class Coordinator: ObservableObject {
             homePath.append(page)
         case .forYou:
             forYouPath.append(page)
-        case .collections:
-            collectionsPath.append(page)
+        case .feed:
+            feedPath.append(page)
         case .bookmarks:
             bookmarksPath.append(page)
         case .search:
@@ -136,8 +136,8 @@ final class Coordinator: ObservableObject {
             if !homePath.isEmpty { homePath.removeLast() }
         case .forYou:
             if !forYouPath.isEmpty { forYouPath.removeLast() }
-        case .collections:
-            if !collectionsPath.isEmpty { collectionsPath.removeLast() }
+        case .feed:
+            if !feedPath.isEmpty { feedPath.removeLast() }
         case .bookmarks:
             if !bookmarksPath.isEmpty { bookmarksPath.removeLast() }
         case .search:
@@ -154,8 +154,8 @@ final class Coordinator: ObservableObject {
             homePath = NavigationPath()
         case .forYou:
             forYouPath = NavigationPath()
-        case .collections:
-            collectionsPath = NavigationPath()
+        case .feed:
+            feedPath = NavigationPath()
         case .bookmarks:
             bookmarksPath = NavigationPath()
         case .search:
@@ -184,13 +184,6 @@ final class Coordinator: ObservableObject {
         switch page {
         case let .articleDetail(article):
             ArticleDetailView(article: article, serviceLocator: serviceLocator)
-
-        case let .collectionDetail(collection):
-            CollectionDetailView(
-                collection: collection,
-                router: CollectionsNavigationRouter(coordinator: self),
-                serviceLocator: serviceLocator
-            )
 
         case .settings:
             SettingsView(serviceLocator: serviceLocator)
