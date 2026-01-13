@@ -127,7 +127,12 @@ The app fetches keys from Remote Config on launch. Environment variables are use
 | Command | Description |
 |---------|-------------|
 | `make setup` | Install XcodeGen and generate project |
+| `make xcode` | Generate project and open in Xcode |
 | `make build` | Build for development |
+| `make build-release` | Build for release |
+| `make bump-patch` | Increase patch version (0.0.x) |
+| `make bump-minor` | Increase minor version (0.x.0) |
+| `make bump-major` | Increase major version (x.0.0) |
 | `make test` | Run all tests |
 | `make test-unit` | Run unit tests only |
 | `make test-ui` | Run UI tests only |

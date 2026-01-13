@@ -1,7 +1,7 @@
 # Pulse Makefile
 # Build, test, and development automation
 
-.PHONY: help init install-xcodegen generate setup test test-unit test-ui test-snapshot test-debug clean clean-packages coverage coverage-report coverage-badge deeplink-test lint format build build-release
+.PHONY: help init install-xcodegen generate setup xcode test test-unit test-ui test-snapshot test-debug clean clean-packages coverage coverage-report coverage-badge deeplink-test lint format build build-release bump-patch bump-minor bump-major
 
 # Default target
 help:
@@ -25,6 +25,10 @@ help:
 	@echo "  coverage-report   - Show detailed per-file coverage report"
 	@echo "  coverage-badge    - Generate SVG badge at badges/coverage.svg"
 	@echo "  deeplink-test     - Test deeplink functionality specifically"
+	@echo "  xcode             - Generate project and open in Xcode"
+	@echo "  bump-patch        - Increase patch version (0.0.x)"
+	@echo "  bump-minor        - Increase minor version (0.x.0)"
+	@echo "  bump-major        - Increase major version (x.0.0)"
 	@echo "  help              - Show this help message"
 
 # Setup Mint, SwiftFormat, and SwiftLint
@@ -233,3 +237,41 @@ clean:
 	@rm -rf Pulse.xcodeproj
 	@rm -rf build/TestResults.xcresult
 	@echo "Cleaned!"
+
+# Generate project and open in Xcode
+xcode: generate
+	@echo "Opening Xcode..."
+	@open Pulse.xcodeproj
+
+# Bump patch version (0.0.x)
+bump-patch:
+	@echo "Bumping patch version..."
+	@CURRENT=$$(grep 'MARKETING_VERSION:' project.yml | head -1 | sed 's/.*"\(.*\)"/\1/'); \
+	MAJOR=$$(echo $$CURRENT | cut -d. -f1); \
+	MINOR=$$(echo $$CURRENT | cut -d. -f2); \
+	PATCH=$$(echo $$CURRENT | cut -d. -f3); \
+	NEW_PATCH=$$((PATCH + 1)); \
+	NEW_VERSION="$$MAJOR.$$MINOR.$$NEW_PATCH"; \
+	sed -i '' "s/MARKETING_VERSION: \"$$CURRENT\"/MARKETING_VERSION: \"$$NEW_VERSION\"/g" project.yml; \
+	echo "Version bumped: $$CURRENT -> $$NEW_VERSION"
+
+# Bump minor version (0.x.0)
+bump-minor:
+	@echo "Bumping minor version..."
+	@CURRENT=$$(grep 'MARKETING_VERSION:' project.yml | head -1 | sed 's/.*"\(.*\)"/\1/'); \
+	MAJOR=$$(echo $$CURRENT | cut -d. -f1); \
+	MINOR=$$(echo $$CURRENT | cut -d. -f2); \
+	NEW_MINOR=$$((MINOR + 1)); \
+	NEW_VERSION="$$MAJOR.$$NEW_MINOR.0"; \
+	sed -i '' "s/MARKETING_VERSION: \"$$CURRENT\"/MARKETING_VERSION: \"$$NEW_VERSION\"/g" project.yml; \
+	echo "Version bumped: $$CURRENT -> $$NEW_VERSION"
+
+# Bump major version (x.0.0)
+bump-major:
+	@echo "Bumping major version..."
+	@CURRENT=$$(grep 'MARKETING_VERSION:' project.yml | head -1 | sed 's/.*"\(.*\)"/\1/'); \
+	MAJOR=$$(echo $$CURRENT | cut -d. -f1); \
+	NEW_MAJOR=$$((MAJOR + 1)); \
+	NEW_VERSION="$$NEW_MAJOR.0.0"; \
+	sed -i '' "s/MARKETING_VERSION: \"$$CURRENT\"/MARKETING_VERSION: \"$$NEW_VERSION\"/g" project.yml; \
+	echo "Version bumped: $$CURRENT -> $$NEW_VERSION"
