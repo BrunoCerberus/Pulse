@@ -16,7 +16,15 @@ Pulse/
 │   │   ├── View/               # SignInView
 │   │   └── Manager/            # AuthenticationManager (global state)
 │   ├── [Feature]/              # Feature modules (Home, ForYou, Search, Bookmarks, etc.)
-│   ├── Digest/                 # AI-powered digest (special structure)
+│   ├── Collections/            # Curated reading lists with progress tracking
+│   │   ├── API/                # CollectionsService protocol + Live/Mock
+│   │   ├── Domain/             # CollectionsDomainInteractor, State, Action
+│   │   ├── ViewModel/          # CollectionsViewModel
+│   │   ├── View/               # CollectionsView, CollectionCard, CollectionDetailView
+│   │   ├── ViewEvents/         # CollectionsViewEvent
+│   │   ├── ViewStates/         # CollectionsViewState
+│   │   ├── Router/             # CollectionsNavigationRouter
+│   │   └── Models/             # Collection, CollectionDefinition
 │   │   ├── API/                # DigestService protocol + Live/Mock
 │   │   ├── AI/                 # LLMService, LLMModelManager (llama.cpp via LocalLlama)
 │   │   ├── Domain/             # DigestDomainInteractor, State, Action
@@ -213,9 +221,9 @@ CoordinatorView (@StateObject Coordinator)
        │
    TabView (selection: $coordinator.selectedTab)
        │
-   ┌───┴───┬───────┬─────────┬─────────┐
- Home   ForYou   Digest  Bookmarks Search
-   │       │        │          │        │
+   ┌───┴───┬───────┬────────────┬─────────┬───────┐
+ Home   ForYou  Collections  Bookmarks  Search
+   │       │          │           │         │
 NavigationStack(path: $coordinator.homePath)
        │
 .navigationDestination(for: Page.self)

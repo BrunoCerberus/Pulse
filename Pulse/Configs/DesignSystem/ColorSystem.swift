@@ -32,6 +32,7 @@ extension Color {
         static let primary = Color.blue
         static let secondary = Color.purple
         static let tertiary = Color.cyan
+        static let gold = Color.orange
 
         static var gradient: LinearGradient {
             LinearGradient(
@@ -63,6 +64,7 @@ extension Color {
         static let warning = Color.orange
         static let error = Color.red
         static let info = Color.blue
+        static let skeleton = Color(.systemGray5)
     }
 }
 

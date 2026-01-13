@@ -237,9 +237,10 @@ struct CoordinatorTests {
     @Test("AppTab has all expected cases with symbol images")
     func appTabHasAllExpectedCasesWithSymbols() {
         let allTabs = AppTab.allCases
-        #expect(allTabs.count == 4)
+        #expect(allTabs.count == 5)
         #expect(allTabs.contains(.home))
         #expect(allTabs.contains(.forYou))
+        #expect(allTabs.contains(.collections))
         #expect(allTabs.contains(.bookmarks))
         #expect(allTabs.contains(.search))
 
