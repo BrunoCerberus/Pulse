@@ -10,7 +10,24 @@ final class MockFeedService: FeedService {
     var mockDigest: DailyDigest?
     var mockModelStatus: LLMModelStatus = .notLoaded
 
+    /// Alias for mockDigest for cleaner test code
+    var cachedDigest: DailyDigest? {
+        get { mockDigest }
+        set { mockDigest = newValue }
+    }
+
+    /// Custom tokens to stream during generation (if set, overrides default summary)
+    var streamTokens: [String]?
+
+    /// Tracks whether cancelGeneration was called
+    private(set) var cancelGenerationCalled = false
+
     private let modelStatusSubject = CurrentValueSubject<LLMModelStatus, Never>(.notLoaded)
+
+    /// Simulate a model status change for testing
+    func simulateModelStatus(_ status: LLMModelStatus) {
+        modelStatusSubject.send(status)
+    }
 
     // MARK: - FeedService Protocol
 
@@ -51,12 +68,18 @@ final class MockFeedService: FeedService {
                     return
                 }
 
-                let mockSummary = Self.generateMockSummary(for: articles)
-                let words = mockSummary.split(separator: " ")
+                // Use custom tokens if set, otherwise generate from articles
+                let tokens: [String]
+                if let customTokens = self.streamTokens {
+                    tokens = customTokens
+                } else {
+                    let mockSummary = Self.generateMockSummary(for: articles)
+                    tokens = mockSummary.split(separator: " ").map { String($0) + " " }
+                }
 
-                for word in words {
+                for token in tokens {
                     try await Task.sleep(for: .milliseconds(Int(self.generateDelay * 1000)))
-                    continuation.yield(String(word) + " ")
+                    continuation.yield(token)
                 }
 
                 continuation.finish()
@@ -65,7 +88,7 @@ final class MockFeedService: FeedService {
     }
 
     func cancelGeneration() {
-        // No-op for mock
+        cancelGenerationCalled = true
     }
 
     func saveDigest(_ digest: DailyDigest) {
