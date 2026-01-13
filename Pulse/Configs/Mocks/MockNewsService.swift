@@ -128,6 +128,11 @@ final class MockStorageService: StorageService {
         readingHistory
     }
 
+    func fetchRecentReadingHistory(since _: Date) async throws -> [Article] {
+        // For tests, return all reading history (tests control the data)
+        readingHistory
+    }
+
     func clearReadingHistory() async throws {
         readingHistory.removeAll()
     }
@@ -301,6 +306,7 @@ extension ServiceLocator {
         locator.register(RemoteConfigService.self, instance: MockRemoteConfigService())
         locator.register(LLMService.self, instance: MockLLMService())
         locator.register(SummarizationService.self, instance: MockSummarizationService())
+        locator.register(FeedService.self, instance: MockFeedService())
 
         // Auth service with mock signed-in user
         let mockAuth = MockAuthService()
@@ -322,6 +328,7 @@ extension ServiceLocator {
         locator.register(RemoteConfigService.self, instance: MockRemoteConfigService())
         locator.register(LLMService.self, instance: MockLLMService())
         locator.register(SummarizationService.self, instance: MockSummarizationService())
+        locator.register(FeedService.self, instance: MockFeedService())
         locator.register(AuthService.self, instance: MockAuthService())
         return locator
     }

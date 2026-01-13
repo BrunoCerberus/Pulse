@@ -119,12 +119,9 @@ final class FeedDomainInteractor: CombineInteractor {
 
         Task { @MainActor in
             do {
-                let history = try await storageService.fetchReadingHistory()
-                // Filter to last 48 hours
+                // Filter to articles read in the last 48 hours (by readAt, not publishedAt)
                 let cutoff = Date().addingTimeInterval(-48 * 60 * 60)
-                let recentHistory = history.filter { article in
-                    article.publishedAt > cutoff
-                }
+                let recentHistory = try await storageService.fetchRecentReadingHistory(since: cutoff)
                 dispatch(action: .readingHistoryLoaded(recentHistory))
             } catch {
                 dispatch(action: .readingHistoryFailed(error.localizedDescription))

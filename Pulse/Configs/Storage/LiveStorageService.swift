@@ -86,6 +86,17 @@ final class LiveStorageService: StorageService {
     }
 
     @MainActor
+    func fetchRecentReadingHistory(since cutoffDate: Date) async throws -> [Article] {
+        let context = modelContainer.mainContext
+        let descriptor = FetchDescriptor<ReadingHistoryEntry>(
+            predicate: #Predicate { $0.readAt > cutoffDate },
+            sortBy: [SortDescriptor(\.readAt, order: .reverse)]
+        )
+        let history = try context.fetch(descriptor)
+        return history.map { $0.toArticle() }
+    }
+
+    @MainActor
     func clearReadingHistory() async throws {
         let context = modelContainer.mainContext
         try context.delete(model: ReadingHistoryEntry.self)

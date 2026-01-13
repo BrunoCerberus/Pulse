@@ -13,6 +13,7 @@ protocol StorageService {
 
     func saveReadingHistory(_ article: Article) async throws
     func fetchReadingHistory() async throws -> [Article]
+    func fetchRecentReadingHistory(since cutoffDate: Date) async throws -> [Article]
     func clearReadingHistory() async throws
 
     // MARK: - User Preferences
