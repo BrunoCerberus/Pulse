@@ -16,15 +16,15 @@ Pulse/
 │   │   ├── View/               # SignInView
 │   │   └── Manager/            # AuthenticationManager (global state)
 │   ├── [Feature]/              # Feature modules (Home, ForYou, Search, Bookmarks, etc.)
-│   ├── Collections/            # Curated reading lists with progress tracking
-│   │   ├── API/                # CollectionsService protocol + Live/Mock
-│   │   ├── Domain/             # CollectionsDomainInteractor, State, Action
-│   │   ├── ViewModel/          # CollectionsViewModel
-│   │   ├── View/               # CollectionsView, CollectionCard, CollectionDetailView
-│   │   ├── ViewEvents/         # CollectionsViewEvent
-│   │   ├── ViewStates/         # CollectionsViewState
-│   │   ├── Router/             # CollectionsNavigationRouter
-│   │   └── Models/             # Collection, CollectionDefinition
+│   ├── Feed/                   # AI-powered Daily Digest
+│   │   ├── API/                # FeedService protocol + Live/Mock
+│   │   ├── Domain/             # FeedDomainInteractor, State, Action, Reducer, EventActionMap
+│   │   ├── ViewModel/          # FeedViewModel
+│   │   ├── View/               # FeedView, DigestCard, StreamingTextView, SourceArticlesSection
+│   │   ├── ViewEvents/         # FeedViewEvent
+│   │   ├── ViewStates/         # FeedViewState
+│   │   ├── Router/             # FeedNavigationRouter
+│   │   └── Models/             # DailyDigest, FeedDigestPromptBuilder
 │   │   ├── API/                # DigestService protocol + Live/Mock
 │   │   ├── AI/                 # LLMService, LLMModelManager (llama.cpp via LocalLlama)
 │   │   ├── Domain/             # DigestDomainInteractor, State, Action
@@ -221,8 +221,8 @@ CoordinatorView (@StateObject Coordinator)
        │
    TabView (selection: $coordinator.selectedTab)
        │
-   ┌───┴───┬───────┬────────────┬─────────┬───────┐
- Home   ForYou  Collections  Bookmarks  Search
+   ┌───┴───┬───────┬──────┬─────────┬───────┐
+ Home   ForYou   Feed   Bookmarks  Search
    │       │          │           │         │
 NavigationStack(path: $coordinator.homePath)
        │
