@@ -225,10 +225,16 @@ Pulse/
 ```bash
 # Setup
 make setup              # Install XcodeGen + generate project
+make xcode              # Generate project + open in Xcode
 
 # Building
 make build              # Debug build
 make build-release      # Release build
+
+# Version Management
+make bump-patch         # Increase patch version (0.0.x)
+make bump-minor         # Increase minor version (0.x.0)
+make bump-major         # Increase major version (x.0.0)
 
 # Testing
 make test               # All tests
