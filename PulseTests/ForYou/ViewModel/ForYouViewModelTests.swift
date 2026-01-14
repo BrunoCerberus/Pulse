@@ -129,9 +129,14 @@ struct ForYouViewModelTests {
         let article = Article.mockArticles[0]
 
         // First load articles so they can be found
-        mockForYouService.personalizedFeedResult = .success([article])
+        mockForYouService.feedResult = .success([article])
         sut.handle(event: .onAppear)
-        try await waitForStateUpdate()
+
+        // Wait for articles to actually load (async operation)
+        let articlesLoaded = await waitForCondition(timeout: 1_000_000_000) { [sut] in
+            !sut.viewState.articles.isEmpty
+        }
+        #expect(articlesLoaded, "Articles should be loaded before tapping")
 
         sut.handle(event: .onArticleTapped(articleId: article.id))
 
@@ -148,14 +153,19 @@ struct ForYouViewModelTests {
         let article = Article.mockArticles[0]
 
         // First load and select an article
-        mockForYouService.personalizedFeedResult = .success([article])
+        mockForYouService.feedResult = .success([article])
         sut.handle(event: .onAppear)
-        try await waitForStateUpdate()
+
+        // Wait for articles to actually load (async operation)
+        let articlesLoaded = await waitForCondition(timeout: 1_000_000_000) { [sut] in
+            !sut.viewState.articles.isEmpty
+        }
+        #expect(articlesLoaded, "Articles should be loaded before tapping")
 
         sut.handle(event: .onArticleTapped(articleId: article.id))
 
         // Wait for article to be selected
-        let selected = await waitForCondition { [sut] in
+        let selected = await waitForCondition(timeout: 1_000_000_000) { [sut] in
             sut.viewState.selectedArticle != nil
         }
         #expect(selected)
