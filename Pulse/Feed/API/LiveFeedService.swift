@@ -61,7 +61,7 @@ final class LiveFeedService: FeedService {
 extension LLMInferenceConfig {
     static var dailyDigest: LLMInferenceConfig {
         LLMInferenceConfig(
-            maxTokens: 1024,
+            maxTokens: 1500,
             temperature: 0.6,
             topP: 0.9,
             stopSequences: ["</digest>", "\n\n\n", "---"]
