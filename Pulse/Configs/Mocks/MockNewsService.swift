@@ -103,16 +103,29 @@ final class MockStorageService: StorageService {
     var readingHistory: [Article] = []
     var userPreferences: UserPreferences?
 
+    // Error simulation properties
+    var fetchBookmarksError: Error?
+    var deleteArticleError: Error?
+    var fetchPreferencesError: Error?
+    var savePreferencesError: Error?
+    var clearHistoryError: Error?
+
     func saveArticle(_ article: Article) async throws {
         bookmarkedArticles.append(article)
     }
 
     func deleteArticle(_ article: Article) async throws {
+        if let error = deleteArticleError {
+            throw error
+        }
         bookmarkedArticles.removeAll { $0.id == article.id }
     }
 
     func fetchBookmarkedArticles() async throws -> [Article] {
-        bookmarkedArticles
+        if let error = fetchBookmarksError {
+            throw error
+        }
+        return bookmarkedArticles
     }
 
     func isBookmarked(_ articleID: String) async -> Bool {
@@ -134,15 +147,24 @@ final class MockStorageService: StorageService {
     }
 
     func clearReadingHistory() async throws {
+        if let error = clearHistoryError {
+            throw error
+        }
         readingHistory.removeAll()
     }
 
     func saveUserPreferences(_ preferences: UserPreferences) async throws {
+        if let error = savePreferencesError {
+            throw error
+        }
         userPreferences = preferences
     }
 
     func fetchUserPreferences() async throws -> UserPreferences? {
-        userPreferences
+        if let error = fetchPreferencesError {
+            throw error
+        }
+        return userPreferences
     }
 }
 
@@ -201,6 +223,10 @@ final class MockLLMService: LLMService {
     var generateDelay: TimeInterval = 0.1
     var shouldSimulateMemoryPressure = false
 
+    // Call tracking for tests
+    var loadModelCallCount = 0
+    var cancelGenerationCallCount = 0
+
     private let modelStatusSubject = CurrentValueSubject<LLMModelStatus, Never>(.notLoaded)
 
     var modelStatusPublisher: AnyPublisher<LLMModelStatus, Never> {
@@ -208,11 +234,21 @@ final class MockLLMService: LLMService {
     }
 
     var isModelLoaded: Bool {
-        if case .ready = modelStatusSubject.value { return true }
-        return false
+        get {
+            if case .ready = modelStatusSubject.value { return true }
+            return false
+        }
+        set {
+            if newValue {
+                modelStatusSubject.send(.ready)
+            } else {
+                modelStatusSubject.send(.notLoaded)
+            }
+        }
     }
 
     func loadModel() async throws {
+        loadModelCallCount += 1
         modelStatusSubject.send(.loading(progress: 0.5))
         try await Task.sleep(nanoseconds: UInt64(loadDelay * 1_000_000_000))
 
@@ -265,7 +301,9 @@ final class MockLLMService: LLMService {
         }
     }
 
-    func cancelGeneration() {}
+    func cancelGeneration() {
+        cancelGenerationCallCount += 1
+    }
 }
 
 final class MockRemoteConfigService: RemoteConfigService {

@@ -41,10 +41,11 @@ struct FeedViewModelTests {
 
         sut.handle(event: .onAppear)
 
-        try await waitForStateUpdate()
-
-        let state = sut.viewState
-        #expect(state.sourceArticles.count == Article.mockArticles.count)
+        // Wait for source articles to be loaded
+        let success = await waitForCondition(timeout: 1_000_000_000) { [sut] in
+            sut.viewState.sourceArticles.count == Article.mockArticles.count
+        }
+        #expect(success)
     }
 
     @Test("onRefresh event triggers refresh")
@@ -53,10 +54,11 @@ struct FeedViewModelTests {
 
         sut.handle(event: .onRefresh)
 
-        try await waitForStateUpdate()
-
-        let state = sut.viewState
-        #expect(state.sourceArticles.count == Article.mockArticles.count)
+        // Wait for source articles to be loaded
+        let success = await waitForCondition(timeout: 1_000_000_000) { [sut] in
+            sut.viewState.sourceArticles.count == Article.mockArticles.count
+        }
+        #expect(success)
     }
 
     @Test("onCancelGenerationTapped event cancels generation")
@@ -82,10 +84,11 @@ struct FeedViewModelTests {
 
         sut.handle(event: .onRetryTapped)
 
-        try await waitForStateUpdate()
-
-        let state = sut.viewState
-        #expect(state.sourceArticles.count == Article.mockArticles.count)
+        // Wait for source articles to be loaded
+        let success = await waitForCondition(timeout: 1_000_000_000) { [sut] in
+            sut.viewState.sourceArticles.count == Article.mockArticles.count
+        }
+        #expect(success)
     }
 
     @Test("onArticleTapped event selects article")
@@ -131,10 +134,11 @@ struct FeedViewModelTests {
 
         sut.handle(event: .onAppear)
 
-        try await waitForStateUpdate()
-
-        let state = sut.viewState
-        #expect(state.displayState == .empty)
+        // Wait for display state to become empty
+        let success = await waitForCondition(timeout: 1_000_000_000) { [sut] in
+            sut.viewState.displayState == .empty
+        }
+        #expect(success)
     }
 
     @Test("Cached digest shows completed state immediately")
