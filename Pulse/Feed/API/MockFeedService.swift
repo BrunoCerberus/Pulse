@@ -19,9 +19,6 @@ final class MockFeedService: FeedService {
     /// Custom tokens to stream during generation (if set, overrides default summary)
     var streamTokens: [String]?
 
-    /// Tracks whether cancelGeneration was called
-    private(set) var cancelGenerationCalled = false
-
     private let modelStatusSubject = CurrentValueSubject<LLMModelStatus, Never>(.notLoaded)
 
     /// Simulate a model status change for testing
@@ -85,10 +82,6 @@ final class MockFeedService: FeedService {
                 continuation.finish()
             }
         }
-    }
-
-    func cancelGeneration() {
-        cancelGenerationCalled = true
     }
 
     func saveDigest(_ digest: DailyDigest) {
