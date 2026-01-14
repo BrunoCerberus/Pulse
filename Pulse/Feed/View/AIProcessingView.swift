@@ -8,14 +8,7 @@ struct AIProcessingView: View {
 
     @Environment(\.accessibilityReduceMotion) private var reduceMotion
 
-    private var statusMessage: String {
-        switch phase {
-        case let .loading(progress):
-            return progress < 0.5 ? "Preparing AI..." : "Almost ready..."
-        case .generating:
-            return "Crafting your digest..."
-        }
-    }
+    private let statusMessage = "Crafting your digest..."
 
     var body: some View {
         VStack(spacing: Spacing.xl) {
@@ -88,22 +81,9 @@ struct AIProcessingView: View {
     // MARK: - Status Section
 
     private var statusSection: some View {
-        VStack(spacing: Spacing.sm) {
-            Text(statusMessage)
-                .font(Typography.titleSmall)
-                .foregroundStyle(.primary)
-                .contentTransition(.interpolate)
-                .animation(.easeInOut(duration: 0.3), value: statusMessage)
-
-            if case let .loading(progress) = phase {
-                Text("\(Int((progress * 100).rounded()))%")
-                    .font(Typography.captionLarge)
-                    .foregroundStyle(.secondary)
-                    .monospacedDigit()
-                    .contentTransition(.numericText())
-                    .animation(.snappy, value: progress)
-            }
-        }
+        Text(statusMessage)
+            .font(Typography.titleSmall)
+            .foregroundStyle(.primary)
     }
 
     // MARK: - Streaming Text Section
@@ -408,5 +388,5 @@ private struct Particle: Identifiable {
 
 // MARK: - Preview
 
-#Preview("Loading") { AIProcessingView(phase: .loading(progress: 0.5), streamingText: "") }
-#Preview("Generating") { AIProcessingView(phase: .generating, streamingText: "AI digest...") }
+#Preview("Generating") { AIProcessingView(phase: .generating, streamingText: "") }
+#Preview("With Text") { AIProcessingView(phase: .generating, streamingText: "AI digest content streaming...") }

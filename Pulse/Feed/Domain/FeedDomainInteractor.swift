@@ -166,7 +166,7 @@ final class FeedDomainInteractor: CombineInteractor {
 
         updateState { state in
             state.streamingText = ""
-            state.generationState = .loadingModel(progress: 0)
+            state.generationState = .generating
         }
 
         generationTask = Task { @MainActor in
@@ -175,10 +175,6 @@ final class FeedDomainInteractor: CombineInteractor {
                 try await feedService.loadModelIfNeeded()
 
                 guard !Task.isCancelled else { return }
-
-                await MainActor.run { [weak self] in
-                    self?.dispatch(action: .generationStateChanged(.generating))
-                }
 
                 // Generate digest with streaming
                 var fullText = ""
@@ -253,11 +249,7 @@ final class FeedDomainInteractor: CombineInteractor {
     private func handleModelStatusChanged(_ status: LLMModelStatus) {
         updateState { state in
             state.modelStatus = status
-            if case let .loading(progress) = status,
-               case .loadingModel = state.generationState
-            {
-                state.generationState = .loadingModel(progress: progress)
-            } else if case let .error(message) = status {
+            if case let .error(message) = status {
                 state.generationState = .error(message)
             }
         }

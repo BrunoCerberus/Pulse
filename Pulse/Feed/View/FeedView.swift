@@ -36,6 +36,7 @@ struct FeedView<R: FeedNavigationRouter>: View {
 
             content
         }
+        .animation(.easeInOut(duration: 0.35), value: viewModel.viewState.displayState)
         .navigationTitle(isProcessing ? "" : Constants.title)
         .toolbarBackground(.hidden, for: .navigationBar)
         .toolbar(isProcessing ? .hidden : .automatic, for: .navigationBar)
@@ -63,16 +64,25 @@ struct FeedView<R: FeedNavigationRouter>: View {
         switch viewModel.viewState.displayState {
         case .idle:
             idleContent
+                .transition(.opacity)
         case .loading:
             loadingView
+                .transition(.opacity)
         case let .processing(phase):
             processingView(phase: phase)
+                .transition(.opacity)
         case .completed:
             digestContent
+                .transition(.asymmetric(
+                    insertion: .opacity.combined(with: .scale(scale: 0.95)).animation(.easeOut(duration: 0.4)),
+                    removal: .opacity
+                ))
         case .empty:
             emptyStateView
+                .transition(.opacity)
         case .error:
             errorView
+                .transition(.opacity)
         }
     }
 
@@ -151,10 +161,18 @@ struct FeedView<R: FeedNavigationRouter>: View {
         ScrollView {
             LazyVStack(spacing: Spacing.lg) {
                 dateHeader
+                    .opacity(viewModel.viewState.digest != nil ? 1 : 0)
+                    .offset(y: viewModel.viewState.digest != nil ? 0 : 10)
 
                 if let digest = viewModel.viewState.digest {
                     DigestCard(digest: digest)
                         .padding(.horizontal, Spacing.md)
+                        .transition(.asymmetric(
+                            insertion: .opacity
+                                .combined(with: .move(edge: .bottom))
+                                .combined(with: .scale(scale: 0.98)),
+                            removal: .opacity
+                        ))
                 }
 
                 if !viewModel.viewState.sourceArticles.isEmpty {
@@ -165,6 +183,12 @@ struct FeedView<R: FeedNavigationRouter>: View {
                         }
                     )
                     .padding(.horizontal, Spacing.md)
+                    .transition(.asymmetric(
+                        insertion: .opacity
+                            .combined(with: .move(edge: .bottom))
+                            .animation(.easeOut(duration: 0.4).delay(0.15)),
+                        removal: .opacity
+                    ))
                 }
             }
             .padding(.bottom, Spacing.xl)
