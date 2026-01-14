@@ -217,22 +217,38 @@ private struct OrbitRing: View {
 
     @State private var rotation: Double = 0
 
+    // MARK: - Constants
+
+    private enum Constants {
+        static let baseRingSize: CGFloat = 80
+        static let ringSizeIncrement: CGFloat = 30
+        static let baseOpacity: Double = 0.4
+        static let opacityDecrement: Double = 0.1
+        static let generatingOpacityMultiplier: Double = 1.5
+        static let strokeWidthNormal: CGFloat = 2.0
+        static let strokeWidthGenerating: CGFloat = 2.5
+        static let baseSpeedNormal: Double = 15
+        static let baseSpeedGenerating: Double = 8
+        static let speedIncrement: Double = 3
+        static let orbitalDotVisibilityThreshold: Double = 0.3
+    }
+
     private var ringSize: CGFloat {
-        CGFloat(80 + index * 30)
+        Constants.baseRingSize + CGFloat(index) * Constants.ringSizeIncrement
     }
 
     private var ringOpacity: Double {
-        let base = 0.4 - Double(index) * 0.1
-        return isGenerating ? base * 1.5 : base * progress
+        let base = Constants.baseOpacity - Double(index) * Constants.opacityDecrement
+        return isGenerating ? base * Constants.generatingOpacityMultiplier : base * progress
     }
 
     private var strokeWidth: CGFloat {
-        isGenerating ? 2.5 : 2.0
+        isGenerating ? Constants.strokeWidthGenerating : Constants.strokeWidthNormal
     }
 
     private var rotationSpeed: Double {
-        let baseSpeed: Double = isGenerating ? 8 : 15
-        return baseSpeed + Double(index) * 3
+        let baseSpeed = isGenerating ? Constants.baseSpeedGenerating : Constants.baseSpeedNormal
+        return baseSpeed + Double(index) * Constants.speedIncrement
     }
 
     var body: some View {
@@ -257,7 +273,7 @@ private struct OrbitRing: View {
                 .rotationEffect(.degrees(rotation))
 
             // Orbital dot
-            if progress > 0.3 || isGenerating {
+            if progress > Constants.orbitalDotVisibilityThreshold || isGenerating {
                 Circle()
                     .fill(Color.Accent.primary)
                     .frame(width: 6, height: 6)
@@ -310,7 +326,9 @@ private struct FloatingParticles: View {
         }
         .onAppear {
             initializeParticles()
-            animateParticles()
+        }
+        .task {
+            await animateParticles()
         }
         .onChange(of: isGenerating) { _, newValue in
             if newValue { intensifyParticles() }
@@ -327,13 +345,14 @@ private struct FloatingParticles: View {
                 positionY: sin(angle) * radius,
                 size: CGFloat.random(in: 3 ... 6),
                 opacity: Double.random(in: 0.3 ... 0.7),
-                color: [Color.Accent.primary, Color.Accent.secondary, Color.Accent.tertiary].randomElement()!
+                color: [Color.Accent.primary, Color.Accent.secondary, Color.Accent.tertiary].randomElement() ?? Color.Accent.primary
             )
         }
     }
 
-    private func animateParticles() {
-        Timer.scheduledTimer(withTimeInterval: 2.0, repeats: true) { _ in
+    private func animateParticles() async {
+        while !Task.isCancelled {
+            try? await Task.sleep(for: .seconds(2))
             withAnimation(.easeInOut(duration: 2.0)) {
                 for index in particles.indices {
                     let angle = Double.random(in: 0 ... 2 * .pi)
