@@ -7,11 +7,8 @@ private enum Constants {
     static let headerTitle = "Your Daily Digest"
     static let emptyTitle = "No Recent Reading"
     static let emptyMessage = "Read some articles to get your personalized daily digest."
-    static let generatingMessage = "Creating your digest..."
-    static let loadingModelMessage = "Loading AI model..."
     static let errorTitle = "Something went wrong"
     static let tryAgain = "Try Again"
-    static let cancel = "Cancel"
     static let startReading = "Start Reading"
 }
 
@@ -62,10 +59,8 @@ struct FeedView<R: FeedNavigationRouter>: View {
             idleContent
         case .loading:
             loadingView
-        case let .loadingModel(progress):
-            loadingModelView(progress: progress)
-        case .generating:
-            generatingView
+        case let .processing(phase):
+            processingView(phase: phase)
         case .completed:
             digestContent
         case .empty:
@@ -135,94 +130,19 @@ struct FeedView<R: FeedNavigationRouter>: View {
         }
     }
 
-    // MARK: - Loading Model View
+    // MARK: - Processing View
 
-    private func loadingModelView(progress: Double) -> some View {
+    private func processingView(phase: AIProcessingPhase) -> some View {
         VStack(spacing: Spacing.lg) {
             dateHeader
 
-            GlassCard(style: .regular, shadowStyle: .medium, padding: Spacing.lg) {
-                VStack(spacing: Spacing.md) {
-                    ZStack {
-                        // Background track
-                        RoundedRectangle(cornerRadius: CornerRadius.sm)
-                            .fill(Color.secondary.opacity(0.2))
-                            .frame(height: 8)
-
-                        // Progress fill with gradient
-                        GeometryReader { geometry in
-                            RoundedRectangle(cornerRadius: CornerRadius.sm)
-                                .fill(Color.Accent.gradient)
-                                .frame(width: geometry.size.width * progress)
-                                .animation(.easeInOut(duration: 0.3), value: progress)
-                        }
-                        .frame(height: 8)
-                    }
-                    .frame(height: 8)
-
-                    HStack(spacing: Spacing.sm) {
-                        ProgressView()
-                            .scaleEffect(0.8)
-                            .tint(Color.Accent.primary)
-
-                        Text(Constants.loadingModelMessage)
-                            .font(Typography.bodySmall)
-                            .foregroundStyle(.secondary)
-                    }
-
-                    Text("\(Int((progress * 100).rounded()))%")
-                        .font(Typography.headlineSmall)
-                        .foregroundStyle(Color.Accent.primary)
-                        .monospacedDigit()
-                        .contentTransition(.numericText())
-                        .animation(.snappy, value: progress)
+            AIProcessingView(
+                phase: phase,
+                streamingText: viewModel.viewState.streamingText,
+                onCancel: {
+                    viewModel.handle(event: .onCancelGenerationTapped)
                 }
-            }
-            .padding(.horizontal, Spacing.md)
-
-            Spacer()
-        }
-    }
-
-    // MARK: - Generating View
-
-    private var generatingView: some View {
-        ScrollView {
-            VStack(spacing: Spacing.lg) {
-                dateHeader
-
-                GlassCard(style: .thin, shadowStyle: .medium, padding: Spacing.lg) {
-                    VStack(spacing: Spacing.md) {
-                        HStack(spacing: Spacing.sm) {
-                            TypingIndicator()
-
-                            Text(Constants.generatingMessage)
-                                .font(Typography.bodyMedium)
-                                .foregroundStyle(.secondary)
-                        }
-
-                        if !viewModel.viewState.streamingText.isEmpty {
-                            StreamingTextView(text: viewModel.viewState.streamingText)
-                                .frame(maxWidth: .infinity, alignment: .leading)
-                        }
-
-                        Button {
-                            HapticManager.shared.tap()
-                            viewModel.handle(event: .onCancelGenerationTapped)
-                        } label: {
-                            Text(Constants.cancel)
-                                .font(Typography.labelMedium)
-                                .foregroundStyle(.secondary)
-                                .padding(.horizontal, Spacing.lg)
-                                .padding(.vertical, Spacing.sm)
-                                .background(Color.secondary.opacity(0.1))
-                                .clipShape(Capsule())
-                        }
-                        .pressEffect()
-                    }
-                }
-                .padding(.horizontal, Spacing.md)
-            }
+            )
         }
     }
 
@@ -327,36 +247,6 @@ struct FeedView<R: FeedNavigationRouter>: View {
         }
         .padding(.horizontal, Spacing.md)
         .padding(.top, Spacing.md)
-    }
-}
-
-// MARK: - Typing Indicator
-
-private struct TypingIndicator: View {
-    @State private var animatingDot = 0
-
-    var body: some View {
-        HStack(spacing: 4) {
-            ForEach(0 ..< 3) { index in
-                Circle()
-                    .fill(Color.Accent.primary)
-                    .frame(width: 6, height: 6)
-                    .scaleEffect(animatingDot == index ? 1.3 : 0.8)
-                    .opacity(animatingDot == index ? 1 : 0.5)
-            }
-        }
-        .task {
-            while !Task.isCancelled {
-                do {
-                    try await Task.sleep(for: .milliseconds(300))
-                    withAnimation(.easeInOut(duration: 0.2)) {
-                        animatingDot = (animatingDot + 1) % 3
-                    }
-                } catch {
-                    break
-                }
-            }
-        }
     }
 }
 

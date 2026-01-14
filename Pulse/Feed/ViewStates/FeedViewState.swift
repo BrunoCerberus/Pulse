@@ -1,12 +1,34 @@
 import Foundation
 
+// MARK: - Processing Phase
+
+enum AIProcessingPhase: Equatable {
+    case loading(progress: Double)
+    case generating
+
+    var progress: Double {
+        switch self {
+        case let .loading(progress):
+            return progress
+        case .generating:
+            return 1.0
+        }
+    }
+
+    var isGenerating: Bool {
+        if case .generating = self {
+            return true
+        }
+        return false
+    }
+}
+
 // MARK: - Display State
 
 enum FeedDisplayState: Equatable {
     case idle
     case loading
-    case loadingModel(progress: Double)
-    case generating
+    case processing(phase: AIProcessingPhase)
     case completed
     case empty
     case error
