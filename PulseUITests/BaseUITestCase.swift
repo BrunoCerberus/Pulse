@@ -7,7 +7,8 @@ class BaseUITestCase: XCTestCase {
     var app: XCUIApplication!
 
     /// Timeout for app launch verification - requires more time than element checks
-    static let launchTimeout: TimeInterval = 8
+    /// CI machines are slower than local, so use 15 seconds to ensure the app initializes
+    static let launchTimeout: TimeInterval = 15
 
     /// Default timeout for element existence checks
     /// 4s is sufficient with animations disabled - elements appear quickly
@@ -45,10 +46,25 @@ class BaseUITestCase: XCTestCase {
         // This handles both states and avoids timeout when MockAuthService is initializing
         let tabBar = app.tabBars.firstMatch
         let signInButton = app.buttons["Sign in with Apple"]
+
+        // First, wait for the loading state to clear (if app shows loading spinner)
+        // The loading view has a ProgressView which we need to wait past
+        let loadingIndicator = app.activityIndicators.firstMatch
+        if loadingIndicator.exists {
+            // Wait for loading to complete (app initializing auth state)
+            _ = waitForElementToDisappear(loadingIndicator, timeout: Self.launchTimeout)
+        }
+
+        // Now wait for either tab bar or sign-in to appear
         let appReady = waitForAny([tabBar, signInButton], timeout: Self.launchTimeout)
 
         guard appReady else {
-            XCTFail("App did not reach ready state - neither tab bar nor sign-in view appeared")
+            // Debug: log what's visible to help diagnose CI failures
+            let hasActivityIndicator = app.activityIndicators.count > 0
+            let hasButtons = app.buttons.count > 0
+            let hasStaticTexts = app.staticTexts.count > 0
+            XCTFail("App did not reach ready state - neither tab bar nor sign-in view appeared. " +
+                    "Debug: hasActivityIndicator=\(hasActivityIndicator), buttons=\(hasButtons), texts=\(hasStaticTexts)")
             return
         }
 
@@ -177,6 +193,13 @@ class BaseUITestCase: XCTestCase {
     /// Wait for any element matching query to exist
     func waitForAnyMatch(_ query: XCUIElementQuery, timeout: TimeInterval = 10) -> Bool {
         let predicate = NSPredicate { _, _ in query.count > 0 }
+        let expectation = XCTNSPredicateExpectation(predicate: predicate, object: nil)
+        return XCTWaiter.wait(for: [expectation], timeout: timeout) == .completed
+    }
+
+    /// Wait for an element to disappear
+    func waitForElementToDisappear(_ element: XCUIElement, timeout: TimeInterval = 10) -> Bool {
+        let predicate = NSPredicate { _, _ in !element.exists }
         let expectation = XCTNSPredicateExpectation(predicate: predicate, object: nil)
         return XCTWaiter.wait(for: [expectation], timeout: timeout) == .completed
     }
