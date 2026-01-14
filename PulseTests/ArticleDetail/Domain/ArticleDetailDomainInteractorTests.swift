@@ -177,20 +177,21 @@ struct ArticleDetailDomainInteractorTests {
             title: "Test Article",
             description: "First sentence. Second sentence. Third sentence.",
             content: "<p>Paragraph one. Sentence two. Sentence three.</p>",
+            source: ArticleSource(id: nil, name: "Test Source"),
             url: "https://example.com",
-            imageUrl: nil,
-            source: "Test Source",
+            imageURL: nil,
             publishedAt: Date(),
-            category: .general
+            category: .world
         )
         let sut = createSUT(article: articleWithContent)
 
         // Wait for content processing to complete
-        try await waitForStateUpdate(duration: TestWaitDuration.long)
-
-        #expect(sut.currentState.isProcessingContent == false)
-        #expect(sut.currentState.processedContent != nil)
-        #expect(sut.currentState.processedDescription != nil)
+        let success = await waitForCondition(timeout: 2_000_000_000) {
+            !sut.currentState.isProcessingContent &&
+                sut.currentState.processedContent != nil &&
+                sut.currentState.processedDescription != nil
+        }
+        #expect(success)
     }
 
     @Test("Content processing handles nil content")
@@ -200,17 +201,19 @@ struct ArticleDetailDomainInteractorTests {
             title: "Test Article",
             description: nil,
             content: nil,
+            source: ArticleSource(id: nil, name: "Test Source"),
             url: "https://example.com",
-            imageUrl: nil,
-            source: "Test Source",
+            imageURL: nil,
             publishedAt: Date(),
-            category: .general
+            category: .world
         )
         let sut = createSUT(article: articleWithoutContent)
 
-        try await waitForStateUpdate(duration: TestWaitDuration.long)
-
-        #expect(sut.currentState.isProcessingContent == false)
+        // Wait for content processing to complete (should finish quickly with nil values)
+        let success = await waitForCondition(timeout: 2_000_000_000) {
+            !sut.currentState.isProcessingContent
+        }
+        #expect(success)
         #expect(sut.currentState.processedContent == nil)
         #expect(sut.currentState.processedDescription == nil)
     }
@@ -263,11 +266,11 @@ struct ArticleDetailTextProcessingTests {
             title: "Test",
             description: "<p>Description with <strong>bold</strong> text.</p>",
             content: "<div>Content with <a href='test'>link</a> here.</div>",
+            source: ArticleSource(id: nil, name: "Test"),
             url: "https://example.com",
-            imageUrl: nil,
-            source: "Test",
+            imageURL: nil,
             publishedAt: Date(),
-            category: .general
+            category: .world
         )
 
         let sut = ArticleDetailDomainInteractor(
@@ -296,11 +299,11 @@ struct ArticleDetailTextProcessingTests {
             title: "Test",
             description: "Short description.",
             content: "This is the content of the article. [+500 chars]",
+            source: ArticleSource(id: nil, name: "Test"),
             url: "https://example.com",
-            imageUrl: nil,
-            source: "Test",
+            imageURL: nil,
             publishedAt: Date(),
-            category: .general
+            category: .world
         )
 
         let sut = ArticleDetailDomainInteractor(
@@ -328,11 +331,11 @@ struct ArticleDetailTextProcessingTests {
             title: "Test",
             description: "Text with &amp; and &quot;quotes&quot; here.",
             content: nil,
+            source: ArticleSource(id: nil, name: "Test"),
             url: "https://example.com",
-            imageUrl: nil,
-            source: "Test",
+            imageURL: nil,
             publishedAt: Date(),
-            category: .general
+            category: .world
         )
 
         let sut = ArticleDetailDomainInteractor(

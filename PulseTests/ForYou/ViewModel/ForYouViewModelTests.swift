@@ -196,10 +196,12 @@ struct ForYouViewModelTests {
         mockForYouService.personalizedFeedResult = .success([])
 
         sut.handle(event: .onAppear)
-        try await waitForStateUpdate()
 
-        #expect(sut.viewState.showEmptyState)
-        #expect(!sut.viewState.showOnboarding)
+        // Wait for empty state condition
+        let success = await waitForCondition(timeout: 1_000_000_000) { [sut] in
+            sut.viewState.showEmptyState && !sut.viewState.showOnboarding
+        }
+        #expect(success)
     }
 
     @Test("Error message propagates to view state")
@@ -212,9 +214,12 @@ struct ForYouViewModelTests {
         mockForYouService.feedResult = .failure(testError)
 
         sut.handle(event: .onAppear)
-        try await waitForStateUpdate()
 
-        #expect(sut.viewState.errorMessage == "Feed loading failed")
+        // Wait for error message to propagate
+        let success = await waitForCondition(timeout: 1_000_000_000) { [sut] in
+            sut.viewState.errorMessage == "Feed loading failed"
+        }
+        #expect(success)
     }
 
     @Test("View state reducer transforms domain state correctly")
@@ -231,13 +236,15 @@ struct ForYouViewModelTests {
         )
 
         sut.handle(event: .onAppear)
-        try await waitForStateUpdate()
 
-        let state = sut.viewState
-        #expect(!state.articles.isEmpty)
-        #expect(state.followedTopics.count == 2)
-        #expect(!state.isLoading)
-        #expect(!state.showOnboarding)
+        // Wait for articles to load and state to stabilize
+        let success = await waitForCondition(timeout: 1_000_000_000) { [sut] in
+            !sut.viewState.articles.isEmpty &&
+                sut.viewState.followedTopics.count == 2 &&
+                !sut.viewState.isLoading &&
+                !sut.viewState.showOnboarding
+        }
+        #expect(success)
     }
 
     @Test("View state updates through publisher binding")
@@ -394,10 +401,13 @@ struct ForYouViewModelTests {
         mockForYouService.feedResult = .failure(timeoutError)
 
         sut.handle(event: .onAppear)
-        try await waitForStateUpdate()
 
-        #expect(sut.viewState.errorMessage == "The request timed out.")
-        #expect(!sut.viewState.isLoading)
+        // Wait for error state to propagate
+        let success = await waitForCondition(timeout: 1_000_000_000) { [sut] in
+            sut.viewState.errorMessage == "The request timed out." &&
+                !sut.viewState.isLoading
+        }
+        #expect(success)
     }
 
     @Test("ViewModel handles storage service errors")
