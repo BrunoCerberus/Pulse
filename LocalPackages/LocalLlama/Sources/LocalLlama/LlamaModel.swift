@@ -14,7 +14,6 @@ class LlamaModel {
     private var temporaryInvalidCChars: [CChar] = []
     private var generatedTokenAccount: Int32 = 0
     private var ended = false
-    private let n_len: Int32 = 1024
 
     var shouldContinue: Bool {
         generatedTokenAccount < configuration.maxTokenCount && !ended
@@ -94,7 +93,7 @@ class LlamaModel {
     func `continue`() throws -> String {
         let newToken = llama_sampler_sample(sampler, context, batch.n_tokens - 1)
 
-        if llama_vocab_is_eog(vocab, newToken) || generatedTokenAccount == n_len {
+        if llama_vocab_is_eog(vocab, newToken) {
             temporaryInvalidCChars.removeAll()
             ended = true
             return ""
