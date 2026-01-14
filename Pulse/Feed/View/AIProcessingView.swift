@@ -18,25 +18,24 @@ struct AIProcessingView: View {
     }
 
     var body: some View {
-        ScrollView {
-            VStack(spacing: Spacing.xl) {
-                // Animated orb
-                orbAnimation
-                    .frame(height: 200)
-                    .padding(.top, Spacing.xl)
+        VStack(spacing: Spacing.xl) {
+            Spacer()
 
-                // Status text
-                statusSection
+            // Animated orb
+            orbAnimation
+                .frame(height: 200)
 
-                // Streaming text content
-                if phase.isGenerating, !streamingText.isEmpty {
-                    streamingTextSection
-                }
+            // Status text
+            statusSection
 
-                Spacer(minLength: Spacing.xl)
+            // Streaming text content
+            if phase.isGenerating, !streamingText.isEmpty {
+                streamingTextSection
             }
-            .padding(.horizontal, Spacing.md)
+
+            Spacer()
         }
+        .padding(.horizontal, Spacing.md)
     }
 
     // MARK: - Orb Animation
