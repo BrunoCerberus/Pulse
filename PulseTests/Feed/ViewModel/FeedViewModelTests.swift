@@ -61,23 +61,6 @@ struct FeedViewModelTests {
         #expect(success)
     }
 
-    @Test("onCancelGenerationTapped event cancels generation")
-    func onCancelGenerationCancels() async throws {
-        mockStorageService.readingHistory = Article.mockArticles
-        mockFeedService.loadDelay = 0.5 // Longer delay to allow cancellation
-        mockFeedService.generateDelay = 0.5
-
-        sut.handle(event: .onAppear)
-        try await waitForStateUpdate()
-
-        sut.handle(event: .onGenerateDigestTapped)
-        try await Task.sleep(nanoseconds: 100_000_000) // 100ms
-
-        sut.handle(event: .onCancelGenerationTapped)
-
-        #expect(mockFeedService.cancelGenerationCalled)
-    }
-
     @Test("onRetryTapped event retries loading")
     func onRetryRetries() async throws {
         mockStorageService.readingHistory = Article.mockArticles

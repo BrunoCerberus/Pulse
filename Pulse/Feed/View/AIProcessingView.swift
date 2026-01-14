@@ -142,6 +142,18 @@ private struct CentralOrb: View {
     @State private var pulseScale: CGFloat = 1.0
     @State private var glowIntensity: Double = 0.6
 
+    // MARK: - Constants
+
+    private enum Constants {
+        static let pulseDurationNormal: Double = 1.2
+        static let pulseDurationGenerating: Double = 0.8
+        static let pulseScaleNormal: CGFloat = 1.08
+        static let pulseScaleGenerating: CGFloat = 1.15
+        static let glowIntensityNormal: Double = 0.6
+        static let glowIntensityGenerating: Double = 0.9
+        static let glowTransitionDuration: Double = 0.5
+    }
+
     var body: some View {
         ZStack {
             // Inner glow
@@ -182,6 +194,7 @@ private struct CentralOrb: View {
                 .scaleEffect(pulseScale)
                 .shadow(color: Color.Accent.primary.opacity(0.5), radius: 15)
         }
+        .accessibilityHidden(true)
         .onAppear {
             guard !reduceMotion else { return }
             startPulseAnimation()
@@ -190,19 +203,24 @@ private struct CentralOrb: View {
             guard !reduceMotion else { return }
             if newValue {
                 // Intensify animation when generating
-                withAnimation(.easeInOut(duration: 0.5)) {
-                    glowIntensity = 0.9
+                withAnimation(.easeInOut(duration: Constants.glowTransitionDuration)) {
+                    glowIntensity = Constants.glowIntensityGenerating
                 }
             }
+            // Restart animation with new timing
+            pulseScale = 1.0
+            startPulseAnimation()
         }
     }
 
     private func startPulseAnimation() {
+        let duration = isGenerating ? Constants.pulseDurationGenerating : Constants.pulseDurationNormal
+        let scale = isGenerating ? Constants.pulseScaleGenerating : Constants.pulseScaleNormal
         withAnimation(
-            .easeInOut(duration: isGenerating ? 0.8 : 1.2)
+            .easeInOut(duration: duration)
                 .repeatForever(autoreverses: true)
         ) {
-            pulseScale = isGenerating ? 1.15 : 1.08
+            pulseScale = scale
         }
     }
 }
@@ -283,6 +301,7 @@ private struct OrbitRing: View {
                     .opacity(isGenerating ? 1.0 : progress)
             }
         }
+        .accessibilityHidden(true)
         .onAppear {
             guard !reduceMotion else { return }
             startRotation()
@@ -324,6 +343,7 @@ private struct FloatingParticles: View {
                     .blur(radius: 1)
             }
         }
+        .accessibilityHidden(true)
         .onAppear {
             initializeParticles()
         }

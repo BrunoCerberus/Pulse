@@ -38,7 +38,7 @@ struct FeedView<R: FeedNavigationRouter>: View {
         }
         .navigationTitle(isProcessing ? "" : Constants.title)
         .toolbarBackground(.hidden, for: .navigationBar)
-        .navigationBarHidden(isProcessing)
+        .toolbar(isProcessing ? .hidden : .automatic, for: .navigationBar)
         .onAppear {
             viewModel.handle(event: .onAppear)
         }

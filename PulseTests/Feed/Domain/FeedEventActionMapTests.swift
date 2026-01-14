@@ -25,12 +25,6 @@ struct FeedEventActionMapTests {
         #expect(action == .generateDigest)
     }
 
-    @Test("onCancelGenerationTapped event maps to cancelGeneration action")
-    func onCancelGenerationTappedMapping() {
-        let action = sut.map(event: .onCancelGenerationTapped)
-        #expect(action == .cancelGeneration)
-    }
-
     @Test("onArticleTapped event maps to selectArticle action with correct article")
     func onArticleTappedMapping() {
         let testArticle = Article.mockArticles[0]
@@ -64,7 +58,6 @@ struct FeedEventActionMapTests {
             .onAppear,
             .onRefresh,
             .onGenerateDigestTapped,
-            .onCancelGenerationTapped,
             .onArticleTapped(testArticle),
             .onArticleNavigated,
             .onRetryTapped,
