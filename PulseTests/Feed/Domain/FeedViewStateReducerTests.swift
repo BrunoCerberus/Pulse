@@ -60,7 +60,7 @@ struct FeedViewStateReducerTests {
         #expect(viewState.displayState == .loading)
     }
 
-    @Test("Loading model maps to loadingModel display state with progress")
+    @Test("Loading model maps to processing display state with loading phase")
     func loadingModel() {
         let domainState = FeedDomainState(
             generationState: .loadingModel(progress: 0.75),
@@ -74,11 +74,11 @@ struct FeedViewStateReducerTests {
 
         let viewState = sut.reduce(domainState: domainState)
 
-        #expect(viewState.displayState == .loadingModel(progress: 0.75))
+        #expect(viewState.displayState == .processing(phase: .loading(progress: 0.75)))
         #expect(viewState.modelLoadingProgress == 0.75)
     }
 
-    @Test("Generating maps to generating display state")
+    @Test("Generating maps to processing display state with generating phase")
     func generating() {
         let domainState = FeedDomainState(
             generationState: .generating,
@@ -92,7 +92,7 @@ struct FeedViewStateReducerTests {
 
         let viewState = sut.reduce(domainState: domainState)
 
-        #expect(viewState.displayState == .generating)
+        #expect(viewState.displayState == .processing(phase: .generating))
         #expect(viewState.streamingText == "Generating text...")
     }
 

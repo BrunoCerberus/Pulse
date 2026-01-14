@@ -10,8 +10,6 @@ struct FeedEventActionMap: DomainEventActionMap {
             return .refresh
         case .onGenerateDigestTapped:
             return .generateDigest
-        case .onCancelGenerationTapped:
-            return .cancelGeneration
         case let .onArticleTapped(article):
             return .selectArticle(article)
         case .onArticleNavigated:

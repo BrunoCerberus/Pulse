@@ -36,9 +36,9 @@ struct FeedViewStateReducer: ViewStateReducing {
         case .loadingHistory:
             return .loading
         case let .loadingModel(progress):
-            return .loadingModel(progress: progress)
+            return .processing(phase: .loading(progress: progress))
         case .generating:
-            return .generating
+            return .processing(phase: .generating)
         case .completed:
             return .completed
         case .error:

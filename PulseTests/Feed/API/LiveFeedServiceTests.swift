@@ -167,17 +167,6 @@ struct LiveFeedServiceTests {
         #expect(cached == nil)
     }
 
-    // MARK: - Cancel Generation Tests
-
-    @Test("cancelGeneration calls LLM service cancelGeneration")
-    func cancelGeneration() {
-        let sut = createSUT()
-
-        sut.cancelGeneration()
-
-        #expect(mockLLMService.cancelGenerationCallCount == 1)
-    }
-
     // MARK: - Model Status Publisher Tests
 
     @Test("modelStatusPublisher exposes LLM service publisher")

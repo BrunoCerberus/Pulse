@@ -40,9 +40,6 @@ protocol FeedService {
     /// Returns a stream of tokens for live UI updates
     func generateDigest(from articles: [Article]) -> AsyncThrowingStream<String, Error>
 
-    /// Cancel ongoing digest generation
-    func cancelGeneration()
-
     /// Save generated digest for the day
     func saveDigest(_ digest: DailyDigest)
 }

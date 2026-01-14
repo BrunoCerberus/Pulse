@@ -56,8 +56,6 @@ final class FeedDomainInteractor: CombineInteractor {
             updateState { state in
                 state.generationState = .error(error)
             }
-        case .cancelGeneration:
-            cancelGeneration()
         case let .selectArticle(article):
             updateState { $0.selectedArticle = article }
         case .clearSelectedArticle:
@@ -247,16 +245,6 @@ final class FeedDomainInteractor: CombineInteractor {
         updateState { state in
             state.currentDigest = digest
             state.generationState = .completed
-        }
-    }
-
-    private func cancelGeneration() {
-        generationTask?.cancel()
-        generationTask = nil
-        feedService.cancelGeneration()
-        updateState { state in
-            state.generationState = .idle
-            state.streamingText = ""
         }
     }
 

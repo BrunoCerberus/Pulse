@@ -47,10 +47,6 @@ final class LiveFeedService: FeedService {
         )
     }
 
-    func cancelGeneration() {
-        llmService.cancelGeneration()
-    }
-
     func saveDigest(_ digest: DailyDigest) {
         // Only cache digests with non-empty summaries
         guard !digest.summary.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty else {

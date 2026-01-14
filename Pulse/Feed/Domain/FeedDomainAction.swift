@@ -17,7 +17,6 @@ enum FeedDomainAction: Equatable {
     case digestTokenReceived(String)
     case digestCompleted(DailyDigest)
     case digestFailed(String)
-    case cancelGeneration
 
     // Navigation
     case selectArticle(Article)

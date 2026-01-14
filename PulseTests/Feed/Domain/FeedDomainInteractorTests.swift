@@ -109,22 +109,6 @@ struct FeedDomainInteractorTests {
         #expect(isInGenerationFlow, "Should be loading model, generating, or completed")
     }
 
-    @Test("Cancel generation stops streaming")
-    func cancelGeneration() async throws {
-        mockStorageService.readingHistory = Article.mockArticles
-        mockFeedService.generateDelay = 2.0 // Long delay to allow cancellation
-
-        sut.dispatch(action: .loadInitialData)
-        try await waitForStateUpdate()
-
-        sut.dispatch(action: .generateDigest)
-        try await Task.sleep(nanoseconds: 50_000_000) // Brief delay
-
-        sut.dispatch(action: .cancelGeneration)
-
-        #expect(mockFeedService.cancelGenerationCalled)
-    }
-
     @Test("Select article updates state")
     func selectArticle() async throws {
         let article = Article.mockArticles[0]
