@@ -3,23 +3,14 @@ import Foundation
 // MARK: - Processing Phase
 
 enum AIProcessingPhase: Equatable {
-    case loading(progress: Double)
     case generating
 
     var progress: Double {
-        switch self {
-        case let .loading(progress):
-            return progress
-        case .generating:
-            return 1.0
-        }
+        1.0
     }
 
     var isGenerating: Bool {
-        if case .generating = self {
-            return true
-        }
-        return false
+        true
     }
 }
 
@@ -39,7 +30,6 @@ enum FeedDisplayState: Equatable {
 struct FeedViewState: Equatable {
     var displayState: FeedDisplayState
     var headerDate: String
-    var modelLoadingProgress: Double?
     var streamingText: String
     var digest: DigestViewItem?
     var sourceArticles: [FeedSourceArticle]
@@ -50,7 +40,6 @@ struct FeedViewState: Equatable {
         FeedViewState(
             displayState: .loading,
             headerDate: "",
-            modelLoadingProgress: nil,
             streamingText: "",
             digest: nil,
             sourceArticles: [],

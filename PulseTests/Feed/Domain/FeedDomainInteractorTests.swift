@@ -101,12 +101,12 @@ struct FeedDomainInteractorTests {
         let state = sut.currentState
         // Should be in some generation-related state
         let isInGenerationFlow = switch state.generationState {
-        case .loadingModel, .generating, .completed:
+        case .generating, .completed:
             true
         default:
             false
         }
-        #expect(isInGenerationFlow, "Should be loading model, generating, or completed")
+        #expect(isInGenerationFlow, "Should be generating or completed")
     }
 
     @Test("Select article updates state")

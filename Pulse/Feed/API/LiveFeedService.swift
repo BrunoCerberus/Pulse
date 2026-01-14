@@ -59,12 +59,17 @@ final class LiveFeedService: FeedService {
 // MARK: - LLMInferenceConfig Extension
 
 extension LLMInferenceConfig {
+    /// Config for daily digest generation
+    /// maxTokens set to remaining context after input to prevent overflow while allowing natural completion
     static var dailyDigest: LLMInferenceConfig {
-        LLMInferenceConfig(
-            maxTokens: 1024,
+        let inputTokens = (LLMConfiguration.maxArticlesForDigest * LLMConfiguration.estimatedTokensPerArticle) + 150
+        let availableTokens = LLMConfiguration.contextSize - inputTokens
+
+        return LLMInferenceConfig(
+            maxTokens: availableTokens,
             temperature: 0.6,
             topP: 0.9,
-            stopSequences: ["</digest>", "\n\n\n", "---"]
+            stopSequences: ["</digest>", "---"]
         )
     }
 }

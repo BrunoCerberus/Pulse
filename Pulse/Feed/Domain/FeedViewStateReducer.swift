@@ -17,7 +17,6 @@ struct FeedViewStateReducer: ViewStateReducing {
         return FeedViewState(
             displayState: displayState,
             headerDate: domainState.digestDate,
-            modelLoadingProgress: extractModelProgress(domainState),
             streamingText: domainState.streamingText,
             digest: digest,
             sourceArticles: sourceArticles,
@@ -35,8 +34,6 @@ struct FeedViewStateReducer: ViewStateReducing {
             return .idle
         case .loadingHistory:
             return .loading
-        case let .loadingModel(progress):
-            return .processing(phase: .loading(progress: progress))
         case .generating:
             return .processing(phase: .generating)
         case .completed:
@@ -44,12 +41,5 @@ struct FeedViewStateReducer: ViewStateReducing {
         case .error:
             return .error
         }
-    }
-
-    private func extractModelProgress(_ domainState: FeedDomainState) -> Double? {
-        if case let .loadingModel(progress) = domainState.generationState {
-            return progress
-        }
-        return nil
     }
 }

@@ -5,7 +5,6 @@ import Foundation
 enum FeedGenerationState: Equatable {
     case idle
     case loadingHistory
-    case loadingModel(progress: Double)
     case generating
     case completed
     case error(String)

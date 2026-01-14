@@ -84,8 +84,8 @@ final class LLMModelManager: @unchecked Sendable {
             temperature: 0.6,
             batchSize: 512,
             maxTokenCount: 4096, // Must be >= prompt tokens + max generated tokens
-            stopTokens: ["</digest>", "\n\n\n", "---"],
-            timeout: 60.0
+            stopTokens: ["</digest>", "---"],
+            timeout: 120.0 // 2 minutes for full digest generation on mobile
         )
 
         // Create and initialize outside the lock (expensive operation)

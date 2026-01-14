@@ -34,7 +34,7 @@ enum LLMConfiguration {
     static var minimumAvailableMemory: UInt64 { 1_000_000_000 }
 
     /// Generation timeout in seconds
-    static var generationTimeout: TimeInterval { 30.0 }
+    static var generationTimeout: TimeInterval { 120.0 }
 
     /// Maximum articles to include in digest prompt
     /// Capped to prevent context overflow and ensure reasonable generation time
