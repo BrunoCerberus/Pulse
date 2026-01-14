@@ -24,6 +24,11 @@ struct FeedView<R: FeedNavigationRouter>: View {
         self.viewModel = viewModel
     }
 
+    private var isProcessing: Bool {
+        if case .processing = viewModel.viewState.displayState { return true }
+        return false
+    }
+
     var body: some View {
         ZStack {
             backgroundGradient
@@ -31,8 +36,9 @@ struct FeedView<R: FeedNavigationRouter>: View {
 
             content
         }
-        .navigationTitle(Constants.title)
+        .navigationTitle(isProcessing ? "" : Constants.title)
         .toolbarBackground(.hidden, for: .navigationBar)
+        .navigationBarHidden(isProcessing)
         .onAppear {
             viewModel.handle(event: .onAppear)
         }
@@ -133,17 +139,10 @@ struct FeedView<R: FeedNavigationRouter>: View {
     // MARK: - Processing View
 
     private func processingView(phase: AIProcessingPhase) -> some View {
-        VStack(spacing: Spacing.lg) {
-            dateHeader
-
-            AIProcessingView(
-                phase: phase,
-                streamingText: viewModel.viewState.streamingText,
-                onCancel: {
-                    viewModel.handle(event: .onCancelGenerationTapped)
-                }
-            )
-        }
+        AIProcessingView(
+            phase: phase,
+            streamingText: viewModel.viewState.streamingText
+        )
     }
 
     // MARK: - Digest Content

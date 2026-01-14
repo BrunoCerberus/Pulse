@@ -5,7 +5,6 @@ import SwiftUI
 struct AIProcessingView: View {
     let phase: AIProcessingPhase
     let streamingText: String
-    let onCancel: () -> Void
 
     @Environment(\.accessibilityReduceMotion) private var reduceMotion
 
@@ -33,10 +32,6 @@ struct AIProcessingView: View {
                 if phase.isGenerating, !streamingText.isEmpty {
                     streamingTextSection
                 }
-
-                // Cancel button
-                cancelButton
-                    .padding(.top, Spacing.md)
 
                 Spacer(minLength: Spacing.xl)
             }
@@ -135,24 +130,6 @@ struct AIProcessingView: View {
             insertion: .opacity.combined(with: .move(edge: .bottom)),
             removal: .opacity
         ))
-    }
-
-    // MARK: - Cancel Button
-
-    private var cancelButton: some View {
-        Button {
-            HapticManager.shared.tap()
-            onCancel()
-        } label: {
-            Text("Cancel")
-                .font(Typography.labelMedium)
-                .foregroundStyle(.secondary)
-                .padding(.horizontal, Spacing.lg)
-                .padding(.vertical, Spacing.sm)
-                .background(Color.secondary.opacity(0.1))
-                .clipShape(Capsule())
-        }
-        .pressEffect()
     }
 }
 
@@ -393,5 +370,5 @@ private struct Particle: Identifiable {
 
 // MARK: - Preview
 
-#Preview("Loading") { AIProcessingView(phase: .loading(progress: 0.5), streamingText: "", onCancel: {}) }
-#Preview("Generating") { AIProcessingView(phase: .generating, streamingText: "AI digest...", onCancel: {}) }
+#Preview("Loading") { AIProcessingView(phase: .loading(progress: 0.5), streamingText: "") }
+#Preview("Generating") { AIProcessingView(phase: .generating, streamingText: "AI digest...") }
