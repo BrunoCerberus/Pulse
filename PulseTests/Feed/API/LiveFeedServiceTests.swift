@@ -68,9 +68,10 @@ struct LiveFeedServiceTests {
         let sut = createSUT()
 
         let todayDigest = DailyDigest(
+            id: UUID().uuidString,
             summary: "Today's summary",
-            generatedAt: Date(),
-            sourceArticles: Article.mockArticles
+            sourceArticles: Article.mockArticles,
+            generatedAt: Date()
         )
         sut.saveDigest(todayDigest)
 
@@ -86,9 +87,10 @@ struct LiveFeedServiceTests {
 
         let yesterday = Calendar.current.date(byAdding: .day, value: -1, to: Date())!
         let yesterdayDigest = DailyDigest(
+            id: UUID().uuidString,
             summary: "Yesterday's summary",
-            generatedAt: yesterday,
-            sourceArticles: Article.mockArticles
+            sourceArticles: Article.mockArticles,
+            generatedAt: yesterday
         )
         sut.saveDigest(yesterdayDigest)
 
@@ -102,9 +104,10 @@ struct LiveFeedServiceTests {
         let sut = createSUT()
 
         let emptyDigest = DailyDigest(
+            id: UUID().uuidString,
             summary: "   ",
-            generatedAt: Date(),
-            sourceArticles: Article.mockArticles
+            sourceArticles: Article.mockArticles,
+            generatedAt: Date()
         )
         sut.saveDigest(emptyDigest)
 
@@ -120,9 +123,10 @@ struct LiveFeedServiceTests {
         let sut = createSUT()
 
         let validDigest = DailyDigest(
+            id: UUID().uuidString,
             summary: "Valid summary content",
-            generatedAt: Date(),
-            sourceArticles: Article.mockArticles
+            sourceArticles: Article.mockArticles,
+            generatedAt: Date()
         )
         sut.saveDigest(validDigest)
 
@@ -136,9 +140,10 @@ struct LiveFeedServiceTests {
         let sut = createSUT()
 
         let emptyDigest = DailyDigest(
+            id: UUID().uuidString,
             summary: "",
-            generatedAt: Date(),
-            sourceArticles: Article.mockArticles
+            sourceArticles: Article.mockArticles,
+            generatedAt: Date()
         )
         sut.saveDigest(emptyDigest)
 
@@ -151,9 +156,10 @@ struct LiveFeedServiceTests {
         let sut = createSUT()
 
         let whitespaceDigest = DailyDigest(
+            id: UUID().uuidString,
             summary: "   \n\t  ",
-            generatedAt: Date(),
-            sourceArticles: Article.mockArticles
+            sourceArticles: Article.mockArticles,
+            generatedAt: Date()
         )
         sut.saveDigest(whitespaceDigest)
 

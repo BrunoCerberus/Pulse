@@ -22,10 +22,12 @@ struct LiveSettingsServiceTests {
     func fetchPreferencesSuccess() async throws {
         let testPreferences = UserPreferences(
             followedTopics: [.technology, .science],
-            notificationsEnabled: true,
-            breakingNewsEnabled: false,
+            followedSources: [],
             mutedSources: ["Source1"],
-            mutedKeywords: ["keyword1"]
+            mutedKeywords: ["keyword1"],
+            preferredLanguage: "en",
+            notificationsEnabled: true,
+            breakingNewsNotifications: false
         )
         mockStorageService.userPreferences = testPreferences
         let sut = createSUT()
@@ -54,7 +56,7 @@ struct LiveSettingsServiceTests {
         #expect(receivedPreferences?.followedTopics.contains(.technology) == true)
         #expect(receivedPreferences?.followedTopics.contains(.science) == true)
         #expect(receivedPreferences?.notificationsEnabled == true)
-        #expect(receivedPreferences?.breakingNewsEnabled == false)
+        #expect(receivedPreferences?.breakingNewsNotifications == false)
     }
 
     @Test("fetchPreferences returns default when no preferences stored")
@@ -116,10 +118,12 @@ struct LiveSettingsServiceTests {
         let sut = createSUT()
         let preferencesToSave = UserPreferences(
             followedTopics: [.business],
-            notificationsEnabled: false,
-            breakingNewsEnabled: true,
+            followedSources: [],
             mutedSources: [],
-            mutedKeywords: []
+            mutedKeywords: [],
+            preferredLanguage: "en",
+            notificationsEnabled: false,
+            breakingNewsNotifications: true
         )
 
         var cancellables = Set<AnyCancellable>()
@@ -150,7 +154,7 @@ struct LiveSettingsServiceTests {
         let savedPreferences = try await mockStorageService.fetchUserPreferences()
         #expect(savedPreferences?.followedTopics.contains(.business) == true)
         #expect(savedPreferences?.notificationsEnabled == false)
-        #expect(savedPreferences?.breakingNewsEnabled == true)
+        #expect(savedPreferences?.breakingNewsNotifications == true)
     }
 
     @Test("savePreferences propagates storage errors")
