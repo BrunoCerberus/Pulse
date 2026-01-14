@@ -37,10 +37,25 @@ class BaseUITestCase: XCTestCase {
 
         // Launch verification - uses longer timeout as app startup takes time
         _ = app.wait(for: .runningForeground, timeout: Self.launchTimeout)
-        _ = app.tabBars.firstMatch.waitForExistence(timeout: Self.launchTimeout)
 
-        // Ensure app is in a clean state
-        resetToHomeTab()
+        // Wait for UI to stabilize after launch (fixes snapshot timing issues)
+        wait(for: 0.3)
+
+        // Wait for either tab bar (authenticated) or sign-in view (not authenticated)
+        // This handles both states and avoids timeout when MockAuthService is initializing
+        let tabBar = app.tabBars.firstMatch
+        let signInButton = app.buttons["Sign in with Apple"]
+        let appReady = waitForAny([tabBar, signInButton], timeout: Self.launchTimeout)
+
+        guard appReady else {
+            XCTFail("App did not reach ready state - neither tab bar nor sign-in view appeared")
+            return
+        }
+
+        // Only reset to home tab if authenticated (tab bar exists)
+        if tabBar.exists {
+            resetToHomeTab()
+        }
     }
 
     override func tearDownWithError() throws {
