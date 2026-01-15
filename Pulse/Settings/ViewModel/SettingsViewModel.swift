@@ -18,13 +18,13 @@ final class SettingsViewModel: CombineViewModel, ObservableObject {
 
     init(
         serviceLocator: ServiceLocator,
-        themeManager: ThemeManager = .shared,
-        authenticationManager: AuthenticationManager = .shared
+        themeManager: ThemeManager? = nil,
+        authenticationManager: AuthenticationManager? = nil
     ) {
         self.serviceLocator = serviceLocator
         interactor = SettingsDomainInteractor(serviceLocator: serviceLocator)
-        self.themeManager = themeManager
-        self.authenticationManager = authenticationManager
+        self.themeManager = themeManager ?? .shared
+        self.authenticationManager = authenticationManager ?? .shared
         authService = try? serviceLocator.retrieve(AuthService.self)
         setupBindings()
     }

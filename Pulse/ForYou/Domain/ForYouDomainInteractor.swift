@@ -73,7 +73,7 @@ final class ForYouDomainInteractor: CombineInteractor {
             }
 
             await MainActor.run {
-                updateState { state in
+                self.updateState { state in
                     state.isLoading = true
                     state.error = nil
                     state.currentPage = 1
@@ -141,7 +141,7 @@ final class ForYouDomainInteractor: CombineInteractor {
             let currentPreferences = preferences ?? .default
 
             await MainActor.run {
-                updateState { state in
+                self.updateState { state in
                     state.isRefreshing = true
                     state.articles = []
                     state.error = nil

@@ -1,4 +1,5 @@
 import Foundation
+import os
 #if canImport(UIKit)
     import UIKit
 #endif
@@ -21,8 +22,8 @@ final class LLMModelManager: @unchecked Sendable {
     private var isCancelled = false
     private var memoryWarningObserverToken: NSObjectProtocol?
 
-    /// Lock for protecting swiftLlama reference changes only
-    private let lock = NSLock()
+    /// Async-safe lock for protecting swiftLlama reference changes
+    private let lock = OSAllocatedUnfairLock()
 
     private init() {
         setupMemoryWarningObserver()
@@ -40,20 +41,14 @@ final class LLMModelManager: @unchecked Sendable {
 
     /// Check if model is currently loaded
     var modelIsLoaded: Bool {
-        lock.lock()
-        defer { lock.unlock() }
-        return swiftLlama != nil
+        lock.withLock { swiftLlama != nil }
     }
 
     /// Load the GGUF model into memory
     func loadModel(progressHandler: @escaping @Sendable (Double) -> Void) async throws {
         // Quick check if already loaded (minimal lock time)
-        lock.lock()
-        if swiftLlama != nil {
-            lock.unlock()
-            return
-        }
-        lock.unlock()
+        let alreadyLoaded = lock.withLock { swiftLlama != nil }
+        if alreadyLoaded { return }
 
         // Perform validations outside the lock to reduce contention
         guard hasAdequateMemory() else {
@@ -93,19 +88,22 @@ final class LLMModelManager: @unchecked Sendable {
 
         do {
             progressHandler(0.5)
-            try await llama.initialize()
+            try llama.initialize()
             progressHandler(0.8)
 
             // Only lock when setting the shared state
-            lock.lock()
             // Double-check: another caller may have loaded while we were initializing
-            if swiftLlama != nil {
-                lock.unlock()
+            let wasAlreadyLoaded = lock.withLock {
+                if swiftLlama != nil {
+                    return true
+                }
+                swiftLlama = llama
+                return false
+            }
+            if wasAlreadyLoaded {
                 // Another thread loaded first, discard our instance
                 return
             }
-            swiftLlama = llama
-            lock.unlock()
 
             progressHandler(1.0)
             logger.info("Model loaded successfully", category: logCategory)
@@ -117,9 +115,7 @@ final class LLMModelManager: @unchecked Sendable {
 
     /// Unload model and free memory
     func unloadModel() async {
-        lock.lock()
-        swiftLlama = nil
-        lock.unlock()
+        lock.withLock { swiftLlama = nil }
         logger.info("Model unloaded", category: logCategory)
     }
 
@@ -173,13 +169,10 @@ final class LLMModelManager: @unchecked Sendable {
         stopSequences: [String],
         continuation: AsyncThrowingStream<String, Error>.Continuation
     ) async {
-        lock.lock()
-        guard let llama = swiftLlama else {
-            lock.unlock()
+        guard let llama = lock.withLock({ swiftLlama }) else {
             continuation.finish(throwing: LLMError.modelNotLoaded)
             return
         }
-        lock.unlock()
 
         // Pre-inference memory check to prevent crashes during generation
         guard hasAdequateMemory() else {

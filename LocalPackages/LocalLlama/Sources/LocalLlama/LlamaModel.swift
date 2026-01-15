@@ -52,7 +52,7 @@ class LlamaModel {
             throw SwiftLlamaError.others("Model vocabulary is empty or invalid")
         }
 
-        guard let context = llama_new_context_with_model(model, configuration.contextParameters) else {
+        guard let context = llama_init_from_model(model, configuration.contextParameters) else {
             throw SwiftLlamaError.others("Cannot load model context")
         }
         self.context = context
@@ -60,14 +60,13 @@ class LlamaModel {
         self.batch = llama_batch_init(Int32(configuration.batchSize * Configuration.historySize * 2), 0, 1)
         self.sampler = llama_sampler_chain_init(llama_sampler_chain_default_params())
         llama_sampler_chain_add(sampler, llama_sampler_init_temp(configuration.temperature))
-        llama_sampler_chain_add(sampler, llama_sampler_init_softmax())
         llama_sampler_chain_add(sampler, llama_sampler_init_dist(1234))
         try checkContextLength(context: context, model: model)
     }
 
     private func checkContextLength(context: Context, model: Model) throws {
         let n_ctx = llama_n_ctx(context)
-        let n_ctx_train = llama_n_ctx_train(model)
+        let n_ctx_train = llama_model_n_ctx_train(model)
         if n_ctx > n_ctx_train {
             throw SwiftLlamaError.others("Model was trained on \(n_ctx_train) context but tokens \(n_ctx) specified")
         }
@@ -160,7 +159,7 @@ class LlamaModel {
     func clear() {
         tokens.removeAll()
         temporaryInvalidCChars.removeAll()
-        llama_kv_cache_clear(context)
+        llama_kv_self_clear(context)
     }
 
     deinit {

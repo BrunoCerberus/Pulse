@@ -82,13 +82,13 @@ final class LiveLLMService: LLMService {
 
             self.generationTask = Task {
                 do {
-                    // Check if model is loaded (actor-isolated property)
-                    guard await self.modelManager.modelIsLoaded else {
+                    // Check if model is loaded
+                    guard self.modelManager.modelIsLoaded else {
                         throw LLMError.modelNotLoaded
                     }
 
-                    // Get the token stream from the actor
-                    let tokens = await self.modelManager.generate(
+                    // Get the token stream from the manager
+                    let tokens = self.modelManager.generate(
                         prompt: prompt,
                         systemPrompt: systemPrompt ?? LLMModelManager.defaultSystemPrompt,
                         maxTokens: config.maxTokens,
@@ -112,8 +112,6 @@ final class LiveLLMService: LLMService {
     func cancelGeneration() {
         generationTask?.cancel()
         generationTask = nil
-        Task {
-            await modelManager.cancelGeneration()
-        }
+        modelManager.cancelGeneration()
     }
 }
