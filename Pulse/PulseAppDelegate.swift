@@ -54,6 +54,7 @@ final class PulseAppDelegate: UIResponder, UIApplicationDelegate {
      * - Parameter options: Additional options for opening the URL
      * - Returns: True if the URL was handled successfully
      */
+    @available(iOS, deprecated: 26.0, message: "Use scene-based URL handling instead")
     func application(
         _: UIApplication,
         open url: URL,
@@ -98,24 +99,23 @@ final class PulseAppDelegate: UIResponder, UIApplicationDelegate {
 }
 
 extension PulseAppDelegate: UNUserNotificationCenterDelegate {
-    func userNotificationCenter(
+    private nonisolated func userNotificationCenter(
         _: UNUserNotificationCenter,
-        willPresent _: UNNotification,
-        withCompletionHandler completionHandler: @escaping (UNNotificationPresentationOptions) -> Void
-    ) {
-        completionHandler([.banner, .sound, .badge])
+        willPresent _: UNNotification
+    ) async -> UNNotificationPresentationOptions {
+        [.banner, .sound, .badge]
     }
 
-    func userNotificationCenter(
+    nonisolated func userNotificationCenter(
         _: UNUserNotificationCenter,
-        didReceive response: UNNotificationResponse,
-        withCompletionHandler completionHandler: @escaping () -> Void
-    ) {
+        didReceive response: UNNotificationResponse
+    ) async {
         let userInfo = response.notification.request.content.userInfo
         if let articleID = userInfo["articleID"] as? String {
-            deeplinkManager.handle(deeplink: .article(id: articleID))
+            await MainActor.run {
+                self.deeplinkManager.handle(deeplink: .article(id: articleID))
+            }
         }
-        completionHandler()
     }
 
     func application(

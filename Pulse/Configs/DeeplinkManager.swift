@@ -24,6 +24,7 @@ final class DeeplinkManager: ObservableObject {
 
     private init() {}
 
+    // swiftlint:disable:next cyclomatic_complexity
     func parse(url: URL) {
         guard let components = URLComponents(url: url, resolvingAgainstBaseURL: true),
               components.scheme == "pulse"
