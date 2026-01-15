@@ -197,7 +197,8 @@ struct LLMInferenceConfigDailyDigestTests {
         let config = LLMInferenceConfig.dailyDigest
 
         // maxTokens is dynamically calculated: contextSize - (maxArticles * tokensPerArticle + overhead)
-        let expectedInputTokens = (LLMConfiguration.maxArticlesForDigest * LLMConfiguration.estimatedTokensPerArticle) + 150
+        let expectedInputTokens =
+            (LLMConfiguration.maxArticlesForDigest * LLMConfiguration.estimatedTokensPerArticle) + 150
         let expectedMaxTokens = LLMConfiguration.contextSize - expectedInputTokens
         #expect(config.maxTokens == expectedMaxTokens)
         #expect(config.temperature == 0.6)

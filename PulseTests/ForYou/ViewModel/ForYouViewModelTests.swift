@@ -1,3 +1,4 @@
+// swiftlint:disable file_length
 import Combine
 import EntropyCore
 import Foundation
@@ -13,6 +14,7 @@ import Testing
 /// - Publisher binding and state transformation
 @Suite("ForYouViewModel Tests")
 @MainActor
+// swiftlint:disable:next type_body_length
 struct ForYouViewModelTests {
     let mockForYouService: MockForYouService
     let mockStorageService: MockStorageService
