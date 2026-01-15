@@ -28,13 +28,16 @@ final class PulseAppDelegate: UIResponder, UIApplicationDelegate {
         _ application: UIApplication,
         didFinishLaunchingWithOptions _: [UIApplication.LaunchOptionsKey: Any]? = nil
     ) -> Bool {
-        // Skip configuration during tests to prevent hanging
+        // Skip configuration during unit tests to prevent hanging
         guard ProcessInfo.processInfo.environment["XCTestConfigurationFilePath"] == nil else {
             return true
         }
 
-        // Configure Firebase
-        FirebaseApp.configure()
+        // Skip Firebase during UI tests (app runs in separate process without GoogleService-Info.plist)
+        let isUITesting = ProcessInfo.processInfo.environment["UI_TESTING"] == "1"
+        if !isUITesting {
+            FirebaseApp.configure()
+        }
 
         configureNotifications(application)
         return true
