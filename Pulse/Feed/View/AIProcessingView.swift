@@ -345,7 +345,8 @@ private struct FloatingParticles: View {
                 positionY: sin(angle) * radius,
                 size: CGFloat.random(in: 3 ... 6),
                 opacity: Double.random(in: 0.3 ... 0.7),
-                color: [Color.Accent.primary, Color.Accent.secondary, Color.Accent.tertiary].randomElement() ?? Color.Accent.primary
+                color: [Color.Accent.primary, Color.Accent.secondary, Color.Accent.tertiary]
+                    .randomElement() ?? Color.Accent.primary
             )
         }
     }

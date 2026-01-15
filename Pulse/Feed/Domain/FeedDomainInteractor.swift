@@ -32,6 +32,7 @@ final class FeedDomainInteractor: CombineInteractor {
         setupModelStatusBinding()
     }
 
+    // swiftlint:disable:next cyclomatic_complexity
     func dispatch(action: FeedDomainAction) {
         switch action {
         case .loadInitialData:
@@ -144,6 +145,7 @@ final class FeedDomainInteractor: CombineInteractor {
 
     // MARK: - Digest Generation
 
+    // swiftlint:disable:next function_body_length
     private func generateDigest() {
         guard !currentState.readingHistory.isEmpty else {
             updateState { $0.generationState = .error("No recent reading history") }

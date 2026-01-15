@@ -79,6 +79,8 @@ private struct BlinkingCursor: View {
 }
 
 #Preview {
-    StreamingTextView(text: "Today's reading covered a variety of topics including technology, business, and science...")
-        .padding()
+    StreamingTextView(
+        text: "Today's reading covered a variety of topics including technology, business, and science..."
+    )
+    .padding()
 }

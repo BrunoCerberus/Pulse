@@ -4,7 +4,10 @@ import SwiftUI
 
 private enum Constants {
     static let title = "No Recent Reading"
-    static let message = "Read some articles to get your personalized daily digest. Your digest will summarize what you've read in the past 48 hours."
+    static let message = """
+    Read some articles to get your personalized daily digest. \
+    Your digest will summarize what you've read in the past 48 hours.
+    """
     static let startReading = "Start Reading"
 }
 

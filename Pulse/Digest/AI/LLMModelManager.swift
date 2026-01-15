@@ -162,6 +162,7 @@ final class LLMModelManager: @unchecked Sendable {
 
     // MARK: - Private Inference
 
+    // swiftlint:disable:next function_body_length cyclomatic_complexity
     private func runInference(
         prompt: String,
         systemPrompt: String,
@@ -200,6 +201,7 @@ final class LLMModelManager: @unchecked Sendable {
         // Warn if prompt might be too large for context window
         if estimatedPromptTokens > LLMConfiguration.contextSize - LLMConfiguration.reservedContextTokens {
             logger.warning(
+                // swiftlint:disable:next line_length
                 "Prompt may exceed safe context size (\(estimatedPromptTokens) estimated vs \(LLMConfiguration.contextSize) max)",
                 category: logCategory
             )
