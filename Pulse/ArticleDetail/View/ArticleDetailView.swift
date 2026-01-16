@@ -118,7 +118,8 @@ struct ArticleDetailView: View {
             }
 
             Text(viewModel.viewState.article.title)
-                .font(Typography.displaySmall)
+                .font(Typography.titleLarge)
+                .fontWeight(.bold)
 
             metadataRow
 
