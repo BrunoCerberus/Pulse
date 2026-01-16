@@ -1,3 +1,4 @@
+import Combine
 import EntropyCore
 import SwiftUI
 
@@ -13,10 +14,15 @@ private enum Constants {
 
 struct ArticleDetailView: View {
     @StateObject private var viewModel: ArticleDetailViewModel
+    @StateObject private var paywallViewModel: PaywallViewModel
     @Environment(\.dismiss) private var dismiss
     @Environment(\.colorScheme) private var colorScheme
     private let heroBaseHeight: CGFloat = 280
     private let serviceLocator: ServiceLocator
+
+    @State private var isPremium = false
+    @State private var isPaywallPresented = false
+    @State private var subscriptionCancellable: AnyCancellable?
 
     init(article: Article, serviceLocator: ServiceLocator) {
         self.serviceLocator = serviceLocator
@@ -24,6 +30,7 @@ struct ArticleDetailView: View {
             article: article,
             serviceLocator: serviceLocator
         ))
+        _paywallViewModel = StateObject(wrappedValue: PaywallViewModel(serviceLocator: serviceLocator))
     }
 
     var body: some View {
@@ -63,11 +70,16 @@ struct ArticleDetailView: View {
             ToolbarItem(placement: .topBarTrailing) {
                 HStack(spacing: Spacing.sm) {
                     Button("", systemImage: "sparkles") {
-                        viewModel.handle(event: .onSummarizeTapped)
+                        if isPremium {
+                            viewModel.handle(event: .onSummarizeTapped)
+                        } else {
+                            HapticManager.shared.notification(.warning)
+                            isPaywallPresented = true
+                        }
                     }
                     .accessibilityIdentifier("summarizeButton")
                     .accessibilityLabel(Constants.summarize)
-                    .accessibilityHint("Generate AI summary of this article")
+                    .accessibilityHint(isPremium ? "Generate AI summary of this article" : "Premium feature - tap to unlock")
 
                     Button("", systemImage: viewModel.viewState.isBookmarked ? "bookmark.fill" : "bookmark") {
                         viewModel.handle(event: .onBookmarkTapped)
@@ -106,8 +118,40 @@ struct ArticleDetailView: View {
         }
         .onAppear {
             viewModel.handle(event: .onAppear)
+            checkPremiumStatus()
+            observeSubscriptionStatus()
         }
+        .onDisappear {
+            subscriptionCancellable?.cancel()
+        }
+        .sheet(
+            isPresented: $isPaywallPresented,
+            onDismiss: { checkPremiumStatus() },
+            content: { PaywallView(viewModel: paywallViewModel) }
+        )
         .enableSwipeBack()
+    }
+
+    private func checkPremiumStatus() {
+        do {
+            let storeKitService = try serviceLocator.retrieve(StoreKitService.self)
+            isPremium = storeKitService.isPremium
+        } catch {
+            isPremium = false
+        }
+    }
+
+    private func observeSubscriptionStatus() {
+        do {
+            let storeKitService = try serviceLocator.retrieve(StoreKitService.self)
+            subscriptionCancellable = storeKitService.subscriptionStatusPublisher
+                .receive(on: DispatchQueue.main)
+                .sink { [self] newStatus in
+                    self.isPremium = newStatus
+                }
+        } catch {
+            // Service not available
+        }
     }
 
     private var contentCard: some View {

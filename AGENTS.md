@@ -191,6 +191,56 @@ struct HomeDomainInteractorTests {
 6. **State is immutable** - use Equatable structs for DomainState and ViewState
 7. **Authentication is required** - RootView gates access via AuthenticationManager
 8. **AuthenticationManager is a singleton** - observed by RootView to switch between SignInView and CoordinatorView
+9. **Premium features are gated** - AI features require subscription (checked via StoreKitService)
+
+## Premium Feature Gating
+
+Three AI-powered features are gated behind a premium subscription:
+
+| Feature | Location | Non-Premium Behavior |
+|---------|----------|---------------------|
+| AI Daily Digest | Feed tab | Shows `PremiumGateView` |
+| Personalized For You | For You tab | Shows `PremiumGateView` |
+| Article Summarization | Article detail toolbar | Shows paywall sheet |
+
+### Implementation Pattern
+
+Views that gate premium features follow this pattern:
+
+```swift
+struct FeedView<R: FeedNavigationRouter>: View {
+    private let serviceLocator: ServiceLocator
+    @State private var isPremium = false
+    @State private var subscriptionCancellable: AnyCancellable?
+
+    var body: some View {
+        Group {
+            if isPremium {
+                premiumContent
+            } else {
+                PremiumGateView(feature: .dailyDigest, serviceLocator: serviceLocator)
+            }
+        }
+        .onAppear {
+            setupPremiumStatusObserver()
+        }
+    }
+
+    private func setupPremiumStatusObserver() {
+        guard let storeKitService = try? serviceLocator.retrieve(StoreKitService.self) else { return }
+        isPremium = storeKitService.isPremium
+        subscriptionCancellable = storeKitService.subscriptionStatusPublisher
+            .receive(on: DispatchQueue.main)
+            .sink { [weak self] status in self?.isPremium = status }
+    }
+}
+```
+
+### Testing Premium Features
+
+- **Unit tests**: Use `MockStoreKitService(isPremium: true/false)`
+- **UI tests**: Set `MOCK_PREMIUM=1` in launch environment for premium user tests
+- **Snapshot tests**: Register `MockStoreKitService` in test ServiceLocator
 
 ## On-Device AI (Digest Feature)
 

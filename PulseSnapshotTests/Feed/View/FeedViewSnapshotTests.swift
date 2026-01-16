@@ -58,13 +58,18 @@ final class FeedViewSnapshotTests: XCTestCase {
         serviceLocator = ServiceLocator()
         serviceLocator.register(FeedService.self, instance: mockFeedService)
         serviceLocator.register(StorageService.self, instance: mockStorageService)
+
+        // Register StoreKitService with premium enabled for testing
+        let mockStoreKitService = MockStoreKitService(isPremium: true)
+        serviceLocator.register(StoreKitService.self, instance: mockStoreKitService)
     }
 
     func testFeedViewLoading() {
         let viewModel = FeedViewModel(serviceLocator: serviceLocator)
         let view = FeedView(
             router: FeedNavigationRouter(),
-            viewModel: viewModel
+            viewModel: viewModel,
+            serviceLocator: serviceLocator
         )
         let controller = UIHostingController(rootView: view)
 
@@ -84,7 +89,8 @@ final class FeedViewSnapshotTests: XCTestCase {
 
         let view = FeedView(
             router: FeedNavigationRouter(),
-            viewModel: viewModel
+            viewModel: viewModel,
+            serviceLocator: serviceLocator
         )
         let controller = UIHostingController(rootView: view)
 
@@ -110,7 +116,8 @@ final class FeedViewSnapshotTests: XCTestCase {
 
         let view = FeedView(
             router: FeedNavigationRouter(),
-            viewModel: viewModel
+            viewModel: viewModel,
+            serviceLocator: serviceLocator
         )
         let controller = UIHostingController(rootView: view)
 
