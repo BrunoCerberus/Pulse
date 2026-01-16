@@ -131,7 +131,7 @@ struct BookmarksView<R: BookmarksNavigationRouter>: View {
             LazyVStack(spacing: Spacing.sm) {
                 bookmarkCountHeader
 
-                ForEach(viewModel.viewState.bookmarks) { item in
+                ForEach(Array(viewModel.viewState.bookmarks.enumerated()), id: \.element.id) { index, item in
                     GlassArticleCard(
                         item: item,
                         isBookmarked: true,
@@ -144,6 +144,7 @@ struct BookmarksView<R: BookmarksNavigationRouter>: View {
                         },
                         onShare: {}
                     )
+                    .fadeIn(delay: Double(index) * 0.03)
                 }
             }
             .padding(.horizontal, Spacing.md)
