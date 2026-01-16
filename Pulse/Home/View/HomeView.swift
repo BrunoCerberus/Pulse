@@ -176,7 +176,7 @@ struct HomeView<R: HomeNavigationRouter>: View {
 
                 Section {
                     LazyVStack(spacing: Spacing.sm) {
-                        ForEach(viewModel.viewState.headlines) { item in
+                        ForEach(Array(viewModel.viewState.headlines.enumerated()), id: \.element.id) { index, item in
                             GlassArticleCard(
                                 item: item,
                                 onTap: {
@@ -189,6 +189,7 @@ struct HomeView<R: HomeNavigationRouter>: View {
                                     viewModel.handle(event: .onShareTapped(articleId: item.id))
                                 }
                             )
+                            .fadeIn(delay: Double(index) * 0.03)
                             .onAppear {
                                 if item.id == viewModel.viewState.headlines.last?.id {
                                     viewModel.handle(event: .onLoadMore)
@@ -220,10 +221,11 @@ struct HomeView<R: HomeNavigationRouter>: View {
     private var breakingNewsCarousel: some View {
         ScrollView(.horizontal, showsIndicators: false) {
             LazyHStack(spacing: Spacing.md) {
-                ForEach(viewModel.viewState.breakingNews) { item in
+                ForEach(Array(viewModel.viewState.breakingNews.enumerated()), id: \.element.id) { index, item in
                     HeroNewsCard(item: item) {
                         viewModel.handle(event: .onArticleTapped(articleId: item.id))
                     }
+                    .fadeIn(delay: Double(index) * 0.1)
                 }
             }
             .padding(.horizontal, Spacing.md)

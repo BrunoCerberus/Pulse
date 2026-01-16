@@ -216,7 +216,7 @@ struct SearchView<R: SearchNavigationRouter>: View {
                     .disabled(viewModel.viewState.isSorting)
 
                 LazyVStack(spacing: Spacing.sm) {
-                    ForEach(viewModel.viewState.results) { item in
+                    ForEach(Array(viewModel.viewState.results.enumerated()), id: \.element.id) { index, item in
                         GlassArticleCard(
                             item: item,
                             onTap: {
@@ -225,6 +225,7 @@ struct SearchView<R: SearchNavigationRouter>: View {
                             onBookmark: {},
                             onShare: {}
                         )
+                        .fadeIn(delay: Double(index) * 0.03)
                         .onAppear {
                             if item.id == viewModel.viewState.results.last?.id {
                                 viewModel.handle(event: .onLoadMore)

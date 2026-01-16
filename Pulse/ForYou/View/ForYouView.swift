@@ -184,7 +184,7 @@ struct ForYouView<R: ForYouNavigationRouter>: View {
                 if !viewModel.viewState.followedTopics.isEmpty {
                     Section {
                         LazyVStack(spacing: Spacing.sm) {
-                            ForEach(viewModel.viewState.articles) { item in
+                            ForEach(Array(viewModel.viewState.articles.enumerated()), id: \.element.id) { index, item in
                                 GlassArticleCard(
                                     item: item,
                                     onTap: {
@@ -193,6 +193,7 @@ struct ForYouView<R: ForYouNavigationRouter>: View {
                                     onBookmark: {},
                                     onShare: {}
                                 )
+                                .fadeIn(delay: Double(index) * 0.03)
                                 .onAppear {
                                     if item.id == viewModel.viewState.articles.last?.id {
                                         viewModel.handle(event: .onLoadMore)
