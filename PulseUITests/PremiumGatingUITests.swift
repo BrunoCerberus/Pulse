@@ -246,8 +246,8 @@ final class PremiumGatingPremiumUITests: XCTestCase {
         // Wait for content to load
         wait(for: 2.0)
 
-        // Should NOT see premium gate elements
-        XCTAssertFalse(premiumGateTitle.exists && unlockButton.exists, "Premium user should not see premium gate")
+        // Should NOT see premium gate elements (check separately for clarity)
+        XCTAssertFalse(unlockButton.exists, "Premium user should not see unlock button")
 
         // Should see some Feed content indicators
         let digestHeader = app.staticTexts["Your Daily Digest"]
@@ -276,8 +276,8 @@ final class PremiumGatingPremiumUITests: XCTestCase {
         // Wait for content to load
         wait(for: 2.0)
 
-        // Should NOT see premium gate elements
-        XCTAssertFalse(premiumGateTitle.exists && unlockButton.exists, "Premium user should not see premium gate")
+        // Should NOT see premium gate elements (check separately for clarity)
+        XCTAssertFalse(unlockButton.exists, "Premium user should not see unlock button")
 
         // Should see some For You content indicators
         let personalizeText = app.staticTexts["Personalize Your Feed"]

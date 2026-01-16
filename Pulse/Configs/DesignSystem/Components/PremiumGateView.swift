@@ -71,7 +71,6 @@ struct PremiumGateView: View {
     var onUnlockTapped: (() -> Void)?
 
     @State private var isPaywallPresented = false
-    @State private var isPremium = false
     @StateObject private var paywallViewModel: PaywallViewModel
 
     init(
@@ -151,27 +150,14 @@ struct PremiumGateView: View {
             }
             .pressEffect()
             .padding(.horizontal, Spacing.xl)
+            .accessibilityIdentifier("unlockPremiumButton")
 
             Spacer()
         }
         .frame(maxWidth: .infinity, maxHeight: .infinity)
         .background(LinearGradient.subtleBackground)
-        .onAppear {
-            checkPremiumStatus()
-        }
-        .sheet(
-            isPresented: $isPaywallPresented,
-            onDismiss: { checkPremiumStatus() },
-            content: { PaywallView(viewModel: paywallViewModel) }
-        )
-    }
-
-    private func checkPremiumStatus() {
-        do {
-            let storeKitService = try serviceLocator.retrieve(StoreKitService.self)
-            isPremium = storeKitService.isPremium
-        } catch {
-            isPremium = false
+        .sheet(isPresented: $isPaywallPresented) {
+            PaywallView(viewModel: paywallViewModel)
         }
     }
 }

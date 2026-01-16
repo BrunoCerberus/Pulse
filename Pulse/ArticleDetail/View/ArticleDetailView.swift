@@ -146,8 +146,8 @@ struct ArticleDetailView: View {
             let storeKitService = try serviceLocator.retrieve(StoreKitService.self)
             subscriptionCancellable = storeKitService.subscriptionStatusPublisher
                 .receive(on: DispatchQueue.main)
-                .sink { [self] newStatus in
-                    self.isPremium = newStatus
+                .sink { [weak self] newStatus in
+                    self?.isPremium = newStatus
                 }
         } catch {
             // Service not available

@@ -222,16 +222,18 @@ struct FeedView<R: FeedNavigationRouter>: View {
             }
         }
         .onAppear {
-            setupPremiumStatusObserver()
+            observeSubscriptionStatus()
         }
     }
 
-    private func setupPremiumStatusObserver() {
+    private func observeSubscriptionStatus() {
         guard let storeKitService = try? serviceLocator.retrieve(StoreKitService.self) else { return }
         isPremium = storeKitService.isPremium
         subscriptionCancellable = storeKitService.subscriptionStatusPublisher
             .receive(on: DispatchQueue.main)
-            .sink { [weak self] status in self?.isPremium = status }
+            .sink { [weak self] newStatus in
+                self?.isPremium = newStatus
+            }
     }
 }
 ```
