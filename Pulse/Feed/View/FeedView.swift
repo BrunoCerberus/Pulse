@@ -48,7 +48,6 @@ struct FeedView<R: FeedNavigationRouter>: View {
             }
         }
         .onAppear {
-            checkPremiumStatus()
             observeSubscriptionStatus()
         }
         .onDisappear {
@@ -78,19 +77,13 @@ struct FeedView<R: FeedNavigationRouter>: View {
         }
     }
 
-    private func checkPremiumStatus() {
-        do {
-            let storeKitService = try serviceLocator.retrieve(StoreKitService.self)
-            isPremium = storeKitService.isPremium
-        } catch {
-            isPremium = false
-        }
-    }
-
     private func observeSubscriptionStatus() {
         subscriptionCancellable?.cancel()
         do {
             let storeKitService = try serviceLocator.retrieve(StoreKitService.self)
+            // Set initial status immediately to avoid UI flicker
+            isPremium = storeKitService.isPremium
+            // Then observe for changes
             subscriptionCancellable = storeKitService.subscriptionStatusPublisher
                 .receive(on: DispatchQueue.main)
                 .sink { newStatus in

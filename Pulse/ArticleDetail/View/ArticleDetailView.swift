@@ -118,7 +118,6 @@ struct ArticleDetailView: View {
         }
         .onAppear {
             viewModel.handle(event: .onAppear)
-            checkPremiumStatus()
             observeSubscriptionStatus()
         }
         .onDisappear {
@@ -145,6 +144,9 @@ struct ArticleDetailView: View {
         subscriptionCancellable?.cancel()
         do {
             let storeKitService = try serviceLocator.retrieve(StoreKitService.self)
+            // Set initial status immediately to avoid UI flicker
+            isPremium = storeKitService.isPremium
+            // Then observe for changes
             subscriptionCancellable = storeKitService.subscriptionStatusPublisher
                 .receive(on: DispatchQueue.main)
                 .sink { newStatus in

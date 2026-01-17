@@ -56,7 +56,6 @@ struct ForYouView<R: ForYouNavigationRouter>: View {
             }
         }
         .onAppear {
-            checkPremiumStatus()
             observeSubscriptionStatus()
         }
         .onDisappear {
@@ -88,19 +87,13 @@ struct ForYouView<R: ForYouNavigationRouter>: View {
         }
     }
 
-    private func checkPremiumStatus() {
-        do {
-            let storeKitService = try serviceLocator.retrieve(StoreKitService.self)
-            isPremium = storeKitService.isPremium
-        } catch {
-            isPremium = false
-        }
-    }
-
     private func observeSubscriptionStatus() {
         subscriptionCancellable?.cancel()
         do {
             let storeKitService = try serviceLocator.retrieve(StoreKitService.self)
+            // Set initial status immediately to avoid UI flicker
+            isPremium = storeKitService.isPremium
+            // Then observe for changes
             subscriptionCancellable = storeKitService.subscriptionStatusPublisher
                 .receive(on: DispatchQueue.main)
                 .sink { newStatus in
