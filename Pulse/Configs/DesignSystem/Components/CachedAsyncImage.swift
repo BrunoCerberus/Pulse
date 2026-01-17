@@ -10,6 +10,10 @@ final class ImageCache: @unchecked Sendable {
     private let urlSession: URLSession
     private var memoryWarningObserver: NSObjectProtocol?
 
+    /// Original limits stored at initialization, used as reference during memory warnings
+    private var originalCountLimit: Int = 0
+    private var originalTotalCostLimit: Int = 0
+
     private init() {
         // Configure URLSession with caching - must be done first before calling methods
         let config = URLSessionConfiguration.default
@@ -40,7 +44,7 @@ final class ImageCache: @unchecked Sendable {
         }
     }
 
-    /// Configures cache limits based on device memory
+    /// Configures cache limits based on device memory and stores original limits
     private func configureCacheLimits() {
         let totalMemory = ProcessInfo.processInfo.physicalMemory
         let memoryInGB = Double(totalMemory) / (1024 * 1024 * 1024)
@@ -59,15 +63,21 @@ final class ImageCache: @unchecked Sendable {
             cache.countLimit = 75
             cache.totalCostLimit = 30 * 1024 * 1024
         }
+
+        // Store original limits as reference for memory warning handling
+        originalCountLimit = cache.countLimit
+        originalTotalCostLimit = cache.totalCostLimit
     }
 
-    /// Reduces cache size when memory warning is received
+    /// Reduces cache size when memory warning is received.
+    /// Uses original limits as reference to ensure consistent reduction across multiple warnings.
     private func handleMemoryWarning() {
         // Immediately clear all cached objects to free memory
         cache.removeAllObjects()
-        // Then reduce limits to prevent rapid re-accumulation
-        cache.countLimit = max(10, cache.countLimit / 2)
-        cache.totalCostLimit = max(5 * 1024 * 1024, cache.totalCostLimit / 2)
+        // Reduce limits based on original values (not current) to avoid compounding reductions
+        // Example: 75 → 37 on first warning, stays at 37 on subsequent warnings (not 37 → 18 → 9)
+        cache.countLimit = max(10, originalCountLimit / 2)
+        cache.totalCostLimit = max(5 * 1024 * 1024, originalTotalCostLimit / 2)
     }
 
     func image(for url: URL) -> UIImage? {

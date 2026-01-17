@@ -236,17 +236,15 @@ final class ArticleDetailDomainInteractor: CombineInteractor {
 
     // MARK: - Background Task Management
 
-    /// Safely tracks and auto-removes background tasks with proper cleanup on deinit
-    private func trackBackgroundTask(_ task: Task<Void, Never>) {
-        backgroundTasks.insert(task)
+    /// Safely tracks and auto-removes background tasks with proper cleanup on deinit.
+    /// Uses a single MainActor Task to ensure atomic insertion and removal (no race condition).
+    private func trackBackgroundTask(_ taskToTrack: Task<Void, Never>) {
+        Task { @MainActor [weak self] in
+            guard let self else { return }
 
-        // Use detached task with weak self to ensure cleanup even if parent is deallocated
-        Task.detached { [weak self] in
-            _ = await task.result
-            await MainActor.run {
-                guard let self else { return }
-                self.backgroundTasks.remove(task)
-            }
+            backgroundTasks.insert(taskToTrack)
+            _ = await taskToTrack.result
+            backgroundTasks.remove(taskToTrack)
         }
     }
 
