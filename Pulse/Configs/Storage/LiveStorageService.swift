@@ -59,10 +59,13 @@ final class LiveStorageService: StorageService {
         return (try? context.fetchCount(descriptor)) ?? 0 > 0
     }
 
+    /// Saves reading history on MainActor to ensure SwiftData thread safety.
+    /// The operation is lightweight (single record upsert) and won't noticeably block UI.
     @MainActor
     func saveReadingHistory(_ article: Article) async throws {
         let context = modelContainer.mainContext
         let articleID = article.id
+
         let descriptor = FetchDescriptor<ReadingHistoryEntry>(
             predicate: #Predicate { $0.articleID == articleID }
         )

@@ -38,7 +38,9 @@ final class ForYouViewModel: CombineViewModel, ObservableObject {
         interactor.statePublisher
             .map { state in
                 ForYouViewState(
-                    articles: state.articles.map { ArticleViewItem(from: $0) },
+                    articles: state.articles.enumerated().map { index, article in
+                        ArticleViewItem(from: article, index: index)
+                    },
                     followedTopics: state.preferences.followedTopics,
                     isLoading: state.isLoading,
                     isLoadingMore: state.isLoadingMore,
