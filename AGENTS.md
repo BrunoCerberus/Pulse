@@ -227,12 +227,13 @@ struct FeedView<R: FeedNavigationRouter>: View {
     }
 
     private func observeSubscriptionStatus() {
+        subscriptionCancellable?.cancel()
         guard let storeKitService = try? serviceLocator.retrieve(StoreKitService.self) else { return }
         isPremium = storeKitService.isPremium
         subscriptionCancellable = storeKitService.subscriptionStatusPublisher
             .receive(on: DispatchQueue.main)
-            .sink { [weak self] newStatus in
-                self?.isPremium = newStatus
+            .sink { newStatus in
+                self.isPremium = newStatus  // Note: No [weak self] needed for struct views
             }
     }
 }

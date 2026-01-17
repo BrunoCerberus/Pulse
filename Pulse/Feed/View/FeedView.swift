@@ -88,15 +88,19 @@ struct FeedView<R: FeedNavigationRouter>: View {
     }
 
     private func observeSubscriptionStatus() {
+        subscriptionCancellable?.cancel()
         do {
             let storeKitService = try serviceLocator.retrieve(StoreKitService.self)
             subscriptionCancellable = storeKitService.subscriptionStatusPublisher
                 .receive(on: DispatchQueue.main)
-                .sink { [weak self] newStatus in
-                    self?.isPremium = newStatus
+                .sink { newStatus in
+                    self.isPremium = newStatus
                 }
         } catch {
-            // Service not available
+            #if DEBUG
+                print("⚠️ Failed to retrieve StoreKitService: \(error)")
+            #endif
+            isPremium = false
         }
     }
 
