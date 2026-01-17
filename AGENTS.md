@@ -340,9 +340,7 @@ final class HomeNavigationRouter: NavigationRouter {
 | `pulse://search` | Open search tab | ✅ Full |
 | `pulse://search?q=query` | Search with query | ✅ Full |
 | `pulse://settings` | Open settings (pushes onto Home) | ✅ Full |
-| `pulse://article?id=123` | Open specific article | ⚠️ Partial |
-
-**Note:** Article deeplinks parse the ID but require `NewsService.fetchArticle(id:)` implementation to navigate directly to the article.
+| `pulse://article?id=path/to/article` | Open specific article by Guardian content ID | ✅ Full |
 
 ## Unidirectional Data Flow
 

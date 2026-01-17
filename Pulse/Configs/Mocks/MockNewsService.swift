@@ -6,6 +6,7 @@ import Foundation
 final class MockNewsService: NewsService {
     var topHeadlinesResult: Result<[Article], Error> = .success(Article.mockArticles)
     var breakingNewsResult: Result<[Article], Error> = .success(Array(Article.mockArticles.prefix(3)))
+    var fetchArticleResult: Result<Article, Error>?
 
     func fetchTopHeadlines(country _: String, page _: Int) -> AnyPublisher<[Article], Error> {
         topHeadlinesResult.publisher.eraseToAnyPublisher()
@@ -34,6 +35,24 @@ final class MockNewsService: NewsService {
 
     func fetchBreakingNews(country _: String) -> AnyPublisher<[Article], Error> {
         breakingNewsResult.publisher.eraseToAnyPublisher()
+    }
+
+    func fetchArticle(id: String) -> AnyPublisher<Article, Error> {
+        // Use custom result if set, otherwise find article by ID in mock articles
+        if let result = fetchArticleResult {
+            return result.publisher.eraseToAnyPublisher()
+        }
+
+        // Try to find the article in mock articles
+        if let article = Article.mockArticles.first(where: { $0.id == id }) {
+            return Just(article)
+                .setFailureType(to: Error.self)
+                .eraseToAnyPublisher()
+        }
+
+        // Return not found error
+        return Fail(error: URLError(.resourceUnavailable))
+            .eraseToAnyPublisher()
     }
 }
 

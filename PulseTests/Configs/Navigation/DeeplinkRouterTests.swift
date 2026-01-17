@@ -138,14 +138,40 @@ struct DeeplinkRouterTests {
 
     // MARK: - Article Deeplink Tests
 
-    @Test("Route article deeplink switches to home tab")
+    @Test("Route article deeplink switches to home tab and fetches article")
     func routeArticleDeeplink() async throws {
         sut.setCoordinator(coordinator)
         coordinator.selectedTab = .search
 
-        sut.route(deeplink: .article(id: "article-123"))
+        // Use article ID "1" which exists in Article.mockArticles
+        sut.route(deeplink: .article(id: "1"))
+
+        // Tab switch is synchronous
+        #expect(coordinator.selectedTab == .home)
+
+        // Wait for async article fetch and navigation
+        let navigated = await waitForCondition(timeout: 1_000_000_000) { [coordinator] in
+            coordinator.homePath.count == 1
+        }
+
+        #expect(navigated, "Should navigate to article detail after fetch")
+    }
+
+    @Test("Route article deeplink with invalid ID stays on home without pushing")
+    func routeArticleDeeplinkInvalidId() async throws {
+        sut.setCoordinator(coordinator)
+        coordinator.selectedTab = .search
+
+        // Use an ID that doesn't exist in mock articles
+        sut.route(deeplink: .article(id: "non-existent-article-id"))
 
         #expect(coordinator.selectedTab == .home)
+
+        // Wait a bit to ensure navigation doesn't happen
+        try await waitForStateUpdate()
+
+        // Should remain at root since article wasn't found
+        #expect(coordinator.homePath.count == 0)
     }
 
     // MARK: - Category Deeplink Tests (Legacy - redirects to Home)

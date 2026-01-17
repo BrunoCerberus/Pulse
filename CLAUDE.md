@@ -431,4 +431,4 @@ See `APIKeysProvider.swift` for the fallback hierarchy implementation.
 | `pulse://search` | Open search tab | ✅ Full |
 | `pulse://search?q=query` | Search with query | ✅ Full |
 | `pulse://settings` | Open settings (pushes onto Home) | ✅ Full |
-| `pulse://article?id=123` | Open specific article | ⚠️ Partial (navigates to Home, fetching not implemented) |
+| `pulse://article?id=path/to/article` | Open specific article by Guardian content ID | ✅ Full |

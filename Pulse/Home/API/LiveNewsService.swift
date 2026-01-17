@@ -44,4 +44,19 @@ final class LiveNewsService: APIRequest, NewsService {
         .receive(on: DispatchQueue.main)
         .eraseToAnyPublisher()
     }
+
+    func fetchArticle(id: String) -> AnyPublisher<Article, Error> {
+        fetchRequest(
+            target: GuardianAPI.article(id: id),
+            dataType: GuardianSingleArticleResponse.self
+        )
+        .tryMap { response in
+            guard let article = response.response.content.toArticle() else {
+                throw URLError(.cannotParseResponse)
+            }
+            return article
+        }
+        .receive(on: DispatchQueue.main)
+        .eraseToAnyPublisher()
+    }
 }

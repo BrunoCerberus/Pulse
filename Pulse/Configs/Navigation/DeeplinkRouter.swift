@@ -94,11 +94,9 @@ final class DeeplinkRouter {
             coordinator.push(page: .settings)
 
         case let .article(id):
-            // TODO: Article deeplinks require adding fetchArticle(id:) to NewsService
-            // and a corresponding GuardianAPI.article(id:) endpoint.
-            // For now, switches to home tab and logs the article ID.
+            // Fetch the article by ID and navigate to article detail
             coordinator.switchTab(to: .home, popToRoot: true)
-            debugPrint("DeeplinkRouter: Article deeplink received with ID: \(id). Fetching not yet implemented.")
+            fetchAndNavigateToArticle(id: id, coordinator: coordinator)
 
         case .category:
             // Categories feature has been removed
@@ -108,5 +106,30 @@ final class DeeplinkRouter {
 
         // Clear the deeplink after processing
         DeeplinkManager.shared.clearDeeplink()
+    }
+
+    /// Fetches an article by ID and navigates to its detail view.
+    /// - Parameters:
+    ///   - id: The article ID (Guardian content path)
+    ///   - coordinator: The coordinator to use for navigation
+    private func fetchAndNavigateToArticle(id: String, coordinator: Coordinator) {
+        guard let newsService = try? coordinator.serviceLocator.retrieve(NewsService.self) else {
+            debugPrint("DeeplinkRouter: Failed to retrieve NewsService for article deeplink")
+            return
+        }
+
+        newsService.fetchArticle(id: id)
+            .receive(on: DispatchQueue.main)
+            .sink(
+                receiveCompletion: { completion in
+                    if case let .failure(error) = completion {
+                        debugPrint("DeeplinkRouter: Failed to fetch article \(id): \(error.localizedDescription)")
+                    }
+                },
+                receiveValue: { [weak coordinator] article in
+                    coordinator?.push(page: .articleDetail(article))
+                }
+            )
+            .store(in: &cancellables)
     }
 }

@@ -236,7 +236,7 @@ GitHub Actions workflows:
 | `pulse://search` | Open search tab |
 | `pulse://search?q=query` | Search with query |
 | `pulse://settings` | Open settings (pushes onto Home) |
-| `pulse://article?id=123` | Open specific article (partial - navigates to Home) |
+| `pulse://article?id=path/to/article` | Open specific article by Guardian content ID |
 
 ## Testing
 
