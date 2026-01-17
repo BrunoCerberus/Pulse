@@ -111,10 +111,97 @@ extension PulseAppDelegate: UNUserNotificationCenterDelegate {
         didReceive response: UNNotificationResponse
     ) async {
         let userInfo = response.notification.request.content.userInfo
+
+        // Parse deeplink from notification payload
+        guard let deeplink = parseDeeplink(from: userInfo) else {
+            Logger.shared.warning("Push notification received without valid deeplink payload", category: "Navigation")
+            return
+        }
+
+        await MainActor.run {
+            self.deeplinkManager.handle(deeplink: deeplink)
+        }
+    }
+
+    /// Parses a deeplink from push notification userInfo payload.
+    ///
+    /// Supported payload formats:
+    /// ```json
+    /// // Generic deeplink via URL
+    /// { "deeplink": "pulse://forYou" }
+    /// { "deeplink": "pulse://search?q=swift" }
+    ///
+    /// // Article shorthand (legacy support)
+    /// { "articleID": "world/2024/jan/01/article-slug" }
+    ///
+    /// // Type-based format
+    /// { "deeplinkType": "article", "deeplinkId": "world/2024/..." }
+    /// { "deeplinkType": "search", "deeplinkQuery": "swift" }
+    /// ```
+    private nonisolated func parseDeeplink(from userInfo: [AnyHashable: Any]) -> Deeplink? {
+        // Format 1: Full deeplink URL (preferred)
+        if let deeplinkURLString = userInfo["deeplink"] as? String,
+           let url = URL(string: deeplinkURLString)
+        {
+            return parseDeeplinkURL(url)
+        }
+
+        // Format 2: Legacy articleID support
         if let articleID = userInfo["articleID"] as? String {
-            await MainActor.run {
-                self.deeplinkManager.handle(deeplink: .article(id: articleID))
+            return .article(id: articleID)
+        }
+
+        // Format 3: Type-based format
+        if let deeplinkType = userInfo["deeplinkType"] as? String {
+            return parseTypedDeeplink(type: deeplinkType, userInfo: userInfo)
+        }
+
+        return nil
+    }
+
+    /// Parses a deeplink from a URL (reuses DeeplinkManager logic pattern).
+    private nonisolated func parseDeeplinkURL(_ url: URL) -> Deeplink? {
+        guard let components = URLComponents(url: url, resolvingAgainstBaseURL: true),
+              components.scheme == "pulse"
+        else {
+            return nil
+        }
+
+        switch components.host {
+        case "home": return .home
+        case "forYou": return .forYou
+        case "feed": return .feed
+        case "bookmarks": return .bookmarks
+        case "settings": return .settings
+        case "search":
+            let query = components.queryItems?.first { $0.name == "q" }?.value
+            return .search(query: query)
+        case "article":
+            guard let id = components.queryItems?.first(where: { $0.name == "id" })?.value else {
+                return nil
             }
+            return .article(id: id)
+        default:
+            return nil
+        }
+    }
+
+    /// Parses a typed deeplink from userInfo dictionary.
+    private nonisolated func parseTypedDeeplink(type: String, userInfo: [AnyHashable: Any]) -> Deeplink? {
+        switch type {
+        case "home": return .home
+        case "forYou": return .forYou
+        case "feed": return .feed
+        case "bookmarks": return .bookmarks
+        case "settings": return .settings
+        case "search":
+            let query = userInfo["deeplinkQuery"] as? String
+            return .search(query: query)
+        case "article":
+            guard let id = userInfo["deeplinkId"] as? String else { return nil }
+            return .article(id: id)
+        default:
+            return nil
         }
     }
 
