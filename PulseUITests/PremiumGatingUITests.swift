@@ -174,7 +174,7 @@ final class PremiumGatingPremiumUITests: XCTestCase {
     // Use the same timeouts as BaseUITestCase
     static let launchTimeout: TimeInterval = 15
     static let defaultTimeout: TimeInterval = 4
-    static let shortTimeout: TimeInterval = 1.5
+    static let shortTimeout: TimeInterval = 3
 
     override func setUpWithError() throws {
         continueAfterFailure = false

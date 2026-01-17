@@ -15,8 +15,8 @@ class BaseUITestCase: XCTestCase {
     static let defaultTimeout: TimeInterval = 4
 
     /// Short timeout for quick checks (e.g., verifying element visibility)
-    /// 1.5s is enough for immediate UI responses
-    static let shortTimeout: TimeInterval = 1.5
+    /// 3s allows for CI machine variability while remaining responsive
+    static let shortTimeout: TimeInterval = 3
 
     // MARK: - Instance-level Setup (runs before each test)
 
@@ -161,9 +161,9 @@ class BaseUITestCase: XCTestCase {
     func navigateToSettings() {
         navigateToTab("Home")
         let gearButton = app.navigationBars.buttons["gearshape"]
-        if gearButton.waitForExistence(timeout: Self.shortTimeout) {
+        if gearButton.waitForExistence(timeout: Self.defaultTimeout) {
             gearButton.tap()
-            _ = app.navigationBars["Settings"].waitForExistence(timeout: Self.shortTimeout)
+            _ = app.navigationBars["Settings"].waitForExistence(timeout: Self.defaultTimeout)
         }
     }
 
