@@ -422,11 +422,48 @@ See `APIKeysProvider.swift` for the fallback hierarchy implementation.
 
 ## Deeplinks
 
+| Deeplink | Description | Status |
+|----------|-------------|--------|
+| `pulse://home` | Open home tab | ✅ Full |
+| `pulse://forYou` | Open For You tab (Premium) | ✅ Full |
+| `pulse://feed` | Open Feed tab (AI Daily Digest) | ✅ Full |
+| `pulse://bookmarks` | Open bookmarks tab | ✅ Full |
+| `pulse://search` | Open search tab | ✅ Full |
+| `pulse://search?q=query` | Search with query | ✅ Full |
+| `pulse://settings` | Open settings (pushes onto Home) | ✅ Full |
+| `pulse://article?id=path/to/article` | Open specific article by Guardian content ID | ✅ Full |
+
+### Push Notification Deeplinks
+
+Push notifications can trigger deeplinks using three payload formats:
+
+**Format 1: Full URL (Recommended)**
+```json
+{
+  "aps": { "alert": "Check out For You!", "sound": "default" },
+  "deeplink": "pulse://forYou"
+}
 ```
-pulse://home
-pulse://search?q=query
-pulse://bookmarks
-pulse://feed
-pulse://settings
-pulse://article?id=123
+
+**Format 2: Legacy Article Shorthand**
+```json
+{
+  "aps": { "alert": "New article!", "sound": "default" },
+  "articleID": "world/2024/jan/01/article-slug"
+}
 ```
+
+**Format 3: Type-Based**
+```json
+{
+  "aps": { "alert": "Search results", "sound": "default" },
+  "deeplinkType": "search",
+  "deeplinkQuery": "swift"
+}
+```
+
+| deeplinkType | Additional Fields |
+|--------------|-------------------|
+| `home`, `forYou`, `feed`, `bookmarks`, `settings` | None |
+| `search` | `deeplinkQuery` (optional) |
+| `article` | `deeplinkId` (required) |

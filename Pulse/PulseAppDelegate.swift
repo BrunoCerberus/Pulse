@@ -99,7 +99,7 @@ final class PulseAppDelegate: UIResponder, UIApplicationDelegate {
 }
 
 extension PulseAppDelegate: UNUserNotificationCenterDelegate {
-    private nonisolated func userNotificationCenter(
+    nonisolated func userNotificationCenter(
         _: UNUserNotificationCenter,
         willPresent _: UNNotification
     ) async -> UNNotificationPresentationOptions {
@@ -111,10 +111,15 @@ extension PulseAppDelegate: UNUserNotificationCenterDelegate {
         didReceive response: UNNotificationResponse
     ) async {
         let userInfo = response.notification.request.content.userInfo
-        if let articleID = userInfo["articleID"] as? String {
-            await MainActor.run {
-                self.deeplinkManager.handle(deeplink: .article(id: articleID))
-            }
+
+        // Parse deeplink from notification payload using extracted parser
+        guard let deeplink = NotificationDeeplinkParser.parse(from: userInfo) else {
+            Logger.shared.warning("Push notification received without valid deeplink payload", category: "Navigation")
+            return
+        }
+
+        await MainActor.run {
+            self.deeplinkManager.handle(deeplink: deeplink)
         }
     }
 

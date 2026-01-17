@@ -3,6 +3,7 @@ import Foundation
 
 enum Deeplink: Equatable {
     case home
+    case forYou
     case search(query: String? = nil)
     case bookmarks
     case feed
@@ -36,6 +37,8 @@ final class DeeplinkManager: ObservableObject {
         switch components.host {
         case "home":
             deeplink = .home
+        case "forYou":
+            deeplink = .forYou
         case "search":
             let query = components.queryItems?.first(where: { $0.name == "q" })?.value
             deeplink = .search(query: query)

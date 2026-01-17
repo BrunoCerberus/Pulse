@@ -10,8 +10,11 @@ final class DeeplinkRouter {
     /// Weak reference to the coordinator for navigation
     private weak var coordinator: Coordinator?
 
-    /// Subscription storage
+    /// Subscription storage for long-lived observers
     private var cancellables = Set<AnyCancellable>()
+
+    /// Cancellable for current article fetch request (one at a time)
+    private var articleFetchCancellable: AnyCancellable?
 
     /// Queued deeplink to process when coordinator becomes available
     private var queuedDeeplink: Deeplink?
@@ -72,6 +75,9 @@ final class DeeplinkRouter {
         case .home:
             coordinator.switchTab(to: .home, popToRoot: true)
 
+        case .forYou:
+            coordinator.switchTab(to: .forYou, popToRoot: true)
+
         case let .search(query):
             coordinator.switchTab(to: .search, popToRoot: true)
             if let query, !query.isEmpty {
@@ -91,10 +97,9 @@ final class DeeplinkRouter {
             coordinator.push(page: .settings)
 
         case let .article(id):
-            // Article deeplinks require fetching by ID from the API.
-            // Currently switches to home tab as article lookup is not yet implemented.
+            // Fetch the article by ID and navigate to article detail
             coordinator.switchTab(to: .home, popToRoot: true)
-            debugPrint("DeeplinkRouter: Article deeplink received with ID: \(id)")
+            fetchAndNavigateToArticle(id: id, coordinator: coordinator)
 
         case .category:
             // Categories feature has been removed
@@ -104,5 +109,39 @@ final class DeeplinkRouter {
 
         // Clear the deeplink after processing
         DeeplinkManager.shared.clearDeeplink()
+    }
+
+    /// Fetches an article by ID and navigates to its detail view.
+    /// - Parameters:
+    ///   - id: The article ID (Guardian content path)
+    ///   - coordinator: The coordinator to use for navigation
+    private func fetchAndNavigateToArticle(id: String, coordinator: Coordinator) {
+        guard let newsService = try? coordinator.serviceLocator.retrieve(NewsService.self) else {
+            Logger.shared.error("Failed to retrieve NewsService for article deeplink", category: "Navigation")
+            return
+        }
+
+        // Cancel any previous fetch to prevent memory accumulation
+        articleFetchCancellable?.cancel()
+
+        articleFetchCancellable = newsService.fetchArticle(id: id)
+            .receive(on: DispatchQueue.main)
+            .sink(
+                receiveCompletion: { [weak self] completion in
+                    // Clear the cancellable after completion to free memory
+                    self?.articleFetchCancellable = nil
+
+                    if case let .failure(error) = completion {
+                        Logger.shared.error(
+                            "Failed to fetch article \(id): \(error.localizedDescription)",
+                            category: "Navigation"
+                        )
+                    }
+                },
+                receiveValue: { [weak coordinator] article in
+                    Logger.shared.debug("Successfully fetched article: \(article.title)", category: "Navigation")
+                    coordinator?.push(page: .articleDetail(article))
+                }
+            )
     }
 }
