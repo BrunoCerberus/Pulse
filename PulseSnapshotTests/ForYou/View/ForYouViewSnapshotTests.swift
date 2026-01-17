@@ -276,7 +276,7 @@ private struct ForYouPopulatedPreview: View {
                 .ignoresSafeArea()
 
             ScrollView {
-                LazyVStack(spacing: 0, pinnedViews: [.sectionHeaders]) {
+                LazyVStack(spacing: 0) {
                     Section {
                         LazyVStack(spacing: Spacing.sm) {
                             ForEach(mockArticles, id: \.id) { item in
