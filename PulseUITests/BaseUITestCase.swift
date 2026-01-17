@@ -127,7 +127,7 @@ class BaseUITestCase: XCTestCase {
         if searchTab.exists, !searchTab.isSelected {
             searchTab.tap()
         }
-        _ = app.navigationBars["Search"].waitForExistence(timeout: Self.shortTimeout)
+        _ = app.navigationBars["Search"].waitForExistence(timeout: Self.defaultTimeout)
     }
 
     /// Navigate to For You tab and verify navigation bar appears
@@ -136,7 +136,7 @@ class BaseUITestCase: XCTestCase {
         if forYouTab.exists, !forYouTab.isSelected {
             forYouTab.tap()
         }
-        _ = app.navigationBars["For You"].waitForExistence(timeout: Self.shortTimeout)
+        _ = app.navigationBars["For You"].waitForExistence(timeout: Self.defaultTimeout)
     }
 
     /// Navigate to Feed tab and verify navigation bar appears
@@ -145,7 +145,7 @@ class BaseUITestCase: XCTestCase {
         if feedTab.exists, !feedTab.isSelected {
             feedTab.tap()
         }
-        _ = app.navigationBars["Daily Digest"].waitForExistence(timeout: Self.shortTimeout)
+        _ = app.navigationBars["Daily Digest"].waitForExistence(timeout: Self.defaultTimeout)
     }
 
     /// Navigate to Bookmarks tab and verify navigation bar appears
@@ -154,7 +154,7 @@ class BaseUITestCase: XCTestCase {
         if bookmarksTab.exists, !bookmarksTab.isSelected {
             bookmarksTab.tap()
         }
-        _ = app.navigationBars["Bookmarks"].waitForExistence(timeout: Self.shortTimeout)
+        _ = app.navigationBars["Bookmarks"].waitForExistence(timeout: Self.defaultTimeout)
     }
 
     /// Navigate to Settings via gear button
