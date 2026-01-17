@@ -422,11 +422,13 @@ See `APIKeysProvider.swift` for the fallback hierarchy implementation.
 
 ## Deeplinks
 
-```
-pulse://home
-pulse://search?q=query
-pulse://bookmarks
-pulse://feed
-pulse://settings
-pulse://article?id=123
-```
+| Deeplink | Description | Status |
+|----------|-------------|--------|
+| `pulse://home` | Open home tab | ✅ Full |
+| `pulse://forYou` | Open For You tab (Premium) | ✅ Full |
+| `pulse://feed` | Open Feed tab (AI Daily Digest) | ✅ Full |
+| `pulse://bookmarks` | Open bookmarks tab | ✅ Full |
+| `pulse://search` | Open search tab | ✅ Full |
+| `pulse://search?q=query` | Search with query | ✅ Full |
+| `pulse://settings` | Open settings (pushes onto Home) | ✅ Full |
+| `pulse://article?id=123` | Open specific article | ⚠️ Partial (navigates to Home, fetching not implemented) |

@@ -42,6 +42,32 @@ struct DeeplinkRouterTests {
         #expect(coordinator.homePath.count == 0)
     }
 
+    // MARK: - For You Deeplink Tests
+
+    @Test("Route forYou deeplink switches to forYou tab and pops to root")
+    func routeForYouDeeplink() async throws {
+        sut.setCoordinator(coordinator)
+        coordinator.selectedTab = .home
+
+        sut.route(deeplink: .forYou)
+
+        #expect(coordinator.selectedTab == .forYou)
+        #expect(coordinator.forYouPath.count == 0)
+    }
+
+    // MARK: - Feed Deeplink Tests
+
+    @Test("Route feed deeplink switches to feed tab and pops to root")
+    func routeFeedDeeplink() async throws {
+        sut.setCoordinator(coordinator)
+        coordinator.selectedTab = .home
+
+        sut.route(deeplink: .feed)
+
+        #expect(coordinator.selectedTab == .feed)
+        #expect(coordinator.feedPath.count == 0)
+    }
+
     // MARK: - Search Deeplink Tests
 
     @Test("Route search deeplink without query switches to search tab")

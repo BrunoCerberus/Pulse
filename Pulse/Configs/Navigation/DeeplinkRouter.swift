@@ -72,6 +72,9 @@ final class DeeplinkRouter {
         case .home:
             coordinator.switchTab(to: .home, popToRoot: true)
 
+        case .forYou:
+            coordinator.switchTab(to: .forYou, popToRoot: true)
+
         case let .search(query):
             coordinator.switchTab(to: .search, popToRoot: true)
             if let query, !query.isEmpty {
@@ -91,10 +94,11 @@ final class DeeplinkRouter {
             coordinator.push(page: .settings)
 
         case let .article(id):
-            // Article deeplinks require fetching by ID from the API.
-            // Currently switches to home tab as article lookup is not yet implemented.
+            // TODO: Article deeplinks require adding fetchArticle(id:) to NewsService
+            // and a corresponding GuardianAPI.article(id:) endpoint.
+            // For now, switches to home tab and logs the article ID.
             coordinator.switchTab(to: .home, popToRoot: true)
-            debugPrint("DeeplinkRouter: Article deeplink received with ID: \(id)")
+            debugPrint("DeeplinkRouter: Article deeplink received with ID: \(id). Fetching not yet implemented.")
 
         case .category:
             // Categories feature has been removed

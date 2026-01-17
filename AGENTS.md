@@ -329,6 +329,21 @@ final class HomeNavigationRouter: NavigationRouter {
 }
 ```
 
+### Deeplinks
+
+| Deeplink | Description | Status |
+|----------|-------------|--------|
+| `pulse://home` | Open home tab | ✅ Full |
+| `pulse://forYou` | Open For You tab (Premium) | ✅ Full |
+| `pulse://feed` | Open Feed tab (AI Daily Digest) | ✅ Full |
+| `pulse://bookmarks` | Open bookmarks tab | ✅ Full |
+| `pulse://search` | Open search tab | ✅ Full |
+| `pulse://search?q=query` | Search with query | ✅ Full |
+| `pulse://settings` | Open settings (pushes onto Home) | ✅ Full |
+| `pulse://article?id=123` | Open specific article | ⚠️ Partial |
+
+**Note:** Article deeplinks parse the ID but require `NewsService.fetchArticle(id:)` implementation to navigate directly to the article.
+
 ## Unidirectional Data Flow
 
 ```
