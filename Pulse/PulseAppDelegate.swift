@@ -99,7 +99,7 @@ final class PulseAppDelegate: UIResponder, UIApplicationDelegate {
 }
 
 extension PulseAppDelegate: UNUserNotificationCenterDelegate {
-    private nonisolated func userNotificationCenter(
+    nonisolated func userNotificationCenter(
         _: UNUserNotificationCenter,
         willPresent _: UNNotification
     ) async -> UNNotificationPresentationOptions {

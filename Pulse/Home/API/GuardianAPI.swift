@@ -41,7 +41,9 @@ enum GuardianAPI: APIFetcher {
 
         case let .article(id):
             // Guardian API expects the full content path, e.g., /world/2024/jan/01/article-slug
-            components.path += "/\(id)"
+            // URL encode the ID to handle special characters safely
+            let encodedId = id.addingPercentEncoding(withAllowedCharacters: .urlPathAllowed) ?? id
+            components.path += "/\(encodedId)"
             queryItems.append(URLQueryItem(name: "show-fields", value: "thumbnail,trailText,body,byline"))
         }
 

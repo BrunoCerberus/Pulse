@@ -10,8 +10,11 @@ final class DeeplinkRouter {
     /// Weak reference to the coordinator for navigation
     private weak var coordinator: Coordinator?
 
-    /// Subscription storage
+    /// Subscription storage for long-lived observers
     private var cancellables = Set<AnyCancellable>()
+
+    /// Cancellable for current article fetch request (one at a time)
+    private var articleFetchCancellable: AnyCancellable?
 
     /// Queued deeplink to process when coordinator becomes available
     private var queuedDeeplink: Deeplink?
@@ -118,10 +121,16 @@ final class DeeplinkRouter {
             return
         }
 
-        newsService.fetchArticle(id: id)
+        // Cancel any previous fetch to prevent memory accumulation
+        articleFetchCancellable?.cancel()
+
+        articleFetchCancellable = newsService.fetchArticle(id: id)
             .receive(on: DispatchQueue.main)
             .sink(
-                receiveCompletion: { completion in
+                receiveCompletion: { [weak self] completion in
+                    // Clear the cancellable after completion to free memory
+                    self?.articleFetchCancellable = nil
+
                     if case let .failure(error) = completion {
                         Logger.shared.error(
                             "Failed to fetch article \(id): \(error.localizedDescription)",
@@ -134,6 +143,5 @@ final class DeeplinkRouter {
                     coordinator?.push(page: .articleDetail(article))
                 }
             )
-            .store(in: &cancellables)
     }
 }

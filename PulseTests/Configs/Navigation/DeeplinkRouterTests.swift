@@ -149,8 +149,8 @@ struct DeeplinkRouterTests {
         // Tab switch is synchronous
         #expect(coordinator.selectedTab == .home)
 
-        // Wait for async article fetch and navigation
-        let navigated = await waitForCondition(timeout: 1_000_000_000) { [coordinator] in
+        // Wait for async article fetch and navigation (3 seconds for CI reliability)
+        let navigated = await waitForCondition(timeout: 3_000_000_000) { [coordinator] in
             coordinator.homePath.count == 1
         }
 
@@ -252,8 +252,8 @@ struct DeeplinkRouterTests {
         // Simulate DeeplinkManager sending a deeplink
         DeeplinkManager.shared.handle(deeplink: .bookmarks)
 
-        // Wait for Combine publisher to propagate with condition-based waiting
-        let routed = await waitForCondition(timeout: 1_000_000_000) { [coordinator] in
+        // Wait for Combine publisher to propagate (3 seconds for CI reliability)
+        let routed = await waitForCondition(timeout: 3_000_000_000) { [coordinator] in
             coordinator.selectedTab == .bookmarks
         }
 

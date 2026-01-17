@@ -51,6 +51,10 @@ final class LiveNewsService: APIRequest, NewsService {
             dataType: GuardianSingleArticleResponse.self
         )
         .tryMap { response in
+            // Validate API response status
+            guard response.response.status == "ok" else {
+                throw URLError(.badServerResponse)
+            }
             guard let article = response.response.content.toArticle() else {
                 throw URLError(.cannotParseResponse)
             }
