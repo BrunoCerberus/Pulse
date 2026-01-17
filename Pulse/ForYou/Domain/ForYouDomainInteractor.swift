@@ -201,8 +201,9 @@ final class ForYouDomainInteractor: CombineInteractor {
         // Use detached task with weak self to ensure cleanup even if parent is deallocated
         Task.detached { [weak self] in
             _ = await task.result
-            await MainActor.run { [weak self] in
-                self?.backgroundTasks.remove(task)
+            await MainActor.run {
+                guard let self else { return }
+                self.backgroundTasks.remove(task)
             }
         }
     }

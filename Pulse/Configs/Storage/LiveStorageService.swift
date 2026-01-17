@@ -59,29 +59,23 @@ final class LiveStorageService: StorageService {
         return (try? context.fetchCount(descriptor)) ?? 0 > 0
     }
 
-    /// Saves reading history in background to avoid blocking UI during scrolling.
-    /// Uses Task.detached with a fresh ModelContext to ensure proper thread safety.
+    /// Saves reading history on MainActor to ensure SwiftData thread safety.
+    /// The operation is lightweight (single record upsert) and won't noticeably block UI.
+    @MainActor
     func saveReadingHistory(_ article: Article) async throws {
-        // Capture article data and container reference before entering background task
+        let context = modelContainer.mainContext
         let articleID = article.id
-        let container = modelContainer
 
-        try await Task.detached(priority: .utility) {
-            // Create a new ModelContext on this background thread
-            let context = ModelContext(container)
-            context.autosaveEnabled = false
-
-            let descriptor = FetchDescriptor<ReadingHistoryEntry>(
-                predicate: #Predicate { $0.articleID == articleID }
-            )
-            if let existing = try context.fetch(descriptor).first {
-                existing.readAt = Date()
-            } else {
-                let entry = ReadingHistoryEntry(from: article)
-                context.insert(entry)
-            }
-            try context.save()
-        }.value
+        let descriptor = FetchDescriptor<ReadingHistoryEntry>(
+            predicate: #Predicate { $0.articleID == articleID }
+        )
+        if let existing = try context.fetch(descriptor).first {
+            existing.readAt = Date()
+        } else {
+            let entry = ReadingHistoryEntry(from: article)
+            context.insert(entry)
+        }
+        try context.save()
     }
 
     @MainActor
