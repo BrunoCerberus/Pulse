@@ -35,7 +35,8 @@ struct CoordinatorView: View {
                 NavigationStack(path: $coordinator.forYouPath) {
                     ForYouView(
                         router: ForYouNavigationRouter(coordinator: coordinator),
-                        viewModel: coordinator.forYouViewModel
+                        viewModel: coordinator.forYouViewModel,
+                        serviceLocator: coordinator.serviceLocator
                     )
                     .navigationDestination(for: Page.self) { page in
                         coordinator.build(page: page)
@@ -47,7 +48,8 @@ struct CoordinatorView: View {
                 NavigationStack(path: $coordinator.feedPath) {
                     FeedView(
                         router: FeedNavigationRouter(coordinator: coordinator),
-                        viewModel: coordinator.feedViewModel
+                        viewModel: coordinator.feedViewModel,
+                        serviceLocator: coordinator.serviceLocator
                     )
                     .navigationDestination(for: Page.self) { page in
                         coordinator.build(page: page)

@@ -154,3 +154,19 @@
 "paywall.unlock_features" = "Unlock all premium features";
 "paywall.premium_active" = "Premium Active";
 "paywall.full_access" = "You have full access to all features";
+
+/* ==================== */
+/* MARK: - Premium Gate */
+/* ==================== */
+
+"premium_gate.badge" = "Premium Feature";
+"premium_gate.unlock_button" = "Unlock Premium";
+
+"premium_gate.daily_digest.title" = "AI Daily Digest";
+"premium_gate.daily_digest.description" = "Get personalized AI-generated summaries of your reading activity, delivered fresh every day.";
+
+"premium_gate.summarization.title" = "AI Article Summaries";
+"premium_gate.summarization.description" = "Instantly summarize any article with our powerful on-device AI.";
+
+"premium_gate.for_you.title" = "Personalized For You";
+"premium_gate.for_you.description" = "Get a curated feed of articles tailored to your interests and reading habits.";

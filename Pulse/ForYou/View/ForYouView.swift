@@ -1,3 +1,5 @@
+import Combine
+import EntropyCore
 import SwiftUI
 
 // MARK: - Constants
@@ -20,19 +22,48 @@ struct ForYouView<R: ForYouNavigationRouter>: View {
     /// Router responsible for navigation actions
     private var router: R
 
+    /// Service locator for dependency injection
+    private let serviceLocator: ServiceLocator
+
     /// Backing ViewModel managing data and actions
     @ObservedObject var viewModel: ForYouViewModel
+
+    /// Premium status tracking
+    @State private var isPremium = false
+    @State private var subscriptionCancellable: AnyCancellable?
 
     /// Creates the view with a router and ViewModel.
     /// - Parameters:
     ///   - router: Navigation router for routing actions
     ///   - viewModel: ViewModel for managing data and actions
-    init(router: R, viewModel: ForYouViewModel) {
+    ///   - serviceLocator: Service locator for dependency injection
+    init(router: R, viewModel: ForYouViewModel, serviceLocator: ServiceLocator) {
         self.router = router
         self.viewModel = viewModel
+        self.serviceLocator = serviceLocator
     }
 
     var body: some View {
+        Group {
+            if isPremium {
+                premiumContent
+            } else {
+                PremiumGateView(
+                    feature: .forYouFeed,
+                    serviceLocator: serviceLocator
+                )
+                .navigationTitle(Constants.title)
+            }
+        }
+        .onAppear {
+            observeSubscriptionStatus()
+        }
+        .onDisappear {
+            subscriptionCancellable?.cancel()
+        }
+    }
+
+    private var premiumContent: some View {
         ZStack {
             LinearGradient.subtleBackground
                 .ignoresSafeArea()
@@ -53,6 +84,26 @@ struct ForYouView<R: ForYouNavigationRouter>: View {
                 router.route(navigationEvent: .articleDetail(article))
                 viewModel.handle(event: .onArticleNavigated)
             }
+        }
+    }
+
+    private func observeSubscriptionStatus() {
+        subscriptionCancellable?.cancel()
+        do {
+            let storeKitService = try serviceLocator.retrieve(StoreKitService.self)
+            // Set initial status immediately to avoid UI flicker
+            isPremium = storeKitService.isPremium
+            // Then observe for changes
+            subscriptionCancellable = storeKitService.subscriptionStatusPublisher
+                .receive(on: DispatchQueue.main)
+                .sink { newStatus in
+                    self.isPremium = newStatus
+                }
+        } catch {
+            #if DEBUG
+                print("⚠️ Failed to retrieve StoreKitService: \(error)")
+            #endif
+            isPremium = false
         }
     }
 
@@ -244,7 +295,8 @@ struct ForYouView<R: ForYouNavigationRouter>: View {
     NavigationStack {
         ForYouView(
             router: ForYouNavigationRouter(),
-            viewModel: ForYouViewModel(serviceLocator: .preview)
+            viewModel: ForYouViewModel(serviceLocator: .preview),
+            serviceLocator: .preview
         )
     }
 }

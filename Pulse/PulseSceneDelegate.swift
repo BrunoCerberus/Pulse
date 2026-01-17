@@ -192,7 +192,11 @@ final class PulseSceneDelegate: UIResponder, UIWindowSceneDelegate {
                 serviceLocator.register(LLMService.self, instance: MockLLMService())
                 serviceLocator.register(SummarizationService.self, instance: MockSummarizationService())
                 serviceLocator.register(FeedService.self, instance: MockFeedService.withSampleData())
-                serviceLocator.register(StoreKitService.self, instance: MockStoreKitService())
+
+                // Check for MOCK_PREMIUM environment variable to control premium status in UI tests
+                let isPremium = ProcessInfo.processInfo.environment["MOCK_PREMIUM"] == "1"
+                serviceLocator.register(StoreKitService.self, instance: MockStoreKitService(isPremium: isPremium))
+
                 serviceLocator.register(RemoteConfigService.self, instance: MockRemoteConfigService())
                 serviceLocator.register(AuthService.self, instance: MockAuthService())
 

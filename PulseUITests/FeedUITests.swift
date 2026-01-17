@@ -2,6 +2,53 @@ import XCTest
 
 final class FeedUITests: BaseUITestCase {
 
+    // MARK: - Setup
+
+    override func setUpWithError() throws {
+        continueAfterFailure = false
+        XCUIDevice.shared.orientation = .portrait
+
+        app = XCUIApplication()
+
+        // Speed optimizations (same as parent)
+        app.launchEnvironment["UI_TESTING"] = "1"
+        app.launchEnvironment["DISABLE_ANIMATIONS"] = "1"
+
+        // Enable premium access so tests can access the actual feed content
+        // Without this, the feed tab shows PremiumGateView instead of feed content
+        app.launchEnvironment["MOCK_PREMIUM"] = "1"
+
+        // Launch arguments to speed up tests
+        app.launchArguments += ["-UIViewAnimationDuration", "0.01"]
+        app.launchArguments += ["-CATransactionAnimationDuration", "0.01"]
+
+        app.launch()
+
+        // Launch verification
+        _ = app.wait(for: .runningForeground, timeout: Self.launchTimeout)
+        wait(for: 0.3)
+
+        // Wait for app to be ready
+        let tabBar = app.tabBars.firstMatch
+        let signInButton = app.buttons["Sign in with Apple"]
+        let loadingIndicator = app.activityIndicators.firstMatch
+
+        if loadingIndicator.exists {
+            _ = waitForElementToDisappear(loadingIndicator, timeout: Self.launchTimeout)
+        }
+
+        let appReady = waitForAny([tabBar, signInButton], timeout: Self.launchTimeout)
+
+        guard appReady else {
+            XCTFail("App did not reach ready state")
+            return
+        }
+
+        if tabBar.exists {
+            resetToHomeTab()
+        }
+    }
+
     // MARK: - Helper Methods
 
     /// Navigate to Feed tab and verify navigation bar appears

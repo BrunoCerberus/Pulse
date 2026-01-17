@@ -213,11 +213,47 @@ Pulse/
 |---------|-------------|
 | **Authentication** | Firebase Auth with Google and Apple Sign-In (required before accessing app) |
 | **Home** | Breaking news carousel, top headlines with infinite scroll, settings access via gear icon |
-| **For You** | Personalized feed based on followed topics |
-| **Feed** | AI-powered Daily Digest summarizing articles read in last 48 hours using on-device LLM (Llama 3.2-1B) |
+| **For You** | Personalized feed based on followed topics (**Premium**) |
+| **Feed** | AI-powered Daily Digest summarizing articles read in last 48 hours using on-device LLM (Llama 3.2-1B) (**Premium**) |
+| **Article Summarization** | On-device AI article summarization via sparkles button (**Premium**) |
 | **Search** | Full-text search with 300ms debounce, suggestions, and sort options (last tab with liquid glass style) |
 | **Bookmarks** | Save articles for offline reading (SwiftData) |
 | **Settings** | Topics, notifications, theme, muted content, account/logout (accessed from Home navigation bar) |
+
+## Premium Features
+
+The app uses StoreKit 2 for subscription management. Three AI-powered features are gated behind premium:
+
+| Feature | Gate Location | Description |
+|---------|---------------|-------------|
+| **AI Daily Digest** | Feed tab | Non-premium users see `PremiumGateView` instead of digest content |
+| **Personalized For You** | For You tab | Non-premium users see `PremiumGateView` instead of personalized feed |
+| **Article Summarization** | Article detail toolbar | Non-premium users see paywall when tapping sparkles button |
+
+### Key Components
+
+| Component | Purpose |
+|-----------|---------|
+| `StoreKitService` | Protocol for subscription status (`isPremium`, `subscriptionStatusPublisher`) |
+| `LiveStoreKitService` | StoreKit 2 implementation with native `SubscriptionStoreView` |
+| `MockStoreKitService` | Mock for testing (supports `MOCK_PREMIUM` env var in UI tests) |
+| `PremiumFeature` | Enum defining gated features with icons, colors, titles, descriptions |
+| `PremiumGateView` | Reusable upsell component shown to non-premium users |
+| `PaywallView` | Native StoreKit subscription UI (iOS 17+) |
+
+### Premium Status Flow
+
+```
+View.onAppear
+     ↓
+StoreKitService.subscriptionStatusPublisher
+     ↓
+@State isPremium updated via Combine
+     ↓
+View conditionally shows:
+  - Premium content (if isPremium == true)
+  - PremiumGateView (if isPremium == false)
+```
 
 ## Development Commands
 
@@ -344,6 +380,13 @@ final class LiveNewsService: APIRequest, NewsService {
 | `LiveLLMService.swift` | llama.cpp implementation via LocalLlama package |
 | `LLMModelManager.swift` | Model lifecycle (load/unload, memory checks) |
 | `LLMConfiguration.swift` | Model paths, inference parameters |
+| **Premium/Subscription** | |
+| `StoreKitService.swift` | Protocol for subscription status and purchases |
+| `LiveStoreKitService.swift` | StoreKit 2 implementation |
+| `MockStoreKitService.swift` | Mock for testing (respects `MOCK_PREMIUM` env var) |
+| `PremiumGateView.swift` | Reusable premium upsell component |
+| `PremiumFeature.swift` | Enum defining gated features |
+| `PaywallView.swift` | Native StoreKit subscription UI |
 
 ## Troubleshooting
 

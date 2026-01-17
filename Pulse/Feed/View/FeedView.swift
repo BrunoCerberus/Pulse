@@ -1,3 +1,5 @@
+import Combine
+import EntropyCore
 import SwiftUI
 
 // MARK: - Constants
@@ -16,12 +18,16 @@ private enum Constants {
 
 struct FeedView<R: FeedNavigationRouter>: View {
     private var router: R
+    private let serviceLocator: ServiceLocator
 
     @ObservedObject var viewModel: FeedViewModel
+    @State private var isPremium = false
+    @State private var subscriptionCancellable: AnyCancellable?
 
-    init(router: R, viewModel: FeedViewModel) {
+    init(router: R, viewModel: FeedViewModel, serviceLocator: ServiceLocator) {
         self.router = router
         self.viewModel = viewModel
+        self.serviceLocator = serviceLocator
     }
 
     private var isProcessing: Bool {
@@ -30,6 +36,26 @@ struct FeedView<R: FeedNavigationRouter>: View {
     }
 
     var body: some View {
+        Group {
+            if isPremium {
+                premiumContent
+            } else {
+                PremiumGateView(
+                    feature: .dailyDigest,
+                    serviceLocator: serviceLocator
+                )
+                .navigationTitle(Constants.title)
+            }
+        }
+        .onAppear {
+            observeSubscriptionStatus()
+        }
+        .onDisappear {
+            subscriptionCancellable?.cancel()
+        }
+    }
+
+    private var premiumContent: some View {
         ZStack {
             backgroundGradient
                 .ignoresSafeArea()
@@ -48,6 +74,26 @@ struct FeedView<R: FeedNavigationRouter>: View {
                 router.route(navigationEvent: .articleDetail(article))
                 viewModel.handle(event: .onArticleNavigated)
             }
+        }
+    }
+
+    private func observeSubscriptionStatus() {
+        subscriptionCancellable?.cancel()
+        do {
+            let storeKitService = try serviceLocator.retrieve(StoreKitService.self)
+            // Set initial status immediately to avoid UI flicker
+            isPremium = storeKitService.isPremium
+            // Then observe for changes
+            subscriptionCancellable = storeKitService.subscriptionStatusPublisher
+                .receive(on: DispatchQueue.main)
+                .sink { newStatus in
+                    self.isPremium = newStatus
+                }
+        } catch {
+            #if DEBUG
+                print("⚠️ Failed to retrieve StoreKitService: \(error)")
+            #endif
+            isPremium = false
         }
     }
 
@@ -338,7 +384,8 @@ private struct SourceArticlesSkeleton: View {
     NavigationStack {
         FeedView(
             router: FeedNavigationRouter(),
-            viewModel: FeedViewModel(serviceLocator: .preview)
+            viewModel: FeedViewModel(serviceLocator: .preview),
+            serviceLocator: .preview
         )
     }
 }

@@ -24,6 +24,10 @@ final class ForYouViewSnapshotTests: XCTestCase {
         serviceLocator.register(ForYouService.self, instance: MockForYouService())
         serviceLocator.register(SettingsService.self, instance: MockSettingsService())
         serviceLocator.register(StorageService.self, instance: MockStorageService())
+
+        // Register StoreKitService with premium enabled for testing
+        let mockStoreKitService = MockStoreKitService(isPremium: true)
+        serviceLocator.register(StoreKitService.self, instance: mockStoreKitService)
     }
 
     // MARK: - Loading State
@@ -32,7 +36,8 @@ final class ForYouViewSnapshotTests: XCTestCase {
         let view = NavigationStack {
             ForYouView(
                 router: ForYouNavigationRouter(),
-                viewModel: ForYouViewModel(serviceLocator: serviceLocator)
+                viewModel: ForYouViewModel(serviceLocator: serviceLocator),
+                serviceLocator: serviceLocator
             )
         }
         let controller = UIHostingController(rootView: view)
