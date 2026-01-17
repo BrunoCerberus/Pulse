@@ -197,20 +197,14 @@ final class HomeDomainInteractor: CombineInteractor {
     }
 
     private func saveToReadingHistory(_ article: Article) {
-        let task = Task { [weak self] in
+        trackBackgroundTask { [weak self] in
             guard let self else { return }
             try? await storageService.saveReadingHistory(article)
-        }
-        backgroundTasks.insert(task)
-        Task { [weak self] in
-            guard let self else { return }
-            await task.value
-            backgroundTasks.remove(task)
         }
     }
 
     private func toggleBookmark(_ article: Article) {
-        let task = Task { [weak self] in
+        trackBackgroundTask { [weak self] in
             guard let self else { return }
             let isBookmarked = await storageService.isBookmarked(article.id)
             if isBookmarked {
@@ -219,16 +213,29 @@ final class HomeDomainInteractor: CombineInteractor {
                 try? await storageService.saveArticle(article)
             }
         }
+    }
+
+    /// Safely tracks and auto-removes background tasks with proper cleanup on deinit
+    private func trackBackgroundTask(_ operation: @escaping @Sendable () async -> Void) {
+        let task = Task {
+            await operation()
+        }
         backgroundTasks.insert(task)
-        Task { [weak self] in
-            guard let self else { return }
-            await task.value
-            backgroundTasks.remove(task)
+
+        // Use detached task with weak self to ensure cleanup even if parent is deallocated
+        Task.detached { [weak self] in
+            _ = await task.result
+            await MainActor.run { [weak self] in
+                self?.backgroundTasks.remove(task)
+            }
         }
     }
 
     deinit {
-        backgroundTasks.forEach { $0.cancel() }
+        // Cancel all pending tasks on deallocation
+        for task in backgroundTasks {
+            task.cancel()
+        }
     }
 
     private func deduplicateArticles(_ articles: [Article], excluding: [Article]) -> [Article] {

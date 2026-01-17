@@ -2,19 +2,16 @@ import SwiftUI
 
 // MARK: - Image Cache
 
-/// A thread-safe in-memory image cache using NSCache.
+/// A thread-safe in-memory image cache using NSCache with dynamic memory-aware sizing.
 final class ImageCache: @unchecked Sendable {
     static let shared = ImageCache()
 
     private let cache = NSCache<NSURL, UIImage>()
     private let urlSession: URLSession
+    private var memoryWarningObserver: NSObjectProtocol?
 
     private init() {
-        // Configure cache limits - optimized for news app scrolling
-        cache.countLimit = 75
-        cache.totalCostLimit = 30 * 1024 * 1024 // 30MB
-
-        // Configure URLSession with caching
+        // Configure URLSession with caching - must be done first before calling methods
         let config = URLSessionConfiguration.default
         config.urlCache = URLCache(
             memoryCapacity: 15 * 1024 * 1024, // 15MB memory
@@ -23,6 +20,54 @@ final class ImageCache: @unchecked Sendable {
         )
         config.requestCachePolicy = .returnCacheDataElseLoad
         urlSession = URLSession(configuration: config)
+
+        // Configure cache limits dynamically based on available memory
+        configureCacheLimits()
+
+        // Listen for memory warnings to reduce cache pressure
+        memoryWarningObserver = NotificationCenter.default.addObserver(
+            forName: UIApplication.didReceiveMemoryWarningNotification,
+            object: nil,
+            queue: .main
+        ) { [weak self] _ in
+            self?.handleMemoryWarning()
+        }
+    }
+
+    deinit {
+        if let observer = memoryWarningObserver {
+            NotificationCenter.default.removeObserver(observer)
+        }
+    }
+
+    /// Configures cache limits based on device memory
+    private func configureCacheLimits() {
+        let totalMemory = ProcessInfo.processInfo.physicalMemory
+        let memoryInGB = Double(totalMemory) / (1024 * 1024 * 1024)
+
+        // Scale cache based on device memory:
+        // - Low memory devices (< 3GB): 25 images, 15MB
+        // - Medium devices (3-4GB): 50 images, 25MB
+        // - High memory devices (> 4GB): 75 images, 30MB
+        if memoryInGB < 3 {
+            cache.countLimit = 25
+            cache.totalCostLimit = 15 * 1024 * 1024
+        } else if memoryInGB < 4 {
+            cache.countLimit = 50
+            cache.totalCostLimit = 25 * 1024 * 1024
+        } else {
+            cache.countLimit = 75
+            cache.totalCostLimit = 30 * 1024 * 1024
+        }
+    }
+
+    /// Reduces cache size when memory warning is received
+    private func handleMemoryWarning() {
+        // Immediately clear all cached objects to free memory
+        cache.removeAllObjects()
+        // Then reduce limits to prevent rapid re-accumulation
+        cache.countLimit = max(10, cache.countLimit / 2)
+        cache.totalCostLimit = max(5 * 1024 * 1024, cache.totalCostLimit / 2)
     }
 
     func image(for url: URL) -> UIImage? {

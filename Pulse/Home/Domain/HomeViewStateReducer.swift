@@ -4,8 +4,12 @@ import Foundation
 struct HomeViewStateReducer: ViewStateReducing {
     func reduce(domainState: HomeDomainState) -> HomeViewState {
         HomeViewState(
-            breakingNews: domainState.breakingNews.map { ArticleViewItem(from: $0) },
-            headlines: domainState.headlines.map { ArticleViewItem(from: $0) },
+            breakingNews: domainState.breakingNews.enumerated().map { index, article in
+                ArticleViewItem(from: article, index: index)
+            },
+            headlines: domainState.headlines.enumerated().map { index, article in
+                ArticleViewItem(from: article, index: index)
+            },
             isLoading: domainState.isLoading,
             isLoadingMore: domainState.isLoadingMore,
             isRefreshing: domainState.isRefreshing,

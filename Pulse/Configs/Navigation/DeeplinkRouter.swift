@@ -23,6 +23,14 @@ final class DeeplinkRouter {
         setupObservers()
     }
 
+    deinit {
+        // Explicitly cancel any pending fetch to prevent memory leaks
+        articleFetchCancellable?.cancel()
+        articleFetchCancellable = nil
+        // Cancel all observers
+        cancellables.removeAll()
+    }
+
     /// Sets the coordinator directly (used for testing).
     /// - Parameter coordinator: The coordinator to use for navigation
     func setCoordinator(_ coordinator: Coordinator) {

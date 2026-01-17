@@ -230,12 +230,15 @@ struct ForYouView<R: ForYouNavigationRouter>: View {
     }
 
     private var articlesList: some View {
-        ScrollView {
+        let articles = viewModel.viewState.articles
+        let lastItemId = articles.last?.id
+
+        return ScrollView {
             LazyVStack(spacing: 0, pinnedViews: [.sectionHeaders]) {
                 if !viewModel.viewState.followedTopics.isEmpty {
                     Section {
                         LazyVStack(spacing: Spacing.sm) {
-                            ForEach(Array(viewModel.viewState.articles.enumerated()), id: \.element.id) { index, item in
+                            ForEach(articles) { item in
                                 GlassArticleCard(
                                     item: item,
                                     onTap: {
@@ -244,9 +247,10 @@ struct ForYouView<R: ForYouNavigationRouter>: View {
                                     onBookmark: {},
                                     onShare: {}
                                 )
-                                .fadeIn(delay: Double(index) * 0.03)
+                                .fadeIn(delay: Double(item.animationIndex) * 0.03)
                                 .onAppear {
-                                    if item.id == viewModel.viewState.articles.last?.id {
+                                    // Pre-computed lastItemId avoids recalculating .last on every appear
+                                    if item.id == lastItemId {
                                         viewModel.handle(event: .onLoadMore)
                                     }
                                 }

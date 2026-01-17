@@ -38,7 +38,9 @@ final class BookmarksViewModel: CombineViewModel, ObservableObject {
         interactor.statePublisher
             .map { state in
                 BookmarksViewState(
-                    bookmarks: state.bookmarks.map { ArticleViewItem(from: $0) },
+                    bookmarks: state.bookmarks.enumerated().map { index, article in
+                        ArticleViewItem(from: article, index: index)
+                    },
                     isLoading: state.isLoading,
                     isRefreshing: state.isRefreshing,
                     errorMessage: state.error,

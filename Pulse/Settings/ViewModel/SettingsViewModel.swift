@@ -88,14 +88,16 @@ final class SettingsViewModel: CombineViewModel, ObservableObject {
     }
 
     private func setupBindings() {
-        Publishers.CombineLatest3(
+        // Use CombineLatest4 directly instead of nested combineLatest to reduce overhead
+        Publishers.CombineLatest4(
             interactor.statePublisher,
             themeManager.$isDarkMode.removeDuplicates(),
-            themeManager.$useSystemTheme.removeDuplicates()
+            themeManager.$useSystemTheme.removeDuplicates(),
+            authenticationManager.authStatePublisher.removeDuplicates()
         )
-        .combineLatest(authenticationManager.authStatePublisher.removeDuplicates())
-        .map { combined, authState in
-            let (state, isDarkMode, useSystemTheme) = combined
+        // Debounce rapid changes to prevent excessive UI updates during theme toggling
+        .debounce(for: .milliseconds(16), scheduler: DispatchQueue.main)
+        .map { state, isDarkMode, useSystemTheme, authState in
             let currentUser: AuthUser? = {
                 if case let .authenticated(user) = authState {
                     return user

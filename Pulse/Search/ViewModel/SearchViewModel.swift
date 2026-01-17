@@ -63,7 +63,9 @@ final class SearchViewModel: CombineViewModel, ObservableObject {
             .map { state in
                 SearchViewState(
                     query: state.query,
-                    results: state.results.map { ArticleViewItem(from: $0) },
+                    results: state.results.enumerated().map { index, article in
+                        ArticleViewItem(from: article, index: index)
+                    },
                     suggestions: state.suggestions,
                     isLoading: state.isLoading,
                     isLoadingMore: state.isLoadingMore,

@@ -236,17 +236,24 @@ final class ArticleDetailDomainInteractor: CombineInteractor {
 
     // MARK: - Background Task Management
 
+    /// Safely tracks and auto-removes background tasks with proper cleanup on deinit
     private func trackBackgroundTask(_ task: Task<Void, Never>) {
         backgroundTasks.insert(task)
-        Task { [weak self] in
-            guard let self else { return }
-            await task.value
-            backgroundTasks.remove(task)
+
+        // Use detached task with weak self to ensure cleanup even if parent is deallocated
+        Task.detached { [weak self] in
+            _ = await task.result
+            await MainActor.run { [weak self] in
+                self?.backgroundTasks.remove(task)
+            }
         }
     }
 
     deinit {
-        backgroundTasks.forEach { $0.cancel() }
+        // Cancel all pending tasks on deallocation
+        for task in backgroundTasks {
+            task.cancel()
+        }
     }
 
     private func updateState(_ transform: (inout ArticleDetailDomainState) -> Void) {
