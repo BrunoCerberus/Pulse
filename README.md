@@ -227,14 +227,16 @@ GitHub Actions workflows:
 
 ## Deeplinks
 
-```
-pulse://home                    # Open home tab
-pulse://search?q=query          # Search with query
-pulse://bookmarks               # Open bookmarks
-pulse://feed                    # Open feed
-pulse://settings                # Open settings
-pulse://article?id=123          # Open specific article
-```
+| Deeplink | Description |
+|----------|-------------|
+| `pulse://home` | Open home tab |
+| `pulse://forYou` | Open For You tab (Premium) |
+| `pulse://feed` | Open Feed tab (AI Daily Digest) |
+| `pulse://bookmarks` | Open bookmarks tab |
+| `pulse://search` | Open search tab |
+| `pulse://search?q=query` | Search with query |
+| `pulse://settings` | Open settings (pushes onto Home) |
+| `pulse://article?id=path/to/article` | Open specific article by Guardian content ID |
 
 ## Testing
 

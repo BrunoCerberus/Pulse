@@ -4,6 +4,7 @@ import Foundation
 enum GuardianAPI: APIFetcher {
     case search(query: String?, section: String?, page: Int, pageSize: Int, orderBy: String)
     case sections
+    case article(id: String)
 
     private var baseURL: String {
         BaseURLs.guardianAPI
@@ -37,6 +38,13 @@ enum GuardianAPI: APIFetcher {
 
         case .sections:
             components.path += "/sections"
+
+        case let .article(id):
+            // Guardian API expects the full content path, e.g., /world/2024/jan/01/article-slug
+            // URL encode the ID to handle special characters safely
+            let encodedId = id.addingPercentEncoding(withAllowedCharacters: .urlPathAllowed) ?? id
+            components.path += "/\(encodedId)"
+            queryItems.append(URLQueryItem(name: "show-fields", value: "thumbnail,trailText,body,byline"))
         }
 
         queryItems.append(URLQueryItem(name: "api-key", value: apiKey))

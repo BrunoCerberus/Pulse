@@ -19,7 +19,9 @@ struct DeeplinkManagerTests {
         "Parse deeplinks correctly",
         arguments: [
             ("pulse://home", Deeplink.home),
+            ("pulse://forYou", Deeplink.forYou),
             ("pulse://bookmarks", Deeplink.bookmarks),
+            ("pulse://feed", Deeplink.feed),
             ("pulse://settings", Deeplink.settings),
             ("pulse://search", Deeplink.search(query: nil)),
             ("pulse://search?q=swift", Deeplink.search(query: "swift")),

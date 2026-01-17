@@ -14,6 +14,16 @@ struct GuardianResponseContent: Codable {
     let results: [GuardianArticleDTO]
 }
 
+/// Response structure for single article endpoint (/content/{id})
+struct GuardianSingleArticleResponse: Codable {
+    let response: GuardianSingleArticleContent
+}
+
+struct GuardianSingleArticleContent: Codable {
+    let status: String
+    let content: GuardianArticleDTO
+}
+
 struct GuardianArticleDTO: Codable {
     let id: String
     let type: String

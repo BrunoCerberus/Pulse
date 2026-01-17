@@ -79,7 +79,7 @@ struct ArticleDetailView: View {
                     }
                     .accessibilityIdentifier("summarizeButton")
                     .accessibilityLabel(Constants.summarize)
-                    .accessibilityHint(isPremium ? "Generate AI summary of this article" : "Premium feature - tap to unlock")
+                    .accessibilityHint(isPremium ? "Generate AI summary" : "Premium feature")
 
                     Button("", systemImage: viewModel.viewState.isBookmarked ? "bookmark.fill" : "bookmark") {
                         viewModel.handle(event: .onBookmarkTapped)
