@@ -231,7 +231,7 @@ struct ForYouView<R: ForYouNavigationRouter>: View {
 
     private var articlesList: some View {
         ScrollView {
-            LazyVStack(spacing: 0, pinnedViews: [.sectionHeaders]) {
+            LazyVStack(spacing: 0) {
                 if !viewModel.viewState.followedTopics.isEmpty {
                     Section {
                         LazyVStack(spacing: Spacing.sm) {
