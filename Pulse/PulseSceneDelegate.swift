@@ -114,7 +114,7 @@ final class PulseSceneDelegate: UIResponder, UIWindowSceneDelegate {
         let rootView = UIHostingController(
             rootView: RootView(serviceLocator: serviceLocator)
         )
-        rootView.overrideUserInterfaceStyle = ThemeManager.shared.colorScheme == .dark ? .dark : .light
+        rootView.overrideUserInterfaceStyle = uiUserInterfaceStyle(from: ThemeManager.shared.colorScheme)
         window.rootViewController = rootView
     }
 
@@ -131,7 +131,7 @@ final class PulseSceneDelegate: UIResponder, UIWindowSceneDelegate {
         }
 
         let splashViewController = UIHostingController(rootView: splashView)
-        splashViewController.overrideUserInterfaceStyle = ThemeManager.shared.colorScheme == .dark ? .dark : .light
+        splashViewController.overrideUserInterfaceStyle = uiUserInterfaceStyle(from: ThemeManager.shared.colorScheme)
         window.rootViewController = splashViewController
     }
 
@@ -144,7 +144,7 @@ final class PulseSceneDelegate: UIResponder, UIWindowSceneDelegate {
         let rootView = UIHostingController(
             rootView: RootView(serviceLocator: serviceLocator)
         )
-        rootView.overrideUserInterfaceStyle = ThemeManager.shared.colorScheme == .dark ? .dark : .light
+        rootView.overrideUserInterfaceStyle = uiUserInterfaceStyle(from: ThemeManager.shared.colorScheme)
 
         // Animate transition from splash to main app, respecting reduce motion preference
         let shouldReduceMotion = UIAccessibility.isReduceMotionEnabled
@@ -310,5 +310,24 @@ final class PulseSceneDelegate: UIResponder, UIWindowSceneDelegate {
      */
     private func handleDeeplink(_ url: URL) {
         DeeplinkManager.shared.parse(url: url)
+    }
+
+    /**
+     * Converts a SwiftUI ColorScheme to a UIKit UIUserInterfaceStyle.
+     *
+     * - Parameter colorScheme: The SwiftUI color scheme (nil means follow system)
+     * - Returns: The corresponding UIUserInterfaceStyle
+     */
+    private func uiUserInterfaceStyle(from colorScheme: ColorScheme?) -> UIUserInterfaceStyle {
+        switch colorScheme {
+        case .dark:
+            return .dark
+        case .light:
+            return .light
+        case .none:
+            return .unspecified
+        @unknown default:
+            return .unspecified
+        }
     }
 }
