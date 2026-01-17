@@ -114,7 +114,7 @@ final class DeeplinkRouter {
     ///   - coordinator: The coordinator to use for navigation
     private func fetchAndNavigateToArticle(id: String, coordinator: Coordinator) {
         guard let newsService = try? coordinator.serviceLocator.retrieve(NewsService.self) else {
-            debugPrint("DeeplinkRouter: Failed to retrieve NewsService for article deeplink")
+            Logger.shared.error("Failed to retrieve NewsService for article deeplink", category: "Navigation")
             return
         }
 
@@ -123,10 +123,14 @@ final class DeeplinkRouter {
             .sink(
                 receiveCompletion: { completion in
                     if case let .failure(error) = completion {
-                        debugPrint("DeeplinkRouter: Failed to fetch article \(id): \(error.localizedDescription)")
+                        Logger.shared.error(
+                            "Failed to fetch article \(id): \(error.localizedDescription)",
+                            category: "Navigation"
+                        )
                     }
                 },
                 receiveValue: { [weak coordinator] article in
+                    Logger.shared.debug("Successfully fetched article: \(article.title)", category: "Navigation")
                     coordinator?.push(page: .articleDetail(article))
                 }
             )
