@@ -34,8 +34,10 @@ struct ArticleViewItem: Identifiable, Equatable {
     let imageURL: URL?
     let formattedDate: String
     let category: NewsCategory?
+    /// Pre-computed index for staggered animations (avoids re-enumeration in view body)
+    let animationIndex: Int
 
-    init(from article: Article) {
+    init(from article: Article, index: Int = 0) {
         id = article.id
         title = article.title
         description = article.description
@@ -43,5 +45,6 @@ struct ArticleViewItem: Identifiable, Equatable {
         imageURL = article.imageURL.flatMap { URL(string: $0) }
         formattedDate = article.formattedDate
         category = article.category
+        animationIndex = index
     }
 }

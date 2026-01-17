@@ -30,9 +30,12 @@ final class LLMModelManager: @unchecked Sendable {
     }
 
     deinit {
+        // Note: As a singleton, this deinit is only called at app termination.
+        // The memory warning observer is properly cleaned up to avoid dangling references.
         #if canImport(UIKit)
             if let token = memoryWarningObserverToken {
                 NotificationCenter.default.removeObserver(token)
+                memoryWarningObserverToken = nil
             }
         #endif
     }

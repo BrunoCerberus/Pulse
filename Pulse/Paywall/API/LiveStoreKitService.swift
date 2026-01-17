@@ -141,7 +141,12 @@ final class LiveStoreKitService: StoreKitService {
 
     private func listenForTransactions() -> Task<Void, Never> {
         Task { [weak self] in
+            // Exit early if self is already deallocated
+            guard self != nil else { return }
+
             for await result in Transaction.updates {
+                // Check both cancellation and listening flag for proper cleanup
+                guard !Task.isCancelled else { break }
                 guard let self, self.isListening else { break }
 
                 do {

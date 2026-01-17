@@ -164,7 +164,10 @@ struct HomeView<R: HomeNavigationRouter>: View {
     }
 
     private var articlesList: some View {
-        ScrollView {
+        let headlines = viewModel.viewState.headlines
+        let lastItemId = headlines.last?.id
+
+        return ScrollView {
             LazyVStack(spacing: 0) {
                 if !viewModel.viewState.breakingNews.isEmpty {
                     Section {
@@ -176,7 +179,7 @@ struct HomeView<R: HomeNavigationRouter>: View {
 
                 Section {
                     LazyVStack(spacing: Spacing.sm) {
-                        ForEach(Array(viewModel.viewState.headlines.enumerated()), id: \.element.id) { index, item in
+                        ForEach(headlines) { item in
                             GlassArticleCard(
                                 item: item,
                                 onTap: {
@@ -189,9 +192,10 @@ struct HomeView<R: HomeNavigationRouter>: View {
                                     viewModel.handle(event: .onShareTapped(articleId: item.id))
                                 }
                             )
-                            .fadeIn(delay: Double(index) * 0.03)
+                            .fadeIn(delay: Double(item.animationIndex) * 0.03)
                             .onAppear {
-                                if item.id == viewModel.viewState.headlines.last?.id {
+                                // Pre-computed lastItemId avoids recalculating .last on every appear
+                                if item.id == lastItemId {
                                     viewModel.handle(event: .onLoadMore)
                                 }
                             }
@@ -221,11 +225,11 @@ struct HomeView<R: HomeNavigationRouter>: View {
     private var breakingNewsCarousel: some View {
         ScrollView(.horizontal, showsIndicators: false) {
             LazyHStack(spacing: Spacing.md) {
-                ForEach(Array(viewModel.viewState.breakingNews.enumerated()), id: \.element.id) { index, item in
+                ForEach(viewModel.viewState.breakingNews) { item in
                     HeroNewsCard(item: item) {
                         viewModel.handle(event: .onArticleTapped(articleId: item.id))
                     }
-                    .fadeIn(delay: Double(index) * 0.1)
+                    .fadeIn(delay: Double(item.animationIndex) * 0.1)
                 }
             }
             .padding(.horizontal, Spacing.md)

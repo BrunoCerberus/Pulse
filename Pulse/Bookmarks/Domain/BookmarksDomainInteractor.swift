@@ -130,20 +130,33 @@ final class BookmarksDomainInteractor: CombineInteractor {
     }
 
     private func saveToReadingHistory(_ article: Article) {
-        let task = Task { [weak self] in
+        trackBackgroundTask { [weak self] in
             guard let self else { return }
             try? await storageService.saveReadingHistory(article)
         }
-        backgroundTasks.insert(task)
-        Task { [weak self] in
+    }
+
+    /// Safely tracks and auto-removes background tasks with proper cleanup on deinit.
+    /// Uses a single MainActor Task to ensure atomic insertion and removal (no race condition).
+    private func trackBackgroundTask(_ operation: @escaping @Sendable () async -> Void) {
+        Task { @MainActor [weak self] in
             guard let self else { return }
-            await task.value
+
+            let task = Task {
+                await operation()
+            }
+            backgroundTasks.insert(task)
+
+            _ = await task.result
             backgroundTasks.remove(task)
         }
     }
 
     deinit {
-        backgroundTasks.forEach { $0.cancel() }
+        // Cancel all pending tasks on deallocation
+        for task in backgroundTasks {
+            task.cancel()
+        }
     }
 
     private func updateState(_ transform: (inout BookmarksDomainState) -> Void) {
