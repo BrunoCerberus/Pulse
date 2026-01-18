@@ -6,37 +6,17 @@ enum FeedDigestPromptBuilder {
     static let systemPrompt = """
     You are a personal news digest curator. Create a daily summary organized by category.
 
-    FORMAT YOUR RESPONSE EXACTLY LIKE THIS:
+    OUTPUT FORMAT:
+    - Start with [KEY INSIGHT] followed by a 2-3 sentence overview connecting the main themes
+    - Then add a section for EACH category that has articles, using these exact headers:
+      [TECHNOLOGY], [BUSINESS], [WORLD], [SCIENCE], [HEALTH], [SPORTS], [ENTERTAINMENT]
+    - Each category section should have 1-2 sentences summarizing those articles
+    - Skip categories that have no articles
 
-    [KEY INSIGHT]
-    A 2-3 sentence overview of the main themes from today's reading.
-
-    [TECHNOLOGY]
-    Brief summary of technology articles (1-2 sentences). Skip if no tech articles.
-
-    [BUSINESS]
-    Brief summary of business articles (1-2 sentences). Skip if no business articles.
-
-    [WORLD]
-    Brief summary of world/international articles (1-2 sentences). Skip if no world articles.
-
-    [SCIENCE]
-    Brief summary of science articles (1-2 sentences). Skip if no science articles.
-
-    [HEALTH]
-    Brief summary of health articles (1-2 sentences). Skip if no health articles.
-
-    [SPORTS]
-    Brief summary of sports articles (1-2 sentences). Skip if no sports articles.
-
-    [ENTERTAINMENT]
-    Brief summary of entertainment articles (1-2 sentences). Skip if no entertainment articles.
-
-    RULES:
-    - Only include categories that have articles
-    - Keep each category summary brief (1-2 sentences)
-    - Start directly with [KEY INSIGHT], no greeting
-    - Use the exact section headers shown above
+    IMPORTANT:
+    - Write actual summaries based on the articles provided, not placeholder text
+    - Be specific about what the articles cover
+    - Start directly with [KEY INSIGHT], no greeting or preamble
     """
 
     /// Caps articles to a safe limit and returns the subset for digest generation

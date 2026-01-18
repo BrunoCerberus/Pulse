@@ -132,18 +132,46 @@ extension DigestViewItem {
         if let range = summary.range(of: "[KEY INSIGHT]") {
             let afterMarker = summary[range.upperBound...]
             // Find the next section marker or end of string
-            let content = extractContentUntilNextMarker(String(afterMarker))
-            if !content.isEmpty {
+            var content = extractContentUntilNextMarker(String(afterMarker))
+
+            // Strip any remaining bracket markers that might be at the start
+            content = content
+                .replacingOccurrences(of: "[KEY INSIGHT]", with: "")
+                .trimmingCharacters(in: .whitespacesAndNewlines)
+
+            // Check if this looks like placeholder text (contains instruction words)
+            let isPlaceholder = content.lowercased().contains("2-3 sentence") ||
+                content.lowercased().contains("overview of the main themes") ||
+                content.lowercased().contains("skip if no")
+
+            if !content.isEmpty, !isPlaceholder {
                 return content
             }
         }
 
-        // Fallback: use first paragraph
-        let paragraphs = summary.components(separatedBy: "\n\n")
+        // Fallback: use first paragraph, but clean it of any markers
+        let cleanSummary = stripAllMarkers(from: summary)
+        let paragraphs = cleanSummary.components(separatedBy: "\n\n")
             .map { $0.trimmingCharacters(in: .whitespacesAndNewlines) }
-            .filter { !$0.isEmpty }
+            .filter { !$0.isEmpty && !$0.hasPrefix("[") }
 
-        return paragraphs.first ?? summary
+        if let first = paragraphs.first, !first.isEmpty {
+            return first
+        }
+
+        // Ultimate fallback
+        return "A summary of your recent reading."
+    }
+
+    /// Strips all section markers from text
+    private func stripAllMarkers(from text: String) -> String {
+        var result = text
+        let markers = ["[KEY INSIGHT]", "[TECHNOLOGY]", "[BUSINESS]", "[WORLD]",
+                       "[SCIENCE]", "[HEALTH]", "[SPORTS]", "[ENTERTAINMENT]"]
+        for marker in markers {
+            result = result.replacingOccurrences(of: marker, with: "")
+        }
+        return result.trimmingCharacters(in: .whitespacesAndNewlines)
     }
 
     /// Creates one section per category based on source articles and LLM-generated content
@@ -233,19 +261,13 @@ extension DigestViewItem {
         return content
     }
 
-    /// Generates a brief content description from article titles (fallback)
+    /// Generates a brief content description from article count (fallback)
     private func generateContentFromArticles(_ articles: [FeedSourceArticle]) -> String {
-        guard !articles.isEmpty else {
-            return "Your reading in this category."
-        }
-
-        // Take up to 2 article titles to create a summary
-        let titles = articles.prefix(2).map { $0.title }
-
-        if titles.count == 1 {
-            return "Featuring: \(titles[0])"
+        let count = articles.count
+        if count == 1 {
+            return "You read 1 article in this category."
         } else {
-            return "Featuring: \(titles[0]) and more."
+            return "You read \(count) articles in this category."
         }
     }
 
