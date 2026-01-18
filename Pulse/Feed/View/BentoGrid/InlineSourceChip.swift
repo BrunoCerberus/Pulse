@@ -1,0 +1,89 @@
+import SwiftUI
+
+// MARK: - Constants
+
+private enum Constants {
+    static let chipWidth: CGFloat = 140
+    static let thumbnailSize: CGFloat = 40
+}
+
+// MARK: - InlineSourceChip
+
+struct InlineSourceChip: View {
+    let article: FeedSourceArticle
+    let onTap: () -> Void
+
+    var body: some View {
+        Button(action: onTap) {
+            HStack(spacing: Spacing.xs) {
+                thumbnailView
+
+                Text(article.title)
+                    .font(Typography.captionLarge)
+                    .foregroundStyle(.primary)
+                    .lineLimit(2)
+                    .multilineTextAlignment(.leading)
+            }
+            .frame(width: Constants.chipWidth, alignment: .leading)
+            .padding(Spacing.xs)
+            .glassBackground(style: .ultraThin, cornerRadius: CornerRadius.sm)
+        }
+        .buttonStyle(.plain)
+        .pressEffect(scale: 0.95)
+    }
+
+    // MARK: - Thumbnail
+
+    @ViewBuilder
+    private var thumbnailView: some View {
+        if let imageURL = article.imageURL, let url = URL(string: imageURL) {
+            AsyncImage(url: url) { phase in
+                switch phase {
+                case .empty:
+                    placeholderImage
+                case let .success(image):
+                    image
+                        .resizable()
+                        .aspectRatio(contentMode: .fill)
+                case .failure:
+                    placeholderImage
+                @unknown default:
+                    placeholderImage
+                }
+            }
+            .frame(width: Constants.thumbnailSize, height: Constants.thumbnailSize)
+            .clipShape(RoundedRectangle(cornerRadius: CornerRadius.xs))
+        } else {
+            placeholderImage
+        }
+    }
+
+    private var placeholderImage: some View {
+        RoundedRectangle(cornerRadius: CornerRadius.xs)
+            .fill(Color.secondary.opacity(0.2))
+            .frame(width: Constants.thumbnailSize, height: Constants.thumbnailSize)
+            .overlay {
+                Image(systemName: "newspaper")
+                    .font(.system(size: IconSize.sm))
+                    .foregroundStyle(.secondary)
+            }
+    }
+}
+
+// MARK: - Preview
+
+#Preview {
+    VStack(spacing: Spacing.md) {
+        InlineSourceChip(
+            article: FeedSourceArticle(from: Article.mockArticles[0]),
+            onTap: {}
+        )
+
+        InlineSourceChip(
+            article: FeedSourceArticle(from: Article.mockArticles[1]),
+            onTap: {}
+        )
+    }
+    .padding()
+    .background(LinearGradient.subtleBackground)
+}

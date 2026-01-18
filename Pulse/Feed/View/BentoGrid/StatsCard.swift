@@ -1,0 +1,155 @@
+import SwiftUI
+
+// MARK: - Constants
+
+private enum Constants {
+    static let articlesLabel = "articles"
+    static let topicsLabel = "topics"
+    static let timeSpanLabel = "48h span"
+}
+
+// MARK: - StatsCard
+
+struct StatsCard: View {
+    let articleCount: Int
+    let topicsCount: Int
+
+    @State private var animatedArticleCount: Int = 0
+    @State private var animatedTopicsCount: Int = 0
+    @State private var hasAppeared = false
+
+    @Environment(\.accessibilityReduceMotion) private var reduceMotion
+
+    var body: some View {
+        VStack(alignment: .leading, spacing: Spacing.sm) {
+            header
+
+            VStack(alignment: .leading, spacing: Spacing.xs) {
+                statRow(
+                    value: animatedArticleCount,
+                    label: Constants.articlesLabel,
+                    icon: "doc.text"
+                )
+
+                statRow(
+                    value: animatedTopicsCount,
+                    label: Constants.topicsLabel,
+                    icon: "tag"
+                )
+
+                HStack(spacing: Spacing.xs) {
+                    Image(systemName: "clock")
+                        .font(.system(size: IconSize.xs))
+                        .foregroundStyle(.secondary)
+
+                    Text(Constants.timeSpanLabel)
+                        .font(Typography.captionMedium)
+                        .foregroundStyle(.secondary)
+                }
+            }
+        }
+        .padding(Spacing.md)
+        .frame(maxWidth: .infinity, alignment: .leading)
+        .glassBackground(style: .thin, cornerRadius: CornerRadius.lg)
+        .depthShadow(.medium)
+        .onAppear {
+            guard !hasAppeared else { return }
+            hasAppeared = true
+            animateCounters()
+        }
+    }
+
+    // MARK: - Header
+
+    private var header: some View {
+        HStack(spacing: Spacing.xs) {
+            Image(systemName: "chart.bar.fill")
+                .font(.system(size: IconSize.sm))
+                .foregroundStyle(Color.Accent.gradient)
+
+            Text("Stats")
+                .font(Typography.labelMedium)
+                .foregroundStyle(.primary)
+        }
+    }
+
+    // MARK: - Stat Row
+
+    private func statRow(value: Int, label: String, icon: String) -> some View {
+        HStack(spacing: Spacing.xs) {
+            Image(systemName: icon)
+                .font(.system(size: IconSize.xs))
+                .foregroundStyle(Color.Accent.primary)
+
+            Text("\(value)")
+                .font(Typography.titleSmall)
+                .foregroundStyle(.primary)
+                .contentTransition(.numericText())
+
+            Text(label)
+                .font(Typography.captionMedium)
+                .foregroundStyle(.secondary)
+        }
+    }
+
+    // MARK: - Animation
+
+    private func animateCounters() {
+        if reduceMotion {
+            animatedArticleCount = articleCount
+            animatedTopicsCount = topicsCount
+            return
+        }
+
+        // Animate article count
+        animateCounter(
+            from: 0,
+            to: articleCount,
+            duration: 0.6,
+            update: { animatedArticleCount = $0 }
+        )
+
+        // Animate topics count with slight delay
+        DispatchQueue.main.asyncAfter(deadline: .now() + 0.1) {
+            animateCounter(
+                from: 0,
+                to: topicsCount,
+                duration: 0.5,
+                update: { animatedTopicsCount = $0 }
+            )
+        }
+    }
+
+    private func animateCounter(
+        from start: Int,
+        to end: Int,
+        duration: Double,
+        update: @escaping (Int) -> Void
+    ) {
+        let steps = min(end - start, 20)
+        guard steps > 0 else {
+            update(end)
+            return
+        }
+
+        let stepDuration = duration / Double(steps)
+
+        for step in 0 ... steps {
+            DispatchQueue.main.asyncAfter(deadline: .now() + stepDuration * Double(step)) {
+                let progress = Double(step) / Double(steps)
+                let value = start + Int(Double(end - start) * progress)
+                withAnimation(.easeOut(duration: stepDuration)) {
+                    update(value)
+                }
+            }
+        }
+    }
+}
+
+// MARK: - Preview
+
+#Preview {
+    StatsCard(articleCount: 5, topicsCount: 3)
+        .padding()
+        .background(LinearGradient.subtleBackground)
+}
