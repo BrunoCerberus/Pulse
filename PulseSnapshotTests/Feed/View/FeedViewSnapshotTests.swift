@@ -102,8 +102,45 @@ final class FeedViewSnapshotTests: XCTestCase {
     }
 
     func testFeedViewCompleted() {
+        // Multi-paragraph summary to trigger Bento Grid sections
+        let summary = """
+        Today's reading focused on technology and business topics. You explored developments in AI and market trends.
+
+        The technology sector saw significant movement with new product launches and strategic partnerships being announced.
+
+        Business markets responded positively, with stock prices reflecting investor optimism about AI-driven products.
+        """
+
         let digest = DailyDigest(
             id: "test",
+            summary: summary,
+            sourceArticles: snapshotArticles,
+            generatedAt: Date(timeIntervalSince1970: 1_672_531_200)
+        )
+        mockFeedService.cachedDigest = digest
+        mockStorageService.readingHistory = snapshotArticles
+
+        let viewModel = FeedViewModel(serviceLocator: serviceLocator)
+        viewModel.handle(event: .onAppear)
+
+        let view = FeedView(
+            router: FeedNavigationRouter(),
+            viewModel: viewModel,
+            serviceLocator: serviceLocator
+        )
+        let controller = UIHostingController(rootView: view)
+
+        assertSnapshot(
+            of: controller,
+            as: .wait(for: 1.5, on: .image(on: iPhoneAirConfig, precision: 0.99)),
+            record: false
+        )
+    }
+
+    func testFeedViewCompletedSingleParagraph() {
+        // Single paragraph - shows only Key Insight + Stats/Topics
+        let digest = DailyDigest(
+            id: "test-single",
             summary: "Today's reading focused on technology and business topics. You explored developments in AI and market trends.",
             sourceArticles: snapshotArticles,
             generatedAt: Date(timeIntervalSince1970: 1_672_531_200)
@@ -123,7 +160,7 @@ final class FeedViewSnapshotTests: XCTestCase {
 
         assertSnapshot(
             of: controller,
-            as: .wait(for: 1.0, on: .image(on: iPhoneAirConfig, precision: 0.99)),
+            as: .wait(for: 1.5, on: .image(on: iPhoneAirConfig, precision: 0.99)),
             record: false
         )
     }

@@ -6,8 +6,6 @@ struct FeedEventActionMap: DomainEventActionMap {
         switch event {
         case .onAppear:
             return .loadInitialData
-        case .onRefresh:
-            return .refresh
         case .onGenerateDigestTapped:
             return .generateDigest
         case let .onArticleTapped(article):
@@ -15,7 +13,7 @@ struct FeedEventActionMap: DomainEventActionMap {
         case .onArticleNavigated:
             return .clearSelectedArticle
         case .onRetryTapped:
-            return .refresh
+            return .generateDigest
         case .onDismissError:
             return .clearError
         }

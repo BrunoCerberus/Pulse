@@ -3,7 +3,6 @@ import Foundation
 enum FeedDomainAction: Equatable {
     // Lifecycle
     case loadInitialData
-    case refresh
 
     // Model management
     case modelStatusChanged(LLMModelStatus)

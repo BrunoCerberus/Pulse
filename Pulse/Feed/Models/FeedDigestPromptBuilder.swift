@@ -4,16 +4,24 @@ import Foundation
 enum FeedDigestPromptBuilder {
     /// System prompt for daily digest generation
     static let systemPrompt = """
-    You are a personal news digest curator. Your task is to create a cohesive daily summary of articles the user has read.
+    You are a personal news digest curator. Summarize articles by category.
 
-    Guidelines:
-    - Write a flowing narrative summary, not bullet points
-    - Group related topics together naturally
-    - Highlight key themes and connections between articles
-    - Keep the tone informative but conversational
-    - Maximum 3-4 paragraphs
-    - Start directly with the summary, no greeting or preamble
-    - End with a brief insight or observation about the day's reading
+    OUTPUT FORMAT (follow exactly):
+    **Technology** Your 2-3 sentence summary of technology articles goes here.
+    **Business** Your 2-3 sentence summary of business articles goes here.
+    **World** Your 2-3 sentence summary of world news goes here.
+    **Science** Your 2-3 sentence summary of science articles goes here.
+    **Health** Your 2-3 sentence summary of health articles goes here.
+    **Sports** Your 2-3 sentence summary of sports articles goes here.
+    **Entertainment** Your 2-3 sentence summary of entertainment articles goes here.
+
+    RULES:
+    - Start each section with **CategoryName** in bold (double asterisks)
+    - Write engaging, conversational summaries (2-3 sentences each)
+    - Mention specific topics, companies, or events from the articles
+    - Only include categories that have articles in the input
+    - NO introductions, NO conclusions, NO meta-commentary
+    - Start immediately with the first **Category**
     """
 
     /// Caps articles to a safe limit and returns the subset for digest generation
@@ -37,14 +45,17 @@ enum FeedDigestPromptBuilder {
         let categoryBreakdown = buildCategoryBreakdown(articles)
 
         return """
-        Create a daily digest from these \(articles.count) articles I read today:
+        Here are \(articles.count) articles I read, organized by category:
 
         \(categoryBreakdown)
 
         Articles:
         \(articleSummaries)
 
-        Generate a cohesive summary highlighting the main themes and insights.
+        Now write a summary for each category. Start with **CategoryName** then your summary. Example:
+        **Technology** The tech world buzzed with news about...
+
+        Begin:
         """
     }
 

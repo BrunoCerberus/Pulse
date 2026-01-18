@@ -13,12 +13,6 @@ struct FeedEventActionMapTests {
         #expect(action == .loadInitialData)
     }
 
-    @Test("onRefresh event maps to refresh action")
-    func onRefreshMapping() {
-        let action = sut.map(event: .onRefresh)
-        #expect(action == .refresh)
-    }
-
     @Test("onGenerateDigestTapped event maps to generateDigest action")
     func onGenerateDigestTappedMapping() {
         let action = sut.map(event: .onGenerateDigestTapped)
@@ -39,10 +33,10 @@ struct FeedEventActionMapTests {
         #expect(action == .clearSelectedArticle)
     }
 
-    @Test("onRetryTapped event maps to refresh action")
+    @Test("onRetryTapped event maps to generateDigest action")
     func onRetryTappedMapping() {
         let action = sut.map(event: .onRetryTapped)
-        #expect(action == .refresh)
+        #expect(action == .generateDigest)
     }
 
     @Test("onDismissError event maps to clearError action")
@@ -56,7 +50,6 @@ struct FeedEventActionMapTests {
         let testArticle = Article.mockArticles[0]
         let events: [FeedViewEvent] = [
             .onAppear,
-            .onRefresh,
             .onGenerateDigestTapped,
             .onArticleTapped(testArticle),
             .onArticleNavigated,

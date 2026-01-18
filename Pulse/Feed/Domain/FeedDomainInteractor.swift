@@ -32,13 +32,10 @@ final class FeedDomainInteractor: CombineInteractor {
         setupModelStatusBinding()
     }
 
-    // swiftlint:disable:next cyclomatic_complexity
     func dispatch(action: FeedDomainAction) {
         switch action {
         case .loadInitialData:
             loadInitialData()
-        case .refresh:
-            refresh()
         case let .modelStatusChanged(status):
             handleModelStatusChanged(status)
         case let .readingHistoryLoaded(articles):
@@ -98,16 +95,7 @@ final class FeedDomainInteractor: CombineInteractor {
             return
         }
 
-        // Fetch reading history
-        fetchReadingHistory()
-    }
-
-    private func refresh() {
-        updateState { state in
-            state.currentDigest = nil
-            state.streamingText = ""
-            state.generationState = .idle
-        }
+        // Fetch reading history if no cached digest
         fetchReadingHistory()
     }
 
@@ -208,6 +196,13 @@ final class FeedDomainInteractor: CombineInteractor {
                     "Digest generation: raw=\(fullText.count) chars, cleaned=\(finalSummary.count) chars",
                     category: "FeedDomainInteractor"
                 )
+                #if DEBUG
+                    // Log first 500 chars of output for debugging parsing issues
+                    Logger.shared.debug(
+                        "Digest output preview: \(String(finalSummary.prefix(500)))",
+                        category: "FeedDomainInteractor"
+                    )
+                #endif
 
                 // Validate that we got a non-empty summary
                 guard !finalSummary.isEmpty else {
