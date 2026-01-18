@@ -162,8 +162,8 @@ extension DigestViewItem {
                 continue
             }
 
-            // Find a matching paragraph for this category, or use a default description
-            let content = findContentForCategory(category, from: contentParagraphs)
+            // Find a matching paragraph for this category, or generate from article titles
+            let content = findContentForCategory(category, from: contentParagraphs, articles: articles)
 
             sections.append(DigestSection(
                 id: "\(id)-section-\(category.rawValue)",
@@ -178,8 +178,12 @@ extension DigestViewItem {
         return sections
     }
 
-    /// Finds relevant content for a category from summary paragraphs
-    private func findContentForCategory(_ category: NewsCategory, from paragraphs: [String]) -> String {
+    /// Finds relevant content for a category from summary paragraphs or generates from articles
+    private func findContentForCategory(
+        _ category: NewsCategory,
+        from paragraphs: [String],
+        articles: [FeedSourceArticle]
+    ) -> String {
         // Try to find a paragraph that mentions this category
         for paragraph in paragraphs {
             if detectCategory(from: paragraph) == category {
@@ -187,8 +191,24 @@ extension DigestViewItem {
             }
         }
 
-        // Fallback: generate a brief description
-        return "Coverage of \(category.displayName.lowercased()) topics from your reading."
+        // Generate a description based on article titles
+        return generateContentFromArticles(articles, category: category)
+    }
+
+    /// Generates a brief content description from article titles
+    private func generateContentFromArticles(_ articles: [FeedSourceArticle], category: NewsCategory) -> String {
+        guard !articles.isEmpty else {
+            return "Coverage of \(category.displayName.lowercased()) topics from your reading."
+        }
+
+        // Take up to 2 article titles to create a summary
+        let titles = articles.prefix(2).map { $0.title }
+
+        if titles.count == 1 {
+            return "Featuring: \(titles[0])"
+        } else {
+            return "Featuring: \(titles[0]) and more."
+        }
     }
 
     /// Computes category breakdown from source articles
