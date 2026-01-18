@@ -196,6 +196,13 @@ final class FeedDomainInteractor: CombineInteractor {
                     "Digest generation: raw=\(fullText.count) chars, cleaned=\(finalSummary.count) chars",
                     category: "FeedDomainInteractor"
                 )
+                #if DEBUG
+                    // Log first 500 chars of output for debugging parsing issues
+                    Logger.shared.debug(
+                        "Digest output preview: \(String(finalSummary.prefix(500)))",
+                        category: "FeedDomainInteractor"
+                    )
+                #endif
 
                 // Validate that we got a non-empty summary
                 guard !finalSummary.isEmpty else {

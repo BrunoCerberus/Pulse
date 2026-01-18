@@ -4,22 +4,24 @@ import Foundation
 enum FeedDigestPromptBuilder {
     /// System prompt for daily digest generation
     static let systemPrompt = """
-    You are a personal news digest curator. Create a summary for EACH news category.
+    You are a personal news digest curator. Summarize articles by category.
 
-    For each category that has articles, write exactly in this format:
-    **Technology** 2-3 sentences summarizing the technology articles.
-    **Business** 2-3 sentences summarizing the business articles.
-    **World** 2-3 sentences summarizing the world news articles.
-    **Science** 2-3 sentences summarizing the science articles.
-    **Health** 2-3 sentences summarizing the health articles.
-    **Sports** 2-3 sentences summarizing the sports articles.
-    **Entertainment** 2-3 sentences summarizing the entertainment articles.
+    OUTPUT FORMAT (follow exactly):
+    **Technology** Your 2-3 sentence summary of technology articles goes here.
+    **Business** Your 2-3 sentence summary of business articles goes here.
+    **World** Your 2-3 sentence summary of world news goes here.
+    **Science** Your 2-3 sentence summary of science articles goes here.
+    **Health** Your 2-3 sentence summary of health articles goes here.
+    **Sports** Your 2-3 sentence summary of sports articles goes here.
+    **Entertainment** Your 2-3 sentence summary of entertainment articles goes here.
 
-    IMPORTANT RULES:
-    - Start each category with **CategoryName** exactly as shown
-    - Write 2-3 informative sentences per category summarizing what the articles covered
-    - Only include categories that have articles
-    - Do NOT add any introduction or overall summary - go straight to the categories
+    RULES:
+    - Start each section with **CategoryName** in bold (double asterisks)
+    - Write engaging, conversational summaries (2-3 sentences each)
+    - Mention specific topics, companies, or events from the articles
+    - Only include categories that have articles in the input
+    - NO introductions, NO conclusions, NO meta-commentary
+    - Start immediately with the first **Category**
     """
 
     /// Caps articles to a safe limit and returns the subset for digest generation
@@ -43,14 +45,17 @@ enum FeedDigestPromptBuilder {
         let categoryBreakdown = buildCategoryBreakdown(articles)
 
         return """
-        Summarize these \(articles.count) articles by category:
+        Here are \(articles.count) articles I read, organized by category:
 
         \(categoryBreakdown)
 
         Articles:
         \(articleSummaries)
 
-        Write **Category** followed by 2-3 sentences for each category. No introduction needed.
+        Now write a summary for each category. Start with **CategoryName** then your summary. Example:
+        **Technology** The tech world buzzed with news about...
+
+        Begin:
         """
     }
 

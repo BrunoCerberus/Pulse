@@ -174,19 +174,24 @@ extension DigestViewItem {
     /// Extracts content for a specific category from the structured summary
     private func extractCategoryContent(for category: NewsCategory, articles: [FeedSourceArticle]) -> String {
         guard let categoryName = Self.categoryNames[category] else {
-            return generateContentFromArticles(articles)
+            return generateContentFromArticles(articles, category: category)
         }
 
         let searchText = summary.lowercased()
         let categoryLower = categoryName.lowercased()
 
-        // Try multiple patterns the LLM might use
+        // Try multiple patterns the LLM might use (more flexible matching)
         let patterns = [
             "**\(categoryLower)**", // **Technology**
+            "**\(categoryLower):**", // **Technology:**
+            "**\(categoryLower)** ", // **Technology** (with space after)
+            "**\(categoryLower)**\n", // **Technology** (with newline)
             "* **\(categoryLower)**", // * **Technology**
             "- **\(categoryLower)**", // - **Technology**
             "## \(categoryLower)", // ## Technology
             "\(categoryLower):", // Technology:
+            "\(categoryLower) -", // Technology -
+            "\(categoryLower)\n", // Technology (just the word on its own line)
         ]
 
         for pattern in patterns {
@@ -202,8 +207,36 @@ extension DigestViewItem {
             }
         }
 
+        // Try a more flexible regex-based approach as last resort
+        if let content = extractWithRegex(category: categoryLower, from: summary) {
+            return content
+        }
+
         // Fallback: no content found for this category
-        return generateContentFromArticles(articles)
+        return generateContentFromArticles(articles, category: category)
+    }
+
+    /// Uses regex to find category content more flexibly
+    private func extractWithRegex(category: String, from text: String) -> String? {
+        // Match: **Category** or Category: followed by content until next category or end
+        let allCategories = "technology|business|world|science|health|sports|entertainment"
+        let pattern = "(?:\\*\\*\(category)\\*\\*|\\b\(category)\\b[:\\-]?)\\s*(.+?)(?=\\*\\*(?:\(allCategories))\\*\\*|\\b(?:\(allCategories))\\b[:\\-]|$)"
+
+        guard let regex = try? NSRegularExpression(pattern: pattern, options: [.caseInsensitive, .dotMatchesLineSeparators]) else {
+            return nil
+        }
+
+        let range = NSRange(text.startIndex..., in: text)
+        if let match = regex.firstMatch(in: text, options: [], range: range),
+           let contentRange = Range(match.range(at: 1), in: text)
+        {
+            let content = String(text[contentRange]).trimmingCharacters(in: .whitespacesAndNewlines)
+            if !content.isEmpty {
+                return cleanCategoryContent(content)
+            }
+        }
+
+        return nil
     }
 
     /// Extracts text content until the next category marker or end of string
@@ -259,22 +292,68 @@ extension DigestViewItem {
         return result.trimmingCharacters(in: .whitespacesAndNewlines)
     }
 
-    /// Generates a summary from article titles when LLM parsing fails
-    private func generateContentFromArticles(_ articles: [FeedSourceArticle]) -> String {
+    /// Generates a humanized summary from article titles when LLM parsing fails
+    private func generateContentFromArticles(_ articles: [FeedSourceArticle], category: NewsCategory? = nil) -> String {
         guard !articles.isEmpty else {
             return "No articles in this category."
         }
 
-        // Take up to 3 article titles and create a readable summary
-        let topArticles = articles.prefix(3)
-        let titles = topArticles.map { $0.title }
+        let topArticles = Array(articles.prefix(3))
+        let sources = Set(topArticles.map { $0.source }).joined(separator: ", ")
+        let articleCount = articles.count
 
-        if titles.count == 1 {
-            return "Featured: \(titles[0])"
-        } else if titles.count == 2 {
-            return "Highlights include \(titles[0]) and \(titles[1])."
+        // Category-specific intros for more natural language
+        let categoryIntros: [NewsCategory: [String]] = [
+            .technology: [
+                "Your tech reading covered",
+                "In the tech world, you explored",
+                "On the technology front,",
+            ],
+            .business: [
+                "From the business sector,",
+                "Your business reading included",
+                "In markets and business,",
+            ],
+            .world: [
+                "Around the globe,",
+                "In international news,",
+                "From world affairs,",
+            ],
+            .science: [
+                "In scientific developments,",
+                "Your science reading featured",
+                "From the world of science,",
+            ],
+            .health: [
+                "In health and wellness,",
+                "Your health reading covered",
+                "On the health front,",
+            ],
+            .sports: [
+                "In sports coverage,",
+                "From the sports world,",
+                "Your sports reading included",
+            ],
+            .entertainment: [
+                "In entertainment news,",
+                "From the entertainment world,",
+                "Your entertainment reading featured",
+            ],
+        ]
+
+        // Pick a semi-random intro based on article count (for variety)
+        let intros = category.flatMap { categoryIntros[$0] } ?? ["You read about", "Your reading covered", "Notable stories included"]
+        let intro = intros[articleCount % intros.count]
+
+        // Build the summary based on article count
+        if topArticles.count == 1 {
+            let article = topArticles[0]
+            return "\(intro) \"\(article.title)\" from \(article.source)."
+        } else if topArticles.count == 2 {
+            return "\(intro) stories like \"\(topArticles[0].title)\" and coverage from \(sources)."
         } else {
-            return "Highlights include \(titles[0]), \(titles[1]), and more."
+            let moreCount = articleCount > 3 ? " and \(articleCount - 2) more" : ""
+            return "\(intro) \"\(topArticles[0].title),\" plus stories from \(sources)\(moreCount)."
         }
     }
 
