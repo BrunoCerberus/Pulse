@@ -115,62 +115,80 @@ struct DigestSection: Identifiable, Equatable {
 // MARK: - DigestViewItem Extensions
 
 extension DigestViewItem {
-    /// Section markers used in the LLM output format
-    private static let sectionMarkers: [NewsCategory: String] = [
-        .technology: "[TECHNOLOGY]",
-        .business: "[BUSINESS]",
-        .world: "[WORLD]",
-        .science: "[SCIENCE]",
-        .health: "[HEALTH]",
-        .sports: "[SPORTS]",
-        .entertainment: "[ENTERTAINMENT]",
+    /// Category markers in various formats the LLM might use
+    private static let categoryPatterns: [NewsCategory: [String]] = [
+        .technology: ["**Technology**", "**technology**", "[TECHNOLOGY]", "## Technology"],
+        .business: ["**Business**", "**business**", "[BUSINESS]", "## Business"],
+        .world: ["**World**", "**world**", "[WORLD]", "## World"],
+        .science: ["**Science**", "**science**", "[SCIENCE]", "## Science"],
+        .health: ["**Health**", "**health**", "[HEALTH]", "## Health"],
+        .sports: ["**Sports**", "**sports**", "[SPORTS]", "## Sports"],
+        .entertainment: ["**Entertainment**", "**entertainment**", "[ENTERTAINMENT]", "## Entertainment"],
     ]
 
-    /// Extracts the key insight from the structured summary
+    /// Extracts the key insight (overall summary before any category sections)
     var keyInsight: String {
-        // Try to extract content after [KEY INSIGHT] marker
-        if let range = summary.range(of: "[KEY INSIGHT]") {
-            let afterMarker = summary[range.upperBound...]
-            // Find the next section marker or end of string
-            var content = extractContentUntilNextMarker(String(afterMarker))
+        // Find the first category marker position
+        var firstCategoryPosition = summary.endIndex
 
-            // Strip any remaining bracket markers that might be at the start
-            content = content
-                .replacingOccurrences(of: "[KEY INSIGHT]", with: "")
-                .trimmingCharacters(in: .whitespacesAndNewlines)
-
-            // Check if this looks like placeholder text (contains instruction words)
-            let isPlaceholder = content.lowercased().contains("2-3 sentence") ||
-                content.lowercased().contains("overview of the main themes") ||
-                content.lowercased().contains("skip if no")
-
-            if !content.isEmpty, !isPlaceholder {
-                return content
+        for patterns in Self.categoryPatterns.values {
+            for pattern in patterns {
+                if let range = summary.range(of: pattern) {
+                    if range.lowerBound < firstCategoryPosition {
+                        firstCategoryPosition = range.lowerBound
+                    }
+                }
             }
         }
 
-        // Fallback: use first paragraph, but clean it of any markers
-        let cleanSummary = stripAllMarkers(from: summary)
-        let paragraphs = cleanSummary.components(separatedBy: "\n\n")
-            .map { $0.trimmingCharacters(in: .whitespacesAndNewlines) }
-            .filter { !$0.isEmpty && !$0.hasPrefix("[") }
+        // Extract text before the first category
+        let overallSummary = String(summary[..<firstCategoryPosition])
+            .trimmingCharacters(in: .whitespacesAndNewlines)
 
-        if let first = paragraphs.first, !first.isEmpty {
-            return first
+        // Clean up any markers that might be at the start
+        let cleaned = cleanText(overallSummary)
+
+        if !cleaned.isEmpty {
+            return cleaned
         }
 
-        // Ultimate fallback
-        return "A summary of your recent reading."
+        // Fallback: first paragraph
+        let paragraphs = summary.components(separatedBy: "\n\n")
+            .map { $0.trimmingCharacters(in: .whitespacesAndNewlines) }
+            .filter { !$0.isEmpty && !isCategoryHeader($0) }
+
+        return paragraphs.first ?? "A summary of your recent reading."
     }
 
-    /// Strips all section markers from text
-    private func stripAllMarkers(from text: String) -> String {
+    /// Checks if text starts with a category header
+    private func isCategoryHeader(_ text: String) -> Bool {
+        let lowercased = text.lowercased()
+        let categories = ["technology", "business", "world", "science", "health", "sports", "entertainment"]
+        for category in categories {
+            if lowercased.hasPrefix("**\(category)") || lowercased.hasPrefix("[\(category.uppercased())]") {
+                return true
+            }
+        }
+        return false
+    }
+
+    /// Cleans text by removing markers and placeholder content
+    private func cleanText(_ text: String) -> String {
         var result = text
-        let markers = ["[KEY INSIGHT]", "[TECHNOLOGY]", "[BUSINESS]", "[WORLD]",
-                       "[SCIENCE]", "[HEALTH]", "[SPORTS]", "[ENTERTAINMENT]"]
-        for marker in markers {
+
+        // Remove bracket markers
+        let bracketMarkers = ["[KEY INSIGHT]", "[TECHNOLOGY]", "[BUSINESS]", "[WORLD]",
+                              "[SCIENCE]", "[HEALTH]", "[SPORTS]", "[ENTERTAINMENT]"]
+        for marker in bracketMarkers {
             result = result.replacingOccurrences(of: marker, with: "")
         }
+
+        // Check for placeholder text
+        let lowercased = result.lowercased()
+        if lowercased.contains("2-3 sentence") || lowercased.contains("overview of the main themes") {
+            return ""
+        }
+
         return result.trimmingCharacters(in: .whitespacesAndNewlines)
     }
 
@@ -221,36 +239,39 @@ extension DigestViewItem {
 
     /// Extracts content for a specific category from the structured summary
     private func extractCategoryContent(for category: NewsCategory, articles: [FeedSourceArticle]) -> String {
-        guard let marker = Self.sectionMarkers[category],
-              let range = summary.range(of: marker)
-        else {
-            // Marker not found, generate from article titles
+        guard let patterns = Self.categoryPatterns[category] else {
             return generateContentFromArticles(articles)
         }
 
-        let afterMarker = summary[range.upperBound...]
-        let content = extractContentUntilNextMarker(String(afterMarker))
+        // Try each pattern to find the category section
+        for pattern in patterns {
+            if let range = summary.range(of: pattern) {
+                let afterMarker = summary[range.upperBound...]
+                let content = extractContentUntilNextCategory(String(afterMarker))
 
-        if content.isEmpty {
-            return generateContentFromArticles(articles)
+                if !content.isEmpty {
+                    return content
+                }
+            }
         }
 
-        return content
+        // No marker found, use fallback
+        return generateContentFromArticles(articles)
     }
 
-    /// Extracts text content until the next section marker or end of string
-    private func extractContentUntilNextMarker(_ text: String) -> String {
+    /// Extracts text content until the next category marker or end of string
+    private func extractContentUntilNextCategory(_ text: String) -> String {
         let trimmed = text.trimmingCharacters(in: .whitespacesAndNewlines)
 
-        // Find the next section marker
-        let allMarkers = ["[KEY INSIGHT]", "[TECHNOLOGY]", "[BUSINESS]", "[WORLD]",
-                          "[SCIENCE]", "[HEALTH]", "[SPORTS]", "[ENTERTAINMENT]"]
-
+        // Find the next category marker position
         var endIndex = trimmed.endIndex
-        for marker in allMarkers {
-            if let range = trimmed.range(of: marker) {
-                if range.lowerBound < endIndex {
-                    endIndex = range.lowerBound
+
+        for patterns in Self.categoryPatterns.values {
+            for pattern in patterns {
+                if let range = trimmed.range(of: pattern) {
+                    if range.lowerBound < endIndex {
+                        endIndex = range.lowerBound
+                    }
                 }
             }
         }
