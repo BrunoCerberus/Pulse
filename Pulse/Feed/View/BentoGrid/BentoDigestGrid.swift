@@ -13,7 +13,6 @@ struct BentoDigestGrid: View {
     let sourceArticles: [FeedSourceArticle]
     let onArticleTapped: (FeedSourceArticle) -> Void
 
-    @State private var showKeyInsight = false
     @State private var showStats = false
     @State private var showTopics = false
     @State private var showSections: Set<String> = []
@@ -30,13 +29,10 @@ struct BentoDigestGrid: View {
 
     var body: some View {
         VStack(spacing: Constants.gridSpacing) {
-            // Key Insight - full width
-            keyInsightView
-
             // Stats and Topics side by side
             statsAndTopicsRow
 
-            // Content sections (full width)
+            // Content sections (full width) - each category with its summary
             ForEach(sections) { section in
                 contentSectionView(section)
             }
@@ -69,19 +65,6 @@ struct BentoDigestGrid: View {
         }
     }
 
-    // MARK: - Key Insight View
-
-    private var keyInsightView: some View {
-        KeyInsightCard(
-            insight: digest.keyInsight,
-            relatedArticles: Array(sourceArticles.prefix(2)),
-            onArticleTapped: onArticleTapped
-        )
-        .opacity(showKeyInsight ? 1 : 0)
-        .scaleEffect(showKeyInsight ? 1 : 0.95)
-        .animation(reduceMotion ? nil : .spring(response: 0.5, dampingFraction: 0.8), value: showKeyInsight)
-    }
-
     // MARK: - Content Section View
 
     private func contentSectionView(_ section: DigestSection) -> some View {
@@ -101,7 +84,6 @@ struct BentoDigestGrid: View {
     private func triggerStaggeredAnimations() {
         if reduceMotion {
             // Show everything immediately for reduced motion
-            showKeyInsight = true
             showStats = true
             showTopics = true
             for section in sections {
@@ -112,20 +94,16 @@ struct BentoDigestGrid: View {
 
         // Staggered reveal sequence
         DispatchQueue.main.asyncAfter(deadline: .now() + 0.1) {
-            showKeyInsight = true
-        }
-
-        DispatchQueue.main.asyncAfter(deadline: .now() + 0.2) {
             showStats = true
         }
 
-        DispatchQueue.main.asyncAfter(deadline: .now() + 0.25) {
+        DispatchQueue.main.asyncAfter(deadline: .now() + 0.15) {
             showTopics = true
         }
 
         // Stagger content sections
         for (index, section) in sections.enumerated() {
-            let delay = 0.35 + Double(index) * 0.1
+            let delay = 0.25 + Double(index) * 0.1
             DispatchQueue.main.asyncAfter(deadline: .now() + delay) {
                 showSections.insert(section.id)
             }
@@ -137,14 +115,11 @@ struct BentoDigestGrid: View {
 
 #Preview {
     let previewSummary = """
-    Today's reading focused on technology and business developments. AI advancements dominated the tech news \
-    with several major announcements from leading companies.
+    **Technology** AI advancements dominated the tech news with several major announcements from leading companies.
 
-    The technology sector saw significant movement with new product launches and strategic partnerships \
-    being announced across the industry.
+    **Business** Markets responded positively to the tech developments, with stock prices reflecting investor optimism.
 
-    Business markets responded positively to the tech developments, with stock prices reflecting investor \
-    optimism about the future of AI-driven products.
+    **World** International news covered climate agreements and diplomatic developments across multiple regions.
     """
 
     let mockDigest = DigestViewItem(

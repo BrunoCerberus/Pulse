@@ -88,6 +88,10 @@ final class MockFeedService: FeedService {
         mockDigest = digest
     }
 
+    func clearCache() {
+        mockDigest = nil
+    }
+
     // MARK: - Mock Data Generation
 
     private static func generateMockSummary(for articles: [Article]) -> String {

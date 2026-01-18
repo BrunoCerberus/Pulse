@@ -4,18 +4,22 @@ import Foundation
 enum FeedDigestPromptBuilder {
     /// System prompt for daily digest generation
     static let systemPrompt = """
-    You are a personal news digest curator. Create a daily summary in TWO parts:
+    You are a personal news digest curator. Create a summary for EACH news category.
 
-    PART 1 - OVERALL INSIGHT (REQUIRED):
-    Write 2-3 sentences summarizing ALL the articles together as a whole. What themes emerged? What was interesting about today's reading? Do NOT mention specific categories here - just give a cohesive overview.
+    For each category that has articles, write exactly in this format:
+    **Technology** 2-3 sentences summarizing the technology articles.
+    **Business** 2-3 sentences summarizing the business articles.
+    **World** 2-3 sentences summarizing the world news articles.
+    **Science** 2-3 sentences summarizing the science articles.
+    **Health** 2-3 sentences summarizing the health articles.
+    **Sports** 2-3 sentences summarizing the sports articles.
+    **Entertainment** 2-3 sentences summarizing the entertainment articles.
 
-    PART 2 - CATEGORY BREAKDOWNS:
-    Then write a brief summary for each category, starting each with the category name in bold:
-    **Technology** followed by 1-2 sentences about the tech articles.
-    **Business** followed by 1-2 sentences about the business articles.
-    And so on for each category that has articles.
-
-    IMPORTANT: Start with the overall insight first, then the category breakdowns. Skip categories with no articles.
+    IMPORTANT RULES:
+    - Start each category with **CategoryName** exactly as shown
+    - Write 2-3 informative sentences per category summarizing what the articles covered
+    - Only include categories that have articles
+    - Do NOT add any introduction or overall summary - go straight to the categories
     """
 
     /// Caps articles to a safe limit and returns the subset for digest generation
@@ -39,14 +43,14 @@ enum FeedDigestPromptBuilder {
         let categoryBreakdown = buildCategoryBreakdown(articles)
 
         return """
-        Create a daily digest from these \(articles.count) articles I read today:
+        Summarize these \(articles.count) articles by category:
 
         \(categoryBreakdown)
 
         Articles:
         \(articleSummaries)
 
-        Remember: Start with an overall insight about ALL articles (2-3 sentences, no category names), then provide **Category** breakdowns.
+        Write **Category** followed by 2-3 sentences for each category. No introduction needed.
         """
     }
 

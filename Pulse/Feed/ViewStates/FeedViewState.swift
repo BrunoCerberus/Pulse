@@ -115,82 +115,16 @@ struct DigestSection: Identifiable, Equatable {
 // MARK: - DigestViewItem Extensions
 
 extension DigestViewItem {
-    /// Category markers in various formats the LLM might use
-    private static let categoryPatterns: [NewsCategory: [String]] = [
-        .technology: ["**Technology**", "**technology**", "[TECHNOLOGY]", "## Technology"],
-        .business: ["**Business**", "**business**", "[BUSINESS]", "## Business"],
-        .world: ["**World**", "**world**", "[WORLD]", "## World"],
-        .science: ["**Science**", "**science**", "[SCIENCE]", "## Science"],
-        .health: ["**Health**", "**health**", "[HEALTH]", "## Health"],
-        .sports: ["**Sports**", "**sports**", "[SPORTS]", "## Sports"],
-        .entertainment: ["**Entertainment**", "**entertainment**", "[ENTERTAINMENT]", "## Entertainment"],
+    /// Category names for pattern matching (case-insensitive)
+    private static let categoryNames: [NewsCategory: String] = [
+        .technology: "technology",
+        .business: "business",
+        .world: "world",
+        .science: "science",
+        .health: "health",
+        .sports: "sports",
+        .entertainment: "entertainment",
     ]
-
-    /// Extracts the key insight (overall summary before any category sections)
-    var keyInsight: String {
-        // Find the first category marker position
-        var firstCategoryPosition = summary.endIndex
-
-        for patterns in Self.categoryPatterns.values {
-            for pattern in patterns {
-                if let range = summary.range(of: pattern) {
-                    if range.lowerBound < firstCategoryPosition {
-                        firstCategoryPosition = range.lowerBound
-                    }
-                }
-            }
-        }
-
-        // Extract text before the first category
-        let overallSummary = String(summary[..<firstCategoryPosition])
-            .trimmingCharacters(in: .whitespacesAndNewlines)
-
-        // Clean up any markers that might be at the start
-        let cleaned = cleanText(overallSummary)
-
-        if !cleaned.isEmpty {
-            return cleaned
-        }
-
-        // Fallback: first paragraph
-        let paragraphs = summary.components(separatedBy: "\n\n")
-            .map { $0.trimmingCharacters(in: .whitespacesAndNewlines) }
-            .filter { !$0.isEmpty && !isCategoryHeader($0) }
-
-        return paragraphs.first ?? "A summary of your recent reading."
-    }
-
-    /// Checks if text starts with a category header
-    private func isCategoryHeader(_ text: String) -> Bool {
-        let lowercased = text.lowercased()
-        let categories = ["technology", "business", "world", "science", "health", "sports", "entertainment"]
-        for category in categories {
-            if lowercased.hasPrefix("**\(category)") || lowercased.hasPrefix("[\(category.uppercased())]") {
-                return true
-            }
-        }
-        return false
-    }
-
-    /// Cleans text by removing markers and placeholder content
-    private func cleanText(_ text: String) -> String {
-        var result = text
-
-        // Remove bracket markers
-        let bracketMarkers = ["[KEY INSIGHT]", "[TECHNOLOGY]", "[BUSINESS]", "[WORLD]",
-                              "[SCIENCE]", "[HEALTH]", "[SPORTS]", "[ENTERTAINMENT]"]
-        for marker in bracketMarkers {
-            result = result.replacingOccurrences(of: marker, with: "")
-        }
-
-        // Check for placeholder text
-        let lowercased = result.lowercased()
-        if lowercased.contains("2-3 sentence") || lowercased.contains("overview of the main themes") {
-            return ""
-        }
-
-        return result.trimmingCharacters(in: .whitespacesAndNewlines)
-    }
 
     /// Creates one section per category based on source articles and LLM-generated content
     func parseSections(with sourceArticles: [FeedSourceArticle]) -> [DigestSection] {
@@ -239,56 +173,108 @@ extension DigestViewItem {
 
     /// Extracts content for a specific category from the structured summary
     private func extractCategoryContent(for category: NewsCategory, articles: [FeedSourceArticle]) -> String {
-        guard let patterns = Self.categoryPatterns[category] else {
+        guard let categoryName = Self.categoryNames[category] else {
             return generateContentFromArticles(articles)
         }
 
-        // Try each pattern to find the category section
-        for pattern in patterns {
-            if let range = summary.range(of: pattern) {
-                let afterMarker = summary[range.upperBound...]
-                let content = extractContentUntilNextCategory(String(afterMarker))
+        let searchText = summary.lowercased()
+        let categoryLower = categoryName.lowercased()
 
+        // Try multiple patterns the LLM might use
+        let patterns = [
+            "**\(categoryLower)**", // **Technology**
+            "* **\(categoryLower)**", // * **Technology**
+            "- **\(categoryLower)**", // - **Technology**
+            "## \(categoryLower)", // ## Technology
+            "\(categoryLower):", // Technology:
+        ]
+
+        for pattern in patterns {
+            if let markerRange = searchText.range(of: pattern) {
+                // Get corresponding range in original summary
+                let startOffset = searchText.distance(from: searchText.startIndex, to: markerRange.upperBound)
+                let startIndex = summary.index(summary.startIndex, offsetBy: startOffset)
+                let afterMarker = String(summary[startIndex...])
+                let content = extractContentUntilNextCategory(afterMarker)
                 if !content.isEmpty {
-                    return content
+                    return cleanCategoryContent(content)
                 }
             }
         }
 
-        // No marker found, use fallback
+        // Fallback: no content found for this category
         return generateContentFromArticles(articles)
     }
 
     /// Extracts text content until the next category marker or end of string
     private func extractContentUntilNextCategory(_ text: String) -> String {
         let trimmed = text.trimmingCharacters(in: .whitespacesAndNewlines)
+        let searchText = trimmed.lowercased()
 
-        // Find the next category marker position
-        var endIndex = trimmed.endIndex
+        // Find the earliest next category marker
+        let categories = ["technology", "business", "world", "science", "health", "sports", "entertainment"]
+        var earliestEnd = trimmed.endIndex
 
-        for patterns in Self.categoryPatterns.values {
+        for cat in categories {
+            // Check multiple patterns
+            let patterns = ["**\(cat)**", "* **\(cat)**", "- **\(cat)**", "## \(cat)", "\(cat):"]
             for pattern in patterns {
-                if let range = trimmed.range(of: pattern) {
-                    if range.lowerBound < endIndex {
-                        endIndex = range.lowerBound
+                if let range = searchText.range(of: pattern) {
+                    let offset = searchText.distance(from: searchText.startIndex, to: range.lowerBound)
+                    let originalIndex = trimmed.index(trimmed.startIndex, offsetBy: offset)
+                    if originalIndex < earliestEnd {
+                        earliestEnd = originalIndex
                     }
                 }
             }
         }
 
-        let content = String(trimmed[..<endIndex])
-            .trimmingCharacters(in: .whitespacesAndNewlines)
-
-        return content
+        return String(trimmed[..<earliestEnd]).trimmingCharacters(in: .whitespacesAndNewlines)
     }
 
-    /// Generates a brief content description from article count (fallback)
+    /// Cleans category content by removing bullet points and markdown
+    private func cleanCategoryContent(_ content: String) -> String {
+        var result = content
+
+        // Remove leading bullet points, plus signs, dashes
+        let lines = result.components(separatedBy: "\n")
+            .map { line -> String in
+                var cleaned = line.trimmingCharacters(in: .whitespaces)
+                // Remove common bullet prefixes
+                let prefixes = ["+ ", "- ", "* ", "• "]
+                for prefix in prefixes {
+                    if cleaned.hasPrefix(prefix) {
+                        cleaned = String(cleaned.dropFirst(prefix.count))
+                    }
+                }
+                return cleaned
+            }
+            .filter { !$0.isEmpty }
+
+        result = lines.joined(separator: " ")
+
+        // Remove any remaining markdown bold markers
+        result = result.replacingOccurrences(of: "**", with: "")
+
+        return result.trimmingCharacters(in: .whitespacesAndNewlines)
+    }
+
+    /// Generates a summary from article titles when LLM parsing fails
     private func generateContentFromArticles(_ articles: [FeedSourceArticle]) -> String {
-        let count = articles.count
-        if count == 1 {
-            return "You read 1 article in this category."
+        guard !articles.isEmpty else {
+            return "No articles in this category."
+        }
+
+        // Take up to 3 article titles and create a readable summary
+        let topArticles = articles.prefix(3)
+        let titles = topArticles.map { $0.title }
+
+        if titles.count == 1 {
+            return "Featured: \(titles[0])"
+        } else if titles.count == 2 {
+            return "Highlights include \(titles[0]) and \(titles[1])."
         } else {
-            return "You read \(count) articles in this category."
+            return "Highlights include \(titles[0]), \(titles[1]), and more."
         }
     }
 

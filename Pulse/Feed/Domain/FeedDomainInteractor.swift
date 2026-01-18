@@ -87,22 +87,17 @@ final class FeedDomainInteractor: CombineInteractor {
     private func loadInitialData() {
         guard !currentState.hasLoadedInitialData else { return }
 
-        // Check for cached digest first
-        if let cachedDigest = feedService.fetchTodaysDigest() {
-            updateState { state in
-                state.currentDigest = cachedDigest
-                state.readingHistory = cachedDigest.sourceArticles
-                state.hasLoadedInitialData = true
-                state.generationState = .completed
-            }
-            return
-        }
+        // Always clear cache and regenerate fresh
+        feedService.clearCache()
 
         // Fetch reading history
         fetchReadingHistory()
     }
 
     private func refresh() {
+        // Clear the service cache to force regeneration with new prompt
+        feedService.clearCache()
+
         updateState { state in
             state.currentDigest = nil
             state.streamingText = ""
