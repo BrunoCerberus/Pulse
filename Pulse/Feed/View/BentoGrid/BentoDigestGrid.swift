@@ -16,6 +16,7 @@ struct BentoDigestGrid: View {
     @State private var showStats = false
     @State private var showTopics = false
     @State private var showSections: Set<String> = []
+    @State private var animationTask: Task<Void, Never>?
 
     @Environment(\.accessibilityReduceMotion) private var reduceMotion
 
@@ -38,7 +39,14 @@ struct BentoDigestGrid: View {
             }
         }
         .onAppear {
-            triggerStaggeredAnimations()
+            animationTask?.cancel()
+            animationTask = Task {
+                await triggerStaggeredAnimations()
+            }
+        }
+        .onDisappear {
+            animationTask?.cancel()
+            animationTask = nil
         }
     }
 
@@ -81,7 +89,8 @@ struct BentoDigestGrid: View {
 
     // MARK: - Staggered Animations
 
-    private func triggerStaggeredAnimations() {
+    @MainActor
+    private func triggerStaggeredAnimations() async {
         if reduceMotion {
             // Show everything immediately for reduced motion
             showStats = true
@@ -93,20 +102,21 @@ struct BentoDigestGrid: View {
         }
 
         // Staggered reveal sequence
-        DispatchQueue.main.asyncAfter(deadline: .now() + 0.1) {
-            showStats = true
-        }
+        try? await Task.sleep(nanoseconds: 100_000_000) // 0.1 second
+        guard !Task.isCancelled else { return }
+        showStats = true
 
-        DispatchQueue.main.asyncAfter(deadline: .now() + 0.15) {
-            showTopics = true
-        }
+        try? await Task.sleep(nanoseconds: 50_000_000) // 0.05 second (total 0.15)
+        guard !Task.isCancelled else { return }
+        showTopics = true
 
         // Stagger content sections
-        for (index, section) in sections.enumerated() {
-            let delay = 0.25 + Double(index) * 0.1
-            DispatchQueue.main.asyncAfter(deadline: .now() + delay) {
-                showSections.insert(section.id)
-            }
+        try? await Task.sleep(nanoseconds: 100_000_000) // 0.1 second (total 0.25)
+
+        for section in sections {
+            guard !Task.isCancelled else { return }
+            showSections.insert(section.id)
+            try? await Task.sleep(nanoseconds: 100_000_000) // 0.1 second between each
         }
     }
 }

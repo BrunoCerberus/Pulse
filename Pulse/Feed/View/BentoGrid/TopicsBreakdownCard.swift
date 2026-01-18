@@ -13,7 +13,7 @@ struct TopicsBreakdownCard: View {
     let breakdown: [(NewsCategory, Int)]
 
     @State private var animatedProgress: [String: CGFloat] = [:]
-    @State private var hasAppeared = false
+    @State private var animationTask: Task<Void, Never>?
 
     @Environment(\.accessibilityReduceMotion) private var reduceMotion
 
@@ -36,9 +36,14 @@ struct TopicsBreakdownCard: View {
         .glassBackground(style: .thin, cornerRadius: CornerRadius.lg)
         .depthShadow(.medium)
         .onAppear {
-            guard !hasAppeared else { return }
-            hasAppeared = true
-            animateBars()
+            animationTask?.cancel()
+            animationTask = Task {
+                await animateBars()
+            }
+        }
+        .onDisappear {
+            animationTask?.cancel()
+            animationTask = nil
         }
     }
 
@@ -80,7 +85,8 @@ struct TopicsBreakdownCard: View {
 
     // MARK: - Animation
 
-    private func animateBars() {
+    @MainActor
+    private func animateBars() async {
         // Initialize all progress to 0
         for (category, _) in breakdown {
             animatedProgress[category.id] = 0
@@ -95,11 +101,14 @@ struct TopicsBreakdownCard: View {
 
         // Staggered animation for each bar
         for (index, (category, _)) in breakdown.prefix(4).enumerated() {
-            let delay = Double(index) * 0.1
-            DispatchQueue.main.asyncAfter(deadline: .now() + delay) {
-                withAnimation(.spring(response: 0.5, dampingFraction: 0.8)) {
-                    animatedProgress[category.id] = 1
-                }
+            guard !Task.isCancelled else { return }
+
+            if index > 0 {
+                try? await Task.sleep(nanoseconds: 100_000_000) // 0.1 second delay
+            }
+
+            withAnimation(.spring(response: 0.5, dampingFraction: 0.8)) {
+                animatedProgress[category.id] = 1
             }
         }
     }

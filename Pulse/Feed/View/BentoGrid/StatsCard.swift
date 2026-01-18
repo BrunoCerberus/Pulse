@@ -16,7 +16,7 @@ struct StatsCard: View {
 
     @State private var animatedArticleCount: Int = 0
     @State private var animatedTopicsCount: Int = 0
-    @State private var hasAppeared = false
+    @State private var animationTask: Task<Void, Never>?
 
     @Environment(\.accessibilityReduceMotion) private var reduceMotion
 
@@ -53,9 +53,14 @@ struct StatsCard: View {
         .glassBackground(style: .thin, cornerRadius: CornerRadius.lg)
         .depthShadow(.medium)
         .onAppear {
-            guard !hasAppeared else { return }
-            hasAppeared = true
-            animateCounters()
+            animationTask?.cancel()
+            animationTask = Task {
+                await animateCounters()
+            }
+        }
+        .onDisappear {
+            animationTask?.cancel()
+            animationTask = nil
         }
     }
 
@@ -94,7 +99,8 @@ struct StatsCard: View {
 
     // MARK: - Animation
 
-    private func animateCounters() {
+    @MainActor
+    private func animateCounters() async {
         if reduceMotion {
             animatedArticleCount = articleCount
             animatedTopicsCount = topicsCount
@@ -102,30 +108,29 @@ struct StatsCard: View {
         }
 
         // Animate article count
-        animateCounter(
+        await animateCounter(
             from: 0,
             to: articleCount,
             duration: 0.6,
             update: { animatedArticleCount = $0 }
         )
 
-        // Animate topics count with slight delay
-        DispatchQueue.main.asyncAfter(deadline: .now() + 0.1) {
-            animateCounter(
-                from: 0,
-                to: topicsCount,
-                duration: 0.5,
-                update: { animatedTopicsCount = $0 }
-            )
-        }
+        // Animate topics count (runs after article count completes)
+        await animateCounter(
+            from: 0,
+            to: topicsCount,
+            duration: 0.5,
+            update: { animatedTopicsCount = $0 }
+        )
     }
 
+    @MainActor
     private func animateCounter(
         from start: Int,
         to end: Int,
         duration: Double,
-        update: @escaping (Int) -> Void
-    ) {
+        update: (Int) -> Void
+    ) async {
         let steps = min(end - start, 20)
         guard steps > 0 else {
             update(end)
@@ -133,14 +138,19 @@ struct StatsCard: View {
         }
 
         let stepDuration = duration / Double(steps)
+        let stepNanoseconds = UInt64(stepDuration * 1_000_000_000)
 
         for step in 0 ... steps {
-            DispatchQueue.main.asyncAfter(deadline: .now() + stepDuration * Double(step)) {
-                let progress = Double(step) / Double(steps)
-                let value = start + Int(Double(end - start) * progress)
-                withAnimation(.easeOut(duration: stepDuration)) {
-                    update(value)
-                }
+            guard !Task.isCancelled else { return }
+
+            let progress = Double(step) / Double(steps)
+            let value = start + Int(Double(end - start) * progress)
+            withAnimation(.easeOut(duration: stepDuration)) {
+                update(value)
+            }
+
+            if step < steps {
+                try? await Task.sleep(nanoseconds: stepNanoseconds)
             }
         }
     }
