@@ -32,13 +32,10 @@ final class FeedDomainInteractor: CombineInteractor {
         setupModelStatusBinding()
     }
 
-    // swiftlint:disable:next cyclomatic_complexity
     func dispatch(action: FeedDomainAction) {
         switch action {
         case .loadInitialData:
             loadInitialData()
-        case .refresh:
-            refresh()
         case let .modelStatusChanged(status):
             handleModelStatusChanged(status)
         case let .readingHistoryLoaded(articles):
@@ -87,22 +84,18 @@ final class FeedDomainInteractor: CombineInteractor {
     private func loadInitialData() {
         guard !currentState.hasLoadedInitialData else { return }
 
-        // Always clear cache and regenerate fresh
-        feedService.clearCache()
-
-        // Fetch reading history
-        fetchReadingHistory()
-    }
-
-    private func refresh() {
-        // Clear the service cache to force regeneration with new prompt
-        feedService.clearCache()
-
-        updateState { state in
-            state.currentDigest = nil
-            state.streamingText = ""
-            state.generationState = .idle
+        // Check for cached digest first
+        if let cachedDigest = feedService.fetchTodaysDigest() {
+            updateState { state in
+                state.currentDigest = cachedDigest
+                state.readingHistory = cachedDigest.sourceArticles
+                state.hasLoadedInitialData = true
+                state.generationState = .completed
+            }
+            return
         }
+
+        // Fetch reading history if no cached digest
         fetchReadingHistory()
     }
 

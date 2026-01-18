@@ -42,7 +42,4 @@ protocol FeedService {
 
     /// Save generated digest for the day
     func saveDigest(_ digest: DailyDigest)
-
-    /// Clear cached digest to force regeneration
-    func clearCache()
 }

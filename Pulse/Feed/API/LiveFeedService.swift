@@ -54,10 +54,6 @@ final class LiveFeedService: FeedService {
         }
         cachedDigest = digest
     }
-
-    func clearCache() {
-        cachedDigest = nil
-    }
 }
 
 // MARK: - LLMInferenceConfig Extension
