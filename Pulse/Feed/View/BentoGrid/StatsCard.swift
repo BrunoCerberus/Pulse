@@ -13,6 +13,7 @@ private enum Constants {
 struct StatsCard: View {
     let articleCount: Int
     let topicsCount: Int
+    var minHeight: CGFloat?
 
     @State private var animatedArticleCount: Int = 0
     @State private var animatedTopicsCount: Int = 0
@@ -47,9 +48,13 @@ struct StatsCard: View {
                         .foregroundStyle(.secondary)
                 }
             }
+
+            if minHeight != nil {
+                Spacer(minLength: 0)
+            }
         }
         .padding(Spacing.md)
-        .frame(maxWidth: .infinity, alignment: .leading)
+        .frame(maxWidth: .infinity, minHeight: minHeight, alignment: .topLeading)
         .glassBackground(style: .thin, cornerRadius: CornerRadius.lg)
         .depthShadow(.medium)
         .onAppear {
