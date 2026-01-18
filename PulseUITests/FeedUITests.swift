@@ -57,7 +57,7 @@ final class FeedUITests: BaseUITestCase {
         if feedTab.exists, !feedTab.isSelected {
             feedTab.tap()
         }
-        _ = app.navigationBars["Daily Digest"].waitForExistence(timeout: Self.shortTimeout)
+        _ = app.navigationBars["Daily Digest"].waitForExistence(timeout: Self.defaultTimeout)
     }
 
     /// Wait for feed content to load

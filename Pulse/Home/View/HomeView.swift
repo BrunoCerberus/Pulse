@@ -168,7 +168,7 @@ struct HomeView<R: HomeNavigationRouter>: View {
         let lastItemId = headlines.last?.id
 
         return ScrollView {
-            LazyVStack(spacing: 0, pinnedViews: [.sectionHeaders]) {
+            LazyVStack(spacing: 0) {
                 if !viewModel.viewState.breakingNews.isEmpty {
                     Section {
                         breakingNewsCarousel
