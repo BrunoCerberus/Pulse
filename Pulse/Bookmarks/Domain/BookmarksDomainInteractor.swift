@@ -2,6 +2,7 @@ import Combine
 import EntropyCore
 import Foundation
 
+@MainActor
 final class BookmarksDomainInteractor: CombineInteractor {
     typealias DomainState = BookmarksDomainState
     typealias DomainAction = BookmarksDomainAction
@@ -137,18 +138,16 @@ final class BookmarksDomainInteractor: CombineInteractor {
     }
 
     /// Safely tracks and auto-removes background tasks with proper cleanup on deinit.
-    /// Uses a single MainActor Task to ensure atomic insertion and removal (no race condition).
+    /// Uses detached task for background work, tracks completion on MainActor.
     private func trackBackgroundTask(_ operation: @escaping @Sendable () async -> Void) {
+        let task = Task.detached {
+            await operation()
+        }
+        backgroundTasks.insert(task)
+
         Task { @MainActor [weak self] in
-            guard let self else { return }
-
-            let task = Task {
-                await operation()
-            }
-            backgroundTasks.insert(task)
-
             _ = await task.result
-            backgroundTasks.remove(task)
+            self?.backgroundTasks.remove(task)
         }
     }
 
