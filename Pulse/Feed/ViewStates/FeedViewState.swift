@@ -115,8 +115,30 @@ struct DigestSection: Identifiable, Equatable {
 // MARK: - DigestViewItem Extensions
 
 extension DigestViewItem {
-    /// Extracts the first paragraph as the key insight
+    /// Section markers used in the LLM output format
+    private static let sectionMarkers: [NewsCategory: String] = [
+        .technology: "[TECHNOLOGY]",
+        .business: "[BUSINESS]",
+        .world: "[WORLD]",
+        .science: "[SCIENCE]",
+        .health: "[HEALTH]",
+        .sports: "[SPORTS]",
+        .entertainment: "[ENTERTAINMENT]",
+    ]
+
+    /// Extracts the key insight from the structured summary
     var keyInsight: String {
+        // Try to extract content after [KEY INSIGHT] marker
+        if let range = summary.range(of: "[KEY INSIGHT]") {
+            let afterMarker = summary[range.upperBound...]
+            // Find the next section marker or end of string
+            let content = extractContentUntilNextMarker(String(afterMarker))
+            if !content.isEmpty {
+                return content
+            }
+        }
+
+        // Fallback: use first paragraph
         let paragraphs = summary.components(separatedBy: "\n\n")
             .map { $0.trimmingCharacters(in: .whitespacesAndNewlines) }
             .filter { !$0.isEmpty }
@@ -124,8 +146,7 @@ extension DigestViewItem {
         return paragraphs.first ?? summary
     }
 
-    /// Creates one section per category based on source articles
-    /// Only categories with articles are shown - no duplicates
+    /// Creates one section per category based on source articles and LLM-generated content
     func parseSections(with sourceArticles: [FeedSourceArticle]) -> [DigestSection] {
         // Group articles by category
         var articlesByCategory: [NewsCategory: [FeedSourceArticle]] = [:]
@@ -141,14 +162,6 @@ extension DigestViewItem {
             return []
         }
 
-        // Parse summary paragraphs to match with categories
-        let paragraphs = summary.components(separatedBy: "\n\n")
-            .map { $0.trimmingCharacters(in: .whitespacesAndNewlines) }
-            .filter { !$0.isEmpty }
-
-        // Skip the first paragraph (key insight) for content matching
-        let contentParagraphs = paragraphs.count > 1 ? Array(paragraphs.dropFirst()) : []
-
         // Define category order for consistent display
         let categoryOrder: [NewsCategory] = [
             .technology, .business, .world, .science, .health, .sports, .entertainment,
@@ -162,8 +175,8 @@ extension DigestViewItem {
                 continue
             }
 
-            // Find a matching paragraph for this category, or generate from article titles
-            let content = findContentForCategory(category, from: contentParagraphs, articles: articles)
+            // Extract content for this category from the structured summary
+            let content = extractCategoryContent(for: category, articles: articles)
 
             sections.append(DigestSection(
                 id: "\(id)-section-\(category.rawValue)",
@@ -178,27 +191,52 @@ extension DigestViewItem {
         return sections
     }
 
-    /// Finds relevant content for a category from summary paragraphs or generates from articles
-    private func findContentForCategory(
-        _ category: NewsCategory,
-        from paragraphs: [String],
-        articles: [FeedSourceArticle]
-    ) -> String {
-        // Try to find a paragraph that mentions this category
-        for paragraph in paragraphs {
-            if detectCategory(from: paragraph) == category {
-                return paragraph
+    /// Extracts content for a specific category from the structured summary
+    private func extractCategoryContent(for category: NewsCategory, articles: [FeedSourceArticle]) -> String {
+        guard let marker = Self.sectionMarkers[category],
+              let range = summary.range(of: marker)
+        else {
+            // Marker not found, generate from article titles
+            return generateContentFromArticles(articles)
+        }
+
+        let afterMarker = summary[range.upperBound...]
+        let content = extractContentUntilNextMarker(String(afterMarker))
+
+        if content.isEmpty {
+            return generateContentFromArticles(articles)
+        }
+
+        return content
+    }
+
+    /// Extracts text content until the next section marker or end of string
+    private func extractContentUntilNextMarker(_ text: String) -> String {
+        let trimmed = text.trimmingCharacters(in: .whitespacesAndNewlines)
+
+        // Find the next section marker
+        let allMarkers = ["[KEY INSIGHT]", "[TECHNOLOGY]", "[BUSINESS]", "[WORLD]",
+                          "[SCIENCE]", "[HEALTH]", "[SPORTS]", "[ENTERTAINMENT]"]
+
+        var endIndex = trimmed.endIndex
+        for marker in allMarkers {
+            if let range = trimmed.range(of: marker) {
+                if range.lowerBound < endIndex {
+                    endIndex = range.lowerBound
+                }
             }
         }
 
-        // Generate a description based on article titles
-        return generateContentFromArticles(articles, category: category)
+        let content = String(trimmed[..<endIndex])
+            .trimmingCharacters(in: .whitespacesAndNewlines)
+
+        return content
     }
 
-    /// Generates a brief content description from article titles
-    private func generateContentFromArticles(_ articles: [FeedSourceArticle], category: NewsCategory) -> String {
+    /// Generates a brief content description from article titles (fallback)
+    private func generateContentFromArticles(_ articles: [FeedSourceArticle]) -> String {
         guard !articles.isEmpty else {
-            return "Coverage of \(category.displayName.lowercased()) topics from your reading."
+            return "Your reading in this category."
         }
 
         // Take up to 2 article titles to create a summary
@@ -224,29 +262,5 @@ extension DigestViewItem {
         return categoryCount
             .sorted { $0.value > $1.value }
             .map { ($0.key, $0.value) }
-    }
-
-    // MARK: - Private Helpers
-
-    private func detectCategory(from text: String) -> NewsCategory? {
-        let lowercasedText = text.lowercased()
-
-        let categoryKeywords: [NewsCategory: [String]] = [
-            .technology: ["technology", "tech", "ai", "artificial intelligence", "software", "app", "digital", "computer", "startup"],
-            .business: ["business", "market", "economy", "stock", "trade", "company", "finance", "invest", "economic"],
-            .world: ["world", "international", "global", "country", "nation", "foreign", "diplomatic"],
-            .science: ["science", "research", "study", "discover", "experiment", "scientist"],
-            .health: ["health", "medical", "doctor", "hospital", "disease", "treatment", "wellness"],
-            .sports: ["sport", "game", "team", "player", "match", "championship", "athlete"],
-            .entertainment: ["entertainment", "movie", "film", "music", "celebrity", "actor", "show"],
-        ]
-
-        for (category, keywords) in categoryKeywords {
-            for keyword in keywords where lowercasedText.contains(keyword) {
-                return category
-            }
-        }
-
-        return nil
     }
 }

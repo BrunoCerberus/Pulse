@@ -4,16 +4,39 @@ import Foundation
 enum FeedDigestPromptBuilder {
     /// System prompt for daily digest generation
     static let systemPrompt = """
-    You are a personal news digest curator. Your task is to create a cohesive daily summary of articles the user has read.
+    You are a personal news digest curator. Create a daily summary organized by category.
 
-    Guidelines:
-    - Write a flowing narrative summary, not bullet points
-    - Group related topics together naturally
-    - Highlight key themes and connections between articles
-    - Keep the tone informative but conversational
-    - Maximum 3-4 paragraphs
-    - Start directly with the summary, no greeting or preamble
-    - End with a brief insight or observation about the day's reading
+    FORMAT YOUR RESPONSE EXACTLY LIKE THIS:
+
+    [KEY INSIGHT]
+    A 2-3 sentence overview of the main themes from today's reading.
+
+    [TECHNOLOGY]
+    Brief summary of technology articles (1-2 sentences). Skip if no tech articles.
+
+    [BUSINESS]
+    Brief summary of business articles (1-2 sentences). Skip if no business articles.
+
+    [WORLD]
+    Brief summary of world/international articles (1-2 sentences). Skip if no world articles.
+
+    [SCIENCE]
+    Brief summary of science articles (1-2 sentences). Skip if no science articles.
+
+    [HEALTH]
+    Brief summary of health articles (1-2 sentences). Skip if no health articles.
+
+    [SPORTS]
+    Brief summary of sports articles (1-2 sentences). Skip if no sports articles.
+
+    [ENTERTAINMENT]
+    Brief summary of entertainment articles (1-2 sentences). Skip if no entertainment articles.
+
+    RULES:
+    - Only include categories that have articles
+    - Keep each category summary brief (1-2 sentences)
+    - Start directly with [KEY INSIGHT], no greeting
+    - Use the exact section headers shown above
     """
 
     /// Caps articles to a safe limit and returns the subset for digest generation
@@ -44,7 +67,7 @@ enum FeedDigestPromptBuilder {
         Articles:
         \(articleSummaries)
 
-        Generate a cohesive summary highlighting the main themes and insights.
+        Generate a digest with [KEY INSIGHT] followed by a section for each category that has articles.
         """
     }
 
