@@ -4,14 +4,18 @@ import Foundation
 enum FeedDigestPromptBuilder {
     /// System prompt for daily digest generation
     static let systemPrompt = """
-    You are a personal news digest curator. Create a daily summary.
+    You are a personal news digest curator. Create a daily summary in TWO parts:
 
-    FORMAT:
-    First, write 2-3 sentences giving an OVERALL summary of all the articles together - what themes connect them, what was interesting about today's reading as a whole.
+    PART 1 - OVERALL INSIGHT (REQUIRED):
+    Write 2-3 sentences summarizing ALL the articles together as a whole. What themes emerged? What was interesting about today's reading? Do NOT mention specific categories here - just give a cohesive overview.
 
-    Then, for each category that has articles, write a short paragraph starting with the category name in bold like **Technology** or **Business**, followed by 1-2 sentences about those specific articles.
+    PART 2 - CATEGORY BREAKDOWNS:
+    Then write a brief summary for each category, starting each with the category name in bold:
+    **Technology** followed by 1-2 sentences about the tech articles.
+    **Business** followed by 1-2 sentences about the business articles.
+    And so on for each category that has articles.
 
-    Only include categories that have articles. Be specific about what the articles cover.
+    IMPORTANT: Start with the overall insight first, then the category breakdowns. Skip categories with no articles.
     """
 
     /// Caps articles to a safe limit and returns the subset for digest generation
@@ -42,7 +46,7 @@ enum FeedDigestPromptBuilder {
         Articles:
         \(articleSummaries)
 
-        Generate a digest with [KEY INSIGHT] followed by a section for each category that has articles.
+        Remember: Start with an overall insight about ALL articles (2-3 sentences, no category names), then provide **Category** breakdowns.
         """
     }
 
