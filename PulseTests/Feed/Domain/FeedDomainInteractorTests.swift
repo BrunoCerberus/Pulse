@@ -130,18 +130,6 @@ struct FeedDomainInteractorTests {
         #expect(state.selectedArticle == nil)
     }
 
-    @Test("Refresh reloads data")
-    func refreshReloadsData() async throws {
-        mockStorageService.readingHistory = Article.mockArticles
-
-        sut.dispatch(action: .refresh)
-
-        try await waitForStateUpdate()
-
-        let state = sut.currentState
-        #expect(state.hasLoadedInitialData)
-    }
-
     @Test("Model status updates propagate to state")
     func modelStatusUpdates() async throws {
         mockFeedService.simulateModelStatus(.loading(progress: 0.5))

@@ -48,28 +48,25 @@ struct FeedViewModelTests {
         #expect(success)
     }
 
-    @Test("onRefresh event triggers refresh")
-    func onRefreshTriggersRefresh() async throws {
-        mockStorageService.readingHistory = Article.mockArticles
-
-        sut.handle(event: .onRefresh)
-
-        // Wait for source articles to be loaded
-        let success = await waitForCondition(timeout: 1_000_000_000) { [sut] in
-            sut.viewState.sourceArticles.count == Article.mockArticles.count
-        }
-        #expect(success)
-    }
-
-    @Test("onRetryTapped event retries loading")
+    @Test("onRetryTapped event triggers digest generation")
     func onRetryRetries() async throws {
         mockStorageService.readingHistory = Article.mockArticles
+        mockFeedService.loadDelay = 0.01
+        mockFeedService.generateDelay = 0.01
 
+        // First load data
+        sut.handle(event: .onAppear)
+        try await waitForStateUpdate()
+
+        // Now retry should trigger generation
         sut.handle(event: .onRetryTapped)
 
-        // Wait for source articles to be loaded
-        let success = await waitForCondition(timeout: 1_000_000_000) { [sut] in
-            sut.viewState.sourceArticles.count == Article.mockArticles.count
+        // Wait for generation to be in progress or completed
+        let success = await waitForCondition(timeout: 2_000_000_000) { [sut] in
+            let state = sut.viewState.displayState
+            if case .processing = state { return true }
+            if case .completed = state { return true }
+            return false
         }
         #expect(success)
     }

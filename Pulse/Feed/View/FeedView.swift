@@ -211,19 +211,9 @@ struct FeedView<R: FeedNavigationRouter>: View {
                     .offset(y: viewModel.viewState.digest != nil ? 0 : 10)
 
                 if let digest = viewModel.viewState.digest {
-                    DigestCard(digest: digest)
-                        .padding(.horizontal, Spacing.md)
-                        .transition(.asymmetric(
-                            insertion: .opacity
-                                .combined(with: .move(edge: .bottom))
-                                .combined(with: .scale(scale: 0.98)),
-                            removal: .opacity
-                        ))
-                }
-
-                if !viewModel.viewState.sourceArticles.isEmpty {
-                    SourceArticlesSection(
-                        articles: viewModel.viewState.sourceArticles,
+                    BentoDigestGrid(
+                        digest: digest,
+                        sourceArticles: viewModel.viewState.sourceArticles,
                         onArticleTapped: { article in
                             viewModel.handle(event: .onArticleTapped(article.article))
                         }
@@ -231,8 +221,8 @@ struct FeedView<R: FeedNavigationRouter>: View {
                     .padding(.horizontal, Spacing.md)
                     .transition(.asymmetric(
                         insertion: .opacity
-                            .combined(with: .move(edge: .bottom))
-                            .animation(.easeOut(duration: 0.4).delay(0.15)),
+                            .combined(with: .scale(scale: 0.95))
+                            .animation(.easeOut(duration: 0.4)),
                         removal: .opacity
                     ))
                 }

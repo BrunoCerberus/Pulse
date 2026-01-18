@@ -20,7 +20,8 @@ Pulse/
 │   │   ├── API/                # FeedService protocol + Live/Mock
 │   │   ├── Domain/             # FeedDomainInteractor, State, Action, Reducer, EventActionMap
 │   │   ├── ViewModel/          # FeedViewModel
-│   │   ├── View/               # FeedView, DigestCard, StreamingTextView, SourceArticlesSection
+│   │   ├── View/               # FeedView, DigestCard, StreamingTextView, BentoGrid components
+│   │   │   └── BentoGrid/      # BentoDigestGrid, StatsCard, TopicsBreakdownCard, ContentSectionCard
 │   │   ├── ViewEvents/         # FeedViewEvent
 │   │   ├── ViewStates/         # FeedViewState
 │   │   ├── Router/             # FeedNavigationRouter
