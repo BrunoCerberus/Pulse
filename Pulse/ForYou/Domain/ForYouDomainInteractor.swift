@@ -2,6 +2,7 @@ import Combine
 import EntropyCore
 import Foundation
 
+@MainActor
 final class ForYouDomainInteractor: CombineInteractor {
     typealias DomainState = ForYouDomainState
     typealias DomainAction = ForYouDomainAction
@@ -194,16 +195,14 @@ final class ForYouDomainInteractor: CombineInteractor {
     /// Safely tracks and auto-removes background tasks with proper cleanup on deinit.
     /// Uses a single MainActor Task to ensure atomic insertion and removal (no race condition).
     private func trackBackgroundTask(_ operation: @escaping @Sendable () async -> Void) {
+        let task = Task.detached {
+            await operation()
+        }
+        backgroundTasks.insert(task)
+
         Task { @MainActor [weak self] in
-            guard let self else { return }
-
-            let task = Task {
-                await operation()
-            }
-            backgroundTasks.insert(task)
-
             _ = await task.result
-            backgroundTasks.remove(task)
+            self?.backgroundTasks.remove(task)
         }
     }
 

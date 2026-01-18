@@ -3,6 +3,7 @@ import EntropyCore
 import Foundation
 import UIKit
 
+@MainActor
 final class ArticleDetailDomainInteractor: CombineInteractor {
     typealias DomainState = ArticleDetailDomainState
     typealias DomainAction = ArticleDetailDomainAction
@@ -239,12 +240,11 @@ final class ArticleDetailDomainInteractor: CombineInteractor {
     /// Safely tracks and auto-removes background tasks with proper cleanup on deinit.
     /// Uses a single MainActor Task to ensure atomic insertion and removal (no race condition).
     private func trackBackgroundTask(_ taskToTrack: Task<Void, Never>) {
-        Task { @MainActor [weak self] in
-            guard let self else { return }
+        backgroundTasks.insert(taskToTrack)
 
-            backgroundTasks.insert(taskToTrack)
+        Task { @MainActor [weak self] in
             _ = await taskToTrack.result
-            backgroundTasks.remove(taskToTrack)
+            self?.backgroundTasks.remove(taskToTrack)
         }
     }
 
