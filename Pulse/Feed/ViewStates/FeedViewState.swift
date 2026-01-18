@@ -124,43 +124,71 @@ extension DigestViewItem {
         return paragraphs.first ?? summary
     }
 
-    /// Parses the summary into sections based on paragraph structure
+    /// Creates one section per category based on source articles
+    /// Only categories with articles are shown - no duplicates
     func parseSections(with sourceArticles: [FeedSourceArticle]) -> [DigestSection] {
+        // Group articles by category
+        var articlesByCategory: [NewsCategory: [FeedSourceArticle]] = [:]
+
+        for article in sourceArticles {
+            if let category = article.categoryType {
+                articlesByCategory[category, default: []].append(article)
+            }
+        }
+
+        // No categories with articles - return empty
+        guard !articlesByCategory.isEmpty else {
+            return []
+        }
+
+        // Parse summary paragraphs to match with categories
         let paragraphs = summary.components(separatedBy: "\n\n")
             .map { $0.trimmingCharacters(in: .whitespacesAndNewlines) }
             .filter { !$0.isEmpty }
 
-        guard paragraphs.count > 1 else {
-            // Single paragraph - return as key insight only
-            return []
-        }
+        // Skip the first paragraph (key insight) for content matching
+        let contentParagraphs = paragraphs.count > 1 ? Array(paragraphs.dropFirst()) : []
 
-        // Skip the first paragraph (key insight) and create sections from the rest
-        let remainingParagraphs = Array(paragraphs.dropFirst())
+        // Define category order for consistent display
+        let categoryOrder: [NewsCategory] = [
+            .technology, .business, .world, .science, .health, .sports, .entertainment,
+        ]
 
-        return remainingParagraphs.enumerated().map { index, paragraph in
-            // Try to detect category from paragraph content
-            let detectedCategory = detectCategory(from: paragraph)
+        // Create one section per category that has articles
+        var sections: [DigestSection] = []
 
-            // Find related articles for this section
-            let relatedArticles = findRelatedArticles(
-                for: paragraph,
-                category: detectedCategory,
-                from: sourceArticles
-            )
+        for category in categoryOrder {
+            guard let articles = articlesByCategory[category], !articles.isEmpty else {
+                continue
+            }
 
-            // Generate a title based on category or generic
-            let title = sectionTitle(for: detectedCategory, index: index)
+            // Find a matching paragraph for this category, or use a default description
+            let content = findContentForCategory(category, from: contentParagraphs)
 
-            return DigestSection(
-                id: "\(id)-section-\(index)",
-                title: title,
-                content: paragraph,
-                category: detectedCategory,
-                relatedArticles: Array(relatedArticles.prefix(3)),
+            sections.append(DigestSection(
+                id: "\(id)-section-\(category.rawValue)",
+                title: category.displayName,
+                content: content,
+                category: category,
+                relatedArticles: Array(articles.prefix(3)),
                 isHighlight: false
-            )
+            ))
         }
+
+        return sections
+    }
+
+    /// Finds relevant content for a category from summary paragraphs
+    private func findContentForCategory(_ category: NewsCategory, from paragraphs: [String]) -> String {
+        // Try to find a paragraph that mentions this category
+        for paragraph in paragraphs {
+            if detectCategory(from: paragraph) == category {
+                return paragraph
+            }
+        }
+
+        // Fallback: generate a brief description
+        return "Coverage of \(category.displayName.lowercased()) topics from your reading."
     }
 
     /// Computes category breakdown from source articles
@@ -200,32 +228,5 @@ extension DigestViewItem {
         }
 
         return nil
-    }
-
-    private func findRelatedArticles(
-        for _: String,
-        category: NewsCategory?,
-        from sourceArticles: [FeedSourceArticle]
-    ) -> [FeedSourceArticle] {
-        // First, try to match by category
-        if let category {
-            let categoryMatches = sourceArticles.filter { $0.categoryType == category }
-            if !categoryMatches.isEmpty {
-                return categoryMatches
-            }
-        }
-
-        // Fallback: return first few articles
-        return Array(sourceArticles.prefix(2))
-    }
-
-    private func sectionTitle(for category: NewsCategory?, index: Int) -> String {
-        if let category {
-            return category.displayName
-        }
-
-        // Generic titles for sections without detected category
-        let genericTitles = ["Deep Dive", "In Focus", "Highlights", "More Coverage"]
-        return genericTitles[index % genericTitles.count]
     }
 }
