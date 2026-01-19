@@ -147,6 +147,9 @@ extension DigestViewItem {
             .technology, .business, .world, .science, .health, .sports, .entertainment,
         ]
 
+        // Pre-parse all category content from the summary once
+        let parsedContent = parseAllCategoryContent(from: summary)
+
         // Create one section per category that has articles
         var sections: [DigestSection] = []
 
@@ -155,8 +158,15 @@ extension DigestViewItem {
                 continue
             }
 
-            // Extract content for this category from the structured summary
-            let content = extractCategoryContent(for: category, articles: articles)
+            // Use pre-parsed content if available, otherwise fallback to extraction
+            let content: String
+            if let categoryName = Self.categoryNames[category],
+               let parsed = parsedContent[categoryName], !parsed.isEmpty
+            {
+                content = parsed
+            } else {
+                content = extractCategoryContent(for: category, articles: articles)
+            }
 
             sections.append(DigestSection(
                 id: "\(id)-section-\(category.rawValue)",
@@ -171,35 +181,95 @@ extension DigestViewItem {
         return sections
     }
 
+    /// Shared patterns for category marker matching
+    /// Returns array of (pattern, markerLength) tuples for the given category name
+    private static func categoryPatterns(for category: String) -> [(pattern: String, markerLength: Int)] {
+        [
+            ("**\(category)**", 4 + category.count), // **technology**
+            ("**\(category):**", 5 + category.count), // **technology:**
+            ("**\(category)** ", 5 + category.count), // **technology** (with space)
+            ("**\(category)**\n", 5 + category.count), // **technology**(newline)
+            ("## \(category)\n", 4 + category.count), // ## technology(newline)
+            ("## \(category) ", 4 + category.count), // ## technology (space)
+            ("\n\(category):", 2 + category.count), // newline + technology:
+            ("\n\(category) ", 2 + category.count), // newline + technology (space)
+            ("• \(category)", 2 + category.count), // bullet point
+            ("- \(category)", 2 + category.count), // dash bullet
+            ("\(category):", 1 + category.count), // technology: (at any position)
+        ]
+    }
+
+    /// Parses all category content from the summary in a single pass
+    /// Returns a dictionary mapping lowercase category names to their content
+    private func parseAllCategoryContent(from text: String) -> [String: String] {
+        var result: [String: String] = [:]
+
+        // Work entirely with lowercased text to avoid Unicode index misalignment
+        // (lowercasing can change character counts in some locales)
+        let normalizedText = text.lowercased()
+
+        // Find all category markers and their positions
+        let allCategories = Array(Self.categoryNames.values)
+        var categoryPositions: [(category: String, range: Range<String.Index>)] = []
+
+        for category in allCategories {
+            let patterns = Self.categoryPatterns(for: category)
+
+            for (pattern, _) in patterns {
+                if let range = normalizedText.range(of: pattern) {
+                    categoryPositions.append((category: category, range: range))
+                    break // Found this category, move to next
+                }
+            }
+        }
+
+        // Sort by position to get categories in order they appear
+        categoryPositions.sort { $0.range.lowerBound < $1.range.lowerBound }
+
+        // Extract content between each category marker and the next
+        for (index, current) in categoryPositions.enumerated() {
+            let startIndex = current.range.upperBound
+            let endIndex: String.Index
+
+            if index + 1 < categoryPositions.count {
+                // Content ends where the next category starts
+                endIndex = categoryPositions[index + 1].range.lowerBound
+            } else {
+                // Last category - content goes to end
+                endIndex = normalizedText.endIndex
+            }
+
+            if startIndex < endIndex {
+                let content = String(normalizedText[startIndex ..< endIndex])
+                    .trimmingCharacters(in: .whitespacesAndNewlines)
+                    .replacingOccurrences(of: "**", with: "")
+
+                if !content.isEmpty {
+                    result[current.category] = content
+                }
+            }
+        }
+
+        return result
+    }
+
     /// Extracts content for a specific category from the structured summary
     private func extractCategoryContent(for category: NewsCategory, articles: [FeedSourceArticle]) -> String {
         guard let categoryName = Self.categoryNames[category] else {
             return generateContentFromArticles(articles, category: category)
         }
 
-        let searchText = summary.lowercased()
+        // Work entirely with lowercased text to avoid Unicode index misalignment
+        let normalizedText = summary.lowercased()
         let categoryLower = categoryName.lowercased()
 
-        // Try multiple patterns the LLM might use (more flexible matching)
-        let patterns = [
-            "**\(categoryLower)**", // **Technology**
-            "**\(categoryLower):**", // **Technology:**
-            "**\(categoryLower)** ", // **Technology** (with space after)
-            "**\(categoryLower)**\n", // **Technology** (with newline)
-            "* **\(categoryLower)**", // * **Technology**
-            "- **\(categoryLower)**", // - **Technology**
-            "## \(categoryLower)", // ## Technology
-            "\(categoryLower):", // Technology:
-            "\(categoryLower) -", // Technology -
-            "\(categoryLower)\n", // Technology (just the word on its own line)
-        ]
+        // Use shared patterns for consistency
+        let patterns = Self.categoryPatterns(for: categoryLower)
 
-        for pattern in patterns {
-            if let markerRange = searchText.range(of: pattern) {
-                // Get corresponding range in original summary
-                let startOffset = searchText.distance(from: searchText.startIndex, to: markerRange.upperBound)
-                let startIndex = summary.index(summary.startIndex, offsetBy: startOffset)
-                let afterMarker = String(summary[startIndex...])
+        for (pattern, _) in patterns {
+            if let markerRange = normalizedText.range(of: pattern) {
+                // Extract content after the marker from the same normalized text
+                let afterMarker = String(normalizedText[markerRange.upperBound...])
                 let content = extractContentUntilNextCategory(afterMarker)
                 if !content.isEmpty {
                     return cleanCategoryContent(content)
@@ -208,7 +278,7 @@ extension DigestViewItem {
         }
 
         // Try a more flexible regex-based approach as last resort
-        if let content = extractWithRegex(category: categoryLower, from: summary) {
+        if let content = extractWithRegex(category: categoryLower, from: normalizedText) {
             return content
         }
 
