@@ -466,6 +466,164 @@ struct DigestViewItemParsingTests {
         #expect(businessSection?.content.lowercased().contains("market updates") == true)
     }
 
+    @Test("parseSections handles category names in content without false matches")
+    func parseSectionsHandlesCategoryNamesInContent() {
+        // Content where category names appear naturally in text (not as headers)
+        // This tests that we don't falsely match "technology:" in content
+        let summary = """
+        **Technology** AI breakthroughs continue to amaze.
+        **Entertainment** The film industry embraces technology: streaming services are booming. Health: concerns about screen time were discussed.
+        """
+
+        let articles = [
+            createMockArticle(category: .technology, title: "AI News"),
+            createMockArticle(category: .entertainment, title: "Movie News"),
+        ]
+
+        let digest = DigestViewItem(
+            from: DailyDigest(
+                id: "test",
+                summary: summary,
+                sourceArticles: articles,
+                generatedAt: Date()
+            )
+        )
+
+        let sourceArticles = articles.map { FeedSourceArticle(from: $0) }
+        let sections = digest.parseSections(with: sourceArticles)
+
+        #expect(sections.count == 2)
+
+        // Entertainment should contain its full content including "technology:" mention
+        let entertainmentSection = sections.first { $0.category == .entertainment }
+        #expect(entertainmentSection != nil)
+        #expect(entertainmentSection?.content.lowercased().contains("streaming services") == true)
+        #expect(entertainmentSection?.content.lowercased().contains("screen time") == true)
+
+        // Technology should only contain its actual content
+        let techSection = sections.first { $0.category == .technology }
+        #expect(techSection != nil)
+        #expect(techSection?.content.lowercased().contains("ai breakthroughs") == true)
+        #expect(techSection?.content.lowercased().contains("streaming") == false)
+    }
+
+    @Test("parseSections strips repeated category markers from last category")
+    func parseSectionsStripsRepeatedMarkers() {
+        // LLM outputs repeated markers at the end (common error)
+        let summary = """
+        **Technology** Tech news here.
+        **Entertainment** Movie reviews. **Technology** More tech. **Business** Extra business.
+        """
+
+        let articles = [
+            createMockArticle(category: .technology, title: "Tech"),
+            createMockArticle(category: .entertainment, title: "Entertainment"),
+        ]
+
+        let digest = DigestViewItem(
+            from: DailyDigest(
+                id: "test",
+                summary: summary,
+                sourceArticles: articles,
+                generatedAt: Date()
+            )
+        )
+
+        let sourceArticles = articles.map { FeedSourceArticle(from: $0) }
+        let sections = digest.parseSections(with: sourceArticles)
+
+        #expect(sections.count == 2)
+
+        // Entertainment should have its content without the trailing markers
+        let entertainmentSection = sections.first { $0.category == .entertainment }
+        #expect(entertainmentSection != nil)
+        #expect(entertainmentSection?.content.lowercased().contains("movie reviews") == true)
+        // Should NOT contain the repeated markers as content
+        #expect(entertainmentSection?.content.contains("**Technology**") == false)
+        #expect(entertainmentSection?.content.contains("**Business**") == false)
+    }
+
+    @Test("parseSections preserves proper capitalization")
+    func parseSectionsPreservesCapitalization() {
+        let summary = """
+        **Technology** Apple announced new MacBook Pro with M4 chip. Google released Gemini 2.0.
+        **Business** Wall Street rallied on Fed news. S&P 500 reached all-time highs.
+        """
+
+        let articles = [
+            createMockArticle(category: .technology, title: "Tech"),
+            createMockArticle(category: .business, title: "Business"),
+        ]
+
+        let digest = DigestViewItem(
+            from: DailyDigest(
+                id: "test",
+                summary: summary,
+                sourceArticles: articles,
+                generatedAt: Date()
+            )
+        )
+
+        let sourceArticles = articles.map { FeedSourceArticle(from: $0) }
+        let sections = digest.parseSections(with: sourceArticles)
+
+        #expect(sections.count == 2)
+
+        // Content should preserve proper capitalization (not be lowercased)
+        let techSection = sections.first { $0.category == .technology }
+        #expect(techSection != nil)
+        #expect(techSection?.content.contains("Apple") == true)
+        #expect(techSection?.content.contains("MacBook Pro") == true)
+        #expect(techSection?.content.contains("M4") == true)
+        #expect(techSection?.content.contains("Google") == true)
+        #expect(techSection?.content.contains("Gemini") == true)
+
+        let businessSection = sections.first { $0.category == .business }
+        #expect(businessSection != nil)
+        #expect(businessSection?.content.contains("Wall Street") == true)
+        #expect(businessSection?.content.contains("Fed") == true)
+        #expect(businessSection?.content.contains("S&P 500") == true)
+    }
+
+    @Test("parseSections handles Entertainment as last category correctly")
+    func parseSectionsHandlesEntertainmentLast() {
+        // Entertainment is always last in categoryOrder - ensure it gets correct content
+        let summary = """
+        **Technology** Tech developments this week.
+        **Business** Market updates and trends.
+        **Entertainment** The latest blockbusters and streaming hits entertained audiences worldwide.
+        """
+
+        let articles = [
+            createMockArticle(category: .technology, title: "Tech"),
+            createMockArticle(category: .business, title: "Business"),
+            createMockArticle(category: .entertainment, title: "Entertainment"),
+        ]
+
+        let digest = DigestViewItem(
+            from: DailyDigest(
+                id: "test",
+                summary: summary,
+                sourceArticles: articles,
+                generatedAt: Date()
+            )
+        )
+
+        let sourceArticles = articles.map { FeedSourceArticle(from: $0) }
+        let sections = digest.parseSections(with: sourceArticles)
+
+        #expect(sections.count == 3)
+
+        // Entertainment (last category) should have only its content
+        let entertainmentSection = sections.first { $0.category == .entertainment }
+        #expect(entertainmentSection != nil)
+        #expect(entertainmentSection?.content.contains("blockbusters") == true)
+        #expect(entertainmentSection?.content.contains("streaming hits") == true)
+        // Should NOT contain content from other categories
+        #expect(entertainmentSection?.content.lowercased().contains("tech developments") == false)
+        #expect(entertainmentSection?.content.lowercased().contains("market updates") == false)
+    }
+
     // Helper to create mock articles with specific categories
     private func createMockArticle(category: NewsCategory, title: String) -> Article {
         Article(
