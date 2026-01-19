@@ -257,6 +257,9 @@ final class FeedDomainInteractor: CombineInteractor {
     private nonisolated func cleanLLMOutput(_ text: String) -> String {
         var cleaned = text
 
+        // Remove null characters (LLM sometimes outputs these between tokens)
+        cleaned = cleaned.replacingOccurrences(of: "\0", with: "")
+
         // Remove chat template markers
         let markers = [
             "<|system|>", "<|user|>", "<|assistant|>", "<|end|>",
