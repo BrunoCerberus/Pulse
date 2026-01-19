@@ -326,6 +326,41 @@ final class MockLLMService: LLMService {
     }
 }
 
+final class MockNewsCacheStore: NewsCacheStore {
+    private var storage: [String: Any] = [:]
+
+    // Tracking properties for tests
+    var getCallCount = 0
+    var setCallCount = 0
+    var removeCallCount = 0
+    var removeAllCallCount = 0
+
+    func get<T>(for key: NewsCacheKey) -> CacheEntry<T>? {
+        getCallCount += 1
+        return storage[key.stringKey] as? CacheEntry<T>
+    }
+
+    func set<T>(_ entry: CacheEntry<T>, for key: NewsCacheKey) {
+        setCallCount += 1
+        storage[key.stringKey] = entry
+    }
+
+    func remove(for key: NewsCacheKey) {
+        removeCallCount += 1
+        storage.removeValue(forKey: key.stringKey)
+    }
+
+    func removeAll() {
+        removeAllCallCount += 1
+        storage.removeAll()
+    }
+
+    // Helper to check if a key exists in the cache
+    func contains(key: NewsCacheKey) -> Bool {
+        storage[key.stringKey] != nil
+    }
+}
+
 final class MockRemoteConfigService: RemoteConfigService {
     var guardianAPIKeyValue: String?
     var newsAPIKeyValue: String?

@@ -231,7 +231,7 @@ final class PulseSceneDelegate: UIResponder, UIWindowSceneDelegate {
         // Register base services first
         let storageService = LiveStorageService()
         serviceLocator.register(StorageService.self, instance: storageService)
-        serviceLocator.register(NewsService.self, instance: LiveNewsService())
+        serviceLocator.register(NewsService.self, instance: CachingNewsService(wrapping: LiveNewsService()))
         serviceLocator.register(SearchService.self, instance: LiveSearchService())
         serviceLocator.register(StoreKitService.self, instance: LiveStoreKitService())
         serviceLocator.register(LLMService.self, instance: LiveLLMService())
