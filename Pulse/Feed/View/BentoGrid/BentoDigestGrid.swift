@@ -6,6 +6,26 @@ private enum Constants {
     static let gridSpacing: CGFloat = 12
 }
 
+// MARK: - Height Preference Key
+
+private struct CardHeightPreferenceKey: PreferenceKey {
+    static var defaultValue: CGFloat = 0
+
+    static func reduce(value: inout CGFloat, nextValue: () -> CGFloat) {
+        value = max(value, nextValue())
+    }
+}
+
+private extension View {
+    func measureHeight() -> some View {
+        background(
+            GeometryReader { geometry in
+                Color.clear.preference(key: CardHeightPreferenceKey.self, value: geometry.size.height)
+            }
+        )
+    }
+}
+
 // MARK: - BentoDigestGrid
 
 struct BentoDigestGrid: View {
@@ -17,6 +37,7 @@ struct BentoDigestGrid: View {
     @State private var showTopics = false
     @State private var showSections: Set<String> = []
     @State private var animationTask: Task<Void, Never>?
+    @State private var cardRowHeight: CGFloat = 0
 
     @Environment(\.accessibilityReduceMotion) private var reduceMotion
 
@@ -56,19 +77,28 @@ struct BentoDigestGrid: View {
         HStack(alignment: .top, spacing: Constants.gridSpacing) {
             StatsCard(
                 articleCount: digest.articleCount,
-                topicsCount: topicsBreakdown.count
+                topicsCount: topicsBreakdown.count,
+                minHeight: cardRowHeight > 0 ? cardRowHeight : nil
             )
-            .frame(maxWidth: .infinity)
+            .measureHeight()
             .opacity(showStats ? 1 : 0)
             .offset(y: showStats ? 0 : 20)
             .animation(reduceMotion ? nil : .spring(response: 0.5, dampingFraction: 0.8), value: showStats)
 
             if !topicsBreakdown.isEmpty {
-                TopicsBreakdownCard(breakdown: topicsBreakdown)
-                    .frame(maxWidth: .infinity)
-                    .opacity(showTopics ? 1 : 0)
-                    .offset(y: showTopics ? 0 : 20)
-                    .animation(reduceMotion ? nil : .spring(response: 0.5, dampingFraction: 0.8), value: showTopics)
+                TopicsBreakdownCard(
+                    breakdown: topicsBreakdown,
+                    minHeight: cardRowHeight > 0 ? cardRowHeight : nil
+                )
+                .measureHeight()
+                .opacity(showTopics ? 1 : 0)
+                .offset(y: showTopics ? 0 : 20)
+                .animation(reduceMotion ? nil : .spring(response: 0.5, dampingFraction: 0.8), value: showTopics)
+            }
+        }
+        .onPreferenceChange(CardHeightPreferenceKey.self) { height in
+            if height > cardRowHeight {
+                cardRowHeight = height
             }
         }
     }

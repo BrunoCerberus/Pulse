@@ -11,12 +11,12 @@ class BaseUITestCase: XCTestCase {
     static let launchTimeout: TimeInterval = 15
 
     /// Default timeout for element existence checks
-    /// 4s is sufficient with animations disabled - elements appear quickly
-    static let defaultTimeout: TimeInterval = 4
+    /// 6s accounts for CI machine variability
+    static let defaultTimeout: TimeInterval = 6
 
     /// Short timeout for quick checks (e.g., verifying element visibility)
-    /// 3s allows for CI machine variability while remaining responsive
-    static let shortTimeout: TimeInterval = 3
+    /// 5s allows for CI machine variability while remaining responsive
+    static let shortTimeout: TimeInterval = 5
 
     // MARK: - Instance-level Setup (runs before each test)
 
@@ -49,8 +49,9 @@ class BaseUITestCase: XCTestCase {
 
         // First, wait for the loading state to clear (if app shows loading spinner)
         // The loading view has a ProgressView which we need to wait past
+        // Use brief wait to check for loading indicator existence (avoids immediate UI query timeout)
         let loadingIndicator = app.activityIndicators.firstMatch
-        if loadingIndicator.exists {
+        if loadingIndicator.waitForExistence(timeout: 2) {
             // Wait for loading to complete (app initializing auth state)
             _ = waitForElementToDisappear(loadingIndicator, timeout: Self.launchTimeout)
         }

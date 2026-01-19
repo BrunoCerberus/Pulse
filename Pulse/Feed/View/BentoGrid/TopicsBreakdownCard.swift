@@ -11,6 +11,7 @@ private enum Constants {
 
 struct TopicsBreakdownCard: View {
     let breakdown: [(NewsCategory, Int)]
+    var minHeight: CGFloat?
 
     @State private var animatedProgress: [String: CGFloat] = [:]
     @State private var animationTask: Task<Void, Never>?
@@ -30,9 +31,13 @@ struct TopicsBreakdownCard: View {
                     topicRow(category: category, count: count)
                 }
             }
+
+            if minHeight != nil {
+                Spacer(minLength: 0)
+            }
         }
         .padding(Spacing.md)
-        .frame(maxWidth: .infinity, alignment: .leading)
+        .frame(maxWidth: .infinity, minHeight: minHeight, alignment: .topLeading)
         .glassBackground(style: .thin, cornerRadius: CornerRadius.lg)
         .depthShadow(.medium)
         .onAppear {
