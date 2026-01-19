@@ -134,6 +134,11 @@ final class HomeDomainInteractor: CombineInteractor {
     }
 
     private func refresh() {
+        // Invalidate cache to ensure fresh data on pull-to-refresh
+        if let cachingService = newsService as? CachingNewsService {
+            cachingService.invalidateCache()
+        }
+
         updateState { state in
             state.isRefreshing = true
             state.breakingNews = []

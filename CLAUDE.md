@@ -331,6 +331,37 @@ final class LiveNewsService: APIRequest, NewsService {
 }
 ```
 
+## Caching Layer
+
+The app uses an in-memory caching layer to minimize Guardian API calls (500/day free tier limit):
+
+```swift
+// CachingNewsService wraps LiveNewsService using the Decorator Pattern
+let cachingService = CachingNewsService(wrapping: LiveNewsService())
+serviceLocator.register(NewsService.self, instance: cachingService)
+```
+
+### TTL Configuration
+
+| Content Type | TTL | Rationale |
+|-------------|-----|-----------|
+| Breaking News | 5 min | High freshness expectation |
+| Headlines Page 1 | 10 min | Balance freshness vs API savings |
+| Headlines Page 2+ | 30 min | Less critical, saves API calls |
+| Category Headlines | 10 min | Similar to page 1 |
+| Individual Articles | 60 min | Content rarely changes |
+
+### Cache Invalidation
+
+Cache is automatically invalidated on pull-to-refresh:
+
+```swift
+// HomeDomainInteractor.refresh()
+if let cachingService = newsService as? CachingNewsService {
+    cachingService.invalidateCache()
+}
+```
+
 ## Testing Strategy
 
 ### Unit Tests (Swift Testing)
@@ -376,6 +407,9 @@ final class LiveNewsService: APIRequest, NewsService {
 | `StorageService.swift` | SwiftData persistence |
 | `NewsAPI.swift` | API endpoint definitions |
 | `GoogleService-Info.plist` | Firebase configuration |
+| **Caching** | |
+| `NewsCacheStore.swift` | Cache protocol, NSCache implementation, TTL configuration |
+| `CachingNewsService.swift` | Decorator wrapping LiveNewsService with in-memory caching |
 | **AI/LLM** | |
 | `LLMService.swift` | Protocol for LLM operations (load, generate, cancel) |
 | `LiveLLMService.swift` | llama.cpp implementation via LocalLlama package |

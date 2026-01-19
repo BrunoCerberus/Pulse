@@ -193,6 +193,7 @@ struct HomeDomainInteractorTests {
 7. **Authentication is required** - RootView gates access via AuthenticationManager
 8. **AuthenticationManager is a singleton** - observed by RootView to switch between SignInView and CoordinatorView
 9. **Premium features are gated** - AI features require subscription (checked via StoreKitService)
+10. **Service decorators for cross-cutting concerns** - Use Decorator Pattern for caching, logging (e.g., `CachingNewsService` wraps `LiveNewsService`)
 
 ## Premium Feature Gating
 
