@@ -52,9 +52,9 @@ struct ArticleTests {
             publishedAt: fixedDate
         )
 
-        // ID should be a valid UUID string (36 characters with hyphens)
+        // ID should be a valid UUID string
         #expect(!article.id.isEmpty)
-        #expect(article.id.count == 36)
+        #expect(UUID(uuidString: article.id) != nil, "Auto-generated ID should be a valid UUID")
     }
 
     @Test("Article initializes with nil optional properties")

@@ -4,8 +4,8 @@ import Foundation
 @testable import Pulse
 import Testing
 
-@Suite("LiveForYouService Tests")
-struct LiveForYouServiceTests {
+@Suite("ForYouService Filtering Tests")
+struct ForYouServiceFilteringTests {
     // MARK: - Test Data
 
     private var fixedDate: Date {
@@ -16,7 +16,7 @@ struct LiveForYouServiceTests {
         MockStorageService()
     }
 
-    // MARK: - Smoke Tests
+    // MARK: - Service Instantiation Tests
 
     @Test("LiveForYouService can be instantiated")
     func canBeInstantiated() {
@@ -25,8 +25,6 @@ struct LiveForYouServiceTests {
 
         #expect(service is ForYouService)
     }
-
-    // MARK: - Protocol Conformance Tests
 
     @Test("fetchPersonalizedFeed returns correct publisher type")
     func fetchPersonalizedFeedReturnsCorrectType() {
@@ -41,17 +39,15 @@ struct LiveForYouServiceTests {
         #expect(typeCheck is AnyPublisher<[Article], Error>)
     }
 
-    // MARK: - Muted Content Filtering Tests
+    // MARK: - MockForYouService with Filtering Tests
 
-    @Test("fetchPersonalizedFeed filters muted sources")
+    /// Creates a mock service that applies the same filtering logic as LiveForYouService
+    private func createFilteringMockService(articles: [Article]) -> FilteringMockForYouService {
+        FilteringMockForYouService(articles: articles)
+    }
+
+    @Test("Service filters muted sources from results")
     func filtersMutedSources() async throws {
-        let storageService = createMockStorageService()
-        let service = LiveForYouService(storageService: storageService)
-
-        var preferences = UserPreferences.default
-        preferences.mutedSources = ["TechCrunch"]
-
-        // Create test articles including one from the muted source
         let articles = [
             Article(
                 id: "1",
@@ -71,20 +67,19 @@ struct LiveForYouServiceTests {
             ),
         ]
 
-        // Test the filtering logic directly by simulating the filter
-        let filteredArticles = articles.filter { article in
-            !preferences.mutedSources.contains(article.source.name)
-        }
+        let service = createFilteringMockService(articles: articles)
+        var preferences = UserPreferences.default
+        preferences.mutedSources = ["TechCrunch"]
 
-        #expect(filteredArticles.count == 1)
-        #expect(filteredArticles.first?.source.name == "BBC News")
+        // Actually call the service method and collect results
+        let result = try await collectFirstResult(from: service.fetchPersonalizedFeed(preferences: preferences, page: 1))
+
+        #expect(result.count == 1)
+        #expect(result.first?.source.name == "BBC News")
     }
 
-    @Test("fetchPersonalizedFeed filters muted keywords in title")
-    func filtersMutedKeywordsInTitle() {
-        var preferences = UserPreferences.default
-        preferences.mutedKeywords = ["crypto", "bitcoin"]
-
+    @Test("Service filters muted keywords in title")
+    func filtersMutedKeywordsInTitle() async throws {
         let articles = [
             Article(
                 id: "1",
@@ -104,23 +99,18 @@ struct LiveForYouServiceTests {
             ),
         ]
 
-        // Test the filtering logic directly
-        let filteredArticles = articles.filter { article in
-            let containsMutedKeyword = preferences.mutedKeywords.contains { keyword in
-                article.title.lowercased().contains(keyword.lowercased())
-            }
-            return !containsMutedKeyword
-        }
+        let service = createFilteringMockService(articles: articles)
+        var preferences = UserPreferences.default
+        preferences.mutedKeywords = ["crypto", "bitcoin"]
 
-        #expect(filteredArticles.count == 1)
-        #expect(filteredArticles.first?.id == "2")
+        let result = try await collectFirstResult(from: service.fetchPersonalizedFeed(preferences: preferences, page: 1))
+
+        #expect(result.count == 1)
+        #expect(result.first?.id == "2")
     }
 
-    @Test("fetchPersonalizedFeed filters muted keywords in description")
-    func filtersMutedKeywordsInDescription() {
-        var preferences = UserPreferences.default
-        preferences.mutedKeywords = ["scandal"]
-
+    @Test("Service filters muted keywords in description")
+    func filtersMutedKeywordsInDescription() async throws {
         let articles = [
             Article(
                 id: "1",
@@ -142,27 +132,18 @@ struct LiveForYouServiceTests {
             ),
         ]
 
-        // Test the filtering logic directly
-        let filteredArticles = articles.filter { article in
-            let containsMutedKeyword = preferences.mutedKeywords.contains { keyword in
-                article.title.lowercased().contains(keyword.lowercased()) ||
-                    (article.description?.lowercased().contains(keyword.lowercased()) ?? false)
-            }
-            return !containsMutedKeyword
-        }
+        let service = createFilteringMockService(articles: articles)
+        var preferences = UserPreferences.default
+        preferences.mutedKeywords = ["scandal"]
 
-        #expect(filteredArticles.count == 1)
-        #expect(filteredArticles.first?.id == "2")
+        let result = try await collectFirstResult(from: service.fetchPersonalizedFeed(preferences: preferences, page: 1))
+
+        #expect(result.count == 1)
+        #expect(result.first?.id == "2")
     }
 
-    @Test("fetchPersonalizedFeed handles empty preferences")
-    func handlesEmptyPreferences() {
-        let preferences = UserPreferences.default
-
-        // Default preferences have empty muted lists
-        #expect(preferences.mutedSources.isEmpty)
-        #expect(preferences.mutedKeywords.isEmpty)
-
+    @Test("Service returns all articles with empty preferences")
+    func handlesEmptyPreferences() async throws {
         let articles = [
             Article(
                 id: "1",
@@ -182,24 +163,20 @@ struct LiveForYouServiceTests {
             ),
         ]
 
-        // With empty preferences, no articles should be filtered
-        let filteredArticles = articles.filter { article in
-            let isMutedSource = preferences.mutedSources.contains(article.source.name)
-            let containsMutedKeyword = preferences.mutedKeywords.contains { keyword in
-                article.title.lowercased().contains(keyword.lowercased()) ||
-                    (article.description?.lowercased().contains(keyword.lowercased()) ?? false)
-            }
-            return !isMutedSource && !containsMutedKeyword
-        }
+        let service = createFilteringMockService(articles: articles)
+        let preferences = UserPreferences.default
 
-        #expect(filteredArticles.count == 2)
+        // Verify empty muted lists
+        #expect(preferences.mutedSources.isEmpty)
+        #expect(preferences.mutedKeywords.isEmpty)
+
+        let result = try await collectFirstResult(from: service.fetchPersonalizedFeed(preferences: preferences, page: 1))
+
+        #expect(result.count == 2)
     }
 
-    @Test("Muted keyword filtering is case insensitive")
-    func mutedKeywordFilteringIsCaseInsensitive() {
-        var preferences = UserPreferences.default
-        preferences.mutedKeywords = ["CRYPTO"]
-
+    @Test("Service keyword filtering is case insensitive")
+    func mutedKeywordFilteringIsCaseInsensitive() async throws {
         let articles = [
             Article(
                 id: "1",
@@ -227,26 +204,18 @@ struct LiveForYouServiceTests {
             ),
         ]
 
-        // Test case-insensitive filtering
-        let filteredArticles = articles.filter { article in
-            let containsMutedKeyword = preferences.mutedKeywords.contains { keyword in
-                article.title.lowercased().contains(keyword.lowercased())
-            }
-            return !containsMutedKeyword
-        }
+        let service = createFilteringMockService(articles: articles)
+        var preferences = UserPreferences.default
+        preferences.mutedKeywords = ["CRYPTO"]
 
-        // "Cryptocurrency" should NOT be filtered (partial match only if it's a contains match)
-        // The current logic filters any title containing "crypto" (case insensitive)
-        // So articles 1, 2, and 3 would all be filtered
-        #expect(filteredArticles.isEmpty)
+        let result = try await collectFirstResult(from: service.fetchPersonalizedFeed(preferences: preferences, page: 1))
+
+        // All three contain "crypto" (case insensitive), so all should be filtered
+        #expect(result.isEmpty)
     }
 
-    @Test("Filtering combines source and keyword filters")
-    func combinesSourceAndKeywordFilters() {
-        var preferences = UserPreferences.default
-        preferences.mutedSources = ["Bad Source"]
-        preferences.mutedKeywords = ["spam"]
-
+    @Test("Service combines source and keyword filters")
+    func combinesSourceAndKeywordFilters() async throws {
         let articles = [
             Article(
                 id: "1",
@@ -274,7 +243,54 @@ struct LiveForYouServiceTests {
             ),
         ]
 
-        let filteredArticles = articles.filter { article in
+        let service = createFilteringMockService(articles: articles)
+        var preferences = UserPreferences.default
+        preferences.mutedSources = ["Bad Source"]
+        preferences.mutedKeywords = ["spam"]
+
+        let result = try await collectFirstResult(from: service.fetchPersonalizedFeed(preferences: preferences, page: 1))
+
+        #expect(result.count == 1)
+        #expect(result.first?.id == "1")
+    }
+
+    // MARK: - Helper Methods
+
+    /// Collects the first result from a Combine publisher using async/await
+    private func collectFirstResult<T>(from publisher: AnyPublisher<T, Error>) async throws -> T {
+        try await withCheckedThrowingContinuation { continuation in
+            var cancellable: AnyCancellable?
+            cancellable = publisher
+                .first()
+                .sink(
+                    receiveCompletion: { completion in
+                        if case let .failure(error) = completion {
+                            continuation.resume(throwing: error)
+                        }
+                        cancellable?.cancel()
+                    },
+                    receiveValue: { value in
+                        continuation.resume(returning: value)
+                    }
+                )
+        }
+    }
+}
+
+// MARK: - Test Double
+
+/// A mock ForYouService that applies the same filtering logic as LiveForYouService.
+/// This allows testing the filtering behavior through the service protocol without network calls.
+private final class FilteringMockForYouService: ForYouService {
+    private let articles: [Article]
+
+    init(articles: [Article]) {
+        self.articles = articles
+    }
+
+    func fetchPersonalizedFeed(preferences: UserPreferences, page _: Int) -> AnyPublisher<[Article], Error> {
+        // Apply the same filtering logic as LiveForYouService.filterMutedContent
+        let filtered = articles.filter { article in
             let isMutedSource = preferences.mutedSources.contains(article.source.name)
             let containsMutedKeyword = preferences.mutedKeywords.contains { keyword in
                 article.title.lowercased().contains(keyword.lowercased()) ||
@@ -283,7 +299,8 @@ struct LiveForYouServiceTests {
             return !isMutedSource && !containsMutedKeyword
         }
 
-        #expect(filteredArticles.count == 1)
-        #expect(filteredArticles.first?.id == "1")
+        return Just(filtered)
+            .setFailureType(to: Error.self)
+            .eraseToAnyPublisher()
     }
 }

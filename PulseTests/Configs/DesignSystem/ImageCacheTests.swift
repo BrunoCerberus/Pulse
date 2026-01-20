@@ -3,6 +3,12 @@ import Foundation
 import Testing
 import UIKit
 
+/// Tests for ImageCache singleton.
+///
+/// **Test Isolation Note**: These tests use `ImageCache.shared` singleton which maintains
+/// global state. Tests use unique URLs to avoid conflicts, but `clearCache()` affects global
+/// state. If parallel test execution causes issues, consider running these tests serially
+/// with `@Suite(.serialized)` or adding a test-specific cache instance capability.
 @Suite("ImageCache Tests")
 struct ImageCacheTests {
     // MARK: - Test Data
