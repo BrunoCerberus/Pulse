@@ -465,7 +465,7 @@ jobs:
       uses: anthropics/claude-code-action@v1
       with:
         claude_code_oauth_token: ${{ secrets.CLAUDE_CODE_OAUTH_TOKEN }}
-        model: claude-opus-4-5-20251101
+        model: claude-haiku-4-5-20251001
         prompt: |
           You are analyzing failing tests in a scheduled CI run for the Pulse iOS app.
 
