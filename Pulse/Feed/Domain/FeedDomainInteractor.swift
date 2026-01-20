@@ -36,6 +36,8 @@ final class FeedDomainInteractor: CombineInteractor {
         switch action {
         case .loadInitialData:
             loadInitialData()
+        case .preloadModel:
+            preloadModel()
         case let .modelStatusChanged(status):
             handleModelStatusChanged(status)
         case let .readingHistoryLoaded(articles):
@@ -95,8 +97,28 @@ final class FeedDomainInteractor: CombineInteractor {
             return
         }
 
+        // No cached digest - preload model in background while fetching history
+        // This parallelizes model loading with history fetch for faster generation
+        preloadModel()
+
         // Fetch reading history if no cached digest
         fetchReadingHistory()
+    }
+
+    // MARK: - Model Preloading
+
+    private func preloadModel() {
+        Task { @MainActor in
+            do {
+                try await feedService.loadModelIfNeeded()
+            } catch {
+                // Preloading failure is non-fatal; generation will retry loading
+                Logger.shared.debug(
+                    "Model preload failed (will retry on generation): \(error)",
+                    category: "FeedDomainInteractor"
+                )
+            }
+        }
     }
 
     // MARK: - Reading History
@@ -177,10 +199,10 @@ final class FeedDomainInteractor: CombineInteractor {
                     fullText += token
                     tokensSinceLastUpdate += 1
 
+                    // Update UI with raw text during streaming (defer cleaning to completion)
                     if tokensSinceLastUpdate >= updateBatchSize {
-                        let currentText = cleanLLMOutput(fullText)
-                        await MainActor.run { [weak self] in
-                            self?.updateState { $0.streamingText = currentText }
+                        await MainActor.run { [weak self, fullText] in
+                            self?.updateState { $0.streamingText = fullText }
                         }
                         tokensSinceLastUpdate = 0
                     }

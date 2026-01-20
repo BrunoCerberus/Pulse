@@ -78,7 +78,7 @@ enum FeedDigestPromptBuilder {
 
         if let description = article.description, !description.isEmpty {
             let clean = stripHTML(from: description)
-            summary += "\nSummary: \(String(clean.prefix(200)))"
+            summary += "\nSummary: \(String(clean.prefix(150)))"
         }
 
         return summary
