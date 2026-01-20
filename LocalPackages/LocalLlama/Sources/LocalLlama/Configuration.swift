@@ -43,6 +43,7 @@ extension Configuration {
         params.n_ctx = max(8, UInt32(self.nCTX)) // minimum context size is 8
         params.n_threads = Int32(processorCount)
         params.n_threads_batch = Int32(processorCount)
+        params.flash_attn = true // Enable flash attention for faster KV cache operations
         return params
     }
 }

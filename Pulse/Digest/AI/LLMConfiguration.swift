@@ -19,8 +19,8 @@ enum LLMConfiguration {
         modelURL?.path ?? ""
     }
 
-    /// Context window size (tokens)
-    static var contextSize: Int { 4096 }
+    /// Context window size (tokens) - reduced for faster inference
+    static var contextSize: Int { 3072 }
 
     /// Batch size for inference (larger batches improve throughput on 4GB+ devices)
     static var batchSize: Int { 2048 }
