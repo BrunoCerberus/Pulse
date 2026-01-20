@@ -26,10 +26,8 @@ class LlamaModel {
         var model_params = llama_model_default_params()
         #if targetEnvironment(simulator)
         model_params.n_gpu_layers = 0
-        #else
-        // Offload all layers to Metal GPU for faster inference on device
-        model_params.n_gpu_layers = 99
         #endif
+        // Memory mapping for faster model loading
         model_params.use_mmap = true
 
         // Use new API: llama_model_load_from_file

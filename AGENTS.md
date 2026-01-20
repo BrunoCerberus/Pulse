@@ -268,7 +268,7 @@ All llama.cpp operations run on a **dedicated pinned thread** (not just serializ
 - Auto-unloads on `UIApplication.didReceiveMemoryWarningNotification`
 
 ### Performance Optimizations
-- **Metal GPU offloading**: All model layers offloaded to GPU on physical devices (`n_gpu_layers=99`)
+- **CPU inference**: Small models (~1B params) run faster on CPU than GPU due to Metal transfer overhead
 - **Flash attention**: Enabled for faster KV cache operations
 - **Memory mapping**: Model loaded via mmap for faster startup
 - **Model preloading**: Triggered when Feed tab appears (parallel with history fetch)

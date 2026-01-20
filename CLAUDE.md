@@ -413,9 +413,9 @@ if let cachingService = newsService as? CachingNewsService {
 | **AI/LLM** | |
 | `LLMService.swift` | Protocol for LLM operations (load, generate, cancel) |
 | `LiveLLMService.swift` | llama.cpp implementation via LocalLlama package |
-| `LLMModelManager.swift` | Model lifecycle (load/unload, memory checks, Metal GPU offloading) |
+| `LLMModelManager.swift` | Model lifecycle (load/unload, memory checks) |
 | `LLMConfiguration.swift` | Model paths, inference parameters (context size, batch size) |
-| **LLM Performance** | Metal GPU offloading (99 layers), flash attention, mmap loading, model preloading |
+| **LLM Performance** | CPU inference (faster than GPU for small models), flash attention, mmap loading, model preloading |
 | **Premium/Subscription** | |
 | `StoreKitService.swift` | Protocol for subscription status and purchases |
 | `LiveStoreKitService.swift` | StoreKit 2 implementation |
