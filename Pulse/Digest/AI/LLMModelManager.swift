@@ -75,16 +75,15 @@ final class LLMModelManager: @unchecked Sendable {
 
         // Create configuration with adequate context size for prompt + generation
         // The prompt can be ~2000 tokens, plus we want to generate ~500-1000 tokens
-        // Batch size 2048 improves throughput on devices with adequate memory (4GB+)
         let config = Configuration(
             topK: 40,
             topP: 0.9,
-            nCTX: 3072, // Reduced context window (prompt ~2000 + output ~1000)
+            nCTX: LLMConfiguration.contextSize,
             temperature: 0.5, // Lower temperature for more deterministic, focused output
-            batchSize: 2048, // Larger batches improve inference throughput
-            maxTokenCount: 3072, // Must be >= prompt tokens + max generated tokens
+            batchSize: LLMConfiguration.batchSize, // Memory-based: 2048 for 4GB+, 512 for older devices
+            maxTokenCount: LLMConfiguration.contextSize,
             stopTokens: ["</digest>", "---"],
-            timeout: 120.0 // 2 minutes for full digest generation on mobile
+            timeout: LLMConfiguration.generationTimeout
         )
 
         // Create and initialize outside the lock (expensive operation)
