@@ -57,20 +57,43 @@ class BaseUITestCase: XCTestCase {
         }
 
         // Now wait for either tab bar or sign-in to appear
-        let appReady = waitForAny([tabBar, signInButton], timeout: Self.launchTimeout)
+        // Use multiple detection strategies for reliability across different CI environments
+        let homeTabButton = app.tabBars.buttons["Home"]
+        let signInApple = app.buttons["Sign in with Apple"]
+        let signInGoogle = app.buttons["Sign in with Google"]
+
+        // Primary check: tab bar element or sign-in buttons
+        var appReady = waitForAny([tabBar, homeTabButton, signInApple, signInGoogle], timeout: Self.launchTimeout)
+        var foundTabBar = tabBar.exists || homeTabButton.exists
+
+        // Fallback: If primary check fails but buttons exist, check for tab bar buttons directly
+        // This handles CI environments where tabBars query may have timing issues
+        if !appReady {
+            let tabButtonNames = ["Home", "For You", "Feed", "Bookmarks", "Search"]
+            for name in tabButtonNames {
+                let tabButton = app.buttons[name]
+                if tabButton.waitForExistence(timeout: 2) {
+                    appReady = true
+                    foundTabBar = true
+                    break
+                }
+            }
+        }
 
         guard appReady else {
             // Debug: log what's visible to help diagnose CI failures
             let hasActivityIndicator = app.activityIndicators.count > 0
             let hasButtons = app.buttons.count > 0
             let hasStaticTexts = app.staticTexts.count > 0
+            let allButtonLabels = app.buttons.allElementsBoundByIndex.prefix(10).map { $0.label }
             XCTFail("App did not reach ready state - neither tab bar nor sign-in view appeared. " +
-                    "Debug: hasActivityIndicator=\(hasActivityIndicator), buttons=\(hasButtons), texts=\(hasStaticTexts)")
+                    "Debug: hasActivityIndicator=\(hasActivityIndicator), buttons=\(hasButtons), " +
+                    "texts=\(hasStaticTexts), buttonLabels=\(allButtonLabels)")
             return
         }
 
-        // Only reset to home tab if authenticated (tab bar exists)
-        if tabBar.exists {
+        // Only reset to home tab if authenticated (tab bar was found via any detection method)
+        if foundTabBar {
             resetToHomeTab()
         }
     }
@@ -93,16 +116,22 @@ class BaseUITestCase: XCTestCase {
         if !tabBar.waitForExistence(timeout: Self.shortTimeout) {
             let backButton = app.buttons["backButton"]
             if backButton.exists { backButton.tap() }
-            guard tabBar.waitForExistence(timeout: 1) else { return }
+            // Don't fail if tabBar query fails - try direct button access as fallback
         }
 
-        // Select Home tab - use combined predicate for efficiency
+        // Select Home tab - try multiple strategies for CI reliability
         let homeTab = tabBar.buttons["Home"]
         if homeTab.exists, !homeTab.isSelected {
             homeTab.tap()
         } else if !homeTab.exists {
-            // Fallback: tap first tab (Home is always first)
-            tabBar.buttons.element(boundBy: 0).tap()
+            // Fallback: try finding Home button directly (handles tabBar query issues on CI)
+            let homeButton = app.buttons["Home"]
+            if homeButton.waitForExistence(timeout: 2), !homeButton.isSelected {
+                homeButton.tap()
+            } else if tabBar.exists {
+                // Last resort: tap first tab (Home is always first)
+                tabBar.buttons.element(boundBy: 0).tap()
+            }
         }
 
         // Pop all navigation stack levels (handles deep navigation states)
