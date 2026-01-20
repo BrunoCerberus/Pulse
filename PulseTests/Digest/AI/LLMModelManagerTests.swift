@@ -27,11 +27,33 @@ struct LLMModelManagerTests {
         #expect(!sut.modelIsLoaded)
     }
 
-    @Test("Load model is callable")
+    @Test("Load model is callable - skips if already loaded")
     func loadModelIsCallable() async {
+        let wasAlreadyLoaded = sut.modelIsLoaded
+
+        if !wasAlreadyLoaded {
+            do {
+                try await sut.loadModel { _ in }
+            } catch {}
+        }
+
+        #expect(true)
+    }
+
+    @Test("Load model is idempotent")
+    func loadModelIsIdempotent() async {
         do {
             try await sut.loadModel { _ in }
         } catch {}
-        #expect(true)
+
+        let firstLoadState = sut.modelIsLoaded
+
+        do {
+            try await sut.loadModel { _ in }
+        } catch {}
+
+        let secondLoadState = sut.modelIsLoaded
+
+        #expect(firstLoadState == secondLoadState)
     }
 }

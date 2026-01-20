@@ -11,31 +11,30 @@ final class BreakingNewsCardSnapshotTests: XCTestCase {
         traits: UITraitCollection(userInterfaceStyle: .dark)
     )
 
-    private let fixedDate = Date(timeIntervalSince1970: 1_672_531_200)
-
     private var breakingArticleViewItem: ArticleViewItem {
-        ArticleViewItem(from: Article(
+        ArticleViewItem(
             id: "breaking-1",
             title: "Breaking: Major Tech Announcement at WWDC 2024",
             description: "Apple announces groundbreaking new features.",
-            source: ArticleSource(id: "techcrunch", name: "TechCrunch"),
-            url: "https://example.com/breaking",
-            imageURL: "https://picsum.photos/300/200",
-            publishedAt: fixedDate,
-            category: .technology
-        ))
+            sourceName: "TechCrunch",
+            imageURL: nil,
+            formattedDate: "Jan 1, 2023",
+            category: .technology,
+            animationIndex: 0
+        )
     }
 
     private var longTitleBreakingArticleViewItem: ArticleViewItem {
-        ArticleViewItem(from: Article(
+        ArticleViewItem(
             id: "breaking-long",
             title: "Breaking News With An Exceptionally Long Title That Should Test The Text Truncation And Layout Of This Component",
-            source: ArticleSource(id: "reuters", name: "Reuters"),
-            url: "https://example.com/long",
+            description: "",
+            sourceName: "Reuters",
             imageURL: nil,
-            publishedAt: fixedDate,
-            category: .world
-        ))
+            formattedDate: "Jan 1, 2023",
+            category: .world,
+            animationIndex: 0
+        )
     }
 
     func testBreakingNewsCardStandard() {
