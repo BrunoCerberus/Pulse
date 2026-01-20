@@ -3,6 +3,7 @@ import EntropyCore
 import Foundation
 @testable import Pulse
 import Testing
+import UIKit
 
 @Suite("PremiumFeature Tests")
 struct PremiumFeatureTests {
@@ -51,6 +52,51 @@ struct PremiumFeatureTests {
         let uniqueColors = Set(colors)
 
         #expect(colors.count == uniqueColors.count, "All features should have unique colors")
+    }
+
+    @Test("All premium features have non-empty descriptions")
+    func allFeaturesHaveNonEmptyDescriptions() {
+        let features: [PremiumFeature] = [.dailyDigest, .articleSummarization, .forYouFeed]
+
+        for feature in features {
+            #expect(!feature.description.isEmpty, "\(feature) should have a non-empty description")
+        }
+    }
+
+    @Test("All premium features have non-empty titles")
+    func allFeaturesHaveNonEmptyTitles() {
+        let features: [PremiumFeature] = [.dailyDigest, .articleSummarization, .forYouFeed]
+
+        for feature in features {
+            #expect(!feature.title.isEmpty, "\(feature) should have a non-empty title")
+        }
+    }
+
+    @Test("All premium features have valid SF Symbol icons")
+    func allFeaturesHaveValidSFSymbolIcons() {
+        let features: [PremiumFeature] = [.dailyDigest, .articleSummarization, .forYouFeed]
+
+        for feature in features {
+            // Verify the icon string is not empty
+            #expect(!feature.icon.isEmpty, "\(feature) should have a non-empty icon")
+
+            // Verify the icon can create a valid UIImage (valid SF Symbol)
+            let image = UIImage(systemName: feature.icon)
+            #expect(image != nil, "\(feature) icon '\(feature.icon)' should be a valid SF Symbol")
+        }
+    }
+
+    @Test("All premium features have valid icon colors")
+    func allFeaturesHaveValidIconColors() {
+        let features: [PremiumFeature] = [.dailyDigest, .articleSummarization, .forYouFeed]
+
+        for feature in features {
+            // Just verify that accessing iconColor doesn't crash
+            // Color is a non-optional type, so we just verify the property can be accessed
+            let color = feature.iconColor
+            // Use the color to avoid unused variable warning
+            _ = color.description
+        }
     }
 }
 

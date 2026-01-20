@@ -64,6 +64,25 @@ final class ForYouViewSnapshotTests: XCTestCase {
         )
     }
 
+    func testForYouViewOnboardingLightMode() {
+        let view = NavigationStack {
+            ForYouOnboardingPreview()
+        }
+        let controller = UIHostingController(rootView: view)
+
+        let lightConfig = ViewImageConfig(
+            safeArea: UIEdgeInsets(top: 59, left: 0, bottom: 34, right: 0),
+            size: CGSize(width: 393, height: 852),
+            traits: UITraitCollection(userInterfaceStyle: .light)
+        )
+
+        assertSnapshot(
+            of: controller,
+            as: .wait(for: 1.0, on: .image(on: lightConfig, precision: 0.99)),
+            record: false
+        )
+    }
+
     // MARK: - Empty State
 
     func testForYouViewEmpty() {
@@ -90,6 +109,25 @@ final class ForYouViewSnapshotTests: XCTestCase {
         assertSnapshot(
             of: controller,
             as: .wait(for: 1.0, on: .image(on: iPhoneAirConfig, precision: 0.99)),
+            record: false
+        )
+    }
+
+    func testForYouViewErrorLightMode() {
+        let view = NavigationStack {
+            ForYouErrorPreview()
+        }
+        let controller = UIHostingController(rootView: view)
+
+        let lightConfig = ViewImageConfig(
+            safeArea: UIEdgeInsets(top: 59, left: 0, bottom: 34, right: 0),
+            size: CGSize(width: 393, height: 852),
+            traits: UITraitCollection(userInterfaceStyle: .light)
+        )
+
+        assertSnapshot(
+            of: controller,
+            as: .wait(for: 1.0, on: .image(on: lightConfig, precision: 0.99)),
             record: false
         )
     }
