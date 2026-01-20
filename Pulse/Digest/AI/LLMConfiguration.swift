@@ -22,14 +22,9 @@ enum LLMConfiguration {
     /// Context window size (tokens) - reduced for faster inference
     static var contextSize: Int { 3072 }
 
-    /// Batch size for inference, scaled by device memory
-    /// - 4GB+ RAM: 2048 (optimal throughput)
-    /// - <4GB RAM: 512 (safe for older devices)
-    static var batchSize: Int {
-        let physicalMemory = ProcessInfo.processInfo.physicalMemory
-        let fourGB: UInt64 = 4_000_000_000
-        return physicalMemory >= fourGB ? 2048 : 512
-    }
+    /// Batch size for prompt processing
+    /// 512 is optimal for token-by-token generation (larger batches don't help and waste memory)
+    static var batchSize: Int { 512 }
 
     /// Number of threads to use (based on device)
     static var threadCount: Int {
