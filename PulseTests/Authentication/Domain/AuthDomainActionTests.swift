@@ -133,7 +133,7 @@ struct AuthDomainActionCaseDetectionTests {
     @Test("Can identify signInWithGoogle case")
     func identifySignInWithGoogle() {
         let viewController = UIViewController()
-        let action = AuthDomainAction.signInWithGoogle(presenting: vc)
+        let action = AuthDomainAction.signInWithGoogle(presenting: viewController)
 
         var isGoogle = false
         if case .signInWithGoogle = action {
@@ -183,13 +183,13 @@ struct AuthDomainActionComplexAuthWorkflowTests {
         let viewController = UIViewController()
         var actions: [AuthDomainAction] = []
 
-        actions.append(.signInWithGoogle(presenting: vc))
+        actions.append(.signInWithGoogle(presenting: viewController))
         actions.append(.clearError)
 
         #expect(actions.count == 2)
 
         if case let .signInWithGoogle(presentingVC) = actions[0] {
-            #expect(presentingVC === vc)
+            #expect(presentingVC === viewController)
         }
     }
 
@@ -226,7 +226,7 @@ struct AuthDomainActionComplexAuthWorkflowTests {
         let viewController = UIViewController()
         var actions: [AuthDomainAction] = []
 
-        actions.append(.signInWithGoogle(presenting: vc))
+        actions.append(.signInWithGoogle(presenting: viewController))
         // Simulate error
         actions.append(.clearError)
 
@@ -243,7 +243,7 @@ struct AuthDomainActionComplexAuthWorkflowTests {
         var actions: [AuthDomainAction] = []
 
         // First attempt
-        actions.append(.signInWithGoogle(presenting: vc))
+        actions.append(.signInWithGoogle(presenting: viewController))
         // Error occurs
         actions.append(.clearError)
 
@@ -282,7 +282,7 @@ struct AuthDomainActionComplexAuthWorkflowTests {
         var actions: [AuthDomainAction] = []
 
         // Sign in
-        actions.append(.signInWithGoogle(presenting: vc))
+        actions.append(.signInWithGoogle(presenting: viewController))
         actions.append(.clearError)
 
         // User is now authenticated
@@ -294,7 +294,7 @@ struct AuthDomainActionComplexAuthWorkflowTests {
         #expect(actions.count == 4)
 
         if case let .signInWithGoogle(presentingVC) = actions[0] {
-            #expect(presentingVC === vc)
+            #expect(presentingVC === viewController)
         }
 
         if case .signOut = actions[2] {
@@ -308,10 +308,10 @@ struct AuthDomainActionTypePreservationTests {
     @Test("signInWithGoogle preserves UIViewController reference")
     func signInWithGooglePreservesReference() {
         let viewController = UIViewController()
-        let action = AuthDomainAction.signInWithGoogle(presenting: vc)
+        let action = AuthDomainAction.signInWithGoogle(presenting: viewController)
 
         if case let .signInWithGoogle(storedVC) = action {
-            #expect(storedVC === vc)
+            #expect(storedVC === viewController)
         } else {
             #expect(Bool(false))
         }
@@ -320,7 +320,7 @@ struct AuthDomainActionTypePreservationTests {
     @Test("UIViewController can be identified from action")
     func uIViewControllerIdentifiable() {
         let viewController = UIViewController()
-        let action = AuthDomainAction.signInWithGoogle(presenting: vc)
+        let action = AuthDomainAction.signInWithGoogle(presenting: viewController)
 
         if case let .signInWithGoogle(storedVC) = action {
             #expect(type(of: storedVC) == UIViewController.self)

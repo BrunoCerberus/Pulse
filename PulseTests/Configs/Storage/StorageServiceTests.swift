@@ -28,14 +28,14 @@ struct MockStorageServiceBookmarkTests {
     let sut = MockStorageService()
 
     @Test("Save article adds to bookmarks")
-    async func testSaveArticle() throws {
+    func saveArticle() async throws {
         let article = Article.mockArticles[0]
         try await sut.saveArticle(article)
         #expect(await sut.isBookmarked(article.id))
     }
 
     @Test("Delete article removes from bookmarks")
-    async func testDeleteArticle() throws {
+    func deleteArticle() async throws {
         let article = Article.mockArticles[0]
         try await sut.saveArticle(article)
         try await sut.deleteArticle(article)
@@ -43,7 +43,7 @@ struct MockStorageServiceBookmarkTests {
     }
 
     @Test("Fetch bookmarks returns saved articles")
-    async func testFetchBookmarks() throws {
+    func fetchBookmarks() async throws {
         let articles = Array(Article.mockArticles.prefix(2))
         for article in articles {
             try await sut.saveArticle(article)
@@ -53,13 +53,13 @@ struct MockStorageServiceBookmarkTests {
     }
 
     @Test("Is bookmarked returns false initially")
-    async func testIsBookmarkedInitially() {
+    func isBookmarkedInitially() async {
         let isBookmarked = await sut.isBookmarked("non-existent-id")
         #expect(!isBookmarked)
     }
 
     @Test("Is bookmarked returns true after save")
-    async func testIsBookmarkedAfterSave() throws {
+    func isBookmarkedAfterSave() async throws {
         let article = Article.mockArticles[0]
         try await sut.saveArticle(article)
         let isBookmarked = await sut.isBookmarked(article.id)
@@ -67,7 +67,7 @@ struct MockStorageServiceBookmarkTests {
     }
 
     @Test("Multiple bookmarks")
-    async func testMultipleBookmarks() throws {
+    func multipleBookmarks() async throws {
         let articles = Array(Article.mockArticles.prefix(3))
         for article in articles {
             try await sut.saveArticle(article)
@@ -77,7 +77,7 @@ struct MockStorageServiceBookmarkTests {
     }
 
     @Test("Delete error simulation")
-    async func testDeleteError() async throws {
+    func deleteError() async throws {
         let service = MockStorageService()
         service.deleteArticleError = URLError(.badURL)
         let article = Article.mockArticles[0]
@@ -95,7 +95,7 @@ struct MockStorageServiceReadingHistoryTests {
     let sut = MockStorageService()
 
     @Test("Save reading history adds entry")
-    async func testSaveReadingHistory() throws {
+    func saveReadingHistory() async throws {
         let article = Article.mockArticles[0]
         try await sut.saveReadingHistory(article)
         let history = try await sut.fetchReadingHistory()
@@ -103,7 +103,7 @@ struct MockStorageServiceReadingHistoryTests {
     }
 
     @Test("Fetch reading history returns entries")
-    async func testFetchReadingHistory() throws {
+    func fetchReadingHistory() async throws {
         let articles = Array(Article.mockArticles.prefix(2))
         for article in articles {
             try await sut.saveReadingHistory(article)
@@ -113,7 +113,7 @@ struct MockStorageServiceReadingHistoryTests {
     }
 
     @Test("Recent reading history since date")
-    async func testRecentReadingHistory() throws {
+    func recentReadingHistory() async throws {
         let article = Article.mockArticles[0]
         try await sut.saveReadingHistory(article)
         let recent = try await sut.fetchRecentReadingHistory(since: Date(timeIntervalSinceNow: -3600))
@@ -121,7 +121,7 @@ struct MockStorageServiceReadingHistoryTests {
     }
 
     @Test("Clear reading history removes all")
-    async func testClearReadingHistory() throws {
+    func clearReadingHistory() async throws {
         let articles = Array(Article.mockArticles.prefix(2))
         for article in articles {
             try await sut.saveReadingHistory(article)
@@ -132,7 +132,7 @@ struct MockStorageServiceReadingHistoryTests {
     }
 
     @Test("Clear history error simulation")
-    async func testClearHistoryError() async throws {
+    func clearHistoryError() async throws {
         let service = MockStorageService()
         service.clearHistoryError = URLError(.badURL)
         do {
@@ -149,14 +149,14 @@ struct MockStorageServicePreferencesTests {
     let sut = MockStorageService()
 
     @Test("Save preferences")
-    async func testSavePreferences() throws {
+    func savePreferences() async throws {
         let prefs = UserPreferences.default
         try await sut.saveUserPreferences(prefs)
         #expect(true)
     }
 
     @Test("Fetch preferences returns saved")
-    async func testFetchPreferences() throws {
+    func fetchPreferences() async throws {
         let prefs = UserPreferences.default
         try await sut.saveUserPreferences(prefs)
         let fetched = try await sut.fetchUserPreferences()
@@ -164,14 +164,14 @@ struct MockStorageServicePreferencesTests {
     }
 
     @Test("Fetch preferences when none saved")
-    async func testFetchPreferencesEmpty() throws {
+    func fetchPreferencesEmpty() async throws {
         let service = MockStorageService()
         let prefs = try await service.fetchUserPreferences()
         #expect(prefs == nil)
     }
 
     @Test("Preferences error simulation")
-    async func testSavePreferencesError() async throws {
+    func savePreferencesError() async throws {
         let service = MockStorageService()
         service.savePreferencesError = URLError(.badURL)
         do {
@@ -194,7 +194,7 @@ struct BookmarkedArticleTests {
     }
 
     @Test("Convert to article")
-    func testToArticle() {
+    func toArticle() {
         let article = Article.mockArticles[0]
         let bookmarked = BookmarkedArticle(from: article)
         let converted = bookmarked.toArticle()
@@ -213,7 +213,7 @@ struct BookmarkedArticleTests {
 @Suite("ReadingHistoryEntry Model Tests")
 struct ReadingHistoryEntryTests {
     @Test("Initialize from article")
-    func testInitFromArticle() {
+    func initFromArticle() {
         let article = Article.mockArticles[0]
         let entry = ReadingHistoryEntry(from: article)
         #expect(entry.articleID == article.id)
@@ -221,7 +221,7 @@ struct ReadingHistoryEntryTests {
     }
 
     @Test("Convert to article")
-    func testToArticle() {
+    func toArticle() {
         let article = Article.mockArticles[0]
         let entry = ReadingHistoryEntry(from: article)
         let converted = entry.toArticle()
@@ -236,34 +236,10 @@ struct ReadingHistoryEntryTests {
     }
 }
 
-@Suite("UserPreferencesModel Tests")
-struct UserPreferencesModelTests {
-    @Test("Initialize from UserPreferences")
-    func initFromUserPreferences() {
-        let prefs = UserPreferences.default
-        let model = UserPreferencesModel(from: prefs)
-        #expect(model.theme == prefs.theme.rawValue)
-    }
-
-    @Test("Convert to UserPreferences")
-    func testToUserPreferences() {
-        let prefs = UserPreferences.default
-        let model = UserPreferencesModel(from: prefs)
-        let converted = model.toUserPreferences()
-        #expect(converted.theme == prefs.theme)
-    }
-
-    @Test("Default preferences")
-    func defaultPreferences() {
-        let model = UserPreferencesModel(from: .default)
-        #expect(true) // Just verify it initializes
-    }
-}
-
 @Suite("Mock Storage Service Error Handling Tests")
 struct MockStorageServiceErrorTests {
     @Test("Fetch bookmarks error simulation")
-    async func testFetchBookmarksError() async throws {
+    func fetchBookmarksError() async throws {
         let service = MockStorageService()
         service.fetchBookmarksError = URLError(.badURL)
         do {
@@ -275,7 +251,7 @@ struct MockStorageServiceErrorTests {
     }
 
     @Test("Fetch preferences error simulation")
-    async func testFetchPreferencesError() async throws {
+    func fetchPreferencesError() async throws {
         let service = MockStorageService()
         service.fetchPreferencesError = URLError(.badURL)
         do {

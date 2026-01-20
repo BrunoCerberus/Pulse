@@ -174,13 +174,13 @@ struct AuthDomainStateUserTests {
 
         for index in 1 ... 5 {
             let user = AuthUser(
-                id: "user-\(i)",
-                email: "user\(i)@example.com",
-                name: "User \(i)",
-                provider: i % 2 == 0 ? .google : .apple
+                id: "user-\(index)",
+                email: "user\(index)@example.com",
+                name: "User \(index)",
+                provider: index % 2 == 0 ? .google : .apple
             )
             state.user = user
-            #expect(state.user?.id == "user-\(i)")
+            #expect(state.user?.id == "user-\(index)")
         }
     }
 }
@@ -493,8 +493,8 @@ struct AuthDomainStateComplexAuthScenarioTests {
 
         for index in 1 ... 3 {
             state.isLoading = true
-            if i < 3 {
-                state.error = "Attempt \(i) failed"
+            if index < 3 {
+                state.error = "Attempt \(index) failed"
                 state.isLoading = false
                 state.error = nil
             } else {

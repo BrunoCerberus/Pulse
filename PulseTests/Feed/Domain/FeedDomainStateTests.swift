@@ -204,7 +204,7 @@ struct FeedDomainStateCurrentDigestTests {
     @Test("Can set current digest")
     func setCurrentDigest() {
         var state = FeedDomainState()
-        let digest = DailyDigest.mockDigest
+        let digest = DailyDigest(id: "test-digest", summary: "Test summary", sourceArticles: Article.mockArticles, generatedAt: Date())
         state.currentDigest = digest
         #expect(state.currentDigest == digest)
     }
@@ -212,7 +212,7 @@ struct FeedDomainStateCurrentDigestTests {
     @Test("Can clear current digest")
     func clearCurrentDigest() {
         var state = FeedDomainState()
-        state.currentDigest = DailyDigest.mockDigest
+        state.currentDigest = DailyDigest(id: "digest", summary: "Summary", sourceArticles: [], generatedAt: Date())
         state.currentDigest = nil
         #expect(state.currentDigest == nil)
     }
@@ -220,8 +220,8 @@ struct FeedDomainStateCurrentDigestTests {
     @Test("Setting new digest replaces old digest")
     func replaceDigest() {
         var state = FeedDomainState()
-        state.currentDigest = DailyDigest.mockDigest
-        let newDigest = DailyDigest.mockDigest
+        state.currentDigest = DailyDigest(id: "digest", summary: "Summary", sourceArticles: [], generatedAt: Date())
+        let newDigest = DailyDigest(id: "new-digest", summary: "New", sourceArticles: [], generatedAt: Date())
         state.currentDigest = newDigest
         #expect(state.currentDigest == newDigest)
     }
@@ -406,7 +406,7 @@ struct FeedDomainStateComplexDigestScenarioTests {
 
         // Complete
         state.generationState = .completed
-        state.currentDigest = DailyDigest.mockDigest
+        state.currentDigest = DailyDigest(id: "digest", summary: "Summary", sourceArticles: [], generatedAt: Date())
         state.hasLoadedInitialData = true
 
         #expect(state.generationState == .completed)
@@ -435,7 +435,7 @@ struct FeedDomainStateComplexDigestScenarioTests {
 
         // First generation
         state.generationState = .completed
-        state.currentDigest = DailyDigest.mockDigest
+        state.currentDigest = DailyDigest(id: "digest", summary: "Summary", sourceArticles: [], generatedAt: Date())
         state.streamingText = "First digest text"
 
         // Regenerate
@@ -447,7 +447,7 @@ struct FeedDomainStateComplexDigestScenarioTests {
         state.generationState = .generating
         state.streamingText = "New digest text"
         state.generationState = .completed
-        state.currentDigest = DailyDigest.mockDigest
+        state.currentDigest = DailyDigest(id: "digest", summary: "Summary", sourceArticles: [], generatedAt: Date())
 
         #expect(state.streamingText == "New digest text")
         #expect(state.generationState == .completed)

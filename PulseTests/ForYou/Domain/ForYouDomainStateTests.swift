@@ -88,26 +88,26 @@ struct ForYouDomainStatePreferencesTests {
     func setCustomPreferences() {
         var state = ForYouDomainState()
         var prefs = UserPreferences.default
-        prefs.theme = .dark
+        prefs.notificationsEnabled = false
         state.preferences = prefs
-        #expect(state.preferences.theme == .dark)
+        #expect(state.preferences.notificationsEnabled == false)
     }
 
     @Test("Preferences changes don't affect default")
     func preferencesIndependentFromDefault() {
         var state = ForYouDomainState()
         var prefs = state.preferences
-        prefs.theme = .dark
+        prefs.breakingNewsNotifications = false
         state.preferences = prefs
-        #expect(state.preferences.theme == .dark)
-        #expect(UserPreferences.default.theme != .dark)
+        #expect(state.preferences.breakingNewsNotifications == false)
+        #expect(UserPreferences.default.breakingNewsNotifications == true)
     }
 
     @Test("Can reset preferences to default")
     func resetPreferencesToDefault() {
         var state = ForYouDomainState()
         var prefs = UserPreferences.default
-        prefs.theme = .dark
+        prefs.notificationsEnabled = false
         state.preferences = prefs
         state.preferences = UserPreferences.default
         #expect(state.preferences == UserPreferences.default)
@@ -259,7 +259,7 @@ struct ForYouDomainStateEquatableTests {
         var state1 = ForYouDomainState()
         var state2 = ForYouDomainState()
         var prefs = UserPreferences.default
-        prefs.theme = .dark
+        prefs.breakingNewsNotifications = false
         state1.preferences = prefs
         #expect(state1 != state2)
     }
@@ -310,7 +310,7 @@ struct ForYouDomainStateComplexScenarioTests {
         state.articles = Array(Article.mockArticles.prefix(8))
         state.isRefreshing = false
 
-        #expect(state.preferences.theme == .dark)
+        #expect(state.preferences.breakingNewsNotifications == false)
         #expect(!state.isRefreshing)
         #expect(state.articles.count == 8)
     }

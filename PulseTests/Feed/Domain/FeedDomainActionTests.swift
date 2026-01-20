@@ -118,7 +118,7 @@ struct FeedDomainActionDigestGenerationTests {
 
     @Test("Can create digestCompleted action")
     func digestCompletedAction() {
-        let digest = DailyDigest.mockDigest
+        let digest = DailyDigest(id: "test-digest", summary: "Test summary", sourceArticles: Article.mockArticles, generatedAt: Date())
         let action = FeedDomainAction.digestCompleted(digest)
         #expect(action == .digestCompleted(digest))
     }
@@ -231,7 +231,7 @@ struct FeedDomainActionComplexDigestWorkflowTests {
             .digestTokenReceived("First "),
             .digestTokenReceived("chunk "),
             .digestTokenReceived("of text"),
-            .digestCompleted(DailyDigest.mockDigest),
+            .digestCompleted(DailyDigest(id: "mock", summary: "Mock", sourceArticles: [], generatedAt: Date())),
             .generationStateChanged(.completed),
         ]
 
@@ -288,7 +288,7 @@ struct FeedDomainActionComplexDigestWorkflowTests {
             actions.append(.digestTokenReceived(chunk))
         }
 
-        actions.append(.digestCompleted(DailyDigest.mockDigest))
+        actions.append(.digestCompleted(DailyDigest(id: "mock", summary: "Mock", sourceArticles: [], generatedAt: Date())))
 
         #expect(actions.count == 7)
         #expect(actions[1] == .digestTokenReceived("This "))

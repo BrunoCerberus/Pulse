@@ -59,25 +59,25 @@ struct SettingsDomainStatePreferencesTests {
     func setCustomPreferences() {
         var state = SettingsDomainState()
         var prefs = UserPreferences.default
-        prefs.theme = .dark
+        prefs.preferredLanguage = "es"
         state.preferences = prefs
-        #expect(state.preferences.theme == .dark)
+        #expect(state.preferences.preferredLanguage == "es")
     }
 
-    @Test("Can update preferences theme")
-    func updatePreferencesTheme() {
+    @Test("Can update preferences language")
+    func updatePreferencesLanguage() {
         var state = SettingsDomainState()
         var prefs = state.preferences
-        prefs.theme = .light
+        prefs.preferredLanguage = "fr"
         state.preferences = prefs
-        #expect(state.preferences.theme == .light)
+        #expect(state.preferences.preferredLanguage == "fr")
     }
 
     @Test("Can reset preferences to default")
     func resetPreferencesToDefault() {
         var state = SettingsDomainState()
         var prefs = UserPreferences.default
-        prefs.theme = .dark
+        prefs.preferredLanguage = "de"
         state.preferences = prefs
         state.preferences = UserPreferences.default
         #expect(state.preferences == UserPreferences.default)
@@ -87,14 +87,15 @@ struct SettingsDomainStatePreferencesTests {
     func multiplePreferenceChanges() {
         var state = SettingsDomainState()
         var prefs = state.preferences
-        prefs.theme = .dark
+        prefs.notificationsEnabled = false
         state.preferences = prefs
 
         var updatedPrefs = state.preferences
-        updatedPrefs.theme = .light
+        updatedPrefs.breakingNewsNotifications = false
         state.preferences = updatedPrefs
 
-        #expect(state.preferences.theme == .light)
+        #expect(!state.preferences.notificationsEnabled)
+        #expect(!state.preferences.breakingNewsNotifications)
     }
 }
 
@@ -303,7 +304,7 @@ struct SettingsDomainStateEquatableTests {
         var state1 = SettingsDomainState()
         var state2 = SettingsDomainState()
         var prefs = UserPreferences.default
-        prefs.theme = .dark
+        prefs.notificationsEnabled = false
         state1.preferences = prefs
         #expect(state1 != state2)
     }
@@ -345,7 +346,7 @@ struct SettingsDomainStateEquatableTests {
         var state1 = SettingsDomainState()
         var state2 = SettingsDomainState()
         var prefs = UserPreferences.default
-        prefs.theme = .dark
+        prefs.notificationsEnabled = false
         state1.preferences = prefs
         state2.preferences = prefs
         #expect(state1 == state2)
@@ -359,19 +360,19 @@ struct SettingsDomainStateComplexSettingsScenarioTests {
         var state = SettingsDomainState()
         state.isLoading = true
         var prefs = UserPreferences.default
-        prefs.theme = .dark
+        prefs.notificationsEnabled = false
         state.preferences = prefs
         state.isLoading = false
 
         #expect(!state.isLoading)
-        #expect(state.preferences.theme == .dark)
+        #expect(state.preferences.notificationsEnabled == false)
     }
 
     @Test("Simulate saving preferences")
     func savingPreferences() {
         var state = SettingsDomainState()
         var prefs = state.preferences
-        prefs.theme = .dark
+        prefs.notificationsEnabled = false
         state.preferences = prefs
 
         state.isSaving = true
@@ -379,7 +380,7 @@ struct SettingsDomainStateComplexSettingsScenarioTests {
         state.isSaving = false
 
         #expect(!state.isSaving)
-        #expect(state.preferences.theme == .dark)
+        #expect(state.preferences.notificationsEnabled == false)
     }
 
     @Test("Simulate clear history confirmation workflow")
@@ -421,11 +422,11 @@ struct SettingsDomainStateComplexSettingsScenarioTests {
         state.isLoading = true
 
         var prefs = state.preferences
-        prefs.theme = .dark
+        prefs.notificationsEnabled = false
         state.preferences = prefs
         state.isLoading = false
 
-        #expect(state.preferences.theme == .dark)
+        #expect(state.preferences.notificationsEnabled == false)
 
         state.newMutedSource = "Source"
         state.newMutedKeyword = "Keyword"
@@ -461,11 +462,11 @@ struct SettingsDomainStateComplexSettingsScenarioTests {
         state.error = nil
         state.isSaving = true
         var prefs = state.preferences
-        prefs.theme = .dark
+        prefs.notificationsEnabled = false
         state.preferences = prefs
         state.isSaving = false
 
         #expect(state.error == nil)
-        #expect(state.preferences.theme == .dark)
+        #expect(state.preferences.notificationsEnabled == false)
     }
 }
