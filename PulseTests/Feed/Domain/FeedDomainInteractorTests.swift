@@ -139,4 +139,50 @@ struct FeedDomainInteractorTests {
         let state = sut.currentState
         #expect(state.modelStatus == .loading(progress: 0.5))
     }
+
+    // MARK: - Model Preload Tests
+
+    @Test("Preload model triggered when no cached digest")
+    func preloadTriggeredWithoutCache() async throws {
+        mockFeedService.cachedDigest = nil
+        mockFeedService.loadDelay = 0.01
+        mockStorageService.readingHistory = Article.mockArticles
+
+        sut.dispatch(action: .loadInitialData)
+        try await waitForStateUpdate()
+
+        #expect(mockFeedService.loadModelCallCount > 0, "Model preload should be triggered")
+    }
+
+    @Test("Preload model skipped when cached digest exists")
+    func preloadSkippedWithCachedDigest() async throws {
+        let cachedDigest = DailyDigest(
+            id: "cached",
+            summary: "Cached summary",
+            sourceArticles: [],
+            generatedAt: Date()
+        )
+        mockFeedService.cachedDigest = cachedDigest
+        mockStorageService.readingHistory = Article.mockArticles
+
+        sut.dispatch(action: .loadInitialData)
+        try await waitForStateUpdate()
+
+        #expect(mockFeedService.loadModelCallCount == 0, "Model preload should be skipped when cache exists")
+    }
+
+    @Test("Preload failure does not prevent generation")
+    func preloadFailureAllowsGeneration() async throws {
+        mockFeedService.cachedDigest = nil
+        mockFeedService.shouldFail = true
+        mockFeedService.loadDelay = 0.01
+        mockStorageService.readingHistory = Article.mockArticles
+
+        sut.dispatch(action: .loadInitialData)
+        try await waitForStateUpdate()
+
+        // Even with preload failure, state should be ready for generation attempt
+        let state = sut.currentState
+        #expect(state.hasLoadedInitialData, "Should still load initial data despite preload failure")
+    }
 }

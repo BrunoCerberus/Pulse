@@ -80,7 +80,7 @@ final class LLMModelManager: @unchecked Sendable {
             topK: 40,
             topP: 0.9,
             nCTX: 3072, // Reduced context window (prompt ~2000 + output ~1000)
-            temperature: 0.5, // Lower temperature for faster, more deterministic output
+            temperature: 0.5, // Lower temperature for more deterministic, focused output
             batchSize: 2048, // Larger batches improve inference throughput
             maxTokenCount: 3072, // Must be >= prompt tokens + max generated tokens
             stopTokens: ["</digest>", "---"],
