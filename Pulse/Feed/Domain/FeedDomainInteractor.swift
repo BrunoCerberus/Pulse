@@ -11,7 +11,7 @@ final class FeedDomainInteractor: CombineInteractor {
     private let stateSubject = CurrentValueSubject<FeedDomainState, Never>(.initial)
     private var cancellables = Set<AnyCancellable>()
     private var generationTask: Task<Void, Never>?
-    private var isPreloading = false
+    private var preloadTask: Task<Void, Never>?
 
     var statePublisher: AnyPublisher<FeedDomainState, Never> {
         stateSubject.eraseToAnyPublisher()
@@ -109,13 +109,13 @@ final class FeedDomainInteractor: CombineInteractor {
     // MARK: - Model Preloading
 
     private func preloadModel() {
-        guard !isPreloading else { return }
-        isPreloading = true
+        // Skip if preload already in progress (task-based synchronization)
+        guard preloadTask == nil else { return }
 
-        Task { @MainActor in
-            defer { isPreloading = false }
+        preloadTask = Task { @MainActor [weak self] in
+            defer { self?.preloadTask = nil }
             do {
-                try await feedService.loadModelIfNeeded()
+                try await self?.feedService.loadModelIfNeeded()
             } catch {
                 // Preloading failure is non-fatal; generation will retry loading
                 Logger.shared.debug(
@@ -207,7 +207,7 @@ final class FeedDomainInteractor: CombineInteractor {
                     // Update UI with cleaned text during streaming
                     if tokensSinceLastUpdate >= updateBatchSize {
                         let currentText = cleanLLMOutput(fullText)
-                        await MainActor.run { [weak self, currentText] in
+                        await MainActor.run { [weak self] in
                             self?.updateState { $0.streamingText = currentText }
                         }
                         tokensSinceLastUpdate = 0
