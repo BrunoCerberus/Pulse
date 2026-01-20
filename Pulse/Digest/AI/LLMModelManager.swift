@@ -78,12 +78,12 @@ final class LLMModelManager: @unchecked Sendable {
         let config = Configuration(
             topK: 40,
             topP: 0.9,
-            nCTX: 4096, // Context window: enough for prompt + generated text
-            temperature: 0.6,
-            batchSize: 512,
-            maxTokenCount: 4096, // Must be >= prompt tokens + max generated tokens
+            nCTX: LLMConfiguration.contextSize,
+            temperature: 0.5, // Lower temperature for more deterministic, focused output
+            batchSize: LLMConfiguration.batchSize, // Memory-based: 2048 for 4GB+, 512 for older devices
+            maxTokenCount: LLMConfiguration.contextSize,
             stopTokens: ["</digest>", "---"],
-            timeout: 120.0 // 2 minutes for full digest generation on mobile
+            timeout: LLMConfiguration.generationTimeout
         )
 
         // Create and initialize outside the lock (expensive operation)

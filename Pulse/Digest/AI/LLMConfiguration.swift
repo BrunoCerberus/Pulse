@@ -19,10 +19,11 @@ enum LLMConfiguration {
         modelURL?.path ?? ""
     }
 
-    /// Context window size (tokens)
-    static var contextSize: Int { 4096 }
+    /// Context window size (tokens) - reduced for faster inference
+    static var contextSize: Int { 3072 }
 
-    /// Batch size for inference
+    /// Batch size for prompt processing
+    /// 512 is optimal for token-by-token generation (larger batches don't help and waste memory)
     static var batchSize: Int { 512 }
 
     /// Number of threads to use (based on device)
@@ -37,12 +38,13 @@ enum LLMConfiguration {
     static var generationTimeout: TimeInterval { 120.0 }
 
     /// Maximum articles to include in digest prompt
-    /// Capped to prevent context overflow and ensure reasonable generation time
-    /// ~250 tokens per article, leaving room for system prompt (~100) and output (~1000)
-    static var maxArticlesForDigest: Int { 10 }
+    /// Capped to prevent context overflow: 8 × 175 + 1500 reserved = 2900 < 3072 context
+    static var maxArticlesForDigest: Int { 8 }
 
-    /// Estimated tokens per article in digest prompt
-    static var estimatedTokensPerArticle: Int { 250 }
+    /// Estimated tokens per article in digest prompt (title + source + category + 150 char description)
+    /// ~15 title + ~3 source + ~2 category + ~37 description (150 chars / 4) + ~5 structure ≈ 62
+    /// Using 175 as conservative estimate with safety margin
+    static var estimatedTokensPerArticle: Int { 175 }
 
     /// Reserved tokens for system prompt and generation output
     static var reservedContextTokens: Int { 1500 }

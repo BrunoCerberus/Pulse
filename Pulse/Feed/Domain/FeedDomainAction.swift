@@ -5,6 +5,7 @@ enum FeedDomainAction: Equatable {
     case loadInitialData
 
     // Model management
+    case preloadModel
     case modelStatusChanged(LLMModelStatus)
 
     // History

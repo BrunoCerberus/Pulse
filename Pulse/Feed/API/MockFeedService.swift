@@ -10,6 +10,10 @@ final class MockFeedService: FeedService {
     var mockDigest: DailyDigest?
     var mockModelStatus: LLMModelStatus = .notLoaded
 
+    // MARK: - Call Tracking
+
+    private(set) var loadModelCallCount = 0
+
     /// Alias for mockDigest for cleaner test code
     var cachedDigest: DailyDigest? {
         get { mockDigest }
@@ -37,6 +41,7 @@ final class MockFeedService: FeedService {
     }
 
     func loadModelIfNeeded() async throws {
+        loadModelCallCount += 1
         guard !isModelReady else { return }
 
         if shouldFail {

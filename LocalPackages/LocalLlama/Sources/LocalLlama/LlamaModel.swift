@@ -27,6 +27,8 @@ class LlamaModel {
         #if targetEnvironment(simulator)
         model_params.n_gpu_layers = 0
         #endif
+        // Memory mapping for faster model loading
+        model_params.use_mmap = true
 
         // Use new API: llama_model_load_from_file
         guard let model = llama_model_load_from_file(path, model_params) else {
