@@ -338,4 +338,116 @@ final class HomeViewSnapshotTests: XCTestCase {
             record: false
         )
     }
+
+    // MARK: - Error State Tests
+
+    func testHomeViewErrorState() {
+        let view = NavigationStack {
+            HomeErrorPreview()
+        }
+        let controller = UIHostingController(rootView: view)
+
+        assertSnapshot(
+            of: controller,
+            as: .wait(for: 1.0, on: .image(on: iPhoneAirConfig, precision: 0.99)),
+            record: false
+        )
+    }
+
+    func testHomeViewErrorStateLightMode() {
+        let view = NavigationStack {
+            HomeErrorPreview()
+        }
+        let controller = UIHostingController(rootView: view)
+
+        assertSnapshot(
+            of: controller,
+            as: .wait(for: 1.0, on: .image(on: iPhoneAirLightConfig, precision: 0.99)),
+            record: false
+        )
+    }
+
+    // MARK: - Empty State Tests
+
+    func testHomeViewEmptyState() {
+        let view = NavigationStack {
+            HomeEmptyPreview()
+        }
+        let controller = UIHostingController(rootView: view)
+
+        assertSnapshot(
+            of: controller,
+            as: .wait(for: 1.0, on: .image(on: iPhoneAirConfig, precision: 0.99)),
+            record: false
+        )
+    }
+}
+
+// MARK: - Preview Helpers for State Testing
+
+private struct HomeErrorPreview: View {
+    var body: some View {
+        ZStack {
+            LinearGradient.subtleBackground
+                .ignoresSafeArea()
+
+            GlassCard(style: .thin, shadowStyle: .medium, padding: Spacing.xl) {
+                VStack(spacing: Spacing.md) {
+                    Image(systemName: "exclamationmark.triangle.fill")
+                        .font(.system(size: IconSize.xxl))
+                        .foregroundStyle(Color.Semantic.warning)
+
+                    Text("Unable to Load News")
+                        .font(Typography.titleMedium)
+
+                    Text("Please check your internet connection and try again.")
+                        .font(Typography.bodyMedium)
+                        .foregroundStyle(.secondary)
+                        .multilineTextAlignment(.center)
+
+                    Button {} label: {
+                        Text("Try Again")
+                            .font(Typography.labelLarge)
+                            .foregroundStyle(.white)
+                            .padding(.horizontal, Spacing.lg)
+                            .padding(.vertical, Spacing.sm)
+                            .background(Color.Accent.primary)
+                            .clipShape(Capsule())
+                    }
+                    .buttonStyle(.plain)
+                }
+            }
+            .padding(Spacing.lg)
+        }
+        .navigationTitle("Home")
+        .toolbarBackground(.hidden, for: .navigationBar)
+    }
+}
+
+private struct HomeEmptyPreview: View {
+    var body: some View {
+        ZStack {
+            LinearGradient.subtleBackground
+                .ignoresSafeArea()
+
+            GlassCard(style: .thin, shadowStyle: .medium, padding: Spacing.xl) {
+                VStack(spacing: Spacing.md) {
+                    Image(systemName: "newspaper")
+                        .font(.system(size: IconSize.xxl))
+                        .foregroundStyle(.secondary)
+
+                    Text("No Articles")
+                        .font(Typography.titleMedium)
+
+                    Text("No news articles are available right now. Pull to refresh.")
+                        .font(Typography.bodyMedium)
+                        .foregroundStyle(.secondary)
+                        .multilineTextAlignment(.center)
+                }
+            }
+            .padding(Spacing.lg)
+        }
+        .navigationTitle("Home")
+        .toolbarBackground(.hidden, for: .navigationBar)
+    }
 }

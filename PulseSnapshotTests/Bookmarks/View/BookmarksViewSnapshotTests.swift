@@ -25,6 +25,13 @@ final class BookmarksViewSnapshotTests: XCTestCase {
         serviceLocator.register(StorageService.self, instance: MockStorageService())
     }
 
+    // Light mode config
+    private let iPhoneAirLightConfig = ViewImageConfig(
+        safeArea: UIEdgeInsets(top: 59, left: 0, bottom: 34, right: 0),
+        size: CGSize(width: 393, height: 852),
+        traits: UITraitCollection(userInterfaceStyle: .light)
+    )
+
     // MARK: - Empty State
 
     func testBookmarksViewEmpty() {
@@ -39,6 +46,22 @@ final class BookmarksViewSnapshotTests: XCTestCase {
         assertSnapshot(
             of: controller,
             as: .wait(for: 1.0, on: .image(on: iPhoneAirConfig, precision: 0.99)),
+            record: false
+        )
+    }
+
+    func testBookmarksViewEmptyLightMode() {
+        let view = NavigationStack {
+            BookmarksView(
+                router: BookmarksNavigationRouter(),
+                viewModel: BookmarksViewModel(serviceLocator: serviceLocator)
+            )
+        }
+        let controller = UIHostingController(rootView: view)
+
+        assertSnapshot(
+            of: controller,
+            as: .wait(for: 1.0, on: .image(on: iPhoneAirLightConfig, precision: 0.99)),
             record: false
         )
     }
@@ -84,6 +107,19 @@ final class BookmarksViewSnapshotTests: XCTestCase {
         assertSnapshot(
             of: controller,
             as: .wait(for: 1.5, on: .image(on: iPhoneAirConfig, precision: 0.99)),
+            record: false
+        )
+    }
+
+    func testBookmarksViewWithBookmarksLightMode() {
+        let view = NavigationStack {
+            BookmarksPopulatedPreview()
+        }
+        let controller = UIHostingController(rootView: view)
+
+        assertSnapshot(
+            of: controller,
+            as: .wait(for: 1.5, on: .image(on: iPhoneAirLightConfig, precision: 0.99)),
             record: false
         )
     }
