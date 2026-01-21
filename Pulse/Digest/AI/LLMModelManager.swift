@@ -334,10 +334,17 @@ final class LLMModelManager: @unchecked Sendable {
         return hasEnough
     }
 
-    /// Checks if the system is currently under memory pressure using os_proc_available_memory
+    /// Checks if the system is currently under memory pressure using os_proc_available_memory.
+    ///
+    /// - Important: Memory pressure detection is disabled in simulator because `os_proc_available_memory()`
+    ///   returns unreliable values in that environment. **Memory-related behavior must be tested on physical
+    ///   devices** to verify OOM prevention logic works correctly.
+    ///
+    /// - Returns: `true` if available memory is below critical threshold, `false` otherwise (or always `false` in simulator)
     private func isUnderMemoryPressure() -> Bool {
-        // os_proc_available_memory() is unreliable in simulator - always returns high values
         #if targetEnvironment(simulator)
+            // Simulator always reports high available memory regardless of actual pressure.
+            // Memory testing MUST be performed on physical devices.
             return false
         #else
             // Use os_proc_available_memory (iOS 13+)

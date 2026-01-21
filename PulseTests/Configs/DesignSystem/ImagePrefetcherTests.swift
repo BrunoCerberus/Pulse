@@ -13,10 +13,11 @@ struct ImagePrefetcherTests {
     // MARK: - Singleton Tests
 
     @Test("ImagePrefetcher shared instance is singleton")
-    func sharedInstanceIsSingleton() {
+    func sharedInstanceIsSingleton() async {
         let instance1 = ImagePrefetcher.shared
         let instance2 = ImagePrefetcher.shared
 
+        // Actor identity comparison
         #expect(instance1 === instance2)
     }
 
@@ -25,43 +26,43 @@ struct ImagePrefetcherTests {
     @Test("prefetch adds URLs to pending queue")
     func prefetchAddsURLsToPendingQueue() async throws {
         let prefetcher = ImagePrefetcher.shared
-        prefetcher.cancelAll()
+        await prefetcher.cancelAll()
 
         let urls = (0 ..< 10).map { _ in uniqueURL() }
 
-        prefetcher.prefetch(urls: urls)
+        await prefetcher.prefetch(urls: urls)
 
         // Give some time for processing to start
         try await Task.sleep(nanoseconds: 50_000_000)
 
         // Cancel all to clean up
-        prefetcher.cancelAll()
+        await prefetcher.cancelAll()
     }
 
     @Test("prefetch skips duplicate URLs")
     func prefetchSkipsDuplicates() async throws {
         let prefetcher = ImagePrefetcher.shared
-        prefetcher.cancelAll()
+        await prefetcher.cancelAll()
 
         let url = uniqueURL()
 
         // Prefetch same URL twice
-        prefetcher.prefetch(urls: [url])
-        prefetcher.prefetch(urls: [url])
+        await prefetcher.prefetch(urls: [url])
+        await prefetcher.prefetch(urls: [url])
 
         // Give some time for processing
         try await Task.sleep(nanoseconds: 50_000_000)
 
-        prefetcher.cancelAll()
+        await prefetcher.cancelAll()
     }
 
     @Test("prefetch handles empty array gracefully")
-    func prefetchHandlesEmptyArray() {
+    func prefetchHandlesEmptyArray() async {
         let prefetcher = ImagePrefetcher.shared
-        prefetcher.cancelAll()
+        await prefetcher.cancelAll()
 
         // Should not crash or cause issues
-        prefetcher.prefetch(urls: [])
+        await prefetcher.prefetch(urls: [])
     }
 
     // MARK: - Cancel Tests
@@ -69,18 +70,18 @@ struct ImagePrefetcherTests {
     @Test("cancelPrefetch removes URLs from queue")
     func cancelPrefetchRemovesFromQueue() async throws {
         let prefetcher = ImagePrefetcher.shared
-        prefetcher.cancelAll()
+        await prefetcher.cancelAll()
 
         let urls = (0 ..< 10).map { _ in uniqueURL() }
-        prefetcher.prefetch(urls: urls)
+        await prefetcher.prefetch(urls: urls)
 
         // Cancel specific URLs
-        prefetcher.cancelPrefetch(for: Array(urls.prefix(5)))
+        await prefetcher.cancelPrefetch(for: Array(urls.prefix(5)))
 
         // Give some time for cancellation to process
         try await Task.sleep(nanoseconds: 50_000_000)
 
-        prefetcher.cancelAll()
+        await prefetcher.cancelAll()
     }
 
     @Test("cancelAll clears all pending and active tasks")
@@ -88,27 +89,27 @@ struct ImagePrefetcherTests {
         let prefetcher = ImagePrefetcher.shared
 
         let urls = (0 ..< 20).map { _ in uniqueURL() }
-        prefetcher.prefetch(urls: urls)
+        await prefetcher.prefetch(urls: urls)
 
         // Give some time for tasks to start
         try await Task.sleep(nanoseconds: 50_000_000)
 
-        prefetcher.cancelAll()
+        await prefetcher.cancelAll()
 
         // Should be able to prefetch again after cancel
-        prefetcher.prefetch(urls: [uniqueURL()])
+        await prefetcher.prefetch(urls: [uniqueURL()])
 
-        prefetcher.cancelAll()
+        await prefetcher.cancelAll()
     }
 
     @Test("cancelPrefetch handles URLs not in queue gracefully")
-    func cancelPrefetchHandlesUnknownURLs() {
+    func cancelPrefetchHandlesUnknownURLs() async {
         let prefetcher = ImagePrefetcher.shared
-        prefetcher.cancelAll()
+        await prefetcher.cancelAll()
 
         // Should not crash when cancelling URLs that were never prefetched
         let unknownURLs = (0 ..< 5).map { _ in uniqueURL() }
-        prefetcher.cancelPrefetch(for: unknownURLs)
+        await prefetcher.cancelPrefetch(for: unknownURLs)
     }
 
     // MARK: - Concurrency Tests
@@ -116,16 +117,16 @@ struct ImagePrefetcherTests {
     @Test("prefetch limits concurrent operations")
     func prefetchLimitsConcurrentOperations() async throws {
         let prefetcher = ImagePrefetcher.shared
-        prefetcher.cancelAll()
+        await prefetcher.cancelAll()
 
         // Add more URLs than max concurrent limit (4)
         let urls = (0 ..< 20).map { _ in uniqueURL() }
-        prefetcher.prefetch(urls: urls)
+        await prefetcher.prefetch(urls: urls)
 
         // Give time for queue to process
         try await Task.sleep(nanoseconds: 100_000_000)
 
-        prefetcher.cancelAll()
+        await prefetcher.cancelAll()
     }
 
     // MARK: - Thread Safety Tests
@@ -133,14 +134,14 @@ struct ImagePrefetcherTests {
     @Test("prefetch is thread-safe for concurrent calls")
     func prefetchIsThreadSafe() async throws {
         let prefetcher = ImagePrefetcher.shared
-        prefetcher.cancelAll()
+        await prefetcher.cancelAll()
 
         // Perform concurrent prefetch operations
         await withTaskGroup(of: Void.self) { group in
             for _ in 0 ..< 10 {
                 group.addTask {
                     let urls = (0 ..< 5).map { _ in self.uniqueURL() }
-                    prefetcher.prefetch(urls: urls)
+                    await prefetcher.prefetch(urls: urls)
                 }
             }
         }
@@ -148,16 +149,16 @@ struct ImagePrefetcherTests {
         // Give time to settle
         try await Task.sleep(nanoseconds: 100_000_000)
 
-        prefetcher.cancelAll()
+        await prefetcher.cancelAll()
     }
 
     @Test("cancelPrefetch is thread-safe for concurrent calls")
     func cancelPrefetchIsThreadSafe() async throws {
         let prefetcher = ImagePrefetcher.shared
-        prefetcher.cancelAll()
+        await prefetcher.cancelAll()
 
         let urls = (0 ..< 50).map { _ in uniqueURL() }
-        prefetcher.prefetch(urls: urls)
+        await prefetcher.prefetch(urls: urls)
 
         // Perform concurrent cancel operations
         await withTaskGroup(of: Void.self) { group in
@@ -167,11 +168,37 @@ struct ImagePrefetcherTests {
                 let urlsToCancel = Array(urls[startIndex ..< endIndex])
 
                 group.addTask {
-                    prefetcher.cancelPrefetch(for: urlsToCancel)
+                    await prefetcher.cancelPrefetch(for: urlsToCancel)
                 }
             }
         }
 
-        prefetcher.cancelAll()
+        await prefetcher.cancelAll()
+    }
+
+    // MARK: - Actor Isolation Tests
+
+    @Test("actor provides thread-safe access to shared state")
+    func actorProvidesThreadSafety() async throws {
+        let prefetcher = ImagePrefetcher.shared
+        await prefetcher.cancelAll()
+
+        // Rapidly interleave prefetch and cancel operations
+        await withTaskGroup(of: Void.self) { group in
+            for _ in 0 ..< 20 {
+                let url = uniqueURL()
+
+                group.addTask {
+                    await prefetcher.prefetch(urls: [url])
+                }
+
+                group.addTask {
+                    await prefetcher.cancelPrefetch(for: [url])
+                }
+            }
+        }
+
+        // Should complete without crashes or data corruption
+        await prefetcher.cancelAll()
     }
 }

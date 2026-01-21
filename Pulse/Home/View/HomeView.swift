@@ -207,7 +207,9 @@ struct HomeView<R: HomeNavigationRouter>: View {
                             .onDisappear {
                                 // Cancel prefetch for scrolled-past items to free resources
                                 if let url = item.imageURL {
-                                    ImagePrefetcher.shared.cancelPrefetch(for: [url])
+                                    Task {
+                                        await ImagePrefetcher.shared.cancelPrefetch(for: [url])
+                                    }
                                 }
                             }
                         }
@@ -243,7 +245,9 @@ struct HomeView<R: HomeNavigationRouter>: View {
             .compactMap { $0.imageURL }
 
         guard !upcomingURLs.isEmpty else { return }
-        ImagePrefetcher.shared.prefetch(urls: upcomingURLs)
+        Task {
+            await ImagePrefetcher.shared.prefetch(urls: upcomingURLs)
+        }
     }
 
     private var breakingNewsCarousel: some View {
