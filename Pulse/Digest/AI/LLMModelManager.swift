@@ -341,32 +341,50 @@ final class LLMModelManager: @unchecked Sendable {
     ///   devices** to verify OOM prevention logic works correctly.
     ///
     /// - Returns: `true` if available memory is below critical threshold, `false` otherwise (or always `false` in simulator)
-    /// Tracks whether simulator warning has been logged to avoid noise
-    private static var hasLoggedSimulatorWarning = false
+    ///
+    /// Thread-safe static lock for one-time simulator warning log.
+    /// Using a lock ensures the warning is logged exactly once even under concurrent access.
+    private static let simulatorWarningLock = OSAllocatedUnfairLock(initialState: false)
 
     private func isUnderMemoryPressure() -> Bool {
         #if targetEnvironment(simulator)
+            // Allow forcing memory pressure check via environment variable for testing.
+            // Set FORCE_MEMORY_PRESSURE_CHECK=1 in your test scheme to enable.
+            #if DEBUG
+                if ProcessInfo.processInfo.environment["FORCE_MEMORY_PRESSURE_CHECK"] == "1" {
+                    return checkActualMemoryPressure()
+                }
+            #endif
+
             // Simulator always reports high available memory regardless of actual pressure.
             // Memory testing MUST be performed on physical devices.
             #if DEBUG
-                if !Self.hasLoggedSimulatorWarning {
-                    Self.hasLoggedSimulatorWarning = true
-                    logger.debug(
-                        "⚠️ Memory pressure check disabled in simulator - test on physical device for accurate results",
-                        category: logCategory
-                    )
+                Self.simulatorWarningLock.withLock { hasLogged in
+                    if !hasLogged {
+                        hasLogged = true
+                        logger.debug(
+                            "⚠️ Memory pressure check disabled in simulator - test on physical device or set FORCE_MEMORY_PRESSURE_CHECK=1",
+                            category: logCategory
+                        )
+                    }
                 }
             #endif
             return false
         #else
-            // Use os_proc_available_memory (iOS 13+)
-            // This is more accurate than calculating from task_info
-            let availableMemory = os_proc_available_memory()
-            // Consider system under pressure if less than 200MB available at OS level
-            // This is a conservative threshold that catches critical states before OOM killer acts
-            let criticalThreshold = 200 * 1024 * 1024 // 200MB
-            return availableMemory < criticalThreshold
+            return checkActualMemoryPressure()
         #endif
+    }
+
+    /// Performs the actual memory pressure check using os_proc_available_memory.
+    /// Extracted to allow testing via FORCE_MEMORY_PRESSURE_CHECK environment variable.
+    private func checkActualMemoryPressure() -> Bool {
+        // Use os_proc_available_memory (iOS 13+)
+        // This is more accurate than calculating from task_info
+        let availableMemory = os_proc_available_memory()
+        // Consider system under pressure if less than 200MB available at OS level
+        // This is a conservative threshold that catches critical states before OOM killer acts
+        let criticalThreshold = 200 * 1024 * 1024 // 200MB
+        return availableMemory < criticalThreshold
     }
 
     private func setupMemoryWarningObserver() {
