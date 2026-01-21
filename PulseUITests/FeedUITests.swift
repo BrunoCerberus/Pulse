@@ -82,7 +82,13 @@ final class FeedUITests: BaseUITestCase {
 
         navigateToFeed()
 
-        XCTAssertTrue(feedTab.isSelected, "Feed tab should be selected")
+        // Wait for tab selection state to settle after navigation
+        // CI machines may have slight delays in updating accessibility properties
+        wait(for: 0.5)
+
+        // Re-query the tab to get updated selection state
+        let feedTabAfterNav = app.tabBars.buttons["Feed"]
+        XCTAssertTrue(feedTabAfterNav.isSelected, "Feed tab should be selected")
 
         let navTitle = app.navigationBars["Daily Digest"]
         XCTAssertTrue(navTitle.waitForExistence(timeout: Self.defaultTimeout), "Navigation title 'Daily Digest' should exist")
