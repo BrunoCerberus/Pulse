@@ -20,12 +20,9 @@ class BaseUITestCase: XCTestCase {
 
     // MARK: - Instance-level Setup (runs before each test)
 
-    override func setUpWithError() throws {
-        continueAfterFailure = false
-        XCUIDevice.shared.orientation = .portrait
-
-        app = XCUIApplication()
-
+    /// Override this method in subclasses to configure app-specific environment variables
+    /// Called before app.launch() to allow customization of launch environment
+    func configureAppEnvironment(_ app: XCUIApplication) {
         // Speed optimizations
         app.launchEnvironment["UI_TESTING"] = "1"
         app.launchEnvironment["DISABLE_ANIMATIONS"] = "1"
@@ -33,6 +30,16 @@ class BaseUITestCase: XCTestCase {
         // Launch arguments to speed up tests
         app.launchArguments += ["-UIViewAnimationDuration", "0.01"]
         app.launchArguments += ["-CATransactionAnimationDuration", "0.01"]
+    }
+
+    override func setUpWithError() throws {
+        continueAfterFailure = false
+        XCUIDevice.shared.orientation = .portrait
+
+        app = XCUIApplication()
+
+        // Configure environment - subclasses can override to add custom environment variables
+        configureAppEnvironment(app)
 
         app.launch()
 
