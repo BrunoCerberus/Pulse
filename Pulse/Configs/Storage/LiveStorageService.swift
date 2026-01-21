@@ -8,21 +8,36 @@ import SwiftData
 /// Uses @ModelActor for automatic context management with SwiftData.
 @ModelActor
 actor BackgroundStorageActor {
+    private let logCategory = "BackgroundStorage"
+
     /// Saves or updates reading history for an article.
     /// Runs on a background context to avoid main thread blocking.
+    ///
+    /// - Note: Callers typically use `try?` since reading history is non-critical data.
+    ///   Errors are logged here for debugging purposes even when callers ignore them.
     func saveReadingHistory(_ article: Article) throws {
         let articleID = article.id
         let descriptor = FetchDescriptor<ReadingHistoryEntry>(
             predicate: #Predicate { $0.articleID == articleID }
         )
 
-        if let existing = try modelContext.fetch(descriptor).first {
-            existing.readAt = Date()
-        } else {
-            let entry = ReadingHistoryEntry(from: article)
-            modelContext.insert(entry)
+        do {
+            if let existing = try modelContext.fetch(descriptor).first {
+                existing.readAt = Date()
+            } else {
+                let entry = ReadingHistoryEntry(from: article)
+                modelContext.insert(entry)
+            }
+            try modelContext.save()
+        } catch {
+            // Log error for debugging - callers may silently ignore with try?
+            // but we want visibility into storage failures
+            Logger.shared.error(
+                "Failed to save reading history for article \(articleID): \(error.localizedDescription)",
+                category: logCategory
+            )
+            throw error
         }
-        try modelContext.save()
     }
 }
 

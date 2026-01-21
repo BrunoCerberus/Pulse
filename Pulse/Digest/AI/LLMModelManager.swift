@@ -341,10 +341,22 @@ final class LLMModelManager: @unchecked Sendable {
     ///   devices** to verify OOM prevention logic works correctly.
     ///
     /// - Returns: `true` if available memory is below critical threshold, `false` otherwise (or always `false` in simulator)
+    /// Tracks whether simulator warning has been logged to avoid noise
+    private static var hasLoggedSimulatorWarning = false
+
     private func isUnderMemoryPressure() -> Bool {
         #if targetEnvironment(simulator)
             // Simulator always reports high available memory regardless of actual pressure.
             // Memory testing MUST be performed on physical devices.
+            #if DEBUG
+                if !Self.hasLoggedSimulatorWarning {
+                    Self.hasLoggedSimulatorWarning = true
+                    logger.debug(
+                        "⚠️ Memory pressure check disabled in simulator - test on physical device for accurate results",
+                        category: logCategory
+                    )
+                }
+            #endif
             return false
         #else
             // Use os_proc_available_memory (iOS 13+)

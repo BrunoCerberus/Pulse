@@ -1,6 +1,25 @@
 import Foundation
 import UIKit
 
+// MARK: - Prefetch Error
+
+/// Errors specific to image prefetching operations.
+/// Separate from CancellationError for better debugging and logging.
+private enum PrefetchError: Error, CustomStringConvertible {
+    /// The prefetch operation exceeded the configured timeout.
+    /// This typically indicates a slow or stalled network request.
+    case timeout
+
+    var description: String {
+        switch self {
+        case .timeout:
+            return "Prefetch operation timed out"
+        }
+    }
+}
+
+// MARK: - Image Prefetcher
+
 /// A service that prefetches images in the background to improve scroll performance.
 /// Integrates with the existing `ImageCache` for deduplication and storage.
 ///
@@ -153,15 +172,18 @@ actor ImagePrefetcher {
                 }
                 group.addTask {
                     try await Task.sleep(nanoseconds: self.prefetchTimeout)
-                    throw CancellationError()
+                    throw PrefetchError.timeout
                 }
                 // Wait for first to complete, cancel the other
                 _ = try await group.next()
                 group.cancelAll()
             }
         } catch is CancellationError {
-            // Task was cancelled or timed out - this is expected behavior
-            Logger.shared.debug("Prefetch cancelled or timed out: \(url.absoluteString)", category: logCategory)
+            // Task was explicitly cancelled (e.g., user scrolled past item)
+            Logger.shared.debug("Prefetch cancelled: \(url.absoluteString)", category: logCategory)
+        } catch PrefetchError.timeout {
+            // Prefetch exceeded timeout - network may be slow/stalled
+            Logger.shared.debug("Prefetch timed out after 30s: \(url.absoluteString)", category: logCategory)
         } catch {
             // Log unexpected errors for debugging while still failing silently
             // Image will be loaded normally on display if prefetch fails
