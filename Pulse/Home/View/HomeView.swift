@@ -179,7 +179,7 @@ struct HomeView<R: HomeNavigationRouter>: View {
 
                 Section {
                     LazyVStack(spacing: Spacing.sm) {
-                        ForEach(headlines) { item in
+                        ForEach(Array(headlines.enumerated()), id: \.element.id) { index, item in
                             GlassArticleCard(
                                 item: item,
                                 onTap: {
@@ -197,6 +197,14 @@ struct HomeView<R: HomeNavigationRouter>: View {
                                 // Pre-computed lastItemId avoids recalculating .last on every appear
                                 if item.id == lastItemId {
                                     viewModel.handle(event: .onLoadMore)
+                                }
+                                // Prefetch next 5 images for smoother scrolling
+                                prefetchUpcomingImages(from: index, in: headlines)
+                            }
+                            .onDisappear {
+                                // Cancel prefetch for scrolled-past items to free resources
+                                if let url = item.imageURL {
+                                    ImagePrefetcher.shared.cancelPrefetch(for: [url])
                                 }
                             }
                         }
@@ -220,6 +228,19 @@ struct HomeView<R: HomeNavigationRouter>: View {
                 }
             }
         }
+    }
+
+    /// Prefetches images for upcoming articles to reduce visible loading delays during scrolling.
+    private func prefetchUpcomingImages(from currentIndex: Int, in articles: [ArticleViewItem]) {
+        let prefetchCount = 5
+        let endIndex = min(currentIndex + prefetchCount, articles.count)
+        guard endIndex > currentIndex else { return }
+
+        let upcomingURLs = articles[currentIndex ..< endIndex]
+            .compactMap { $0.imageURL }
+
+        guard !upcomingURLs.isEmpty else { return }
+        ImagePrefetcher.shared.prefetch(urls: upcomingURLs)
     }
 
     private var breakingNewsCarousel: some View {

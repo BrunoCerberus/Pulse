@@ -5,6 +5,26 @@ import os
 #endif
 import LocalLlama
 
+// MARK: - Memory Operation
+
+/// Defines memory operation types with different thresholds
+enum MemoryOperation {
+    case modelLoad
+    case inference
+
+    /// Returns the minimum available memory required for this operation
+    var minimumMemory: UInt64 {
+        switch self {
+        case .modelLoad:
+            return LLMConfiguration.minimumAvailableMemory
+        case .inference:
+            return LLMConfiguration.minimumInferenceMemory
+        }
+    }
+}
+
+// MARK: - LLM Model Manager
+
 /// Manages the lifecycle of the LLM model (loading, inference, unloading)
 ///
 /// Uses SwiftLlama actor for thread-safe on-device inference with GGUF models.
@@ -53,9 +73,16 @@ final class LLMModelManager: @unchecked Sendable {
         let alreadyLoaded = lock.withLock { swiftLlama != nil }
         if alreadyLoaded { return }
 
+        // Log memory tier for diagnostics
+        let memoryTier = MemoryTier.current
+        logger.info(
+            "Device memory tier: \(memoryTier.description), context: \(LLMConfiguration.contextSize), batch: \(LLMConfiguration.batchSize)",
+            category: logCategory
+        )
+
         // Perform validations outside the lock to reduce contention
-        guard hasAdequateMemory() else {
-            logger.warning("Insufficient memory to load model", category: logCategory)
+        guard hasAdequateMemory(for: .modelLoad) else {
+            logger.warning("Insufficient memory to load model (tier: \(memoryTier.rawValue))", category: logCategory)
             throw LLMError.memoryPressure
         }
 
@@ -179,8 +206,8 @@ final class LLMModelManager: @unchecked Sendable {
         }
 
         // Pre-inference memory check to prevent crashes during generation
-        guard hasAdequateMemory() else {
-            logger.warning("Insufficient memory for inference", category: logCategory)
+        guard hasAdequateMemory(for: .inference) else {
+            logger.warning("Insufficient memory for inference (tier: \(MemoryTier.current.rawValue))", category: logCategory)
             continuation.finish(throwing: LLMError.memoryPressure)
             return
         }
@@ -269,7 +296,15 @@ final class LLMModelManager: @unchecked Sendable {
 
     // MARK: - Private Helpers
 
-    private func hasAdequateMemory() -> Bool {
+    /// Checks if the device has adequate memory for the specified operation.
+    /// Uses operation-specific thresholds and also checks system memory pressure.
+    private func hasAdequateMemory(for operation: MemoryOperation) -> Bool {
+        // Check system memory pressure first (available on iOS 13+)
+        if isUnderMemoryPressure() {
+            logger.warning("System is under memory pressure", category: logCategory)
+            return false
+        }
+
         var info = mach_task_basic_info()
         var count = mach_msg_type_number_t(MemoryLayout<mach_task_basic_info>.size) / 4
 
@@ -285,7 +320,29 @@ final class LLMModelManager: @unchecked Sendable {
         let totalMemory = ProcessInfo.processInfo.physicalMemory
         let availableMemory = totalMemory - usedMemory
 
-        return availableMemory > LLMConfiguration.minimumAvailableMemory
+        let hasEnough = availableMemory > operation.minimumMemory
+
+        if !hasEnough {
+            let availableMB = availableMemory / (1024 * 1024)
+            let requiredMB = operation.minimumMemory / (1024 * 1024)
+            logger.warning(
+                "Memory check failed: \(availableMB)MB available, \(requiredMB)MB required for \(operation)",
+                category: logCategory
+            )
+        }
+
+        return hasEnough
+    }
+
+    /// Checks if the system is currently under memory pressure using dispatch_source_memorypressure
+    private func isUnderMemoryPressure() -> Bool {
+        // Use os_proc_available_memory if available (iOS 13+)
+        // This is more accurate than calculating from task_info
+        let availableMemory = os_proc_available_memory()
+        // Consider system under pressure if less than 200MB available at OS level
+        // This is a conservative threshold that catches critical states before OOM killer acts
+        let criticalThreshold = 200 * 1024 * 1024 // 200MB
+        return availableMemory < criticalThreshold
     }
 
     private func setupMemoryWarningObserver() {
