@@ -52,13 +52,12 @@ enum LLMConfiguration {
 
     /// Context window size (tokens) - memory-adaptive for device safety
     /// - Constrained: 2048 (prevents OOM on 3GB devices)
-    /// - Standard: 3072 (balanced for most iPhones)
-    /// - High: 4096 (full capacity for Pro models)
+    /// - Standard/High: 3072 (balanced performance vs speed)
+    /// Note: Larger context (4096) significantly slows generation without proportional benefit
     static var contextSize: Int {
         switch MemoryTier.current {
         case .constrained: return 2048
-        case .standard: return 3072
-        case .high: return 4096
+        case .standard, .high: return 3072
         }
     }
 
@@ -108,11 +107,11 @@ enum LLMConfiguration {
 
     /// Maximum articles to include in digest prompt - memory-adaptive
     /// Scales with context size to prevent overflow
+    /// Note: More articles = longer generation time; 8 provides good coverage without excessive delay
     static var maxArticlesForDigest: Int {
         switch MemoryTier.current {
         case .constrained: return 5
-        case .standard: return 8
-        case .high: return 10
+        case .standard, .high: return 8
         }
     }
 
