@@ -63,21 +63,12 @@ actor ImagePrefetcher {
     /// Already-cached images are skipped. Prefetch runs at low priority.
     ///
     /// - Parameter urls: The image URLs to prefetch
-    ///
-    /// - Note: Cache check happens outside actor isolation for performance.
-    ///   This introduces a benign race condition where an image may be prefetched
-    ///   redundantly if it gets cached between the check and the fetch. This is
-    ///   acceptable as ImageCache handles deduplication internally.
     func prefetch(urls: [URL]) async {
-        // Step 1: Filter out already-cached URLs (non-actor-isolated, benign race)
-        // This check is outside actor isolation for performance - ImageCache handles deduplication
-        let uncachedURLs = urls.filter { ImageCache.shared.image(for: $0) == nil }
-        guard !uncachedURLs.isEmpty else { return }
-
-        // Step 2: Filter within actor isolation to check pending/active state
-        // This must be actor-isolated to safely access pendingURLsSet and activeTasks
-        let newURLs = uncachedURLs.filter { url in
-            !pendingURLsSet.contains(url) && activeTasks[url] == nil
+        // Filter out cached, pending, and active URLs in a single pass within actor isolation.
+        // This eliminates race conditions between cache check and queue state check.
+        let newURLs = urls.filter { url in
+            guard ImageCache.shared.image(for: url) == nil else { return false }
+            return !pendingURLsSet.contains(url) && activeTasks[url] == nil
         }
         guard !newURLs.isEmpty else { return }
 

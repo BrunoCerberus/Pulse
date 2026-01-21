@@ -45,7 +45,9 @@ actor BackgroundStorageActor {
 
 final class LiveStorageService: StorageService {
     private let modelContainer: ModelContainer
-    private var backgroundActor: BackgroundStorageActor?
+    /// Background actor for off-main-thread SwiftData operations.
+    /// Immutable after init to prevent race conditions.
+    private let backgroundActor: BackgroundStorageActor
 
     init() {
         do {
@@ -55,9 +57,10 @@ final class LiveStorageService: StorageService {
                 UserPreferencesModel.self,
             ])
             let modelConfiguration = ModelConfiguration(schema: schema, isStoredInMemoryOnly: false)
-            modelContainer = try ModelContainer(for: schema, configurations: [modelConfiguration])
+            let container = try ModelContainer(for: schema, configurations: [modelConfiguration])
+            modelContainer = container
             // Initialize background actor with the same container
-            backgroundActor = BackgroundStorageActor(modelContainer: modelContainer)
+            backgroundActor = BackgroundStorageActor(modelContainer: container)
         } catch {
             fatalError("Failed to create ModelContainer: \(error)")
         }
@@ -107,30 +110,7 @@ final class LiveStorageService: StorageService {
     /// This is called frequently during article browsing, so background execution
     /// prevents cumulative UI thread work.
     func saveReadingHistory(_ article: Article) async throws {
-        guard let actor = backgroundActor else {
-            // Fallback to main context if background actor initialization failed
-            try await saveReadingHistoryOnMain(article)
-            return
-        }
-        try await actor.saveReadingHistory(article)
-    }
-
-    /// Fallback method for saving reading history on MainActor
-    @MainActor
-    private func saveReadingHistoryOnMain(_ article: Article) throws {
-        let context = modelContainer.mainContext
-        let articleID = article.id
-
-        let descriptor = FetchDescriptor<ReadingHistoryEntry>(
-            predicate: #Predicate { $0.articleID == articleID }
-        )
-        if let existing = try context.fetch(descriptor).first {
-            existing.readAt = Date()
-        } else {
-            let entry = ReadingHistoryEntry(from: article)
-            context.insert(entry)
-        }
-        try context.save()
+        try await backgroundActor.saveReadingHistory(article)
     }
 
     @MainActor

@@ -342,9 +342,16 @@ final class LLMModelManager: @unchecked Sendable {
     ///
     /// - Returns: `true` if available memory is below critical threshold, `false` otherwise (or always `false` in simulator)
     ///
+    /// Reference type wrapper for simulator warning state.
+    /// Required because OSAllocatedUnfairLock needs a reference type to properly
+    /// synchronize mutable state across threads.
+    private final class SimulatorWarningState: @unchecked Sendable {
+        var hasLogged = false
+    }
+
     /// Thread-safe static lock for one-time simulator warning log.
     /// Using a lock ensures the warning is logged exactly once even under concurrent access.
-    private static let simulatorWarningLock = OSAllocatedUnfairLock(initialState: false)
+    private static let simulatorWarningLock = OSAllocatedUnfairLock(initialState: SimulatorWarningState())
 
     private func isUnderMemoryPressure() -> Bool {
         #if targetEnvironment(simulator)
@@ -359,9 +366,9 @@ final class LLMModelManager: @unchecked Sendable {
             // Simulator always reports high available memory regardless of actual pressure.
             // Memory testing MUST be performed on physical devices.
             #if DEBUG
-                Self.simulatorWarningLock.withLock { hasLogged in
-                    if !hasLogged {
-                        hasLogged = true
+                Self.simulatorWarningLock.withLock { state in
+                    if !state.hasLogged {
+                        state.hasLogged = true
                         logger.debug(
                             "⚠️ Memory pressure check disabled in simulator - test on physical device or set FORCE_MEMORY_PRESSURE_CHECK=1",
                             category: logCategory
