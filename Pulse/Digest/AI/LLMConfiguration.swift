@@ -23,12 +23,23 @@ enum LLMConfiguration {
     static var contextSize: Int { 3072 }
 
     /// Batch size for prompt processing
-    /// 512 is optimal for token-by-token generation (larger batches don't help and waste memory)
-    static var batchSize: Int { 512 }
+    /// Larger batch = faster prompt ingestion (prompt tokens processed in parallel)
+    /// Token generation is sequential, so batch size doesn't affect generation speed
+    static var batchSize: Int {
+        let memory = ProcessInfo.processInfo.physicalMemory
+        // Devices with 4GB+ RAM can use larger batches for faster prompt processing
+        if memory >= 4_000_000_000 {
+            return 2048
+        }
+        return 512
+    }
 
-    /// Number of threads to use (based on device)
+    /// Number of threads to use (based on device capabilities)
+    /// Modern iPhones have 6 cores - use most of them for inference
     static var threadCount: Int {
-        min(ProcessInfo.processInfo.activeProcessorCount, 4)
+        let cores = ProcessInfo.processInfo.activeProcessorCount
+        // Use up to 6 threads on capable devices, leaving some headroom
+        return min(cores - 1, 6)
     }
 
     /// Minimum available memory required to load model (1GB)

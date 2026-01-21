@@ -25,7 +25,12 @@ class LlamaModel {
         llama_numa_init(GGML_NUMA_STRATEGY_DISABLED)
         var model_params = llama_model_default_params()
         #if targetEnvironment(simulator)
+        // Disable GPU on simulator (no Metal support)
         model_params.n_gpu_layers = 0
+        #else
+        // Enable Metal acceleration on real devices
+        // Llama-3.2-1B has ~16 layers, offload up to 32 for safety
+        model_params.n_gpu_layers = 32
         #endif
         // Memory mapping for faster model loading
         model_params.use_mmap = true

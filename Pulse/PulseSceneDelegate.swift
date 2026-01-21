@@ -52,6 +52,9 @@ final class PulseSceneDelegate: UIResponder, UIWindowSceneDelegate {
         // Configure authentication manager with auth service
         configureAuthenticationManager()
 
+        // Preload LLM model in background for faster digest generation
+        preloadLLMModelIfPremium()
+
         // Initialize deeplink router for coordinator-based navigation
         deeplinkRouter = DeeplinkRouter()
 
@@ -245,6 +248,34 @@ final class PulseSceneDelegate: UIResponder, UIWindowSceneDelegate {
 
         // Register authentication service
         serviceLocator.register(AuthService.self, instance: LiveAuthService())
+    }
+
+    /**
+     * Preload the LLM model in background for premium users.
+     *
+     * This improves perceived performance by having the model ready
+     * when the user opens the Feed tab. Only preloads for premium users
+     * since they're the only ones who can use the digest feature.
+     */
+    private func preloadLLMModelIfPremium() {
+        Task.detached(priority: .utility) { [serviceLocator] in
+            do {
+                // Check if user is premium before preloading
+                let storeKitService = try serviceLocator.retrieve(StoreKitService.self)
+                guard storeKitService.isPremium else {
+                    Logger.shared.service("Skipping LLM preload - not premium user")
+                    return
+                }
+
+                // Preload the model in background
+                let llmService = try serviceLocator.retrieve(LLMService.self)
+                try await llmService.loadModel()
+                Logger.shared.service("LLM model preloaded successfully")
+            } catch {
+                // Preload failure is non-critical - model will load on-demand
+                Logger.shared.service("LLM preload skipped: \(error)", level: .debug)
+            }
+        }
     }
 
     /**
