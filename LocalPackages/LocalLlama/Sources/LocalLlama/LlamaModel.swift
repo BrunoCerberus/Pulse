@@ -29,8 +29,8 @@ class LlamaModel {
         model_params.n_gpu_layers = 0
         #else
         // Enable Metal acceleration on real devices
-        // Offload all layers to GPU for maximum performance
-        model_params.n_gpu_layers = 99
+        // Llama-3.2-1B has ~16 layers, offload up to 32 for safety
+        model_params.n_gpu_layers = 32
         #endif
         // Memory mapping for faster model loading
         model_params.use_mmap = true

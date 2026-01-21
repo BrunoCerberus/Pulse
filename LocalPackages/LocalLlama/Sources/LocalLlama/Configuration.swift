@@ -45,9 +45,9 @@ extension Configuration {
         params.n_ctx = max(8, UInt32(self.nCTX)) // minimum context size is 8
         params.n_threads = Int32(threadCount)
         params.n_threads_batch = Int32(threadCount)
-        // Flash attention for faster KV cache operations (1.5-2x speedup)
-        // Safe on modern devices with Metal support
-        params.flash_attn = true
+        // Flash attention disabled - causes crashes with Q4_K_M quantized models
+        // Keep disabled until llama.cpp improves compatibility
+        params.flash_attn = false
         return params
     }
 }
