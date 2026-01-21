@@ -86,11 +86,11 @@ struct NewsCategoryTests {
     }
 
     @Test(
-        "Invalid or empty guardian section returns nil",
-        arguments: ["unknown-section", ""]
+        "Unknown guardian section defaults to world",
+        arguments: ["unknown-section", "", "environment", "politics", "opinion"]
     )
-    func invalidGuardianSectionReturnsNil(section: String) {
-        #expect(NewsCategory.fromGuardianSection(section) == nil)
+    func unknownGuardianSectionDefaultsToWorld(section: String) {
+        #expect(NewsCategory.fromGuardianSection(section) == .world)
     }
 
     @Test(

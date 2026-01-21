@@ -165,9 +165,9 @@ struct GuardianResponseTests {
         #expect(article?.imageURL == nil)
     }
 
-    @Test("toArticle handles nil category mapping")
-    func toArticleHandlesNilCategoryMapping() throws {
-        // Create JSON with unknown section
+    @Test("toArticle defaults to world category for unmapped sections")
+    func toArticleDefaultsToWorldForUnmappedSections() throws {
+        // Create JSON with unknown section (defaults to .world)
         let jsonWithUnknownSection = """
         {
             "response": {
@@ -201,8 +201,8 @@ struct GuardianResponseTests {
         let article = dto.toArticle()
 
         #expect(article != nil)
-        // "commentisfree" doesn't map to a known NewsCategory
-        #expect(article?.category == nil)
+        // "commentisfree" doesn't map to a known NewsCategory, defaults to .world
+        #expect(article?.category == .world)
     }
 
     @Test("toArticle with explicit category overrides section mapping")

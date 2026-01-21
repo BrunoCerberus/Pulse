@@ -59,7 +59,7 @@ enum NewsCategory: String, CaseIterable, Codable, Identifiable {
         }
     }
 
-    static func fromGuardianSection(_ section: String) -> NewsCategory? {
+    static func fromGuardianSection(_ section: String) -> NewsCategory {
         switch section.lowercased() {
         case "world", "uk-news", "us-news", "australia-news":
             return .world
@@ -76,7 +76,8 @@ enum NewsCategory: String, CaseIterable, Codable, Identifiable {
         case "culture", "film", "music", "books", "tv-and-radio", "stage":
             return .entertainment
         default:
-            return nil
+            // Default to world for unmapped sections (e.g., environment, politics, etc.)
+            return .world
         }
     }
 }
