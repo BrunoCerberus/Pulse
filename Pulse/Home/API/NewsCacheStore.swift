@@ -95,6 +95,10 @@ protocol NewsCacheStore: AnyObject {
 
     /// Removes all cached entries.
     func removeAll()
+
+    /// Removes cached entries matching a predicate.
+    /// - Parameter predicate: A closure that returns true for keys to remove
+    func removeMatching(_ predicate: (NewsCacheKey) -> Bool)
 }
 
 // MARK: - Live Cache Store Implementation
@@ -112,6 +116,10 @@ final class LiveNewsCacheStore: NewsCacheStore {
 
     private let cache: NSCache<NSString, CacheEntryWrapper>
     private var memoryWarningObserver: NSObjectProtocol?
+
+    /// Tracks active cache keys for selective invalidation
+    private var activeKeys = Set<NewsCacheKey>()
+    private let keysLock = NSLock()
 
     init() {
         cache = NSCache()
@@ -153,15 +161,42 @@ final class LiveNewsCacheStore: NewsCacheStore {
         // Estimate cost based on data type
         let cost = estimateCost(for: entry.data)
         cache.setObject(wrapper, forKey: nsKey, cost: cost)
+
+        // Track the key for selective invalidation
+        keysLock.withLock {
+            activeKeys.insert(key)
+        }
     }
 
     func remove(for key: NewsCacheKey) {
         let nsKey = key.stringKey as NSString
         cache.removeObject(forKey: nsKey)
+
+        keysLock.withLock {
+            activeKeys.remove(key)
+        }
     }
 
     func removeAll() {
         cache.removeAllObjects()
+
+        keysLock.withLock {
+            activeKeys.removeAll()
+        }
+    }
+
+    func removeMatching(_ predicate: (NewsCacheKey) -> Bool) {
+        // Collect keys to remove under lock to avoid holding lock during cache operations
+        let keysToRemove = keysLock.withLock {
+            activeKeys.filter(predicate)
+        }
+
+        // Remove matching entries
+        for key in keysToRemove {
+            remove(for: key)
+        }
+
+        Logger.shared.service("Selectively removed \(keysToRemove.count) cache entries", level: .debug)
     }
 
     /// Estimates memory cost for cache entries to help NSCache manage memory.

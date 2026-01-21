@@ -140,6 +140,23 @@ final class CachingNewsService: NewsService {
         Logger.shared.service("News cache invalidated", level: .debug)
     }
 
+    /// Invalidates breaking news and headlines only. Preserves article cache.
+    ///
+    /// Use this for pull-to-refresh instead of `invalidateCache()` to preserve
+    /// the 60-minute article cache, reducing unnecessary API calls when users
+    /// re-open previously viewed articles.
+    func invalidateFreshContent() {
+        cacheStore.removeMatching { key in
+            switch key {
+            case .breakingNews, .topHeadlines, .categoryHeadlines:
+                return true // Remove fresh content
+            case .article:
+                return false // Preserve article cache
+            }
+        }
+        Logger.shared.service("Fresh content cache invalidated (articles preserved)", level: .debug)
+    }
+
     /// Invalidates cached data for a specific key.
     /// - Parameter key: The cache key to invalidate
     func invalidateCache(for key: NewsCacheKey) {

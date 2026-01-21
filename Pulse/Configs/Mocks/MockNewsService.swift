@@ -328,12 +328,14 @@ final class MockLLMService: LLMService {
 
 final class MockNewsCacheStore: NewsCacheStore {
     private var storage: [String: Any] = [:]
+    private var activeKeys = Set<NewsCacheKey>()
 
     // Tracking properties for tests
     var getCallCount = 0
     var setCallCount = 0
     var removeCallCount = 0
     var removeAllCallCount = 0
+    var removeMatchingCallCount = 0
 
     func get<T>(for key: NewsCacheKey) -> CacheEntry<T>? {
         getCallCount += 1
@@ -343,16 +345,28 @@ final class MockNewsCacheStore: NewsCacheStore {
     func set<T>(_ entry: CacheEntry<T>, for key: NewsCacheKey) {
         setCallCount += 1
         storage[key.stringKey] = entry
+        activeKeys.insert(key)
     }
 
     func remove(for key: NewsCacheKey) {
         removeCallCount += 1
         storage.removeValue(forKey: key.stringKey)
+        activeKeys.remove(key)
     }
 
     func removeAll() {
         removeAllCallCount += 1
         storage.removeAll()
+        activeKeys.removeAll()
+    }
+
+    func removeMatching(_ predicate: (NewsCacheKey) -> Bool) {
+        removeMatchingCallCount += 1
+        let keysToRemove = activeKeys.filter(predicate)
+        for key in keysToRemove {
+            storage.removeValue(forKey: key.stringKey)
+            activeKeys.remove(key)
+        }
     }
 
     // Helper to check if a key exists in the cache

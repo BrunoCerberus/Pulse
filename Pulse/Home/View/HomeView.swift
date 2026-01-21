@@ -198,6 +198,19 @@ struct HomeView<R: HomeNavigationRouter>: View {
                                 if item.id == lastItemId {
                                     viewModel.handle(event: .onLoadMore)
                                 }
+                                // Prefetch next 5 images for smoother scrolling
+                                // Index lookup only happens on appear, not every body render
+                                if let index = headlines.firstIndex(where: { $0.id == item.id }) {
+                                    prefetchUpcomingImages(from: index, in: headlines)
+                                }
+                            }
+                            .onDisappear {
+                                // Cancel prefetch for scrolled-past items to free resources
+                                if let url = item.imageURL {
+                                    Task {
+                                        await ImagePrefetcher.shared.cancelPrefetch(for: [url])
+                                    }
+                                }
                             }
                         }
                     }
@@ -219,6 +232,21 @@ struct HomeView<R: HomeNavigationRouter>: View {
                     GlassSectionHeader("Top Headlines")
                 }
             }
+        }
+    }
+
+    /// Prefetches images for upcoming articles to reduce visible loading delays during scrolling.
+    private func prefetchUpcomingImages(from currentIndex: Int, in articles: [ArticleViewItem]) {
+        let prefetchCount = 5
+        let endIndex = min(currentIndex + prefetchCount, articles.count)
+        guard endIndex > currentIndex else { return }
+
+        let upcomingURLs = articles[currentIndex ..< endIndex]
+            .compactMap { $0.imageURL }
+
+        guard !upcomingURLs.isEmpty else { return }
+        Task {
+            await ImagePrefetcher.shared.prefetch(urls: upcomingURLs)
         }
     }
 
