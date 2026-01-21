@@ -2,6 +2,76 @@ import XCTest
 
 final class ArticleDetailUITests: BaseUITestCase {
 
+    // MARK: - Setup
+
+    override func setUpWithError() throws {
+        continueAfterFailure = false
+        XCUIDevice.shared.orientation = .portrait
+
+        app = XCUIApplication()
+
+        // Speed optimizations
+        app.launchEnvironment["UI_TESTING"] = "1"
+        app.launchEnvironment["DISABLE_ANIMATIONS"] = "1"
+
+        // Enable premium access for testing bookmark and other premium features
+        app.launchEnvironment["MOCK_PREMIUM"] = "1"
+
+        // Launch arguments to speed up tests
+        app.launchArguments += ["-UIViewAnimationDuration", "0.01"]
+        app.launchArguments += ["-CATransactionAnimationDuration", "0.01"]
+
+        app.launch()
+
+        // Launch verification
+        _ = app.wait(for: .runningForeground, timeout: Self.launchTimeout)
+        wait(for: 0.3)
+
+        // Wait for app to be ready - use same comprehensive detection as BaseUITestCase
+        let tabBar = app.tabBars.firstMatch
+        let homeTabButton = app.tabBars.buttons["Home"]
+        let signInApple = app.buttons["Sign in with Apple"]
+        let signInGoogle = app.buttons["Sign in with Google"]
+        let loadingIndicator = app.activityIndicators.firstMatch
+
+        // First, wait for the loading state to clear
+        if loadingIndicator.waitForExistence(timeout: 2) {
+            _ = waitForElementToDisappear(loadingIndicator, timeout: Self.launchTimeout)
+        }
+
+        // Now wait for either tab bar or sign-in to appear with multiple strategies
+        var appReady = waitForAny([tabBar, homeTabButton, signInApple, signInGoogle], timeout: Self.launchTimeout)
+        var foundTabBar = tabBar.exists || homeTabButton.exists
+
+        // Fallback: try finding tab buttons directly if primary check fails
+        if !appReady {
+            let tabButtonNames = ["Home", "For You", "Feed", "Bookmarks", "Search"]
+            for name in tabButtonNames {
+                let tabButton = app.buttons[name]
+                if tabButton.waitForExistence(timeout: 2) {
+                    appReady = true
+                    foundTabBar = true
+                    break
+                }
+            }
+        }
+
+        guard appReady else {
+            // Debug info for diagnosing CI failures
+            let hasActivityIndicator = app.activityIndicators.count > 0
+            let hasButtons = app.buttons.count > 0
+            let hasStaticTexts = app.staticTexts.count > 0
+            let allButtonLabels = app.buttons.allElementsBoundByIndex.prefix(10).map { $0.label }
+            XCTFail("App did not reach ready state - Debug: hasActivityIndicator=\(hasActivityIndicator), " +
+                    "buttons=\(hasButtons), texts=\(hasStaticTexts), buttonLabels=\(allButtonLabels)")
+            return
+        }
+
+        if foundTabBar {
+            resetToHomeTab()
+        }
+    }
+
     // MARK: - Helper Methods
 
     /// Navigate to an article detail by tapping the first available article
