@@ -13,9 +13,12 @@ final class ImagePrefetcher: @unchecked Sendable {
     private var activeTasks: [URL: Task<Void, Never>] = [:]
     private let tasksLock = NSLock()
 
-    /// Pending URLs waiting to be prefetched
-    private var pendingURLs: [URL] = []
+    /// Pending URLs waiting to be prefetched (Set for O(1) lookup)
+    private var pendingURLs = Set<URL>()
     private let pendingLock = NSLock()
+
+    /// Timeout for prefetch operations (30 seconds)
+    private let prefetchTimeout: UInt64 = 30_000_000_000
 
     private init() {}
 
@@ -36,11 +39,9 @@ final class ImagePrefetcher: @unchecked Sendable {
 
         guard !urlsToFetch.isEmpty else { return }
 
-        // Add to pending queue
+        // Add to pending queue (Set.formUnion is O(n) vs O(n²) for array contains)
         pendingLock.withLock {
-            for url in urlsToFetch where !pendingURLs.contains(url) {
-                pendingURLs.append(url)
-            }
+            pendingURLs.formUnion(urlsToFetch)
         }
 
         // Process pending queue
@@ -51,13 +52,13 @@ final class ImagePrefetcher: @unchecked Sendable {
     /// Called when items scroll out of view to free up resources.
     /// - Parameter urls: The image URLs to cancel prefetching for
     func cancelPrefetch(for urls: [URL]) {
-        for url in urls {
-            // Remove from pending queue
-            pendingLock.withLock {
-                pendingURLs.removeAll { $0 == url }
-            }
+        // Remove from pending queue (batch operation for efficiency)
+        pendingLock.withLock {
+            pendingURLs.subtract(urls)
+        }
 
-            // Cancel active task if running
+        // Cancel active tasks
+        for url in urls {
             let task = tasksLock.withLock { activeTasks.removeValue(forKey: url) }
             task?.cancel()
         }
@@ -95,7 +96,9 @@ final class ImagePrefetcher: @unchecked Sendable {
         let urlsToProcess = pendingLock.withLock {
             let count = min(slotsAvailable, pendingURLs.count)
             let urls = Array(pendingURLs.prefix(count))
-            pendingURLs.removeFirst(count)
+            for url in urls {
+                pendingURLs.remove(url)
+            }
             return urls
         }
 
@@ -124,8 +127,19 @@ final class ImagePrefetcher: @unchecked Sendable {
         guard !Task.isCancelled else { return }
 
         do {
-            // Use existing ImageCache infrastructure
-            _ = try await ImageCache.shared.loadImage(from: url)
+            // Race between image fetch and timeout to prevent leaked tasks
+            try await withThrowingTaskGroup(of: Void.self) { group in
+                group.addTask {
+                    _ = try await ImageCache.shared.loadImage(from: url)
+                }
+                group.addTask {
+                    try await Task.sleep(nanoseconds: self.prefetchTimeout)
+                    throw CancellationError()
+                }
+                // Wait for first to complete, cancel the other
+                _ = try await group.next()
+                group.cancelAll()
+            }
         } catch {
             // Silently fail - prefetch is best-effort
             // Image will be loaded normally on display if prefetch fails

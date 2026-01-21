@@ -271,6 +271,100 @@ struct CachingNewsServiceTests {
         #expect(!mockCacheStore.contains(key: cacheKey))
     }
 
+    @Test("invalidateFreshContent removes headlines but preserves article cache")
+    func invalidateFreshContentPreservesArticles() {
+        let articles = Article.mockArticles
+        let article = articles[0]
+
+        // Pre-populate cache with various content types
+        mockCacheStore.set(CacheEntry(data: articles, timestamp: Date()), for: .breakingNews(country: "us"))
+        mockCacheStore.set(CacheEntry(data: articles, timestamp: Date()), for: .topHeadlines(country: "us", page: 1))
+        mockCacheStore.set(CacheEntry(data: articles, timestamp: Date()), for: .topHeadlines(country: "us", page: 2))
+        mockCacheStore.set(
+            CacheEntry(data: articles, timestamp: Date()),
+            for: .categoryHeadlines(category: .technology, country: "us", page: 1)
+        )
+        mockCacheStore.set(CacheEntry(data: article, timestamp: Date()), for: .article(id: article.id))
+
+        mockCacheStore.removeMatchingCallCount = 0
+
+        sut.invalidateFreshContent()
+
+        // Should call removeMatching once
+        #expect(mockCacheStore.removeMatchingCallCount == 1)
+
+        // Headlines should be removed
+        #expect(!mockCacheStore.contains(key: .breakingNews(country: "us")))
+        #expect(!mockCacheStore.contains(key: .topHeadlines(country: "us", page: 1)))
+        #expect(!mockCacheStore.contains(key: .topHeadlines(country: "us", page: 2)))
+        #expect(!mockCacheStore.contains(key: .categoryHeadlines(category: .technology, country: "us", page: 1)))
+
+        // Article should be preserved
+        #expect(mockCacheStore.contains(key: .article(id: article.id)))
+    }
+
+    @Test("invalidateFreshContent on empty cache does not crash")
+    func invalidateFreshContentOnEmptyCache() {
+        mockCacheStore.removeMatchingCallCount = 0
+
+        // Should not crash on empty cache
+        sut.invalidateFreshContent()
+
+        #expect(mockCacheStore.removeMatchingCallCount == 1)
+    }
+
+    @Test("invalidateFreshContent removes all headline types")
+    func invalidateFreshContentRemovesAllHeadlineTypes() {
+        let articles = Article.mockArticles
+
+        // Add multiple headline types
+        mockCacheStore.set(CacheEntry(data: articles, timestamp: Date()), for: .breakingNews(country: "us"))
+        mockCacheStore.set(CacheEntry(data: articles, timestamp: Date()), for: .breakingNews(country: "uk"))
+        mockCacheStore.set(CacheEntry(data: articles, timestamp: Date()), for: .topHeadlines(country: "us", page: 1))
+        mockCacheStore.set(CacheEntry(data: articles, timestamp: Date()), for: .topHeadlines(country: "uk", page: 1))
+        mockCacheStore.set(
+            CacheEntry(data: articles, timestamp: Date()),
+            for: .categoryHeadlines(category: .sports, country: "us", page: 1)
+        )
+        mockCacheStore.set(
+            CacheEntry(data: articles, timestamp: Date()),
+            for: .categoryHeadlines(category: .business, country: "us", page: 1)
+        )
+
+        sut.invalidateFreshContent()
+
+        // All headline types should be removed
+        #expect(!mockCacheStore.contains(key: .breakingNews(country: "us")))
+        #expect(!mockCacheStore.contains(key: .breakingNews(country: "uk")))
+        #expect(!mockCacheStore.contains(key: .topHeadlines(country: "us", page: 1)))
+        #expect(!mockCacheStore.contains(key: .topHeadlines(country: "uk", page: 1)))
+        #expect(!mockCacheStore.contains(key: .categoryHeadlines(category: .sports, country: "us", page: 1)))
+        #expect(!mockCacheStore.contains(key: .categoryHeadlines(category: .business, country: "us", page: 1)))
+    }
+
+    @Test("invalidateFreshContent preserves multiple articles")
+    func invalidateFreshContentPreservesMultipleArticles() {
+        let articles = Article.mockArticles
+
+        // Add multiple articles
+        for article in articles {
+            mockCacheStore.set(CacheEntry(data: article, timestamp: Date()), for: .article(id: article.id))
+        }
+
+        // Add some headlines
+        mockCacheStore.set(CacheEntry(data: articles, timestamp: Date()), for: .breakingNews(country: "us"))
+
+        sut.invalidateFreshContent()
+
+        // All articles should be preserved
+        for article in articles {
+            #expect(mockCacheStore.contains(key: .article(id: article.id)))
+        }
+
+        // Headlines should be removed
+        #expect(!mockCacheStore.contains(key: .breakingNews(country: "us")))
+    }
+
     // MARK: - TTL Tests
 
     @Test("Page 2+ headlines use longer TTL than page 1")

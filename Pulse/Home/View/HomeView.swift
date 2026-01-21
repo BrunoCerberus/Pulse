@@ -179,7 +179,7 @@ struct HomeView<R: HomeNavigationRouter>: View {
 
                 Section {
                     LazyVStack(spacing: Spacing.sm) {
-                        ForEach(Array(headlines.enumerated()), id: \.element.id) { index, item in
+                        ForEach(headlines) { item in
                             GlassArticleCard(
                                 item: item,
                                 onTap: {
@@ -199,7 +199,10 @@ struct HomeView<R: HomeNavigationRouter>: View {
                                     viewModel.handle(event: .onLoadMore)
                                 }
                                 // Prefetch next 5 images for smoother scrolling
-                                prefetchUpcomingImages(from: index, in: headlines)
+                                // Index lookup only happens on appear, not every body render
+                                if let index = headlines.firstIndex(where: { $0.id == item.id }) {
+                                    prefetchUpcomingImages(from: index, in: headlines)
+                                }
                             }
                             .onDisappear {
                                 // Cancel prefetch for scrolled-past items to free resources

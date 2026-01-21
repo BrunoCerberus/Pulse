@@ -334,15 +334,20 @@ final class LLMModelManager: @unchecked Sendable {
         return hasEnough
     }
 
-    /// Checks if the system is currently under memory pressure using dispatch_source_memorypressure
+    /// Checks if the system is currently under memory pressure using os_proc_available_memory
     private func isUnderMemoryPressure() -> Bool {
-        // Use os_proc_available_memory if available (iOS 13+)
-        // This is more accurate than calculating from task_info
-        let availableMemory = os_proc_available_memory()
-        // Consider system under pressure if less than 200MB available at OS level
-        // This is a conservative threshold that catches critical states before OOM killer acts
-        let criticalThreshold = 200 * 1024 * 1024 // 200MB
-        return availableMemory < criticalThreshold
+        // os_proc_available_memory() is unreliable in simulator - always returns high values
+        #if targetEnvironment(simulator)
+            return false
+        #else
+            // Use os_proc_available_memory (iOS 13+)
+            // This is more accurate than calculating from task_info
+            let availableMemory = os_proc_available_memory()
+            // Consider system under pressure if less than 200MB available at OS level
+            // This is a conservative threshold that catches critical states before OOM killer acts
+            let criticalThreshold = 200 * 1024 * 1024 // 200MB
+            return availableMemory < criticalThreshold
+        #endif
     }
 
     private func setupMemoryWarningObserver() {
