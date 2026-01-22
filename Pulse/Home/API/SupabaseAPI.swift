@@ -16,7 +16,9 @@ enum SupabaseAPI: APIFetcher {
 
     var path: String {
         guard var components = URLComponents(string: baseURL + "/articles") else {
-            fatalError("Invalid Supabase URL: \(baseURL)")
+            Logger.shared.service("SupabaseAPI: Invalid Supabase URL: \(baseURL)", level: .error)
+            // Return invalid URL that will fail gracefully at the network layer
+            return "https://invalid.supabase.url/articles"
         }
 
         var queryItems: [URLQueryItem] = []
@@ -59,7 +61,8 @@ enum SupabaseAPI: APIFetcher {
         components.queryItems = queryItems
 
         guard let urlString = components.string else {
-            fatalError("Failed to construct Supabase URL from components")
+            Logger.shared.service("SupabaseAPI: Failed to construct URL from components", level: .error)
+            return "https://invalid.supabase.url/articles"
         }
 
         return urlString

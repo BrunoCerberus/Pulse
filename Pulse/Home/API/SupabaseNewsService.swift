@@ -162,9 +162,15 @@ struct SupabaseArticle: Codable {
 
     func toArticle() -> Article {
         // Parse ISO8601 date string
-        let date = Self.iso8601Formatter.date(from: publishedAt)
-            ?? Self.iso8601FormatterNoFraction.date(from: publishedAt)
-            ?? Date()
+        let date: Date
+        if let parsed = Self.iso8601Formatter.date(from: publishedAt) {
+            date = parsed
+        } else if let parsed = Self.iso8601FormatterNoFraction.date(from: publishedAt) {
+            date = parsed
+        } else {
+            Logger.shared.service("SupabaseArticle: Failed to parse date '\(publishedAt)' for article \(id)", level: .warning)
+            date = Date()
+        }
 
         // Handle content/description mapping for RSS feeds:
         // - If content exists, use summary as description (short preview) and content as body
@@ -186,9 +192,10 @@ struct SupabaseArticle: Codable {
         }
 
         // Handle image URLs: RSS feeds often only have one image
-        // Use whatever is available, preferring full-size image_url
+        // Use whatever is available, preferring full-size image_url for hero images
+        // Don't fallback to full-res for thumbnail to avoid loading large images in list views
         let fullImageURL = imageUrl ?? thumbnailUrl
-        let thumbURL = thumbnailUrl ?? imageUrl
+        let thumbURL = thumbnailUrl
 
         return Article(
             id: id,
@@ -203,19 +210,6 @@ struct SupabaseArticle: Codable {
             publishedAt: date,
             category: categories.flatMap { NewsCategory(rawValue: $0.slug) }
         )
-    }
-
-    /// Creates a short description from content text (first ~150 chars at word boundary)
-    private static func truncateForDescription(_ text: String) -> String {
-        let maxLength = 150
-        guard text.count > maxLength else { return text }
-
-        // Find word boundary near maxLength
-        let endIndex = text.index(text.startIndex, offsetBy: maxLength)
-        if let spaceIndex = text[..<endIndex].lastIndex(of: " ") {
-            return String(text[..<spaceIndex]) + "..."
-        }
-        return String(text.prefix(maxLength)) + "..."
     }
 }
 
