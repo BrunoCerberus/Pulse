@@ -64,13 +64,15 @@ class LlamaModel {
         }
         self.context = context
         self.tokens = []
-        // Optimized batch size: context size + small buffer for generation
+        // Optimized batch size: context + generation buffer
         // Previously used batchSize * historySize * 2 (20480) which was excessive
-        let optimizedBatchSize = Int32(configuration.nCTX + 512)
+        // Buffer must accommodate maxTokenCount for generation phase
+        let generationBuffer = max(512, configuration.maxTokenCount)
+        let optimizedBatchSize = Int32(configuration.nCTX + generationBuffer)
         self.batch = llama_batch_init(optimizedBatchSize, 0, 1)
 
-        // Optimized sampler chain: top-k -> top-p -> temperature -> distribution
-        // This order provides better quality/speed tradeoff
+        // Sampler chain: top-k -> top-p -> temperature -> distribution
+        // Order follows llama.cpp convention: filtering (top-k, top-p) before temperature scaling
         self.sampler = llama_sampler_chain_init(llama_sampler_chain_default_params())
         llama_sampler_chain_add(sampler, llama_sampler_init_top_k(Int32(configuration.topK)))
         llama_sampler_chain_add(sampler, llama_sampler_init_top_p(configuration.topP, 1))
