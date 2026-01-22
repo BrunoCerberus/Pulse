@@ -17,6 +17,9 @@ packages:
   EntropyCore:
     url: https://github.com/BrunoCerberus/EntropyCore.git
     revision: 29a981230b89ef26fba90094ed81be79e996557e
+  Supabase:
+    url: https://github.com/supabase/supabase-swift.git
+    from: 2.0.0
   SnapshotTesting:
     url: https://github.com/pointfreeco/swift-snapshot-testing.git
     from: 1.16.0
@@ -149,6 +152,8 @@ targets:
       - package: GoogleSignIn
       - package: LocalLlama
         product: LocalLlama
+      - package: Supabase
+        product: Supabase
       - target: PulseWidgetExtension
         embed: true
 

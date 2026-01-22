@@ -227,6 +227,7 @@ final class PulseSceneDelegate: UIResponder, UIWindowSceneDelegate {
         let remoteConfigService = LiveRemoteConfigService()
         serviceLocator.register(RemoteConfigService.self, instance: remoteConfigService)
         APIKeysProvider.configure(with: remoteConfigService)
+        SupabaseConfig.configure(with: remoteConfigService)
 
         // Fetch Remote Config values (fire-and-forget, fallbacks work until ready)
         fetchRemoteConfig(remoteConfigService)
@@ -234,7 +235,14 @@ final class PulseSceneDelegate: UIResponder, UIWindowSceneDelegate {
         // Register base services first
         let storageService = LiveStorageService()
         serviceLocator.register(StorageService.self, instance: storageService)
-        serviceLocator.register(NewsService.self, instance: CachingNewsService(wrapping: LiveNewsService()))
+
+        // Use SupabaseNewsService with Guardian API as fallback
+        // Supabase backend provides RSS-aggregated articles with no rate limits
+        // Falls back to Guardian API if Supabase is not configured
+        let supabaseNewsService = SupabaseNewsService(
+            fallbackService: LiveNewsService()
+        )
+        serviceLocator.register(NewsService.self, instance: CachingNewsService(wrapping: supabaseNewsService))
         serviceLocator.register(SearchService.self, instance: LiveSearchService())
         serviceLocator.register(StoreKitService.self, instance: LiveStoreKitService())
         serviceLocator.register(LLMService.self, instance: LiveLLMService())
