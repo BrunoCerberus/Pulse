@@ -29,11 +29,10 @@ final class CachingNewsService: NewsService {
 
     func fetchTopHeadlines(country: String, page: Int) -> AnyPublisher<[Article], Error> {
         let cacheKey = NewsCacheKey.topHeadlines(country: country, page: page)
-        let ttl = NewsCacheTTL.ttl(for: cacheKey)
 
         // Check cache first
         if let cached: CacheEntry<[Article]> = cacheStore.get(for: cacheKey),
-           !cached.isExpired(ttl: ttl)
+           !cached.isExpired(ttl: NewsCacheTTL.default)
         {
             Logger.shared.service("Cache hit for headlines (country: \(country), page: \(page))", level: .debug)
             return Just(cached.data)
@@ -53,11 +52,10 @@ final class CachingNewsService: NewsService {
 
     func fetchTopHeadlines(category: NewsCategory, country: String, page: Int) -> AnyPublisher<[Article], Error> {
         let cacheKey = NewsCacheKey.categoryHeadlines(category: category, country: country, page: page)
-        let ttl = NewsCacheTTL.ttl(for: cacheKey)
 
         // Check cache first
         if let cached: CacheEntry<[Article]> = cacheStore.get(for: cacheKey),
-           !cached.isExpired(ttl: ttl)
+           !cached.isExpired(ttl: NewsCacheTTL.default)
         {
             Logger.shared.service(
                 "Cache hit for category headlines (category: \(category.rawValue), page: \(page))",
@@ -83,11 +81,10 @@ final class CachingNewsService: NewsService {
 
     func fetchBreakingNews(country: String) -> AnyPublisher<[Article], Error> {
         let cacheKey = NewsCacheKey.breakingNews(country: country)
-        let ttl = NewsCacheTTL.ttl(for: cacheKey)
 
         // Check cache first
         if let cached: CacheEntry<[Article]> = cacheStore.get(for: cacheKey),
-           !cached.isExpired(ttl: ttl)
+           !cached.isExpired(ttl: NewsCacheTTL.default)
         {
             Logger.shared.service("Cache hit for breaking news (country: \(country))", level: .debug)
             return Just(cached.data)
@@ -107,11 +104,10 @@ final class CachingNewsService: NewsService {
 
     func fetchArticle(id: String) -> AnyPublisher<Article, Error> {
         let cacheKey = NewsCacheKey.article(id: id)
-        let ttl = NewsCacheTTL.ttl(for: cacheKey)
 
         // Check cache first
         if let cached: CacheEntry<Article> = cacheStore.get(for: cacheKey),
-           !cached.isExpired(ttl: ttl)
+           !cached.isExpired(ttl: NewsCacheTTL.default)
         {
             Logger.shared.service("Cache hit for article (id: \(id))", level: .debug)
             return Just(cached.data)
@@ -138,29 +134,5 @@ final class CachingNewsService: NewsService {
     func invalidateCache() {
         cacheStore.removeAll()
         Logger.shared.service("News cache invalidated", level: .debug)
-    }
-
-    /// Invalidates breaking news and headlines only. Preserves article cache.
-    ///
-    /// Use this for pull-to-refresh instead of `invalidateCache()` to preserve
-    /// the 60-minute article cache, reducing unnecessary API calls when users
-    /// re-open previously viewed articles.
-    func invalidateFreshContent() {
-        cacheStore.removeMatching { key in
-            switch key {
-            case .breakingNews, .topHeadlines, .categoryHeadlines:
-                return true // Remove fresh content
-            case .article:
-                return false // Preserve article cache
-            }
-        }
-        Logger.shared.service("Fresh content cache invalidated (articles preserved)", level: .debug)
-    }
-
-    /// Invalidates cached data for a specific key.
-    /// - Parameter key: The cache key to invalidate
-    func invalidateCache(for key: NewsCacheKey) {
-        cacheStore.remove(for: key)
-        Logger.shared.service("Cache invalidated for key: \(key.stringKey)", level: .debug)
     }
 }

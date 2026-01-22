@@ -42,36 +42,10 @@ enum NewsCacheKey: Hashable {
 
 // MARK: - Cache TTL Configuration
 
-/// Defines time-to-live durations for different types of cached content.
+/// Defines time-to-live for cached content.
 enum NewsCacheTTL {
-    /// Breaking news has high freshness expectation (5 minutes)
-    static let breakingNews: TimeInterval = 5 * 60
-
-    /// Page 1 headlines balance freshness vs API savings (10 minutes)
-    static let headlinesPage1: TimeInterval = 10 * 60
-
-    /// Page 2+ headlines are less critical (30 minutes)
-    static let headlinesPageN: TimeInterval = 30 * 60
-
-    /// Category headlines similar to page 1 (10 minutes)
-    static let categoryHeadlines: TimeInterval = 10 * 60
-
-    /// Individual articles rarely change (60 minutes)
-    static let article: TimeInterval = 60 * 60
-
-    /// Returns the appropriate TTL for a given cache key.
-    static func ttl(for key: NewsCacheKey) -> TimeInterval {
-        switch key {
-        case .breakingNews:
-            return breakingNews
-        case let .topHeadlines(_, page):
-            return page == 1 ? headlinesPage1 : headlinesPageN
-        case .categoryHeadlines:
-            return categoryHeadlines
-        case .article:
-            return article
-        }
-    }
+    /// Default TTL for all cached content (10 minutes)
+    static let `default`: TimeInterval = 10 * 60
 }
 
 // MARK: - Cache Store Protocol
@@ -89,16 +63,8 @@ protocol NewsCacheStore: AnyObject {
     ///   - key: The cache key to associate with the entry
     func set<T>(_ entry: CacheEntry<T>, for key: NewsCacheKey)
 
-    /// Removes a cached entry for the given key.
-    /// - Parameter key: The cache key to remove
-    func remove(for key: NewsCacheKey)
-
     /// Removes all cached entries.
     func removeAll()
-
-    /// Removes cached entries matching a predicate.
-    /// - Parameter predicate: A closure that returns true for keys to remove
-    func removeMatching(_ predicate: (NewsCacheKey) -> Bool)
 }
 
 // MARK: - Live Cache Store Implementation
@@ -116,10 +82,6 @@ final class LiveNewsCacheStore: NewsCacheStore {
 
     private let cache: NSCache<NSString, CacheEntryWrapper>
     private var memoryWarningObserver: NSObjectProtocol?
-
-    /// Tracks active cache keys for selective invalidation
-    private var activeKeys = Set<NewsCacheKey>()
-    private let keysLock = NSLock()
 
     init() {
         cache = NSCache()
@@ -161,42 +123,10 @@ final class LiveNewsCacheStore: NewsCacheStore {
         // Estimate cost based on data type
         let cost = estimateCost(for: entry.data)
         cache.setObject(wrapper, forKey: nsKey, cost: cost)
-
-        // Track the key for selective invalidation
-        keysLock.withLock {
-            activeKeys.insert(key)
-        }
-    }
-
-    func remove(for key: NewsCacheKey) {
-        let nsKey = key.stringKey as NSString
-        cache.removeObject(forKey: nsKey)
-
-        keysLock.withLock {
-            activeKeys.remove(key)
-        }
     }
 
     func removeAll() {
         cache.removeAllObjects()
-
-        keysLock.withLock {
-            activeKeys.removeAll()
-        }
-    }
-
-    func removeMatching(_ predicate: (NewsCacheKey) -> Bool) {
-        // Collect keys to remove under lock to avoid holding lock during cache operations
-        let keysToRemove = keysLock.withLock {
-            activeKeys.filter(predicate)
-        }
-
-        // Remove matching entries
-        for key in keysToRemove {
-            remove(for: key)
-        }
-
-        Logger.shared.service("Selectively removed \(keysToRemove.count) cache entries", level: .debug)
     }
 
     /// Estimates memory cost for cache entries to help NSCache manage memory.

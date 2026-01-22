@@ -5,7 +5,7 @@ import SwiftUI
 /// This view extracts the UIImageViews from the system UITabBar and applies
 /// symbol effects directly to them when the selection changes, enabling
 /// animations with the native Liquid Glass tab bar.
-struct AnimatedTabView<Selection: AnimatedTabSelectionProtocol, Content: TabContent<Selection>>: View {
+struct AnimatedTabView<Selection: AnimatedTabSelectable, Content: TabContent<Selection>>: View {
     @Binding var selection: Selection
     @TabContentBuilder<Selection> var content: Content
     var effects: (Selection) -> any DiscreteSymbolEffect & SymbolEffect
@@ -41,7 +41,7 @@ struct AnimatedTabView<Selection: AnimatedTabSelectionProtocol, Content: TabCont
 // MARK: - UIViewRepresentable for Extracting Tab Bar Image Views
 
 /// Extracts UIImageViews from the UITabBar to enable symbol effect animations.
-private struct ExtractImageViewsFromTabView<Value: AnimatedTabSelectionProtocol>: UIViewRepresentable {
+private struct ExtractImageViewsFromTabView<Value: AnimatedTabSelectable>: UIViewRepresentable {
     @Binding var imageViews: [Value: UIImageView]
 
     func makeUIView(context _: Context) -> UIView {
