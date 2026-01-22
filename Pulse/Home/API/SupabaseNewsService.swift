@@ -167,9 +167,8 @@ struct SupabaseArticle: Codable {
             ?? Date()
 
         // Handle content/description mapping for RSS feeds:
-        // - If content exists, use summary as description (short preview)
-        // - If content is nil, RSS feed only has summary which is the main content
-        //   In this case, use summary as content and create truncated description
+        // - If content exists, use summary as description (short preview) and content as body
+        // - If only summary exists, use it as full content (no description to avoid duplication)
         let articleDescription: String?
         let articleContent: String?
 
@@ -178,9 +177,9 @@ struct SupabaseArticle: Codable {
             articleDescription = summary
             articleContent = fullContent
         } else if let summaryText = summary, !summaryText.isEmpty {
-            // RSS feed only has summary - use it as content, truncate for description
+            // RSS feed only has summary - use it as content, no description to avoid duplication
+            articleDescription = nil
             articleContent = summaryText
-            articleDescription = Self.truncateForDescription(summaryText)
         } else {
             articleDescription = nil
             articleContent = nil
