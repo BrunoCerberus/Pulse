@@ -39,14 +39,37 @@ struct Article: Identifiable, Equatable, Codable, Hashable {
         self.category = category
     }
 
-    /// Returns the best available image URL for list/cell display (prefers thumbnail)
+    /// Returns the best available image URL for list/cell display (prefers thumbnail, optimized for ~300px)
     var displayImageURL: String? {
-        thumbnailURL ?? imageURL
+        guard let url = thumbnailURL ?? imageURL else { return nil }
+        return Self.optimizeImageURL(url, targetWidth: 300)
     }
 
-    /// Returns the best available image URL for detail/hero display (prefers full resolution)
+    /// Returns the best available image URL for detail/hero display (prefers full resolution, optimized for ~1200px)
     var heroImageURL: String? {
-        imageURL ?? thumbnailURL
+        guard let url = imageURL ?? thumbnailURL else { return nil }
+        return Self.optimizeImageURL(url, targetWidth: 1200)
+    }
+
+    /// Optimizes image URLs from known providers to request the desired resolution
+    /// Currently supports: Guardian (i.guim.co.uk)
+    private static func optimizeImageURL(_ urlString: String, targetWidth: Int) -> String {
+        // Guardian image optimization: change width parameter
+        // Format: https://i.guim.co.uk/img/media/.../image.jpg?width=140&quality=85&...
+        if urlString.contains("i.guim.co.uk") {
+            // Replace width parameter with target width
+            var optimized = urlString
+            if let range = optimized.range(of: "width=\\d+", options: .regularExpression) {
+                optimized = optimized.replacingCharacters(in: range, with: "width=\(targetWidth)")
+            }
+            // Also increase quality for hero images
+            if targetWidth >= 800, let range = optimized.range(of: "quality=\\d+", options: .regularExpression) {
+                optimized = optimized.replacingCharacters(in: range, with: "quality=95")
+            }
+            return optimized
+        }
+
+        return urlString
     }
 
     var formattedDate: String {
