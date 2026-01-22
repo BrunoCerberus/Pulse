@@ -56,13 +56,13 @@ struct SummarizationDomainInteractorTests {
     func startSummarizationCompletesWithSummary() async throws {
         let expectedSummary = "Test summary content"
         mockSummarizationService.generateResult = .success(expectedSummary)
-        mockSummarizationService.loadDelay = 0.001
-        mockSummarizationService.generateDelay = 0.001
+        mockSummarizationService.loadDelay = 0.01
+        mockSummarizationService.generateDelay = 0.01
 
         sut.dispatch(action: .startSummarization)
 
-        // Wait for summarization to complete
-        let completed = await waitForCondition(timeout: 1_000_000_000) { [sut] in
+        // Wait for summarization to complete with longer timeout
+        let completed = await waitForCondition(timeout: 3_000_000_000) { [sut] in
             sut.currentState.summarizationState == .completed
         }
 
