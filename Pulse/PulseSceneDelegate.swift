@@ -236,13 +236,10 @@ final class PulseSceneDelegate: UIResponder, UIWindowSceneDelegate {
         let storageService = LiveStorageService()
         serviceLocator.register(StorageService.self, instance: storageService)
 
-        // Use SupabaseNewsService with Guardian API as fallback
-        // Supabase backend provides RSS-aggregated articles with no rate limits
-        // Falls back to Guardian API if Supabase is not configured
-        let supabaseNewsService = SupabaseNewsService(
-            fallbackService: LiveNewsService()
-        )
-        serviceLocator.register(NewsService.self, instance: CachingNewsService(wrapping: supabaseNewsService))
+        // All Live services use Supabase backend with Guardian API fallback
+        // Supabase backend provides RSS-aggregated articles with high-res images and full content
+        // Falls back to Guardian API if Supabase is not configured or on error
+        serviceLocator.register(NewsService.self, instance: CachingNewsService(wrapping: LiveNewsService()))
         serviceLocator.register(SearchService.self, instance: LiveSearchService())
         serviceLocator.register(StoreKitService.self, instance: LiveStoreKitService())
         serviceLocator.register(LLMService.self, instance: LiveLLMService())

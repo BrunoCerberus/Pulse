@@ -171,7 +171,7 @@ Pulse/
 │   │   ├── View/           # SignInView
 │   │   └── Manager/        # AuthenticationManager (global state)
 │   ├── Home/               # Home feed feature
-│   │   ├── API/            # NewsService, SupabaseNewsService, SupabaseAPI
+│   │   ├── API/            # NewsService, SupabaseAPI, SupabaseModels
 │   │   ├── Domain/         # Interactor, State, Action, Reducer, EventActionMap
 │   │   ├── ViewModel/      # HomeViewModel
 │   │   ├── View/           # SwiftUI views

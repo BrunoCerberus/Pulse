@@ -16,7 +16,7 @@ Pulse/
 │   │   ├── View/               # SignInView
 │   │   └── Manager/            # AuthenticationManager (global state)
 │   ├── [Feature]/              # Feature modules (Home, ForYou, Search, Bookmarks, etc.)
-│   │   └── API/                # Service protocols + SupabaseNewsService, SupabaseAPI
+│   │   └── API/                # Service protocols + SupabaseAPI, SupabaseModels
 │   ├── Feed/                   # AI-powered Daily Digest
 │   │   ├── API/                # FeedService protocol + Live/Mock
 │   │   ├── Domain/             # FeedDomainInteractor, State, Action, Reducer, EventActionMap
@@ -195,7 +195,7 @@ struct HomeDomainInteractorTests {
 8. **AuthenticationManager is a singleton** - observed by RootView to switch between SignInView and CoordinatorView
 9. **Premium features are gated** - AI features require subscription (checked via StoreKitService)
 10. **Service decorators for cross-cutting concerns** - Use Decorator Pattern for caching, logging (e.g., `CachingNewsService` wraps `LiveNewsService`)
-11. **Graceful fallback for data sources** - SupabaseNewsService falls back to Guardian API when not configured
+11. **Graceful fallback for data sources** - Live services (NewsService, SearchService, ForYouService) use Supabase as primary and fall back to Guardian API when not configured or on error
 
 ## Data Source Architecture
 

@@ -9,6 +9,7 @@ enum SupabaseAPI: APIFetcher {
     case articlesByCategory(category: String, page: Int, pageSize: Int)
     case breakingNews(since: String)
     case article(id: String)
+    case search(query: String, page: Int, pageSize: Int, orderBy: String)
 
     private var baseURL: String {
         SupabaseConfig.url + "/rest/v1"
@@ -56,6 +57,18 @@ enum SupabaseAPI: APIFetcher {
         case let .article(id):
             queryItems.append(URLQueryItem(name: "id", value: "eq.\(id)"))
             queryItems.append(URLQueryItem(name: "limit", value: "1"))
+
+        case let .search(query, page, pageSize, orderBy):
+            let offset = (page - 1) * pageSize
+            // Use ilike for case-insensitive search in title and summary
+            // PostgREST OR syntax: or=(title.ilike.*query*,summary.ilike.*query*)
+            let searchPattern = "*\(query)*"
+            queryItems.append(URLQueryItem(name: "or", value: "(title.ilike.\(searchPattern),summary.ilike.\(searchPattern))"))
+            // Map order parameter
+            let order = orderBy == "relevance" ? "published_at.desc" : "published_at.desc"
+            queryItems.append(URLQueryItem(name: "order", value: order))
+            queryItems.append(URLQueryItem(name: "offset", value: String(offset)))
+            queryItems.append(URLQueryItem(name: "limit", value: String(pageSize)))
         }
 
         components.queryItems = queryItems

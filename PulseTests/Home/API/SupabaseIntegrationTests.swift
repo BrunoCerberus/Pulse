@@ -4,70 +4,6 @@ import Foundation
 @testable import Pulse
 import Testing
 
-// MARK: - SupabaseNewsService Tests
-
-@Suite("SupabaseNewsService Tests")
-struct SupabaseNewsServiceTests {
-    // MARK: - Initialization Tests
-
-    @Test("SupabaseNewsService can be instantiated")
-    func canBeInstantiated() {
-        let service = SupabaseNewsService()
-
-        #expect(service is NewsService)
-    }
-
-    @Test("SupabaseNewsService accepts fallback service")
-    func acceptsFallbackService() {
-        let fallback = MockNewsService()
-        let service = SupabaseNewsService(fallbackService: fallback)
-
-        #expect(service is NewsService)
-    }
-
-    // MARK: - Protocol Conformance Tests
-
-    @Test("fetchTopHeadlines returns correct publisher type")
-    func fetchTopHeadlinesReturnsCorrectType() {
-        let service = SupabaseNewsService()
-
-        let publisher = service.fetchTopHeadlines(country: "us", page: 1)
-
-        let typeCheck: AnyPublisher<[Article], Error> = publisher
-        #expect(typeCheck is AnyPublisher<[Article], Error>)
-    }
-
-    @Test("fetchBreakingNews returns correct publisher type")
-    func fetchBreakingNewsReturnsCorrectType() {
-        let service = SupabaseNewsService()
-
-        let publisher = service.fetchBreakingNews(country: "us")
-
-        let typeCheck: AnyPublisher<[Article], Error> = publisher
-        #expect(typeCheck is AnyPublisher<[Article], Error>)
-    }
-
-    @Test("fetchTopHeadlines by category returns correct publisher type")
-    func fetchTopHeadlinesByCategoryReturnsCorrectType() {
-        let service = SupabaseNewsService()
-
-        let publisher = service.fetchTopHeadlines(category: .technology, country: "us", page: 1)
-
-        let typeCheck: AnyPublisher<[Article], Error> = publisher
-        #expect(typeCheck is AnyPublisher<[Article], Error>)
-    }
-
-    @Test("fetchArticle returns correct publisher type")
-    func fetchArticleReturnsCorrectType() {
-        let service = SupabaseNewsService()
-
-        let publisher = service.fetchArticle(id: "test-article-id")
-
-        let typeCheck: AnyPublisher<Article, Error> = publisher
-        #expect(typeCheck is AnyPublisher<Article, Error>)
-    }
-}
-
 // MARK: - SupabaseArticle Mapping Tests
 
 @Suite("SupabaseArticle Mapping Tests")
@@ -356,17 +292,30 @@ struct SupabaseAPITests {
         #expect(path.contains("limit=1"))
     }
 
+    @Test("SupabaseAPI search includes query filter")
+    func searchIncludesQueryFilter() {
+        let api = SupabaseAPI.search(query: "swift", page: 1, pageSize: 20, orderBy: "relevance")
+
+        let path = api.path
+
+        #expect(path.contains("or="))
+        #expect(path.contains("title.ilike.*swift*"))
+        #expect(path.contains("summary.ilike.*swift*"))
+    }
+
     @Test("SupabaseAPI uses GET method")
     func usesGetMethod() {
         let articlesAPI = SupabaseAPI.articles(page: 1, pageSize: 20)
         let categoryAPI = SupabaseAPI.articlesByCategory(category: "tech", page: 1, pageSize: 20)
         let breakingAPI = SupabaseAPI.breakingNews(since: "2024-01-01")
         let articleAPI = SupabaseAPI.article(id: "test")
+        let searchAPI = SupabaseAPI.search(query: "test", page: 1, pageSize: 20, orderBy: "relevance")
 
         #expect(articlesAPI.method == .GET)
         #expect(categoryAPI.method == .GET)
         #expect(breakingAPI.method == .GET)
         #expect(articleAPI.method == .GET)
+        #expect(searchAPI.method == .GET)
     }
 
     @Test("SupabaseAPI task is nil")
@@ -391,21 +340,50 @@ struct SupabaseAPITests {
     }
 }
 
-// MARK: - SupabaseNewsError Tests
+// MARK: - Live Service Protocol Conformance Tests
 
-@Suite("SupabaseNewsError Tests")
-struct SupabaseNewsErrorTests {
-    @Test("notConfigured error has correct description")
-    func notConfiguredErrorDescription() {
-        let error = SupabaseNewsError.notConfigured
-
-        #expect(error.errorDescription == "Supabase backend is not configured")
+@Suite("Live Services Protocol Conformance Tests")
+struct LiveServicesProtocolTests {
+    @Test("LiveNewsService conforms to NewsService protocol")
+    func liveNewsServiceConformance() {
+        let service = LiveNewsService()
+        #expect(service is NewsService)
     }
 
-    @Test("articleNotFound error has correct description")
-    func articleNotFoundErrorDescription() {
-        let error = SupabaseNewsError.articleNotFound
+    @Test("LiveSearchService conforms to SearchService protocol")
+    func liveSearchServiceConformance() {
+        let service = LiveSearchService()
+        #expect(service is SearchService)
+    }
 
-        #expect(error.errorDescription == "Article not found")
+    @Test("LiveForYouService conforms to ForYouService protocol")
+    func liveForYouServiceConformance() {
+        let service = LiveForYouService(storageService: MockStorageService())
+        #expect(service is ForYouService)
+    }
+
+    @Test("LiveNewsService fetchTopHeadlines returns correct publisher type")
+    func newsServiceFetchTopHeadlinesType() {
+        let service = LiveNewsService()
+        let publisher = service.fetchTopHeadlines(country: "us", page: 1)
+        let typeCheck: AnyPublisher<[Article], Error> = publisher
+        #expect(typeCheck is AnyPublisher<[Article], Error>)
+    }
+
+    @Test("LiveSearchService search returns correct publisher type")
+    func searchServiceSearchType() {
+        let service = LiveSearchService()
+        let publisher = service.search(query: "test", page: 1, sortBy: "relevance")
+        let typeCheck: AnyPublisher<[Article], Error> = publisher
+        #expect(typeCheck is AnyPublisher<[Article], Error>)
+    }
+
+    @Test("LiveForYouService fetchPersonalizedFeed returns correct publisher type")
+    func forYouServiceFetchType() {
+        let service = LiveForYouService(storageService: MockStorageService())
+        let preferences = UserPreferences.default
+        let publisher = service.fetchPersonalizedFeed(preferences: preferences, page: 1)
+        let typeCheck: AnyPublisher<[Article], Error> = publisher
+        #expect(typeCheck is AnyPublisher<[Article], Error>)
     }
 }

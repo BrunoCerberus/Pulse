@@ -168,7 +168,7 @@ Pulse/
 │   ├── View/                   # SignInView
 │   └── Manager/                # AuthenticationManager (global state)
 ├── Home/                       # Home feed feature
-│   ├── API/                    # NewsAPI, NewsService, SupabaseAPI, SupabaseNewsService
+│   ├── API/                    # NewsAPI, NewsService, SupabaseAPI, SupabaseModels
 │   ├── Domain/                 # Interactor, State, Action, Reducer, EventActionMap
 │   ├── ViewModel/              # HomeViewModel
 │   ├── View/                   # SwiftUI views (generic over Router)
@@ -310,6 +310,8 @@ make coverage-badge     # Generate SVG badge
 
 ## Network Layer (EntropyCore)
 
+All Live services (LiveNewsService, LiveSearchService, LiveForYouService) use Supabase as the primary backend with Guardian API fallback.
+
 ### Supabase Backend (Primary)
 
 ```swift
@@ -318,21 +320,30 @@ enum SupabaseAPI: APIFetcher {
     case articlesByCategory(category: String, page: Int, pageSize: Int)
     case breakingNews(since: String)
     case article(id: String)
+    case search(query: String, page: Int, pageSize: Int, orderBy: String)
 
     var path: String { ... }
     var method: HTTPMethod { .GET }
 }
 
-final class SupabaseNewsService: APIRequest, NewsService {
-    private let fallbackService: NewsService?
+final class LiveNewsService: APIRequest, NewsService {
+    private let useSupabase: Bool
+
+    override init() {
+        self.useSupabase = SupabaseConfig.isConfigured
+        super.init()
+    }
 
     func fetchTopHeadlines(country: String, page: Int) -> AnyPublisher<[Article], Error> {
-        guard isConfigured else {
-            return fallbackService?.fetchTopHeadlines(country: country, page: page)
-                ?? Fail(error: SupabaseNewsError.notConfigured).eraseToAnyPublisher()
+        if useSupabase {
+            return fetchFromSupabase(page: page)
+                .catch { [weak self] error -> AnyPublisher<[Article], Error> in
+                    // Automatic fallback to Guardian on Supabase error
+                    return self?.fetchFromGuardian(page: page) ?? Fail(error: error).eraseToAnyPublisher()
+                }
+                .eraseToAnyPublisher()
         }
-        // Fetch from Supabase REST API with embedded relations
-        return fetchRequest(target: SupabaseAPI.articles(page: page, pageSize: 20), ...)
+        return fetchFromGuardian(page: page)
     }
 }
 ```
@@ -353,18 +364,11 @@ enum GuardianAPI: APIFetcher {
     var path: String { ... }
     var method: HTTPMethod { .GET }
 }
-
-final class LiveNewsService: APIRequest, NewsService {
-    func fetchTopHeadlines(country: String, page: Int) -> AnyPublisher<[Article], Error> {
-        fetchRequest(
-            target: GuardianAPI.search(query: nil, section: nil, page: page, pageSize: 20, orderBy: "newest"),
-            dataType: GuardianResponse.self
-        )
-        .map { $0.response.results.compactMap { $0.toArticle() } }
-        .eraseToAnyPublisher()
-    }
-}
 ```
+
+Guardian API is used as fallback when:
+- Supabase is not configured (missing URL or API key)
+- Supabase API returns an error
 
 ## Caching Layer
 
@@ -445,7 +449,7 @@ if let cachingService = newsService as? CachingNewsService {
 | **Supabase Backend** | |
 | `SupabaseConfig.swift` | Supabase URL and API key configuration |
 | `SupabaseAPI.swift` | Supabase REST API endpoint definitions |
-| `SupabaseNewsService.swift` | News service with Guardian API fallback |
+| `SupabaseModels.swift` | Supabase response models (SupabaseArticle, SupabaseSource, SupabaseCategory) |
 | **Caching** | |
 | `NewsCacheStore.swift` | Cache protocol, NSCache implementation, TTL configuration |
 | `CachingNewsService.swift` | Decorator wrapping LiveNewsService with in-memory caching |
