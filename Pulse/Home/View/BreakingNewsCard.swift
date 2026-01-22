@@ -15,7 +15,8 @@ struct BreakingNewsCard: View {
     var body: some View {
         Button(action: onTap) {
             ZStack(alignment: .bottomLeading) {
-                if let imageURL = item.imageURL {
+                // Use heroImageURL for carousel cards (higher resolution)
+                if let imageURL = item.heroImageURL ?? item.imageURL {
                     CachedAsyncImage(url: imageURL, accessibilityLabel: item.title) { image in
                         image
                             .resizable()
