@@ -1,6 +1,6 @@
 # Pulse
 
-A modern iOS news aggregation app built with Clean Architecture, SwiftUI, and Combine. Powered by the Guardian API.
+A modern iOS news aggregation app built with Clean Architecture, SwiftUI, and Combine. Powered by a self-hosted RSS feed aggregator backend with Guardian API fallback.
 
 ## Features
 
@@ -131,9 +131,13 @@ API keys are managed via **Firebase Remote Config** (primary) with environment v
 ```bash
 # For CI/CD or local development without Remote Config
 export GUARDIAN_API_KEY="your_guardian_key"
+
+# Supabase backend configuration (optional - falls back to Guardian API)
+export SUPABASE_URL="https://your-project.supabase.co"
+export SUPABASE_ANON_KEY="your_anon_key"
 ```
 
-The app fetches keys from Remote Config on launch. Environment variables are used as fallback when Remote Config is unavailable.
+The app fetches keys from Remote Config on launch. Environment variables are used as fallback when Remote Config is unavailable. If Supabase is not configured, the app automatically falls back to the Guardian API.
 
 ## Commands
 
@@ -167,7 +171,7 @@ Pulse/
 │   │   ├── View/           # SignInView
 │   │   └── Manager/        # AuthenticationManager (global state)
 │   ├── Home/               # Home feed feature
-│   │   ├── API/            # NewsService protocol + LiveNewsService
+│   │   ├── API/            # NewsService, SupabaseNewsService, SupabaseAPI
 │   │   ├── Domain/         # Interactor, State, Action, Reducer, EventActionMap
 │   │   ├── ViewModel/      # HomeViewModel
 │   │   ├── View/           # SwiftUI views
@@ -186,7 +190,7 @@ Pulse/
 │       ├── DesignSystem/   # ColorSystem, Typography, Components, HapticManager
 │       ├── Extensions/     # SwipeBackGesture and other utilities
 │       ├── Models/         # Article, NewsCategory, UserPreferences
-│       ├── Networking/     # APIKeysProvider, BaseURLs
+│       ├── Networking/     # APIKeysProvider, BaseURLs, SupabaseConfig
 │       ├── Storage/        # StorageService (SwiftData)
 │       ├── Mocks/          # Mock services for testing
 │       └── Widget/         # WidgetDataManager
@@ -261,6 +265,22 @@ Visual regression tests for UI components using SnapshotTesting.
 
 MIT License - see [LICENSE](LICENSE) for details.
 
+## Data Sources
+
+### Supabase Backend (Primary)
+
+The app fetches articles from a self-hosted RSS feed aggregator backend that:
+
+- Aggregates news from multiple RSS sources (Guardian, BBC, TechCrunch, Science Daily, etc.)
+- Extracts high-resolution `og:image` from article pages for hero images
+- Extracts full article content using Mozilla Readability
+- Stores articles in Supabase database with automatic cleanup
+
+### Guardian API (Fallback)
+
+When Supabase is not configured, the app falls back to the Guardian API directly.
+
 ## Acknowledgments
 
-- [Guardian API](https://open-platform.theguardian.com) - Primary news data provider
+- [Supabase](https://supabase.com) - Backend database and REST API
+- [Guardian API](https://open-platform.theguardian.com) - Fallback news data provider

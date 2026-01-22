@@ -2,7 +2,7 @@
 
 ## Project Overview
 
-Pulse is an iOS news aggregation app built with **Unidirectional Data Flow Architecture** based on Clean Architecture principles, using **Combine** for reactive data binding. The app fetches news from the **Guardian API** (primary) and provides a personalized reading experience.
+Pulse is an iOS news aggregation app built with **Unidirectional Data Flow Architecture** based on Clean Architecture principles, using **Combine** for reactive data binding. The app fetches news from a **Supabase backend** (primary) powered by a Go RSS worker, with **Guardian API** fallback.
 
 ## Architecture
 
@@ -168,7 +168,7 @@ Pulse/
 │   ├── View/                   # SignInView
 │   └── Manager/                # AuthenticationManager (global state)
 ├── Home/                       # Home feed feature
-│   ├── API/                    # NewsAPI, NewsService
+│   ├── API/                    # NewsAPI, NewsService, SupabaseAPI, SupabaseNewsService
 │   ├── Domain/                 # Interactor, State, Action, Reducer, EventActionMap
 │   ├── ViewModel/              # HomeViewModel
 │   ├── View/                   # SwiftUI views (generic over Router)
@@ -203,7 +203,7 @@ Pulse/
     ├── Extensions/             # CombineViewModel, CombineInteractor, etc.
     ├── Models/                 # Article, NewsCategory, UserPreferences
     ├── Storage/                # StorageService (SwiftData)
-    ├── Networking/             # API keys, base URLs
+    ├── Networking/             # API keys, base URLs, SupabaseConfig
     ├── Mocks/                  # Mock services for testing
     └── Widget/                 # WidgetDataManager
 ```
@@ -310,6 +310,41 @@ make coverage-badge     # Generate SVG badge
 
 ## Network Layer (EntropyCore)
 
+### Supabase Backend (Primary)
+
+```swift
+enum SupabaseAPI: APIFetcher {
+    case articles(page: Int, pageSize: Int)
+    case articlesByCategory(category: String, page: Int, pageSize: Int)
+    case breakingNews(since: String)
+    case article(id: String)
+
+    var path: String { ... }
+    var method: HTTPMethod { .GET }
+}
+
+final class SupabaseNewsService: APIRequest, NewsService {
+    private let fallbackService: NewsService?
+
+    func fetchTopHeadlines(country: String, page: Int) -> AnyPublisher<[Article], Error> {
+        guard isConfigured else {
+            return fallbackService?.fetchTopHeadlines(country: country, page: page)
+                ?? Fail(error: SupabaseNewsError.notConfigured).eraseToAnyPublisher()
+        }
+        // Fetch from Supabase REST API with embedded relations
+        return fetchRequest(target: SupabaseAPI.articles(page: page, pageSize: 20), ...)
+    }
+}
+```
+
+The Supabase backend is powered by a Go RSS worker (`pulse-backend`) that:
+- Fetches articles from multiple RSS sources (Guardian, BBC, TechCrunch, etc.)
+- Extracts `og:image` from article pages for high-resolution hero images
+- Extracts full article content using go-readability (Mozilla Readability port)
+- Stores in Supabase with automatic article cleanup
+
+### Guardian API (Fallback)
+
 ```swift
 enum GuardianAPI: APIFetcher {
     case search(query: String?, section: String?, page: Int, pageSize: Int, orderBy: String)
@@ -405,8 +440,12 @@ if let cachingService = newsService as? CachingNewsService {
 | `DeeplinkManager.swift` | URL scheme handling |
 | `ThemeManager.swift` | Dark/light mode management |
 | `StorageService.swift` | SwiftData persistence |
-| `NewsAPI.swift` | API endpoint definitions |
+| `NewsAPI.swift` | Guardian API endpoint definitions |
 | `GoogleService-Info.plist` | Firebase configuration |
+| **Supabase Backend** | |
+| `SupabaseConfig.swift` | Supabase URL and API key configuration |
+| `SupabaseAPI.swift` | Supabase REST API endpoint definitions |
+| `SupabaseNewsService.swift` | News service with Guardian API fallback |
 | **Caching** | |
 | `NewsCacheStore.swift` | Cache protocol, NSCache implementation, TTL configuration |
 | `CachingNewsService.swift` | Decorator wrapping LiveNewsService with in-memory caching |
@@ -452,9 +491,13 @@ API keys are managed via **Firebase Remote Config** (primary) with fallbacks:
 ```bash
 # For CI/CD or local development without Remote Config
 export GUARDIAN_API_KEY="your_key"
+
+# Supabase backend configuration (optional)
+export SUPABASE_URL="https://your-project.supabase.co"
+export SUPABASE_ANON_KEY="your_anon_key"
 ```
 
-See `APIKeysProvider.swift` for the fallback hierarchy implementation.
+See `APIKeysProvider.swift` and `SupabaseConfig.swift` for implementation details. If Supabase is not configured, the app automatically falls back to the Guardian API.
 
 ## Deeplinks
 
