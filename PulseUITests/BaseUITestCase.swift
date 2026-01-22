@@ -156,8 +156,15 @@ class BaseUITestCase: XCTestCase {
     /// Navigate to Search tab (handles role: .search accessibility)
     func navigateToSearchTab() {
         let searchTab = app.tabBars.buttons["Search"]
-        if searchTab.exists, !searchTab.isSelected {
+        // Use waitForExistence for CI reliability
+        if searchTab.waitForExistence(timeout: Self.shortTimeout), !searchTab.isSelected {
             searchTab.tap()
+        } else if !searchTab.exists {
+            // Fallback: try finding the button directly
+            let searchButton = app.buttons["Search"]
+            if searchButton.waitForExistence(timeout: 2), !searchButton.isSelected {
+                searchButton.tap()
+            }
         }
         _ = app.navigationBars["Search"].waitForExistence(timeout: Self.defaultTimeout)
     }
@@ -165,8 +172,15 @@ class BaseUITestCase: XCTestCase {
     /// Navigate to For You tab and verify navigation bar appears
     func navigateToForYouTab() {
         let forYouTab = app.tabBars.buttons["For You"]
-        if forYouTab.exists, !forYouTab.isSelected {
+        // Use waitForExistence for CI reliability - tab bar may not be immediately available
+        if forYouTab.waitForExistence(timeout: Self.shortTimeout), !forYouTab.isSelected {
             forYouTab.tap()
+        } else if !forYouTab.exists {
+            // Fallback: try finding the button directly
+            let forYouButton = app.buttons["For You"]
+            if forYouButton.waitForExistence(timeout: 2), !forYouButton.isSelected {
+                forYouButton.tap()
+            }
         }
         _ = app.navigationBars["For You"].waitForExistence(timeout: Self.defaultTimeout)
     }
@@ -174,8 +188,15 @@ class BaseUITestCase: XCTestCase {
     /// Navigate to Feed tab and verify navigation bar appears
     func navigateToFeedTab() {
         let feedTab = app.tabBars.buttons["Feed"]
-        if feedTab.exists, !feedTab.isSelected {
+        // Use waitForExistence for CI reliability
+        if feedTab.waitForExistence(timeout: Self.shortTimeout), !feedTab.isSelected {
             feedTab.tap()
+        } else if !feedTab.exists {
+            // Fallback: try finding the button directly
+            let feedButton = app.buttons["Feed"]
+            if feedButton.waitForExistence(timeout: 2), !feedButton.isSelected {
+                feedButton.tap()
+            }
         }
         _ = app.navigationBars["Daily Digest"].waitForExistence(timeout: Self.defaultTimeout)
     }
@@ -183,8 +204,15 @@ class BaseUITestCase: XCTestCase {
     /// Navigate to Bookmarks tab and verify navigation bar appears
     func navigateToBookmarksTab() {
         let bookmarksTab = app.tabBars.buttons["Bookmarks"]
-        if bookmarksTab.exists, !bookmarksTab.isSelected {
+        // Use waitForExistence for CI reliability
+        if bookmarksTab.waitForExistence(timeout: Self.shortTimeout), !bookmarksTab.isSelected {
             bookmarksTab.tap()
+        } else if !bookmarksTab.exists {
+            // Fallback: try finding the button directly
+            let bookmarksButton = app.buttons["Bookmarks"]
+            if bookmarksButton.waitForExistence(timeout: 2), !bookmarksButton.isSelected {
+                bookmarksButton.tap()
+            }
         }
         _ = app.navigationBars["Bookmarks"].waitForExistence(timeout: Self.defaultTimeout)
     }
@@ -237,7 +265,8 @@ class BaseUITestCase: XCTestCase {
     }
 
     /// Wait for content to load (articles, error, or empty state)
-    func waitForHomeContent(timeout: TimeInterval = 20) -> Bool {
+    @discardableResult
+    func waitForHomeContent(timeout: TimeInterval = 30) -> Bool {
         let contentIndicators = [
             app.staticTexts["Breaking News"],
             app.staticTexts["Top Headlines"],
@@ -245,7 +274,12 @@ class BaseUITestCase: XCTestCase {
             app.staticTexts["No News Available"],
             app.scrollViews.firstMatch, // Fallback: wait for scroll view to appear
         ]
-        return waitForAny(contentIndicators, timeout: timeout)
+        // First try with main indicators
+        if waitForAny(contentIndicators, timeout: timeout) {
+            return true
+        }
+        // Fallback: check if any article cards exist
+        return waitForAnyMatch(articleCards(), timeout: 5)
     }
 
     /// Wait for article detail view

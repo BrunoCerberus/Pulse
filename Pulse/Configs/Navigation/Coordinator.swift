@@ -2,13 +2,13 @@ import EntropyCore
 import SwiftUI
 
 /// Protocol for tabs that support animated symbol effects.
-protocol AnimatedTabSelectionProtocol: CaseIterable, Hashable {
+protocol AnimatedTabSelectable: CaseIterable, Hashable {
     var symbolImage: String { get }
     var symbolEffect: any DiscreteSymbolEffect & SymbolEffect { get }
 }
 
 /// Tab selection enum for the main TabView.
-enum AppTab: String, CaseIterable, AnimatedTabSelectionProtocol {
+enum AppTab: String, CaseIterable, AnimatedTabSelectable {
     case home
     case forYou
     case feed

@@ -134,10 +134,9 @@ final class HomeDomainInteractor: CombineInteractor {
     }
 
     private func refresh() {
-        // Invalidate fresh content (headlines, breaking) but preserve article cache
-        // This reduces API calls when users re-open previously viewed articles
+        // Invalidate cache on refresh to ensure fresh data
         if let cachingService = newsService as? CachingNewsService {
-            cachingService.invalidateFreshContent()
+            cachingService.invalidateCache()
         }
 
         updateState { state in
