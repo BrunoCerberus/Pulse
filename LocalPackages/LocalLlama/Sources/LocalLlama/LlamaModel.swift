@@ -64,10 +64,20 @@ class LlamaModel {
         }
         self.context = context
         self.tokens = []
-        self.batch = llama_batch_init(Int32(configuration.batchSize * Configuration.historySize * 2), 0, 1)
+        // Optimized batch size: context + generation buffer
+        // Previously used batchSize * historySize * 2 (20480) which was excessive
+        // Buffer must accommodate maxTokenCount for generation phase
+        let generationBuffer = max(512, configuration.maxTokenCount)
+        let optimizedBatchSize = Int32(configuration.nCTX + generationBuffer)
+        self.batch = llama_batch_init(optimizedBatchSize, 0, 1)
+
+        // Sampler chain: top-k -> top-p -> temperature -> distribution
+        // Order follows llama.cpp convention: filtering (top-k, top-p) before temperature scaling
         self.sampler = llama_sampler_chain_init(llama_sampler_chain_default_params())
+        llama_sampler_chain_add(sampler, llama_sampler_init_top_k(Int32(configuration.topK)))
+        llama_sampler_chain_add(sampler, llama_sampler_init_top_p(configuration.topP, 1))
         llama_sampler_chain_add(sampler, llama_sampler_init_temp(configuration.temperature))
-        llama_sampler_chain_add(sampler, llama_sampler_init_dist(1234))
+        llama_sampler_chain_add(sampler, llama_sampler_init_dist(UInt32(configuration.seed)))
         try checkContextLength(context: context, model: model)
     }
 

@@ -48,7 +48,8 @@ public final class SwiftLlama: @unchecked Sendable {
             }
         }
         llamaThread?.name = "com.localllama.inference"
-        llamaThread?.qualityOfService = .userInitiated
+        // Use highest QoS for maximum inference priority
+        llamaThread?.qualityOfService = .userInteractive
         llamaThread?.start()
 
         // Wait for thread to be ready
