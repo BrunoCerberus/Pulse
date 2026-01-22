@@ -83,14 +83,18 @@ struct StretchyAsyncImage: View {
             showGradientOverlay: showGradientOverlay,
             gradientHeight: gradientHeight
         ) {
-            CachedAsyncImage(url: url, accessibilityLabel: accessibilityLabel) { image in
-                image
-                    .resizable()
-                    .scaledToFill()
-            } placeholder: {
-                Rectangle()
-                    .fill(Color.primary.opacity(0.05))
-                    .overlay { ProgressView() }
+            GeometryReader { geo in
+                CachedAsyncImage(url: url, accessibilityLabel: accessibilityLabel) { image in
+                    image
+                        .resizable()
+                        .aspectRatio(contentMode: .fill)
+                        .frame(width: geo.size.width, height: geo.size.height)
+                        .clipped()
+                } placeholder: {
+                    Rectangle()
+                        .fill(Color.primary.opacity(0.05))
+                        .overlay { ProgressView() }
+                }
             }
         }
     }

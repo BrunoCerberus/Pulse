@@ -190,11 +190,6 @@ struct SupabaseArticle: Codable {
         let fullImageURL = imageUrl ?? thumbnailUrl
         let thumbURL = thumbnailUrl ?? imageUrl
 
-        // Debug: Log image URLs to verify og:image extraction is working
-        if imageUrl != thumbnailUrl {
-            Logger.shared.service("Article '\(title)': imageUrl=\(imageUrl ?? "nil"), thumbnailUrl=\(thumbnailUrl ?? "nil")", level: .debug)
-        }
-
         return Article(
             id: id,
             title: title,
