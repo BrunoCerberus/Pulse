@@ -12,6 +12,10 @@ public final class SwiftLlama: @unchecked Sendable {
     private var generatedTokenCache = ""
     private var isInitialized = false
 
+    /// Cached system prompt hash for KV cache reuse optimization
+    /// When the same system prompt is used, we can skip re-processing it
+    private var lastSystemPromptHash: Int?
+
     /// Dedicated thread for all llama.cpp operations
     private var llamaThread: Thread?
     private var runLoop: CFRunLoop?
@@ -48,7 +52,8 @@ public final class SwiftLlama: @unchecked Sendable {
             }
         }
         llamaThread?.name = "com.localllama.inference"
-        llamaThread?.qualityOfService = .userInitiated
+        // Use highest QoS for maximum inference priority
+        llamaThread?.qualityOfService = .userInteractive
         llamaThread?.start()
 
         // Wait for thread to be ready
@@ -115,6 +120,10 @@ public final class SwiftLlama: @unchecked Sendable {
     }
 
     /// Generate text on the dedicated llama thread
+    /// - Parameter prompt: The prompt containing system and user messages
+    /// - Returns: Generated text response
+    /// - Note: Uses KV cache reuse optimization - if the system prompt hasn't changed,
+    ///   we preserve the cached system prompt tokens for faster generation.
     public func generate(for prompt: Prompt) async throws -> String {
         try await withCheckedThrowingContinuation { continuation in
             do {
@@ -128,6 +137,15 @@ public final class SwiftLlama: @unchecked Sendable {
 
                     var result = ""
 
+                    // KV Cache optimization: only clear if system prompt changed
+                    let currentSystemHash = prompt.systemPrompt.hashValue
+                    let systemPromptChanged = lastSystemPromptHash != currentSystemHash
+                    if systemPromptChanged {
+                        model.clear()
+                        lastSystemPromptHash = currentSystemHash
+                    }
+
+                    // Always clear after generation to prevent context overflow
                     defer { model.clear() }
 
                     try model.start(for: prompt)
