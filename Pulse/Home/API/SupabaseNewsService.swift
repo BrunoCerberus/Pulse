@@ -166,19 +166,57 @@ struct SupabaseArticle: Codable {
             ?? Self.iso8601FormatterNoFraction.date(from: publishedAt)
             ?? Date()
 
+        // Handle content/description mapping for RSS feeds:
+        // - If content exists, use summary as description (short preview)
+        // - If content is nil, RSS feed only has summary which is the main content
+        //   In this case, use summary as content and create truncated description
+        let articleDescription: String?
+        let articleContent: String?
+
+        if let fullContent = content, !fullContent.isEmpty {
+            // Backend has both fields populated
+            articleDescription = summary
+            articleContent = fullContent
+        } else if let summaryText = summary, !summaryText.isEmpty {
+            // RSS feed only has summary - use it as content, truncate for description
+            articleContent = summaryText
+            articleDescription = Self.truncateForDescription(summaryText)
+        } else {
+            articleDescription = nil
+            articleContent = nil
+        }
+
+        // Handle image URLs: RSS feeds often only have one image
+        // Use whatever is available, preferring full-size image_url
+        let fullImageURL = imageUrl ?? thumbnailUrl
+        let thumbURL = thumbnailUrl ?? imageUrl
+
         return Article(
             id: id,
             title: title,
-            description: summary,
-            content: content,
+            description: articleDescription,
+            content: articleContent,
             author: author,
             source: ArticleSource(id: sources?.slug, name: sources?.name ?? "Unknown"),
             url: url,
-            imageURL: imageUrl,
-            thumbnailURL: thumbnailUrl,
+            imageURL: fullImageURL,
+            thumbnailURL: thumbURL,
             publishedAt: date,
             category: categories.flatMap { NewsCategory(rawValue: $0.slug) }
         )
+    }
+
+    /// Creates a short description from content text (first ~150 chars at word boundary)
+    private static func truncateForDescription(_ text: String) -> String {
+        let maxLength = 150
+        guard text.count > maxLength else { return text }
+
+        // Find word boundary near maxLength
+        let endIndex = text.index(text.startIndex, offsetBy: maxLength)
+        if let spaceIndex = text[..<endIndex].lastIndex(of: " ") {
+            return String(text[..<spaceIndex]) + "..."
+        }
+        return String(text.prefix(maxLength)) + "..."
     }
 }
 
