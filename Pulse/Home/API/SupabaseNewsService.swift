@@ -174,7 +174,8 @@ struct SupabaseArticle: Codable {
             author: author,
             source: ArticleSource(id: sources?.slug, name: sources?.name ?? "Unknown"),
             url: url,
-            imageURL: imageUrl ?? thumbnailUrl,
+            imageURL: imageUrl,
+            thumbnailURL: thumbnailUrl,
             publishedAt: date,
             category: categories.flatMap { NewsCategory(rawValue: $0.slug) }
         )

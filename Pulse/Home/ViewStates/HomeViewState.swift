@@ -42,7 +42,7 @@ struct ArticleViewItem: Identifiable, Equatable {
         title = article.title
         description = article.description
         sourceName = article.source.name
-        imageURL = article.imageURL.flatMap { URL(string: $0) }
+        imageURL = article.displayImageURL.flatMap { URL(string: $0) }
         formattedDate = article.formattedDate
         category = article.category
         animationIndex = index

@@ -80,7 +80,7 @@ struct FeedSourceArticle: Identifiable, Equatable {
         source = article.source.name
         category = article.category?.displayName
         categoryType = article.category
-        imageURL = article.imageURL
+        imageURL = article.displayImageURL
         self.article = article
     }
 }

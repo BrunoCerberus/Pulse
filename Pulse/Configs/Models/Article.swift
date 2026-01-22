@@ -9,6 +9,7 @@ struct Article: Identifiable, Equatable, Codable, Hashable {
     let source: ArticleSource
     let url: String
     let imageURL: String?
+    let thumbnailURL: String?
     let publishedAt: Date
     let category: NewsCategory?
 
@@ -21,6 +22,7 @@ struct Article: Identifiable, Equatable, Codable, Hashable {
         source: ArticleSource,
         url: String,
         imageURL: String? = nil,
+        thumbnailURL: String? = nil,
         publishedAt: Date,
         category: NewsCategory? = nil
     ) {
@@ -32,8 +34,19 @@ struct Article: Identifiable, Equatable, Codable, Hashable {
         self.source = source
         self.url = url
         self.imageURL = imageURL
+        self.thumbnailURL = thumbnailURL
         self.publishedAt = publishedAt
         self.category = category
+    }
+
+    /// Returns the best available image URL for list/cell display (prefers thumbnail)
+    var displayImageURL: String? {
+        thumbnailURL ?? imageURL
+    }
+
+    /// Returns the best available image URL for detail/hero display (prefers full resolution)
+    var heroImageURL: String? {
+        imageURL ?? thumbnailURL
     }
 
     var formattedDate: String {
