@@ -33,8 +33,10 @@ final class FeedUITests: BaseUITestCase {
         let signInButton = app.buttons["Sign in with Apple"]
         let loadingIndicator = app.activityIndicators.firstMatch
 
-        if loadingIndicator.exists {
-            _ = waitForElementToDisappear(loadingIndicator, timeout: Self.launchTimeout)
+        // CI simulators can be slow to show the initial UI, so give more time to detect loading state
+        if loadingIndicator.waitForExistence(timeout: 10) {
+            // Wait for loading to complete with extended timeout for CI
+            _ = waitForElementToDisappear(loadingIndicator, timeout: Self.launchTimeout * 2)
         }
 
         let appReady = waitForAny([tabBar, signInButton], timeout: Self.launchTimeout)

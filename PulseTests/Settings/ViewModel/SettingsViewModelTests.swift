@@ -75,12 +75,28 @@ struct SettingsViewModelTests {
     @Test("Add muted source works correctly")
     func addMutedSource() async throws {
         sut.handle(event: .onAppear)
-        try await Task.sleep(nanoseconds: 300_000_000)
+
+        // Wait for initial load
+        let loaded = await waitForCondition(timeout: 1_000_000_000) { [sut] in
+            !sut.viewState.isLoading
+        }
+        #expect(loaded, "Initial load should complete")
 
         sut.handle(event: .onNewMutedSourceChanged("TestSource"))
-        try await Task.sleep(nanoseconds: 50_000_000)
+
+        // Wait for text field to update
+        let textUpdated = await waitForCondition(timeout: 500_000_000) { [sut] in
+            sut.viewState.newMutedSource == "TestSource"
+        }
+        #expect(textUpdated, "Text field should update")
+
         sut.handle(event: .onAddMutedSource)
-        try await Task.sleep(nanoseconds: 300_000_000)
+
+        // Wait for muted source to be added and field to clear
+        let added = await waitForCondition(timeout: 1_000_000_000) { [sut] in
+            sut.viewState.mutedSources.contains("TestSource") && sut.viewState.newMutedSource.isEmpty
+        }
+        #expect(added, "Muted source should be added")
 
         #expect(sut.viewState.mutedSources.contains("TestSource"))
         #expect(sut.viewState.newMutedSource.isEmpty)
@@ -89,12 +105,28 @@ struct SettingsViewModelTests {
     @Test("Add muted keyword works correctly")
     func addMutedKeyword() async throws {
         sut.handle(event: .onAppear)
-        try await Task.sleep(nanoseconds: 300_000_000)
+
+        // Wait for initial load
+        let loaded = await waitForCondition(timeout: 1_000_000_000) { [sut] in
+            !sut.viewState.isLoading
+        }
+        #expect(loaded, "Initial load should complete")
 
         sut.handle(event: .onNewMutedKeywordChanged("TestKeyword"))
-        try await Task.sleep(nanoseconds: 50_000_000)
+
+        // Wait for text field to update
+        let textUpdated = await waitForCondition(timeout: 500_000_000) { [sut] in
+            sut.viewState.newMutedKeyword == "TestKeyword"
+        }
+        #expect(textUpdated, "Text field should update")
+
         sut.handle(event: .onAddMutedKeyword)
-        try await Task.sleep(nanoseconds: 300_000_000)
+
+        // Wait for muted keyword to be added and field to clear
+        let added = await waitForCondition(timeout: 1_000_000_000) { [sut] in
+            sut.viewState.mutedKeywords.contains("TestKeyword") && sut.viewState.newMutedKeyword.isEmpty
+        }
+        #expect(added, "Muted keyword should be added")
 
         #expect(sut.viewState.mutedKeywords.contains("TestKeyword"))
         #expect(sut.viewState.newMutedKeyword.isEmpty)
@@ -203,15 +235,29 @@ struct SettingsViewModelTests {
     @Test("Cancel clear history hides confirmation")
     func cancelClearHistoryHidesConfirmation() async throws {
         sut.handle(event: .onAppear)
-        try await Task.sleep(nanoseconds: 300_000_000)
+
+        // Wait for initial load
+        let loaded = await waitForCondition(timeout: 1_000_000_000) { [sut] in
+            !sut.viewState.isLoading
+        }
+        #expect(loaded, "Initial load should complete")
 
         sut.handle(event: .onClearReadingHistory)
-        try await Task.sleep(nanoseconds: 200_000_000)
 
+        // Wait for confirmation to show
+        let shown = await waitForCondition(timeout: 1_000_000_000) { [sut] in
+            sut.viewState.showClearHistoryConfirmation
+        }
+        #expect(shown, "Confirmation should be shown")
         #expect(sut.viewState.showClearHistoryConfirmation)
 
         sut.handle(event: .onCancelClearHistory)
-        try await Task.sleep(nanoseconds: 200_000_000)
+
+        // Wait for confirmation to hide
+        let hidden = await waitForCondition(timeout: 1_000_000_000) { [sut] in
+            !sut.viewState.showClearHistoryConfirmation
+        }
+        #expect(hidden, "Confirmation should be hidden")
 
         #expect(!sut.viewState.showClearHistoryConfirmation)
     }
@@ -219,13 +265,28 @@ struct SettingsViewModelTests {
     @Test("Confirm clear history clears and hides confirmation")
     func confirmClearHistoryClearsAndHides() async throws {
         sut.handle(event: .onAppear)
-        try await Task.sleep(nanoseconds: 300_000_000)
+
+        // Wait for initial load
+        let loaded = await waitForCondition(timeout: 1_000_000_000) { [sut] in
+            !sut.viewState.isLoading
+        }
+        #expect(loaded, "Initial load should complete")
 
         sut.handle(event: .onClearReadingHistory)
-        try await Task.sleep(nanoseconds: 200_000_000)
+
+        // Wait for confirmation to show
+        let shown = await waitForCondition(timeout: 1_000_000_000) { [sut] in
+            sut.viewState.showClearHistoryConfirmation
+        }
+        #expect(shown, "Confirmation should be shown")
 
         sut.handle(event: .onConfirmClearHistory)
-        try await Task.sleep(nanoseconds: 200_000_000)
+
+        // Wait for confirmation to hide
+        let hidden = await waitForCondition(timeout: 1_000_000_000) { [sut] in
+            !sut.viewState.showClearHistoryConfirmation
+        }
+        #expect(hidden, "Confirmation should be hidden")
 
         #expect(!sut.viewState.showClearHistoryConfirmation)
     }

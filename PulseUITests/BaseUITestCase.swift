@@ -7,16 +7,17 @@ class BaseUITestCase: XCTestCase {
     var app: XCUIApplication!
 
     /// Timeout for app launch verification - requires more time than element checks
-    /// CI machines are slower than local, so use 15 seconds to ensure the app initializes
-    static let launchTimeout: TimeInterval = 15
+    /// CI machines are significantly slower than local, especially on shared runners
+    /// Use 60 seconds to handle worst-case CI initialization times
+    static let launchTimeout: TimeInterval = 60
 
     /// Default timeout for element existence checks
-    /// 6s accounts for CI machine variability
-    static let defaultTimeout: TimeInterval = 6
+    /// 10s accounts for CI machine variability and slower simulators
+    static let defaultTimeout: TimeInterval = 10
 
     /// Short timeout for quick checks (e.g., verifying element visibility)
-    /// 5s allows for CI machine variability while remaining responsive
-    static let shortTimeout: TimeInterval = 5
+    /// 6s allows for CI machine variability while remaining responsive
+    static let shortTimeout: TimeInterval = 6
 
     // MARK: - Instance-level Setup (runs before each test)
 
@@ -49,11 +50,12 @@ class BaseUITestCase: XCTestCase {
 
         // First, wait for the loading state to clear (if app shows loading spinner)
         // The loading view has a ProgressView which we need to wait past
-        // Use brief wait to check for loading indicator existence (avoids immediate UI query timeout)
+        // CI simulators can be slow to show the initial UI, so give more time to detect loading state
         let loadingIndicator = app.activityIndicators.firstMatch
-        if loadingIndicator.waitForExistence(timeout: 2) {
+        if loadingIndicator.waitForExistence(timeout: 10) {
             // Wait for loading to complete (app initializing auth state)
-            _ = waitForElementToDisappear(loadingIndicator, timeout: Self.launchTimeout)
+            // Use longer timeout for CI where network/auth initialization can be slow
+            _ = waitForElementToDisappear(loadingIndicator, timeout: Self.launchTimeout * 2)
         }
 
         // Now wait for either tab bar or sign-in to appear

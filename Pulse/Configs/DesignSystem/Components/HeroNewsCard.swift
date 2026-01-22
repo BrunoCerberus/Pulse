@@ -45,7 +45,8 @@ struct HeroNewsCard: View {
 
     @ViewBuilder
     private var imageBackground: some View {
-        if let imageURL = item.imageURL {
+        // Use heroImageURL for hero cards (higher resolution)
+        if let imageURL = item.heroImageURL ?? item.imageURL {
             CachedAsyncImage(url: imageURL, accessibilityLabel: item.title) { image in
                 image
                     .resizable()
@@ -199,7 +200,8 @@ struct FeaturedArticleCard: View {
 
     @ViewBuilder
     private var imageSection: some View {
-        if let imageURL = item.imageURL {
+        // Use heroImageURL for featured cards (higher resolution)
+        if let imageURL = item.heroImageURL ?? item.imageURL {
             CachedAsyncImage(url: imageURL, accessibilityLabel: item.title) { image in
                 image
                     .resizable()

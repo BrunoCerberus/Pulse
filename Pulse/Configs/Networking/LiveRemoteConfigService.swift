@@ -40,6 +40,8 @@ final class LiveRemoteConfigService: RemoteConfigService {
             RemoteConfigKey.guardianAPIKey.rawValue: "" as NSString,
             RemoteConfigKey.newsAPIKey.rawValue: "" as NSString,
             RemoteConfigKey.gnewsAPIKey.rawValue: "" as NSString,
+            RemoteConfigKey.supabaseURL.rawValue: "" as NSString,
+            RemoteConfigKey.supabaseAnonKey.rawValue: "" as NSString,
         ])
     }
 
@@ -76,5 +78,13 @@ final class LiveRemoteConfigService: RemoteConfigService {
 
     var gnewsAPIKey: String? {
         getStringOrNil(forKey: .gnewsAPIKey)
+    }
+
+    var supabaseURL: String? {
+        getStringOrNil(forKey: .supabaseURL)
+    }
+
+    var supabaseAnonKey: String? {
+        getStringOrNil(forKey: .supabaseAnonKey)
     }
 }

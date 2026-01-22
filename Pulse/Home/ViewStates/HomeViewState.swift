@@ -31,7 +31,10 @@ struct ArticleViewItem: Identifiable, Equatable {
     let title: String
     let description: String?
     let sourceName: String
+    /// Thumbnail image for list cells (prefers smaller/thumbnail URL)
     let imageURL: URL?
+    /// High-resolution image for carousel/featured display (prefers full-size URL)
+    let heroImageURL: URL?
     let formattedDate: String
     let category: NewsCategory?
     /// Pre-computed index for staggered animations (avoids re-enumeration in view body)
@@ -42,7 +45,8 @@ struct ArticleViewItem: Identifiable, Equatable {
         title = article.title
         description = article.description
         sourceName = article.source.name
-        imageURL = article.imageURL.flatMap { URL(string: $0) }
+        imageURL = article.displayImageURL.flatMap { URL(string: $0) }
+        heroImageURL = article.heroImageURL.flatMap { URL(string: $0) }
         formattedDate = article.formattedDate
         category = article.category
         animationIndex = index

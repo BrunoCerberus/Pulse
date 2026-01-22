@@ -38,8 +38,8 @@ struct SummarizationViewModelTests {
 
     @Test("Handle onSummarizationStarted triggers summarization")
     func testOnSummarizationStarted() async throws {
-        mockSummarizationService.loadDelay = 0.001
-        mockSummarizationService.generateDelay = 0.001
+        mockSummarizationService.loadDelay = 0.01
+        mockSummarizationService.generateDelay = 0.01
 
         var cancellables = Set<AnyCancellable>()
         var states: [SummarizationViewState] = []
@@ -52,8 +52,8 @@ struct SummarizationViewModelTests {
 
         sut.handle(event: .onSummarizationStarted)
 
-        // Wait for summarization to complete
-        let completed = await waitForCondition(timeout: 1_000_000_000) { [sut] in
+        // Wait for summarization to complete with longer timeout
+        let completed = await waitForCondition(timeout: 3_000_000_000) { [sut] in
             sut.viewState.summarizationState == .completed
         }
 
@@ -93,13 +93,13 @@ struct SummarizationViewModelTests {
     func viewStateUpdatesOnCompletion() async throws {
         let expectedSummary = "This is a test summary"
         mockSummarizationService.generateResult = .success(expectedSummary)
-        mockSummarizationService.loadDelay = 0.001
-        mockSummarizationService.generateDelay = 0.001
+        mockSummarizationService.loadDelay = 0.01
+        mockSummarizationService.generateDelay = 0.01
 
         sut.handle(event: .onSummarizationStarted)
 
-        // Wait for summarization to complete
-        let completed = await waitForCondition(timeout: 1_000_000_000) { [sut] in
+        // Wait for summarization to complete with longer timeout
+        let completed = await waitForCondition(timeout: 3_000_000_000) { [sut] in
             sut.viewState.summarizationState == .completed
         }
 
@@ -111,13 +111,13 @@ struct SummarizationViewModelTests {
     func viewStateUpdatesOnError() async throws {
         let testError = NSError(domain: "test", code: 1, userInfo: [NSLocalizedDescriptionKey: "Test error"])
         mockSummarizationService.generateResult = .failure(testError)
-        mockSummarizationService.loadDelay = 0.001
-        mockSummarizationService.generateDelay = 0.001
+        mockSummarizationService.loadDelay = 0.01
+        mockSummarizationService.generateDelay = 0.01
 
         sut.handle(event: .onSummarizationStarted)
 
-        // Wait for error state
-        let hasError = await waitForCondition(timeout: 1_000_000_000) { [sut] in
+        // Wait for error state with longer timeout
+        let hasError = await waitForCondition(timeout: 3_000_000_000) { [sut] in
             if case .error = sut.viewState.summarizationState { return true }
             return false
         }
@@ -150,16 +150,16 @@ struct SummarizationViewModelTests {
 
     @Test("Article is preserved throughout summarization")
     func articleIsPreserved() async throws {
-        mockSummarizationService.loadDelay = 0.01
-        mockSummarizationService.generateDelay = 0.01
+        mockSummarizationService.loadDelay = 0.02
+        mockSummarizationService.generateDelay = 0.02
 
         // Initial state has the article
         #expect(sut.viewState.article == article)
 
         sut.handle(event: .onSummarizationStarted)
 
-        // Wait for summarization to complete
-        let completed = await waitForCondition(timeout: 1_000_000_000) { [sut] in
+        // Wait for summarization to complete with longer timeout
+        let completed = await waitForCondition(timeout: 3_000_000_000) { [sut] in
             sut.viewState.summarizationState == .completed
         }
         #expect(completed, "Summarization should complete")

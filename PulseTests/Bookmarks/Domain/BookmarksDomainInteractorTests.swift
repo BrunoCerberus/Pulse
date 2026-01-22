@@ -240,13 +240,28 @@ struct BookmarksDomainInteractorTests {
         mockBookmarksService.bookmarks = [firstArticle, secondArticle]
 
         sut.dispatch(action: .loadBookmarks)
-        try await Task.sleep(nanoseconds: 300_000_000)
+
+        // Wait for bookmarks to load
+        let loaded = await waitForCondition(timeout: 1_000_000_000) { [sut] in
+            !sut.currentState.isLoading && !sut.currentState.bookmarks.isEmpty
+        }
+        #expect(loaded, "Bookmarks should load")
 
         sut.dispatch(action: .selectArticle(articleId: firstArticle.id))
-        try await Task.sleep(nanoseconds: 200_000_000)
+
+        // Wait for first article to be added to history
+        var firstInHistory = await waitForCondition(timeout: 1_000_000_000) { [mockStorageService] in
+            mockStorageService.readingHistory.contains { $0.id == firstArticle.id }
+        }
+        #expect(firstInHistory, "First article should be in history")
 
         sut.dispatch(action: .selectArticle(articleId: secondArticle.id))
-        try await Task.sleep(nanoseconds: 200_000_000)
+
+        // Wait for second article to be added to history at the beginning
+        let secondAtFront = await waitForCondition(timeout: 1_000_000_000) { [mockStorageService, secondArticle] in
+            mockStorageService.readingHistory.first?.id == secondArticle.id
+        }
+        #expect(secondAtFront, "Second article should be at front of history")
 
         let history = try await mockStorageService.fetchReadingHistory()
         #expect(history.first?.id == secondArticle.id)

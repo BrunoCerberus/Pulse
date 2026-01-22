@@ -27,7 +27,7 @@ final class WidgetDataManager {
                 id: article.id,
                 title: article.title,
                 source: article.source.name,
-                imageURL: article.imageURL
+                imageURL: article.displayImageURL
             )
         }
 

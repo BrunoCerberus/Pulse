@@ -2,7 +2,7 @@
 
 ## Project Overview
 
-Pulse is an iOS news aggregation app built with **Unidirectional Data Flow Architecture** based on Clean Architecture principles, using **Combine** for reactive data binding. The app fetches news from the **Guardian API** (primary) and provides a personalized reading experience.
+Pulse is an iOS news aggregation app built with **Unidirectional Data Flow Architecture** based on Clean Architecture principles, using **Combine** for reactive data binding. The app fetches news from a **Supabase backend** (primary) powered by a Go RSS worker, with **Guardian API** fallback.
 
 ## Architecture
 
@@ -168,7 +168,7 @@ Pulse/
 │   ├── View/                   # SignInView
 │   └── Manager/                # AuthenticationManager (global state)
 ├── Home/                       # Home feed feature
-│   ├── API/                    # NewsAPI, NewsService
+│   ├── API/                    # NewsAPI, NewsService, SupabaseAPI, SupabaseModels
 │   ├── Domain/                 # Interactor, State, Action, Reducer, EventActionMap
 │   ├── ViewModel/              # HomeViewModel
 │   ├── View/                   # SwiftUI views (generic over Router)
@@ -203,7 +203,7 @@ Pulse/
     ├── Extensions/             # CombineViewModel, CombineInteractor, etc.
     ├── Models/                 # Article, NewsCategory, UserPreferences
     ├── Storage/                # StorageService (SwiftData)
-    ├── Networking/             # API keys, base URLs
+    ├── Networking/             # API keys, base URLs, SupabaseConfig
     ├── Mocks/                  # Mock services for testing
     └── Widget/                 # WidgetDataManager
 ```
@@ -310,6 +310,52 @@ make coverage-badge     # Generate SVG badge
 
 ## Network Layer (EntropyCore)
 
+All Live services (LiveNewsService, LiveSearchService, LiveForYouService) use Supabase as the primary backend with Guardian API fallback.
+
+### Supabase Backend (Primary)
+
+```swift
+enum SupabaseAPI: APIFetcher {
+    case articles(page: Int, pageSize: Int)
+    case articlesByCategory(category: String, page: Int, pageSize: Int)
+    case breakingNews(since: String)
+    case article(id: String)
+    case search(query: String, page: Int, pageSize: Int, orderBy: String)
+
+    var path: String { ... }
+    var method: HTTPMethod { .GET }
+}
+
+final class LiveNewsService: APIRequest, NewsService {
+    private let useSupabase: Bool
+
+    override init() {
+        self.useSupabase = SupabaseConfig.isConfigured
+        super.init()
+    }
+
+    func fetchTopHeadlines(country: String, page: Int) -> AnyPublisher<[Article], Error> {
+        if useSupabase {
+            return fetchFromSupabase(page: page)
+                .catch { [weak self] error -> AnyPublisher<[Article], Error> in
+                    // Automatic fallback to Guardian on Supabase error
+                    return self?.fetchFromGuardian(page: page) ?? Fail(error: error).eraseToAnyPublisher()
+                }
+                .eraseToAnyPublisher()
+        }
+        return fetchFromGuardian(page: page)
+    }
+}
+```
+
+The Supabase backend is powered by a Go RSS worker (`pulse-backend`) that:
+- Fetches articles from multiple RSS sources (Guardian, BBC, TechCrunch, etc.)
+- Extracts `og:image` from article pages for high-resolution hero images
+- Extracts full article content using go-readability (Mozilla Readability port)
+- Stores in Supabase with automatic article cleanup
+
+### Guardian API (Fallback)
+
 ```swift
 enum GuardianAPI: APIFetcher {
     case search(query: String?, section: String?, page: Int, pageSize: Int, orderBy: String)
@@ -318,18 +364,11 @@ enum GuardianAPI: APIFetcher {
     var path: String { ... }
     var method: HTTPMethod { .GET }
 }
-
-final class LiveNewsService: APIRequest, NewsService {
-    func fetchTopHeadlines(country: String, page: Int) -> AnyPublisher<[Article], Error> {
-        fetchRequest(
-            target: GuardianAPI.search(query: nil, section: nil, page: page, pageSize: 20, orderBy: "newest"),
-            dataType: GuardianResponse.self
-        )
-        .map { $0.response.results.compactMap { $0.toArticle() } }
-        .eraseToAnyPublisher()
-    }
-}
 ```
+
+Guardian API is used as fallback when:
+- Supabase is not configured (missing URL or API key)
+- Supabase API returns an error
 
 ## Caching Layer
 
@@ -405,8 +444,12 @@ if let cachingService = newsService as? CachingNewsService {
 | `DeeplinkManager.swift` | URL scheme handling |
 | `ThemeManager.swift` | Dark/light mode management |
 | `StorageService.swift` | SwiftData persistence |
-| `NewsAPI.swift` | API endpoint definitions |
+| `NewsAPI.swift` | Guardian API endpoint definitions |
 | `GoogleService-Info.plist` | Firebase configuration |
+| **Supabase Backend** | |
+| `SupabaseConfig.swift` | Supabase URL and API key configuration |
+| `SupabaseAPI.swift` | Supabase REST API endpoint definitions |
+| `SupabaseModels.swift` | Supabase response models (SupabaseArticle, SupabaseSource, SupabaseCategory) |
 | **Caching** | |
 | `NewsCacheStore.swift` | Cache protocol, NSCache implementation, TTL configuration |
 | `CachingNewsService.swift` | Decorator wrapping LiveNewsService with in-memory caching |
@@ -452,9 +495,13 @@ API keys are managed via **Firebase Remote Config** (primary) with fallbacks:
 ```bash
 # For CI/CD or local development without Remote Config
 export GUARDIAN_API_KEY="your_key"
+
+# Supabase backend configuration (optional)
+export SUPABASE_URL="https://your-project.supabase.co"
+export SUPABASE_ANON_KEY="your_anon_key"
 ```
 
-See `APIKeysProvider.swift` for the fallback hierarchy implementation.
+See `APIKeysProvider.swift` and `SupabaseConfig.swift` for implementation details. If Supabase is not configured, the app automatically falls back to the Guardian API.
 
 ## Deeplinks
 

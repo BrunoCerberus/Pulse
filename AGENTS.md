@@ -2,7 +2,7 @@
 
 ## Repository Overview
 
-Pulse is an iOS news aggregation app built with **Unidirectional Data Flow Architecture** based on Clean Architecture principles, using **Combine** for reactive data binding. This document provides guidelines for AI agents and contributors working on the codebase.
+Pulse is an iOS news aggregation app built with **Unidirectional Data Flow Architecture** based on Clean Architecture principles, using **Combine** for reactive data binding. The app fetches news from a **Supabase backend** (primary) with **Guardian API** fallback. This document provides guidelines for AI agents and contributors working on the codebase.
 
 ## Project Structure
 
@@ -16,6 +16,7 @@ Pulse/
 │   │   ├── View/               # SignInView
 │   │   └── Manager/            # AuthenticationManager (global state)
 │   ├── [Feature]/              # Feature modules (Home, ForYou, Search, Bookmarks, etc.)
+│   │   └── API/                # Service protocols + SupabaseAPI, SupabaseModels
 │   ├── Feed/                   # AI-powered Daily Digest
 │   │   ├── API/                # FeedService protocol + Live/Mock
 │   │   ├── Domain/             # FeedDomainInteractor, State, Action, Reducer, EventActionMap
@@ -194,6 +195,34 @@ struct HomeDomainInteractorTests {
 8. **AuthenticationManager is a singleton** - observed by RootView to switch between SignInView and CoordinatorView
 9. **Premium features are gated** - AI features require subscription (checked via StoreKitService)
 10. **Service decorators for cross-cutting concerns** - Use Decorator Pattern for caching, logging (e.g., `CachingNewsService` wraps `LiveNewsService`)
+11. **Graceful fallback for data sources** - Live services (NewsService, SearchService, ForYouService) use Supabase as primary and fall back to Guardian API when not configured or on error
+
+## Data Source Architecture
+
+The app uses a two-tier data source strategy:
+
+| Source | Type | Description |
+|--------|------|-------------|
+| Supabase Backend | Primary | Self-hosted RSS aggregator with og:image and content extraction |
+| Guardian API | Fallback | Direct API access when Supabase is not configured |
+
+### Backend Features (pulse-backend)
+- Aggregates RSS feeds from Guardian, BBC, TechCrunch, Science Daily, etc.
+- Extracts high-resolution `og:image` from article pages
+- Extracts full article content using go-readability
+- Automatic article cleanup (configurable retention period)
+
+### Article Model
+```swift
+struct Article {
+    let imageURL: String?      // High-res og:image from backend
+    let thumbnailURL: String?  // RSS feed image (smaller)
+
+    var heroImageURL: String? {
+        imageURL ?? thumbnailURL  // Prefer high-res for hero display
+    }
+}
+```
 
 ## Premium Feature Gating
 
@@ -453,10 +482,12 @@ API keys are managed via **Firebase Remote Config** (primary) with fallbacks:
 
 ```bash
 # Environment variable fallback for CI/CD
-GUARDIAN_API_KEY  # Guardian API key (primary data source)
+GUARDIAN_API_KEY      # Guardian API key (fallback data source)
+SUPABASE_URL          # Supabase project URL (primary data source)
+SUPABASE_ANON_KEY     # Supabase anonymous key
 ```
 
-See `Configs/Networking/APIKeysProvider.swift` for implementation.
+See `Configs/Networking/APIKeysProvider.swift` and `SupabaseConfig.swift` for implementation. If Supabase is not configured, the app automatically falls back to the Guardian API.
 
 ## Troubleshooting
 

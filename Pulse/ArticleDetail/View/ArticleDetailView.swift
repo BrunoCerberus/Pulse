@@ -40,7 +40,7 @@ struct ArticleDetailView: View {
 
             ScrollView {
                 VStack(alignment: .leading, spacing: 0) {
-                    if let imageURL = viewModel.viewState.article.imageURL, let url = URL(string: imageURL) {
+                    if let imageURL = viewModel.viewState.article.heroImageURL, let url = URL(string: imageURL) {
                         StretchyAsyncImage(
                             url: url,
                             baseHeight: heroBaseHeight,

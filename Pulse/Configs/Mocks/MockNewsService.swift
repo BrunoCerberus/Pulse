@@ -379,6 +379,8 @@ final class MockRemoteConfigService: RemoteConfigService {
     var guardianAPIKeyValue: String?
     var newsAPIKeyValue: String?
     var gnewsAPIKeyValue: String?
+    var supabaseURLValue: String?
+    var supabaseAnonKeyValue: String?
     var shouldThrowOnFetch = false
 
     func fetchAndActivate() async throws {
@@ -392,12 +394,16 @@ final class MockRemoteConfigService: RemoteConfigService {
         case .guardianAPIKey: guardianAPIKeyValue
         case .newsAPIKey: newsAPIKeyValue
         case .gnewsAPIKey: gnewsAPIKeyValue
+        case .supabaseURL: supabaseURLValue
+        case .supabaseAnonKey: supabaseAnonKeyValue
         }
     }
 
     var guardianAPIKey: String? { guardianAPIKeyValue }
     var newsAPIKey: String? { newsAPIKeyValue }
     var gnewsAPIKey: String? { gnewsAPIKeyValue }
+    var supabaseURL: String? { supabaseURLValue }
+    var supabaseAnonKey: String? { supabaseAnonKeyValue }
 }
 
 extension ServiceLocator {
