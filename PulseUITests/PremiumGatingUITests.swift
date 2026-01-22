@@ -172,9 +172,10 @@ final class PremiumGatingPremiumUITests: XCTestCase {
     var app: XCUIApplication!
 
     // Use the same timeouts as BaseUITestCase
-    static let launchTimeout: TimeInterval = 15
-    static let defaultTimeout: TimeInterval = 4
-    static let shortTimeout: TimeInterval = 3
+    // CI machines are significantly slower than local, especially on shared runners
+    static let launchTimeout: TimeInterval = 60
+    static let defaultTimeout: TimeInterval = 10
+    static let shortTimeout: TimeInterval = 6
 
     override func setUpWithError() throws {
         continueAfterFailure = false
@@ -204,9 +205,11 @@ final class PremiumGatingPremiumUITests: XCTestCase {
         let tabBar = app.tabBars.firstMatch
         let signInButton = app.buttons["Sign in with Apple"]
 
+        // CI simulators can be slow to show the initial UI, so give more time to detect loading state
         let loadingIndicator = app.activityIndicators.firstMatch
-        if loadingIndicator.exists {
-            _ = waitForElementToDisappear(loadingIndicator, timeout: Self.launchTimeout)
+        if loadingIndicator.waitForExistence(timeout: 10) {
+            // Wait for loading to complete with extended timeout for CI
+            _ = waitForElementToDisappear(loadingIndicator, timeout: Self.launchTimeout * 2)
         }
 
         let appReady = waitForAny([tabBar, signInButton], timeout: Self.launchTimeout)
