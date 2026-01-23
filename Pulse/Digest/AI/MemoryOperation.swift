@@ -16,16 +16,3 @@ enum MemoryOperation {
         }
     }
 }
-
-// MARK: - Simulator Warning State
-
-/// Reference type wrapper for simulator warning state.
-/// Required because OSAllocatedUnfairLock needs a reference type to properly
-/// synchronize mutable state across threads.
-final class SimulatorWarningState: @unchecked Sendable {
-    var hasLogged = false
-}
-
-/// Thread-safe static lock for one-time simulator warning log.
-/// Using a lock ensures the warning is logged exactly once even under concurrent access.
-let simulatorWarningLock = OSAllocatedUnfairLock(initialState: SimulatorWarningState())

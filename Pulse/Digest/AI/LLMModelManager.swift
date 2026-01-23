@@ -10,7 +10,7 @@ import os
 /// Manages the lifecycle of the LLM model (loading, inference, unloading)
 ///
 /// Uses SwiftLlama actor for thread-safe on-device inference with GGUF models.
-final class LLMModelManager: @unchecked Sendable {
+final class LLMModelManager: @unchecked Sendable { // swiftlint:disable:this type_body_length
     static let shared = LLMModelManager()
 
     /// Default system prompt for general-purpose LLM interactions
@@ -26,6 +26,19 @@ final class LLMModelManager: @unchecked Sendable {
 
     /// Async-safe lock for protecting swiftLlama reference changes
     private let lock = OSAllocatedUnfairLock()
+
+    // MARK: - Simulator Warning State
+
+    /// Reference type wrapper for simulator warning state.
+    /// Required because OSAllocatedUnfairLock needs a reference type to properly
+    /// synchronize mutable state across threads.
+    private final class SimulatorWarningState: @unchecked Sendable {
+        var hasLogged = false
+    }
+
+    /// Thread-safe static lock for one-time simulator warning log.
+    /// Using a lock ensures the warning is logged exactly once even under concurrent access.
+    private static let simulatorWarningLock = OSAllocatedUnfairLock(initialState: SimulatorWarningState())
 
     private init() {
         setupMemoryWarningObserver()
@@ -68,7 +81,7 @@ final class LLMModelManager: @unchecked Sendable {
               FileManager.default.fileExists(atPath: modelPath)
         else {
             logger.warning("Model file not found", category: logCategory)
-            throw LLMError.modelLoadFailed("Model file not bundled")
+            throw LLMError.modelLoadFailed("Model file not bundled. Please add the GGUF model to Resources/Models/")
         }
 
         logger.info("Loading model from: \(modelPath)", category: logCategory)
@@ -321,7 +334,7 @@ final class LLMModelManager: @unchecked Sendable {
                 if ProcessInfo.processInfo.environment["FORCE_MEMORY_PRESSURE_CHECK"] == "1" {
                     return checkActualMemoryPressure()
                 }
-                simulatorWarningLock.withLock { state in
+                Self.simulatorWarningLock.withLock { state in
                     if !state.hasLogged {
                         state.hasLogged = true
                         logger.debug("Memory check disabled in sim", category: logCategory)
