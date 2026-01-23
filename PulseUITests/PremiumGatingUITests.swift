@@ -31,7 +31,14 @@ final class PremiumGatingNonPremiumUITests: BaseUITestCase {
 
     /// Tests that tapping Unlock Premium on Feed shows paywall
     func testFeedUnlockButtonShowsPaywall() throws {
+        // Ensure tab bar is ready before navigation
+        let feedTab = app.tabBars.buttons["Feed"]
+        XCTAssertTrue(feedTab.waitForExistence(timeout: Self.launchTimeout), "Feed tab should exist")
+
         navigateToFeedTab()
+
+        // Wait for content to load after navigation
+        wait(for: 1.0)
 
         let unlockButton = app.buttons["Unlock Premium"]
         guard unlockButton.waitForExistence(timeout: 10) else {

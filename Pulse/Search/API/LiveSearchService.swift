@@ -46,15 +46,18 @@ final class LiveSearchService: APIRequest, SearchService {
 
     // MARK: - Supabase Search
 
-    private func searchSupabase(query: String, page: Int, sortBy: String) -> AnyPublisher<[Article], Error> {
-        let orderBy = mapSortOrder(sortBy)
+    private func searchSupabase(query: String, page: Int, sortBy _: String) -> AnyPublisher<[Article], Error> {
+        // Edge Functions search endpoint uses full-text search with proper pagination
+        let pageSize = 20
         return fetchRequest(
-            target: SupabaseAPI.search(query: query, page: page, pageSize: 20, orderBy: orderBy),
-            dataType: [SupabaseArticle].self
+            target: SupabaseAPI.search(query: query, page: page, pageSize: pageSize),
+            dataType: [SupabaseSearchResult].self
         )
-        .map { $0.map { $0.toArticle() } }
+        .map { results in
+            results.map { $0.toArticle() }
+        }
         .handleEvents(receiveOutput: { articles in
-            Logger.shared.service("LiveSearchService: Supabase returned \(articles.count) results for '\(query)'", level: .debug)
+            Logger.shared.service("LiveSearchService: Supabase returned \(articles.count) results for '\(query)' (page \(page))", level: .debug)
         })
         .receive(on: DispatchQueue.main)
         .eraseToAnyPublisher()

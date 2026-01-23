@@ -98,9 +98,8 @@ final class LiveNewsService: APIRequest, NewsService {
     }
 
     private func fetchBreakingFromSupabase() -> AnyPublisher<[Article], Error> {
-        let oneDayAgo = ISO8601DateFormatter().string(from: Date().addingTimeInterval(-86400))
-        return fetchRequest(
-            target: SupabaseAPI.breakingNews(since: oneDayAgo),
+        fetchRequest(
+            target: SupabaseAPI.breakingNews(limit: 10),
             dataType: [SupabaseArticle].self
         )
         .map { $0.map { $0.toArticle() } }

@@ -102,8 +102,12 @@ class BaseUITestCase: XCTestCase {
 
     override func tearDownWithError() throws {
         XCUIDevice.shared.orientation = .portrait
-        if app?.state != .notRunning {
-            app.terminate()
+        // Gracefully terminate app - don't fail test on termination issues
+        // XCUIApplication.terminate() can throw if the app is in an unexpected state
+        if let application = app, application.state != .notRunning {
+            application.terminate()
+            // Brief wait to allow termination to complete
+            _ = application.wait(for: .notRunning, timeout: 5)
         }
         app = nil
     }
@@ -188,14 +192,28 @@ class BaseUITestCase: XCTestCase {
     /// Navigate to Feed tab and verify navigation bar appears
     func navigateToFeedTab() {
         let feedTab = app.tabBars.buttons["Feed"]
-        // Use waitForExistence for CI reliability
-        if feedTab.waitForExistence(timeout: Self.shortTimeout), !feedTab.isSelected {
-            feedTab.tap()
+        // Use waitForExistence with longer timeout for CI reliability
+        if feedTab.waitForExistence(timeout: Self.defaultTimeout), !feedTab.isSelected {
+            // Wait for element to become hittable
+            wait(for: 0.3)
+            if feedTab.isHittable {
+                feedTab.tap()
+            }
         } else if !feedTab.exists {
-            // Fallback: try finding the button directly
-            let feedButton = app.buttons["Feed"]
-            if feedButton.waitForExistence(timeout: 2), !feedButton.isSelected {
-                feedButton.tap()
+            // Fallback for iOS 26+: try finding by image name "text.document"
+            // The new TabView API may expose image name as the button label
+            let feedByImage = app.tabBars.buttons["text.document"]
+            if feedByImage.waitForExistence(timeout: Self.shortTimeout), !feedByImage.isSelected {
+                wait(for: 0.3)
+                if feedByImage.isHittable {
+                    feedByImage.tap()
+                }
+            } else {
+                // Last resort: try finding the button directly
+                let feedButton = app.buttons["Feed"]
+                if feedButton.waitForExistence(timeout: 2), !feedButton.isSelected {
+                    feedButton.tap()
+                }
             }
         }
         _ = app.navigationBars["Daily Digest"].waitForExistence(timeout: Self.defaultTimeout)

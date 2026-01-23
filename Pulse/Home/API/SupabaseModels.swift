@@ -1,9 +1,26 @@
 import Foundation
 
-// MARK: - Supabase Response Models
+// MARK: - Edge Functions Response Models
 
-/// Article data from Supabase REST API with embedded relations.
-/// Note: Uses snake_case property names since EntropyCore's jsonDecoder uses convertFromSnakeCase
+/// Article data from Supabase Edge Functions API with flattened structure.
+///
+/// The Edge Functions return a flat response format with source and category
+/// fields directly on the article object (not nested).
+///
+/// Example response:
+/// ```json
+/// {
+///   "id": "uuid",
+///   "title": "Article title",
+///   "url": "https://...",
+///   "image_url": "https://...",
+///   "published_at": "2026-01-22T05:01:00+00:00",
+///   "source_name": "The Verge",
+///   "source_slug": "the-verge",
+///   "category_name": "Technology",
+///   "category_slug": "technology"
+/// }
+/// ```
 struct SupabaseArticle: Codable {
     let id: String
     let title: String
@@ -11,13 +28,17 @@ struct SupabaseArticle: Codable {
     let content: String?
     let url: String
     let imageUrl: String?
-    let thumbnailUrl: String?
-    let author: String?
     let publishedAt: String // ISO8601 string from Supabase
-    let sources: SupabaseSource?
-    let categories: SupabaseCategory?
 
-    // No CodingKeys needed - convertFromSnakeCase handles image_url -> imageUrl, etc.
+    // Flattened source fields (from Edge Functions)
+    let sourceName: String?
+    let sourceSlug: String?
+
+    // Flattened category fields (from Edge Functions)
+    let categoryName: String?
+    let categorySlug: String?
+
+    // No CodingKeys needed - convertFromSnakeCase handles all conversions
 
     private static let iso8601Formatter: ISO8601DateFormatter = {
         let formatter = ISO8601DateFormatter()
@@ -62,42 +83,111 @@ struct SupabaseArticle: Codable {
             articleContent = nil
         }
 
-        // Handle image URLs: RSS feeds often only have one image
-        // Use whatever is available, preferring full-size image_url for hero images
-        // Don't fallback to full-res for thumbnail to avoid loading large images in list views
-        let fullImageURL = imageUrl ?? thumbnailUrl
-        let thumbURL = thumbnailUrl
+        return Article(
+            id: id,
+            title: title,
+            description: articleDescription,
+            content: articleContent,
+            author: nil, // Edge Functions don't include author in list view
+            source: ArticleSource(id: sourceSlug, name: sourceName ?? "Unknown"),
+            url: url,
+            imageURL: imageUrl,
+            thumbnailURL: imageUrl, // Use same image for thumbnail
+            publishedAt: date,
+            category: categorySlug.flatMap { NewsCategory(rawValue: $0) }
+        )
+    }
+}
+
+// MARK: - Search Response Model
+
+/// Search result from the dedicated /api-search endpoint.
+/// Returns full article data including content for search relevance.
+struct SupabaseSearchResult: Codable {
+    let id: String
+    let title: String
+    let summary: String?
+    let content: String?
+    let url: String
+    let imageUrl: String?
+    let publishedAt: String
+
+    // Flattened fields (may be present in search results)
+    let sourceName: String?
+    let sourceSlug: String?
+    let categoryName: String?
+    let categorySlug: String?
+
+    private static let iso8601Formatter: ISO8601DateFormatter = {
+        let formatter = ISO8601DateFormatter()
+        formatter.formatOptions = [.withInternetDateTime, .withFractionalSeconds]
+        return formatter
+    }()
+
+    private static let iso8601FormatterNoFraction: ISO8601DateFormatter = {
+        let formatter = ISO8601DateFormatter()
+        formatter.formatOptions = [.withInternetDateTime]
+        return formatter
+    }()
+
+    func toArticle() -> Article {
+        let date: Date
+        if let parsed = Self.iso8601Formatter.date(from: publishedAt) {
+            date = parsed
+        } else if let parsed = Self.iso8601FormatterNoFraction.date(from: publishedAt) {
+            date = parsed
+        } else {
+            date = Date()
+        }
+
+        let articleDescription: String?
+        let articleContent: String?
+
+        if let fullContent = content, !fullContent.isEmpty {
+            articleDescription = summary
+            articleContent = fullContent
+        } else if let summaryText = summary, !summaryText.isEmpty {
+            articleDescription = nil
+            articleContent = summaryText
+        } else {
+            articleDescription = nil
+            articleContent = nil
+        }
 
         return Article(
             id: id,
             title: title,
             description: articleDescription,
             content: articleContent,
-            author: author,
-            source: ArticleSource(id: sources?.slug, name: sources?.name ?? "Unknown"),
+            author: nil,
+            source: ArticleSource(id: sourceSlug, name: sourceName ?? "Unknown"),
             url: url,
-            imageURL: fullImageURL,
-            thumbnailURL: thumbURL,
+            imageURL: imageUrl,
+            thumbnailURL: imageUrl,
             publishedAt: date,
-            category: categories.flatMap { NewsCategory(rawValue: $0.slug) }
+            category: categorySlug.flatMap { NewsCategory(rawValue: $0) }
         )
     }
 }
 
-/// Source data - only decode fields we need, ignore extra fields
-struct SupabaseSource: Codable {
-    let id: String
-    let name: String
-    let slug: String
-    let logoUrl: String?
-    let websiteUrl: String?
-    // Extra fields from API are ignored automatically
-}
+// MARK: - Category Response Model
 
-/// Category data - only decode fields we need
+/// Category data from /api-categories endpoint
 struct SupabaseCategory: Codable {
     let id: String
     let name: String
     let slug: String
-    // Extra fields like created_at, display_order are ignored
+}
+
+// MARK: - Source Response Model
+
+/// Source data from /api-sources endpoint
+struct SupabaseSource: Codable {
+    let id: String
+    let name: String
+    let slug: String
+    let websiteUrl: String?
+    let logoUrl: String?
+    let categoryId: String?
+    let isActive: Bool?
 }
