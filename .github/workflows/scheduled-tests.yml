@@ -197,10 +197,118 @@ jobs:
           -resultBundlePath test-results/${{ matrix.artifact-name }}.xcresult \
           -disableAutomaticPackageResolution \
           -retry-tests-on-failure \
-          | tee /tmp/test_output.log
-        TEST_EXIT_CODE=$?
-        grep -E "(Test run.*passed|Test run.*failed)" /tmp/test_output.log | tail -5 || echo "${{ matrix.test-name }} completed"
+          2>&1 | tee /tmp/test_output.log
+
+        TEST_EXIT_CODE=${PIPESTATUS[0]}
+
+        echo ""
+        echo "============================================"
+        echo "              TEST SUMMARY"
+        echo "============================================"
+        grep -E "(Test Suite.*started|Test Suite.*passed|Test Suite.*failed|Executed [0-9]+ test)" /tmp/test_output.log | tail -10 || echo "${{ matrix.test-name }} completed"
+
         exit $TEST_EXIT_CODE
+
+    - name: Extract and display test failures
+      if: failure()
+      run: |
+        RESULT_BUNDLE="test-results/${{ matrix.artifact-name }}.xcresult"
+
+        echo ""
+        echo "============================================"
+        echo "          FAILED TESTS SUMMARY"
+        echo "============================================"
+        echo ""
+
+        # Check if xcresult exists
+        if [ ! -d "$RESULT_BUNDLE" ]; then
+          echo "::warning::Test result bundle not found at $RESULT_BUNDLE"
+          echo "Falling back to log parsing..."
+          echo ""
+          grep -E "(✘|Test Case.*failed|FAIL|Assertion)" /tmp/test_output.log 2>/dev/null | head -50 || echo "No failures found in log"
+          exit 0
+        fi
+
+        # Write header to job summary
+        echo "## ❌ ${{ matrix.test-name }} Failures" >> $GITHUB_STEP_SUMMARY
+        echo "" >> $GITHUB_STEP_SUMMARY
+
+        # Extract test failures using xcresulttool (requires --legacy flag on newer Xcode)
+        python3 << 'PYTHON_SCRIPT'
+        import json
+        import subprocess
+        import sys
+        import os
+
+        result_bundle = os.environ.get('RESULT_BUNDLE', 'test-results/test.xcresult')
+        summary_file = os.environ.get('GITHUB_STEP_SUMMARY', '/dev/null')
+
+        # Try new format first, then legacy
+        data = None
+        for legacy_flag in ["", "--legacy"]:
+            try:
+                cmd = ["xcrun", "xcresulttool", "get", "object"]
+                if legacy_flag:
+                    cmd.append(legacy_flag)
+                cmd.extend(["--path", result_bundle, "--format", "json"])
+
+                result = subprocess.run(cmd, capture_output=True, text=True)
+                if result.returncode == 0 and result.stdout.strip():
+                    data = json.loads(result.stdout)
+                    break
+            except Exception:
+                continue
+
+        if data is None:
+            print("Could not parse xcresult bundle")
+            sys.exit(0)
+
+        # Navigate to test failure summaries
+        actions = data.get('actions', {}).get('_values', [])
+        if not actions:
+            print("No actions found in xcresult")
+            sys.exit(0)
+
+        action = actions[0]
+        issues = action.get('actionResult', {}).get('issues', {})
+        failures = issues.get('testFailureSummaries', {}).get('_values', [])
+
+        if not failures:
+            print("No test failures found in xcresult (test may have crashed)")
+            sys.exit(0)
+
+        print(f"Found {len(failures)} test failure(s):")
+        print("")
+
+        # Also write to GITHUB_STEP_SUMMARY
+        with open(summary_file, "a") as summary:
+            summary.write("| Test | Failure Message |\n")
+            summary.write("|------|----------------|\n")
+
+            for f in failures:
+                test_name = f.get('testCaseName', {}).get('_value', 'Unknown Test')
+                message = f.get('message', {}).get('_value', 'No message')
+
+                # Clean up message for display
+                message_short = message[:150] + "..." if len(message) > 150 else message
+                message_escaped = message_short.replace("|", "\\|").replace("\n", " ")
+
+                # Print to console
+                print(f"❌ {test_name}")
+                print(f"   {message_short}")
+                print("")
+
+                # GitHub Actions error annotation
+                print(f"::error title={test_name}::{message_short}")
+
+                # Write to summary
+                summary.write(f"| `{test_name}` | {message_escaped} |\n")
+
+        print("")
+        print("See the uploaded .xcresult artifact for full details.")
+        PYTHON_SCRIPT
+      env:
+        RESULT_BUNDLE: test-results/${{ matrix.artifact-name }}.xcresult
 
     - name: Upload test results
       uses: actions/upload-artifact@v4
