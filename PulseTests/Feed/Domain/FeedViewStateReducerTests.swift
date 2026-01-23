@@ -1,3 +1,4 @@
+// swiftlint:disable file_length
 import EntropyCore
 import Foundation
 @testable import Pulse
@@ -189,6 +190,7 @@ struct FeedViewStateReducerTests {
 // MARK: - DigestViewItem Parsing Tests
 
 @Suite("DigestViewItem Parsing Tests")
+// swiftlint:disable:next type_body_length
 struct DigestViewItemParsingTests {
     @Test("parseSections extracts unique content per category")
     func parseSectionsExtractsUniqueContent() {
@@ -470,10 +472,12 @@ struct DigestViewItemParsingTests {
     func parseSectionsHandlesCategoryNamesInContent() {
         // Content where category names appear naturally in text (not as headers)
         // This tests that we don't falsely match "technology:" in content
+        // swiftlint:disable line_length
         let summary = """
         **Technology** AI breakthroughs continue to amaze.
         **Entertainment** The film industry embraces technology: streaming services are booming. Health: concerns about screen time were discussed.
         """
+        // swiftlint:enable line_length
 
         let articles = [
             createMockArticle(category: .technology, title: "AI News"),

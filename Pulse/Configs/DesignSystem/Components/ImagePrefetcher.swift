@@ -176,7 +176,8 @@ actor ImagePrefetcher {
         } catch {
             // Log unexpected errors for debugging while still failing silently
             // Image will be loaded normally on display if prefetch fails
-            Logger.shared.warning("Prefetch failed for \(url.absoluteString): \(error.localizedDescription)", category: logCategory)
+            let errMsg = error.localizedDescription
+            Logger.shared.warning("Prefetch failed for \(url.absoluteString): \(errMsg)", category: logCategory)
         }
     }
 }

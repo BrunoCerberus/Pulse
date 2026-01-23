@@ -107,7 +107,7 @@ struct ContentSectionCard: View {
 #Preview {
     let previewSection = DigestSection(
         title: "Technology",
-        content: "The technology sector saw significant developments with new AI models being announced and companies pivoting their strategies to incorporate machine learning capabilities.",
+        content: "The technology sector saw significant developments with new AI models.",
         category: .technology,
         relatedArticles: [
             FeedSourceArticle(from: Article.mockArticles[0]),

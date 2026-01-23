@@ -25,8 +25,10 @@ final class LiveNewsService: APIRequest, NewsService {
         if useSupabase {
             return fetchFromSupabase(page: page)
                 .catch { [weak self] error -> AnyPublisher<[Article], Error> in
-                    Logger.shared.service("LiveNewsService: Supabase failed, falling back to Guardian - \(error.localizedDescription)", level: .warning)
-                    return self?.fetchFromGuardian(page: page) ?? Fail(error: error).eraseToAnyPublisher()
+                    let message = "LiveNewsService: Supabase failed, falling back to Guardian"
+                    Logger.shared.service("\(message) - \(error.localizedDescription)", level: .warning)
+                    return self?.fetchFromGuardian(page: page)
+                        ?? Fail(error: error).eraseToAnyPublisher()
                 }
                 .eraseToAnyPublisher()
         }
@@ -37,8 +39,10 @@ final class LiveNewsService: APIRequest, NewsService {
         if useSupabase {
             return fetchFromSupabase(category: category, page: page)
                 .catch { [weak self] error -> AnyPublisher<[Article], Error> in
-                    Logger.shared.service("LiveNewsService: Supabase category fetch failed, falling back to Guardian - \(error.localizedDescription)", level: .warning)
-                    return self?.fetchFromGuardian(category: category, page: page) ?? Fail(error: error).eraseToAnyPublisher()
+                    let message = "LiveNewsService: Supabase category fetch failed"
+                    Logger.shared.service("\(message) - \(error.localizedDescription)", level: .warning)
+                    return self?.fetchFromGuardian(category: category, page: page)
+                        ?? Fail(error: error).eraseToAnyPublisher()
                 }
                 .eraseToAnyPublisher()
         }
@@ -49,8 +53,10 @@ final class LiveNewsService: APIRequest, NewsService {
         if useSupabase {
             return fetchBreakingFromSupabase()
                 .catch { [weak self] error -> AnyPublisher<[Article], Error> in
-                    Logger.shared.service("LiveNewsService: Supabase breaking news failed, falling back to Guardian - \(error.localizedDescription)", level: .warning)
-                    return self?.fetchBreakingFromGuardian() ?? Fail(error: error).eraseToAnyPublisher()
+                    let message = "LiveNewsService: Supabase breaking news failed"
+                    Logger.shared.service("\(message) - \(error.localizedDescription)", level: .warning)
+                    return self?.fetchBreakingFromGuardian()
+                        ?? Fail(error: error).eraseToAnyPublisher()
                 }
                 .eraseToAnyPublisher()
         }
@@ -61,8 +67,10 @@ final class LiveNewsService: APIRequest, NewsService {
         if useSupabase {
             return fetchArticleFromSupabase(id: id)
                 .catch { [weak self] error -> AnyPublisher<Article, Error> in
-                    Logger.shared.service("LiveNewsService: Supabase article fetch failed, falling back to Guardian - \(error.localizedDescription)", level: .warning)
-                    return self?.fetchArticleFromGuardian(id: id) ?? Fail(error: error).eraseToAnyPublisher()
+                    let message = "LiveNewsService: Supabase article fetch failed"
+                    Logger.shared.service("\(message) - \(error.localizedDescription)", level: .warning)
+                    return self?.fetchArticleFromGuardian(id: id)
+                        ?? Fail(error: error).eraseToAnyPublisher()
                 }
                 .eraseToAnyPublisher()
         }
@@ -91,7 +99,9 @@ final class LiveNewsService: APIRequest, NewsService {
         )
         .map { $0.map { $0.toArticle() } }
         .handleEvents(receiveOutput: { articles in
-            Logger.shared.service("LiveNewsService: Supabase returned \(articles.count) articles for \(category.rawValue)", level: .debug)
+            let count = articles.count
+            let cat = category.rawValue
+            Logger.shared.service("LiveNewsService: Supabase returned \(count) for \(cat)", level: .debug)
         })
         .receive(on: DispatchQueue.main)
         .eraseToAnyPublisher()
