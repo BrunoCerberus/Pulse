@@ -28,8 +28,10 @@ final class LiveSearchService: APIRequest, SearchService {
         if useSupabase {
             return searchSupabase(query: query, page: page, sortBy: sortBy)
                 .catch { [weak self] error -> AnyPublisher<[Article], Error> in
-                    Logger.shared.service("LiveSearchService: Supabase search failed, falling back to Guardian - \(error.localizedDescription)", level: .warning)
-                    return self?.searchGuardian(query: query, page: page, sortBy: sortBy) ?? Fail(error: error).eraseToAnyPublisher()
+                    let msg = "LiveSearchService: Supabase search failed, falling back to Guardian"
+                    Logger.shared.service("\(msg) - \(error.localizedDescription)", level: .warning)
+                    return self?.searchGuardian(query: query, page: page, sortBy: sortBy)
+                        ?? Fail(error: error).eraseToAnyPublisher()
                 }
                 .eraseToAnyPublisher()
         }
@@ -57,7 +59,8 @@ final class LiveSearchService: APIRequest, SearchService {
             results.map { $0.toArticle() }
         }
         .handleEvents(receiveOutput: { articles in
-            Logger.shared.service("LiveSearchService: Supabase returned \(articles.count) results for '\(query)' (page \(page))", level: .debug)
+            let count = articles.count
+            Logger.shared.service("LiveSearchService: \(count) results for '\(query)'", level: .debug)
         })
         .receive(on: DispatchQueue.main)
         .eraseToAnyPublisher()

@@ -21,10 +21,18 @@ enum SupabaseAPI: APIFetcher {
     }
 
     /// Fields to select for article list views (optimized for feed display)
-    private static let listFields = "id,title,url,image_url,published_at,source_name,source_slug,category_name,category_slug,summary,content"
+    private static let listFields = [
+        "id", "title", "url", "image_url", "published_at",
+        "source_name", "source_slug", "category_name", "category_slug",
+        "summary", "content",
+    ].joined(separator: ",")
 
     /// Fields to select for article detail views (includes full content)
-    private static let detailFields = "id,title,url,image_url,published_at,source_name,source_slug,category_name,category_slug,summary,content"
+    private static let detailFields = [
+        "id", "title", "url", "image_url", "published_at",
+        "source_name", "source_slug", "category_name", "category_slug",
+        "summary", "content",
+    ].joined(separator: ",")
 
     var path: String {
         let endpoint: String

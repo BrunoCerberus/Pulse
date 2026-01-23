@@ -1,6 +1,5 @@
 import Foundation
 
-// swiftlint:disable line_length
 enum FeedDigestPromptBuilder {
     /// System prompt for daily digest generation
     static let systemPrompt = """
@@ -103,5 +102,3 @@ enum FeedDigestPromptBuilder {
             .trimmingCharacters(in: .whitespacesAndNewlines)
     }
 }
-
-// swiftlint:enable line_length

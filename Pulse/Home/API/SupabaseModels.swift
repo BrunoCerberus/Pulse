@@ -60,7 +60,8 @@ struct SupabaseArticle: Codable {
         } else if let parsed = Self.iso8601FormatterNoFraction.date(from: publishedAt) {
             date = parsed
         } else {
-            Logger.shared.service("SupabaseArticle: Failed to parse date '\(publishedAt)' for article \(id)", level: .warning)
+            let msg = "SupabaseArticle: Failed to parse date '\(publishedAt)' for \(id)"
+            Logger.shared.service(msg, level: .warning)
             date = Date()
         }
 

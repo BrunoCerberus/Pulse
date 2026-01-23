@@ -72,7 +72,8 @@ struct ForYouServiceFilteringTests {
         preferences.mutedSources = ["TechCrunch"]
 
         // Actually call the service method and collect results
-        let result = try await collectFirstResult(from: service.fetchPersonalizedFeed(preferences: preferences, page: 1))
+        let publisher = service.fetchPersonalizedFeed(preferences: preferences, page: 1)
+        let result = try await collectFirstResult(from: publisher)
 
         #expect(result.count == 1)
         #expect(result.first?.source.name == "BBC News")
@@ -103,7 +104,8 @@ struct ForYouServiceFilteringTests {
         var preferences = UserPreferences.default
         preferences.mutedKeywords = ["crypto", "bitcoin"]
 
-        let result = try await collectFirstResult(from: service.fetchPersonalizedFeed(preferences: preferences, page: 1))
+        let publisher = service.fetchPersonalizedFeed(preferences: preferences, page: 1)
+        let result = try await collectFirstResult(from: publisher)
 
         #expect(result.count == 1)
         #expect(result.first?.id == "2")
@@ -136,7 +138,8 @@ struct ForYouServiceFilteringTests {
         var preferences = UserPreferences.default
         preferences.mutedKeywords = ["scandal"]
 
-        let result = try await collectFirstResult(from: service.fetchPersonalizedFeed(preferences: preferences, page: 1))
+        let publisher = service.fetchPersonalizedFeed(preferences: preferences, page: 1)
+        let result = try await collectFirstResult(from: publisher)
 
         #expect(result.count == 1)
         #expect(result.first?.id == "2")
@@ -170,7 +173,8 @@ struct ForYouServiceFilteringTests {
         #expect(preferences.mutedSources.isEmpty)
         #expect(preferences.mutedKeywords.isEmpty)
 
-        let result = try await collectFirstResult(from: service.fetchPersonalizedFeed(preferences: preferences, page: 1))
+        let publisher = service.fetchPersonalizedFeed(preferences: preferences, page: 1)
+        let result = try await collectFirstResult(from: publisher)
 
         #expect(result.count == 2)
     }
@@ -208,7 +212,8 @@ struct ForYouServiceFilteringTests {
         var preferences = UserPreferences.default
         preferences.mutedKeywords = ["CRYPTO"]
 
-        let result = try await collectFirstResult(from: service.fetchPersonalizedFeed(preferences: preferences, page: 1))
+        let publisher = service.fetchPersonalizedFeed(preferences: preferences, page: 1)
+        let result = try await collectFirstResult(from: publisher)
 
         // All three contain "crypto" (case insensitive), so all should be filtered
         #expect(result.isEmpty)
@@ -248,7 +253,8 @@ struct ForYouServiceFilteringTests {
         preferences.mutedSources = ["Bad Source"]
         preferences.mutedKeywords = ["spam"]
 
-        let result = try await collectFirstResult(from: service.fetchPersonalizedFeed(preferences: preferences, page: 1))
+        let publisher = service.fetchPersonalizedFeed(preferences: preferences, page: 1)
+        let result = try await collectFirstResult(from: publisher)
 
         #expect(result.count == 1)
         #expect(result.first?.id == "1")

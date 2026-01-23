@@ -29,8 +29,10 @@ final class LiveForYouService: APIRequest, ForYouService {
         if useSupabase {
             return fetchFromSupabase(topics: topics, page: page, preferences: preferences)
                 .catch { [weak self] error -> AnyPublisher<[Article], Error> in
-                    Logger.shared.service("LiveForYouService: Supabase failed, falling back to Guardian - \(error.localizedDescription)", level: .warning)
-                    return self?.fetchFromGuardian(topics: topics, page: page, preferences: preferences) ?? Fail(error: error).eraseToAnyPublisher()
+                    let msg = "LiveForYouService: Supabase failed, falling back to Guardian"
+                    Logger.shared.service("\(msg) - \(error.localizedDescription)", level: .warning)
+                    return self?.fetchFromGuardian(topics: topics, page: page, preferences: preferences)
+                        ?? Fail(error: error).eraseToAnyPublisher()
                 }
                 .eraseToAnyPublisher()
         }
@@ -39,7 +41,11 @@ final class LiveForYouService: APIRequest, ForYouService {
 
     // MARK: - Supabase Fetchers
 
-    private func fetchFromSupabase(topics: [NewsCategory], page: Int, preferences: UserPreferences) -> AnyPublisher<[Article], Error> {
+    private func fetchFromSupabase(
+        topics: [NewsCategory],
+        page: Int,
+        preferences: UserPreferences
+    ) -> AnyPublisher<[Article], Error> {
         if topics.isEmpty {
             return fetchAllFromSupabase(page: page, preferences: preferences)
         }
@@ -68,7 +74,8 @@ final class LiveForYouService: APIRequest, ForYouService {
                 self.filterMutedContent(articles, preferences: preferences)
             }
             .handleEvents(receiveOutput: { articles in
-                Logger.shared.service("LiveForYouService: Supabase returned \(articles.count) personalized articles", level: .debug)
+                let count = articles.count
+                Logger.shared.service("LiveForYouService: Supabase returned \(count) articles", level: .debug)
             })
             .receive(on: DispatchQueue.main)
             .eraseToAnyPublisher()
@@ -89,7 +96,11 @@ final class LiveForYouService: APIRequest, ForYouService {
 
     // MARK: - Guardian Fetchers (Fallback)
 
-    private func fetchFromGuardian(topics: [NewsCategory], page: Int, preferences: UserPreferences) -> AnyPublisher<[Article], Error> {
+    private func fetchFromGuardian(
+        topics: [NewsCategory],
+        page: Int,
+        preferences: UserPreferences
+    ) -> AnyPublisher<[Article], Error> {
         if topics.isEmpty {
             return fetchAllFromGuardian(page: page, preferences: preferences)
         }

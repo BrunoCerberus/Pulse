@@ -1,34 +1,16 @@
 import Foundation
+import LocalLlama
 import os
 #if canImport(UIKit)
     import UIKit
 #endif
-import LocalLlama
-
-// MARK: - Memory Operation
-
-/// Defines memory operation types with different thresholds
-enum MemoryOperation {
-    case modelLoad
-    case inference
-
-    /// Returns the minimum available memory required for this operation
-    var minimumMemory: UInt64 {
-        switch self {
-        case .modelLoad:
-            return LLMConfiguration.minimumAvailableMemory
-        case .inference:
-            return LLMConfiguration.minimumInferenceMemory
-        }
-    }
-}
 
 // MARK: - LLM Model Manager
 
 /// Manages the lifecycle of the LLM model (loading, inference, unloading)
 ///
 /// Uses SwiftLlama actor for thread-safe on-device inference with GGUF models.
-final class LLMModelManager: @unchecked Sendable {
+final class LLMModelManager: @unchecked Sendable { // swiftlint:disable:this type_body_length
     static let shared = LLMModelManager()
 
     /// Default system prompt for general-purpose LLM interactions
@@ -44,6 +26,19 @@ final class LLMModelManager: @unchecked Sendable {
 
     /// Async-safe lock for protecting swiftLlama reference changes
     private let lock = OSAllocatedUnfairLock()
+
+    // MARK: - Simulator Warning State
+
+    /// Reference type wrapper for simulator warning state.
+    /// Required because OSAllocatedUnfairLock needs a reference type to properly
+    /// synchronize mutable state across threads.
+    private final class SimulatorWarningState: @unchecked Sendable {
+        var hasLogged = false
+    }
+
+    /// Thread-safe static lock for one-time simulator warning log.
+    /// Using a lock ensures the warning is logged exactly once even under concurrent access.
+    private static let simulatorWarningLock = OSAllocatedUnfairLock(initialState: SimulatorWarningState())
 
     private init() {
         setupMemoryWarningObserver()
@@ -69,20 +64,14 @@ final class LLMModelManager: @unchecked Sendable {
 
     /// Load the GGUF model into memory
     func loadModel(progressHandler: @escaping @Sendable (Double) -> Void) async throws {
-        // Quick check if already loaded (minimal lock time)
         let alreadyLoaded = lock.withLock { swiftLlama != nil }
         if alreadyLoaded { return }
 
-        // Log memory tier for diagnostics
         let memoryTier = MemoryTier.current
-        logger.info(
-            "Device memory tier: \(memoryTier.description), context: \(LLMConfiguration.contextSize), batch: \(LLMConfiguration.batchSize)",
-            category: logCategory
-        )
+        logMemoryTier(memoryTier)
 
-        // Perform validations outside the lock to reduce contention
         guard hasAdequateMemory(for: .modelLoad) else {
-            logger.warning("Insufficient memory to load model (tier: \(memoryTier.rawValue))", category: logCategory)
+            logger.warning("Insufficient memory (tier: \(memoryTier.rawValue))", category: logCategory)
             throw LLMError.memoryPressure
         }
 
@@ -91,30 +80,14 @@ final class LLMModelManager: @unchecked Sendable {
         guard let modelPath = LLMConfiguration.modelURL?.path,
               FileManager.default.fileExists(atPath: modelPath)
         else {
-            logger.warning("Model file not found at expected path", category: logCategory)
-            throw LLMError.modelLoadFailed(
-                "Model file not bundled. Please add the GGUF model to Resources/Models/"
-            )
+            logger.warning("Model file not found", category: logCategory)
+            throw LLMError.modelLoadFailed("Model file not bundled. Please add the GGUF model to Resources/Models/")
         }
 
         logger.info("Loading model from: \(modelPath)", category: logCategory)
         progressHandler(0.3)
 
-        // Create configuration with adequate context size for prompt + generation
-        // The prompt can be ~2000 tokens, plus we want to generate ~500-1000 tokens
-        let config = Configuration(
-            topK: 40,
-            topP: 0.9,
-            nCTX: LLMConfiguration.contextSize,
-            temperature: 0.5, // Lower temperature for more deterministic, focused output
-            batchSize: LLMConfiguration.batchSize, // Memory-based: 2048 for 4GB+, 512 for older devices
-            maxTokenCount: LLMConfiguration.contextSize,
-            stopTokens: ["</digest>", "---"],
-            timeout: LLMConfiguration.generationTimeout
-        )
-
-        // Create and initialize outside the lock (expensive operation)
-        let llama = SwiftLlama(modelPath: modelPath, modelConfiguration: config)
+        let llama = SwiftLlama(modelPath: modelPath, modelConfiguration: makeConfiguration())
 
         do {
             progressHandler(0.5)
@@ -207,7 +180,8 @@ final class LLMModelManager: @unchecked Sendable {
 
         // Pre-inference memory check to prevent crashes during generation
         guard hasAdequateMemory(for: .inference) else {
-            logger.warning("Insufficient memory for inference (tier: \(MemoryTier.current.rawValue))", category: logCategory)
+            let tier = MemoryTier.current.rawValue
+            logger.warning("Insufficient memory for inference (tier: \(tier))", category: logCategory)
             continuation.finish(throwing: LLMError.memoryPressure)
             return
         }
@@ -296,8 +270,26 @@ final class LLMModelManager: @unchecked Sendable {
 
     // MARK: - Private Helpers
 
+    private func logMemoryTier(_ tier: MemoryTier) {
+        let ctx = LLMConfiguration.contextSize
+        let batch = LLMConfiguration.batchSize
+        logger.info("Memory tier: \(tier.description), ctx: \(ctx), batch: \(batch)", category: logCategory)
+    }
+
+    private func makeConfiguration() -> Configuration {
+        Configuration(
+            topK: 40,
+            topP: 0.9,
+            nCTX: LLMConfiguration.contextSize,
+            temperature: 0.5,
+            batchSize: LLMConfiguration.batchSize,
+            maxTokenCount: LLMConfiguration.contextSize,
+            stopTokens: ["</digest>", "---"],
+            timeout: LLMConfiguration.generationTimeout
+        )
+    }
+
     /// Checks if the device has adequate memory for the specified operation.
-    /// Uses operation-specific thresholds and also checks system memory pressure.
     private func hasAdequateMemory(for operation: MemoryOperation) -> Bool {
         // Check system memory pressure first (available on iOS 13+)
         if isUnderMemoryPressure() {
@@ -334,45 +326,18 @@ final class LLMModelManager: @unchecked Sendable {
         return hasEnough
     }
 
-    /// Checks if the system is currently under memory pressure using os_proc_available_memory.
-    ///
-    /// - Important: Memory pressure detection is disabled in simulator because `os_proc_available_memory()`
-    ///   returns unreliable values in that environment. **Memory-related behavior must be tested on physical
-    ///   devices** to verify OOM prevention logic works correctly.
-    ///
-    /// - Returns: `true` if available memory is below critical threshold, `false` otherwise (or always `false` in simulator)
-    ///
-    /// Reference type wrapper for simulator warning state.
-    /// Required because OSAllocatedUnfairLock needs a reference type to properly
-    /// synchronize mutable state across threads.
-    private final class SimulatorWarningState: @unchecked Sendable {
-        var hasLogged = false
-    }
-
-    /// Thread-safe static lock for one-time simulator warning log.
-    /// Using a lock ensures the warning is logged exactly once even under concurrent access.
-    private static let simulatorWarningLock = OSAllocatedUnfairLock(initialState: SimulatorWarningState())
-
+    /// Checks if the system is under memory pressure using `os_proc_available_memory`.
+    /// Memory pressure detection is disabled in simulator - test on physical devices.
     private func isUnderMemoryPressure() -> Bool {
         #if targetEnvironment(simulator)
-            // Allow forcing memory pressure check via environment variable for testing.
-            // Set FORCE_MEMORY_PRESSURE_CHECK=1 in your test scheme to enable.
             #if DEBUG
                 if ProcessInfo.processInfo.environment["FORCE_MEMORY_PRESSURE_CHECK"] == "1" {
                     return checkActualMemoryPressure()
                 }
-            #endif
-
-            // Simulator always reports high available memory regardless of actual pressure.
-            // Memory testing MUST be performed on physical devices.
-            #if DEBUG
                 Self.simulatorWarningLock.withLock { state in
                     if !state.hasLogged {
                         state.hasLogged = true
-                        logger.debug(
-                            "⚠️ Memory pressure check disabled in simulator - test on physical device or set FORCE_MEMORY_PRESSURE_CHECK=1",
-                            category: logCategory
-                        )
+                        logger.debug("Memory check disabled in sim", category: logCategory)
                     }
                 }
             #endif

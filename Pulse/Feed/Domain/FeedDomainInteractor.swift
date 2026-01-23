@@ -33,6 +33,7 @@ final class FeedDomainInteractor: CombineInteractor {
         setupModelStatusBinding()
     }
 
+    // swiftlint:disable:next cyclomatic_complexity
     func dispatch(action: FeedDomainAction) {
         switch action {
         case .loadInitialData:
