@@ -3,18 +3,19 @@ import Foundation
 /**
  * Supabase configuration provider for the backend API.
  *
- * This enum provides Supabase URL and API key with fallback mechanisms
- * similar to APIKeysProvider.
+ * This enum provides the Supabase project URL with fallback mechanisms.
+ * The Edge Functions API is public and does not require authentication.
  *
  * Fallback Hierarchy:
  * 1. Firebase Remote Config (primary, fetched from server)
  * 2. Environment variables (for CI/CD)
- * 3. Hardcoded defaults (for development only)
  *
  * Usage:
  * ```swift
  * let url = SupabaseConfig.url
- * let key = SupabaseConfig.anonKey
+ * if SupabaseConfig.isConfigured {
+ *     // Use Supabase Edge Functions
+ * }
  * ```
  */
 enum SupabaseConfig {
@@ -34,7 +35,7 @@ enum SupabaseConfig {
         remoteConfigService = service
     }
 
-    // MARK: - Supabase Credentials
+    // MARK: - Supabase URL
 
     /**
      * Supabase project URL.
@@ -61,8 +62,9 @@ enum SupabaseConfig {
     /**
      * Supabase anonymous (public) API key.
      *
-     * This key is safe to include in the app as it only provides
-     * read access controlled by Row Level Security policies.
+     * Note: The Edge Functions API is public and does not require authentication.
+     * This key is kept for backwards compatibility but is not used by the
+     * current Edge Functions endpoints.
      */
     static var anonKey: String {
         // 1. Try Remote Config (primary source)
@@ -75,17 +77,16 @@ enum SupabaseConfig {
             return key
         }
 
-        // 3. Log warning and return empty
-        Logger.shared.service("SUPABASE_ANON_KEY not configured in Remote Config or environment", level: .warning)
+        // Not required for Edge Functions - return empty without warning
         return ""
     }
 
     /**
      * Check if Supabase is properly configured.
      *
-     * - Returns: `true` if both URL and anon key are available
+     * - Returns: `true` if the URL is available (auth key not required for Edge Functions)
      */
     static var isConfigured: Bool {
-        !url.isEmpty && !anonKey.isEmpty
+        !url.isEmpty
     }
 }

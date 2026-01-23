@@ -66,44 +66,28 @@ struct SupabaseArticleMappingTests {
 
     // MARK: - Image URL Handling
 
-    @Test("Image URLs prioritize full-size for imageURL")
-    func imageURLPrioritizesFullSize() {
+    @Test("Image URL maps correctly")
+    func imageURLMapsCorrectly() {
         let article = createSupabaseArticle(
-            imageUrl: "https://example.com/full.jpg",
-            thumbnailUrl: "https://example.com/thumb.jpg"
+            imageUrl: "https://example.com/full.jpg"
         )
 
         let mapped = article.toArticle()
 
+        // Edge Functions use same image for both imageURL and thumbnailURL
         #expect(mapped.imageURL == "https://example.com/full.jpg")
-        #expect(mapped.thumbnailURL == "https://example.com/thumb.jpg")
+        #expect(mapped.thumbnailURL == "https://example.com/full.jpg")
     }
 
-    @Test("Image URL falls back to thumbnail when no full-size available")
-    func imageURLFallsBackToThumbnail() {
+    @Test("Nil image URL results in nil values")
+    func nilImageURLResultsInNilValues() {
         let article = createSupabaseArticle(
-            imageUrl: nil,
-            thumbnailUrl: "https://example.com/thumb.jpg"
+            imageUrl: nil
         )
 
         let mapped = article.toArticle()
 
-        #expect(mapped.imageURL == "https://example.com/thumb.jpg")
-        #expect(mapped.thumbnailURL == "https://example.com/thumb.jpg")
-    }
-
-    @Test("Thumbnail URL does not fallback to full-size image")
-    func thumbnailDoesNotFallbackToFullSize() {
-        let article = createSupabaseArticle(
-            imageUrl: "https://example.com/full.jpg",
-            thumbnailUrl: nil
-        )
-
-        let mapped = article.toArticle()
-
-        // imageURL should have the full-size
-        #expect(mapped.imageURL == "https://example.com/full.jpg")
-        // thumbnailURL should NOT fallback to full-size (would defeat optimization)
+        #expect(mapped.imageURL == nil)
         #expect(mapped.thumbnailURL == nil)
     }
 
@@ -143,18 +127,13 @@ struct SupabaseArticleMappingTests {
         #expect(components.day == 20)
     }
 
-    // MARK: - Source and Category Mapping
+    // MARK: - Source and Category Mapping (Flat Fields)
 
-    @Test("Source maps correctly")
+    @Test("Source maps correctly from flat fields")
     func sourceMapsCorrectly() {
         let article = createSupabaseArticle(
-            sources: SupabaseSource(
-                id: "src-123",
-                name: "TechCrunch",
-                slug: "techcrunch",
-                logoUrl: "https://example.com/logo.png",
-                websiteUrl: "https://techcrunch.com"
-            )
+            sourceName: "TechCrunch",
+            sourceSlug: "techcrunch"
         )
 
         let mapped = article.toArticle()
@@ -165,7 +144,10 @@ struct SupabaseArticleMappingTests {
 
     @Test("Missing source uses Unknown as name")
     func missingSourceUsesUnknown() {
-        let article = createSupabaseArticle(sources: nil)
+        let article = createSupabaseArticle(
+            sourceName: nil,
+            sourceSlug: nil
+        )
 
         let mapped = article.toArticle()
 
@@ -175,7 +157,7 @@ struct SupabaseArticleMappingTests {
     @Test("Category maps to NewsCategory when slug matches")
     func categoryMapsWhenSlugMatches() {
         let article = createSupabaseArticle(
-            categories: SupabaseCategory(id: "cat-1", name: "Technology", slug: "technology")
+            categorySlug: "technology"
         )
 
         let mapped = article.toArticle()
@@ -186,7 +168,18 @@ struct SupabaseArticleMappingTests {
     @Test("Category is nil when slug does not match NewsCategory")
     func categoryNilWhenNoMatch() {
         let article = createSupabaseArticle(
-            categories: SupabaseCategory(id: "cat-1", name: "Random", slug: "random-category")
+            categorySlug: "random-category"
+        )
+
+        let mapped = article.toArticle()
+
+        #expect(mapped.category == nil)
+    }
+
+    @Test("Category is nil when slug is nil")
+    func categoryNilWhenSlugNil() {
+        let article = createSupabaseArticle(
+            categorySlug: nil
         )
 
         let mapped = article.toArticle()
@@ -203,21 +196,11 @@ struct SupabaseArticleMappingTests {
         content: String? = "Test content",
         url: String = "https://example.com/article",
         imageUrl: String? = "https://example.com/image.jpg",
-        thumbnailUrl: String? = "https://example.com/thumb.jpg",
-        author: String? = "Test Author",
         publishedAt: String = "2024-01-15T10:30:00.000Z",
-        sources: SupabaseSource? = SupabaseSource(
-            id: "src-1",
-            name: "Test Source",
-            slug: "test-source",
-            logoUrl: nil,
-            websiteUrl: nil
-        ),
-        categories: SupabaseCategory? = SupabaseCategory(
-            id: "cat-1",
-            name: "Technology",
-            slug: "technology"
-        )
+        sourceName: String? = "Test Source",
+        sourceSlug: String? = "test-source",
+        categoryName: String? = "Technology",
+        categorySlug: String? = "technology"
     ) -> SupabaseArticle {
         SupabaseArticle(
             id: id,
@@ -226,20 +209,29 @@ struct SupabaseArticleMappingTests {
             content: content,
             url: url,
             imageUrl: imageUrl,
-            thumbnailUrl: thumbnailUrl,
-            author: author,
             publishedAt: publishedAt,
-            sources: sources,
-            categories: categories
+            sourceName: sourceName,
+            sourceSlug: sourceSlug,
+            categoryName: categoryName,
+            categorySlug: categorySlug
         )
     }
 }
 
-// MARK: - SupabaseAPI Tests
+// MARK: - SupabaseAPI Tests (Edge Functions)
 
 @Suite("SupabaseAPI Tests")
 struct SupabaseAPITests {
     // MARK: - Path Construction Tests
+
+    @Test("SupabaseAPI articles uses Edge Functions endpoint")
+    func articlesUsesEdgeFunctionsEndpoint() {
+        let api = SupabaseAPI.articles(page: 1, pageSize: 20)
+
+        let path = api.path
+
+        #expect(path.contains("/functions/v1/api-articles"))
+    }
 
     @Test("SupabaseAPI articles path includes pagination parameters")
     func articlesPathIncludesPagination() {
@@ -247,19 +239,20 @@ struct SupabaseAPITests {
 
         let path = api.path
 
-        #expect(path.contains("/articles"))
+        #expect(path.contains("/api-articles"))
         #expect(path.contains("offset=20")) // page 2 with pageSize 20 = offset 20
         #expect(path.contains("limit=20"))
         #expect(path.contains("order=published_at.desc"))
     }
 
-    @Test("SupabaseAPI articles page 1 has offset 0")
-    func articlesPage1HasOffsetZero() {
+    @Test("SupabaseAPI articles page 1 does not include offset")
+    func articlesPage1NoOffset() {
         let api = SupabaseAPI.articles(page: 1, pageSize: 20)
 
         let path = api.path
 
-        #expect(path.contains("offset=0"))
+        // Page 1 should not include offset parameter (offset = 0)
+        #expect(!path.contains("offset="))
     }
 
     @Test("SupabaseAPI articlesByCategory includes category filter")
@@ -268,18 +261,19 @@ struct SupabaseAPITests {
 
         let path = api.path
 
-        #expect(path.contains("categories.slug=eq.technology"))
-        #expect(path.contains("categories!inner"))
+        #expect(path.contains("/api-articles"))
+        #expect(path.contains("category_slug=eq.technology"))
     }
 
-    @Test("SupabaseAPI breakingNews includes since filter")
-    func breakingNewsIncludesSinceFilter() {
-        let api = SupabaseAPI.breakingNews(since: "2024-01-15T00:00:00Z")
+    @Test("SupabaseAPI breakingNews uses limit parameter")
+    func breakingNewsUsesLimit() {
+        let api = SupabaseAPI.breakingNews(limit: 10)
 
         let path = api.path
 
-        #expect(path.contains("published_at=gte.2024-01-15T00:00:00Z"))
+        #expect(path.contains("/api-articles"))
         #expect(path.contains("limit=10"))
+        #expect(path.contains("order=published_at.desc"))
     }
 
     @Test("SupabaseAPI article includes id filter")
@@ -288,34 +282,57 @@ struct SupabaseAPITests {
 
         let path = api.path
 
+        #expect(path.contains("/api-articles"))
         #expect(path.contains("id=eq.article-123"))
         #expect(path.contains("limit=1"))
     }
 
-    @Test("SupabaseAPI search includes query filter")
-    func searchIncludesQueryFilter() {
-        let api = SupabaseAPI.search(query: "swift", page: 1, pageSize: 20, orderBy: "relevance")
+    @Test("SupabaseAPI search uses dedicated search endpoint")
+    func searchUsesSearchEndpoint() {
+        let api = SupabaseAPI.search(query: "swift", limit: 20)
 
         let path = api.path
 
-        #expect(path.contains("or="))
-        #expect(path.contains("title.ilike.*swift*"))
-        #expect(path.contains("summary.ilike.*swift*"))
+        #expect(path.contains("/functions/v1/api-search"))
+        #expect(path.contains("q=swift"))
+        #expect(path.contains("limit=20"))
+    }
+
+    @Test("SupabaseAPI categories uses dedicated endpoint")
+    func categoriesEndpoint() {
+        let api = SupabaseAPI.categories
+
+        let path = api.path
+
+        #expect(path.contains("/functions/v1/api-categories"))
+    }
+
+    @Test("SupabaseAPI sources uses dedicated endpoint")
+    func sourcesEndpoint() {
+        let api = SupabaseAPI.sources
+
+        let path = api.path
+
+        #expect(path.contains("/functions/v1/api-sources"))
     }
 
     @Test("SupabaseAPI uses GET method")
     func usesGetMethod() {
         let articlesAPI = SupabaseAPI.articles(page: 1, pageSize: 20)
         let categoryAPI = SupabaseAPI.articlesByCategory(category: "tech", page: 1, pageSize: 20)
-        let breakingAPI = SupabaseAPI.breakingNews(since: "2024-01-01")
+        let breakingAPI = SupabaseAPI.breakingNews(limit: 10)
         let articleAPI = SupabaseAPI.article(id: "test")
-        let searchAPI = SupabaseAPI.search(query: "test", page: 1, pageSize: 20, orderBy: "relevance")
+        let searchAPI = SupabaseAPI.search(query: "test", limit: 20)
+        let categoriesAPI = SupabaseAPI.categories
+        let sourcesAPI = SupabaseAPI.sources
 
         #expect(articlesAPI.method == .GET)
         #expect(categoryAPI.method == .GET)
         #expect(breakingAPI.method == .GET)
         #expect(articleAPI.method == .GET)
         #expect(searchAPI.method == .GET)
+        #expect(categoriesAPI.method == .GET)
+        #expect(sourcesAPI.method == .GET)
     }
 
     @Test("SupabaseAPI task is nil")
@@ -325,18 +342,11 @@ struct SupabaseAPITests {
         #expect(api.task == nil)
     }
 
-    @Test("SupabaseAPI includes select parameter with fields")
-    func includesSelectParameter() {
+    @Test("SupabaseAPI header is nil (no auth required)")
+    func headerIsNil() {
         let api = SupabaseAPI.articles(page: 1, pageSize: 20)
 
-        let path = api.path
-
-        #expect(path.contains("select="))
-        #expect(path.contains("title"))
-        #expect(path.contains("summary"))
-        #expect(path.contains("content"))
-        #expect(path.contains("image_url"))
-        #expect(path.contains("thumbnail_url"))
+        #expect(api.header == nil)
     }
 }
 

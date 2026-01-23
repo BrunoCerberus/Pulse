@@ -1,11 +1,15 @@
 import Combine
 import Foundation
 
-/// A decorator that wraps a NewsService implementation and adds caching functionality.
+/// A decorator that wraps a NewsService implementation and adds client-side caching.
 ///
-/// This service checks the cache before making network requests and stores responses
-/// in the cache for future use. Each content type has a configurable TTL defined in
-/// `NewsCacheTTL`.
+/// This service provides a second layer of caching on top of the server-side caching
+/// provided by Supabase Edge Functions (which use Cache-Control headers with 5min TTL).
+///
+/// Client-side caching benefits:
+/// - Instant response for repeated requests within TTL
+/// - Reduced network traffic
+/// - Offline fallback for cached content
 ///
 /// Usage:
 /// ```swift
