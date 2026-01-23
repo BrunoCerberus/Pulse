@@ -60,28 +60,6 @@ enum SupabaseConfig {
     }
 
     /**
-     * Supabase anonymous (public) API key.
-     *
-     * Note: The Edge Functions API is public and does not require authentication.
-     * This key is kept for backwards compatibility but is not used by the
-     * current Edge Functions endpoints.
-     */
-    static var anonKey: String {
-        // 1. Try Remote Config (primary source)
-        if let key = remoteConfigService?.supabaseAnonKey, !key.isEmpty {
-            return key
-        }
-
-        // 2. Fallback to environment variable (for CI/CD)
-        if let key = ProcessInfo.processInfo.environment["SUPABASE_ANON_KEY"], !key.isEmpty {
-            return key
-        }
-
-        // Not required for Edge Functions - return empty without warning
-        return ""
-    }
-
-    /**
      * Check if Supabase is properly configured.
      *
      * - Returns: `true` if the URL is available (auth key not required for Edge Functions)

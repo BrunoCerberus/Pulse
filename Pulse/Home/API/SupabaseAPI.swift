@@ -12,7 +12,7 @@ enum SupabaseAPI: APIFetcher {
     case articlesByCategory(category: String, page: Int, pageSize: Int)
     case breakingNews(limit: Int)
     case article(id: String)
-    case search(query: String, limit: Int)
+    case search(query: String, page: Int, pageSize: Int)
     case categories
     case sources
 
@@ -64,10 +64,14 @@ enum SupabaseAPI: APIFetcher {
             queryItems.append(URLQueryItem(name: "id", value: "eq.\(id)"))
             queryItems.append(URLQueryItem(name: "limit", value: "1"))
 
-        case let .search(query, limit):
+        case let .search(query, page, pageSize):
             endpoint = "/api-search"
+            let offset = (page - 1) * pageSize
             queryItems.append(URLQueryItem(name: "q", value: query))
-            queryItems.append(URLQueryItem(name: "limit", value: String(limit)))
+            queryItems.append(URLQueryItem(name: "limit", value: String(pageSize)))
+            if offset > 0 {
+                queryItems.append(URLQueryItem(name: "offset", value: String(offset)))
+            }
 
         case .categories:
             endpoint = "/api-categories"

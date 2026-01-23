@@ -287,15 +287,29 @@ struct SupabaseAPITests {
         #expect(path.contains("limit=1"))
     }
 
-    @Test("SupabaseAPI search uses dedicated search endpoint")
+    @Test("SupabaseAPI search uses dedicated search endpoint with pagination")
     func searchUsesSearchEndpoint() {
-        let api = SupabaseAPI.search(query: "swift", limit: 20)
+        let api = SupabaseAPI.search(query: "swift", page: 1, pageSize: 20)
 
         let path = api.path
 
         #expect(path.contains("/functions/v1/api-search"))
         #expect(path.contains("q=swift"))
         #expect(path.contains("limit=20"))
+        // Page 1 should not include offset
+        #expect(!path.contains("offset="))
+    }
+
+    @Test("SupabaseAPI search page 2 includes offset")
+    func searchPage2IncludesOffset() {
+        let api = SupabaseAPI.search(query: "swift", page: 2, pageSize: 20)
+
+        let path = api.path
+
+        #expect(path.contains("/functions/v1/api-search"))
+        #expect(path.contains("q=swift"))
+        #expect(path.contains("limit=20"))
+        #expect(path.contains("offset=20"))
     }
 
     @Test("SupabaseAPI categories uses dedicated endpoint")
@@ -322,7 +336,7 @@ struct SupabaseAPITests {
         let categoryAPI = SupabaseAPI.articlesByCategory(category: "tech", page: 1, pageSize: 20)
         let breakingAPI = SupabaseAPI.breakingNews(limit: 10)
         let articleAPI = SupabaseAPI.article(id: "test")
-        let searchAPI = SupabaseAPI.search(query: "test", limit: 20)
+        let searchAPI = SupabaseAPI.search(query: "test", page: 1, pageSize: 20)
         let categoriesAPI = SupabaseAPI.categories
         let sourcesAPI = SupabaseAPI.sources
 
