@@ -91,15 +91,16 @@ final class HomeDomainInteractor: CombineInteractor {
     }
 
     private func loadInitialData() {
+        // Always reload followed topics from preferences (even if data is already loaded)
+        // This ensures topics are refreshed when returning from Settings
+        loadFollowedTopics()
+
         guard !currentState.isLoading, !currentState.hasLoadedInitialData else { return }
 
         updateState { state in
             state.isLoading = true
             state.error = nil
         }
-
-        // Load followed topics from preferences
-        loadFollowedTopics()
 
         // NewsAPI free tier has best coverage for US
         let country = "us"
