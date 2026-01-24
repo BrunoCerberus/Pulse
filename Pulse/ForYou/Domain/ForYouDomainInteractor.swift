@@ -2,6 +2,24 @@ import Combine
 import EntropyCore
 import Foundation
 
+/// Domain interactor for the For You (personalized feed) feature.
+///
+/// Manages business logic and state for personalized content, including:
+/// - Loading articles based on user's followed topics
+/// - Infinite scroll pagination with deduplication
+/// - Pull-to-refresh with preference updates
+/// - Article selection and reading history tracking
+///
+/// ## Data Flow
+/// 1. Views dispatch `ForYouDomainAction` via `dispatch(action:)`
+/// 2. Interactor processes actions and updates `ForYouDomainState`
+/// 3. State changes are published via `statePublisher`
+///
+/// ## Dependencies
+/// - `ForYouService`: Fetches personalized articles
+/// - `StorageService`: Retrieves preferences and persists reading history
+///
+/// - Note: This is a **Premium** feature.
 @MainActor
 final class ForYouDomainInteractor: CombineInteractor {
     typealias DomainState = ForYouDomainState

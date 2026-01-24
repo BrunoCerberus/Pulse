@@ -3,6 +3,15 @@ import EntropyCore
 import Foundation
 import UIKit
 
+/// ViewModel for the Sign In screen.
+///
+/// Implements `CombineViewModel` to handle authentication via Google and Apple Sign-In.
+/// Provides loading state and error handling for auth operations.
+///
+/// ## Features
+/// - Google Sign-In via Firebase Auth
+/// - Apple Sign-In via Firebase Auth
+/// - Error display with dismiss action
 @MainActor
 final class SignInViewModel: CombineViewModel, ObservableObject {
     typealias ViewState = SignInViewState

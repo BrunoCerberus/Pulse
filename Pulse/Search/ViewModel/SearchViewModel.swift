@@ -2,6 +2,16 @@ import Combine
 import EntropyCore
 import Foundation
 
+/// ViewModel for the Search screen.
+///
+/// Implements `CombineViewModel` to transform domain state into view state.
+/// Provides debounced search (300ms) to reduce API calls during typing.
+///
+/// ## Features
+/// - Full-text search with pagination
+/// - Autocomplete suggestions
+/// - Sort options (relevance, date, popularity)
+/// - 300ms debounce on query changes
 @MainActor
 final class SearchViewModel: CombineViewModel, ObservableObject {
     typealias ViewState = SearchViewState

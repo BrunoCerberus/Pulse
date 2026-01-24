@@ -2,6 +2,15 @@ import Combine
 import EntropyCore
 import Foundation
 
+/// ViewModel for the Bookmarks screen.
+///
+/// Implements `CombineViewModel` to transform domain state into view state.
+/// Manages the list of user's bookmarked articles with pull-to-refresh support.
+///
+/// ## Features
+/// - Load bookmarked articles from local storage
+/// - Pull-to-refresh functionality
+/// - Remove bookmarks via swipe action
 @MainActor
 final class BookmarksViewModel: CombineViewModel, ObservableObject {
     typealias ViewState = BookmarksViewState

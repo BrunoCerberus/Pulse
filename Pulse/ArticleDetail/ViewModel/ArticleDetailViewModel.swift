@@ -2,6 +2,20 @@ import Combine
 import EntropyCore
 import Foundation
 
+/// ViewModel for the Article Detail screen.
+///
+/// Implements `CombineViewModel` to transform domain state into view state.
+/// Handles view events by mapping them to domain actions via `ArticleDetailEventActionMap`.
+///
+/// ## Features
+/// - Article content display with formatting
+/// - Bookmark toggle with optimistic updates
+/// - Share sheet integration
+/// - AI summarization sheet (Premium)
+/// - Open in browser action
+///
+/// ## State Flow
+/// `ArticleDetailDomainState` → `ArticleDetailViewStateReducer` → `ArticleDetailViewState`
 @MainActor
 final class ArticleDetailViewModel: CombineViewModel, ObservableObject {
     typealias ViewState = ArticleDetailViewState

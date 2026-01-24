@@ -2,6 +2,22 @@ import Combine
 import EntropyCore
 import Foundation
 
+/// Domain interactor for the Settings feature.
+///
+/// Manages business logic and state for user preferences, including:
+/// - Loading and saving user preferences
+/// - Topic management (follow/unfollow)
+/// - Notification settings
+/// - Muted sources and keywords
+/// - Clearing reading history
+///
+/// ## Data Flow
+/// 1. Views dispatch `SettingsDomainAction` via `dispatch(action:)`
+/// 2. Interactor processes actions and updates `SettingsDomainState`
+/// 3. State changes are published via `statePublisher`
+///
+/// ## Dependencies
+/// - `SettingsService`: Manages preference persistence
 final class SettingsDomainInteractor: CombineInteractor {
     typealias DomainState = SettingsDomainState
     typealias DomainAction = SettingsDomainAction

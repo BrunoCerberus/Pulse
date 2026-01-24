@@ -2,6 +2,19 @@ import Combine
 import EntropyCore
 import Foundation
 
+/// ViewModel for the Home screen.
+///
+/// Implements `CombineViewModel` to transform domain state into view state.
+/// Handles view events by mapping them to domain actions via `HomeEventActionMap`.
+///
+/// ## Usage
+/// ```swift
+/// let viewModel = HomeViewModel(serviceLocator: serviceLocator)
+/// viewModel.handle(event: .onAppear) // Triggers initial data load
+/// ```
+///
+/// ## State Flow
+/// `HomeDomainState` → `HomeViewStateReducer` → `HomeViewState`
 @MainActor
 final class HomeViewModel: CombineViewModel, ObservableObject {
     typealias ViewState = HomeViewState

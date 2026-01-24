@@ -2,6 +2,22 @@ import Combine
 import EntropyCore
 import Foundation
 
+/// Domain interactor for the Search feature.
+///
+/// Manages business logic and state for article search, including:
+/// - Full-text search with pagination
+/// - Autocomplete suggestions
+/// - Sort options (relevance, date, popularity)
+/// - Reading history tracking for selected articles
+///
+/// ## Data Flow
+/// 1. Views dispatch `SearchDomainAction` via `dispatch(action:)`
+/// 2. Interactor processes actions and updates `SearchDomainState`
+/// 3. State changes are published via `statePublisher`
+///
+/// ## Dependencies
+/// - `SearchService`: Performs search queries
+/// - `StorageService`: Persists reading history
 @MainActor
 final class SearchDomainInteractor: CombineInteractor {
     typealias DomainState = SearchDomainState

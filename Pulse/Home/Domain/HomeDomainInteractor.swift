@@ -2,6 +2,22 @@ import Combine
 import EntropyCore
 import Foundation
 
+/// Domain interactor for the Home feature.
+///
+/// Manages business logic and state for the main news feed, including:
+/// - Loading breaking news carousel and headline articles
+/// - Infinite scroll pagination with deduplication
+/// - Pull-to-refresh with cache invalidation
+/// - Article selection, bookmarking, and sharing
+///
+/// ## Data Flow
+/// 1. Views dispatch `HomeDomainAction` via `dispatch(action:)`
+/// 2. Interactor processes actions and updates `HomeDomainState`
+/// 3. State changes are published via `statePublisher`
+///
+/// ## Dependencies
+/// - `NewsService`: Fetches articles from Supabase/Guardian API
+/// - `StorageService`: Persists reading history and bookmarks
 @MainActor
 final class HomeDomainInteractor: CombineInteractor {
     typealias DomainState = HomeDomainState

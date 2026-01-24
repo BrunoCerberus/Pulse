@@ -3,6 +3,21 @@ import EntropyCore
 import Foundation
 import UIKit
 
+/// Domain interactor for the Authentication feature.
+///
+/// Manages business logic and state for user authentication, including:
+/// - Sign in with Google (Firebase Auth)
+/// - Sign in with Apple (Firebase Auth)
+/// - Sign out
+/// - Error handling with user cancellation detection
+///
+/// ## Data Flow
+/// 1. Views dispatch `AuthDomainAction` via `dispatch(action:)`
+/// 2. Interactor processes actions and updates `AuthDomainState`
+/// 3. State changes are published via `statePublisher`
+///
+/// ## Dependencies
+/// - `AuthService`: Firebase Auth implementation
 final class AuthDomainInteractor: CombineInteractor {
     typealias DomainState = AuthDomainState
     typealias DomainAction = AuthDomainAction

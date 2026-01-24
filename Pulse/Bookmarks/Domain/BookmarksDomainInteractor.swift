@@ -2,6 +2,22 @@ import Combine
 import EntropyCore
 import Foundation
 
+/// Domain interactor for the Bookmarks feature.
+///
+/// Manages business logic and state for saved articles, including:
+/// - Loading bookmarked articles from local storage
+/// - Pull-to-refresh functionality
+/// - Removing bookmarks
+/// - Article selection and reading history tracking
+///
+/// ## Data Flow
+/// 1. Views dispatch `BookmarksDomainAction` via `dispatch(action:)`
+/// 2. Interactor processes actions and updates `BookmarksDomainState`
+/// 3. State changes are published via `statePublisher`
+///
+/// ## Dependencies
+/// - `BookmarksService`: Fetches and manages bookmarks
+/// - `StorageService`: Persists reading history
 @MainActor
 final class BookmarksDomainInteractor: CombineInteractor {
     typealias DomainState = BookmarksDomainState

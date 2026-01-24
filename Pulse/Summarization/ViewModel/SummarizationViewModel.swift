@@ -2,6 +2,18 @@ import Combine
 import EntropyCore
 import Foundation
 
+/// ViewModel for the Article Summarization sheet.
+///
+/// Implements `CombineViewModel` to transform domain state into view state.
+/// Handles view events by mapping them to domain actions via `SummarizationEventActionMap`.
+///
+/// The summarization feature uses on-device LLM to generate article summaries
+/// with streaming text output and progress tracking.
+///
+/// ## State Flow
+/// `SummarizationDomainState` → `SummarizationViewStateReducer` → `SummarizationViewState`
+///
+/// - Note: This is a **Premium** feature.
 @MainActor
 final class SummarizationViewModel: CombineViewModel, ObservableObject {
     typealias ViewState = SummarizationViewState

@@ -1,22 +1,39 @@
 import Foundation
 
+/// Represents the domain state for the Article Detail feature.
+///
+/// This state is owned by `ArticleDetailDomainInteractor` and published via `statePublisher`.
+/// The detail view displays the full article content with support for bookmarking,
+/// sharing, and AI summarization (Premium).
 struct ArticleDetailDomainState: Equatable {
+    /// The article being displayed.
     let article: Article
 
-    // Content processing
+    // MARK: - Content Processing
+
+    /// Indicates whether article content is being processed into AttributedString.
     var isProcessingContent: Bool
+
+    /// Processed article body content as AttributedString (supports links, formatting).
     var processedContent: AttributedString?
+
+    /// Processed article description as AttributedString.
     var processedDescription: AttributedString?
 
-    // Bookmark state
+    // MARK: - User Actions
+
+    /// Whether the article is bookmarked by the user.
     var isBookmarked: Bool
 
-    // Share sheet
+    /// Whether to show the native share sheet.
     var showShareSheet: Bool
 
-    // Summarization sheet visibility
+    /// Whether to show the AI summarization sheet (Premium feature).
     var showSummarizationSheet: Bool
 
+    /// Creates the initial state for a given article.
+    /// - Parameter article: The article to display.
+    /// - Returns: Initial state with content processing in progress.
     static func initial(article: Article) -> ArticleDetailDomainState {
         ArticleDetailDomainState(
             article: article,

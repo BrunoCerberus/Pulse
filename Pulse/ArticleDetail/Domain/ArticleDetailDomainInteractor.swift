@@ -3,6 +3,21 @@ import EntropyCore
 import Foundation
 import UIKit
 
+/// Domain interactor for the Article Detail feature.
+///
+/// Manages business logic and state for article viewing, including:
+/// - Content processing (HTML stripping, paragraph formatting)
+/// - Bookmark management with optimistic updates
+/// - Reading history tracking
+/// - Share sheet and summarization sheet coordination
+///
+/// ## Data Flow
+/// 1. Views dispatch `ArticleDetailDomainAction` via `dispatch(action:)`
+/// 2. Interactor processes actions and updates `ArticleDetailDomainState`
+/// 3. State changes are published via `statePublisher`
+///
+/// ## Dependencies
+/// - `StorageService`: Manages bookmarks and reading history
 @MainActor
 final class ArticleDetailDomainInteractor: CombineInteractor {
     typealias DomainState = ArticleDetailDomainState
