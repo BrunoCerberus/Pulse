@@ -19,6 +19,7 @@ struct HomeViewModelTests {
 
         serviceLocator.register(NewsService.self, instance: mockNewsService)
         serviceLocator.register(StorageService.self, instance: mockStorageService)
+        serviceLocator.register(SettingsService.self, instance: MockSettingsService())
 
         sut = HomeViewModel(serviceLocator: serviceLocator)
     }
@@ -113,7 +114,9 @@ struct HomeViewModelTests {
             hasMorePages: true,
             hasLoadedInitialData: true,
             selectedArticle: nil,
-            articleToShare: nil
+            articleToShare: nil,
+            selectedCategory: nil,
+            followedTopics: []
         )
 
         let viewState = reducer.reduce(domainState: domainState)

@@ -19,12 +19,14 @@ import Foundation
 /// - `NewsService`: Fetches articles from Supabase/Guardian API
 /// - `StorageService`: Persists reading history and bookmarks
 @MainActor
+// swiftlint:disable:next type_body_length
 final class HomeDomainInteractor: CombineInteractor {
     typealias DomainState = HomeDomainState
     typealias DomainAction = HomeDomainAction
 
     private let newsService: NewsService
     private let storageService: StorageService
+    private let settingsService: SettingsService
     private let stateSubject = CurrentValueSubject<HomeDomainState, Never>(.initial)
     private var cancellables = Set<AnyCancellable>()
     private var backgroundTasks = Set<Task<Void, Never>>()
@@ -51,6 +53,13 @@ final class HomeDomainInteractor: CombineInteractor {
             Logger.shared.service("Failed to retrieve StorageService: \(error)", level: .warning)
             storageService = LiveStorageService()
         }
+
+        do {
+            settingsService = try serviceLocator.retrieve(SettingsService.self)
+        } catch {
+            Logger.shared.service("Failed to retrieve SettingsService: \(error)", level: .warning)
+            settingsService = LiveSettingsService(storageService: storageService)
+        }
     }
 
     func dispatch(action: HomeDomainAction) {
@@ -71,6 +80,8 @@ final class HomeDomainInteractor: CombineInteractor {
             findArticle(by: articleId).map { shareArticle($0) }
         case .clearArticleToShare:
             clearArticleToShare()
+        case let .selectCategory(category):
+            handleSelectCategory(category)
         }
     }
 
@@ -87,34 +98,62 @@ final class HomeDomainInteractor: CombineInteractor {
             state.error = nil
         }
 
+        // Load followed topics from preferences
+        loadFollowedTopics()
+
         // NewsAPI free tier has best coverage for US
         let country = "us"
+        let selectedCategory = currentState.selectedCategory
 
-        Publishers.Zip(
-            newsService.fetchBreakingNews(country: country),
-            newsService.fetchTopHeadlines(country: country, page: 1)
-        )
-        .sink { [weak self] completion in
-            if case let .failure(error) = completion {
-                self?.updateState { state in
-                    state.isLoading = false
-                    state.error = error.localizedDescription
+        // When a category is selected, only fetch headlines for that category (no breaking news)
+        if let category = selectedCategory {
+            newsService.fetchTopHeadlines(category: category, country: country, page: 1)
+                .sink { [weak self] completion in
+                    if case let .failure(error) = completion {
+                        self?.updateState { state in
+                            state.isLoading = false
+                            state.error = error.localizedDescription
+                        }
+                    }
+                } receiveValue: { [weak self] headlines in
+                    self?.updateState { state in
+                        state.breakingNews = []
+                        state.headlines = headlines
+                        state.isLoading = false
+                        state.currentPage = 1
+                        state.hasMorePages = headlines.count >= 20
+                        state.hasLoadedInitialData = true
+                    }
                 }
+                .store(in: &cancellables)
+        } else {
+            // "All" tab: fetch both breaking news and headlines
+            Publishers.Zip(
+                newsService.fetchBreakingNews(country: country),
+                newsService.fetchTopHeadlines(country: country, page: 1)
+            )
+            .sink { [weak self] completion in
+                if case let .failure(error) = completion {
+                    self?.updateState { state in
+                        state.isLoading = false
+                        state.error = error.localizedDescription
+                    }
+                }
+            } receiveValue: { [weak self] breaking, headlines in
+                self?.updateState { state in
+                    state.breakingNews = breaking
+                    state.headlines = self?.deduplicateArticles(headlines, excluding: breaking) ?? headlines
+                    state.isLoading = false
+                    state.currentPage = 1
+                    state.hasMorePages = headlines.count >= 20
+                    state.hasLoadedInitialData = true
+                }
+                // Update widget with latest headlines
+                let allArticles = breaking + headlines
+                WidgetDataManager.shared.saveArticlesForWidget(allArticles)
             }
-        } receiveValue: { [weak self] breaking, headlines in
-            self?.updateState { state in
-                state.breakingNews = breaking
-                state.headlines = self?.deduplicateArticles(headlines, excluding: breaking) ?? headlines
-                state.isLoading = false
-                state.currentPage = 1
-                state.hasMorePages = headlines.count >= 20
-                state.hasLoadedInitialData = true
-            }
-            // Update widget with latest headlines
-            let allArticles = breaking + headlines
-            WidgetDataManager.shared.saveArticlesForWidget(allArticles)
+            .store(in: &cancellables)
         }
-        .store(in: &cancellables)
     }
 
     private func loadMoreHeadlines() {
@@ -127,8 +166,16 @@ final class HomeDomainInteractor: CombineInteractor {
         // NewsAPI free tier has best coverage for US
         let country = "us"
         let nextPage = currentState.currentPage + 1
+        let selectedCategory = currentState.selectedCategory
 
-        newsService.fetchTopHeadlines(country: country, page: nextPage)
+        let headlinesPublisher: AnyPublisher<[Article], Error>
+        if let category = selectedCategory {
+            headlinesPublisher = newsService.fetchTopHeadlines(category: category, country: country, page: nextPage)
+        } else {
+            headlinesPublisher = newsService.fetchTopHeadlines(country: country, page: nextPage)
+        }
+
+        headlinesPublisher
             .sink { [weak self] completion in
                 if case .failure = completion {
                     self?.updateState { state in
@@ -165,32 +212,60 @@ final class HomeDomainInteractor: CombineInteractor {
             state.hasLoadedInitialData = false
         }
 
-        let country = "us"
+        // Reload followed topics
+        loadFollowedTopics()
 
-        Publishers.Zip(
-            newsService.fetchBreakingNews(country: country),
-            newsService.fetchTopHeadlines(country: country, page: 1)
-        )
-        .sink { [weak self] completion in
-            if case let .failure(error) = completion {
-                self?.updateState { state in
-                    state.isRefreshing = false
-                    state.error = error.localizedDescription
+        let country = "us"
+        let selectedCategory = currentState.selectedCategory
+
+        // When a category is selected, only fetch headlines for that category
+        if let category = selectedCategory {
+            newsService.fetchTopHeadlines(category: category, country: country, page: 1)
+                .sink { [weak self] completion in
+                    if case let .failure(error) = completion {
+                        self?.updateState { state in
+                            state.isRefreshing = false
+                            state.error = error.localizedDescription
+                        }
+                    }
+                } receiveValue: { [weak self] headlines in
+                    self?.updateState { state in
+                        state.breakingNews = []
+                        state.headlines = headlines
+                        state.isRefreshing = false
+                        state.currentPage = 1
+                        state.hasMorePages = headlines.count >= 20
+                        state.hasLoadedInitialData = true
+                    }
                 }
+                .store(in: &cancellables)
+        } else {
+            // "All" tab: fetch both breaking news and headlines
+            Publishers.Zip(
+                newsService.fetchBreakingNews(country: country),
+                newsService.fetchTopHeadlines(country: country, page: 1)
+            )
+            .sink { [weak self] completion in
+                if case let .failure(error) = completion {
+                    self?.updateState { state in
+                        state.isRefreshing = false
+                        state.error = error.localizedDescription
+                    }
+                }
+            } receiveValue: { [weak self] breaking, headlines in
+                self?.updateState { state in
+                    state.breakingNews = breaking
+                    state.headlines = self?.deduplicateArticles(headlines, excluding: breaking) ?? headlines
+                    state.isRefreshing = false
+                    state.currentPage = 1
+                    state.hasMorePages = headlines.count >= 20
+                    state.hasLoadedInitialData = true
+                }
+                let allArticles = breaking + headlines
+                WidgetDataManager.shared.saveArticlesForWidget(allArticles)
             }
-        } receiveValue: { [weak self] breaking, headlines in
-            self?.updateState { state in
-                state.breakingNews = breaking
-                state.headlines = self?.deduplicateArticles(headlines, excluding: breaking) ?? headlines
-                state.isRefreshing = false
-                state.currentPage = 1
-                state.hasMorePages = headlines.count >= 20
-                state.hasLoadedInitialData = true
-            }
-            let allArticles = breaking + headlines
-            WidgetDataManager.shared.saveArticlesForWidget(allArticles)
+            .store(in: &cancellables)
         }
-        .store(in: &cancellables)
     }
 
     private func selectArticle(_ article: Article) {
@@ -216,6 +291,90 @@ final class HomeDomainInteractor: CombineInteractor {
         updateState { state in
             state.articleToShare = nil
         }
+    }
+
+    private func handleSelectCategory(_ category: NewsCategory?) {
+        // Skip if already on this category
+        guard category != currentState.selectedCategory else { return }
+
+        updateState { state in
+            state.selectedCategory = category
+            state.headlines = []
+            state.breakingNews = []
+            state.currentPage = 1
+            state.hasMorePages = true
+            state.hasLoadedInitialData = false
+            state.isLoading = true
+            state.error = nil
+        }
+
+        let country = "us"
+
+        if let category {
+            // Fetch category-filtered headlines
+            newsService.fetchTopHeadlines(category: category, country: country, page: 1)
+                .sink { [weak self] completion in
+                    if case let .failure(error) = completion {
+                        self?.updateState { state in
+                            state.isLoading = false
+                            state.error = error.localizedDescription
+                        }
+                    }
+                } receiveValue: { [weak self] headlines in
+                    self?.updateState { state in
+                        state.headlines = headlines
+                        state.isLoading = false
+                        state.currentPage = 1
+                        state.hasMorePages = headlines.count >= 20
+                        state.hasLoadedInitialData = true
+                    }
+                }
+                .store(in: &cancellables)
+        } else {
+            // "All" tab: fetch both breaking news and headlines
+            Publishers.Zip(
+                newsService.fetchBreakingNews(country: country),
+                newsService.fetchTopHeadlines(country: country, page: 1)
+            )
+            .sink { [weak self] completion in
+                if case let .failure(error) = completion {
+                    self?.updateState { state in
+                        state.isLoading = false
+                        state.error = error.localizedDescription
+                    }
+                }
+            } receiveValue: { [weak self] breaking, headlines in
+                self?.updateState { state in
+                    state.breakingNews = breaking
+                    state.headlines = self?.deduplicateArticles(headlines, excluding: breaking) ?? headlines
+                    state.isLoading = false
+                    state.currentPage = 1
+                    state.hasMorePages = headlines.count >= 20
+                    state.hasLoadedInitialData = true
+                }
+                let allArticles = breaking + headlines
+                WidgetDataManager.shared.saveArticlesForWidget(allArticles)
+            }
+            .store(in: &cancellables)
+        }
+    }
+
+    private func loadFollowedTopics() {
+        settingsService.fetchPreferences()
+            .receive(on: DispatchQueue.main)
+            .sink(
+                receiveCompletion: { completion in
+                    if case let .failure(error) = completion {
+                        Logger.shared.service("Failed to load followed topics: \(error)", level: .warning)
+                    }
+                },
+                receiveValue: { [weak self] preferences in
+                    self?.updateState { state in
+                        state.followedTopics = preferences.followedTopics
+                    }
+                }
+            )
+            .store(in: &cancellables)
     }
 
     private func saveToReadingHistory(_ article: Article) {

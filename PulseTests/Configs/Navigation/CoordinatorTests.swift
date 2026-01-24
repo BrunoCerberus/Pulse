@@ -11,17 +11,7 @@ struct CoordinatorTests {
     let sut: Coordinator
 
     init() {
-        serviceLocator = ServiceLocator()
-        // Register mock services
-        serviceLocator.register(NewsService.self, instance: MockNewsService())
-        serviceLocator.register(StorageService.self, instance: MockStorageService())
-        serviceLocator.register(SearchService.self, instance: MockSearchService())
-        serviceLocator.register(ForYouService.self, instance: MockForYouService())
-        serviceLocator.register(LLMService.self, instance: MockLLMService())
-        serviceLocator.register(SummarizationService.self, instance: MockSummarizationService())
-        serviceLocator.register(BookmarksService.self, instance: MockBookmarksService())
-        serviceLocator.register(SettingsService.self, instance: MockSettingsService())
-
+        serviceLocator = TestServiceLocatorFactory.createFullyMocked()
         sut = Coordinator(serviceLocator: serviceLocator)
     }
 
@@ -31,7 +21,7 @@ struct CoordinatorTests {
     func initialStateIsCorrect() {
         #expect(sut.selectedTab == .home)
         #expect(sut.homePath.isEmpty)
-        #expect(sut.forYouPath.isEmpty)
+        #expect(sut.feedPath.isEmpty)
         #expect(sut.bookmarksPath.isEmpty)
         #expect(sut.searchPath.isEmpty)
     }
@@ -53,9 +43,9 @@ struct CoordinatorTests {
         sut.selectedTab = .home
         let article = Article.mockArticles[0]
 
-        sut.push(page: .articleDetail(article), in: .forYou)
+        sut.push(page: .articleDetail(article), in: .feed)
 
-        #expect(sut.forYouPath.count == 1)
+        #expect(sut.feedPath.count == 1)
         #expect(sut.homePath.isEmpty)
     }
 
@@ -137,23 +127,23 @@ struct CoordinatorTests {
     func popToRootInSpecificTabClearsThatTab() {
         sut.selectedTab = .home
         let article = Article.mockArticles[0]
-        sut.push(page: .articleDetail(article), in: .forYou)
+        sut.push(page: .articleDetail(article), in: .feed)
 
-        sut.popToRoot(in: .forYou)
+        sut.popToRoot(in: .feed)
 
-        #expect(sut.forYouPath.isEmpty)
+        #expect(sut.feedPath.isEmpty)
     }
 
     @Test("Pop to root does not affect other tabs")
     func popToRootDoesNotAffectOtherTabs() {
         let article = Article.mockArticles[0]
         sut.push(page: .articleDetail(article), in: .home)
-        sut.push(page: .articleDetail(article), in: .forYou)
+        sut.push(page: .articleDetail(article), in: .feed)
 
         sut.popToRoot(in: .home)
 
         #expect(sut.homePath.isEmpty)
-        #expect(sut.forYouPath.count == 1)
+        #expect(sut.feedPath.count == 1)
     }
 
     // MARK: - Switch Tab Tests
@@ -170,23 +160,23 @@ struct CoordinatorTests {
     @Test("Switch tab with popToRoot clears target tab")
     func switchTabWithPopToRootClearsTargetTab() {
         let article = Article.mockArticles[0]
-        sut.push(page: .articleDetail(article), in: .forYou)
+        sut.push(page: .articleDetail(article), in: .feed)
 
-        sut.switchTab(to: .forYou, popToRoot: true)
+        sut.switchTab(to: .feed, popToRoot: true)
 
-        #expect(sut.selectedTab == .forYou)
-        #expect(sut.forYouPath.isEmpty)
+        #expect(sut.selectedTab == .feed)
+        #expect(sut.feedPath.isEmpty)
     }
 
     @Test("Switch tab without popToRoot preserves navigation")
     func switchTabWithoutPopToRootPreservesNavigation() {
         let article = Article.mockArticles[0]
-        sut.push(page: .articleDetail(article), in: .forYou)
+        sut.push(page: .articleDetail(article), in: .feed)
 
-        sut.switchTab(to: .forYou, popToRoot: false)
+        sut.switchTab(to: .feed, popToRoot: false)
 
-        #expect(sut.selectedTab == .forYou)
-        #expect(sut.forYouPath.count == 1)
+        #expect(sut.selectedTab == .feed)
+        #expect(sut.feedPath.count == 1)
     }
 
     // MARK: - Tab Independence Tests
@@ -197,11 +187,11 @@ struct CoordinatorTests {
 
         sut.push(page: .articleDetail(article), in: .home)
         sut.push(page: .settings, in: .home)
-        sut.push(page: .articleDetail(article), in: .forYou)
+        sut.push(page: .articleDetail(article), in: .feed)
         sut.push(page: .articleDetail(article), in: .bookmarks)
 
         #expect(sut.homePath.count == 2)
-        #expect(sut.forYouPath.count == 1)
+        #expect(sut.feedPath.count == 1)
         #expect(sut.bookmarksPath.count == 1)
         #expect(sut.searchPath.isEmpty)
     }
@@ -210,14 +200,14 @@ struct CoordinatorTests {
     func switchingTabsPreservesAllNavigationState() {
         let article = Article.mockArticles[0]
         sut.push(page: .articleDetail(article), in: .home)
-        sut.push(page: .articleDetail(article), in: .forYou)
+        sut.push(page: .articleDetail(article), in: .feed)
 
         sut.switchTab(to: .search)
         sut.switchTab(to: .bookmarks)
         sut.switchTab(to: .home)
 
         #expect(sut.homePath.count == 1)
-        #expect(sut.forYouPath.count == 1)
+        #expect(sut.feedPath.count == 1)
     }
 
     // MARK: - ViewModel Lazy Initialization Tests (Consolidated)
@@ -226,7 +216,7 @@ struct CoordinatorTests {
     func allViewModelsAreLazilyInitialized() {
         // Access each viewModel and verify it's not nil
         #expect(sut.homeViewModel != nil)
-        #expect(sut.forYouViewModel != nil)
+        #expect(sut.feedViewModel != nil)
         #expect(sut.bookmarksViewModel != nil)
         #expect(sut.searchViewModel != nil)
         #expect(sut.settingsViewModel != nil)
@@ -237,9 +227,8 @@ struct CoordinatorTests {
     @Test("AppTab has all expected cases with symbol images")
     func appTabHasAllExpectedCasesWithSymbols() {
         let allTabs = AppTab.allCases
-        #expect(allTabs.count == 5)
+        #expect(allTabs.count == 4)
         #expect(allTabs.contains(.home))
-        #expect(allTabs.contains(.forYou))
         #expect(allTabs.contains(.feed))
         #expect(allTabs.contains(.bookmarks))
         #expect(allTabs.contains(.search))

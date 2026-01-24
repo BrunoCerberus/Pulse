@@ -18,7 +18,9 @@ struct HomeViewStateReducerTests {
         hasMorePages: Bool = true,
         hasLoadedInitialData: Bool = true,
         selectedArticle: Article? = nil,
-        articleToShare: Article? = nil
+        articleToShare: Article? = nil,
+        selectedCategory: NewsCategory? = nil,
+        followedTopics: [NewsCategory] = []
     ) -> HomeDomainState {
         HomeDomainState(
             breakingNews: breakingNews,
@@ -31,7 +33,9 @@ struct HomeViewStateReducerTests {
             hasMorePages: hasMorePages,
             hasLoadedInitialData: hasLoadedInitialData,
             selectedArticle: selectedArticle,
-            articleToShare: articleToShare
+            articleToShare: articleToShare,
+            selectedCategory: selectedCategory,
+            followedTopics: followedTopics
         )
     }
 

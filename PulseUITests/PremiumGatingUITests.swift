@@ -59,54 +59,6 @@ final class PremiumGatingNonPremiumUITests: BaseUITestCase {
         app.swipeDown()
     }
 
-    // MARK: - For You Tab Premium Gate
-
-    /// Tests that non-premium users see the premium gate on For You tab
-    func testForYouTabShowsPremiumGateForNonPremiumUser() throws {
-        // Navigate to For You tab
-        let forYouTab = app.tabBars.buttons["For You"]
-        XCTAssertTrue(forYouTab.waitForExistence(timeout: Self.launchTimeout), "For You tab should exist")
-
-        navigateToForYouTab()
-
-        // Non-premium users should see the premium gate
-        let premiumBadge = app.staticTexts["Premium Feature"]
-        let premiumTitle = app.staticTexts["Personalized For You"]
-        let unlockButton = app.buttons["Unlock Premium"]
-
-        let hasPremiumGate = waitForAny([premiumBadge, premiumTitle, unlockButton], timeout: 10)
-        XCTAssertTrue(hasPremiumGate, "Non-premium user should see premium gate on For You tab")
-
-        // Should NOT see regular For You content (onboarding or articles)
-        let personalizeText = app.staticTexts["Personalize Your Feed"]
-        let noArticlesText = app.staticTexts["No Articles"]
-        XCTAssertFalse(personalizeText.exists, "Non-premium user should not see For You onboarding")
-        XCTAssertFalse(noArticlesText.exists, "Non-premium user should not see For You empty state")
-    }
-
-    /// Tests that tapping Unlock Premium on For You shows paywall
-    func testForYouUnlockButtonShowsPaywall() throws {
-        navigateToForYouTab()
-
-        let unlockButton = app.buttons["Unlock Premium"]
-        guard unlockButton.waitForExistence(timeout: 10) else {
-            XCTFail("Unlock Premium button should exist for non-premium user")
-            return
-        }
-
-        unlockButton.tap()
-
-        // Paywall sheet should appear
-        let paywallTitle = app.staticTexts["Unlock Premium"]
-        let subscriptionView = app.scrollViews.firstMatch
-
-        let paywallAppeared = paywallTitle.waitForExistence(timeout: 5) || subscriptionView.waitForExistence(timeout: 5)
-        XCTAssertTrue(paywallAppeared, "Paywall should appear after tapping Unlock Premium")
-
-        // Dismiss the sheet
-        app.swipeDown()
-    }
-
     // MARK: - Article Summarization Premium Gate
 
     /// Tests that non-premium users see paywall when tapping summarize button
@@ -269,36 +221,6 @@ final class PremiumGatingPremiumUITests: XCTestCase {
         XCTAssertTrue(hasFeedContent, "Premium user should see Feed content (digest, empty, error, or loading)")
     }
 
-    // MARK: - For You Tab Premium Access
-
-    /// Tests that premium users see For You content
-    func testForYouTabShowsContentForPremiumUser() throws {
-        // Navigate to For You tab
-        let forYouTab = app.tabBars.buttons["For You"]
-        XCTAssertTrue(forYouTab.waitForExistence(timeout: Self.launchTimeout), "For You tab should exist")
-
-        navigateToForYouTab()
-
-        // Premium users should see actual content, not the gate
-        let premiumGateTitle = app.staticTexts["Personalized For You"]
-        let unlockButton = app.buttons["Unlock Premium"]
-
-        // Wait for content to load
-        wait(for: 2.0)
-
-        // Should NOT see premium gate elements (check separately for clarity)
-        XCTAssertFalse(unlockButton.exists, "Premium user should not see unlock button")
-
-        // Should see some For You content indicators
-        let personalizeText = app.staticTexts["Personalize Your Feed"]
-        let noArticlesText = app.staticTexts["No Articles"]
-        let errorText = app.staticTexts["Unable to Load Feed"]
-        let scrollView = app.scrollViews.firstMatch
-
-        let hasForYouContent = waitForAny([personalizeText, noArticlesText, errorText, scrollView], timeout: 10)
-        XCTAssertTrue(hasForYouContent, "Premium user should see For You content")
-    }
-
     // MARK: - Article Summarization Premium Access
 
     /// Tests that premium users can access summarization
@@ -363,21 +285,6 @@ final class PremiumGatingPremiumUITests: XCTestCase {
             }
         }
         _ = app.navigationBars["Daily Digest"].waitForExistence(timeout: Self.defaultTimeout)
-    }
-
-    func navigateToForYouTab() {
-        let forYouTab = app.tabBars.buttons["For You"]
-        // Use waitForExistence for CI reliability
-        if forYouTab.waitForExistence(timeout: Self.shortTimeout), !forYouTab.isSelected {
-            forYouTab.tap()
-        } else if !forYouTab.exists {
-            // Fallback: try finding the button directly
-            let forYouButton = app.buttons["For You"]
-            if forYouButton.waitForExistence(timeout: 2), !forYouButton.isSelected {
-                forYouButton.tap()
-            }
-        }
-        _ = app.navigationBars["For You"].waitForExistence(timeout: Self.defaultTimeout)
     }
 
     func resetToHomeTab() {

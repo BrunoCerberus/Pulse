@@ -10,6 +10,9 @@ struct HomeViewState: Equatable {
     var showEmptyState: Bool
     var selectedArticle: Article?
     var articleToShare: Article?
+    var selectedCategory: NewsCategory?
+    var followedTopics: [NewsCategory]
+    var showCategoryTabs: Bool
 
     static var initial: HomeViewState {
         HomeViewState(
@@ -21,7 +24,10 @@ struct HomeViewState: Equatable {
             errorMessage: nil,
             showEmptyState: false,
             selectedArticle: nil,
-            articleToShare: nil
+            articleToShare: nil,
+            selectedCategory: nil,
+            followedTopics: [],
+            showCategoryTabs: false
         )
     }
 }

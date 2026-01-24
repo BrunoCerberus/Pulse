@@ -19,6 +19,7 @@ struct HomeDomainInteractorTests {
 
         serviceLocator.register(NewsService.self, instance: mockNewsService)
         serviceLocator.register(StorageService.self, instance: mockStorageService)
+        serviceLocator.register(SettingsService.self, instance: MockSettingsService())
 
         sut = HomeDomainInteractor(serviceLocator: serviceLocator)
     }

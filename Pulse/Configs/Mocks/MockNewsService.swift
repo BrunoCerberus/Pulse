@@ -87,14 +87,6 @@ final class MockBookmarksService: BookmarksService {
     }
 }
 
-final class MockForYouService: ForYouService {
-    var feedResult: Result<[Article], Error> = .success(Article.mockArticles)
-
-    func fetchPersonalizedFeed(preferences _: UserPreferences, page _: Int) -> AnyPublisher<[Article], Error> {
-        feedResult.publisher.eraseToAnyPublisher()
-    }
-}
-
 final class MockSettingsService: SettingsService {
     var preferences: UserPreferences = .default
 
@@ -392,7 +384,6 @@ extension ServiceLocator {
         locator.register(NewsService.self, instance: MockNewsService())
         locator.register(SearchService.self, instance: MockSearchService())
         locator.register(BookmarksService.self, instance: MockBookmarksService())
-        locator.register(ForYouService.self, instance: MockForYouService())
         locator.register(SettingsService.self, instance: MockSettingsService())
         locator.register(StorageService.self, instance: MockStorageService())
         locator.register(StoreKitService.self, instance: MockStoreKitService())
@@ -414,7 +405,6 @@ extension ServiceLocator {
         locator.register(NewsService.self, instance: MockNewsService())
         locator.register(SearchService.self, instance: MockSearchService())
         locator.register(BookmarksService.self, instance: MockBookmarksService())
-        locator.register(ForYouService.self, instance: MockForYouService())
         locator.register(SettingsService.self, instance: MockSettingsService())
         locator.register(StorageService.self, instance: MockStorageService())
         locator.register(StoreKitService.self, instance: MockStoreKitService())

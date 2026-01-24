@@ -15,7 +15,6 @@ import SwiftUI
 enum PremiumFeature {
     case dailyDigest
     case articleSummarization
-    case forYouFeed
 
     var icon: String {
         switch self {
@@ -23,8 +22,6 @@ enum PremiumFeature {
             return "sparkles"
         case .articleSummarization:
             return "doc.text.magnifyingglass"
-        case .forYouFeed:
-            return "heart.text.square.fill"
         }
     }
 
@@ -34,8 +31,6 @@ enum PremiumFeature {
             return .purple
         case .articleSummarization:
             return .blue
-        case .forYouFeed:
-            return .orange
         }
     }
 
@@ -45,8 +40,6 @@ enum PremiumFeature {
             return String(localized: "premium_gate.daily_digest.title")
         case .articleSummarization:
             return String(localized: "premium_gate.summarization.title")
-        case .forYouFeed:
-            return String(localized: "premium_gate.for_you.title")
         }
     }
 
@@ -56,8 +49,6 @@ enum PremiumFeature {
             return String(localized: "premium_gate.daily_digest.description")
         case .articleSummarization:
             return String(localized: "premium_gate.summarization.description")
-        case .forYouFeed:
-            return String(localized: "premium_gate.for_you.description")
         }
     }
 }
@@ -210,13 +201,6 @@ extension View {
 #Preview {
     PremiumGateView(
         feature: .dailyDigest,
-        serviceLocator: .preview
-    )
-}
-
-#Preview("For You Gate") {
-    PremiumGateView(
-        feature: .forYouFeed,
         serviceLocator: .preview
     )
 }

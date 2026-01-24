@@ -88,35 +88,6 @@ struct LiveServicesBasicTests {
         #expect(true)
     }
 
-    // MARK: - LiveForYouService Tests
-
-    @Test("LiveForYouService can be instantiated")
-    func liveForYouServiceInstantiation() {
-        let mockStorageService = MockStorageService()
-        let sut = LiveForYouService(storageService: mockStorageService)
-        #expect(sut != nil)
-    }
-
-    @Test("LiveForYouService fetchPersonalizedFeed returns publisher")
-    func liveForYouServiceFetchPersonalizedFeed() {
-        let mockStorageService = MockStorageService()
-        let sut = LiveForYouService(storageService: mockStorageService)
-        var cancellables = Set<AnyCancellable>()
-
-        let preferences = UserPreferences.default
-        let publisher = sut.fetchPersonalizedFeed(preferences: preferences, page: 1)
-
-        publisher
-            .sink(
-                receiveCompletion: { _ in },
-                receiveValue: { (_: [Article]) in }
-            )
-            .store(in: &cancellables)
-
-        // Smoke test: Verifies method signature and return type contract
-        #expect(true)
-    }
-
     // MARK: - LiveBookmarksService Tests
 
     @Test("LiveBookmarksService can be instantiated")
@@ -232,29 +203,5 @@ struct LiveServicesBasicTests {
         // Note: Requires Firebase Remote Config to be configured
         // Comprehensive testing would require Firebase SDK mocking
         #expect(true) // Placeholder - actual instantiation depends on Firebase setup
-    }
-}
-
-/// Extended tests for LiveForYouService business logic
-@Suite("LiveForYouService Business Logic Tests")
-struct LiveForYouServiceBusinessLogicTests {
-    // Note: The filterMutedContent method is private, so we test it indirectly
-    // through the public API. For more thorough testing, consider:
-    // 1. Making the method internal for testing
-    // 2. Using @testable import to access private methods
-    // 3. Creating a separate filtering utility class
-
-    @Test("Personalized feed respects muted sources (integration test)")
-    func personalizedFeedRespectsMutedSources() async throws {
-        // This would require actual network calls or extensive mocking
-        // Current architecture properly tests this through Mock services
-        #expect(true)
-    }
-
-    @Test("Personalized feed respects muted keywords (integration test)")
-    func personalizedFeedRespectsMutedKeywords() async throws {
-        // This would require actual network calls or extensive mocking
-        // Current architecture properly tests this through Mock services
-        #expect(true)
     }
 }

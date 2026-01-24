@@ -83,9 +83,6 @@ final class DeeplinkRouter {
         case .home:
             coordinator.switchTab(to: .home, popToRoot: true)
 
-        case .forYou:
-            coordinator.switchTab(to: .forYou, popToRoot: true)
-
         case let .search(query):
             coordinator.switchTab(to: .search, popToRoot: true)
             if let query, !query.isEmpty {

@@ -39,6 +39,12 @@ struct HomeDomainState: Equatable {
     /// Article selected for sharing via share sheet.
     var articleToShare: Article?
 
+    /// Currently selected category filter (nil = "All").
+    var selectedCategory: NewsCategory?
+
+    /// User's followed topics from preferences.
+    var followedTopics: [NewsCategory]
+
     /// Creates the default initial state.
     static var initial: HomeDomainState {
         HomeDomainState(
@@ -52,7 +58,9 @@ struct HomeDomainState: Equatable {
             hasMorePages: true,
             hasLoadedInitialData: false,
             selectedArticle: nil,
-            articleToShare: nil
+            articleToShare: nil,
+            selectedCategory: nil,
+            followedTopics: []
         )
     }
 }

@@ -71,7 +71,7 @@ class BaseUITestCase: XCTestCase {
         // Fallback: If primary check fails but buttons exist, check for tab bar buttons directly
         // This handles CI environments where tabBars query may have timing issues
         if !appReady {
-            let tabButtonNames = ["Home", "For You", "Feed", "Bookmarks", "Search"]
+            let tabButtonNames = ["Home", "Feed", "Bookmarks", "Search"]
             for name in tabButtonNames {
                 let tabButton = app.buttons[name]
                 if tabButton.waitForExistence(timeout: 2) {
@@ -171,22 +171,6 @@ class BaseUITestCase: XCTestCase {
             }
         }
         _ = app.navigationBars["Search"].waitForExistence(timeout: Self.defaultTimeout)
-    }
-
-    /// Navigate to For You tab and verify navigation bar appears
-    func navigateToForYouTab() {
-        let forYouTab = app.tabBars.buttons["For You"]
-        // Use waitForExistence for CI reliability - tab bar may not be immediately available
-        if forYouTab.waitForExistence(timeout: Self.shortTimeout), !forYouTab.isSelected {
-            forYouTab.tap()
-        } else if !forYouTab.exists {
-            // Fallback: try finding the button directly
-            let forYouButton = app.buttons["For You"]
-            if forYouButton.waitForExistence(timeout: 2), !forYouButton.isSelected {
-                forYouButton.tap()
-            }
-        }
-        _ = app.navigationBars["For You"].waitForExistence(timeout: Self.defaultTimeout)
     }
 
     /// Navigate to Feed tab and verify navigation bar appears
