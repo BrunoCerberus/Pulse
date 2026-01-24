@@ -2,6 +2,17 @@ import Combine
 import EntropyCore
 import Foundation
 
+/// ViewModel for the For You (personalized feed) screen.
+///
+/// Implements `CombineViewModel` to transform domain state into view state.
+/// Provides personalized articles based on the user's followed topics.
+///
+/// ## Features
+/// - Personalized feed based on preferences
+/// - Infinite scroll with pagination
+/// - Topic onboarding when no topics are followed
+///
+/// - Note: This is a **Premium** feature.
 @MainActor
 final class ForYouViewModel: CombineViewModel, ObservableObject {
     typealias ViewState = ForYouViewState

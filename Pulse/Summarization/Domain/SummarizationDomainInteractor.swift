@@ -2,6 +2,23 @@ import Combine
 import EntropyCore
 import Foundation
 
+/// Domain interactor for the Article Summarization feature.
+///
+/// Manages business logic and state for AI-powered article summarization, including:
+/// - On-device LLM model loading with progress tracking
+/// - Streaming text generation with token batching
+/// - Summarization cancellation
+/// - LLM output cleanup (removing chat template markers)
+///
+/// ## Data Flow
+/// 1. Views dispatch `SummarizationDomainAction` via `dispatch(action:)`
+/// 2. Interactor processes actions and updates `SummarizationDomainState`
+/// 3. State changes are published via `statePublisher`
+///
+/// ## Dependencies
+/// - `SummarizationService`: Manages LLM model and summarization
+///
+/// - Note: This is a **Premium** feature.
 final class SummarizationDomainInteractor: CombineInteractor {
     typealias DomainState = SummarizationDomainState
     typealias DomainAction = SummarizationDomainAction

@@ -2,6 +2,18 @@ import Combine
 import EntropyCore
 import Foundation
 
+/// ViewModel for the Settings screen.
+///
+/// Implements `CombineViewModel` to manage user preferences and app settings.
+/// Combines state from multiple sources: interactor, ThemeManager, and AuthenticationManager.
+///
+/// ## Features
+/// - Topic management (follow/unfollow)
+/// - Notification settings
+/// - Dark mode and system theme toggle
+/// - Muted sources and keywords
+/// - Account management (sign out)
+/// - Clear reading history
 @MainActor
 final class SettingsViewModel: CombineViewModel, ObservableObject {
     typealias ViewState = SettingsViewState

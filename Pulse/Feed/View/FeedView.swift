@@ -16,6 +16,19 @@ private enum Constants {
 
 // MARK: - FeedView
 
+/// Feed screen displaying AI-powered daily digests.
+///
+/// This view gates premium content, showing `PremiumGateView` for non-premium users.
+/// For premium users, it displays the AI-generated digest based on their reading history.
+///
+/// ## Features
+/// - Premium status observation via StoreKit
+/// - AI digest generation using on-device LLM
+/// - Streaming text display during generation
+/// - BentoGrid layout for digest content
+/// - Empty state when no reading history exists
+///
+/// - Note: This is a **Premium** feature.
 struct FeedView<R: FeedNavigationRouter>: View {
     private var router: R
     private let serviceLocator: ServiceLocator

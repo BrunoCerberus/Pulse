@@ -1,7 +1,7 @@
 # Pulse Makefile
 # Build, test, and development automation
 
-.PHONY: help init install-xcodegen generate setup xcode test test-unit test-ui test-snapshot test-debug clean clean-packages coverage coverage-report coverage-badge deeplink-test lint format build build-release bump-patch bump-minor bump-major
+.PHONY: help init install-xcodegen generate setup xcode test test-unit test-ui test-snapshot test-debug clean clean-packages coverage coverage-report coverage-badge deeplink-test lint format build build-release bump-patch bump-minor bump-major docs
 
 # Default target
 help:
@@ -29,6 +29,7 @@ help:
 	@echo "  bump-patch        - Increase patch version (0.0.x)"
 	@echo "  bump-minor        - Increase minor version (0.x.0)"
 	@echo "  bump-major        - Increase major version (x.0.0)"
+	@echo "  docs              - Generate DocC documentation"
 	@echo "  help              - Show this help message"
 
 # Setup Mint, SwiftFormat, and SwiftLint
@@ -275,3 +276,20 @@ bump-major:
 	NEW_VERSION="$$NEW_MAJOR.0.0"; \
 	sed -i '' "s/MARKETING_VERSION: \"$$CURRENT\"/MARKETING_VERSION: \"$$NEW_VERSION\"/g" project.yml; \
 	echo "Version bumped: $$CURRENT -> $$NEW_VERSION"
+
+# Generate DocC documentation
+docs:
+	@echo "Generating DocC documentation..."
+	@xcodebuild docbuild \
+		-project Pulse.xcodeproj \
+		-scheme PulseDev \
+		-destination 'generic/platform=iOS' \
+		-derivedDataPath ./DerivedData \
+		DOCC_EXTRACT_SWIFT_INFO_FOR_OBJC_SYMBOLS=NO \
+		CODE_SIGNING_ALLOWED=NO
+	@echo ""
+	@echo "Documentation generated at:"
+	@echo "  ./DerivedData/Build/Products/Debug-iphoneos/Pulse.doccarchive"
+	@echo ""
+	@echo "To view, run:"
+	@echo "  open ./DerivedData/Build/Products/Debug-iphoneos/Pulse.doccarchive"

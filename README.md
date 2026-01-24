@@ -98,6 +98,195 @@ coordinator.build(page:)
 
 Views are generic over their router type (`HomeView<R: HomeNavigationRouter>`) for testability.
 
+## Quick Start: Adding a Feature
+
+Follow these steps to add a new feature module to Pulse:
+
+### 1. Create Feature Folder Structure
+
+```
+Pulse/
+└── MyFeature/
+    ├── API/
+    │   ├── MyFeatureService.swift       # Protocol
+    │   └── LiveMyFeatureService.swift   # Implementation
+    ├── Domain/
+    │   ├── MyFeatureDomainState.swift
+    │   ├── MyFeatureDomainAction.swift
+    │   ├── MyFeatureDomainInteractor.swift
+    │   ├── MyFeatureEventActionMap.swift
+    │   └── MyFeatureViewStateReducer.swift
+    ├── ViewModel/
+    │   └── MyFeatureViewModel.swift
+    ├── View/
+    │   └── MyFeatureView.swift
+    ├── ViewEvents/
+    │   └── MyFeatureViewEvent.swift
+    ├── ViewStates/
+    │   └── MyFeatureViewState.swift
+    └── Router/
+        └── MyFeatureNavigationRouter.swift
+```
+
+### 2. Define the Service Protocol
+
+```swift
+// API/MyFeatureService.swift
+protocol MyFeatureService {
+    func fetchData() -> AnyPublisher<[MyModel], Error>
+}
+```
+
+### 3. Create Domain State and Actions
+
+```swift
+// Domain/MyFeatureDomainState.swift
+struct MyFeatureDomainState: Equatable {
+    var items: [MyModel] = []
+    var isLoading: Bool = false
+    var error: String?
+}
+
+// Domain/MyFeatureDomainAction.swift
+enum MyFeatureDomainAction {
+    case loadData
+    case dataLoaded([MyModel])
+    case loadFailed(String)
+}
+```
+
+### 4. Implement the Interactor
+
+```swift
+// Domain/MyFeatureDomainInteractor.swift
+@MainActor
+final class MyFeatureDomainInteractor: CombineInteractor {
+    typealias DomainState = MyFeatureDomainState
+    typealias DomainAction = MyFeatureDomainAction
+
+    private let stateSubject = CurrentValueSubject<DomainState, Never>(.init())
+    var statePublisher: AnyPublisher<DomainState, Never> { stateSubject.eraseToAnyPublisher() }
+
+    private let myService: MyFeatureService
+
+    init(serviceLocator: ServiceLocator) {
+        self.myService = try! serviceLocator.retrieve(MyFeatureService.self)
+    }
+
+    func dispatch(action: DomainAction) {
+        switch action {
+        case .loadData:
+            loadData()
+        case .dataLoaded(let items):
+            stateSubject.value.items = items
+            stateSubject.value.isLoading = false
+        case .loadFailed(let error):
+            stateSubject.value.error = error
+            stateSubject.value.isLoading = false
+        }
+    }
+}
+```
+
+### 5. Register the Service
+
+In `PulseSceneDelegate.setupServices()`:
+
+```swift
+serviceLocator.register(MyFeatureService.self, instance: LiveMyFeatureService())
+```
+
+### 6. Add Navigation (if needed)
+
+Add a case to `Page.swift` and implement `build(page:)` in `Coordinator`.
+
+## Common Patterns
+
+### Event to Action Mapping
+
+```swift
+// Domain/MyFeatureEventActionMap.swift
+struct MyFeatureEventActionMap: DomainEventActionMap {
+    func map(event: MyFeatureViewEvent) -> MyFeatureDomainAction? {
+        switch event {
+        case .onAppear:
+            return .loadData
+        case .onRefresh:
+            return .loadData
+        case .onItemTapped(let id):
+            return .selectItem(id)
+        }
+    }
+}
+```
+
+### View State Reduction
+
+```swift
+// Domain/MyFeatureViewStateReducer.swift
+struct MyFeatureViewStateReducer: ViewStateReducing {
+    func reduce(domainState: MyFeatureDomainState) -> MyFeatureViewState {
+        MyFeatureViewState(
+            items: domainState.items.map { ItemViewItem(from: $0) },
+            isLoading: domainState.isLoading,
+            showEmptyState: domainState.items.isEmpty && !domainState.isLoading,
+            errorMessage: domainState.error
+        )
+    }
+}
+```
+
+### Generic Router Pattern
+
+```swift
+// Router/MyFeatureNavigationRouter.swift
+@MainActor
+protocol MyFeatureNavigationRouter: NavigationRouter where NavigationEvent == MyFeatureNavigationEvent {}
+
+enum MyFeatureNavigationEvent {
+    case itemDetail(MyModel)
+    case settings
+}
+
+@MainActor
+final class MyFeatureNavigationRouterImpl: MyFeatureNavigationRouter {
+    private weak var coordinator: Coordinator?
+
+    init(coordinator: Coordinator? = nil) {
+        self.coordinator = coordinator
+    }
+
+    func route(navigationEvent: MyFeatureNavigationEvent) {
+        switch navigationEvent {
+        case .itemDetail(let item):
+            coordinator?.push(page: .itemDetail(item))
+        case .settings:
+            coordinator?.push(page: .settings)
+        }
+    }
+}
+```
+
+### Testing with Mock Services
+
+```swift
+// In Tests
+func createTestServiceLocator() -> ServiceLocator {
+    let serviceLocator = ServiceLocator()
+    serviceLocator.register(MyFeatureService.self, instance: MockMyFeatureService())
+    return serviceLocator
+}
+
+@Test func testDataLoading() async {
+    let serviceLocator = createTestServiceLocator()
+    let interactor = MyFeatureDomainInteractor(serviceLocator: serviceLocator)
+
+    interactor.dispatch(action: .loadData)
+
+    // Assert state changes...
+}
+```
+
 ## Requirements
 
 - Xcode 26.0.1+

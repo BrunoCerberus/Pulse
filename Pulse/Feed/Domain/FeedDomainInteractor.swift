@@ -2,6 +2,24 @@ import Combine
 import EntropyCore
 import Foundation
 
+/// Domain interactor for the Feed (AI Daily Digest) feature.
+///
+/// Manages business logic and state for AI-powered digest generation, including:
+/// - Loading reading history from the last 48 hours
+/// - On-device LLM model lifecycle (preload, load, generate)
+/// - Streaming text generation with token batching
+/// - Digest caching and retrieval
+///
+/// ## Data Flow
+/// 1. Views dispatch `FeedDomainAction` via `dispatch(action:)`
+/// 2. Interactor processes actions and updates `FeedDomainState`
+/// 3. State changes are published via `statePublisher`
+///
+/// ## Dependencies
+/// - `FeedService`: Manages LLM model and digest generation
+/// - `StorageService`: Fetches reading history
+///
+/// - Note: This is a **Premium** feature.
 final class FeedDomainInteractor: CombineInteractor {
     typealias DomainState = FeedDomainState
     typealias DomainAction = FeedDomainAction
