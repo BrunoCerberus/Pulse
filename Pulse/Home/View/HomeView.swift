@@ -107,32 +107,46 @@ struct HomeView<R: HomeNavigationRouter>: View {
     // MARK: - Category Tab Bar
 
     private var categoryTabBar: some View {
-        ScrollView(.horizontal, showsIndicators: false) {
-            HStack(spacing: Spacing.sm) {
-                // "All" tab - always first
-                GlassTopicChip(
-                    topic: Constants.allCategory,
-                    isSelected: viewModel.viewState.selectedCategory == nil,
-                    color: Color.Accent.primary
-                ) {
-                    viewModel.handle(event: .onCategorySelected(nil))
-                }
-
-                // Followed topics tabs
-                ForEach(viewModel.viewState.followedTopics, id: \.self) { category in
-                    GlassTopicChip(
-                        topic: category.displayName,
-                        isSelected: viewModel.viewState.selectedCategory == category,
-                        color: category.color
-                    ) {
-                        viewModel.handle(event: .onCategorySelected(category))
+        HStack(spacing: Spacing.sm) {
+            // "All" tab - always first
+            Button {
+                HapticManager.shared.selectionChanged()
+                viewModel.handle(event: .onCategorySelected(nil))
+            } label: {
+                Text(Constants.allCategory)
+                    .font(Typography.labelMedium)
+                    .foregroundStyle(viewModel.viewState.selectedCategory == nil ? .white : Color.Accent.primary)
+                    .padding(.horizontal, Spacing.md)
+                    .padding(.vertical, Spacing.xs)
+                    .background {
+                        Capsule()
+                            .fill(viewModel.viewState.selectedCategory == nil ? Color.Accent.primary : Color.Accent.primary.opacity(0.15))
                     }
+            }
+
+            // Followed topics tabs
+            ForEach(viewModel.viewState.followedTopics, id: \.self) { category in
+                Button {
+                    HapticManager.shared.selectionChanged()
+                    viewModel.handle(event: .onCategorySelected(category))
+                } label: {
+                    Text(category.displayName)
+                        .font(Typography.labelMedium)
+                        .foregroundStyle(viewModel.viewState.selectedCategory == category ? .white : category.color)
+                        .padding(.horizontal, Spacing.md)
+                        .padding(.vertical, Spacing.xs)
+                        .background {
+                            Capsule()
+                                .fill(viewModel.viewState.selectedCategory == category ? category.color : category.color.opacity(0.15))
+                        }
                 }
             }
-            .padding(.horizontal, Spacing.md)
-            .padding(.vertical, Spacing.sm)
+
+            Spacer()
         }
-        .background(.ultraThinMaterial)
+        .padding(.horizontal, Spacing.md)
+        .padding(.vertical, Spacing.sm)
+        .background(Color(.secondarySystemBackground))
     }
 
     // MARK: - Content Views
