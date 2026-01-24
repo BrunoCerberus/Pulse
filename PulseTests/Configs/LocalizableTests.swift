@@ -75,13 +75,6 @@ struct TabBarLocalizableTests {
         #expect(value == "Home")
     }
 
-    @Test("For You tab is not empty")
-    func forYouTabIsNotEmpty() {
-        let value = String(localized: "tab.for_you")
-        #expect(!value.isEmpty)
-        #expect(value == "For You")
-    }
-
     @Test("Search tab is not empty")
     func searchTabIsNotEmpty() {
         let value = String(localized: "tab.search")
@@ -186,57 +179,6 @@ struct HomeLocalizableTests {
     @Test("Home empty message is not empty")
     func homeEmptyMessageIsNotEmpty() {
         let value = String(localized: "home.empty.message")
-        #expect(!value.isEmpty)
-    }
-}
-
-// MARK: - For You Screen Tests
-
-@Suite("For You Screen Localization Tests")
-struct ForYouLocalizableTests {
-    @Test("For You title is not empty")
-    func forYouTitleIsNotEmpty() {
-        let value = String(localized: "for_you.title")
-        #expect(!value.isEmpty)
-        #expect(value == "For You")
-    }
-
-    @Test("For You error title is not empty")
-    func forYouErrorTitleIsNotEmpty() {
-        let value = String(localized: "for_you.error.title")
-        #expect(!value.isEmpty)
-    }
-
-    @Test("For You empty title is not empty")
-    func forYouEmptyTitleIsNotEmpty() {
-        let value = String(localized: "for_you.empty.title")
-        #expect(!value.isEmpty)
-        #expect(value == "Personalize Your Feed")
-    }
-
-    @Test("For You empty message is not empty")
-    func forYouEmptyMessageIsNotEmpty() {
-        let value = String(localized: "for_you.empty.message")
-        #expect(!value.isEmpty)
-    }
-
-    @Test("Set preferences button is not empty")
-    func setPreferencesButtonIsNotEmpty() {
-        let value = String(localized: "for_you.set_preferences")
-        #expect(!value.isEmpty)
-        #expect(value == "Set Preferences")
-    }
-
-    @Test("No articles title is not empty")
-    func noArticlesTitleIsNotEmpty() {
-        let value = String(localized: "for_you.no_articles.title")
-        #expect(!value.isEmpty)
-        #expect(value == "No Articles")
-    }
-
-    @Test("No articles message is not empty")
-    func noArticlesMessageIsNotEmpty() {
-        let value = String(localized: "for_you.no_articles.message")
         #expect(!value.isEmpty)
     }
 }

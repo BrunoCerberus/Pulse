@@ -195,7 +195,7 @@ struct HomeDomainInteractorTests {
 8. **AuthenticationManager is a singleton** - observed by RootView to switch between SignInView and CoordinatorView
 9. **Premium features are gated** - AI features require subscription (checked via StoreKitService)
 10. **Service decorators for cross-cutting concerns** - Use Decorator Pattern for caching, logging (e.g., `CachingNewsService` wraps `LiveNewsService`)
-11. **Graceful fallback for data sources** - Live services (NewsService, SearchService, ForYouService) use Supabase as primary and fall back to Guardian API when not configured or on error
+11. **Graceful fallback for data sources** - Live services (NewsService, SearchService) use Supabase as primary and fall back to Guardian API when not configured or on error
 
 ## Data Source Architecture
 

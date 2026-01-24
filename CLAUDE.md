@@ -307,7 +307,7 @@ make coverage-badge     # Generate SVG badge
 
 ## Network Layer (EntropyCore)
 
-All Live services (LiveNewsService, LiveSearchService, LiveForYouService) use Supabase as the primary backend with Guardian API fallback.
+All Live services (LiveNewsService, LiveSearchService) use Supabase as the primary backend with Guardian API fallback.
 
 ### Supabase Backend (Primary)
 
