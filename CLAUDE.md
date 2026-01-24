@@ -115,9 +115,9 @@ Pulse is an iOS news aggregation app built with **Unidirectional Data Flow Archi
           │
       TabView (selection: $coordinator.selectedTab)
           │
-      ┌───┴───┬───────┬──────┬─────────┬───────┐
-    Home   ForYou   Feed   Bookmarks  Search
-      │       │          │           │         │
+      ┌───┴───┬──────┬─────────┬───────┐
+    Home    Feed   Bookmarks  Search
+      │        │           │         │
    NavigationStack(path: $coordinator.homePath)
           │
    .navigationDestination(for: Page.self)
@@ -167,15 +167,14 @@ Pulse/
 │   ├── ViewModel/              # SignInViewModel
 │   ├── View/                   # SignInView
 │   └── Manager/                # AuthenticationManager (global state)
-├── Home/                       # Home feed feature
+├── Home/                       # Home feed with category filtering
 │   ├── API/                    # NewsAPI, NewsService, SupabaseAPI, SupabaseModels
 │   ├── Domain/                 # Interactor, State, Action, Reducer, EventActionMap
 │   ├── ViewModel/              # HomeViewModel
-│   ├── View/                   # SwiftUI views (generic over Router)
+│   ├── View/                   # SwiftUI views (includes category tabs)
 │   ├── ViewEvents/             # HomeViewEvent
 │   ├── ViewStates/             # HomeViewState
 │   └── Router/                 # HomeNavigationRouter
-├── ForYou/                     # Personalized feed (same pattern)
 ├── Feed/                       # AI-powered Daily Digest
 │   ├── API/                    # FeedService protocol + Live/Mock
 │   ├── Domain/                 # FeedDomainInteractor, State, Action, Reducer, EventActionMap
@@ -213,8 +212,7 @@ Pulse/
 | Feature | Description |
 |---------|-------------|
 | **Authentication** | Firebase Auth with Google and Apple Sign-In (required before accessing app) |
-| **Home** | Breaking news carousel, top headlines with infinite scroll, settings access via gear icon |
-| **For You** | Personalized feed based on followed topics (**Premium**) |
+| **Home** | Breaking news carousel, top headlines with infinite scroll, category tabs for filtering by followed topics, settings access via gear icon |
 | **Feed** | AI-powered Daily Digest summarizing articles read in last 48 hours using on-device LLM (Llama 3.2-1B) (**Premium**) |
 | **Article Summarization** | On-device AI article summarization via sparkles button (**Premium**) |
 | **Search** | Full-text search with 300ms debounce, suggestions, and sort options (last tab with liquid glass style) |
@@ -223,12 +221,11 @@ Pulse/
 
 ## Premium Features
 
-The app uses StoreKit 2 for subscription management. Three AI-powered features are gated behind premium:
+The app uses StoreKit 2 for subscription management. Two AI-powered features are gated behind premium:
 
 | Feature | Gate Location | Description |
 |---------|---------------|-------------|
 | **AI Daily Digest** | Feed tab | Non-premium users see `PremiumGateView` instead of digest content |
-| **Personalized For You** | For You tab | Non-premium users see `PremiumGateView` instead of personalized feed |
 | **Article Summarization** | Article detail toolbar | Non-premium users see paywall when tapping sparkles button |
 
 ### Key Components
@@ -508,7 +505,6 @@ See `APIKeysProvider.swift` and `SupabaseConfig.swift` for implementation detail
 | Deeplink | Description | Status |
 |----------|-------------|--------|
 | `pulse://home` | Open home tab | ✅ Full |
-| `pulse://forYou` | Open For You tab (Premium) | ✅ Full |
 | `pulse://feed` | Open Feed tab (AI Daily Digest) | ✅ Full |
 | `pulse://bookmarks` | Open bookmarks tab | ✅ Full |
 | `pulse://search` | Open search tab | ✅ Full |
@@ -523,8 +519,8 @@ Push notifications can trigger deeplinks using three payload formats:
 **Format 1: Full URL (Recommended)**
 ```json
 {
-  "aps": { "alert": "Check out For You!", "sound": "default" },
-  "deeplink": "pulse://forYou"
+  "aps": { "alert": "Breaking news!", "sound": "default" },
+  "deeplink": "pulse://home"
 }
 ```
 
@@ -547,6 +543,6 @@ Push notifications can trigger deeplinks using three payload formats:
 
 | deeplinkType | Additional Fields |
 |--------------|-------------------|
-| `home`, `forYou`, `feed`, `bookmarks`, `settings` | None |
+| `home`, `feed`, `bookmarks`, `settings` | None |
 | `search` | `deeplinkQuery` (optional) |
 | `article` | `deeplinkId` (required) |
