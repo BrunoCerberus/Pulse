@@ -14,13 +14,6 @@ struct NotificationDeeplinkParserTests {
         #expect(result == .home)
     }
 
-    @Test("Parse full deeplink URL - forYou")
-    func parseFullDeeplinkURLForYou() {
-        let userInfo: [AnyHashable: Any] = ["deeplink": "pulse://forYou"]
-        let result = NotificationDeeplinkParser.parse(from: userInfo)
-        #expect(result == .forYou)
-    }
-
     @Test("Parse full deeplink URL - feed")
     func parseFullDeeplinkURLFeed() {
         let userInfo: [AnyHashable: Any] = ["deeplink": "pulse://feed"]
@@ -114,13 +107,6 @@ struct NotificationDeeplinkParserTests {
         let userInfo: [AnyHashable: Any] = ["deeplinkType": "home"]
         let result = NotificationDeeplinkParser.parse(from: userInfo)
         #expect(result == .home)
-    }
-
-    @Test("Parse typed deeplink - forYou")
-    func parseTypedDeeplinkForYou() {
-        let userInfo: [AnyHashable: Any] = ["deeplinkType": "forYou"]
-        let result = NotificationDeeplinkParser.parse(from: userInfo)
-        #expect(result == .forYou)
     }
 
     @Test("Parse typed deeplink - feed")

@@ -34,13 +34,12 @@ make xcode
 
 ```
 Pulse/
-├── Home/                   # Home feed feature
+├── Home/                   # Home feed with category filtering
 │   ├── API/                # Service protocols + implementations
 │   ├── Domain/             # Interactor, State, Action, Reducer
 │   ├── ViewModel/          # HomeViewModel
-│   ├── View/               # SwiftUI views
+│   ├── View/               # SwiftUI views (includes category tabs)
 │   └── Router/             # Navigation router
-├── ForYou/                 # Personalized feed (Premium)
 ├── Feed/                   # AI Daily Digest (Premium)
 ├── Search/                 # Search feature
 ├── Bookmarks/              # Offline reading

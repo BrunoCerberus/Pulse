@@ -11,16 +11,7 @@ struct HomeNavigationRouterTests {
     let sut: HomeNavigationRouter
 
     init() {
-        serviceLocator = ServiceLocator()
-        serviceLocator.register(NewsService.self, instance: MockNewsService())
-        serviceLocator.register(StorageService.self, instance: MockStorageService())
-        serviceLocator.register(SearchService.self, instance: MockSearchService())
-        serviceLocator.register(ForYouService.self, instance: MockForYouService())
-        serviceLocator.register(BookmarksService.self, instance: MockBookmarksService())
-        serviceLocator.register(SettingsService.self, instance: MockSettingsService())
-        serviceLocator.register(LLMService.self, instance: MockLLMService())
-        serviceLocator.register(SummarizationService.self, instance: MockSummarizationService())
-
+        serviceLocator = TestServiceLocatorFactory.createFullyMocked()
         coordinator = Coordinator(serviceLocator: serviceLocator)
         sut = HomeNavigationRouter(coordinator: coordinator)
     }

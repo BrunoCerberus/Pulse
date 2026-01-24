@@ -12,7 +12,7 @@ final class NavigationUITests: BaseUITestCase {
         XCTAssertTrue(tabBar.waitForExistence(timeout: Self.launchTimeout), "Tab bar should be visible after launch")
 
         // --- All Tabs Accessible ---
-        let expectedTabs = ["Home", "For You", "Bookmarks", "Search"]
+        let expectedTabs = ["Home", "Feed", "Bookmarks", "Search"]
         for tabName in expectedTabs {
             let tab = tabBar.buttons[tabName]
             XCTAssertTrue(tab.waitForExistence(timeout: Self.defaultTimeout), "Tab '\(tabName)' should exist in tab bar")
@@ -23,9 +23,9 @@ final class NavigationUITests: BaseUITestCase {
         tabBar.buttons["Home"].tap()
         XCTAssertTrue(app.navigationBars["News"].waitForExistence(timeout: Self.defaultTimeout), "Home tab should display News navigation bar")
 
-        // For You
-        tabBar.buttons["For You"].tap()
-        XCTAssertTrue(app.navigationBars["For You"].waitForExistence(timeout: Self.defaultTimeout), "For You tab should display For You navigation bar")
+        // Feed (Daily Digest)
+        tabBar.buttons["Feed"].tap()
+        XCTAssertTrue(app.navigationBars["Daily Digest"].waitForExistence(timeout: Self.defaultTimeout), "Feed tab should display Daily Digest navigation bar")
 
         // Bookmarks
         tabBar.buttons["Bookmarks"].tap()

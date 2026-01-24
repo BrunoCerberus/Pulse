@@ -56,23 +56,6 @@ final class PremiumGateViewSnapshotTests: XCTestCase {
         )
     }
 
-    // MARK: - For You Feed Feature Gate
-
-    func testPremiumGateViewForYouFeed() {
-        let view = PremiumGateView(
-            feature: .forYouFeed,
-            serviceLocator: serviceLocator
-        )
-
-        let controller = UIHostingController(rootView: view)
-
-        assertSnapshot(
-            of: controller,
-            as: .image(on: SnapshotConfig.iPhoneAir, precision: SnapshotConfig.standardPrecision),
-            record: false
-        )
-    }
-
     // MARK: - Light Mode Tests
 
     func testPremiumGateViewDailyDigestLightMode() {

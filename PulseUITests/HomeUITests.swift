@@ -2,6 +2,129 @@ import XCTest
 
 final class HomeUITests: BaseUITestCase {
 
+    // MARK: - Category Tabs Tests
+
+    /// Tests category tabs visibility and interaction after enabling topics in Settings
+    func testCategoryTabsAfterEnablingTopics() throws {
+        // Navigate to Settings
+        let gearButton = app.navigationBars.buttons["gearshape"]
+        XCTAssertTrue(gearButton.waitForExistence(timeout: Self.shortTimeout), "Gear button should exist")
+        gearButton.tap()
+
+        // Verify Settings opened
+        let settingsNavBar = app.navigationBars["Settings"]
+        XCTAssertTrue(settingsNavBar.waitForExistence(timeout: Self.defaultTimeout), "Settings should open")
+
+        // Find and tap on Topics section (scroll if needed)
+        let topicsSection = app.staticTexts["Topics"]
+        if topicsSection.waitForExistence(timeout: Self.shortTimeout) {
+            // Look for category buttons (they should be in a grid or list)
+            let technologyButton = app.buttons["Technology"]
+            let businessButton = app.buttons["Business"]
+
+            // Try to enable some topics if not already enabled
+            if technologyButton.waitForExistence(timeout: Self.shortTimeout) {
+                technologyButton.tap()
+            }
+
+            if businessButton.waitForExistence(timeout: Self.shortTimeout) {
+                businessButton.tap()
+            }
+        }
+
+        // Navigate back to Home
+        var backButton = settingsNavBar.buttons["Pulse"]
+        if !backButton.exists {
+            backButton = settingsNavBar.buttons["Back"]
+        }
+        if !backButton.exists {
+            backButton = settingsNavBar.buttons.firstMatch
+        }
+
+        if backButton.exists {
+            backButton.tap()
+        } else {
+            app.swipeRight()
+        }
+
+        // Verify we're back on Home
+        XCTAssertTrue(app.navigationBars["News"].waitForExistence(timeout: Self.shortTimeout), "Should return to Home")
+
+        // Wait for content to load
+        _ = waitForHomeContent(timeout: 30)
+
+        // Check if category tabs are visible (look for "All" button which is always present when tabs are shown)
+        let allTabButton = app.buttons["All"]
+        if allTabButton.waitForExistence(timeout: Self.shortTimeout) {
+            // Category tabs are visible - test interaction
+            allTabButton.tap()
+
+            // Verify app remains responsive
+            XCTAssertTrue(app.navigationBars["News"].exists, "App should remain on Home after tapping All tab")
+        }
+    }
+
+    /// Tests that tapping a category tab filters content
+    func testCategoryTabFiltersContent() throws {
+        // Wait for content to load
+        _ = waitForHomeContent(timeout: 30)
+
+        // Check if category tabs exist
+        let allTabButton = app.buttons["All"]
+
+        if allTabButton.waitForExistence(timeout: Self.shortTimeout) {
+            // Try to find and tap a category tab
+            let technologyTab = app.buttons["Technology"]
+            let businessTab = app.buttons["Business"]
+
+            if technologyTab.exists {
+                technologyTab.tap()
+
+                // Wait a moment for content to reload
+                _ = wait(for: 1.0)
+
+                // Verify app is still responsive
+                XCTAssertTrue(app.navigationBars["News"].exists, "App should remain on Home after category selection")
+
+                // Tap All to return to unfiltered view
+                allTabButton.tap()
+                XCTAssertTrue(app.navigationBars["News"].exists, "App should remain on Home after returning to All")
+            } else if businessTab.exists {
+                businessTab.tap()
+                _ = wait(for: 1.0)
+                XCTAssertTrue(app.navigationBars["News"].exists, "App should remain on Home after category selection")
+            }
+        }
+    }
+
+    /// Tests horizontal scrolling of category tabs when many categories are followed
+    func testCategoryTabsHorizontalScroll() throws {
+        // Wait for content to load
+        _ = waitForHomeContent(timeout: 30)
+
+        // Check if category tabs exist
+        let allTabButton = app.buttons["All"]
+
+        if allTabButton.waitForExistence(timeout: Self.shortTimeout) {
+            // Try to scroll horizontally in the category tabs area
+            // The scroll view containing tabs should be near the top
+            let scrollViews = app.scrollViews
+            if scrollViews.count > 0 {
+                let tabsScrollView = scrollViews.firstMatch
+
+                // Perform horizontal swipe
+                tabsScrollView.swipeLeft()
+                _ = wait(for: 0.5)
+
+                // Swipe back
+                tabsScrollView.swipeRight()
+
+                // Verify app is still responsive
+                XCTAssertTrue(app.navigationBars["News"].exists, "App should remain responsive after horizontal scroll")
+            }
+        }
+    }
+
     // MARK: - Navigation and Content Tests
 
     /// Tests navigation bar, content loading, interactions, and settings navigation

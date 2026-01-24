@@ -27,18 +27,9 @@ struct PremiumFeatureTests {
         #expect(feature.description.isEmpty == false)
     }
 
-    @Test("For You Feed feature has correct properties")
-    func forYouFeedProperties() {
-        let feature = PremiumFeature.forYouFeed
-
-        #expect(feature.icon == "heart.text.square.fill")
-        #expect(feature.title.isEmpty == false)
-        #expect(feature.description.isEmpty == false)
-    }
-
     @Test("All features have unique icons")
     func allFeaturesHaveUniqueIcons() {
-        let features: [PremiumFeature] = [.dailyDigest, .articleSummarization, .forYouFeed]
+        let features: [PremiumFeature] = [.dailyDigest, .articleSummarization]
         let icons = features.map(\.icon)
         let uniqueIcons = Set(icons)
 
@@ -47,7 +38,7 @@ struct PremiumFeatureTests {
 
     @Test("All features have unique colors")
     func allFeaturesHaveUniqueColors() {
-        let features: [PremiumFeature] = [.dailyDigest, .articleSummarization, .forYouFeed]
+        let features: [PremiumFeature] = [.dailyDigest, .articleSummarization]
         let colors = features.map { "\($0.iconColor)" }
         let uniqueColors = Set(colors)
 
@@ -56,7 +47,7 @@ struct PremiumFeatureTests {
 
     @Test("All premium features have non-empty descriptions")
     func allFeaturesHaveNonEmptyDescriptions() {
-        let features: [PremiumFeature] = [.dailyDigest, .articleSummarization, .forYouFeed]
+        let features: [PremiumFeature] = [.dailyDigest, .articleSummarization]
 
         for feature in features {
             #expect(!feature.description.isEmpty, "\(feature) should have a non-empty description")
@@ -65,7 +56,7 @@ struct PremiumFeatureTests {
 
     @Test("All premium features have non-empty titles")
     func allFeaturesHaveNonEmptyTitles() {
-        let features: [PremiumFeature] = [.dailyDigest, .articleSummarization, .forYouFeed]
+        let features: [PremiumFeature] = [.dailyDigest, .articleSummarization]
 
         for feature in features {
             #expect(!feature.title.isEmpty, "\(feature) should have a non-empty title")
@@ -74,7 +65,7 @@ struct PremiumFeatureTests {
 
     @Test("All premium features have valid SF Symbol icons")
     func allFeaturesHaveValidSFSymbolIcons() {
-        let features: [PremiumFeature] = [.dailyDigest, .articleSummarization, .forYouFeed]
+        let features: [PremiumFeature] = [.dailyDigest, .articleSummarization]
 
         for feature in features {
             // Verify the icon string is not empty
@@ -88,7 +79,7 @@ struct PremiumFeatureTests {
 
     @Test("All premium features have valid icon colors")
     func allFeaturesHaveValidIconColors() {
-        let features: [PremiumFeature] = [.dailyDigest, .articleSummarization, .forYouFeed]
+        let features: [PremiumFeature] = [.dailyDigest, .articleSummarization]
 
         for feature in features {
             // Just verify that accessing iconColor doesn't crash

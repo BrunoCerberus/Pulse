@@ -31,19 +31,6 @@ struct CoordinatorView: View {
                 }
             }
 
-            Tab("For You", systemImage: AppTab.forYou.symbolImage, value: .forYou) {
-                NavigationStack(path: $coordinator.forYouPath) {
-                    ForYouView(
-                        router: ForYouNavigationRouter(coordinator: coordinator),
-                        viewModel: coordinator.forYouViewModel,
-                        serviceLocator: coordinator.serviceLocator
-                    )
-                    .navigationDestination(for: Page.self) { page in
-                        coordinator.build(page: page)
-                    }
-                }
-            }
-
             Tab("Feed", systemImage: AppTab.feed.symbolImage, value: .feed) {
                 NavigationStack(path: $coordinator.feedPath) {
                     FeedView(

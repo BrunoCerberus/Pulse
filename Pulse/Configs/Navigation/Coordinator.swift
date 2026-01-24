@@ -10,7 +10,6 @@ protocol AnimatedTabSelectable: CaseIterable, Hashable {
 /// Tab selection enum for the main TabView.
 enum AppTab: String, CaseIterable, AnimatedTabSelectable {
     case home
-    case forYou
     case feed
     case bookmarks
     case search
@@ -18,7 +17,6 @@ enum AppTab: String, CaseIterable, AnimatedTabSelectable {
     var symbolImage: String {
         switch self {
         case .home: "newspaper"
-        case .forYou: "heart.text.square"
         case .feed: "text.document"
         case .bookmarks: "bookmark"
         case .search: "magnifyingglass"
@@ -28,7 +26,6 @@ enum AppTab: String, CaseIterable, AnimatedTabSelectable {
     var symbolEffect: any DiscreteSymbolEffect & SymbolEffect {
         switch self {
         case .home: .bounce
-        case .forYou: .bounce
         case .feed: .bounce
         case .bookmarks: .bounce
         case .search: .bounce
@@ -62,9 +59,6 @@ final class Coordinator: ObservableObject {
     /// Navigation path for the Home tab
     @Published var homePath = NavigationPath()
 
-    /// Navigation path for the For You tab
-    @Published var forYouPath = NavigationPath()
-
     /// Navigation path for the Feed tab
     @Published var feedPath = NavigationPath()
 
@@ -83,9 +77,6 @@ final class Coordinator: ObservableObject {
 
     /// Shared HomeViewModel instance
     lazy var homeViewModel: HomeViewModel = .init(serviceLocator: serviceLocator)
-
-    /// Shared ForYouViewModel instance
-    lazy var forYouViewModel: ForYouViewModel = .init(serviceLocator: serviceLocator)
 
     /// Shared FeedViewModel instance
     lazy var feedViewModel: FeedViewModel = .init(serviceLocator: serviceLocator)
@@ -118,8 +109,6 @@ final class Coordinator: ObservableObject {
         switch targetTab {
         case .home:
             homePath.append(page)
-        case .forYou:
-            forYouPath.append(page)
         case .feed:
             feedPath.append(page)
         case .bookmarks:
@@ -134,8 +123,6 @@ final class Coordinator: ObservableObject {
         switch selectedTab {
         case .home:
             if !homePath.isEmpty { homePath.removeLast() }
-        case .forYou:
-            if !forYouPath.isEmpty { forYouPath.removeLast() }
         case .feed:
             if !feedPath.isEmpty { feedPath.removeLast() }
         case .bookmarks:
@@ -152,8 +139,6 @@ final class Coordinator: ObservableObject {
         switch targetTab {
         case .home:
             homePath = NavigationPath()
-        case .forYou:
-            forYouPath = NavigationPath()
         case .feed:
             feedPath = NavigationPath()
         case .bookmarks:

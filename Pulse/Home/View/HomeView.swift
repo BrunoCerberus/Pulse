@@ -10,6 +10,7 @@ private enum Constants {
     static let breaking = String(localized: "home.breaking")
     static let tryAgain = String(localized: "common.try_again")
     static let loadingMore = String(localized: "common.loading_more")
+    static let allCategory = String(localized: "home.category.all", defaultValue: "All")
 }
 
 // MARK: - HomeView
@@ -97,6 +98,50 @@ struct HomeView<R: HomeNavigationRouter>: View {
         LinearGradient.subtleBackground
     }
 
+    // MARK: - Category Tab Bar
+
+    private var categoryTabBar: some View {
+        ScrollView(.horizontal, showsIndicators: false) {
+            HStack(spacing: Spacing.sm) {
+                // "All" tab - always first
+                Button {
+                    HapticManager.shared.selectionChanged()
+                    viewModel.handle(event: .onCategorySelected(nil))
+                } label: {
+                    Text(Constants.allCategory)
+                        .font(Typography.labelMedium)
+                        .foregroundStyle(viewModel.viewState.selectedCategory == nil ? .white : Color.Accent.primary)
+                        .padding(.horizontal, Spacing.md)
+                        .padding(.vertical, Spacing.xs)
+                        .background {
+                            Capsule()
+                                .fill(viewModel.viewState.selectedCategory == nil ? Color.Accent.primary : Color.Accent.primary.opacity(0.15))
+                        }
+                }
+
+                // Followed topics tabs
+                ForEach(viewModel.viewState.followedTopics, id: \.self) { category in
+                    Button {
+                        HapticManager.shared.selectionChanged()
+                        viewModel.handle(event: .onCategorySelected(category))
+                    } label: {
+                        Text(category.displayName)
+                            .font(Typography.labelMedium)
+                            .foregroundStyle(viewModel.viewState.selectedCategory == category ? .white : category.color)
+                            .padding(.horizontal, Spacing.md)
+                            .padding(.vertical, Spacing.xs)
+                            .background {
+                                Capsule()
+                                    .fill(viewModel.viewState.selectedCategory == category ? category.color : category.color.opacity(0.15))
+                            }
+                    }
+                }
+            }
+            .padding(.horizontal, Spacing.md)
+            .padding(.vertical, Spacing.sm)
+        }
+    }
+
     // MARK: - Content Views
 
     @ViewBuilder
@@ -116,9 +161,17 @@ struct HomeView<R: HomeNavigationRouter>: View {
     private var loadingView: some View {
         ScrollView {
             VStack(spacing: Spacing.lg) {
-                GlassSectionHeader("Breaking News")
+                // Category tabs at top of scrollable content
+                if viewModel.viewState.showCategoryTabs {
+                    categoryTabBar
+                }
 
-                HeroCarouselSkeleton()
+                // Only show breaking news skeleton when on "All" tab
+                if viewModel.viewState.selectedCategory == nil {
+                    GlassSectionHeader("Breaking News")
+
+                    HeroCarouselSkeleton()
+                }
 
                 GlassSectionHeader("Top Headlines")
 
@@ -183,10 +236,17 @@ struct HomeView<R: HomeNavigationRouter>: View {
     private var articlesList: some View {
         let headlines = viewModel.viewState.headlines
         let lastItemId = headlines.last?.id
+        let showBreakingNews = viewModel.viewState.selectedCategory == nil
+            && !viewModel.viewState.breakingNews.isEmpty
 
         return ScrollView {
             LazyVStack(spacing: 0) {
-                if !viewModel.viewState.breakingNews.isEmpty {
+                // Category tabs at top of scrollable content
+                if viewModel.viewState.showCategoryTabs {
+                    categoryTabBar
+                }
+
+                if showBreakingNews {
                     Section {
                         breakingNewsCarousel
                     } header: {

@@ -191,7 +191,6 @@ final class PulseSceneDelegate: UIResponder, UIWindowSceneDelegate {
                 serviceLocator.register(SearchService.self, instance: MockSearchService())
                 serviceLocator.register(BookmarksService.self, instance: MockBookmarksService())
                 serviceLocator.register(SettingsService.self, instance: MockSettingsService())
-                serviceLocator.register(ForYouService.self, instance: MockForYouService())
                 serviceLocator.register(LLMService.self, instance: MockLLMService())
                 serviceLocator.register(SummarizationService.self, instance: MockSummarizationService())
                 serviceLocator.register(FeedService.self, instance: MockFeedService.withSampleData())
@@ -219,8 +218,8 @@ final class PulseSceneDelegate: UIResponder, UIWindowSceneDelegate {
      * Register all live services for production use.
      *
      * Note: Services that depend on other services (like LiveSettingsService,
-     * LiveBookmarksService, LiveForYouService) receive their dependencies
-     * directly rather than through ServiceLocator.
+     * LiveBookmarksService) receive their dependencies directly rather than
+     * through ServiceLocator.
      */
     private func registerLiveServices() {
         // Register and configure Remote Config service first
@@ -249,7 +248,6 @@ final class PulseSceneDelegate: UIResponder, UIWindowSceneDelegate {
         // Register services that depend on StorageService
         serviceLocator.register(BookmarksService.self, instance: LiveBookmarksService(storageService: storageService))
         serviceLocator.register(SettingsService.self, instance: LiveSettingsService(storageService: storageService))
-        serviceLocator.register(ForYouService.self, instance: LiveForYouService(storageService: storageService))
 
         // Register authentication service
         serviceLocator.register(AuthService.self, instance: LiveAuthService())

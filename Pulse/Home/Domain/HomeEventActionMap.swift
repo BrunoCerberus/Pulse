@@ -20,6 +20,8 @@ struct HomeEventActionMap: DomainEventActionMap {
             return .shareArticle(articleId: articleId)
         case .onShareDismissed:
             return .clearArticleToShare
+        case let .onCategorySelected(category):
+            return .selectCategory(category)
         }
     }
 }

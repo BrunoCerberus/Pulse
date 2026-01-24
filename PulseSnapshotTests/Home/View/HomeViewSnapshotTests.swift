@@ -381,6 +381,104 @@ final class HomeViewSnapshotTests: XCTestCase {
             record: false
         )
     }
+
+    // MARK: - Category Tabs Tests
+
+    func testCategoryTabsWithFollowedTopics() {
+        let view = NavigationStack {
+            CategoryTabsPreview(
+                followedTopics: [.technology, .business, .science],
+                selectedCategory: nil
+            )
+        }
+        let controller = UIHostingController(rootView: view)
+
+        assertSnapshot(
+            of: controller,
+            as: .wait(for: 1.0, on: .image(on: iPhoneAirConfig, precision: 0.99)),
+            record: false
+        )
+    }
+
+    func testCategoryTabsWithSelectedCategory() {
+        let view = NavigationStack {
+            CategoryTabsPreview(
+                followedTopics: [.technology, .business, .science],
+                selectedCategory: .technology
+            )
+        }
+        let controller = UIHostingController(rootView: view)
+
+        assertSnapshot(
+            of: controller,
+            as: .wait(for: 1.0, on: .image(on: iPhoneAirConfig, precision: 0.99)),
+            record: false
+        )
+    }
+
+    func testCategoryTabsLightMode() {
+        let view = NavigationStack {
+            CategoryTabsPreview(
+                followedTopics: [.technology, .business],
+                selectedCategory: nil
+            )
+        }
+        let controller = UIHostingController(rootView: view)
+
+        assertSnapshot(
+            of: controller,
+            as: .wait(for: 1.0, on: .image(on: iPhoneAirLightConfig, precision: 0.99)),
+            record: false
+        )
+    }
+
+    func testCategoryTabsAllCategories() {
+        let view = NavigationStack {
+            CategoryTabsPreview(
+                followedTopics: NewsCategory.allCases,
+                selectedCategory: .health
+            )
+        }
+        let controller = UIHostingController(rootView: view)
+
+        assertSnapshot(
+            of: controller,
+            as: .wait(for: 1.0, on: .image(on: iPhoneAirConfig, precision: 0.99)),
+            record: false
+        )
+    }
+
+    func testCategoryTabsSingleTopic() {
+        let view = NavigationStack {
+            CategoryTabsPreview(
+                followedTopics: [.technology],
+                selectedCategory: nil
+            )
+        }
+        let controller = UIHostingController(rootView: view)
+
+        assertSnapshot(
+            of: controller,
+            as: .wait(for: 1.0, on: .image(on: iPhoneAirConfig, precision: 0.99)),
+            record: false
+        )
+    }
+
+    func testNoCategoryTabsWhenNoFollowedTopics() {
+        let view = NavigationStack {
+            CategoryTabsPreview(
+                followedTopics: [],
+                selectedCategory: nil
+            )
+        }
+        let controller = UIHostingController(rootView: view)
+
+        assertSnapshot(
+            of: controller,
+            as: .wait(for: 1.0, on: .image(on: iPhoneAirConfig, precision: 0.99)),
+            record: false
+        )
+    }
 }
 
 // MARK: - Preview Helpers for State Testing
@@ -449,5 +547,97 @@ private struct HomeEmptyPreview: View {
         }
         .navigationTitle("Home")
         .toolbarBackground(.hidden, for: .navigationBar)
+    }
+}
+
+private struct CategoryTabsPreview: View {
+    let followedTopics: [NewsCategory]
+    let selectedCategory: NewsCategory?
+
+    var body: some View {
+        ZStack {
+            LinearGradient.subtleBackground
+                .ignoresSafeArea()
+
+            ScrollView {
+                VStack(spacing: Spacing.lg) {
+                    // Category tabs (only shown when followedTopics is not empty)
+                    if !followedTopics.isEmpty {
+                        categoryTabBar
+                    }
+
+                    // Sample content
+                    GlassSectionHeader("Top Headlines")
+
+                    VStack(spacing: Spacing.sm) {
+                        ForEach(0 ..< 3, id: \.self) { index in
+                            sampleArticleCard(index: index)
+                        }
+                    }
+                    .padding(.horizontal, Spacing.md)
+                }
+            }
+        }
+        .navigationTitle("News")
+        .toolbarBackground(.hidden, for: .navigationBar)
+    }
+
+    private var categoryTabBar: some View {
+        ScrollView(.horizontal, showsIndicators: false) {
+            HStack(spacing: Spacing.sm) {
+                // "All" tab - always first
+                Button {} label: {
+                    Text("All")
+                        .font(Typography.labelMedium)
+                        .foregroundStyle(selectedCategory == nil ? .white : Color.Accent.primary)
+                        .padding(.horizontal, Spacing.md)
+                        .padding(.vertical, Spacing.xs)
+                        .background {
+                            Capsule()
+                                .fill(selectedCategory == nil ? Color.Accent.primary : Color.Accent.primary.opacity(0.15))
+                        }
+                }
+
+                // Followed topics tabs
+                ForEach(followedTopics, id: \.self) { category in
+                    Button {} label: {
+                        Text(category.displayName)
+                            .font(Typography.labelMedium)
+                            .foregroundStyle(selectedCategory == category ? .white : category.color)
+                            .padding(.horizontal, Spacing.md)
+                            .padding(.vertical, Spacing.xs)
+                            .background {
+                                Capsule()
+                                    .fill(selectedCategory == category ? category.color : category.color.opacity(0.15))
+                            }
+                    }
+                }
+            }
+            .padding(.horizontal, Spacing.md)
+            .padding(.vertical, Spacing.sm)
+        }
+    }
+
+    private func sampleArticleCard(index: Int) -> some View {
+        GlassCard(style: .thin, shadowStyle: .subtle, padding: Spacing.md) {
+            VStack(alignment: .leading, spacing: Spacing.xs) {
+                Text("Sample Article Title \(index + 1)")
+                    .font(Typography.titleSmall)
+
+                Text("This is a sample article description for testing purposes.")
+                    .font(Typography.bodySmall)
+                    .foregroundStyle(.secondary)
+
+                HStack {
+                    Text("Source")
+                        .font(Typography.captionMedium)
+                        .foregroundStyle(.secondary)
+                    Spacer()
+                    Text("2h ago")
+                        .font(Typography.captionMedium)
+                        .foregroundStyle(.secondary)
+                }
+            }
+        }
     }
 }

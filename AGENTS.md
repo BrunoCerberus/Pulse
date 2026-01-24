@@ -15,7 +15,7 @@ Pulse/
 │   │   ├── ViewModel/          # SignInViewModel
 │   │   ├── View/               # SignInView
 │   │   └── Manager/            # AuthenticationManager (global state)
-│   ├── [Feature]/              # Feature modules (Home, ForYou, Search, Bookmarks, etc.)
+│   ├── [Feature]/              # Feature modules (Home, Search, Bookmarks, etc.)
 │   │   └── API/                # Service protocols + SupabaseAPI, SupabaseModels
 │   ├── Feed/                   # AI-powered Daily Digest
 │   │   ├── API/                # FeedService protocol + Live/Mock
@@ -195,7 +195,7 @@ struct HomeDomainInteractorTests {
 8. **AuthenticationManager is a singleton** - observed by RootView to switch between SignInView and CoordinatorView
 9. **Premium features are gated** - AI features require subscription (checked via StoreKitService)
 10. **Service decorators for cross-cutting concerns** - Use Decorator Pattern for caching, logging (e.g., `CachingNewsService` wraps `LiveNewsService`)
-11. **Graceful fallback for data sources** - Live services (NewsService, SearchService, ForYouService) use Supabase as primary and fall back to Guardian API when not configured or on error
+11. **Graceful fallback for data sources** - Live services (NewsService, SearchService) use Supabase as primary and fall back to Guardian API when not configured or on error
 
 ## Data Source Architecture
 
@@ -226,12 +226,11 @@ struct Article {
 
 ## Premium Feature Gating
 
-Three AI-powered features are gated behind a premium subscription:
+Two AI-powered features are gated behind a premium subscription:
 
 | Feature | Location | Non-Premium Behavior |
 |---------|----------|---------------------|
 | AI Daily Digest | Feed tab | Shows `PremiumGateView` |
-| Personalized For You | For You tab | Shows `PremiumGateView` |
 | Article Summarization | Article detail toolbar | Shows paywall sheet |
 
 ### Implementation Pattern
@@ -311,9 +310,9 @@ CoordinatorView (@StateObject Coordinator)
        │
    TabView (selection: $coordinator.selectedTab)
        │
-   ┌───┴───┬───────┬──────┬─────────┬───────┐
- Home   ForYou   Feed   Bookmarks  Search
-   │       │          │           │         │
+   ┌───┴───┬──────┬─────────┬───────┐
+ Home    Feed   Bookmarks  Search
+   │        │           │         │
 NavigationStack(path: $coordinator.homePath)
        │
 .navigationDestination(for: Page.self)
@@ -371,7 +370,6 @@ final class HomeNavigationRouter: NavigationRouter {
 | Deeplink | Description | Status |
 |----------|-------------|--------|
 | `pulse://home` | Open home tab | ✅ Full |
-| `pulse://forYou` | Open For You tab (Premium) | ✅ Full |
 | `pulse://feed` | Open Feed tab (AI Daily Digest) | ✅ Full |
 | `pulse://bookmarks` | Open bookmarks tab | ✅ Full |
 | `pulse://search` | Open search tab | ✅ Full |

@@ -27,8 +27,8 @@ final class GlassTabBarSnapshotTests: XCTestCase {
         )
     }
 
-    func testGlassTabBarForYouSelected() {
-        let view = TabBarTestWrapper(selectedTab: .forYou)
+    func testGlassTabBarFeedSelected() {
+        let view = TabBarTestWrapper(selectedTab: .feed)
             .background(LinearGradient.meshFallback)
 
         let controller = UIHostingController(rootView: view)

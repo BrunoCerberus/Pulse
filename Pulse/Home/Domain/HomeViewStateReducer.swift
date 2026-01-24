@@ -17,7 +17,10 @@ struct HomeViewStateReducer: ViewStateReducing {
             showEmptyState: !domainState.isLoading && !domainState.isRefreshing
                 && domainState.headlines.isEmpty && domainState.breakingNews.isEmpty,
             selectedArticle: domainState.selectedArticle,
-            articleToShare: domainState.articleToShare
+            articleToShare: domainState.articleToShare,
+            selectedCategory: domainState.selectedCategory,
+            followedTopics: domainState.followedTopics,
+            showCategoryTabs: !domainState.followedTopics.isEmpty
         )
     }
 }

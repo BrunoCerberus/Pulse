@@ -1,4 +1,3 @@
-// swiftlint:disable file_length
 import Combine
 import EntropyCore
 import Foundation
@@ -381,12 +380,6 @@ struct LiveServicesProtocolTests {
         #expect(service is SearchService)
     }
 
-    @Test("LiveForYouService conforms to ForYouService protocol")
-    func liveForYouServiceConformance() {
-        let service = LiveForYouService(storageService: MockStorageService())
-        #expect(service is ForYouService)
-    }
-
     @Test("LiveNewsService fetchTopHeadlines returns correct publisher type")
     func newsServiceFetchTopHeadlinesType() {
         let service = LiveNewsService()
@@ -399,15 +392,6 @@ struct LiveServicesProtocolTests {
     func searchServiceSearchType() {
         let service = LiveSearchService()
         let publisher = service.search(query: "test", page: 1, sortBy: "relevance")
-        let typeCheck: AnyPublisher<[Article], Error> = publisher
-        #expect(typeCheck is AnyPublisher<[Article], Error>)
-    }
-
-    @Test("LiveForYouService fetchPersonalizedFeed returns correct publisher type")
-    func forYouServiceFetchType() {
-        let service = LiveForYouService(storageService: MockStorageService())
-        let preferences = UserPreferences.default
-        let publisher = service.fetchPersonalizedFeed(preferences: preferences, page: 1)
         let typeCheck: AnyPublisher<[Article], Error> = publisher
         #expect(typeCheck is AnyPublisher<[Article], Error>)
     }

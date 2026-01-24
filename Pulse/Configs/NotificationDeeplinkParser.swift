@@ -3,7 +3,7 @@ import Foundation
 /// Parses deeplinks from push notification payloads.
 ///
 /// Supports three payload formats:
-/// 1. Full URL: `{ "deeplink": "pulse://forYou" }`
+/// 1. Full URL: `{ "deeplink": "pulse://home" }`
 /// 2. Legacy article: `{ "articleID": "world/2024/..." }`
 /// 3. Type-based: `{ "deeplinkType": "search", "deeplinkQuery": "swift" }`
 enum NotificationDeeplinkParser {
@@ -45,7 +45,6 @@ enum NotificationDeeplinkParser {
 
         switch components.host {
         case "home": return .home
-        case "forYou": return .forYou
         case "feed": return .feed
         case "bookmarks": return .bookmarks
         case "settings": return .settings
@@ -71,7 +70,6 @@ enum NotificationDeeplinkParser {
     static func parseTyped(type: String, userInfo: [AnyHashable: Any]) -> Deeplink? {
         switch type {
         case "home": return .home
-        case "forYou": return .forYou
         case "feed": return .feed
         case "bookmarks": return .bookmarks
         case "settings": return .settings

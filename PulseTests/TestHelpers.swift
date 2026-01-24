@@ -74,7 +74,6 @@ enum TestServiceLocatorFactory {
         serviceLocator.register(NewsService.self, instance: MockNewsService())
         serviceLocator.register(StorageService.self, instance: MockStorageService())
         serviceLocator.register(SearchService.self, instance: MockSearchService())
-        serviceLocator.register(ForYouService.self, instance: MockForYouService())
         serviceLocator.register(BookmarksService.self, instance: MockBookmarksService())
         serviceLocator.register(SettingsService.self, instance: MockSettingsService())
         serviceLocator.register(LLMService.self, instance: MockLLMService())
@@ -95,7 +94,6 @@ enum TestServiceLocatorFactory {
         serviceLocator.register(NewsService.self, instance: newsService)
         serviceLocator.register(StorageService.self, instance: storageService)
         serviceLocator.register(SearchService.self, instance: MockSearchService())
-        serviceLocator.register(ForYouService.self, instance: MockForYouService())
         serviceLocator.register(BookmarksService.self, instance: MockBookmarksService())
         serviceLocator.register(SettingsService.self, instance: MockSettingsService())
         serviceLocator.register(LLMService.self, instance: MockLLMService())
@@ -111,14 +109,6 @@ enum TestServiceLocatorFactory {
 }
 
 // MARK: - Mock Service Extensions
-
-extension MockForYouService {
-    /// Convenience property for setting personalized feed result
-    var personalizedFeedResult: Result<[Article], Error> {
-        get { feedResult }
-        set { feedResult = newValue }
-    }
-}
 
 extension MockStorageService {
     /// Convenience property for setting mocked bookmarked articles

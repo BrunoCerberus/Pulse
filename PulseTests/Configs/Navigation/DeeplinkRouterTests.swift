@@ -42,19 +42,6 @@ struct DeeplinkRouterTests {
         #expect(coordinator.homePath.count == 0)
     }
 
-    // MARK: - For You Deeplink Tests
-
-    @Test("Route forYou deeplink switches to forYou tab and pops to root")
-    func routeForYouDeeplink() async throws {
-        sut.setCoordinator(coordinator)
-        coordinator.selectedTab = .home
-
-        sut.route(deeplink: .forYou)
-
-        #expect(coordinator.selectedTab == .forYou)
-        #expect(coordinator.forYouPath.count == 0)
-    }
-
     // MARK: - Feed Deeplink Tests
 
     @Test("Route feed deeplink switches to feed tab and pops to root")
@@ -82,6 +69,10 @@ struct DeeplinkRouterTests {
 
     @Test("Route search deeplink with query sets query and searches")
     func routeSearchDeeplinkWithQuery() async throws {
+        // Clear any lingering deeplinks from previous tests and wait for Combine pipeline
+        DeeplinkManager.shared.clearDeeplink()
+        try await waitForStateUpdate()
+
         sut.setCoordinator(coordinator)
         coordinator.selectedTab = .home
 

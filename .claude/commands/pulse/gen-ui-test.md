@@ -81,7 +81,7 @@ final class <FeatureName>UITests: BaseUITestCase {
 This provides access to:
 - `app` - XCUIApplication instance
 - `Self.launchTimeout` (8s), `Self.defaultTimeout` (4s), `Self.shortTimeout` (1.5s)
-- `navigateToTab(_:)`, `navigateToSearchTab()`, `navigateToForYouTab()`, etc.
+- `navigateToTab(_:)`, `navigateToSearchTab()`, `navigateToFeedTab()`, etc.
 - `navigateToSettings()`, `navigateBack()`
 - `wait(for:)`, `waitForAny(_:timeout:)`, `waitForAnyMatch(_:timeout:)`
 - `waitForHomeContent(timeout:)`, `waitForArticleDetail(timeout:)`

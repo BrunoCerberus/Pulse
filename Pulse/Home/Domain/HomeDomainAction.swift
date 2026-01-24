@@ -9,4 +9,5 @@ enum HomeDomainAction: Equatable {
     case bookmarkArticle(articleId: String)
     case shareArticle(articleId: String)
     case clearArticleToShare
+    case selectCategory(NewsCategory?)
 }

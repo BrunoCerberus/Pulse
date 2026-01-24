@@ -9,4 +9,5 @@ enum HomeViewEvent: Equatable {
     case onBookmarkTapped(articleId: String)
     case onShareTapped(articleId: String)
     case onShareDismissed
+    case onCategorySelected(NewsCategory?)
 }

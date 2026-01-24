@@ -2,6 +2,12 @@ import Combine
 import EntropyCore
 import Foundation
 
+/// Notification posted when user preferences are updated.
+/// Used by Home to refresh followed topics when returning from Settings.
+extension Notification.Name {
+    static let userPreferencesDidChange = Notification.Name("userPreferencesDidChange")
+}
+
 /// Domain interactor for the Settings feature.
 ///
 /// Manages business logic and state for user preferences, including:
@@ -194,6 +200,8 @@ final class SettingsDomainInteractor: CombineInteractor {
                 self?.updateState { state in
                     state.isSaving = false
                 }
+                // Notify other components (e.g., Home) that preferences changed
+                NotificationCenter.default.post(name: .userPreferencesDidChange, object: nil)
             }
             .store(in: &cancellables)
     }

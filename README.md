@@ -5,24 +5,22 @@ A modern iOS news aggregation app built with Clean Architecture, SwiftUI, and Co
 ## Features
 
 - **Authentication**: Firebase Auth with Google and Apple Sign-In (required before accessing app)
-- **Home Feed**: Breaking news carousel and top headlines with infinite scrolling (settings accessible via gear icon)
-- **For You**: Personalized feed based on followed topics and reading history (**Premium**)
+- **Home Feed**: Breaking news carousel, top headlines with infinite scrolling, and category tabs for filtering by followed topics (settings accessible via gear icon)
 - **Feed**: AI-powered Daily Digest summarizing articles read in the last 48 hours using on-device LLM (Llama 3.2-1B) (**Premium**)
 - **Article Summarization**: On-device AI article summarization via sparkles button (**Premium**)
 - **Bookmarks**: Save articles for offline reading with SwiftData persistence
 - **Search**: Full-text search with 300ms debounce, suggestions, recent searches, and sort options
 - **Settings**: Customize topics, notifications, theme, content filters, and account/logout (accessed from Home navigation bar)
 
-The app uses iOS 26's liquid glass TabView style with tabs: Home, For You, Feed, Bookmarks, and Search. Users must sign in with Google or Apple before accessing the main app.
+The app uses iOS 26's liquid glass TabView style with tabs: Home, Feed, Bookmarks, and Search. Users must sign in with Google or Apple before accessing the main app.
 
 ### Premium Features
 
-The app uses StoreKit 2 for subscription management. Three AI-powered features require a premium subscription:
+The app uses StoreKit 2 for subscription management. Two AI-powered features require a premium subscription:
 
 | Feature | Description |
 |---------|-------------|
 | AI Daily Digest | Personalized summaries of your reading activity |
-| Personalized For You | Curated feed based on interests and reading habits |
 | Article Summarization | On-device AI summaries for any article |
 
 Non-premium users see a `PremiumGateView` with an "Unlock Premium" button that presents the native StoreKit subscription UI.
@@ -80,9 +78,9 @@ CoordinatorView (@StateObject Coordinator)
        │
    TabView (selection: $coordinator.selectedTab)
        │
-   ┌───┴───┬───────┬──────┬─────────┬───────┐
- Home   ForYou   Feed   Bookmarks  Search
-   │       │          │           │         │
+   ┌───┴───┬──────┬─────────┬───────┐
+ Home    Feed   Bookmarks  Search
+   │        │           │         │
 NavigationStack(path: $coordinator.homePath)
        │
 .navigationDestination(for: Page.self)
@@ -359,15 +357,14 @@ Pulse/
 │   │   ├── ViewModel/      # SignInViewModel
 │   │   ├── View/           # SignInView
 │   │   └── Manager/        # AuthenticationManager (global state)
-│   ├── Home/               # Home feed feature
+│   ├── Home/               # Home feed with category filtering
 │   │   ├── API/            # NewsService, SupabaseAPI, SupabaseModels
 │   │   ├── Domain/         # Interactor, State, Action, Reducer, EventActionMap
 │   │   ├── ViewModel/      # HomeViewModel
-│   │   ├── View/           # SwiftUI views
+│   │   ├── View/           # SwiftUI views (includes category tabs)
 │   │   ├── ViewEvents/     # HomeViewEvent
 │   │   ├── ViewStates/     # HomeViewState
 │   │   └── Router/         # HomeNavigationRouter
-│   ├── ForYou/             # Personalized feed (same pattern)
 │   ├── Feed/               # AI-powered Daily Digest
 │   ├── Search/             # Search functionality
 │   ├── Bookmarks/          # Saved articles
@@ -423,7 +420,6 @@ GitHub Actions workflows:
 | Deeplink | Description |
 |----------|-------------|
 | `pulse://home` | Open home tab |
-| `pulse://forYou` | Open For You tab (Premium) |
 | `pulse://feed` | Open Feed tab (AI Daily Digest) |
 | `pulse://bookmarks` | Open bookmarks tab |
 | `pulse://search` | Open search tab |

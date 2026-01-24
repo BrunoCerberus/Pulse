@@ -144,7 +144,7 @@ struct GlassCategoryButton: View {
     }
 }
 
-// MARK: - Topic Chip (For ForYou)
+// MARK: - Topic Chip (For Category Tabs)
 
 struct GlassTopicChip: View {
     let topic: String
