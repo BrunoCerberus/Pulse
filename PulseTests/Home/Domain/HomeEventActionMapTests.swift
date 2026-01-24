@@ -33,11 +33,31 @@ struct HomeEventActionMapTests {
             .onArticleTapped(articleId: articleId),
             .onBookmarkTapped(articleId: articleId),
             .onShareTapped(articleId: articleId),
+            .onCategorySelected(.technology),
+            .onCategorySelected(nil),
         ]
 
         for event in events {
             let action = sut.map(event: event)
             #expect(action != nil)
         }
+    }
+
+    // MARK: - Category Selection Event Mappings
+
+    @Test("Category selection event maps to select category action")
+    func categorySelectionEventMapping() {
+        // Test selecting a specific category
+        let technologyAction = sut.map(event: .onCategorySelected(.technology))
+        #expect(technologyAction == .selectCategory(.technology))
+
+        // Test selecting nil (All tab)
+        let allTabAction = sut.map(event: .onCategorySelected(nil))
+        #expect(allTabAction == .selectCategory(nil))
+
+        // Test other categories
+        #expect(sut.map(event: .onCategorySelected(.business)) == .selectCategory(.business))
+        #expect(sut.map(event: .onCategorySelected(.science)) == .selectCategory(.science))
+        #expect(sut.map(event: .onCategorySelected(.health)) == .selectCategory(.health))
     }
 }

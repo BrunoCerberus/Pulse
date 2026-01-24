@@ -125,4 +125,108 @@ struct HomeDomainInteractorTests {
         let isBookmarked = await mockStorageService.isBookmarked(article.id)
         #expect(isBookmarked)
     }
+
+    // MARK: - Category Selection Tests
+
+    @Test("Select category updates selected category and clears content")
+    func testSelectCategory() async throws {
+        // First load initial data
+        mockNewsService.topHeadlinesResult = .success(Article.mockArticles)
+        mockNewsService.breakingNewsResult = .success(Array(Article.mockArticles.prefix(2)))
+        sut.dispatch(action: .loadInitialData)
+        try await Task.sleep(nanoseconds: 500_000_000)
+
+        // Verify initial state has content
+        #expect(!sut.currentState.headlines.isEmpty)
+        #expect(sut.currentState.selectedCategory == nil)
+
+        // Select a category
+        sut.dispatch(action: .selectCategory(.technology))
+        try await Task.sleep(nanoseconds: 500_000_000)
+
+        let state = sut.currentState
+        #expect(state.selectedCategory == .technology)
+        #expect(state.breakingNews.isEmpty) // Breaking news cleared for category filter
+    }
+
+    @Test("Select same category does nothing")
+    func selectSameCategoryNoOp() async throws {
+        // Set up with a category already selected
+        sut.dispatch(action: .selectCategory(.business))
+        try await Task.sleep(nanoseconds: 500_000_000)
+
+        let stateBeforeReselect = sut.currentState
+
+        // Select the same category again
+        sut.dispatch(action: .selectCategory(.business))
+        try await Task.sleep(nanoseconds: 100_000_000)
+
+        // State should remain unchanged (no re-fetch triggered)
+        #expect(sut.currentState.selectedCategory == stateBeforeReselect.selectedCategory)
+    }
+
+    @Test("Select nil category returns to All tab")
+    func selectNilCategoryReturnsToAll() async throws {
+        // First select a category
+        sut.dispatch(action: .selectCategory(.technology))
+        try await Task.sleep(nanoseconds: 500_000_000)
+        #expect(sut.currentState.selectedCategory == .technology)
+
+        // Set up mock for All tab (includes breaking news)
+        mockNewsService.topHeadlinesResult = .success(Article.mockArticles)
+        mockNewsService.breakingNewsResult = .success(Array(Article.mockArticles.prefix(2)))
+
+        // Select nil to return to All
+        sut.dispatch(action: .selectCategory(nil))
+        try await Task.sleep(nanoseconds: 500_000_000)
+
+        let state = sut.currentState
+        #expect(state.selectedCategory == nil)
+        #expect(!state.breakingNews.isEmpty) // Breaking news should be fetched for All tab
+    }
+
+    @Test("Category selection fetches category-filtered headlines")
+    func categorySelectionFetchesCategoryHeadlines() async throws {
+        let technologyArticles = Article.mockArticles.filter { $0.category == .technology }
+        mockNewsService.categoryHeadlinesResult = .success(technologyArticles)
+
+        sut.dispatch(action: .selectCategory(.technology))
+        try await Task.sleep(nanoseconds: 500_000_000)
+
+        let state = sut.currentState
+        #expect(state.selectedCategory == .technology)
+        #expect(!state.isLoading)
+        #expect(state.hasLoadedInitialData)
+    }
+
+    @Test("Load more respects selected category")
+    func loadMoreWithCategory() async throws {
+        // First select a category and load initial data
+        mockNewsService.categoryHeadlinesResult = .success(Article.mockArticles)
+        sut.dispatch(action: .selectCategory(.technology))
+        try await Task.sleep(nanoseconds: 500_000_000)
+
+        // Load more
+        sut.dispatch(action: .loadMoreHeadlines)
+        try await Task.sleep(nanoseconds: 500_000_000)
+
+        #expect(sut.currentState.selectedCategory == .technology)
+        #expect(sut.currentState.currentPage >= 1)
+    }
+
+    @Test("Refresh respects selected category")
+    func refreshWithCategory() async throws {
+        // First select a category
+        mockNewsService.categoryHeadlinesResult = .success(Article.mockArticles)
+        sut.dispatch(action: .selectCategory(.technology))
+        try await Task.sleep(nanoseconds: 500_000_000)
+
+        // Refresh
+        sut.dispatch(action: .refresh)
+        try await Task.sleep(nanoseconds: 500_000_000)
+
+        let state = sut.currentState
+        #expect(state.selectedCategory == .technology)
+        #expect(state.breakingNews.isEmpty) // No breaking news for category filter
+    }
 }

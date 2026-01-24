@@ -112,4 +112,68 @@ struct HomeViewStateReducerTests {
         let withHeadlines = makeDomainState(headlines: Article.mockArticles)
         #expect(sut.reduce(domainState: withHeadlines).showEmptyState == false)
     }
+
+    // MARK: - Category Tabs Tests
+
+    @Test("showCategoryTabs is true when followedTopics is not empty")
+    func showCategoryTabsWhenFollowedTopicsNotEmpty() {
+        let stateWithTopics = makeDomainState(followedTopics: [.technology, .business])
+        let viewState = sut.reduce(domainState: stateWithTopics)
+
+        #expect(viewState.showCategoryTabs == true)
+        #expect(viewState.followedTopics.count == 2)
+        #expect(viewState.followedTopics.contains(.technology))
+        #expect(viewState.followedTopics.contains(.business))
+    }
+
+    @Test("showCategoryTabs is false when followedTopics is empty")
+    func showCategoryTabsWhenFollowedTopicsEmpty() {
+        let stateWithoutTopics = makeDomainState(followedTopics: [])
+        let viewState = sut.reduce(domainState: stateWithoutTopics)
+
+        #expect(viewState.showCategoryTabs == false)
+        #expect(viewState.followedTopics.isEmpty)
+    }
+
+    @Test("selectedCategory is passed through correctly")
+    func selectedCategoryPassedThrough() {
+        let stateWithCategory = makeDomainState(
+            selectedCategory: .technology,
+            followedTopics: [.technology, .science]
+        )
+        let viewState = sut.reduce(domainState: stateWithCategory)
+
+        #expect(viewState.selectedCategory == .technology)
+    }
+
+    @Test("selectedCategory nil represents All tab")
+    func selectedCategoryNilRepresentsAllTab() {
+        let stateAllTab = makeDomainState(
+            selectedCategory: nil,
+            followedTopics: [.technology, .science]
+        )
+        let viewState = sut.reduce(domainState: stateAllTab)
+
+        #expect(viewState.selectedCategory == nil)
+        #expect(viewState.showCategoryTabs == true)
+    }
+
+    @Test("followedTopics order is preserved")
+    func followedTopicsOrderPreserved() {
+        let orderedTopics: [NewsCategory] = [.science, .technology, .business, .health]
+        let state = makeDomainState(followedTopics: orderedTopics)
+        let viewState = sut.reduce(domainState: state)
+
+        #expect(viewState.followedTopics == orderedTopics)
+    }
+
+    @Test("category tabs with all category types")
+    func categoryTabsWithAllCategoryTypes() {
+        let allCategories: [NewsCategory] = NewsCategory.allCases
+        let state = makeDomainState(followedTopics: allCategories)
+        let viewState = sut.reduce(domainState: state)
+
+        #expect(viewState.showCategoryTabs == true)
+        #expect(viewState.followedTopics.count == allCategories.count)
+    }
 }

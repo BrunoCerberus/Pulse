@@ -6,6 +6,7 @@ import Foundation
 final class MockNewsService: NewsService {
     var topHeadlinesResult: Result<[Article], Error> = .success(Article.mockArticles)
     var breakingNewsResult: Result<[Article], Error> = .success(Array(Article.mockArticles.prefix(3)))
+    var categoryHeadlinesResult: Result<[Article], Error>?
     var fetchArticleResult: Result<Article, Error>?
 
     func fetchTopHeadlines(country _: String, page _: Int) -> AnyPublisher<[Article], Error> {
@@ -13,7 +14,9 @@ final class MockNewsService: NewsService {
     }
 
     func fetchTopHeadlines(category: NewsCategory, country _: String, page _: Int) -> AnyPublisher<[Article], Error> {
-        topHeadlinesResult.publisher
+        // Use categoryHeadlinesResult if set, otherwise fall back to topHeadlinesResult
+        let result = categoryHeadlinesResult ?? topHeadlinesResult
+        return result.publisher
             .map { articles in
                 articles.map { article in
                     Article(
