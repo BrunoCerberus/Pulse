@@ -107,7 +107,7 @@
 
 "settings.title" = "Settings";
 "settings.followed_topics" = "Followed Topics";
-"settings.followed_topics.description" = "Articles from followed topics will appear in your For You feed.";
+"settings.followed_topics.description" = "Articles from followed topics will appear in your Home feed.";
 "settings.content_filters" = "Content Filters";
 "settings.content_filters.description" = "Muted sources and keywords will be hidden from all feeds.";
 "settings.clear_history" = "Clear Reading History";

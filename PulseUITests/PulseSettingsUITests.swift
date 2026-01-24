@@ -91,7 +91,7 @@ final class PulseSettingsUITests: BaseUITestCase {
 
         app.swipeUp()
 
-        let topicsFooterText = app.staticTexts["Articles from followed topics will appear in your For You feed."]
+        let topicsFooterText = app.staticTexts["Articles from followed topics will appear in your Home feed."]
         XCTAssertTrue(topicsFooterText.waitForExistence(timeout: 5), "Footer text should explain followed topics")
 
         let notificationsToggle = app.switches["Enable Notifications"]
