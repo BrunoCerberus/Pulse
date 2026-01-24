@@ -54,17 +54,30 @@ extension DigestViewItem {
         // Create one section per category that has articles
         var sections: [DigestSection] = []
 
+        // Track parsed content to detect when same LLM-generated content appears for multiple categories
+        // This helps prevent the bug where all categories show the same content
+        var seenParsedContent = Set<String>()
+
         for category in categoryOrder {
             guard let articles = articlesByCategory[category], !articles.isEmpty else {
                 continue
             }
 
             // Use pre-parsed content if available, otherwise fallback to extraction
-            let content: String
+            var content: String
             if let categoryName = Self.categoryNames[category],
                let parsed = parsedContent[categoryName], !parsed.isEmpty
             {
-                content = parsed
+                // Check if this exact parsed content was already used by another category
+                // This indicates a parsing failure where all content ended up in one category
+                let normalizedParsed = parsed.lowercased().trimmingCharacters(in: .whitespacesAndNewlines)
+                if seenParsedContent.contains(normalizedParsed) {
+                    // Same content already used - generate fallback instead
+                    content = generateContentFromArticles(articles, category: category)
+                } else {
+                    seenParsedContent.insert(normalizedParsed)
+                    content = parsed
+                }
             } else {
                 content = extractCategoryContent(for: category, articles: articles)
             }
@@ -83,18 +96,22 @@ extension DigestViewItem {
     }
 
     /// Shared patterns for category marker matching
+    /// IMPORTANT: Order matters - most specific patterns first to avoid false positives
     private static func categoryPatterns(for category: String) -> [(pattern: String, markerLength: Int)] {
         [
+            // Most reliable: Markdown bold headers (prioritize these)
             ("**\(category)**", 4 + category.count),
             ("**\(category):**", 5 + category.count),
             ("**\(category)** ", 5 + category.count),
             ("**\(category)**\n", 5 + category.count),
+            // Markdown heading format
             ("## \(category)\n", 4 + category.count),
             ("## \(category) ", 4 + category.count),
-            ("\n\(category):", 2 + category.count),
-            ("\n\(category) ", 2 + category.count),
-            ("• \(category)", 2 + category.count),
-            ("- \(category)", 2 + category.count),
+            // List formats with markers (less reliable, require bullet prefix)
+            ("\n• \(category):", 3 + category.count),
+            ("\n- \(category):", 3 + category.count),
+            ("\n• \(category) ", 3 + category.count),
+            ("\n- \(category) ", 3 + category.count),
         ]
     }
 
@@ -122,6 +139,66 @@ extension DigestViewItem {
 
         result = result.replacingOccurrences(of: "  +", with: " ", options: .regularExpression)
         return result.trimmingCharacters(in: .whitespacesAndNewlines)
+    }
+
+    /// Removes duplicate paragraphs/sentences from content (common LLM repetition issue)
+    private static func deduplicateContent(_ content: String) -> String {
+        // Split into paragraphs (double newline) or sentences
+        let paragraphs = content.components(separatedBy: "\n\n")
+            .map { $0.trimmingCharacters(in: .whitespacesAndNewlines) }
+            .filter { !$0.isEmpty }
+
+        // If we have multiple paragraphs, deduplicate them
+        if paragraphs.count > 1 {
+            var seen = Set<String>()
+            var uniqueParagraphs: [String] = []
+
+            for paragraph in paragraphs {
+                // Normalize for comparison (lowercase, trimmed)
+                let normalized = paragraph.lowercased().trimmingCharacters(in: .whitespacesAndNewlines)
+                if !seen.contains(normalized) {
+                    seen.insert(normalized)
+                    uniqueParagraphs.append(paragraph)
+                }
+            }
+
+            if uniqueParagraphs.count < paragraphs.count {
+                return uniqueParagraphs.joined(separator: "\n\n")
+            }
+        }
+
+        // Also check for repeated sentences within a single paragraph
+        let sentences = content.components(separatedBy: ". ")
+            .map { $0.trimmingCharacters(in: .whitespacesAndNewlines) }
+            .filter { !$0.isEmpty }
+
+        if sentences.count > 2 {
+            var seen = Set<String>()
+            var uniqueSentences: [String] = []
+
+            for sentence in sentences {
+                let normalized = sentence.lowercased().trimmingCharacters(in: .whitespacesAndNewlines)
+                // Skip very short fragments and duplicates
+                if normalized.count > 10, !seen.contains(normalized) {
+                    seen.insert(normalized)
+                    uniqueSentences.append(sentence)
+                } else if normalized.count <= 10, !sentence.isEmpty {
+                    // Keep short fragments (might be important)
+                    uniqueSentences.append(sentence)
+                }
+            }
+
+            if uniqueSentences.count < sentences.count {
+                var result = uniqueSentences.joined(separator: ". ")
+                // Ensure proper ending
+                if !result.hasSuffix(".") && !result.hasSuffix("?") && !result.hasSuffix("!") {
+                    result += "."
+                }
+                return result
+            }
+        }
+
+        return content
     }
 
     /// Parses all category content from the summary in a single pass
@@ -162,7 +239,9 @@ extension DigestViewItem {
                 let cleanedContent = Self.stripCategoryMarkers(from: rawContent)
 
                 if !cleanedContent.isEmpty {
-                    result[current.category] = cleanedContent
+                    // Deduplicate to handle LLM repetition issues
+                    let deduplicatedContent = Self.deduplicateContent(cleanedContent)
+                    result[current.category] = deduplicatedContent
                 }
             }
         }
@@ -238,7 +317,15 @@ extension DigestViewItem {
         var earliestEnd = trimmedOriginal.endIndex
 
         for cat in categories {
-            let patterns = ["**\(cat)**", "* **\(cat)**", "- **\(cat)**", "## \(cat)"]
+            // Only match structured category headers, not category names in prose
+            let patterns = [
+                "**\(cat)**",
+                "\n**\(cat)**",
+                "* **\(cat)**",
+                "- **\(cat)**",
+                "## \(cat)",
+                "\n## \(cat)",
+            ]
             for pattern in patterns {
                 if let range = searchText.range(of: pattern) {
                     let offset = searchText.distance(from: searchText.startIndex, to: range.lowerBound)
@@ -253,7 +340,8 @@ extension DigestViewItem {
         }
 
         let rawContent = String(trimmedOriginal[..<earliestEnd]).trimmingCharacters(in: .whitespacesAndNewlines)
-        return Self.stripCategoryMarkers(from: rawContent)
+        let cleaned = Self.stripCategoryMarkers(from: rawContent)
+        return Self.deduplicateContent(cleaned)
     }
 
     /// Cleans category content by removing bullet points and markdown
@@ -275,8 +363,10 @@ extension DigestViewItem {
 
         result = lines.joined(separator: " ")
         result = result.replacingOccurrences(of: "**", with: "")
+        result = result.trimmingCharacters(in: .whitespacesAndNewlines)
 
-        return result.trimmingCharacters(in: .whitespacesAndNewlines)
+        // Apply deduplication to handle LLM repetition
+        return Self.deduplicateContent(result)
     }
 
     /// Generates a humanized summary from article titles when LLM parsing fails

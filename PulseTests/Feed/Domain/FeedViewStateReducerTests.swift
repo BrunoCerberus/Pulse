@@ -628,6 +628,84 @@ struct DigestViewItemParsingTests {
         #expect(entertainmentSection?.content.lowercased().contains("market updates") == false)
     }
 
+    @Test("parseSections deduplicates repeated LLM content within a category")
+    func parseSectionsDeduplicatesRepeatedContent() {
+        // Simulate LLM repetition bug where the same paragraph is repeated
+        let summary = """
+        **World** The world of international relations was dominated by the ongoing conflict.
+
+        The world of international relations was dominated by the ongoing conflict.
+
+        The world of international relations was dominated by the ongoing conflict.
+
+        **Technology** Tech news covered AI developments.
+        """
+
+        let articles = [
+            createMockArticle(category: .world, title: "Diplomacy News"),
+            createMockArticle(category: .technology, title: "AI Article"),
+        ]
+
+        let digest = DigestViewItem(
+            from: DailyDigest(
+                id: "test",
+                summary: summary,
+                sourceArticles: articles,
+                generatedAt: Date()
+            )
+        )
+
+        let sourceArticles = articles.map { FeedSourceArticle(from: $0) }
+        let sections = digest.parseSections(with: sourceArticles)
+
+        #expect(sections.count == 2)
+
+        // World section should have deduplicated content (not repeated 3 times)
+        let worldSection = sections.first { $0.category == .world }
+        #expect(worldSection != nil)
+
+        // Count occurrences of the repeated phrase
+        let content = worldSection?.content ?? ""
+        let phrase = "international relations was dominated"
+        let occurrences = content.components(separatedBy: phrase).count - 1
+        #expect(occurrences == 1) // Should appear only once after deduplication
+    }
+
+    @Test("parseSections handles all content ending up in one category")
+    func parseSectionsHandlesAllContentInOneCategory() {
+        // Bug scenario: LLM outputs all content without proper category markers
+        // causing everything to be assigned to the first category found
+        let summary = """
+        **World** International news. Technology updates. Business trends. Sports highlights.
+        """
+
+        let articles = [
+            createMockArticle(category: .world, title: "World News"),
+            createMockArticle(category: .technology, title: "Tech News"),
+            createMockArticle(category: .business, title: "Business News"),
+        ]
+
+        let digest = DigestViewItem(
+            from: DailyDigest(
+                id: "test",
+                summary: summary,
+                sourceArticles: articles,
+                generatedAt: Date()
+            )
+        )
+
+        let sourceArticles = articles.map { FeedSourceArticle(from: $0) }
+        let sections = digest.parseSections(with: sourceArticles)
+
+        // All three categories should have sections (even if tech/business use fallback)
+        #expect(sections.count == 3)
+
+        // Each section should have distinct content (not all the same)
+        let contents = sections.map { $0.content.lowercased() }
+        let uniqueContents = Set(contents)
+        #expect(uniqueContents.count == sections.count) // All content should be unique
+    }
+
     // Helper to create mock articles with specific categories
     private func createMockArticle(category: NewsCategory, title: String) -> Article {
         Article(
