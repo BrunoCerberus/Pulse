@@ -60,6 +60,14 @@ final class HomeDomainInteractor: CombineInteractor {
             Logger.shared.service("Failed to retrieve SettingsService: \(error)", level: .warning)
             settingsService = LiveSettingsService(storageService: storageService)
         }
+
+        // Observe preference changes to update followed topics when returning from Settings
+        NotificationCenter.default.publisher(for: .userPreferencesDidChange)
+            .receive(on: DispatchQueue.main)
+            .sink { [weak self] _ in
+                self?.loadFollowedTopics()
+            }
+            .store(in: &cancellables)
     }
 
     func dispatch(action: HomeDomainAction) {
