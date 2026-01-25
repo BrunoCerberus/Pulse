@@ -34,7 +34,7 @@ final class MediaNavigationRouter: NavigationRouter, Equatable {
 
         switch navigationEvent {
         case let .mediaDetail(article):
-            coordinator.push(page: .articleDetail(article))
+            coordinator.push(page: .mediaDetail(article))
         }
     }
 }

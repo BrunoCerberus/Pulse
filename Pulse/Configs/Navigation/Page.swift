@@ -8,6 +8,9 @@ enum Page: Hashable {
     /// Navigate to article detail view
     case articleDetail(Article)
 
+    /// Navigate to media detail view (videos/podcasts)
+    case mediaDetail(Article)
+
     /// Navigate to settings view
     case settings
 }
