@@ -24,11 +24,10 @@ enum SupabaseAPI: APIFetcher {
 
     /// Fields to select for article list views (optimized for feed display)
     /// Note: Media type is derived from category_slug (podcasts/videos)
-    /// Note: media_url is optional - contains direct audio/video URL for podcasts/videos
     private static let listFields = [
         "id", "title", "url", "image_url", "published_at",
         "source_name", "source_slug", "category_name", "category_slug",
-        "summary", "content", "media_url",
+        "summary", "content",
     ].joined(separator: ",")
 
     /// Fields to select for article detail views (includes full content)
