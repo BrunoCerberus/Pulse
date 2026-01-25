@@ -111,6 +111,8 @@ struct MediaDetailView: View {
 
     private var videoPlayer: some View {
         VStack(spacing: Spacing.md) {
+            let _ = print("🎬 MediaDetailView: article.mediaURL = \(viewModel.viewState.article.mediaURL ?? "nil")")
+            let _ = print("🎬 MediaDetailView: article.url = \(viewModel.viewState.article.url)")
             if let mediaURL = viewModel.viewState.article.mediaURL,
                let url = URL(string: mediaURL)
             {

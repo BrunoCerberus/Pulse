@@ -53,6 +53,8 @@ struct VideoPlayerView: UIViewRepresentable {
         let embedURL = convertToEmbedURL(url)
         guard context.coordinator.loadedURL != embedURL else { return }
 
+        print("🎬 VideoPlayerView: Loading URL: \(embedURL.absoluteString)")
+
         context.coordinator.loadedURL = embedURL
         let request = URLRequest(url: embedURL)
         webView.load(request)

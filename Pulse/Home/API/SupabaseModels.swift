@@ -38,6 +38,10 @@ struct SupabaseArticle: Codable {
     let categoryName: String?
     let categorySlug: String?
 
+    // Media URL - direct audio/video file URL (from RSS enclosure tag)
+    // Optional - only present for podcasts/videos if backend provides it
+    let mediaUrl: String?
+
     // No CodingKeys needed - convertFromSnakeCase handles all conversions
 
     private static let iso8601Formatter: ISO8601DateFormatter = {
@@ -93,6 +97,11 @@ struct SupabaseArticle: Codable {
             }
         }()
 
+        // Use media_url if available (direct audio/video file), otherwise fallback to article url
+        // For videos, the url might be a YouTube link which works for embedding
+        // For podcasts, we need the media_url to be the actual audio file URL
+        let effectiveMediaURL = mediaUrl ?? url
+
         return Article(
             id: id,
             title: title,
@@ -106,7 +115,7 @@ struct SupabaseArticle: Codable {
             publishedAt: date,
             category: categorySlug.flatMap { NewsCategory(rawValue: $0) },
             mediaType: derivedMediaType,
-            mediaURL: url, // Use article URL as media URL for now
+            mediaURL: effectiveMediaURL,
             mediaDuration: nil,
             mediaMimeType: nil
         )
@@ -131,6 +140,9 @@ struct SupabaseSearchResult: Codable {
     let sourceSlug: String?
     let categoryName: String?
     let categorySlug: String?
+
+    // Media URL - direct audio/video file URL (optional)
+    let mediaUrl: String?
 
     private static let iso8601Formatter: ISO8601DateFormatter = {
         let formatter = ISO8601DateFormatter()
@@ -177,6 +189,8 @@ struct SupabaseSearchResult: Codable {
             }
         }()
 
+        let effectiveMediaURL = mediaUrl ?? url
+
         return Article(
             id: id,
             title: title,
@@ -190,7 +204,7 @@ struct SupabaseSearchResult: Codable {
             publishedAt: date,
             category: categorySlug.flatMap { NewsCategory(rawValue: $0) },
             mediaType: derivedMediaType,
-            mediaURL: url,
+            mediaURL: effectiveMediaURL,
             mediaDuration: nil,
             mediaMimeType: nil
         )

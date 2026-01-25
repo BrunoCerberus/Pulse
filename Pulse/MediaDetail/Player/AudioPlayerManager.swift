@@ -56,10 +56,11 @@ final class AudioPlayerManager: ObservableObject {
     private func configureAudioSession() {
         do {
             let session = AVAudioSession.sharedInstance()
-            try session.setCategory(.playback, mode: .spokenAudio, options: [.allowAirPlay])
-            try session.setActive(true, options: .notifyOthersOnDeactivation)
+            // Use simple .playback category with .default mode for maximum compatibility
+            try session.setCategory(.playback, mode: .default)
+            try session.setActive(true)
         } catch {
-            // Log but don't fail - simulator often has audio session issues
+            // Log but don't fail - some devices may have restrictions
             print("⚠️ Audio session configuration warning: \(error.localizedDescription)")
         }
     }
@@ -79,22 +80,18 @@ final class AudioPlayerManager: ObservableObject {
     func load(url: URL) {
         cleanup()
 
+        print("🎵 AudioPlayerManager: Loading URL: \(url.absoluteString)")
+
         // Configure audio session before loading
         configureAudioSession()
 
         isLoading = true
         error = nil
 
-        // Create asset with options for better streaming support
-        let options: [String: Any] = [
-            AVURLAssetPreferPreciseDurationAndTimingKey: true,
-        ]
-        let asset = AVURLAsset(url: url, options: options)
+        // Create asset - use simple initialization for better compatibility
+        let asset = AVURLAsset(url: url)
         playerItem = AVPlayerItem(asset: asset)
         player = AVPlayer(playerItem: playerItem)
-
-        // Enable external playback
-        player?.allowsExternalPlayback = true
 
         setupObservers()
     }
