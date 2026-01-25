@@ -17,6 +17,16 @@ Pulse/
 │   │   └── Manager/            # AuthenticationManager (global state)
 │   ├── [Feature]/              # Feature modules (Home, Search, Bookmarks, etc.)
 │   │   └── API/                # Service protocols + SupabaseAPI, SupabaseModels
+│   ├── Media/                  # Videos and Podcasts browsing
+│   │   ├── Domain/             # MediaDomainInteractor, State, Action, Reducer, EventActionMap
+│   │   ├── ViewModel/          # MediaViewModel
+│   │   ├── View/               # MediaView, MediaCard, FeaturedMediaCard
+│   │   └── Router/             # MediaNavigationRouter
+│   ├── MediaDetail/            # Video/Podcast playback
+│   │   ├── Domain/             # MediaDetailDomainInteractor, State, Action
+│   │   ├── ViewModel/          # MediaDetailViewModel
+│   │   ├── View/               # MediaDetailView, VideoPlayerView, AudioPlayerView, YouTubeThumbnailView
+│   │   └── Player/             # AudioPlayerManager (AVPlayer wrapper)
 │   ├── Feed/                   # AI-powered Daily Digest
 │   │   ├── API/                # FeedService protocol + Live/Mock
 │   │   ├── Domain/             # FeedDomainInteractor, State, Action, Reducer, EventActionMap
@@ -310,9 +320,9 @@ CoordinatorView (@StateObject Coordinator)
        │
    TabView (selection: $coordinator.selectedTab)
        │
-   ┌───┴───┬──────┬─────────┬───────┐
- Home    Feed   Bookmarks  Search
-   │        │           │         │
+   ┌───┴───┬──────┬──────┬─────────┬───────┐
+ Home   Media   Feed   Bookmarks  Search
+   │        │       │           │         │
 NavigationStack(path: $coordinator.homePath)
        │
 .navigationDestination(for: Page.self)
@@ -370,6 +380,7 @@ final class HomeNavigationRouter: NavigationRouter {
 | Deeplink | Description | Status |
 |----------|-------------|--------|
 | `pulse://home` | Open home tab | ✅ Full |
+| `pulse://media` | Open Media tab (Videos & Podcasts) | ✅ Full |
 | `pulse://feed` | Open Feed tab (AI Daily Digest) | ✅ Full |
 | `pulse://bookmarks` | Open bookmarks tab | ✅ Full |
 | `pulse://search` | Open search tab | ✅ Full |
