@@ -31,6 +31,18 @@ struct CoordinatorView: View {
                 }
             }
 
+            Tab("Media", systemImage: AppTab.media.symbolImage, value: .media) {
+                NavigationStack(path: $coordinator.mediaPath) {
+                    MediaView(
+                        router: MediaNavigationRouter(coordinator: coordinator),
+                        viewModel: coordinator.mediaViewModel
+                    )
+                    .navigationDestination(for: Page.self) { page in
+                        coordinator.build(page: page)
+                    }
+                }
+            }
+
             Tab("Feed", systemImage: AppTab.feed.symbolImage, value: .feed) {
                 NavigationStack(path: $coordinator.feedPath) {
                     FeedView(

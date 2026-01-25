@@ -83,6 +83,12 @@ final class DeeplinkRouter {
         case .home:
             coordinator.switchTab(to: .home, popToRoot: true)
 
+        case let .media(type):
+            coordinator.switchTab(to: .media, popToRoot: true)
+            if let type {
+                coordinator.mediaViewModel.handle(event: .onMediaTypeSelected(type))
+            }
+
         case let .search(query):
             coordinator.switchTab(to: .search, popToRoot: true)
             if let query, !query.isEmpty {

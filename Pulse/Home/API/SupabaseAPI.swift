@@ -15,12 +15,15 @@ enum SupabaseAPI: APIFetcher {
     case search(query: String, page: Int, pageSize: Int)
     case categories
     case sources
+    case media(type: String?, page: Int, pageSize: Int)
+    case featuredMedia(type: String?, limit: Int)
 
     private var baseURL: String {
         SupabaseConfig.url + "/functions/v1"
     }
 
     /// Fields to select for article list views (optimized for feed display)
+    /// Note: Media type is derived from category_slug (podcasts/videos)
     private static let listFields = [
         "id", "title", "url", "image_url", "published_at",
         "source_name", "source_slug", "category_name", "category_slug",
@@ -86,6 +89,40 @@ enum SupabaseAPI: APIFetcher {
 
         case .sources:
             endpoint = "/api-sources"
+
+        case let .media(type, page, pageSize):
+            endpoint = "/api-articles"
+            let offset = (page - 1) * pageSize
+            queryItems.append(URLQueryItem(name: "select", value: Self.listFields))
+
+            // Filter by category_slug for media content
+            if let type {
+                queryItems.append(URLQueryItem(name: "category_slug", value: "eq.\(type)"))
+            } else {
+                // Both podcasts and videos
+                queryItems.append(URLQueryItem(name: "category_slug", value: "in.(podcasts,videos)"))
+            }
+
+            queryItems.append(URLQueryItem(name: "order", value: "published_at.desc"))
+            queryItems.append(URLQueryItem(name: "limit", value: String(pageSize)))
+            if offset > 0 {
+                queryItems.append(URLQueryItem(name: "offset", value: String(offset)))
+            }
+
+        case let .featuredMedia(type, limit):
+            endpoint = "/api-articles"
+            queryItems.append(URLQueryItem(name: "select", value: Self.listFields))
+
+            // Filter by category_slug for media content
+            if let type {
+                queryItems.append(URLQueryItem(name: "category_slug", value: "eq.\(type)"))
+            } else {
+                // Both podcasts and videos
+                queryItems.append(URLQueryItem(name: "category_slug", value: "in.(podcasts,videos)"))
+            }
+
+            queryItems.append(URLQueryItem(name: "order", value: "published_at.desc"))
+            queryItems.append(URLQueryItem(name: "limit", value: String(limit)))
         }
 
         guard var components = URLComponents(string: baseURL + endpoint) else {

@@ -194,6 +194,7 @@ final class PulseSceneDelegate: UIResponder, UIWindowSceneDelegate {
                 serviceLocator.register(LLMService.self, instance: MockLLMService())
                 serviceLocator.register(SummarizationService.self, instance: MockSummarizationService())
                 serviceLocator.register(FeedService.self, instance: MockFeedService.withSampleData())
+                serviceLocator.register(MediaService.self, instance: MockMediaService())
 
                 // Check for MOCK_PREMIUM environment variable to control premium status in UI tests
                 let isPremium = ProcessInfo.processInfo.environment["MOCK_PREMIUM"] == "1"
@@ -240,6 +241,7 @@ final class PulseSceneDelegate: UIResponder, UIWindowSceneDelegate {
         // Falls back to Guardian API if Supabase is not configured or on error
         serviceLocator.register(NewsService.self, instance: CachingNewsService(wrapping: LiveNewsService()))
         serviceLocator.register(SearchService.self, instance: LiveSearchService())
+        serviceLocator.register(MediaService.self, instance: LiveMediaService())
         serviceLocator.register(StoreKitService.self, instance: LiveStoreKitService())
         serviceLocator.register(LLMService.self, instance: LiveLLMService())
         serviceLocator.register(SummarizationService.self, instance: LiveSummarizationService())

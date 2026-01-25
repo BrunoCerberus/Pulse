@@ -84,6 +84,15 @@ struct SupabaseArticle: Codable {
             articleContent = nil
         }
 
+        // Derive media type from category slug
+        let derivedMediaType: MediaType? = {
+            switch categorySlug {
+            case "podcasts": return .podcast
+            case "videos": return .video
+            default: return nil
+            }
+        }()
+
         return Article(
             id: id,
             title: title,
@@ -95,7 +104,11 @@ struct SupabaseArticle: Codable {
             imageURL: imageUrl,
             thumbnailURL: imageUrl, // Use same image for thumbnail
             publishedAt: date,
-            category: categorySlug.flatMap { NewsCategory(rawValue: $0) }
+            category: categorySlug.flatMap { NewsCategory(rawValue: $0) },
+            mediaType: derivedMediaType,
+            mediaURL: url, // Use article URL as media URL for now
+            mediaDuration: nil,
+            mediaMimeType: nil
         )
     }
 }
@@ -155,6 +168,15 @@ struct SupabaseSearchResult: Codable {
             articleContent = nil
         }
 
+        // Derive media type from category slug
+        let derivedMediaType: MediaType? = {
+            switch categorySlug {
+            case "podcasts": return .podcast
+            case "videos": return .video
+            default: return nil
+            }
+        }()
+
         return Article(
             id: id,
             title: title,
@@ -166,7 +188,11 @@ struct SupabaseSearchResult: Codable {
             imageURL: imageUrl,
             thumbnailURL: imageUrl,
             publishedAt: date,
-            category: categorySlug.flatMap { NewsCategory(rawValue: $0) }
+            category: categorySlug.flatMap { NewsCategory(rawValue: $0) },
+            mediaType: derivedMediaType,
+            mediaURL: url,
+            mediaDuration: nil,
+            mediaMimeType: nil
         )
     }
 }
