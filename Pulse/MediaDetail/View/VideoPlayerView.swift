@@ -3,8 +3,8 @@ import WebKit
 
 /// A WKWebView wrapper for embedding video content (YouTube, etc.).
 ///
-/// This view embeds the video URL in a WKWebView with inline playback enabled,
-/// allowing videos to play directly within the app without redirecting to Safari.
+/// This view embeds videos using an HTML iframe with proper configuration
+/// for mobile playback, allowing videos to play directly within the app.
 struct VideoPlayerView: UIViewRepresentable {
     /// The URL of the video to embed.
     let url: URL
@@ -30,6 +30,7 @@ struct VideoPlayerView: UIViewRepresentable {
         let config = WKWebViewConfiguration()
         config.allowsInlineMediaPlayback = true
         config.mediaTypesRequiringUserActionForPlayback = []
+        config.allowsPictureInPictureMediaPlayback = true
 
         let preferences = WKWebpagePreferences()
         preferences.allowsContentJavaScript = true
@@ -50,30 +51,57 @@ struct VideoPlayerView: UIViewRepresentable {
 
     func updateUIView(_ webView: WKWebView, context: Context) {
         // Prevent reloading if URL hasn't changed
-        let embedURL = convertToEmbedURL(url)
-        guard context.coordinator.loadedURL != embedURL else { return }
+        guard context.coordinator.loadedURL != url else { return }
+        context.coordinator.loadedURL = url
 
-        context.coordinator.loadedURL = embedURL
-        let request = URLRequest(url: embedURL)
-        webView.load(request)
+        // Check if it's a YouTube video
+        if let videoID = extractYouTubeVideoID(from: url.absoluteString) {
+            let html = createYouTubeEmbedHTML(videoID: videoID)
+            webView.loadHTMLString(html, baseURL: URL(string: "https://www.youtube.com"))
+        } else {
+            // For non-YouTube videos, load the URL directly
+            let request = URLRequest(url: url)
+            webView.load(request)
+        }
     }
 
-    /// Converts a regular video URL to an embeddable format.
-    /// - YouTube watch URLs are converted to embed URLs
-    /// - Other URLs are returned as-is
-    private func convertToEmbedURL(_ url: URL) -> URL {
-        let urlString = url.absoluteString
-
-        // Handle YouTube watch URLs
-        // Formats: youtube.com/watch?v=VIDEO_ID, youtu.be/VIDEO_ID, www.youtube.com/watch?v=VIDEO_ID
-        if let videoID = extractYouTubeVideoID(from: urlString) {
-            let embedURLString = "https://www.youtube.com/embed/\(videoID)?playsinline=1&autoplay=0"
-            if let embedURL = URL(string: embedURLString) {
-                return embedURL
-            }
-        }
-
-        return url
+    /// Creates an HTML page with an embedded YouTube iframe using the IFrame Player API.
+    private func createYouTubeEmbedHTML(videoID: String) -> String {
+        """
+        <!DOCTYPE html>
+        <html>
+        <head>
+            <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+            <style>
+                * { margin: 0; padding: 0; box-sizing: border-box; }
+                html, body { width: 100%; height: 100%; background: #000; overflow: hidden; }
+                .video-container {
+                    position: relative;
+                    width: 100%;
+                    height: 100%;
+                }
+                iframe {
+                    position: absolute;
+                    top: 0;
+                    left: 0;
+                    width: 100%;
+                    height: 100%;
+                    border: none;
+                }
+            </style>
+        </head>
+        <body>
+            <div class="video-container">
+                <iframe
+                    src="https://www.youtube.com/embed/\(videoID)?playsinline=1&enablejsapi=1&rel=0&modestbranding=1&fs=1"
+                    allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share"
+                    allowfullscreen
+                    referrerpolicy="strict-origin-when-cross-origin">
+                </iframe>
+            </div>
+        </body>
+        </html>
+        """
     }
 
     /// Extracts YouTube video ID from various URL formats.
@@ -99,7 +127,10 @@ struct VideoPlayerView: UIViewRepresentable {
 
         // Pattern 3: youtube.com/embed/VIDEO_ID (already embed format)
         if urlString.contains("youtube.com/embed/") {
-            return nil // Already in embed format
+            let parts = urlString.components(separatedBy: "youtube.com/embed/")
+            if parts.count > 1 {
+                return parts[1].components(separatedBy: "?").first
+            }
         }
 
         return nil
