@@ -283,13 +283,4 @@ final class MediaUITests: BaseUITestCase {
         return waitForAny(detailIndicators, timeout: timeout)
     }
 
-    private func navigateBack() {
-        let backButton = app.buttons["backButton"]
-        if backButton.exists, backButton.isHittable {
-            backButton.tap()
-        } else {
-            app.swipeRight()
-        }
-        wait(for: 0.3)
-    }
 }
