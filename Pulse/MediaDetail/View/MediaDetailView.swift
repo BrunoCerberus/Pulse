@@ -111,34 +111,43 @@ struct MediaDetailView: View {
 
     private var videoPlayer: some View {
         VStack(spacing: Spacing.md) {
-            if let mediaURL = viewModel.viewState.article.mediaURL,
-               let url = URL(string: mediaURL)
-            {
-                VideoPlayerView(
-                    url: url,
-                    onLoadingStarted: {
-                        viewModel.handle(event: .onPlayerLoading)
-                    },
-                    onLoadingFinished: {
-                        viewModel.handle(event: .onPlayerReady)
-                    },
-                    onError: { error in
-                        viewModel.handle(event: .onError(error))
+            if let mediaURL = viewModel.viewState.article.mediaURL {
+                // YouTube videos: show thumbnail with play button (embedding often blocked)
+                if mediaURL.contains("youtube.com") || mediaURL.contains("youtu.be") {
+                    YouTubeThumbnailView(
+                        urlString: mediaURL,
+                        articleImageURL: viewModel.viewState.article.imageURL
+                    )
+                } else if let url = URL(string: mediaURL) {
+                    // Direct video files: use VideoPlayerView
+                    VideoPlayerView(
+                        url: url,
+                        onLoadingStarted: {
+                            viewModel.handle(event: .onPlayerLoading)
+                        },
+                        onLoadingFinished: {
+                            viewModel.handle(event: .onPlayerReady)
+                        },
+                        onError: { error in
+                            viewModel.handle(event: .onError(error))
+                        }
+                    )
+                    .aspectRatio(16 / 9, contentMode: .fit)
+                    .clipShape(RoundedRectangle(cornerRadius: CornerRadius.lg))
+                    .overlay {
+                        if viewModel.viewState.isLoading {
+                            RoundedRectangle(cornerRadius: CornerRadius.lg)
+                                .fill(.black.opacity(0.5))
+                                .overlay {
+                                    ProgressView()
+                                        .tint(.white)
+                                }
+                        }
                     }
-                )
-                .aspectRatio(16 / 9, contentMode: .fit)
-                .clipShape(RoundedRectangle(cornerRadius: CornerRadius.lg))
-                .overlay {
-                    if viewModel.viewState.isLoading {
-                        RoundedRectangle(cornerRadius: CornerRadius.lg)
-                            .fill(.black.opacity(0.5))
-                            .overlay {
-                                ProgressView()
-                                    .tint(.white)
-                            }
-                    }
+                    .padding(.horizontal, Spacing.md)
+                } else {
+                    errorView(message: Constants.videoUnavailable)
                 }
-                .padding(.horizontal, Spacing.md)
             } else {
                 errorView(message: Constants.videoUnavailable)
             }
