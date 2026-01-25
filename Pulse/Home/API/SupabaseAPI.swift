@@ -23,11 +23,12 @@ enum SupabaseAPI: APIFetcher {
     }
 
     /// Fields to select for article list views (optimized for feed display)
-    /// Note: Media type is derived from category_slug (podcasts/videos)
+    /// Includes media fields for podcasts/videos support
     private static let listFields = [
         "id", "title", "url", "image_url", "published_at",
         "source_name", "source_slug", "category_name", "category_slug",
         "summary", "content",
+        "media_type", "media_url", "media_duration", "media_mime_type",
     ].joined(separator: ",")
 
     /// Fields to select for article detail views (includes full content)
@@ -146,7 +147,9 @@ enum SupabaseAPI: APIFetcher {
         .GET
     }
 
-    var task: (any Codable)? { nil }
+    var task: (any Codable)? {
+        nil
+    }
 
     var header: (any Codable)? {
         // Edge Functions API is public - no authentication required

@@ -38,9 +38,11 @@ struct SupabaseArticle: Codable {
     let categoryName: String?
     let categorySlug: String?
 
-    // Media URL - direct audio/video file URL (from RSS enclosure tag)
-    // Optional - only present for podcasts/videos if backend provides it
-    let mediaUrl: String?
+    // Media fields (for podcasts and videos)
+    let mediaType: String? // "podcast", "video", or nil
+    let mediaUrl: String? // Direct URL to audio/video file
+    let mediaDuration: Int? // Duration in seconds
+    let mediaMimeType: String? // "audio/mpeg", "video/mp4", etc.
 
     // No CodingKeys needed - convertFromSnakeCase handles all conversions
 
@@ -88,8 +90,16 @@ struct SupabaseArticle: Codable {
             articleContent = nil
         }
 
-        // Derive media type from category slug
+        // Use media_type field directly from backend, fallback to category_slug
         let derivedMediaType: MediaType? = {
+            if let type = mediaType {
+                switch type {
+                case "podcast": return .podcast
+                case "video": return .video
+                default: return nil
+                }
+            }
+            // Fallback: derive from category_slug
             switch categorySlug {
             case "podcasts": return .podcast
             case "videos": return .video
@@ -116,8 +126,8 @@ struct SupabaseArticle: Codable {
             category: categorySlug.flatMap { NewsCategory(rawValue: $0) },
             mediaType: derivedMediaType,
             mediaURL: effectiveMediaURL,
-            mediaDuration: nil,
-            mediaMimeType: nil
+            mediaDuration: mediaDuration,
+            mediaMimeType: mediaMimeType
         )
     }
 }
@@ -141,8 +151,11 @@ struct SupabaseSearchResult: Codable {
     let categoryName: String?
     let categorySlug: String?
 
-    // Media URL - direct audio/video file URL (optional)
+    // Media fields (for podcasts and videos)
+    let mediaType: String?
     let mediaUrl: String?
+    let mediaDuration: Int?
+    let mediaMimeType: String?
 
     private static let iso8601Formatter: ISO8601DateFormatter = {
         let formatter = ISO8601DateFormatter()
@@ -180,8 +193,15 @@ struct SupabaseSearchResult: Codable {
             articleContent = nil
         }
 
-        // Derive media type from category slug
+        // Use media_type field directly, fallback to category_slug
         let derivedMediaType: MediaType? = {
+            if let type = mediaType {
+                switch type {
+                case "podcast": return .podcast
+                case "video": return .video
+                default: return nil
+                }
+            }
             switch categorySlug {
             case "podcasts": return .podcast
             case "videos": return .video
@@ -205,8 +225,8 @@ struct SupabaseSearchResult: Codable {
             category: categorySlug.flatMap { NewsCategory(rawValue: $0) },
             mediaType: derivedMediaType,
             mediaURL: effectiveMediaURL,
-            mediaDuration: nil,
-            mediaMimeType: nil
+            mediaDuration: mediaDuration,
+            mediaMimeType: mediaMimeType
         )
     }
 }
