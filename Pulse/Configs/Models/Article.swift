@@ -63,12 +63,49 @@ struct Article: Identifiable, Equatable, Codable, Hashable {
 
     /// Returns the best available image URL for list/cell display (prefers thumbnail)
     var displayImageURL: String? {
-        thumbnailURL ?? imageURL
+        // For YouTube videos, extract the thumbnail from the video ID
+        if let youtubeThumbnail = youTubeThumbnailURL {
+            return youtubeThumbnail
+        }
+        return thumbnailURL ?? imageURL
     }
 
     /// Returns the best available image URL for detail/hero display (prefers full resolution)
     var heroImageURL: String? {
-        imageURL ?? thumbnailURL
+        // For YouTube videos, use maxresdefault thumbnail
+        if let youtubeThumbnail = youTubeThumbnailURL {
+            return youtubeThumbnail
+        }
+        return imageURL ?? thumbnailURL
+    }
+
+    /// Extracts YouTube thumbnail URL from mediaURL if it's a YouTube video.
+    private var youTubeThumbnailURL: String? {
+        guard let mediaURL, mediaType == .video else { return nil }
+
+        // Only process YouTube URLs
+        guard mediaURL.contains("youtube.com") || mediaURL.contains("youtu.be") else {
+            return nil
+        }
+
+        var videoID: String?
+
+        // Pattern 1: youtube.com/watch?v=VIDEO_ID
+        if mediaURL.contains("youtube.com/watch") {
+            if let components = URLComponents(string: mediaURL) {
+                videoID = components.queryItems?.first(where: { $0.name == "v" })?.value
+            }
+        }
+        // Pattern 2: youtu.be/VIDEO_ID
+        else if mediaURL.contains("youtu.be/") {
+            let parts = mediaURL.components(separatedBy: "youtu.be/")
+            if parts.count > 1 {
+                videoID = parts[1].components(separatedBy: "?").first
+            }
+        }
+
+        guard let id = videoID else { return nil }
+        return "https://img.youtube.com/vi/\(id)/maxresdefault.jpg"
     }
 
     var formattedDate: String {
