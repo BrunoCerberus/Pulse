@@ -268,7 +268,8 @@ struct DigestViewItemParsingTests {
         // Should still create sections using fallback content generation
         #expect(sections.count == 1)
         #expect(sections.first?.category == .technology)
-        #expect(try !(#require(sections.first?.content.isEmpty)))
+        let contentIsEmpty = try #require(sections.first?.content.isEmpty)
+        #expect(!contentIsEmpty)
     }
 
     @Test("parseSections does not duplicate content across categories")
@@ -327,7 +328,8 @@ struct DigestViewItemParsingTests {
         // Should still create sections using fallback content generation
         #expect(sections.count == 1)
         #expect(sections.first?.category == .technology)
-        #expect(try !(#require(sections.first?.content.isEmpty)))
+        let contentIsEmpty = try #require(sections.first?.content.isEmpty)
+        #expect(!contentIsEmpty)
     }
 
     @Test("parseSections handles single category correctly")
