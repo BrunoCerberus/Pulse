@@ -36,9 +36,7 @@ final class AudioPlayerManager: ObservableObject {
 
     // MARK: - Initialization
 
-    init() {
-        configureAudioSession()
-    }
+    init() {}
 
     deinit {
         // Perform cleanup inline since deinit is nonisolated
@@ -53,13 +51,25 @@ final class AudioPlayerManager: ObservableObject {
 
     // MARK: - Audio Session
 
+    /// Configures and activates the audio session for playback.
+    /// Called lazily when loading audio to avoid simulator issues.
     private func configureAudioSession() {
         do {
             let session = AVAudioSession.sharedInstance()
-            try session.setCategory(.playback, mode: .spokenAudio)
-            try session.setActive(true)
+            try session.setCategory(.playback, mode: .spokenAudio, options: [.allowAirPlay])
+            try session.setActive(true, options: .notifyOthersOnDeactivation)
         } catch {
-            self.error = "Failed to configure audio session: \(error.localizedDescription)"
+            // Log but don't fail - simulator often has audio session issues
+            print("⚠️ Audio session configuration warning: \(error.localizedDescription)")
+        }
+    }
+
+    /// Deactivates the audio session when done.
+    private func deactivateAudioSession() {
+        do {
+            try AVAudioSession.sharedInstance().setActive(false, options: .notifyOthersOnDeactivation)
+        } catch {
+            // Ignore deactivation errors
         }
     }
 
@@ -69,12 +79,22 @@ final class AudioPlayerManager: ObservableObject {
     func load(url: URL) {
         cleanup()
 
+        // Configure audio session before loading
+        configureAudioSession()
+
         isLoading = true
         error = nil
 
-        let asset = AVURLAsset(url: url)
+        // Create asset with options for better streaming support
+        let options: [String: Any] = [
+            AVURLAssetPreferPreciseDurationAndTimingKey: true,
+        ]
+        let asset = AVURLAsset(url: url, options: options)
         playerItem = AVPlayerItem(asset: asset)
         player = AVPlayer(playerItem: playerItem)
+
+        // Enable external playback
+        player?.allowsExternalPlayback = true
 
         setupObservers()
     }
@@ -139,6 +159,9 @@ final class AudioPlayerManager: ObservableObject {
         player?.pause()
         player = nil
         playerItem = nil
+
+        // Deactivate audio session
+        deactivateAudioSession()
     }
 
     // MARK: - Observers
