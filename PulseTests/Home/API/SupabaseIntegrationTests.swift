@@ -200,7 +200,11 @@ struct SupabaseArticleMappingTests {
         sourceName: String? = "Test Source",
         sourceSlug: String? = "test-source",
         categoryName: String? = "Technology",
-        categorySlug: String? = "technology"
+        categorySlug: String? = "technology",
+        mediaType: String? = nil,
+        mediaUrl: String? = nil,
+        mediaDuration: Int? = nil,
+        mediaMimeType: String? = nil
     ) -> SupabaseArticle {
         SupabaseArticle(
             id: id,
@@ -213,7 +217,11 @@ struct SupabaseArticleMappingTests {
             sourceName: sourceName,
             sourceSlug: sourceSlug,
             categoryName: categoryName,
-            categorySlug: categorySlug
+            categorySlug: categorySlug,
+            mediaType: mediaType,
+            mediaUrl: mediaUrl,
+            mediaDuration: mediaDuration,
+            mediaMimeType: mediaMimeType
         )
     }
 }
