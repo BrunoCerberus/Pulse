@@ -184,8 +184,7 @@ final class MediaViewSnapshotTests: XCTestCase {
         let item = MediaViewItem(from: videoArticle, index: 0)
         let view = FeaturedMediaCard(
             item: item,
-            onTap: {},
-            onPlay: {}
+            onTap: {}
         )
         .frame(width: 375)
         .padding()
@@ -203,8 +202,7 @@ final class MediaViewSnapshotTests: XCTestCase {
         let item = MediaViewItem(from: podcastArticle, index: 0)
         let view = FeaturedMediaCard(
             item: item,
-            onTap: {},
-            onPlay: {}
+            onTap: {}
         )
         .frame(width: 375)
         .padding()
@@ -222,8 +220,7 @@ final class MediaViewSnapshotTests: XCTestCase {
         let item = MediaViewItem(from: videoArticle, index: 0)
         let view = FeaturedMediaCard(
             item: item,
-            onTap: {},
-            onPlay: {}
+            onTap: {}
         )
         .frame(width: 375)
         .padding()
@@ -365,8 +362,8 @@ private struct MediaSegmentedControlPreview: View {
                 .ignoresSafeArea()
 
             MediaSegmentedControl(
-                selectedType: .constant(selectedType),
-                onTypeSelected: { _ in }
+                selectedType: selectedType,
+                onSelect: { _ in }
             )
         }
     }
