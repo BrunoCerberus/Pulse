@@ -72,7 +72,9 @@ enum SearchSortOption: String, CaseIterable, Identifiable {
     /// Sort by popularity/engagement.
     case popularity
 
-    var id: String { rawValue }
+    var id: String {
+        rawValue
+    }
 
     /// Human-readable display name for the sort option.
     var displayName: String {

@@ -2,8 +2,8 @@ import Foundation
 @testable import Pulse
 import Testing
 
-// Note: Keychain tests require host app entitlements to run.
-// These tests are disabled in unit test target but can run in UI tests.
+/// Note: Keychain tests require host app entitlements to run.
+/// These tests are disabled in unit test target but can run in UI tests.
 @Suite("KeychainManager Tests", .serialized, .disabled("Keychain requires host app entitlements"))
 @MainActor
 struct KeychainManagerTests {
@@ -181,7 +181,7 @@ struct KeychainManagerTests {
     // MARK: - Error Description Tests
 
     @Test("KeychainError has error descriptions")
-    func keychainErrorHasDescriptions() {
+    func keychainErrorHasDescriptions() throws {
         let errors: [KeychainManager.KeychainError] = [
             .duplicateEntry,
             .unknown(0),
@@ -192,7 +192,7 @@ struct KeychainManagerTests {
 
         for error in errors {
             #expect(error.errorDescription != nil)
-            #expect(!error.errorDescription!.isEmpty)
+            #expect(try !(#require(error.errorDescription?.isEmpty)))
         }
     }
 }

@@ -34,7 +34,7 @@ struct ServiceLocatorTests {
     }
 
     @Test("Clear removes all services")
-    func testClear() throws {
+    func testClear() {
         let serviceLocator = ServiceLocator()
         let mockService = MockNewsService()
         serviceLocator.register(NewsService.self, instance: mockService)

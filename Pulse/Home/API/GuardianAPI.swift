@@ -61,9 +61,13 @@ enum GuardianAPI: APIFetcher {
         .GET
     }
 
-    var task: (any Codable)? { nil }
+    var task: (any Codable)? {
+        nil
+    }
 
-    var header: (any Codable)? { nil }
+    var header: (any Codable)? {
+        nil
+    }
 
     var debug: Bool {
         #if DEBUG

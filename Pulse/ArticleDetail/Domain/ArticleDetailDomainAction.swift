@@ -1,7 +1,7 @@
 import Foundation
 
 enum ArticleDetailDomainAction: Equatable {
-    // Lifecycle
+    /// Lifecycle
     case onAppear
 
     // Bookmark
@@ -12,10 +12,10 @@ enum ArticleDetailDomainAction: Equatable {
     case showShareSheet
     case dismissShareSheet
 
-    // Browser
+    /// Browser
     case openInBrowser
 
-    // Content processing
+    /// Content processing
     case contentProcessingCompleted(content: AttributedString?, description: AttributedString?)
 
     // Summarization sheet

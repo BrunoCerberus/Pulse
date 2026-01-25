@@ -236,7 +236,7 @@ struct ArticleDetailVMContentTests {
 @MainActor
 struct ArticleDetailVMBookmarkTests {
     @Test("Toggle bookmark adds article to bookmarks")
-    func toggleBookmarkAddsToBookmarks() async throws {
+    func toggleBookmarkAddsToBookmarks() async {
         let (serviceLocator, mockStorageService) = createTestServiceLocator()
         let testArticle = createTestArticle()
         let sut = ArticleDetailViewModel(article: testArticle, serviceLocator: serviceLocator)
@@ -306,7 +306,7 @@ struct ArticleDetailVMBookmarkTests {
     }
 
     @Test("Share sets showShareSheet to true")
-    func shareShowsShareSheet() async throws {
+    func shareShowsShareSheet() async {
         let (serviceLocator, _) = createTestServiceLocator()
         let testArticle = createTestArticle()
         let sut = ArticleDetailViewModel(article: testArticle, serviceLocator: serviceLocator)

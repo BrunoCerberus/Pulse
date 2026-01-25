@@ -66,7 +66,7 @@ struct AuthenticationManagerTests {
     }
 
     @Test("Auth state changes are published")
-    func authStateChangesArePublished() async throws {
+    func authStateChangesArePublished() async {
         mockAuthService.mockCurrentUser = nil
         sut.configure(with: mockAuthService)
 
@@ -104,7 +104,7 @@ struct AuthenticationManagerTests {
     }
 
     @Test("Auth state publisher emits state changes")
-    func authStatePublisherEmitsChanges() async throws {
+    func authStatePublisherEmitsChanges() async {
         mockAuthService.mockCurrentUser = nil
         sut.configure(with: mockAuthService)
 
@@ -136,7 +136,7 @@ struct AuthenticationManagerTests {
     }
 
     @Test("Logout triggers unauthenticated state")
-    func logoutTriggersUnauthenticatedState() async throws {
+    func logoutTriggersUnauthenticatedState() async {
         let testUser = AuthUser(
             uid: "test-user-logout",
             email: "logout@example.com",
@@ -163,7 +163,7 @@ struct AuthenticationManagerTests {
     }
 
     @Test("Current user is updated when auth state changes")
-    func currentUserIsUpdated() async throws {
+    func currentUserIsUpdated() async {
         mockAuthService.mockCurrentUser = nil
         sut.configure(with: mockAuthService)
 

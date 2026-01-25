@@ -95,8 +95,7 @@ struct VideoPlayerView: UIViewRepresentable {
             let parts = urlString.components(separatedBy: "youtu.be/")
             if parts.count > 1 {
                 // Remove any query parameters
-                let videoID = parts[1].components(separatedBy: "?").first
-                return videoID
+                return parts[1].components(separatedBy: "?").first
             }
         }
 

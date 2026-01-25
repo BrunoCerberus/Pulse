@@ -45,11 +45,11 @@ struct ImageCacheTests {
     }
 
     @Test("ImageCache returns nil for uncached URL")
-    func returnsNilForUncachedURL() {
+    func returnsNilForUncachedURL() throws {
         let cache = ImageCache.shared
 
         // Use a unique URL that hasn't been cached
-        let uncachedURL = URL(string: "https://example.com/uncached-\(UUID().uuidString).jpg")!
+        let uncachedURL = try #require(URL(string: "https://example.com/uncached-\(UUID().uuidString).jpg"))
 
         let retrievedImage = cache.image(for: uncachedURL)
 
@@ -57,12 +57,12 @@ struct ImageCacheTests {
     }
 
     @Test("clearCache removes all cached images")
-    func clearCacheRemovesAllImages() {
+    func clearCacheRemovesAllImages() throws {
         let cache = ImageCache.shared
 
         // Use unique URLs for this test to avoid interference
-        let url1 = URL(string: "https://example.com/clear-test-1-\(UUID().uuidString).jpg")!
-        let url2 = URL(string: "https://example.com/clear-test-2-\(UUID().uuidString).jpg")!
+        let url1 = try #require(URL(string: "https://example.com/clear-test-1-\(UUID().uuidString).jpg"))
+        let url2 = try #require(URL(string: "https://example.com/clear-test-2-\(UUID().uuidString).jpg"))
 
         // Store images
         cache.setImage(testImage, for: url1)
@@ -83,11 +83,11 @@ struct ImageCacheTests {
     // MARK: - Cache Hit Tests
 
     @Test("Cache hit returns same image without network call")
-    func cacheHitReturnsCachedImage() {
+    func cacheHitReturnsCachedImage() throws {
         let cache = ImageCache.shared
 
         // Use unique URL for this test
-        let uniqueURL = URL(string: "https://example.com/cache-hit-\(UUID().uuidString).jpg")!
+        let uniqueURL = try #require(URL(string: "https://example.com/cache-hit-\(UUID().uuidString).jpg"))
 
         // Pre-populate the cache
         cache.setImage(testImage, for: uniqueURL)
@@ -100,10 +100,10 @@ struct ImageCacheTests {
     // MARK: - Overwrite Tests
 
     @Test("Setting image for same URL overwrites previous")
-    func settingImageOverwritesPrevious() {
+    func settingImageOverwritesPrevious() throws {
         let cache = ImageCache.shared
 
-        let uniqueURL = URL(string: "https://example.com/overwrite-\(UUID().uuidString).jpg")!
+        let uniqueURL = try #require(URL(string: "https://example.com/overwrite-\(UUID().uuidString).jpg"))
 
         // Create two different colored images
         let redImage = UIGraphicsImageRenderer(size: CGSize(width: 10, height: 10)).image { context in

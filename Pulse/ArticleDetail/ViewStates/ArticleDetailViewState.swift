@@ -8,13 +8,13 @@ struct ArticleDetailViewState: Equatable {
     var processedContent: AttributedString?
     var processedDescription: AttributedString?
 
-    // Bookmark state
+    /// Bookmark state
     var isBookmarked: Bool
 
-    // Share sheet
+    /// Share sheet
     var showShareSheet: Bool
 
-    // Summarization sheet visibility
+    /// Summarization sheet visibility
     var showSummarizationSheet: Bool
 
     static func initial(article: Article) -> ArticleDetailViewState {

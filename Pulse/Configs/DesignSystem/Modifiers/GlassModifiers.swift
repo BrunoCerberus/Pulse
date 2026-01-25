@@ -207,7 +207,7 @@ struct FadeInModifier: ViewModifier {
     @State private var hasAnimated = false
     @Environment(\.accessibilityReduceMotion) private var reduceMotion
 
-    // Cap delay to prevent excessive animation queuing
+    /// Cap delay to prevent excessive animation queuing
     private static let maxDelay: Double = 0.3
 
     func body(content: Content) -> some View {

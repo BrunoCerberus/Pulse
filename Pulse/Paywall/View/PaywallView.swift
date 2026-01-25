@@ -145,7 +145,6 @@ struct PaywallView: View {
         }
     }
 
-    @ViewBuilder
     private var paywallMarketingContent: some View {
         VStack(spacing: Spacing.lg) {
             // Premium Icon

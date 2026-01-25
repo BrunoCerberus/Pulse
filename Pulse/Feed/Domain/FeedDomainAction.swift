@@ -1,7 +1,7 @@
 import Foundation
 
 enum FeedDomainAction: Equatable {
-    // Lifecycle
+    /// Lifecycle
     case loadInitialData
 
     // Model management
@@ -22,9 +22,9 @@ enum FeedDomainAction: Equatable {
     case selectArticle(Article)
     case clearSelectedArticle
 
-    // State changes
+    /// State changes
     case generationStateChanged(FeedGenerationState)
 
-    // Error handling
+    /// Error handling
     case clearError
 }

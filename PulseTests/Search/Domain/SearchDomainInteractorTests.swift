@@ -23,7 +23,7 @@ struct SearchDomainInteractorTests {
         sut = SearchDomainInteractor(serviceLocator: serviceLocator)
     }
 
-    // Helper to generate mock articles (need 20+ to enable pagination)
+    /// Helper to generate mock articles (need 20+ to enable pagination)
     private func makeMockArticles(count: Int, idPrefix: String = "article") -> [Article] {
         (1 ... count).map { index in
             Article(
@@ -276,7 +276,7 @@ struct SearchDomainInteractorTests {
     // MARK: - Sort Option Tests
 
     @Test("Set sort option updates state")
-    func setSortOptionUpdatesState() async throws {
+    func setSortOptionUpdatesState() {
         sut.dispatch(action: .setSortOption(.publishedAt))
 
         let state = sut.currentState

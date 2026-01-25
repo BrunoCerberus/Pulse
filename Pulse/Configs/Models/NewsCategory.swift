@@ -9,7 +9,9 @@ enum NewsCategory: String, CaseIterable, Codable, Identifiable {
     case sports
     case entertainment
 
-    var id: String { rawValue }
+    var id: String {
+        rawValue
+    }
 
     var displayName: String {
         switch self {

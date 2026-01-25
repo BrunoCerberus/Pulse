@@ -34,7 +34,6 @@ struct StretchyHeader<Content: View>: View {
         .frame(height: baseHeight)
     }
 
-    @ViewBuilder
     private func stretchyContent(height: CGFloat, width _: CGFloat) -> some View {
         GeometryReader { geo in
             ZStack(alignment: .bottom) {

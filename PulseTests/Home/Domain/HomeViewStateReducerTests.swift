@@ -6,7 +6,7 @@ import Testing
 struct HomeViewStateReducerTests {
     let sut = HomeViewStateReducer()
 
-    // Helper to create domain state with defaults
+    /// Helper to create domain state with defaults
     private func makeDomainState(
         breakingNews: [Article] = [],
         headlines: [Article] = [],

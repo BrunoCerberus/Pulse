@@ -6,7 +6,7 @@ import Testing
 struct SummarizationViewStateReducerTests {
     let sut = SummarizationViewStateReducer()
 
-    // Helper to create domain state with defaults
+    /// Helper to create domain state with defaults
     private func makeDomainState(
         article: Article = Article.mockArticles[0],
         summarizationState: SummarizationState = .idle,

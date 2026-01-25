@@ -94,7 +94,7 @@ struct SupabaseArticleMappingTests {
     // MARK: - Date Parsing
 
     @Test("Parses ISO8601 date with fractional seconds")
-    func parsesDateWithFractionalSeconds() {
+    func parsesDateWithFractionalSeconds() throws {
         let article = createSupabaseArticle(
             publishedAt: "2024-01-15T10:30:00.000Z"
         )
@@ -102,7 +102,7 @@ struct SupabaseArticleMappingTests {
         let mapped = article.toArticle()
 
         let calendar = Calendar(identifier: .gregorian)
-        let components = calendar.dateComponents(in: TimeZone(identifier: "UTC")!, from: mapped.publishedAt)
+        let components = try calendar.dateComponents(in: #require(TimeZone(identifier: "UTC")), from: mapped.publishedAt)
 
         #expect(components.year == 2024)
         #expect(components.month == 1)
@@ -112,7 +112,7 @@ struct SupabaseArticleMappingTests {
     }
 
     @Test("Parses ISO8601 date without fractional seconds")
-    func parsesDateWithoutFractionalSeconds() {
+    func parsesDateWithoutFractionalSeconds() throws {
         let article = createSupabaseArticle(
             publishedAt: "2024-06-20T14:45:00Z"
         )
@@ -120,7 +120,7 @@ struct SupabaseArticleMappingTests {
         let mapped = article.toArticle()
 
         let calendar = Calendar(identifier: .gregorian)
-        let components = calendar.dateComponents(in: TimeZone(identifier: "UTC")!, from: mapped.publishedAt)
+        let components = try calendar.dateComponents(in: #require(TimeZone(identifier: "UTC")), from: mapped.publishedAt)
 
         #expect(components.year == 2024)
         #expect(components.month == 6)

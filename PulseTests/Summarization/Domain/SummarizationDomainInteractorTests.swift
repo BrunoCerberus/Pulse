@@ -37,7 +37,7 @@ struct SummarizationDomainInteractorTests {
     // MARK: - Start Summarization Tests
 
     @Test("Start summarization updates state to loading")
-    func startSummarizationUpdatesStateToLoading() async throws {
+    func startSummarizationUpdatesStateToLoading() async {
         mockSummarizationService.loadDelay = 0.1
         mockSummarizationService.generateDelay = 0.1
 
@@ -53,7 +53,7 @@ struct SummarizationDomainInteractorTests {
     }
 
     @Test("Start summarization completes with summary")
-    func startSummarizationCompletesWithSummary() async throws {
+    func startSummarizationCompletesWithSummary() async {
         let expectedSummary = "Test summary content"
         mockSummarizationService.generateResult = .success(expectedSummary)
         mockSummarizationService.loadDelay = 0.01
@@ -71,7 +71,7 @@ struct SummarizationDomainInteractorTests {
     }
 
     @Test("Start summarization handles error")
-    func startSummarizationHandlesError() async throws {
+    func startSummarizationHandlesError() async {
         let testError = NSError(domain: "test", code: 1, userInfo: [NSLocalizedDescriptionKey: "Test error"])
         mockSummarizationService.generateResult = .failure(testError)
         mockSummarizationService.loadDelay = 0.001
@@ -91,7 +91,7 @@ struct SummarizationDomainInteractorTests {
     // MARK: - Cancel Summarization Tests
 
     @Test("Cancel summarization resets state to idle")
-    func cancelSummarizationResetsState() async throws {
+    func cancelSummarizationResetsState() async {
         mockSummarizationService.loadDelay = 1.0 // Long delay so we can cancel
         mockSummarizationService.generateDelay = 1.0
 

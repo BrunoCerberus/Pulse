@@ -73,7 +73,7 @@ struct SettingsViewModelTests {
     }
 
     @Test("Add muted source works correctly")
-    func addMutedSource() async throws {
+    func addMutedSource() async {
         sut.handle(event: .onAppear)
 
         // Wait for initial load
@@ -103,7 +103,7 @@ struct SettingsViewModelTests {
     }
 
     @Test("Add muted keyword works correctly")
-    func addMutedKeyword() async throws {
+    func addMutedKeyword() async {
         sut.handle(event: .onAppear)
 
         // Wait for initial load
@@ -233,7 +233,7 @@ struct SettingsViewModelTests {
     }
 
     @Test("Cancel clear history hides confirmation")
-    func cancelClearHistoryHidesConfirmation() async throws {
+    func cancelClearHistoryHidesConfirmation() async {
         sut.handle(event: .onAppear)
 
         // Wait for initial load
@@ -263,7 +263,7 @@ struct SettingsViewModelTests {
     }
 
     @Test("Confirm clear history clears and hides confirmation")
-    func confirmClearHistoryClearsAndHides() async throws {
+    func confirmClearHistoryClearsAndHides() async {
         sut.handle(event: .onAppear)
 
         // Wait for initial load

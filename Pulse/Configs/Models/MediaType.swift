@@ -8,7 +8,9 @@ enum MediaType: String, Codable, CaseIterable, Identifiable, Equatable, Hashable
     case video
     case podcast
 
-    var id: String { rawValue }
+    var id: String {
+        rawValue
+    }
 
     /// Human-readable display name for the media type.
     var displayName: String {

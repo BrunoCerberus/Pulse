@@ -1,7 +1,7 @@
 import Foundation
 
 enum ArticleDetailViewEvent: Equatable {
-    // Lifecycle
+    /// Lifecycle
     case onAppear
 
     // Toolbar actions
@@ -9,7 +9,7 @@ enum ArticleDetailViewEvent: Equatable {
     case onShareTapped
     case onSummarizeTapped
 
-    // Content
+    /// Content
     case onReadFullTapped
 
     // Sheet management

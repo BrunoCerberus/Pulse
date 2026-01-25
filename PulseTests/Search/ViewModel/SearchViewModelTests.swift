@@ -93,7 +93,7 @@ struct SearchViewModelTests {
     // MARK: - Debounce Tests
 
     @Test("Query change triggers debounced search after 300ms")
-    func queryChangeTriggersDebounceSearch() async throws {
+    func queryChangeTriggersDebounceSearch() async {
         mockSearchService.searchResult = .success(Article.mockArticles)
 
         sut.handle(event: .onQueryChanged("technology"))

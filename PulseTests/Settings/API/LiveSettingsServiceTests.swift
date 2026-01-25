@@ -19,7 +19,7 @@ struct LiveSettingsServiceTests {
     // MARK: - Fetch Preferences Tests
 
     @Test("fetchPreferences returns stored preferences")
-    func fetchPreferencesSuccess() async throws {
+    func fetchPreferencesSuccess() async {
         let testPreferences = UserPreferences(
             followedTopics: [.technology, .science],
             followedSources: [],
@@ -60,7 +60,7 @@ struct LiveSettingsServiceTests {
     }
 
     @Test("fetchPreferences returns default when no preferences stored")
-    func fetchPreferencesDefault() async throws {
+    func fetchPreferencesDefault() async {
         mockStorageService.userPreferences = nil
         let sut = createSUT()
 
@@ -86,7 +86,7 @@ struct LiveSettingsServiceTests {
     }
 
     @Test("fetchPreferences propagates storage errors")
-    func fetchPreferencesError() async throws {
+    func fetchPreferencesError() async {
         let testError = NSError(domain: "test", code: 1, userInfo: nil)
         mockStorageService.fetchPreferencesError = testError
         let sut = createSUT()
@@ -158,7 +158,7 @@ struct LiveSettingsServiceTests {
     }
 
     @Test("savePreferences propagates storage errors")
-    func savePreferencesError() async throws {
+    func savePreferencesError() async {
         let testError = NSError(domain: "test", code: 1, userInfo: nil)
         mockStorageService.savePreferencesError = testError
         let sut = createSUT()
@@ -221,7 +221,7 @@ struct LiveSettingsServiceTests {
     }
 
     @Test("clearReadingHistory propagates storage errors")
-    func clearReadingHistoryError() async throws {
+    func clearReadingHistoryError() async {
         let testError = NSError(domain: "test", code: 1, userInfo: nil)
         mockStorageService.clearHistoryError = testError
         let sut = createSUT()
