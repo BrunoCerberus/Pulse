@@ -3,58 +3,90 @@ import SwiftUI
 /// Segmented control for filtering media by type (All/Videos/Podcasts).
 ///
 /// Features:
-/// - Pill-style toggle with animated selection
-/// - Shows icons and labels for each type
+/// - Chip-style toggles with animated selection
+/// - Matched geometry effect for smooth transitions
+/// - Glow effect on selected state
 /// - Respects media type colors
-/// - Glass morphism background
+/// - Haptic feedback on selection
 struct MediaSegmentedControl: View {
     let selectedType: MediaType?
     let onSelect: (MediaType?) -> Void
+
+    @Namespace private var animation
+    @Environment(\.colorScheme) private var colorScheme
 
     /// Options for the segmented control (nil = All, then each MediaType).
     private let options: [MediaType?] = [nil] + MediaType.allCases
 
     var body: some View {
-        HStack(spacing: Spacing.xs) {
+        HStack(spacing: Spacing.sm) {
             ForEach(options, id: \.self) { type in
-                segmentButton(for: type)
+                MediaTypeChip(
+                    type: type,
+                    isSelected: selectedType == type,
+                    namespace: animation
+                ) {
+                    HapticManager.shared.selectionChanged()
+                    withAnimation(AnimationTiming.springSmooth) {
+                        onSelect(type)
+                    }
+                }
             }
         }
-        .padding(Spacing.xxs)
-        .background {
-            Capsule()
-                .fill(.ultraThinMaterial)
-        }
+        .frame(maxWidth: .infinity, alignment: .leading)
+    }
+}
+
+// MARK: - Media Type Chip
+
+private struct MediaTypeChip: View {
+    let type: MediaType?
+    let isSelected: Bool
+    let namespace: Namespace.ID
+    let action: () -> Void
+
+    private var chipColor: Color {
+        type?.color ?? Color.Accent.primary
     }
 
-    private func segmentButton(for type: MediaType?) -> some View {
-        let isSelected = selectedType == type
+    private var label: String {
+        type?.displayName ?? String(localized: "media.all_types", defaultValue: "All")
+    }
 
-        return Button {
-            withAnimation(.easeInOut(duration: 0.2)) {
-                onSelect(type)
-            }
-        } label: {
+    var body: some View {
+        Button(action: action) {
             HStack(spacing: Spacing.xxs) {
                 if let type {
                     Image(systemName: type.icon)
-                        .font(.system(size: IconSize.xs))
+                        .font(.system(size: IconSize.sm))
+                        .symbolEffect(.bounce, value: isSelected)
                 }
-                Text(type?.displayName ?? String(localized: "media.all_types", defaultValue: "All"))
+
+                Text(label)
                     .font(Typography.labelMedium)
+                    .fontWeight(isSelected ? .semibold : .medium)
             }
-            .foregroundStyle(isSelected ? .white : .primary)
+            .foregroundStyle(isSelected ? .white : chipColor)
             .padding(.horizontal, Spacing.md)
             .padding(.vertical, Spacing.xs)
             .background {
                 if isSelected {
                     Capsule()
-                        .fill(type?.color ?? Color.Accent.primary)
+                        .fill(chipColor.gradient)
+                        .matchedGeometryEffect(id: "selection", in: namespace)
+                } else {
+                    Capsule()
+                        .fill(chipColor.opacity(0.12))
+                        .overlay(
+                            Capsule()
+                                .stroke(chipColor.opacity(0.25), lineWidth: 0.5)
+                        )
                 }
             }
+            .glowEffect(color: isSelected ? chipColor : .clear, radius: 8)
         }
         .buttonStyle(.plain)
-        .animation(.easeInOut(duration: 0.2), value: selectedType)
+        .pressEffect(scale: 0.95)
     }
 }
 
@@ -77,6 +109,35 @@ struct MediaSegmentedControl: View {
 
                     Text("Selected: \(selectedType?.displayName ?? "All")")
                         .foregroundStyle(.secondary)
+
+                    // Show each state
+                    VStack(spacing: Spacing.md) {
+                        Text("Individual States")
+                            .font(Typography.captionMedium)
+                            .foregroundStyle(.secondary)
+
+                        HStack(spacing: Spacing.sm) {
+                            MediaSegmentedControl(
+                                selectedType: nil,
+                                onSelect: { _ in }
+                            )
+                        }
+
+                        HStack(spacing: Spacing.sm) {
+                            MediaSegmentedControl(
+                                selectedType: .video,
+                                onSelect: { _ in }
+                            )
+                        }
+
+                        HStack(spacing: Spacing.sm) {
+                            MediaSegmentedControl(
+                                selectedType: .podcast,
+                                onSelect: { _ in }
+                            )
+                        }
+                    }
+                    .padding(.top, Spacing.xl)
                 }
             }
         }

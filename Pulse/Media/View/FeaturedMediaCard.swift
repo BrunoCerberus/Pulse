@@ -93,7 +93,7 @@ struct FeaturedMediaCard: View {
                     .foregroundStyle(.black)
                     .offset(x: 2) // Optical centering for play icon
             }
-            .shadow(color: .black.opacity(0.3), radius: 8, y: 4)
+            .depthShadow(.elevated)
     }
 
     // MARK: - Content Overlay

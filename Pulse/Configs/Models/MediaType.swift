@@ -36,9 +36,9 @@ enum MediaType: String, Codable, CaseIterable, Identifiable, Equatable, Hashable
     var color: Color {
         switch self {
         case .video:
-            return .red
+            return .red // YouTube brand recognition
         case .podcast:
-            return .purple
+            return Color.Accent.secondary
         }
     }
 

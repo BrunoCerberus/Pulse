@@ -39,6 +39,9 @@ struct HomeView<R: HomeNavigationRouter>: View {
     /// Backing ViewModel managing data and actions
     @ObservedObject var viewModel: HomeViewModel
 
+    /// Namespace for matched geometry animation in category tabs
+    @Namespace private var categoryAnimation
+
     /// Creates the view with a router and ViewModel.
     /// - Parameters:
     ///   - router: Navigation router for routing actions
@@ -104,42 +107,66 @@ struct HomeView<R: HomeNavigationRouter>: View {
         ScrollView(.horizontal, showsIndicators: false) {
             HStack(spacing: Spacing.sm) {
                 // "All" tab - always first
-                Button {
-                    HapticManager.shared.selectionChanged()
+                categoryChip(
+                    title: Constants.allCategory,
+                    color: Color.Accent.primary,
+                    isSelected: viewModel.viewState.selectedCategory == nil
+                ) {
                     viewModel.handle(event: .onCategorySelected(nil))
-                } label: {
-                    Text(Constants.allCategory)
-                        .font(Typography.labelMedium)
-                        .foregroundStyle(viewModel.viewState.selectedCategory == nil ? .white : Color.Accent.primary)
-                        .padding(.horizontal, Spacing.md)
-                        .padding(.vertical, Spacing.xs)
-                        .background {
-                            Capsule()
-                                .fill(viewModel.viewState.selectedCategory == nil ? Color.Accent.primary : Color.Accent.primary.opacity(0.15))
-                        }
                 }
 
                 // Followed topics tabs
                 ForEach(viewModel.viewState.followedTopics, id: \.self) { category in
-                    Button {
-                        HapticManager.shared.selectionChanged()
+                    categoryChip(
+                        title: category.displayName,
+                        color: category.color,
+                        isSelected: viewModel.viewState.selectedCategory == category
+                    ) {
                         viewModel.handle(event: .onCategorySelected(category))
-                    } label: {
-                        Text(category.displayName)
-                            .font(Typography.labelMedium)
-                            .foregroundStyle(viewModel.viewState.selectedCategory == category ? .white : category.color)
-                            .padding(.horizontal, Spacing.md)
-                            .padding(.vertical, Spacing.xs)
-                            .background {
-                                Capsule()
-                                    .fill(viewModel.viewState.selectedCategory == category ? category.color : category.color.opacity(0.15))
-                            }
                     }
                 }
             }
             .padding(.horizontal, Spacing.md)
             .padding(.vertical, Spacing.sm)
         }
+    }
+
+    private func categoryChip(
+        title: String,
+        color: Color,
+        isSelected: Bool,
+        action: @escaping () -> Void
+    ) -> some View {
+        Button {
+            HapticManager.shared.selectionChanged()
+            withAnimation(AnimationTiming.springSmooth) {
+                action()
+            }
+        } label: {
+            Text(title)
+                .font(Typography.labelMedium)
+                .fontWeight(isSelected ? .semibold : .medium)
+                .foregroundStyle(isSelected ? .white : color)
+                .padding(.horizontal, Spacing.md)
+                .padding(.vertical, Spacing.xs)
+                .background {
+                    if isSelected {
+                        Capsule()
+                            .fill(color.gradient)
+                            .matchedGeometryEffect(id: "categorySelection", in: categoryAnimation)
+                    } else {
+                        Capsule()
+                            .fill(color.opacity(0.12))
+                            .overlay(
+                                Capsule()
+                                    .stroke(color.opacity(0.25), lineWidth: 0.5)
+                            )
+                    }
+                }
+                .glowEffect(color: isSelected ? color : .clear, radius: 8)
+        }
+        .buttonStyle(.plain)
+        .pressEffect(scale: 0.95)
     }
 
     // MARK: - Content Views
