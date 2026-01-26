@@ -61,22 +61,56 @@ struct Article: Identifiable, Equatable, Codable, Hashable {
         self.mediaMimeType = mediaMimeType
     }
 
-    /// Returns the best available image URL for list/cell display (prefers thumbnail)
+    /// Returns the best available image URL for list/cell display (prefers thumbnail).
+    ///
+    /// Fallback priority:
+    /// 1. YouTube thumbnail (extracted from video ID)
+    /// 2. Explicit thumbnail URL
+    /// 3. Full image URL
+    /// 4. Source favicon/logo (for media items without images)
     var displayImageURL: String? {
         // For YouTube videos, extract the thumbnail from the video ID
         if let youtubeThumbnail = youTubeThumbnailURL {
             return youtubeThumbnail
         }
-        return thumbnailURL ?? imageURL
+        // Use explicit image URLs if available
+        if let thumbnail = thumbnailURL {
+            return thumbnail
+        }
+        if let image = imageURL {
+            return image
+        }
+        // For media items, fall back to source favicon
+        if isMedia {
+            return sourceFaviconURL
+        }
+        return nil
     }
 
-    /// Returns the best available image URL for detail/hero display (prefers full resolution)
+    /// Returns the best available image URL for detail/hero display (prefers full resolution).
+    ///
+    /// Fallback priority:
+    /// 1. YouTube thumbnail (extracted from video ID)
+    /// 2. Full image URL
+    /// 3. Thumbnail URL
+    /// 4. Source favicon/logo (for media items without images)
     var heroImageURL: String? {
         // For YouTube videos, use maxresdefault thumbnail
         if let youtubeThumbnail = youTubeThumbnailURL {
             return youtubeThumbnail
         }
-        return imageURL ?? thumbnailURL
+        // Use explicit image URLs if available
+        if let image = imageURL {
+            return image
+        }
+        if let thumbnail = thumbnailURL {
+            return thumbnail
+        }
+        // For media items, fall back to source favicon
+        if isMedia {
+            return sourceFaviconURL
+        }
+        return nil
     }
 
     /// Extracts YouTube thumbnail URL from mediaURL if it's a YouTube video.
@@ -106,6 +140,20 @@ struct Article: Identifiable, Equatable, Codable, Hashable {
 
         guard let id = videoID else { return nil }
         return "https://img.youtube.com/vi/\(id)/maxresdefault.jpg"
+    }
+
+    /// Returns the source's favicon/logo URL as a fallback image.
+    ///
+    /// Uses Google's favicon service to get the logo for the article's domain.
+    /// Returns nil if the URL cannot be parsed.
+    var sourceFaviconURL: String? {
+        guard let urlComponents = URLComponents(string: url),
+              let host = urlComponents.host
+        else {
+            return nil
+        }
+        // Use Google's favicon service with 128px size for good quality
+        return "https://www.google.com/s2/favicons?domain=\(host)&sz=128"
     }
 
     var formattedDate: String {
