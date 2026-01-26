@@ -96,7 +96,6 @@ struct SummarizationSheet: View {
 
     // MARK: - Content Section
 
-    @ViewBuilder
     private var contentSection: some View {
         Group {
             switch viewModel.viewState.summarizationState {

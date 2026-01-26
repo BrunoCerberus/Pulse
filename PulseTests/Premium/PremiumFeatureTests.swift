@@ -110,7 +110,7 @@ struct MockStoreKitServicePremiumTests {
     }
 
     @Test("MockStoreKitService can update subscription status")
-    func updateSubscriptionStatus() async throws {
+    func updateSubscriptionStatus() {
         let service = MockStoreKitService(isPremium: false)
 
         #expect(service.isPremium == false)

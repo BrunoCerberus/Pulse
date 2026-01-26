@@ -344,7 +344,7 @@ final class MockNewsCacheStore: NewsCacheStore {
         storage.removeAll()
     }
 
-    // Helper to check if a key exists in the cache
+    /// Helper to check if a key exists in the cache
     func contains(key: NewsCacheKey) -> Bool {
         storage[key.stringKey] != nil
     }
@@ -374,11 +374,25 @@ final class MockRemoteConfigService: RemoteConfigService {
         }
     }
 
-    var guardianAPIKey: String? { guardianAPIKeyValue }
-    var newsAPIKey: String? { newsAPIKeyValue }
-    var gnewsAPIKey: String? { gnewsAPIKeyValue }
-    var supabaseURL: String? { supabaseURLValue }
-    var supabaseAnonKey: String? { supabaseAnonKeyValue }
+    var guardianAPIKey: String? {
+        guardianAPIKeyValue
+    }
+
+    var newsAPIKey: String? {
+        newsAPIKeyValue
+    }
+
+    var gnewsAPIKey: String? {
+        gnewsAPIKeyValue
+    }
+
+    var supabaseURL: String? {
+        supabaseURLValue
+    }
+
+    var supabaseAnonKey: String? {
+        supabaseAnonKeyValue
+    }
 }
 
 extension ServiceLocator {

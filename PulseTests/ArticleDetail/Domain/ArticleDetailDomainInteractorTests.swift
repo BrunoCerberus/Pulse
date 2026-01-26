@@ -171,7 +171,7 @@ struct ArticleDetailDomainInteractorTests {
     // MARK: - Content Processing Tests
 
     @Test("Content processing completes with processed content")
-    func contentProcessingCompletes() async throws {
+    func contentProcessingCompletes() async {
         let articleWithContent = Article(
             id: "test-1",
             title: "Test Article",
@@ -195,7 +195,7 @@ struct ArticleDetailDomainInteractorTests {
     }
 
     @Test("Content processing handles nil content")
-    func contentProcessingHandlesNil() async throws {
+    func contentProcessingHandlesNil() async {
         let articleWithoutContent = Article(
             id: "test-2",
             title: "Test Article",

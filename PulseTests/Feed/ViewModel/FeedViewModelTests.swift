@@ -36,7 +36,7 @@ struct FeedViewModelTests {
     }
 
     @Test("onAppear event dispatches loadData")
-    func onAppearLoadsData() async throws {
+    func onAppearLoadsData() async {
         mockStorageService.readingHistory = Article.mockArticles
 
         sut.handle(event: .onAppear)
@@ -78,7 +78,7 @@ struct FeedViewModelTests {
         sut.handle(event: .onAppear)
         try await waitForStateUpdate()
 
-        let article = Article.mockArticles.first!
+        let article = try #require(Article.mockArticles.first)
 
         sut.handle(event: .onArticleTapped(article))
 
@@ -96,7 +96,7 @@ struct FeedViewModelTests {
         sut.handle(event: .onAppear)
         try await waitForStateUpdate()
 
-        let article = Article.mockArticles.first!
+        let article = try #require(Article.mockArticles.first)
 
         sut.handle(event: .onArticleTapped(article))
         try await waitForStateUpdate()
@@ -109,7 +109,7 @@ struct FeedViewModelTests {
     }
 
     @Test("Empty reading history shows empty state")
-    func emptyHistoryShowsEmptyState() async throws {
+    func emptyHistoryShowsEmptyState() async {
         mockStorageService.readingHistory = []
 
         sut.handle(event: .onAppear)

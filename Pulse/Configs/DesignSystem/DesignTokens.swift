@@ -54,7 +54,9 @@ enum ShadowStyle {
         }
     }
 
-    var xOffset: CGFloat { 0 }
+    var xOffset: CGFloat {
+        0
+    }
 
     var yOffset: CGFloat {
         switch self {

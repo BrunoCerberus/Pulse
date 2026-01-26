@@ -1,7 +1,6 @@
 import Foundation
-import Testing
-
 @testable import Pulse
+import Testing
 
 @Suite
 struct NotificationDeeplinkParserTests {
@@ -236,15 +235,15 @@ struct NotificationDeeplinkParserTests {
     // MARK: - Direct parseURL Tests
 
     @Test("parseURL with valid home URL")
-    func parseURLHome() {
-        let url = URL(string: "pulse://home")!
+    func parseURLHome() throws {
+        let url = try #require(URL(string: "pulse://home"))
         let result = NotificationDeeplinkParser.parseURL(url)
         #expect(result == .home)
     }
 
     @Test("parseURL with non-pulse scheme returns nil")
-    func parseURLNonPulseScheme() {
-        let url = URL(string: "https://example.com/home")!
+    func parseURLNonPulseScheme() throws {
+        let url = try #require(URL(string: "https://example.com/home"))
         let result = NotificationDeeplinkParser.parseURL(url)
         #expect(result == nil)
     }

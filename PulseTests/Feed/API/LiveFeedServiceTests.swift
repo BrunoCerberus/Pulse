@@ -82,10 +82,10 @@ struct LiveFeedServiceTests {
     }
 
     @Test("fetchTodaysDigest returns nil when cached digest is from yesterday")
-    func fetchDigestYesterday() {
+    func fetchDigestYesterday() throws {
         let sut = createSUT()
 
-        let yesterday = Calendar.current.date(byAdding: .day, value: -1, to: Date())!
+        let yesterday = try #require(Calendar.current.date(byAdding: .day, value: -1, to: Date()))
         let yesterdayDigest = DailyDigest(
             id: UUID().uuidString,
             summary: "Yesterday's summary",

@@ -9,7 +9,7 @@ struct LiveSearchServiceTests {
     private let recentSearchesKey = "pulse.recentSearches"
     let sut = LiveSearchService()
 
-    // Helper to set up recent searches for testing
+    /// Helper to set up recent searches for testing
     private func setRecentSearches(_ searches: [String]) {
         UserDefaults.standard.set(searches, forKey: recentSearchesKey)
         UserDefaults.standard.synchronize()
@@ -154,7 +154,7 @@ struct LiveSearchServiceTests {
     }
 
     @Test("getSuggestions returns immediately via Just publisher")
-    func getSuggestionsReturnsImmediately() async throws {
+    func getSuggestionsReturnsImmediately() {
         clearRecentSearches()
         setRecentSearches(["Test"])
         defer { clearRecentSearches() }

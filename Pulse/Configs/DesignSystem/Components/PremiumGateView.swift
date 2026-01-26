@@ -170,12 +170,7 @@ struct PremiumGateView: View {
 /// ```
 struct PremiumGatedModifier<GateContent: View>: ViewModifier {
     let isPremium: Bool
-    let gateContent: GateContent
-
-    init(isPremium: Bool, @ViewBuilder gateContent: () -> GateContent) {
-        self.isPremium = isPremium
-        self.gateContent = gateContent()
-    }
+    @ViewBuilder let gateContent: GateContent
 
     func body(content: Content) -> some View {
         if isPremium {

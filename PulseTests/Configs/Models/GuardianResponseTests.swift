@@ -97,7 +97,7 @@ struct GuardianResponseTests {
 
     @Test("GuardianResponse decodes from valid JSON")
     func decodesFromValidJSON() throws {
-        let data = validJSON.data(using: .utf8)!
+        let data = try #require(validJSON.data(using: .utf8))
         let decoder = JSONDecoder()
 
         let response = try decoder.decode(GuardianResponse.self, from: data)
@@ -113,7 +113,7 @@ struct GuardianResponseTests {
 
     @Test("GuardianResponse handles missing optional fields")
     func handlesMissingOptionalFields() throws {
-        let data = jsonWithMissingFields.data(using: .utf8)!
+        let data = try #require(jsonWithMissingFields.data(using: .utf8))
         let decoder = JSONDecoder()
 
         let response = try decoder.decode(GuardianResponse.self, from: data)
@@ -129,7 +129,7 @@ struct GuardianResponseTests {
 
     @Test("toArticle conversion maps fields correctly")
     func toArticleMapsFieldsCorrectly() throws {
-        let data = validJSON.data(using: .utf8)!
+        let data = try #require(validJSON.data(using: .utf8))
         let decoder = JSONDecoder()
         let response = try decoder.decode(GuardianResponse.self, from: data)
 
@@ -151,7 +151,7 @@ struct GuardianResponseTests {
 
     @Test("toArticle handles nil fields gracefully")
     func toArticleHandlesNilFields() throws {
-        let data = jsonWithMissingFields.data(using: .utf8)!
+        let data = try #require(jsonWithMissingFields.data(using: .utf8))
         let decoder = JSONDecoder()
         let response = try decoder.decode(GuardianResponse.self, from: data)
 
@@ -193,7 +193,7 @@ struct GuardianResponseTests {
         }
         """
 
-        let data = jsonWithUnknownSection.data(using: .utf8)!
+        let data = try #require(jsonWithUnknownSection.data(using: .utf8))
         let decoder = JSONDecoder()
         let response = try decoder.decode(GuardianResponse.self, from: data)
 
@@ -207,7 +207,7 @@ struct GuardianResponseTests {
 
     @Test("toArticle with explicit category overrides section mapping")
     func toArticleWithExplicitCategory() throws {
-        let data = validJSON.data(using: .utf8)!
+        let data = try #require(validJSON.data(using: .utf8))
         let decoder = JSONDecoder()
         let response = try decoder.decode(GuardianResponse.self, from: data)
 
@@ -220,7 +220,7 @@ struct GuardianResponseTests {
 
     @Test("toArticle parses date with fractional seconds")
     func toArticleParsesDateWithFractionalSeconds() throws {
-        let data = jsonWithFractionalSeconds.data(using: .utf8)!
+        let data = try #require(jsonWithFractionalSeconds.data(using: .utf8))
         let decoder = JSONDecoder()
         let response = try decoder.decode(GuardianResponse.self, from: data)
 
@@ -233,7 +233,7 @@ struct GuardianResponseTests {
 
     @Test("toArticle parses date without fractional seconds")
     func toArticleParsesDateWithoutFractionalSeconds() throws {
-        let data = validJSON.data(using: .utf8)!
+        let data = try #require(validJSON.data(using: .utf8))
         let decoder = JSONDecoder()
         let response = try decoder.decode(GuardianResponse.self, from: data)
 
@@ -268,7 +268,7 @@ struct GuardianArticleDTOTests {
         }
         """
 
-        let data = json.data(using: .utf8)!
+        let data = try #require(json.data(using: .utf8))
         let dto = try JSONDecoder().decode(GuardianArticleDTO.self, from: data)
 
         #expect(dto.id == "test/article")
@@ -299,7 +299,7 @@ struct GuardianArticleDTOTests {
         }
         """
 
-        let data = json.data(using: .utf8)!
+        let data = try #require(json.data(using: .utf8))
         let dto = try JSONDecoder().decode(GuardianArticleDTO.self, from: data)
 
         let article = dto.toArticle()
@@ -330,7 +330,7 @@ struct GuardianSingleArticleResponseTests {
         }
         """
 
-        let data = json.data(using: .utf8)!
+        let data = try #require(json.data(using: .utf8))
         let response = try JSONDecoder().decode(GuardianSingleArticleResponse.self, from: data)
 
         #expect(response.response.status == "ok")

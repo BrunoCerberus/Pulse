@@ -158,7 +158,7 @@ struct WidgetDataManagerTests {
     }
 
     @Test("Prefix 10 articles conversion")
-    func prefixTenArticlesConversion() throws {
+    func prefixTenArticlesConversion() {
         // Generate 15 articles
         let articles = (1 ... 15).map { index in
             Article(

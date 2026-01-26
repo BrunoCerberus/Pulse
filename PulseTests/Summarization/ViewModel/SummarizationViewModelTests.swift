@@ -37,7 +37,7 @@ struct SummarizationViewModelTests {
     // MARK: - Event Handling Tests
 
     @Test("Handle onSummarizationStarted triggers summarization")
-    func testOnSummarizationStarted() async throws {
+    func testOnSummarizationStarted() async {
         mockSummarizationService.loadDelay = 0.01
         mockSummarizationService.generateDelay = 0.01
 
@@ -63,7 +63,7 @@ struct SummarizationViewModelTests {
     }
 
     @Test("Handle onSummarizationCancelled resets state")
-    func testOnSummarizationCancelled() async throws {
+    func testOnSummarizationCancelled() async {
         mockSummarizationService.loadDelay = 1.0
         mockSummarizationService.generateDelay = 1.0
 
@@ -90,7 +90,7 @@ struct SummarizationViewModelTests {
     // MARK: - State Propagation Tests
 
     @Test("View state updates when summarization completes")
-    func viewStateUpdatesOnCompletion() async throws {
+    func viewStateUpdatesOnCompletion() async {
         let expectedSummary = "This is a test summary"
         mockSummarizationService.generateResult = .success(expectedSummary)
         mockSummarizationService.loadDelay = 0.01
@@ -108,7 +108,7 @@ struct SummarizationViewModelTests {
     }
 
     @Test("View state updates on error")
-    func viewStateUpdatesOnError() async throws {
+    func viewStateUpdatesOnError() async {
         let testError = NSError(domain: "test", code: 1, userInfo: [NSLocalizedDescriptionKey: "Test error"])
         mockSummarizationService.generateResult = .failure(testError)
         mockSummarizationService.loadDelay = 0.01
@@ -149,7 +149,7 @@ struct SummarizationViewModelTests {
     // MARK: - Article Preservation
 
     @Test("Article is preserved throughout summarization")
-    func articleIsPreserved() async throws {
+    func articleIsPreserved() async {
         mockSummarizationService.loadDelay = 0.02
         mockSummarizationService.generateDelay = 0.02
 

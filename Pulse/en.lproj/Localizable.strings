@@ -170,3 +170,18 @@
 
 "premium_gate.for_you.title" = "Personalized For You";
 "premium_gate.for_you.description" = "Get a curated feed of articles tailored to your interests and reading habits.";
+
+/* ==================== */
+/* MARK: - Media        */
+/* ==================== */
+
+"media.type.videos" = "Videos";
+"media.type.podcasts" = "Podcasts";
+"media.open_in_browser" = "Open in Browser";
+"media.skip_backward" = "Skip back 15 seconds";
+"media.skip_forward" = "Skip forward 30 seconds";
+"media.play" = "Play";
+"media.pause" = "Pause";
+"media.error_title" = "Playback Error";
+"media.video_unavailable" = "Video URL is not available";
+"media.audio_unavailable" = "Audio URL is not available";

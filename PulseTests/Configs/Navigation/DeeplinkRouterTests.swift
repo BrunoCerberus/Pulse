@@ -29,7 +29,7 @@ struct DeeplinkRouterTests {
     // MARK: - Home Deeplink Tests
 
     @Test("Route home deeplink switches to home tab and pops to root")
-    func routeHomeDeeplink() async throws {
+    func routeHomeDeeplink() {
         // Set coordinator directly for synchronous test
         sut.setCoordinator(coordinator)
 
@@ -45,7 +45,7 @@ struct DeeplinkRouterTests {
     // MARK: - Feed Deeplink Tests
 
     @Test("Route feed deeplink switches to feed tab and pops to root")
-    func routeFeedDeeplink() async throws {
+    func routeFeedDeeplink() {
         sut.setCoordinator(coordinator)
         coordinator.selectedTab = .home
 
@@ -58,7 +58,7 @@ struct DeeplinkRouterTests {
     // MARK: - Search Deeplink Tests
 
     @Test("Route search deeplink without query switches to search tab")
-    func routeSearchDeeplinkWithoutQuery() async throws {
+    func routeSearchDeeplinkWithoutQuery() {
         sut.setCoordinator(coordinator)
         coordinator.selectedTab = .home
 
@@ -93,7 +93,7 @@ struct DeeplinkRouterTests {
     }
 
     @Test("Route search deeplink with empty query does not set query")
-    func routeSearchDeeplinkWithEmptyQuery() async throws {
+    func routeSearchDeeplinkWithEmptyQuery() {
         sut.setCoordinator(coordinator)
 
         sut.route(deeplink: .search(query: ""))
@@ -104,7 +104,7 @@ struct DeeplinkRouterTests {
     // MARK: - Bookmarks Deeplink Tests
 
     @Test("Route bookmarks deeplink switches to bookmarks tab and pops to root")
-    func routeBookmarksDeeplink() async throws {
+    func routeBookmarksDeeplink() {
         sut.setCoordinator(coordinator)
         coordinator.selectedTab = .home
 
@@ -117,7 +117,7 @@ struct DeeplinkRouterTests {
     // MARK: - Settings Deeplink Tests
 
     @Test("Route settings deeplink switches to home and pushes settings")
-    func routeSettingsDeeplink() async throws {
+    func routeSettingsDeeplink() {
         sut.setCoordinator(coordinator)
         coordinator.selectedTab = .search
 
@@ -130,7 +130,7 @@ struct DeeplinkRouterTests {
     // MARK: - Article Deeplink Tests
 
     @Test("Route article deeplink switches to home tab and fetches article")
-    func routeArticleDeeplink() async throws {
+    func routeArticleDeeplink() async {
         sut.setCoordinator(coordinator)
         coordinator.selectedTab = .search
 
@@ -176,7 +176,7 @@ struct DeeplinkRouterTests {
     // MARK: - Category Deeplink Tests (Legacy - redirects to Home)
 
     @Test("Route category deeplink switches to home tab")
-    func routeCategoryDeeplinkValid() async throws {
+    func routeCategoryDeeplinkValid() {
         sut.setCoordinator(coordinator)
         coordinator.selectedTab = .search
 
@@ -187,7 +187,7 @@ struct DeeplinkRouterTests {
     }
 
     @Test("Route category deeplink with any name switches to home")
-    func routeCategoryDeeplinkInvalid() async throws {
+    func routeCategoryDeeplinkInvalid() {
         sut.setCoordinator(coordinator)
         coordinator.selectedTab = .search
 
@@ -212,7 +212,7 @@ struct DeeplinkRouterTests {
     }
 
     @Test("Queued deeplink is processed when coordinator becomes available")
-    func queuedDeeplinkIsProcessed() async throws {
+    func queuedDeeplinkIsProcessed() {
         // Create new router without setting coordinator
         let newRouter = DeeplinkRouter()
 
@@ -230,7 +230,7 @@ struct DeeplinkRouterTests {
     // MARK: - Multiple Deeplinks Tests
 
     @Test("Multiple deeplinks are processed in sequence")
-    func multipleDeeplinksProcessed() async throws {
+    func multipleDeeplinksProcessed() {
         sut.setCoordinator(coordinator)
         coordinator.selectedTab = .home
 
@@ -244,7 +244,7 @@ struct DeeplinkRouterTests {
     // MARK: - Deeplink Publisher Tests
 
     @Test("Router responds to DeeplinkManager publisher")
-    func routerRespondsToDeeplinkPublisher() async throws {
+    func routerRespondsToDeeplinkPublisher() async {
         sut.setCoordinator(coordinator)
         coordinator.selectedTab = .home
 
@@ -275,7 +275,7 @@ struct DeeplinkRouterTests {
     // MARK: - Concurrent Navigation Tests
 
     @Test("Rapid tab switching handles concurrent deeplinks correctly")
-    func rapidTabSwitchingHandlesConcurrentDeeplinks() async throws {
+    func rapidTabSwitchingHandlesConcurrentDeeplinks() {
         sut.setCoordinator(coordinator)
         coordinator.selectedTab = .home
 
@@ -290,7 +290,7 @@ struct DeeplinkRouterTests {
     }
 
     @Test("Concurrent deeplinks during active navigation complete without crash")
-    func concurrentDeeplinksDuringActiveNavigation() async throws {
+    func concurrentDeeplinksDuringActiveNavigation() {
         sut.setCoordinator(coordinator)
 
         // Start with a navigation in progress
@@ -306,7 +306,7 @@ struct DeeplinkRouterTests {
     }
 
     @Test("Multiple coordinators becoming available handles queued deeplinks correctly")
-    func multipleCoordinatorNotificationsHandleQueuedDeeplinks() async throws {
+    func multipleCoordinatorNotificationsHandleQueuedDeeplinks() {
         let newRouter = DeeplinkRouter()
 
         // Queue a deeplink before coordinator is available

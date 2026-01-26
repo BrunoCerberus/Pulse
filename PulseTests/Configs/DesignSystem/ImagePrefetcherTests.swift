@@ -13,7 +13,7 @@ struct ImagePrefetcherTests {
     // MARK: - Singleton Tests
 
     @Test("ImagePrefetcher shared instance is singleton")
-    func sharedInstanceIsSingleton() async {
+    func sharedInstanceIsSingleton() {
         let instance1 = ImagePrefetcher.shared
         let instance2 = ImagePrefetcher.shared
 
@@ -153,7 +153,7 @@ struct ImagePrefetcherTests {
     }
 
     @Test("cancelPrefetch is thread-safe for concurrent calls")
-    func cancelPrefetchIsThreadSafe() async throws {
+    func cancelPrefetchIsThreadSafe() async {
         let prefetcher = ImagePrefetcher.shared
         await prefetcher.cancelAll()
 
@@ -179,7 +179,7 @@ struct ImagePrefetcherTests {
     // MARK: - Actor Isolation Tests
 
     @Test("actor provides thread-safe access to shared state")
-    func actorProvidesThreadSafety() async throws {
+    func actorProvidesThreadSafety() async {
         let prefetcher = ImagePrefetcher.shared
         await prefetcher.cancelAll()
 

@@ -3,6 +3,7 @@ import Foundation
 
 enum Deeplink: Equatable {
     case home
+    case media(type: MediaType? = nil)
     case search(query: String? = nil)
     case bookmarks
     case feed
@@ -36,6 +37,10 @@ final class DeeplinkManager: ObservableObject {
         switch components.host {
         case "home":
             deeplink = .home
+        case "media":
+            let typeString = components.queryItems?.first(where: { $0.name == "type" })?.value
+            let mediaType = typeString.flatMap { MediaType(rawValue: $0) }
+            deeplink = .media(type: mediaType)
         case "search":
             let query = components.queryItems?.first(where: { $0.name == "q" })?.value
             deeplink = .search(query: query)

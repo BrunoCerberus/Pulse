@@ -245,7 +245,7 @@ struct DigestViewItemParsingTests {
     }
 
     @Test("parseSections handles content without markers gracefully")
-    func parseSectionsHandlesNoMarkers() {
+    func parseSectionsHandlesNoMarkers() throws {
         // Content without proper category markers
         let summary = "General news summary without category markers."
 
@@ -268,7 +268,8 @@ struct DigestViewItemParsingTests {
         // Should still create sections using fallback content generation
         #expect(sections.count == 1)
         #expect(sections.first?.category == .technology)
-        #expect(!sections.first!.content.isEmpty)
+        let contentIsEmpty = try #require(sections.first?.content.isEmpty)
+        #expect(!contentIsEmpty)
     }
 
     @Test("parseSections does not duplicate content across categories")
@@ -305,7 +306,7 @@ struct DigestViewItemParsingTests {
     }
 
     @Test("parseSections handles empty summary gracefully")
-    func parseSectionsHandlesEmptySummary() {
+    func parseSectionsHandlesEmptySummary() throws {
         let summary = ""
 
         let articles = [
@@ -327,7 +328,8 @@ struct DigestViewItemParsingTests {
         // Should still create sections using fallback content generation
         #expect(sections.count == 1)
         #expect(sections.first?.category == .technology)
-        #expect(!sections.first!.content.isEmpty)
+        let contentIsEmpty = try #require(sections.first?.content.isEmpty)
+        #expect(!contentIsEmpty)
     }
 
     @Test("parseSections handles single category correctly")
@@ -706,7 +708,7 @@ struct DigestViewItemParsingTests {
         #expect(uniqueContents.count == sections.count) // All content should be unique
     }
 
-    // Helper to create mock articles with specific categories
+    /// Helper to create mock articles with specific categories
     private func createMockArticle(category: NewsCategory, title: String) -> Article {
         Article(
             title: title,
@@ -768,7 +770,7 @@ struct LLMOutputCleaningTests {
         #expect(cleaned.contains("Market news"))
     }
 
-    // Helper function that mirrors the implementation in FeedDomainInteractor
+    /// Helper function that mirrors the implementation in FeedDomainInteractor
     private func cleanLLMOutput(_ text: String) -> String {
         var cleaned = text
 

@@ -28,8 +28,8 @@ struct DeeplinkManagerTests {
             ("pulse://category?name=technology", Deeplink.category(name: "technology")),
         ]
     )
-    func parseDeeplinkCorrectly(urlString: String, expectedDeeplink: Deeplink) {
-        let url = URL(string: urlString)!
+    func parseDeeplinkCorrectly(urlString: String, expectedDeeplink: Deeplink) throws {
+        let url = try #require(URL(string: urlString))
 
         sut.parse(url: url)
 
@@ -38,8 +38,8 @@ struct DeeplinkManagerTests {
     }
 
     @Test("Invalid scheme is ignored")
-    func invalidSchemeIsIgnored() {
-        let url = URL(string: "invalid://home")!
+    func invalidSchemeIsIgnored() throws {
+        let url = try #require(URL(string: "invalid://home"))
 
         sut.parse(url: url)
 

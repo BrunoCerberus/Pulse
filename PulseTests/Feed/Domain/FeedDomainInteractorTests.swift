@@ -110,7 +110,7 @@ struct FeedDomainInteractorTests {
     }
 
     @Test("Select article updates state")
-    func selectArticle() async throws {
+    func selectArticle() {
         let article = Article.mockArticles[0]
 
         sut.dispatch(action: .selectArticle(article))
@@ -120,7 +120,7 @@ struct FeedDomainInteractorTests {
     }
 
     @Test("Clear selection removes selected article")
-    func clearSelection() async throws {
+    func clearSelection() {
         let article = Article.mockArticles[0]
 
         sut.dispatch(action: .selectArticle(article))

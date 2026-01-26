@@ -56,7 +56,7 @@ final class MockAuthService: AuthService {
             .eraseToAnyPublisher()
     }
 
-    // For testing: simulate signed-in state
+    /// For testing: simulate signed-in state
     func simulateSignedIn(_ user: AuthUser) {
         authStateSubject.send(user)
     }

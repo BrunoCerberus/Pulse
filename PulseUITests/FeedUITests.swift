@@ -162,7 +162,7 @@ final class FeedUITests: BaseUITestCase {
 
         // Verify Feed tab exists and is in the correct position
         let tabButtons = tabBar.buttons.allElementsBoundByIndex
-        XCTAssertGreaterThanOrEqual(tabButtons.count, 4, "Tab bar should have at least 4 tabs")
+        XCTAssertGreaterThanOrEqual(tabButtons.count, 5, "Tab bar should have at least 5 tabs")
 
         // Find Feed tab index
         var feedIndex = -1
@@ -173,8 +173,8 @@ final class FeedUITests: BaseUITestCase {
             }
         }
 
-        // Feed should be at index 1 (between Home and Bookmarks)
-        XCTAssertEqual(feedIndex, 1, "Feed tab should be at index 1 (between Home and Bookmarks)")
+        // Feed should be at index 2 (after Home and Media, before Bookmarks)
+        XCTAssertEqual(feedIndex, 2, "Feed tab should be at index 2 (after Home and Media)")
     }
 
     // MARK: - Source Articles Navigation Test

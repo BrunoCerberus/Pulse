@@ -38,6 +38,12 @@ struct SupabaseArticle: Codable {
     let categoryName: String?
     let categorySlug: String?
 
+    // Media fields (for podcasts and videos)
+    let mediaType: String? // "podcast", "video", or nil
+    let mediaUrl: String? // Direct URL to audio/video file
+    let mediaDuration: Int? // Duration in seconds
+    let mediaMimeType: String? // "audio/mpeg", "video/mp4", etc.
+
     // No CodingKeys needed - convertFromSnakeCase handles all conversions
 
     private static let iso8601Formatter: ISO8601DateFormatter = {
@@ -84,6 +90,28 @@ struct SupabaseArticle: Codable {
             articleContent = nil
         }
 
+        // Use media_type field directly from backend, fallback to category_slug
+        let derivedMediaType: MediaType? = {
+            if let type = mediaType {
+                switch type {
+                case "podcast": return .podcast
+                case "video": return .video
+                default: return nil
+                }
+            }
+            // Fallback: derive from category_slug
+            switch categorySlug {
+            case "podcasts": return .podcast
+            case "videos": return .video
+            default: return nil
+            }
+        }()
+
+        // Use media_url if available (direct audio/video file), otherwise fallback to article url
+        // For videos, the url might be a YouTube link which works for embedding
+        // For podcasts, we need the media_url to be the actual audio file URL
+        let effectiveMediaURL = mediaUrl ?? url
+
         return Article(
             id: id,
             title: title,
@@ -95,7 +123,11 @@ struct SupabaseArticle: Codable {
             imageURL: imageUrl,
             thumbnailURL: imageUrl, // Use same image for thumbnail
             publishedAt: date,
-            category: categorySlug.flatMap { NewsCategory(rawValue: $0) }
+            category: categorySlug.flatMap { NewsCategory(rawValue: $0) },
+            mediaType: derivedMediaType,
+            mediaURL: effectiveMediaURL,
+            mediaDuration: mediaDuration,
+            mediaMimeType: mediaMimeType
         )
     }
 }
@@ -118,6 +150,12 @@ struct SupabaseSearchResult: Codable {
     let sourceSlug: String?
     let categoryName: String?
     let categorySlug: String?
+
+    // Media fields (for podcasts and videos)
+    let mediaType: String?
+    let mediaUrl: String?
+    let mediaDuration: Int?
+    let mediaMimeType: String?
 
     private static let iso8601Formatter: ISO8601DateFormatter = {
         let formatter = ISO8601DateFormatter()
@@ -155,6 +193,24 @@ struct SupabaseSearchResult: Codable {
             articleContent = nil
         }
 
+        // Use media_type field directly, fallback to category_slug
+        let derivedMediaType: MediaType? = {
+            if let type = mediaType {
+                switch type {
+                case "podcast": return .podcast
+                case "video": return .video
+                default: return nil
+                }
+            }
+            switch categorySlug {
+            case "podcasts": return .podcast
+            case "videos": return .video
+            default: return nil
+            }
+        }()
+
+        let effectiveMediaURL = mediaUrl ?? url
+
         return Article(
             id: id,
             title: title,
@@ -166,7 +222,11 @@ struct SupabaseSearchResult: Codable {
             imageURL: imageUrl,
             thumbnailURL: imageUrl,
             publishedAt: date,
-            category: categorySlug.flatMap { NewsCategory(rawValue: $0) }
+            category: categorySlug.flatMap { NewsCategory(rawValue: $0) },
+            mediaType: derivedMediaType,
+            mediaURL: effectiveMediaURL,
+            mediaDuration: mediaDuration,
+            mediaMimeType: mediaMimeType
         )
     }
 }

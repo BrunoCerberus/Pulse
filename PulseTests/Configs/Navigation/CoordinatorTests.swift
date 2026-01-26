@@ -216,6 +216,7 @@ struct CoordinatorTests {
     func allViewModelsAreLazilyInitialized() {
         // Access each viewModel and verify it's not nil
         #expect(sut.homeViewModel != nil)
+        #expect(sut.mediaViewModel != nil)
         #expect(sut.feedViewModel != nil)
         #expect(sut.bookmarksViewModel != nil)
         #expect(sut.searchViewModel != nil)
@@ -227,8 +228,9 @@ struct CoordinatorTests {
     @Test("AppTab has all expected cases with symbol images")
     func appTabHasAllExpectedCasesWithSymbols() {
         let allTabs = AppTab.allCases
-        #expect(allTabs.count == 4)
+        #expect(allTabs.count == 5)
         #expect(allTabs.contains(.home))
+        #expect(allTabs.contains(.media))
         #expect(allTabs.contains(.feed))
         #expect(allTabs.contains(.bookmarks))
         #expect(allTabs.contains(.search))

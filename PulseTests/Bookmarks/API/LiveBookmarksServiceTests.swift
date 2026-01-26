@@ -19,7 +19,7 @@ struct LiveBookmarksServiceTests {
     // MARK: - Fetch Bookmarks Tests
 
     @Test("fetchBookmarks returns bookmarked articles")
-    func fetchBookmarksSuccess() async throws {
+    func fetchBookmarksSuccess() async {
         mockStorageService.bookmarkedArticles = Article.mockArticles
         let sut = createSUT()
 
@@ -49,7 +49,7 @@ struct LiveBookmarksServiceTests {
     }
 
     @Test("fetchBookmarks returns empty array when no bookmarks")
-    func fetchBookmarksEmpty() async throws {
+    func fetchBookmarksEmpty() async {
         mockStorageService.bookmarkedArticles = []
         let sut = createSUT()
 
@@ -73,7 +73,7 @@ struct LiveBookmarksServiceTests {
     }
 
     @Test("fetchBookmarks propagates storage errors")
-    func fetchBookmarksError() async throws {
+    func fetchBookmarksError() async {
         let testError = NSError(domain: "test", code: 1, userInfo: nil)
         mockStorageService.fetchBookmarksError = testError
         let sut = createSUT()
@@ -101,7 +101,7 @@ struct LiveBookmarksServiceTests {
     // MARK: - Remove Bookmark Tests
 
     @Test("removeBookmark removes article from storage")
-    func removeBookmarkSuccess() async throws {
+    func removeBookmarkSuccess() async {
         let articleToRemove = Article.mockArticles[0]
         mockStorageService.bookmarkedArticles = [articleToRemove]
         let sut = createSUT()
@@ -136,7 +136,7 @@ struct LiveBookmarksServiceTests {
     }
 
     @Test("removeBookmark propagates storage errors")
-    func removeBookmarkError() async throws {
+    func removeBookmarkError() async {
         let testError = NSError(domain: "test", code: 1, userInfo: nil)
         mockStorageService.deleteArticleError = testError
         let sut = createSUT()

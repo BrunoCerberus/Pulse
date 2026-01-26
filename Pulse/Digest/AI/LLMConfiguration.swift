@@ -35,10 +35,14 @@ enum MemoryTier: String {
 enum LLMConfiguration {
     /// Model file name without extension
     /// Note: Download from https://huggingface.co/bartowski/Llama-3.2-1B-Instruct-GGUF
-    static var modelFileName: String { "Llama-3.2-1B-Instruct-Q4_K_M" }
+    static var modelFileName: String {
+        "Llama-3.2-1B-Instruct-Q4_K_M"
+    }
 
     /// Model file extension
-    static var modelExtension: String { "gguf" }
+    static var modelExtension: String {
+        "gguf"
+    }
 
     /// Full model URL within app bundle
     static var modelURL: URL? {
@@ -103,7 +107,9 @@ enum LLMConfiguration {
     }
 
     /// Generation timeout in seconds
-    static var generationTimeout: TimeInterval { 120.0 }
+    static var generationTimeout: TimeInterval {
+        120.0
+    }
 
     /// Maximum articles to include in digest prompt - memory-adaptive
     /// Scales with context size to prevent overflow
@@ -118,8 +124,12 @@ enum LLMConfiguration {
     /// Estimated tokens per article in digest prompt (title + source + category + 150 char description)
     /// ~15 title + ~3 source + ~2 category + ~37 description (150 chars / 4) + ~5 structure ≈ 62
     /// Using 175 as conservative estimate with safety margin
-    static var estimatedTokensPerArticle: Int { 175 }
+    static var estimatedTokensPerArticle: Int {
+        175
+    }
 
     /// Reserved tokens for system prompt and generation output
-    static var reservedContextTokens: Int { 1500 }
+    static var reservedContextTokens: Int {
+        1500
+    }
 }
