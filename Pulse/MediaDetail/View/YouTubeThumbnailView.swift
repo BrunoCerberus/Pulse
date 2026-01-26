@@ -40,7 +40,7 @@ struct YouTubeThumbnailView: View {
 
                 // Dark overlay for better contrast
                 Rectangle()
-                    .fill(.black.opacity(0.3))
+                    .fill(Color.Glass.overlay)
 
                 // Play button
                 VStack(spacing: Spacing.sm) {
@@ -62,7 +62,7 @@ struct YouTubeThumbnailView: View {
                         .foregroundStyle(.white)
                         .padding(.horizontal, Spacing.md)
                         .padding(.vertical, Spacing.xs)
-                        .background(.black.opacity(0.7))
+                        .background(Color.Glass.overlay.opacity(2.33))
                         .clipShape(Capsule())
                 }
             }
@@ -75,7 +75,7 @@ struct YouTubeThumbnailView: View {
 
     private var thumbnailPlaceholder: some View {
         Rectangle()
-            .fill(Color(white: 0.15))
+            .fill(Color.Glass.surface)
             .overlay {
                 ProgressView()
                     .tint(.white)
@@ -108,7 +108,7 @@ struct YouTubeThumbnailView: View {
 
     private var videoPlaceholder: some View {
         Rectangle()
-            .fill(Color(white: 0.15))
+            .fill(Color.Glass.surface)
             .overlay {
                 Image(systemName: "play.rectangle.fill")
                     .font(.system(size: 48))

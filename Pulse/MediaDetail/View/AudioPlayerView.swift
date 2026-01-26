@@ -109,13 +109,13 @@ struct AudioPlayerView: View {
         }
         .frame(width: 280, height: 280)
         .clipShape(RoundedRectangle(cornerRadius: CornerRadius.lg))
-        .shadow(color: .black.opacity(0.3), radius: 20, x: 0, y: 10)
+        .depthShadow(.floating)
     }
 
     private var artworkPlaceholder: some View {
         ZStack {
             LinearGradient(
-                colors: [.purple.opacity(0.6), .purple.opacity(0.3)],
+                colors: [Color.Accent.secondary.opacity(0.6), Color.Accent.secondary.opacity(0.3)],
                 startPoint: .topLeading,
                 endPoint: .bottomTrailing
             )
@@ -152,7 +152,7 @@ struct AudioPlayerView: View {
                 ZStack(alignment: .leading) {
                     // Track background
                     Capsule()
-                        .fill(Color.secondary.opacity(0.2))
+                        .fill(Color.Glass.surface)
                         .frame(height: 4)
 
                     // Progress fill

@@ -121,7 +121,7 @@ struct MediaCard: View {
 
     private var playOverlay: some View {
         Circle()
-            .fill(.black.opacity(0.5))
+            .fill(Color.Glass.overlay.opacity(1.67))
             .frame(width: 36, height: 36)
             .overlay {
                 Image(systemName: "play.fill")
@@ -141,7 +141,7 @@ struct MediaCard: View {
                     .foregroundStyle(.white)
                     .padding(.horizontal, Spacing.xxs)
                     .padding(.vertical, 2)
-                    .background(.black.opacity(0.75))
+                    .background(Color.Glass.overlay.opacity(2.5))
                     .clipShape(RoundedRectangle(cornerRadius: CornerRadius.xs))
                     .padding(Spacing.xxs)
             }
