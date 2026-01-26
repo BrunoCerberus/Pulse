@@ -42,6 +42,9 @@ struct HomeView<R: HomeNavigationRouter>: View {
     /// Namespace for matched geometry animation in category tabs
     @Namespace private var categoryAnimation
 
+    /// Check if running in UI test environment
+    private let isUITesting = ProcessInfo.processInfo.environment["UI_TESTING"] == "1"
+
     /// Creates the view with a router and ViewModel.
     /// - Parameters:
     ///   - router: Navigation router for routing actions
@@ -151,9 +154,13 @@ struct HomeView<R: HomeNavigationRouter>: View {
                 .padding(.vertical, Spacing.xs)
                 .background {
                     if isSelected {
-                        Capsule()
-                            .fill(color.gradient)
-                            .matchedGeometryEffect(id: "categorySelection", in: categoryAnimation)
+                        let capsule = Capsule().fill(color.gradient)
+                        // Disable matched geometry effect in UI tests to prevent timing-related crashes
+                        if isUITesting {
+                            capsule
+                        } else {
+                            capsule.matchedGeometryEffect(id: "categorySelection", in: categoryAnimation)
+                        }
                     } else {
                         Capsule()
                             .fill(color.opacity(0.12))

@@ -91,22 +91,25 @@ struct FeedDomainInteractorTests {
         mockFeedService.generateDelay = 0.01
 
         sut.dispatch(action: .loadInitialData)
-        try await waitForStateUpdate()
+
+        // Wait for reading history to actually be loaded
+        let historyLoaded = await waitForCondition {
+            !self.sut.currentState.readingHistory.isEmpty && self.sut.currentState.hasLoadedInitialData
+        }
+        #expect(historyLoaded, "Reading history should be loaded")
 
         sut.dispatch(action: .generateDigest)
 
-        // Wait briefly for generation to start
-        try await Task.sleep(nanoseconds: 100_000_000)
-
-        let state = sut.currentState
-        // Should be in some generation-related state
-        let isInGenerationFlow = switch state.generationState {
-        case .generating, .completed:
-            true
-        default:
-            false
+        // Wait for generation state to be set
+        let generationStarted = await waitForCondition {
+            switch self.sut.currentState.generationState {
+            case .generating, .completed:
+                return true
+            default:
+                return false
+            }
         }
-        #expect(isInGenerationFlow, "Should be generating or completed")
+        #expect(generationStarted, "Should be generating or completed")
     }
 
     @Test("Select article updates state")
