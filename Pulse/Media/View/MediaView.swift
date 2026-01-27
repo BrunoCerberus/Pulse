@@ -293,15 +293,7 @@ private struct FeaturedMediaCardSkeleton: View {
 
             LinearGradient.heroOverlay
 
-            Circle()
-                .fill(.white.opacity(0.85))
-                .frame(width: 48, height: 48)
-                .overlay {
-                    Image(systemName: "play.fill")
-                        .font(.system(size: IconSize.lg))
-                        .foregroundStyle(.black)
-                        .offset(x: 2)
-                }
+            // Intentionally omit play button in skeleton state
 
             VStack(alignment: .leading, spacing: Spacing.xs) {
                 Spacer()
