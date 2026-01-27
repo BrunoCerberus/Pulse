@@ -48,73 +48,125 @@ final class MediaDetailDomainInteractor: CombineInteractor {
     }
 
     func dispatch(action: MediaDetailDomainAction) {
+        if handleLifecycle(action) { return }
+        if handlePlaybackControl(action) { return }
+        if handlePlaybackEvents(action) { return }
+        if handleShareSheet(action) { return }
+        if handleBookmark(action) { return }
+        if handleBrowser(action) { return }
+    }
+
+    private func handleLifecycle(_ action: MediaDetailDomainAction) -> Bool {
         switch action {
         case .onAppear:
             onAppear()
+            return true
+        default:
+            return false
+        }
+    }
 
-        // MARK: - Playback Control
+    private func handlePlaybackControl(_ action: MediaDetailDomainAction) -> Bool {
+        switch action {
         case .play:
             updateState { $0.isPlaying = true }
+            return true
         case .pause:
             updateState { $0.isPlaying = false }
-        case let .seek(to: progress):
+            return true
+        case let .seek(progress: progress):
             let newTime = currentState.duration * progress
             updateState {
                 $0.playbackProgress = progress
                 $0.currentTime = newTime
             }
+            return true
         case let .skipBackward(seconds):
             let newTime = max(0, currentState.currentTime - seconds)
-            let progress = currentState.duration > 0 ? newTime / currentState.duration : 0
-            updateState {
-                $0.currentTime = newTime
-                $0.playbackProgress = progress
-            }
+            updatePlaybackProgress(newTime: newTime)
+            return true
         case let .skipForward(seconds):
             let newTime = min(currentState.duration, currentState.currentTime + seconds)
-            let progress = currentState.duration > 0 ? newTime / currentState.duration : 0
-            updateState {
-                $0.currentTime = newTime
-                $0.playbackProgress = progress
-            }
+            updatePlaybackProgress(newTime: newTime)
+            return true
+        default:
+            return false
+        }
+    }
 
-        // MARK: - Playback Events
+    private func updatePlaybackProgress(newTime: TimeInterval) {
+        let progress = currentState.duration > 0 ? newTime / currentState.duration : 0
+        updateState {
+            $0.currentTime = newTime
+            $0.playbackProgress = progress
+        }
+    }
+
+    private func handlePlaybackEvents(_ action: MediaDetailDomainAction) -> Bool {
+        switch action {
         case let .playbackProgressUpdated(progress, currentTime):
             updateState {
                 $0.playbackProgress = progress
                 $0.currentTime = currentTime
             }
+            return true
         case let .durationLoaded(duration):
             updateState {
                 $0.duration = duration
                 $0.isLoading = false
             }
+            return true
         case .playerLoading:
             updateState { $0.isLoading = true }
+            return true
         case .playerReady:
             updateState { $0.isLoading = false }
+            return true
         case let .playbackError(errorMessage):
             updateState {
                 $0.error = errorMessage
                 $0.isLoading = false
                 $0.isPlaying = false
             }
+            return true
+        default:
+            return false
+        }
+    }
 
-        // MARK: - Share Sheet
+    private func handleShareSheet(_ action: MediaDetailDomainAction) -> Bool {
+        switch action {
         case .showShareSheet:
             updateState { $0.showShareSheet = true }
+            return true
         case .dismissShareSheet:
             updateState { $0.showShareSheet = false }
+            return true
+        default:
+            return false
+        }
+    }
 
-        // MARK: - Bookmark
+    private func handleBookmark(_ action: MediaDetailDomainAction) -> Bool {
+        switch action {
         case .toggleBookmark:
             toggleBookmark()
+            return true
         case let .bookmarkStatusLoaded(isBookmarked):
             updateState { $0.isBookmarked = isBookmarked }
+            return true
+        default:
+            return false
+        }
+    }
 
-        // MARK: - Browser
+    private func handleBrowser(_ action: MediaDetailDomainAction) -> Bool {
+        switch action {
         case .openInBrowser:
             openInBrowser()
+            return true
+        default:
+            return false
         }
     }
 

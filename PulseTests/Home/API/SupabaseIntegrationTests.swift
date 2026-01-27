@@ -102,7 +102,8 @@ struct SupabaseArticleMappingTests {
         let mapped = article.toArticle()
 
         let calendar = Calendar(identifier: .gregorian)
-        let components = try calendar.dateComponents(in: #require(TimeZone(identifier: "UTC")), from: mapped.publishedAt)
+        let timeZone = try #require(TimeZone(identifier: "UTC"))
+        let components = try calendar.dateComponents(in: timeZone, from: mapped.publishedAt)
 
         #expect(components.year == 2024)
         #expect(components.month == 1)
@@ -120,7 +121,8 @@ struct SupabaseArticleMappingTests {
         let mapped = article.toArticle()
 
         let calendar = Calendar(identifier: .gregorian)
-        let components = try calendar.dateComponents(in: #require(TimeZone(identifier: "UTC")), from: mapped.publishedAt)
+        let timeZone = try #require(TimeZone(identifier: "UTC"))
+        let components = try calendar.dateComponents(in: timeZone, from: mapped.publishedAt)
 
         #expect(components.year == 2024)
         #expect(components.month == 6)
@@ -369,38 +371,5 @@ struct SupabaseAPITests {
         let api = SupabaseAPI.articles(page: 1, pageSize: 20)
 
         #expect(api.header == nil)
-    }
-}
-
-// MARK: - Live Service Protocol Conformance Tests
-
-@Suite("Live Services Protocol Conformance Tests")
-struct LiveServicesProtocolTests {
-    @Test("LiveNewsService conforms to NewsService protocol")
-    func liveNewsServiceConformance() {
-        let service = LiveNewsService()
-        #expect(service is NewsService)
-    }
-
-    @Test("LiveSearchService conforms to SearchService protocol")
-    func liveSearchServiceConformance() {
-        let service = LiveSearchService()
-        #expect(service is SearchService)
-    }
-
-    @Test("LiveNewsService fetchTopHeadlines returns correct publisher type")
-    func newsServiceFetchTopHeadlinesType() {
-        let service = LiveNewsService()
-        let publisher = service.fetchTopHeadlines(country: "us", page: 1)
-        let typeCheck: AnyPublisher<[Article], Error> = publisher
-        #expect(typeCheck is AnyPublisher<[Article], Error>)
-    }
-
-    @Test("LiveSearchService search returns correct publisher type")
-    func searchServiceSearchType() {
-        let service = LiveSearchService()
-        let publisher = service.search(query: "test", page: 1, sortBy: "relevance")
-        let typeCheck: AnyPublisher<[Article], Error> = publisher
-        #expect(typeCheck is AnyPublisher<[Article], Error>)
     }
 }

@@ -19,7 +19,7 @@ enum MediaDetailDomainAction: Equatable {
     case pause
 
     /// Seek to a position (0.0 - 1.0).
-    case seek(to: Double)
+    case seek(progress: Double)
 
     /// Skip backward by specified seconds.
     case skipBackward(seconds: Double)

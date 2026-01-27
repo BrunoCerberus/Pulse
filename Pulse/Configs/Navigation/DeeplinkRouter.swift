@@ -84,18 +84,10 @@ final class DeeplinkRouter {
             coordinator.switchTab(to: .home, popToRoot: true)
 
         case let .media(type):
-            coordinator.switchTab(to: .media, popToRoot: true)
-            if let type {
-                coordinator.mediaViewModel.handle(event: .onMediaTypeSelected(type))
-            }
+            routeToMedia(type: type, coordinator: coordinator)
 
         case let .search(query):
-            coordinator.switchTab(to: .search, popToRoot: true)
-            if let query, !query.isEmpty {
-                // Update the search view model with the query
-                coordinator.searchViewModel.handle(event: .onQueryChanged(query))
-                coordinator.searchViewModel.handle(event: .onSearch)
-            }
+            routeToSearch(query: query, coordinator: coordinator)
 
         case .bookmarks:
             coordinator.switchTab(to: .bookmarks, popToRoot: true)
@@ -120,6 +112,21 @@ final class DeeplinkRouter {
 
         // Clear the deeplink after processing
         DeeplinkManager.shared.clearDeeplink()
+    }
+
+    private func routeToMedia(type: MediaType?, coordinator: Coordinator) {
+        coordinator.switchTab(to: .media, popToRoot: true)
+        if let type {
+            coordinator.mediaViewModel.handle(event: .onMediaTypeSelected(type))
+        }
+    }
+
+    private func routeToSearch(query: String?, coordinator: Coordinator) {
+        coordinator.switchTab(to: .search, popToRoot: true)
+        if let query, !query.isEmpty {
+            coordinator.searchViewModel.handle(event: .onQueryChanged(query))
+            coordinator.searchViewModel.handle(event: .onSearch)
+        }
     }
 
     /// Fetches an article by ID and navigates to its detail view.
