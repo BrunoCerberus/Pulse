@@ -97,7 +97,7 @@ struct MediaDetailDomainInteractorTests {
         // First set duration so seek can calculate time
         sut.dispatch(action: .durationLoaded(600))
 
-        sut.dispatch(action: .seek(to: 0.5))
+        sut.dispatch(action: .seek(progress: 0.5))
 
         let state = sut.currentState
         #expect(state.playbackProgress == 0.5)

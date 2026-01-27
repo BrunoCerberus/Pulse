@@ -23,9 +23,9 @@ struct MediaDetailEventActionMapTests {
 
     @Test("onSeek maps to seek action")
     func testOnSeek() {
-        #expect(sut.map(event: .onSeek(progress: 0.5)) == .seek(to: 0.5))
-        #expect(sut.map(event: .onSeek(progress: 0.0)) == .seek(to: 0.0))
-        #expect(sut.map(event: .onSeek(progress: 1.0)) == .seek(to: 1.0))
+        #expect(sut.map(event: .onSeek(progress: 0.5)) == .seek(progress: 0.5))
+        #expect(sut.map(event: .onSeek(progress: 0.0)) == .seek(progress: 0.0))
+        #expect(sut.map(event: .onSeek(progress: 1.0)) == .seek(progress: 1.0))
     }
 
     @Test("onSkipBackwardTapped maps to skipBackward with 15 seconds")
@@ -97,12 +97,13 @@ struct MediaDetailEventActionMapTests {
 
         // Playback control
         #expect(sut.map(event: .onPlayPauseTapped) == nil)
-        #expect(sut.map(event: .onSeek(progress: 0.25)) == .seek(to: 0.25))
+        #expect(sut.map(event: .onSeek(progress: 0.25)) == .seek(progress: 0.25))
         #expect(sut.map(event: .onSkipBackwardTapped) == .skipBackward(seconds: 15))
         #expect(sut.map(event: .onSkipForwardTapped) == .skipForward(seconds: 30))
 
         // Playback events
-        #expect(sut.map(event: .onProgressUpdate(progress: 0.5, currentTime: 300)) == .playbackProgressUpdated(progress: 0.5, currentTime: 300))
+        let progressAction = sut.map(event: .onProgressUpdate(progress: 0.5, currentTime: 300))
+        #expect(progressAction == .playbackProgressUpdated(progress: 0.5, currentTime: 300))
         #expect(sut.map(event: .onDurationLoaded(600)) == .durationLoaded(600))
         #expect(sut.map(event: .onPlayerLoading) == .playerLoading)
         #expect(sut.map(event: .onPlayerReady) == .playerReady)
