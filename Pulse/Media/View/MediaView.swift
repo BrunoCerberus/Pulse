@@ -270,15 +270,65 @@ private struct FeaturedMediaCarouselSkeleton: View {
     var body: some View {
         ScrollView(.horizontal, showsIndicators: false) {
             HStack(spacing: Spacing.md) {
-                ForEach(0 ..< 3, id: \.self) { _ in
-                    RoundedRectangle(cornerRadius: CornerRadius.lg, style: .continuous)
-                        .fill(Color.primary.opacity(0.05))
-                        .frame(width: 280, height: 180)
-                        .shimmer()
+                ForEach(0 ..< 3, id: \.self) { index in
+                    FeaturedMediaCardSkeleton()
+                        .fadeIn(delay: Double(index) * 0.1)
                 }
             }
             .padding(.horizontal, Spacing.md)
             .padding(.vertical, Spacing.sm)
+        }
+    }
+}
+
+private struct FeaturedMediaCardSkeleton: View {
+    @State private var isAnimating = false
+
+    private let cardWidth: CGFloat = 280
+    private let cardHeight: CGFloat = 180
+
+    var body: some View {
+        ZStack {
+            Color.primary.opacity(0.08)
+
+            LinearGradient.heroOverlay
+
+            Circle()
+                .fill(.white.opacity(0.85))
+                .frame(width: 48, height: 48)
+                .overlay {
+                    Image(systemName: "play.fill")
+                        .font(.system(size: IconSize.lg))
+                        .foregroundStyle(.black)
+                        .offset(x: 2)
+                }
+
+            VStack(alignment: .leading, spacing: Spacing.xs) {
+                Spacer()
+
+                SkeletonShape(width: 90, height: 22, cornerRadius: CornerRadius.pill)
+
+                SkeletonShape(height: 18)
+                SkeletonShape(width: 220, height: 18)
+
+                HStack(spacing: Spacing.xs) {
+                    SkeletonShape(width: 80, height: 12)
+                    SkeletonShape(width: 60, height: 12)
+                }
+            }
+            .padding(Spacing.md)
+            .frame(maxWidth: .infinity, alignment: .leading)
+            .background(.ultraThinMaterial.opacity(0.3))
+        }
+        .frame(width: cardWidth, height: cardHeight)
+        .clipShape(RoundedRectangle(cornerRadius: CornerRadius.lg, style: .continuous))
+        .overlay(
+            RoundedRectangle(cornerRadius: CornerRadius.lg, style: .continuous)
+                .stroke(Color.Border.glass, lineWidth: 0.5)
+        )
+        .shimmer(isActive: isAnimating)
+        .onAppear {
+            isAnimating = true
         }
     }
 }
