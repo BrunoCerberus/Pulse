@@ -9,7 +9,10 @@ private enum Constants {
     static let all = String(localized: "media.all_types", defaultValue: "All")
     static let errorTitle = String(localized: "media.error.title", defaultValue: "Unable to Load Media")
     static let emptyTitle = String(localized: "media.empty.title", defaultValue: "No Media")
-    static let emptyMessage = String(localized: "media.empty.message", defaultValue: "Check back later for new videos and podcasts.")
+    static let emptyMessage = String(
+        localized: "media.empty.message",
+        defaultValue: "Check back later for new videos and podcasts."
+    )
     static let tryAgain = String(localized: "common.try_again", defaultValue: "Try Again")
     static let loadingMore = String(localized: "common.loading_more", defaultValue: "Loading more...")
 }

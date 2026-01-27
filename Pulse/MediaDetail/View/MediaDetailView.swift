@@ -95,20 +95,6 @@ struct MediaDetailView: View {
         .enableSwipeBack()
     }
 
-    // MARK: - Player Content
-
-    @ViewBuilder
-    private var playerContent: some View {
-        switch viewModel.viewState.article.mediaType {
-        case .video:
-            videoPlayer
-        case .podcast:
-            podcastPlayer
-        case .none:
-            unsupportedMediaView
-        }
-    }
-
     private var videoPlayer: some View {
         VStack(spacing: Spacing.md) {
             if let mediaURL = viewModel.viewState.article.mediaURL {
@@ -318,6 +304,22 @@ struct MediaDetailView: View {
     }
 }
 
+// MARK: - Player Content
+
+private extension MediaDetailView {
+    @ViewBuilder
+    var playerContent: some View {
+        switch viewModel.viewState.article.mediaType {
+        case .video:
+            videoPlayer
+        case .podcast:
+            podcastPlayer
+        case .none:
+            unsupportedMediaView
+        }
+    }
+}
+
 #Preview("Video") {
     NavigationStack {
         MediaDetailView(
@@ -344,7 +346,8 @@ struct MediaDetailView: View {
             article: Article(
                 id: "2",
                 title: "The Future of AI in Software Development",
-                description: "A deep dive into how AI is transforming the way we write code and what it means for developers.",
+                description: "A deep dive into how AI is transforming the way we write code " +
+                    "and what it means for developers.",
                 source: ArticleSource(id: "podcast", name: "Tech Talk Daily"),
                 url: "https://example.com/podcast",
                 imageURL: nil,
