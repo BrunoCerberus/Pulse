@@ -2,7 +2,7 @@ import SwiftUI
 
 // MARK: - Constants
 
-private enum Constants {
+enum HomeViewConstants {
     static let title = String(localized: "home.title")
     static let errorTitle = String(localized: "home.error.title")
     static let emptyTitle = String(localized: "home.empty.title")
@@ -33,6 +33,8 @@ private enum Constants {
 ///          viewModel: HomeViewModel(serviceLocator: serviceLocator))
 /// ```
 struct HomeView<R: HomeNavigationRouter>: View {
+    // MARK: - Properties
+
     /// Router responsible for navigation actions
     private var router: R
 
@@ -58,7 +60,7 @@ struct HomeView<R: HomeNavigationRouter>: View {
 
             content
         }
-        .navigationTitle(Constants.title)
+        .navigationTitle(HomeViewConstants.title)
         .toolbarBackground(.hidden, for: .navigationBar)
         .toolbar {
             ToolbarItem(placement: .topBarTrailing) {
@@ -103,12 +105,12 @@ struct HomeView<R: HomeNavigationRouter>: View {
 
     // MARK: - Category Tab Bar
 
-    private var categoryTabBar: some View {
+    var categoryTabBar: some View {
         ScrollView(.horizontal, showsIndicators: false) {
             HStack(spacing: Spacing.sm) {
                 // "All" tab - always first
                 categoryChip(
-                    title: Constants.allCategory,
+                    title: HomeViewConstants.allCategory,
                     color: Color.Accent.primary,
                     isSelected: viewModel.viewState.selectedCategory == nil
                 ) {
@@ -185,80 +187,7 @@ struct HomeView<R: HomeNavigationRouter>: View {
         }
     }
 
-    private var loadingView: some View {
-        ScrollView {
-            VStack(spacing: Spacing.lg) {
-                // Category tabs at top of scrollable content
-                if viewModel.viewState.showCategoryTabs {
-                    categoryTabBar
-                }
-
-                // Only show breaking news skeleton when on "All" tab
-                if viewModel.viewState.selectedCategory == nil {
-                    GlassSectionHeader("Breaking News")
-
-                    HeroCarouselSkeleton()
-                }
-
-                GlassSectionHeader("Top Headlines")
-
-                ArticleListSkeleton(count: 5)
-            }
-        }
-    }
-
-    private func errorView(_ message: String) -> some View {
-        GlassCard(style: .thin, shadowStyle: .medium, padding: Spacing.xl) {
-            VStack(spacing: Spacing.md) {
-                Image(systemName: "exclamationmark.triangle.fill")
-                    .font(.system(size: IconSize.xxl))
-                    .foregroundStyle(Color.Semantic.warning)
-
-                Text(Constants.errorTitle)
-                    .font(Typography.titleMedium)
-
-                Text(message)
-                    .font(Typography.bodyMedium)
-                    .foregroundStyle(.secondary)
-                    .multilineTextAlignment(.center)
-
-                Button {
-                    HapticManager.shared.tap()
-                    viewModel.handle(event: .onRefresh)
-                } label: {
-                    Text(Constants.tryAgain)
-                        .font(Typography.labelLarge)
-                        .foregroundStyle(.white)
-                        .padding(.horizontal, Spacing.lg)
-                        .padding(.vertical, Spacing.sm)
-                        .background(Color.Accent.primary)
-                        .clipShape(Capsule())
-                }
-                .buttonStyle(.plain)
-                .pressEffect()
-            }
-        }
-        .padding(Spacing.lg)
-    }
-
-    private var emptyStateView: some View {
-        GlassCard(style: .thin, shadowStyle: .medium, padding: Spacing.xl) {
-            VStack(spacing: Spacing.md) {
-                Image(systemName: "newspaper")
-                    .font(.system(size: IconSize.xxl))
-                    .foregroundStyle(.secondary)
-
-                Text(Constants.emptyTitle)
-                    .font(Typography.titleMedium)
-
-                Text(Constants.emptyMessage)
-                    .font(Typography.bodyMedium)
-                    .foregroundStyle(.secondary)
-                    .multilineTextAlignment(.center)
-            }
-        }
-        .padding(Spacing.lg)
-    }
+    // loadingView, errorView, emptyStateView moved to HomeView+Subviews.swift
 
     private var articlesList: some View {
         let headlines = viewModel.viewState.headlines
@@ -325,7 +254,7 @@ struct HomeView<R: HomeNavigationRouter>: View {
                         HStack {
                             ProgressView()
                                 .tint(.secondary)
-                            Text(Constants.loadingMore)
+                            Text(HomeViewConstants.loadingMore)
                                 .font(Typography.captionLarge)
                                 .foregroundStyle(.secondary)
                         }
@@ -339,35 +268,7 @@ struct HomeView<R: HomeNavigationRouter>: View {
         }
     }
 
-    /// Prefetches images for upcoming articles to reduce visible loading delays during scrolling.
-    private func prefetchUpcomingImages(from currentIndex: Int, in articles: [ArticleViewItem]) {
-        let prefetchCount = 5
-        let endIndex = min(currentIndex + prefetchCount, articles.count)
-        guard endIndex > currentIndex else { return }
-
-        let upcomingURLs = articles[currentIndex ..< endIndex]
-            .compactMap { $0.imageURL }
-
-        guard !upcomingURLs.isEmpty else { return }
-        Task {
-            await ImagePrefetcher.shared.prefetch(urls: upcomingURLs)
-        }
-    }
-
-    private var breakingNewsCarousel: some View {
-        ScrollView(.horizontal, showsIndicators: false) {
-            LazyHStack(spacing: Spacing.md) {
-                ForEach(viewModel.viewState.breakingNews) { item in
-                    HeroNewsCard(item: item) {
-                        viewModel.handle(event: .onArticleTapped(articleId: item.id))
-                    }
-                    .fadeIn(delay: Double(item.animationIndex) * 0.1)
-                }
-            }
-            .padding(.horizontal, Spacing.md)
-            .padding(.vertical, Spacing.sm)
-        }
-    }
+    // prefetchUpcomingImages, breakingNewsCarousel moved to HomeView+Subviews.swift
 }
 
 #Preview {

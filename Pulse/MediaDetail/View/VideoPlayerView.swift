@@ -67,7 +67,12 @@ struct VideoPlayerView: UIViewRepresentable {
 
     /// Creates an HTML page with an embedded YouTube iframe using the IFrame Player API.
     private func createYouTubeEmbedHTML(videoID: String) -> String {
-        """
+        let src = "https://www.youtube.com/embed/\(videoID)?playsinline=1" +
+            "&enablejsapi=1&rel=0&modestbranding=1&fs=1"
+        let allow = "accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; " +
+            "picture-in-picture; web-share"
+
+        return """
         <!DOCTYPE html>
         <html>
         <head>
@@ -93,8 +98,8 @@ struct VideoPlayerView: UIViewRepresentable {
         <body>
             <div class="video-container">
                 <iframe
-                    src="https://www.youtube.com/embed/\(videoID)?playsinline=1&enablejsapi=1&rel=0&modestbranding=1&fs=1"
-                    allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share"
+                    src="\(src)"
+                    allow="\(allow)"
                     allowfullscreen
                     referrerpolicy="strict-origin-when-cross-origin">
                 </iframe>

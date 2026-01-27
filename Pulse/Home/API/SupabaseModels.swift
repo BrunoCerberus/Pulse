@@ -59,76 +59,66 @@ struct SupabaseArticle: Codable {
     }()
 
     func toArticle() -> Article {
-        // Parse ISO8601 date string
-        let date: Date
-        if let parsed = Self.iso8601Formatter.date(from: publishedAt) {
-            date = parsed
-        } else if let parsed = Self.iso8601FormatterNoFraction.date(from: publishedAt) {
-            date = parsed
-        } else {
-            let msg = "SupabaseArticle: Failed to parse date '\(publishedAt)' for \(id)"
-            Logger.shared.service(msg, level: .warning)
-            date = Date()
-        }
-
-        // Handle content/description mapping for RSS feeds:
-        // - If content exists, use summary as description (short preview) and content as body
-        // - If only summary exists, use it as full content (no description to avoid duplication)
-        let articleDescription: String?
-        let articleContent: String?
-
-        if let fullContent = content, !fullContent.isEmpty {
-            // Backend has both fields populated
-            articleDescription = summary
-            articleContent = fullContent
-        } else if let summaryText = summary, !summaryText.isEmpty {
-            // RSS feed only has summary - use it as content, no description to avoid duplication
-            articleDescription = nil
-            articleContent = summaryText
-        } else {
-            articleDescription = nil
-            articleContent = nil
-        }
-
-        // Use media_type field directly from backend, fallback to category_slug
-        let derivedMediaType: MediaType? = {
-            if let type = mediaType {
-                switch type {
-                case "podcast": return .podcast
-                case "video": return .video
-                default: return nil
-                }
-            }
-            // Fallback: derive from category_slug
-            switch categorySlug {
-            case "podcasts": return .podcast
-            case "videos": return .video
-            default: return nil
-            }
-        }()
-
-        // Use media_url if available (direct audio/video file), otherwise fallback to article url
-        // For videos, the url might be a YouTube link which works for embedding
-        // For podcasts, we need the media_url to be the actual audio file URL
-        let effectiveMediaURL = mediaUrl ?? url
-
-        return Article(
+        Article(
             id: id,
             title: title,
-            description: articleDescription,
-            content: articleContent,
+            description: descriptionAndContent.description,
+            content: descriptionAndContent.content,
             author: nil, // Edge Functions don't include author in list view
             source: ArticleSource(id: sourceSlug, name: sourceName ?? "Unknown"),
             url: url,
             imageURL: imageUrl,
             thumbnailURL: imageUrl, // Use same image for thumbnail
-            publishedAt: date,
+            publishedAt: parsedPublishedAt,
             category: categorySlug.flatMap { NewsCategory(rawValue: $0) },
             mediaType: derivedMediaType,
-            mediaURL: effectiveMediaURL,
+            mediaURL: mediaUrl ?? url,
             mediaDuration: mediaDuration,
             mediaMimeType: mediaMimeType
         )
+    }
+
+    private var parsedPublishedAt: Date {
+        if let parsed = Self.iso8601Formatter.date(from: publishedAt) {
+            return parsed
+        }
+        if let parsed = Self.iso8601FormatterNoFraction.date(from: publishedAt) {
+            return parsed
+        }
+
+        let msg = "SupabaseArticle: Failed to parse date '\(publishedAt)' for \(id)"
+        Logger.shared.service(msg, level: .warning)
+        return Date()
+    }
+
+    private var descriptionAndContent: (description: String?, content: String?) {
+        // Content/description mapping for RSS feeds:
+        // - If content exists: description = summary (short preview), content = content (full)
+        // - If only summary exists: content = summary, description = nil (avoid duplication)
+        if let fullContent = content, !fullContent.isEmpty {
+            return (summary, fullContent)
+        }
+        if let summaryText = summary, !summaryText.isEmpty {
+            return (nil, summaryText)
+        }
+        return (nil, nil)
+    }
+
+    private var derivedMediaType: MediaType? {
+        if let type = mediaType {
+            switch type {
+            case "podcast": return .podcast
+            case "video": return .video
+            default: return nil
+            }
+        }
+
+        // Fallback: derive from category_slug
+        switch categorySlug {
+        case "podcasts": return .podcast
+        case "videos": return .video
+        default: return nil
+        }
     }
 }
 
@@ -170,64 +160,54 @@ struct SupabaseSearchResult: Codable {
     }()
 
     func toArticle() -> Article {
-        let date: Date
-        if let parsed = Self.iso8601Formatter.date(from: publishedAt) {
-            date = parsed
-        } else if let parsed = Self.iso8601FormatterNoFraction.date(from: publishedAt) {
-            date = parsed
-        } else {
-            date = Date()
-        }
-
-        let articleDescription: String?
-        let articleContent: String?
-
-        if let fullContent = content, !fullContent.isEmpty {
-            articleDescription = summary
-            articleContent = fullContent
-        } else if let summaryText = summary, !summaryText.isEmpty {
-            articleDescription = nil
-            articleContent = summaryText
-        } else {
-            articleDescription = nil
-            articleContent = nil
-        }
-
-        // Use media_type field directly, fallback to category_slug
-        let derivedMediaType: MediaType? = {
-            if let type = mediaType {
-                switch type {
-                case "podcast": return .podcast
-                case "video": return .video
-                default: return nil
-                }
-            }
-            switch categorySlug {
-            case "podcasts": return .podcast
-            case "videos": return .video
-            default: return nil
-            }
-        }()
-
-        let effectiveMediaURL = mediaUrl ?? url
-
-        return Article(
+        Article(
             id: id,
             title: title,
-            description: articleDescription,
-            content: articleContent,
+            description: descriptionAndContent.description,
+            content: descriptionAndContent.content,
             author: nil,
             source: ArticleSource(id: sourceSlug, name: sourceName ?? "Unknown"),
             url: url,
             imageURL: imageUrl,
             thumbnailURL: imageUrl,
-            publishedAt: date,
+            publishedAt: parsedPublishedAt,
             category: categorySlug.flatMap { NewsCategory(rawValue: $0) },
             mediaType: derivedMediaType,
-            mediaURL: effectiveMediaURL,
+            mediaURL: mediaUrl ?? url,
             mediaDuration: mediaDuration,
             mediaMimeType: mediaMimeType
         )
+    }
+
+    private var parsedPublishedAt: Date {
+        Self.iso8601Formatter.date(from: publishedAt)
+            ?? Self.iso8601FormatterNoFraction.date(from: publishedAt)
+            ?? Date()
+    }
+
+    private var descriptionAndContent: (description: String?, content: String?) {
+        if let fullContent = content, !fullContent.isEmpty {
+            return (summary, fullContent)
+        }
+        if let summaryText = summary, !summaryText.isEmpty {
+            return (nil, summaryText)
+        }
+        return (nil, nil)
+    }
+
+    private var derivedMediaType: MediaType? {
+        if let type = mediaType {
+            switch type {
+            case "podcast": return .podcast
+            case "video": return .video
+            default: return nil
+            }
+        }
+        switch categorySlug {
+        case "podcasts": return .podcast
+        case "videos": return .video
+        default: return nil
+        }
     }
 }
 
