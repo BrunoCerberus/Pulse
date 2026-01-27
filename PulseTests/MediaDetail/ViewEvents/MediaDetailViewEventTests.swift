@@ -17,31 +17,49 @@ struct MediaDetailViewEventTests {
         if case let .onSeek(progress) = event { #expect(progress == 0.5) }
     }
 
-    @Test("onSkipBackward event") func onSkipBackward() {
-        #expect(MediaDetailViewEvent.onSkipBackward == .onSkipBackward)
+    @Test("onSkipBackwardTapped event") func onSkipBackwardTapped() {
+        #expect(MediaDetailViewEvent.onSkipBackwardTapped == .onSkipBackwardTapped)
     }
 
-    @Test("onSkipForward event") func onSkipForward() {
-        #expect(MediaDetailViewEvent.onSkipForward == .onSkipForward)
+    @Test("onSkipForwardTapped event") func onSkipForwardTapped() {
+        #expect(MediaDetailViewEvent.onSkipForwardTapped == .onSkipForwardTapped)
     }
 
     @Test("onShareTapped event") func onShareTapped() {
         #expect(MediaDetailViewEvent.onShareTapped == .onShareTapped)
     }
 
-    @Test("onDismissShareSheet event") func onDismissShareSheet() {
-        #expect(MediaDetailViewEvent.onDismissShareSheet == .onDismissShareSheet)
+    @Test("onShareDismissed event") func onShareDismissed() {
+        #expect(MediaDetailViewEvent.onShareDismissed == .onShareDismissed)
     }
 
     @Test("onBookmarkTapped event") func onBookmarkTapped() {
         #expect(MediaDetailViewEvent.onBookmarkTapped == .onBookmarkTapped)
     }
 
-    @Test("onOpenInBrowser event") func onOpenInBrowser() {
-        #expect(MediaDetailViewEvent.onOpenInBrowser == .onOpenInBrowser)
+    @Test("onOpenInBrowserTapped event") func onOpenInBrowserTapped() {
+        #expect(MediaDetailViewEvent.onOpenInBrowserTapped == .onOpenInBrowserTapped)
     }
 
-    @Test("onDismissError event") func onDismissError() {
-        #expect(MediaDetailViewEvent.onDismissError == .onDismissError)
+    @Test("onProgressUpdate event") func onProgressUpdate() {
+        let event = MediaDetailViewEvent.onProgressUpdate(progress: 0.5, currentTime: 30.0)
+        if case let .onProgressUpdate(progress, currentTime) = event {
+            #expect(progress == 0.5)
+            #expect(currentTime == 30.0)
+        }
+    }
+
+    @Test("onDurationLoaded event") func onDurationLoaded() {
+        let event = MediaDetailViewEvent.onDurationLoaded(120.0)
+        if case let .onDurationLoaded(duration) = event {
+            #expect(duration == 120.0)
+        }
+    }
+
+    @Test("onError event") func onError() {
+        let event = MediaDetailViewEvent.onError("Test error")
+        if case let .onError(message) = event {
+            #expect(message == "Test error")
+        }
     }
 }

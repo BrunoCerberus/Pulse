@@ -90,7 +90,7 @@ struct ArticleDetailDomainActionTests {
         if case let .contentProcessingCompleted(actionContent, actionDescription) = action {
             #expect(actionContent != nil)
             #expect(actionDescription != nil)
-            let contentString = String(actionContent?.characters ?? "")
+            let contentString = actionContent.map { String($0.characters) } ?? ""
             #expect(contentString.contains("Content"))
         } else {
             Issue.record("Expected contentProcessingCompleted action")

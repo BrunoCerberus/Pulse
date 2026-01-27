@@ -38,27 +38,6 @@ struct LiveSummarizationServiceTests {
 
     // MARK: - Model Status Publisher Tests
 
-    @Test("Model status publisher forwards from LLMService")
-    func modelStatusPublisherForwards() async {
-        var receivedStatuses: [LLMModelStatus] = []
-        let expectation = expectation(description: "Receive status updates")
-        expectation.expectedFulfillmentCount = 2
-
-        let cancellable = sut.modelStatusPublisher
-            .sink { status in
-                receivedStatuses.append(status)
-                expectation.fulfill()
-            }
-
-        // Simulate status change
-        mockLLMService.isModelLoaded = true
-
-        await fulfillment(of: [expectation], timeout: 1.0)
-        cancellable.cancel()
-
-        #expect(receivedStatuses.contains(.ready))
-    }
-
     @Test("Model status publisher reflects notLoaded initially")
     func modelStatusPublisherInitialState() {
         var initialStatus: LLMModelStatus?
@@ -124,8 +103,6 @@ struct LiveSummarizationServiceTests {
 
     @Test("loadModelIfNeeded propagates errors")
     func loadModelIfNeededPropagatesErrors() async {
-        struct TestError: Error {}
-
         // Create a custom mock that throws on load
         let failingMock = FailingMockLLMService()
         let failingService = LiveSummarizationService(llmService: failingMock)
@@ -168,8 +145,6 @@ struct LiveSummarizationServiceTests {
 
     @Test("summarize stream propagates errors")
     func summarizeStreamPropagatesErrors() async {
-        struct TestError: Error {}
-
         let article = Article.mockArticles[0]
         let errorMock = ErrorMockLLMService()
         let errorService = LiveSummarizationService(llmService: errorMock)

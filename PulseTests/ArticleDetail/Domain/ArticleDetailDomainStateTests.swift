@@ -81,7 +81,7 @@ struct ArticleDetailDomainStateTests {
         state.processedContent = attributedContent
 
         #expect(state.processedContent != nil)
-        let contentString = String(state.processedContent?.characters ?? "")
+        let contentString = state.processedContent.map { String($0.characters) } ?? ""
         #expect(contentString.contains("Bold"))
     }
 
@@ -93,7 +93,7 @@ struct ArticleDetailDomainStateTests {
         state.processedDescription = attributedDescription
 
         #expect(state.processedDescription != nil)
-        let descString = String(state.processedDescription?.characters ?? "")
+        let descString = state.processedDescription.map { String($0.characters) } ?? ""
         #expect(descString.contains("Italic"))
     }
 

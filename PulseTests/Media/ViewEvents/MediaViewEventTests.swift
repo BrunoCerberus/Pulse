@@ -17,26 +17,34 @@ struct MediaViewEventTests {
     }
 
     @Test("onMediaTapped event") func onMediaTapped() {
-        let event = MediaViewEvent.onMediaTapped(articleId: "id")
-        if case let .onMediaTapped(id) = event { #expect(id == "id") }
+        let event = MediaViewEvent.onMediaTapped(mediaId: "id")
+        if case let .onMediaTapped(mediaId) = event { #expect(mediaId == "id") }
     }
 
-    @Test("onMediaTypeChanged event") func onMediaTypeChanged() {
-        let event = MediaViewEvent.onMediaTypeChanged(.video)
-        if case let .onMediaTypeChanged(type) = event { #expect(type == .video) }
+    @Test("onMediaTypeSelected event") func onMediaTypeSelected() {
+        let event = MediaViewEvent.onMediaTypeSelected(.video)
+        if case let .onMediaTypeSelected(type) = event { #expect(type == .video) }
+    }
+
+    @Test("onMediaNavigated event") func onMediaNavigated() {
+        #expect(MediaViewEvent.onMediaNavigated == .onMediaNavigated)
     }
 
     @Test("onShareTapped event") func onShareTapped() {
-        let event = MediaViewEvent.onShareTapped(articleId: "id")
-        if case let .onShareTapped(id) = event { #expect(id == "id") }
+        let event = MediaViewEvent.onShareTapped(mediaId: "id")
+        if case let .onShareTapped(mediaId) = event { #expect(mediaId == "id") }
     }
 
-    @Test("onDismissShareSheet event") func onDismissShareSheet() {
-        #expect(MediaViewEvent.onDismissShareSheet == .onDismissShareSheet)
+    @Test("onShareDismissed event") func onShareDismissed() {
+        #expect(MediaViewEvent.onShareDismissed == .onShareDismissed)
     }
 
     @Test("onPlayTapped event") func onPlayTapped() {
-        let event = MediaViewEvent.onPlayTapped(articleId: "id")
-        if case let .onPlayTapped(id) = event { #expect(id == "id") }
+        let event = MediaViewEvent.onPlayTapped(mediaId: "id")
+        if case let .onPlayTapped(mediaId) = event { #expect(mediaId == "id") }
+    }
+
+    @Test("onPlayDismissed event") func onPlayDismissed() {
+        #expect(MediaViewEvent.onPlayDismissed == .onPlayDismissed)
     }
 }

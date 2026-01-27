@@ -9,27 +9,33 @@ struct UserPreferencesTests {
         let prefs = UserPreferences.default
 
         #expect(prefs.followedTopics.isEmpty)
-        #expect(prefs.notificationsEnabled == false)
-        #expect(prefs.breakingNewsNotifications == false)
+        #expect(prefs.followedSources.isEmpty)
         #expect(prefs.mutedSources.isEmpty)
         #expect(prefs.mutedKeywords.isEmpty)
+        #expect(prefs.notificationsEnabled == true)
+        #expect(prefs.breakingNewsNotifications == true)
+        #expect(!prefs.preferredLanguage.isEmpty)
     }
 
     @Test("Preferences can be created with custom values")
     func customPreferences() {
         let prefs = UserPreferences(
             followedTopics: [.technology, .business],
-            notificationsEnabled: true,
-            breakingNewsNotifications: true,
+            followedSources: ["TechCrunch"],
             mutedSources: ["Source A"],
-            mutedKeywords: ["spam"]
+            mutedKeywords: ["spam"],
+            preferredLanguage: "en",
+            notificationsEnabled: true,
+            breakingNewsNotifications: true
         )
 
         #expect(prefs.followedTopics.count == 2)
-        #expect(prefs.notificationsEnabled == true)
-        #expect(prefs.breakingNewsNotifications == true)
+        #expect(prefs.followedSources.count == 1)
         #expect(prefs.mutedSources.count == 1)
         #expect(prefs.mutedKeywords.count == 1)
+        #expect(prefs.preferredLanguage == "en")
+        #expect(prefs.notificationsEnabled == true)
+        #expect(prefs.breakingNewsNotifications == true)
     }
 
     @Test("Same preferences are equal")
@@ -54,7 +60,7 @@ struct UserPreferencesTests {
     @Test("Different notificationsEnabled are not equal")
     func differentNotificationsEnabled() {
         var prefs1 = UserPreferences.default
-        prefs1.notificationsEnabled = true
+        prefs1.notificationsEnabled = false
 
         let prefs2 = UserPreferences.default
 
@@ -69,5 +75,28 @@ struct UserPreferencesTests {
         let prefs2 = UserPreferences.default
 
         #expect(prefs1 != prefs2)
+    }
+
+    @Test("Different followedSources are not equal")
+    func differentFollowedSources() {
+        var prefs1 = UserPreferences.default
+        prefs1.followedSources = ["TechCrunch"]
+
+        let prefs2 = UserPreferences.default
+
+        #expect(prefs1 != prefs2)
+    }
+
+    @Test("Different preferredLanguage are not equal")
+    func differentPreferredLanguage() {
+        var prefs1 = UserPreferences.default
+        prefs1.preferredLanguage = "fr"
+
+        let prefs2 = UserPreferences.default
+
+        // Only different if default language wasn't "fr"
+        if prefs2.preferredLanguage != "fr" {
+            #expect(prefs1 != prefs2)
+        }
     }
 }

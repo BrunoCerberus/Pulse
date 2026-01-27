@@ -16,20 +16,20 @@ struct ArticleDetailViewEventTests {
         #expect(ArticleDetailViewEvent.onShareTapped == .onShareTapped)
     }
 
-    @Test("onDismissShareSheet event") func onDismissShareSheet() {
-        #expect(ArticleDetailViewEvent.onDismissShareSheet == .onDismissShareSheet)
+    @Test("onShareSheetDismissed event") func onShareSheetDismissed() {
+        #expect(ArticleDetailViewEvent.onShareSheetDismissed == .onShareSheetDismissed)
     }
 
-    @Test("onOpenInBrowser event") func onOpenInBrowser() {
-        #expect(ArticleDetailViewEvent.onOpenInBrowser == .onOpenInBrowser)
+    @Test("onReadFullTapped event") func onReadFullTapped() {
+        #expect(ArticleDetailViewEvent.onReadFullTapped == .onReadFullTapped)
     }
 
     @Test("onSummarizeTapped event") func onSummarizeTapped() {
         #expect(ArticleDetailViewEvent.onSummarizeTapped == .onSummarizeTapped)
     }
 
-    @Test("onDismissSummarization event") func onDismissSummarization() {
-        #expect(ArticleDetailViewEvent.onDismissSummarization == .onDismissSummarization)
+    @Test("onSummarizationSheetDismissed event") func onSummarizationSheetDismissed() {
+        #expect(ArticleDetailViewEvent.onSummarizationSheetDismissed == .onSummarizationSheetDismissed)
     }
 
     @Test("Same events are equal") func sameEvents() {

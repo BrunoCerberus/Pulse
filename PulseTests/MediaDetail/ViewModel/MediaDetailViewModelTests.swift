@@ -85,21 +85,21 @@ struct MediaDetailViewModelTests {
         // Event should be handled without error
     }
 
-    @Test("Handle onSkipBackward skips backward")
+    @Test("Handle onSkipBackwardTapped skips backward")
     func handleSkipBackward() {
         let serviceLocator = ServiceLocator()
         let sut = MediaDetailViewModel(article: testVideoArticle, serviceLocator: serviceLocator)
 
-        sut.handle(event: .onSkipBackward)
+        sut.handle(event: .onSkipBackwardTapped)
         // Event should be handled without error
     }
 
-    @Test("Handle onSkipForward skips forward")
+    @Test("Handle onSkipForwardTapped skips forward")
     func handleSkipForward() {
         let serviceLocator = ServiceLocator()
         let sut = MediaDetailViewModel(article: testVideoArticle, serviceLocator: serviceLocator)
 
-        sut.handle(event: .onSkipForward)
+        sut.handle(event: .onSkipForwardTapped)
         // Event should be handled without error
     }
 
@@ -112,12 +112,12 @@ struct MediaDetailViewModelTests {
         // Event should be handled without error
     }
 
-    @Test("Handle onDismissShareSheet dismisses share sheet")
+    @Test("Handle onShareDismissed dismisses share sheet")
     func handleDismissShareSheet() {
         let serviceLocator = ServiceLocator()
         let sut = MediaDetailViewModel(article: testVideoArticle, serviceLocator: serviceLocator)
 
-        sut.handle(event: .onDismissShareSheet)
+        sut.handle(event: .onShareDismissed)
         // Event should be handled without error
     }
 
@@ -130,21 +130,21 @@ struct MediaDetailViewModelTests {
         // Event should be handled without error
     }
 
-    @Test("Handle onOpenInBrowser opens browser")
+    @Test("Handle onOpenInBrowserTapped opens browser")
     func handleOpenInBrowser() {
         let serviceLocator = ServiceLocator()
         let sut = MediaDetailViewModel(article: testVideoArticle, serviceLocator: serviceLocator)
 
-        sut.handle(event: .onOpenInBrowser)
+        sut.handle(event: .onOpenInBrowserTapped)
         // Event should be handled without error
     }
 
-    @Test("Handle onDismissError dismisses error")
-    func handleDismissError() {
+    @Test("Handle onError event")
+    func handleError() {
         let serviceLocator = ServiceLocator()
         let sut = MediaDetailViewModel(article: testVideoArticle, serviceLocator: serviceLocator)
 
-        sut.handle(event: .onDismissError)
+        sut.handle(event: .onError("Test error"))
         // Event should be handled without error
     }
 }
