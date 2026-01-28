@@ -229,7 +229,6 @@ struct HomeDomainInteractorTests {
         #expect(state.selectedCategory == .technology)
         #expect(state.breakingNews.isEmpty) // No breaking news for category filter
     }
-
 }
 
 // MARK: - Media Filtering Tests
