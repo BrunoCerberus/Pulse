@@ -129,7 +129,7 @@ struct MediaDomainInteractorTests {
         sut.dispatch(action: .loadInitialData)
         try await Task.sleep(nanoseconds: 300_000_000)
 
-        let initialCount = sut.currentState.mediaItems.count
+        _ = sut.currentState.mediaItems.count
 
         // Load more
         sut.dispatch(action: .loadMoreMedia)

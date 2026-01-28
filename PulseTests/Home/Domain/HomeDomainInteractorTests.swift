@@ -230,8 +230,11 @@ struct HomeDomainInteractorTests {
         #expect(state.breakingNews.isEmpty) // No breaking news for category filter
     }
 
-    // MARK: - Media Filtering Tests
+}
 
+// MARK: - Media Filtering Tests
+
+extension HomeDomainInteractorTests {
     @Test("Media items are filtered from headlines")
     func mediaItemsFilteredFromHeadlines() async throws {
         let videoArticle = Article(

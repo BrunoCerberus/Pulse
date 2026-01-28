@@ -18,7 +18,7 @@ struct MemoryOperationTests {
         // Should be able to switch on the case
         switch operation {
         case .modelLoad:
-            #expect(true)
+            #expect(Bool(true))
         case .inference:
             Issue.record("Should be modelLoad case")
         }
@@ -32,7 +32,7 @@ struct MemoryOperationTests {
         case .modelLoad:
             Issue.record("Should be inference case")
         case .inference:
-            #expect(true)
+            #expect(Bool(true))
         }
     }
 
