@@ -49,14 +49,14 @@ final class LiveStorageService: StorageService {
     /// Immutable after init to prevent race conditions.
     private let backgroundActor: BackgroundStorageActor
 
-    init() {
+    init(inMemory: Bool = false) {
         do {
             let schema = Schema([
                 BookmarkedArticle.self,
                 ReadingHistoryEntry.self,
                 UserPreferencesModel.self,
             ])
-            let modelConfiguration = ModelConfiguration(schema: schema, isStoredInMemoryOnly: false)
+            let modelConfiguration = ModelConfiguration(schema: schema, isStoredInMemoryOnly: inMemory)
             let container = try ModelContainer(for: schema, configurations: [modelConfiguration])
             modelContainer = container
             // Initialize background actor with the same container

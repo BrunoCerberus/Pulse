@@ -37,7 +37,7 @@ struct LiveStorageServiceTests {
     }
 
     init() {
-        sut = LiveStorageService()
+        sut = LiveStorageService(inMemory: true)
     }
 
     // MARK: - Bookmark Tests

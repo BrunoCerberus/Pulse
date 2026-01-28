@@ -8,14 +8,14 @@ import XCTest
 final class BookmarksViewSnapshotTests: XCTestCase {
     private var serviceLocator: ServiceLocator!
 
-    // Custom device config matching CI's iPhone Air simulator
+    /// Custom device config matching CI's iPhone Air simulator
     private let iPhoneAirConfig = ViewImageConfig(
         safeArea: UIEdgeInsets(top: 59, left: 0, bottom: 34, right: 0),
         size: CGSize(width: 393, height: 852),
         traits: UITraitCollection(userInterfaceStyle: .dark)
     )
 
-    // Fixed date for snapshot stability
+    /// Fixed date for snapshot stability
     private let fixedDate = Date(timeIntervalSince1970: 1_672_531_200) // Jan 1, 2023 00:00:00 UTC
 
     override func setUp() {
@@ -25,7 +25,7 @@ final class BookmarksViewSnapshotTests: XCTestCase {
         serviceLocator.register(StorageService.self, instance: MockStorageService())
     }
 
-    // Light mode config
+    /// Light mode config
     private let iPhoneAirLightConfig = ViewImageConfig(
         safeArea: UIEdgeInsets(top: 59, left: 0, bottom: 34, right: 0),
         size: CGSize(width: 393, height: 852),

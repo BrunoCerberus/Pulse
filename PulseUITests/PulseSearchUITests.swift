@@ -61,7 +61,7 @@ final class PulseSearchUITests: BaseUITestCase {
     // MARK: - Combined Flow Test
 
     /// Tests search UI, input, sorting, keyboard behavior, and tab switching
-    func testSearchFlow() throws {
+    func testSearchFlow() {
         // --- Search UI, Initial State, and Suggestions ---
         navigateToSearchTab()
 

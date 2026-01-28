@@ -5,7 +5,7 @@ final class NavigationUITests: BaseUITestCase {
 
     /// Tests tab bar existence, tab navigation, settings flow, and article detail navigation
     /// Note: Search tab navigation is tested separately in PulseSearchUITests
-    func testNavigationFlow() throws {
+    func testNavigationFlow() {
         // --- Tab Bar Exists ---
         let tabBar = app.tabBars.firstMatch
         XCTAssertTrue(tabBar.waitForExistence(timeout: Self.launchTimeout), "Tab bar should be visible after launch")

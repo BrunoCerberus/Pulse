@@ -8,7 +8,7 @@ import XCTest
 final class ArticleDetailViewSnapshotTests: XCTestCase {
     private var serviceLocator: ServiceLocator!
 
-    // Custom device config matching CI's iPhone Air simulator
+    /// Custom device config matching CI's iPhone Air simulator
     private let iPhoneAirConfig = ViewImageConfig(
         safeArea: UIEdgeInsets(top: 59, left: 0, bottom: 34, right: 0),
         size: CGSize(width: 393, height: 852),
@@ -21,7 +21,7 @@ final class ArticleDetailViewSnapshotTests: XCTestCase {
         serviceLocator.register(StorageService.self, instance: MockStorageService())
     }
 
-    // Fixed date for snapshot stability (Jan 1, 2023 - will always show "2 yr ago" or similar)
+    /// Fixed date for snapshot stability (Jan 1, 2023 - will always show "2 yr ago" or similar)
     private var snapshotArticle: Article {
         Article(
             id: "snapshot-1",

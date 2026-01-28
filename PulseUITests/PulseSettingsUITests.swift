@@ -41,7 +41,7 @@ final class PulseSettingsUITests: BaseUITestCase {
     // MARK: - Combined Flow Test
 
     /// Tests settings sections, toggles, content filters, and persistence
-    func testSettingsFlow() throws {
+    func testSettingsFlow() {
         navigateToSettings()
 
         let navigationTitle = app.navigationBars["Settings"]

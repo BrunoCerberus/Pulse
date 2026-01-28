@@ -8,14 +8,14 @@ import XCTest
 final class RootViewSnapshotTests: XCTestCase {
     private var serviceLocator: ServiceLocator!
 
-    // Custom device config matching CI's iPhone Air simulator (forced dark mode)
+    /// Custom device config matching CI's iPhone Air simulator (forced dark mode)
     private let iPhoneAirConfig = ViewImageConfig(
         safeArea: UIEdgeInsets(top: 59, left: 0, bottom: 34, right: 0),
         size: CGSize(width: 393, height: 852),
         traits: UITraitCollection(userInterfaceStyle: .dark)
     )
 
-    // Light mode config for additional coverage
+    /// Light mode config for additional coverage
     private let iPhoneAirLightConfig = ViewImageConfig(
         safeArea: UIEdgeInsets(top: 59, left: 0, bottom: 34, right: 0),
         size: CGSize(width: 393, height: 852),

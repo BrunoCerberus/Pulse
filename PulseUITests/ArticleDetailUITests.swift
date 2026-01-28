@@ -35,7 +35,7 @@ final class ArticleDetailUITests: BaseUITestCase {
     // MARK: - Combined Flow Test
 
     /// Tests article detail toolbar, content, navigation, and bookmarking flow
-    func testArticleDetailFlow() throws {
+    func testArticleDetailFlow() {
         let navigated = navigateToArticleDetail()
         if !navigated {
             let errorState = app.staticTexts["Unable to Load News"].exists || app.staticTexts["No News Available"].exists

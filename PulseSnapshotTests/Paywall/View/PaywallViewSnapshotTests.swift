@@ -125,7 +125,9 @@ private final class FailingStoreKitService: StoreKitService {
         subscriptionStatusSubject.eraseToAnyPublisher()
     }
 
-    var isPremium: Bool { false }
+    var isPremium: Bool {
+        false
+    }
 
     func fetchProducts() -> AnyPublisher<[Product], Error> {
         Fail(error: Pulse.StoreKitError.unknown)

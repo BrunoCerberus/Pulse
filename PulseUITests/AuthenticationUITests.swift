@@ -4,7 +4,7 @@ final class AuthenticationUITests: BaseUITestCase {
     // MARK: - Combined Flow Test
 
     /// Tests authentication UI states and settings account section when authenticated
-    func testAuthenticationFlow() throws {
+    func testAuthenticationFlow() {
         let tabBar = app.tabBars.firstMatch
         let signInWithAppleButton = app.buttons["Sign in with Apple"]
         let signInWithGoogleButton = app.buttons["Sign in with Google"]

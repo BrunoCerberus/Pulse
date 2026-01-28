@@ -29,7 +29,7 @@ struct LiveSummarizationServiceTests {
     @Test("Initialization with custom LLMService")
     func initializationWithCustomLLMService() {
         let customMock = MockLLMService()
-        customMock.modelStatus = .ready
+        customMock.isModelLoaded = true
 
         let service = LiveSummarizationService(llmService: customMock)
 

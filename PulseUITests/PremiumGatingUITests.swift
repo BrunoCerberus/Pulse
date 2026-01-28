@@ -8,7 +8,7 @@ final class PremiumGatingNonPremiumUITests: BaseUITestCase {
     // MARK: - Feed Tab Premium Gate
 
     /// Tests that non-premium users see the premium gate on Feed tab
-    func testFeedTabShowsPremiumGateForNonPremiumUser() throws {
+    func testFeedTabShowsPremiumGateForNonPremiumUser() {
         // Navigate to Feed tab
         let feedTab = app.tabBars.buttons["Feed"]
         XCTAssertTrue(feedTab.waitForExistence(timeout: Self.launchTimeout), "Feed tab should exist")
@@ -29,7 +29,7 @@ final class PremiumGatingNonPremiumUITests: BaseUITestCase {
     }
 
     /// Tests that tapping Unlock Premium on Feed shows paywall
-    func testFeedUnlockButtonShowsPaywall() throws {
+    func testFeedUnlockButtonShowsPaywall() {
         // Ensure tab bar is ready before navigation
         let feedTab = app.tabBars.buttons["Feed"]
         XCTAssertTrue(feedTab.waitForExistence(timeout: Self.launchTimeout), "Feed tab should exist")
@@ -61,7 +61,7 @@ final class PremiumGatingNonPremiumUITests: BaseUITestCase {
     // MARK: - Article Summarization Premium Gate
 
     /// Tests that non-premium users see paywall when tapping summarize button
-    func testSummarizeButtonShowsPaywallForNonPremiumUser() throws {
+    func testSummarizeButtonShowsPaywallForNonPremiumUser() {
         // Navigate to article detail
         let navigated = navigateToArticleDetail()
         guard navigated else {
@@ -193,7 +193,7 @@ final class PremiumGatingPremiumUITests: XCTestCase {
     // MARK: - Feed Tab Premium Access
 
     /// Tests that premium users see digest content on Feed tab
-    func testFeedTabShowsContentForPremiumUser() throws {
+    func testFeedTabShowsContentForPremiumUser() {
         // Navigate to Feed tab
         let feedTab = app.tabBars.buttons["Feed"]
         XCTAssertTrue(feedTab.waitForExistence(timeout: Self.launchTimeout), "Feed tab should exist")
@@ -223,7 +223,7 @@ final class PremiumGatingPremiumUITests: XCTestCase {
     // MARK: - Article Summarization Premium Access
 
     /// Tests that premium users can access summarization
-    func testSummarizeButtonWorksForPremiumUser() throws {
+    func testSummarizeButtonWorksForPremiumUser() {
         // Navigate to article detail
         let navigated = navigateToArticleDetail()
         guard navigated else {
