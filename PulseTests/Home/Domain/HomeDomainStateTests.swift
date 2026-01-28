@@ -4,7 +4,6 @@ import Testing
 
 @Suite("HomeDomainState Tests")
 struct HomeDomainStateTests {
-    // Use a fixed reference date to ensure consistent test results
     private static let referenceDate = Date(timeIntervalSince1970: 1_700_000_000)
 
     private var testArticles: [Article] {

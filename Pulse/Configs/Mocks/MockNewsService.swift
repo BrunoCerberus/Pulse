@@ -435,7 +435,6 @@ extension ServiceLocator {
 }
 
 extension Article {
-    // Use a fixed reference date for consistent mock data
     private static let mockReferenceDate = Date(timeIntervalSince1970: 1_700_000_000)
 
     static var mockArticles: [Article] {
