@@ -147,11 +147,15 @@ final class HomeDomainInteractor: CombineInteractor {
             } receiveValue: { [weak self] articles in
                 guard let self else { return }
                 self.updateState { state in
+                    // Filter out media items (videos/podcasts) - they belong in MediaView
+                    let nonMediaArticles = articles.filter { !$0.isMedia }
                     let existingIDs = Set(state.headlines.map { $0.id } + state.breakingNews.map { $0.id })
-                    let newArticles = articles.filter { !existingIDs.contains($0.id) }
+                    let newArticles = nonMediaArticles.filter { !existingIDs.contains($0.id) }
                     state.headlines.append(contentsOf: newArticles)
                     state.isLoadingMore = false
                     state.currentPage = nextPage
+                    // Use unfiltered count for pagination: backend page size determines if more exist.
+                    // Filtering happens client-side; backend doesn't know about media exclusion.
                     state.hasMorePages = articles.count >= 20
                 }
             }
