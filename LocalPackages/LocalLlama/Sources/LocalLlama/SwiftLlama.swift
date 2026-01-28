@@ -1,6 +1,6 @@
+import Combine
 import Foundation
 import llama
-import Combine
 
 /// Thread-safe LLM wrapper using a dedicated pinned thread
 /// All llama.cpp operations run on the EXACT SAME OS thread to avoid thread-local state issues
@@ -24,7 +24,7 @@ public final class SwiftLlama: @unchecked Sendable {
 
     public init(modelPath: String, modelConfiguration: Configuration = .init()) {
         self.modelPath = modelPath
-        self.configuration = modelConfiguration
+        configuration = modelConfiguration
         startDedicatedThread()
     }
 
@@ -71,7 +71,7 @@ public final class SwiftLlama: @unchecked Sendable {
 
         CFRunLoopPerformBlock(runLoop, CFRunLoopMode.defaultMode.rawValue) {
             do {
-                result = .success(try block())
+                result = try .success(block())
             } catch {
                 result = .failure(error)
             }
@@ -89,9 +89,9 @@ public final class SwiftLlama: @unchecked Sendable {
         }
 
         switch result {
-        case .success(let value):
+        case let .success(value):
             return value
-        case .failure(let error):
+        case let .failure(error):
             throw error
         }
     }
@@ -152,8 +152,8 @@ public final class SwiftLlama: @unchecked Sendable {
                     }
 
                     // Finalize output
-                    self.configuration.stopTokens.forEach {
-                        self.generatedTokenCache = self.generatedTokenCache.replacingOccurrences(of: $0, with: "")
+                    for stopToken in self.configuration.stopTokens {
+                        self.generatedTokenCache = self.generatedTokenCache.replacingOccurrences(of: stopToken, with: "")
                     }
                     result += self.generatedTokenCache
                     self.generatedTokenCache = ""
@@ -177,7 +177,8 @@ public final class SwiftLlama: @unchecked Sendable {
 
         if generatedTokenCache.count >= maxLengthOfStopToken * 2 {
             if let stopToken = configuration.stopTokens.first(where: { generatedTokenCache.contains($0) }),
-               let index = generatedTokenCache.range(of: stopToken) {
+               let index = generatedTokenCache.range(of: stopToken)
+            {
                 result += String(generatedTokenCache[..<index.lowerBound])
                 generatedTokenCache = ""
                 return true

@@ -3,21 +3,22 @@ import llama
 
 extension Batch {
     mutating func clear() {
-        self.n_tokens = 0
+        n_tokens = 0
     }
 
     mutating func add(token: Token,
                       position: Position,
                       seqIDs: [SeqID],
-                      logit: Bool) {
+                      logit: Bool)
+    {
         let nextIndex = Int(n_tokens)
         self.token[nextIndex] = token
-        self.pos[nextIndex] = position
-        self.n_seq_id[nextIndex] = Int32(seqIDs.count)
-        seqIDs.enumerated().forEach { index, id in
+        pos[nextIndex] = position
+        n_seq_id[nextIndex] = Int32(seqIDs.count)
+        for (index, id) in seqIDs.enumerated() {
             seq_id[nextIndex]?[index] = id
         }
-        self.logits[nextIndex] = logit ? 1 : 0
-        self.n_tokens += 1
+        logits[nextIndex] = logit ? 1 : 0
+        n_tokens += 1
     }
 }

@@ -1,9 +1,8 @@
 import XCTest
 
 final class PulseUITests: BaseUITestCase {
-
     /// Tests tab bar exists, tab navigation, and settings access
-    func testMainAppNavigationFlow() throws {
+    func testMainAppNavigationFlow() {
         XCTAssertTrue(app.tabBars.firstMatch.exists)
 
         let homeTab = app.tabBars.buttons["Home"]

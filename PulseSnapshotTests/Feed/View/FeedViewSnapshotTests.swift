@@ -10,14 +10,14 @@ final class FeedViewSnapshotTests: XCTestCase {
     private var mockFeedService: MockFeedService!
     private var mockStorageService: MockStorageService!
 
-    // Custom device config matching CI's iPhone Air simulator (forced dark mode)
+    /// Custom device config matching CI's iPhone Air simulator (forced dark mode)
     private let iPhoneAirConfig = ViewImageConfig(
         safeArea: UIEdgeInsets(top: 59, left: 0, bottom: 34, right: 0),
         size: CGSize(width: 393, height: 852),
         traits: UITraitCollection(userInterfaceStyle: .dark)
     )
 
-    // Fixed date article for snapshot stability
+    /// Fixed date article for snapshot stability
     private var snapshotArticle: Article {
         Article(
             id: "snapshot-1",

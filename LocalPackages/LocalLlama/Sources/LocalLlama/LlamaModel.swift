@@ -25,12 +25,12 @@ class LlamaModel {
         llama_numa_init(GGML_NUMA_STRATEGY_DISABLED)
         var model_params = llama_model_default_params()
         #if targetEnvironment(simulator)
-        // Disable GPU on simulator (no Metal support)
-        model_params.n_gpu_layers = 0
+            // Disable GPU on simulator (no Metal support)
+            model_params.n_gpu_layers = 0
         #else
-        // Enable Metal acceleration on real devices
-        // Llama-3.2-1B has ~16 layers, offload up to 32 for safety
-        model_params.n_gpu_layers = 32
+            // Enable Metal acceleration on real devices
+            // Llama-3.2-1B has ~16 layers, offload up to 32 for safety
+            model_params.n_gpu_layers = 32
         #endif
         // Memory mapping for faster model loading
         model_params.use_mmap = true
@@ -63,17 +63,17 @@ class LlamaModel {
             throw SwiftLlamaError.others("Cannot load model context")
         }
         self.context = context
-        self.tokens = []
+        tokens = []
         // Optimized batch size: context + generation buffer
         // Previously used batchSize * historySize * 2 (20480) which was excessive
         // Buffer must accommodate maxTokenCount for generation phase
         let generationBuffer = max(512, configuration.maxTokenCount)
         let optimizedBatchSize = Int32(configuration.nCTX + generationBuffer)
-        self.batch = llama_batch_init(optimizedBatchSize, 0, 1)
+        batch = llama_batch_init(optimizedBatchSize, 0, 1)
 
         // Sampler chain: top-k -> top-p -> temperature -> distribution
         // Order follows llama.cpp convention: filtering (top-k, top-p) before temperature scaling
-        self.sampler = llama_sampler_chain_init(llama_sampler_chain_default_params())
+        sampler = llama_sampler_chain_init(llama_sampler_chain_default_params())
         llama_sampler_chain_add(sampler, llama_sampler_init_top_k(Int32(configuration.topK)))
         llama_sampler_chain_add(sampler, llama_sampler_init_top_p(configuration.topP, 1))
         llama_sampler_chain_add(sampler, llama_sampler_init_temp(configuration.temperature))
@@ -95,7 +95,7 @@ class LlamaModel {
         temporaryInvalidCChars = []
         batch.clear()
 
-        tokens.enumerated().forEach { index, token in
+        for (index, token) in tokens.enumerated() {
             batch.add(token: token, position: Int32(index), seqIDs: [0], logit: false)
         }
         batch.logits[Int(batch.n_tokens) - 1] = 1 // true
@@ -124,7 +124,8 @@ class LlamaModel {
             temporaryInvalidCChars.removeAll()
         } else if let suffixIndex = temporaryInvalidCChars.firstIndex(where: { $0 != 0 }),
                   let validSuffix = String(validating: Array(temporaryInvalidCChars.suffix(from: suffixIndex)) + [0],
-                                           as: UTF8.self) {
+                                           as: UTF8.self)
+        {
             newTokenStr = validSuffix
             temporaryInvalidCChars.removeAll()
         } else {

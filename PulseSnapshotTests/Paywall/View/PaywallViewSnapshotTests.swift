@@ -1,6 +1,6 @@
-@testable import Pulse
 import Combine
 import EntropyCore
+@testable import Pulse
 import SnapshotTesting
 import StoreKit
 import SwiftUI
@@ -125,7 +125,9 @@ private final class FailingStoreKitService: StoreKitService {
         subscriptionStatusSubject.eraseToAnyPublisher()
     }
 
-    var isPremium: Bool { false }
+    var isPremium: Bool {
+        false
+    }
 
     func fetchProducts() -> AnyPublisher<[Product], Error> {
         Fail(error: Pulse.StoreKitError.unknown)

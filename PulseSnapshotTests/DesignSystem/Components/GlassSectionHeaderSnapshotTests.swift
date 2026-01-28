@@ -44,8 +44,8 @@ final class GlassSectionHeaderSnapshotTests: XCTestCase {
             subtitle: "Updated 5 minutes ago",
             actionTitle: "See All"
         ) {}
-        .frame(width: 393)
-        .background(LinearGradient.meshFallback)
+            .frame(width: 393)
+            .background(LinearGradient.meshFallback)
 
         let controller = UIHostingController(rootView: view)
 

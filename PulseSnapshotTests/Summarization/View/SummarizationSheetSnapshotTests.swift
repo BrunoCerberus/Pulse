@@ -83,7 +83,6 @@ final class SummarizationSheetSnapshotTests: XCTestCase {
             record: false
         )
     }
-
 }
 
 // MARK: - Preview Helpers

@@ -5,14 +5,14 @@ import XCTest
 
 @MainActor
 final class GlassArticleCardSnapshotTests: XCTestCase {
-    // Custom device config matching CI's iPhone Air simulator (forced dark mode)
+    /// Custom device config matching CI's iPhone Air simulator (forced dark mode)
     private let iPhoneAirConfig = ViewImageConfig(
         safeArea: UIEdgeInsets(top: 59, left: 0, bottom: 34, right: 0),
         size: CGSize(width: 393, height: 852),
         traits: UITraitCollection(userInterfaceStyle: .dark)
     )
 
-    // Fixed date article for snapshot stability (Jan 1, 2023 - will always show consistent relative time)
+    /// Fixed date article for snapshot stability (Jan 1, 2023 - will always show consistent relative time)
     private var snapshotArticle: Article {
         Article(
             id: "snapshot-1",

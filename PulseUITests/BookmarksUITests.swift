@@ -1,11 +1,10 @@
 import XCTest
 
 final class BookmarksUITests: BaseUITestCase {
-
     // MARK: - Combined Flow Test
 
     /// Tests bookmarks navigation, content, context menu, and bookmark persistence
-    func testBookmarksFlow() throws {
+    func testBookmarksFlow() {
         // --- Tab Navigation ---
         let bookmarksTab = app.tabBars.buttons["Bookmarks"]
         XCTAssertTrue(bookmarksTab.waitForExistence(timeout: Self.shortTimeout), "Bookmarks tab should exist")

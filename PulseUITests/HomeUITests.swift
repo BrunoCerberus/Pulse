@@ -1,11 +1,10 @@
 import XCTest
 
 final class HomeUITests: BaseUITestCase {
-
     // MARK: - Category Tabs Tests
 
     /// Tests category tabs visibility and interaction after enabling topics in Settings
-    func testCategoryTabsAfterEnablingTopics() throws {
+    func testCategoryTabsAfterEnablingTopics() {
         // Navigate to Settings
         let gearButton = app.navigationBars.buttons["gearshape"]
         XCTAssertTrue(gearButton.waitForExistence(timeout: Self.shortTimeout), "Gear button should exist")
@@ -65,7 +64,7 @@ final class HomeUITests: BaseUITestCase {
     }
 
     /// Tests that tapping a category tab filters content
-    func testCategoryTabFiltersContent() throws {
+    func testCategoryTabFiltersContent() {
         // Wait for content to load
         _ = waitForHomeContent(timeout: 30)
 
@@ -98,7 +97,7 @@ final class HomeUITests: BaseUITestCase {
     }
 
     /// Tests horizontal scrolling of category tabs when many categories are followed
-    func testCategoryTabsHorizontalScroll() throws {
+    func testCategoryTabsHorizontalScroll() {
         // Wait for content to load
         _ = waitForHomeContent(timeout: 30)
 
@@ -128,7 +127,7 @@ final class HomeUITests: BaseUITestCase {
     // MARK: - Navigation and Content Tests
 
     /// Tests navigation bar, content loading, interactions, and settings navigation
-    func testHomeContentInteractionsAndSettingsFlow() throws {
+    func testHomeContentInteractionsAndSettingsFlow() {
         // Verify navigation title
         XCTAssertTrue(app.navigationBars["News"].waitForExistence(timeout: Self.shortTimeout), "Navigation title 'News' should exist")
 

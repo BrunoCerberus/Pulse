@@ -5,14 +5,14 @@ import XCTest
 
 @MainActor
 final class HeroNewsCardSnapshotTests: XCTestCase {
-    // Custom device config matching CI's iPhone Air simulator (forced dark mode)
+    /// Custom device config matching CI's iPhone Air simulator (forced dark mode)
     private let iPhoneAirConfig = ViewImageConfig(
         safeArea: UIEdgeInsets(top: 59, left: 0, bottom: 34, right: 0),
         size: CGSize(width: 393, height: 852),
         traits: UITraitCollection(userInterfaceStyle: .dark)
     )
 
-    // Fixed date for snapshot stability
+    /// Fixed date for snapshot stability
     private let fixedDate = Date(timeIntervalSince1970: 1_672_531_200) // Jan 1, 2023 00:00:00 UTC
 
     private var articleWithImage: ArticleViewItem {

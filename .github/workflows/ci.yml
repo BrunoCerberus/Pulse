@@ -183,7 +183,8 @@ jobs:
           -project Pulse.xcodeproj \
           -scheme PulseDev \
           -destination 'platform=iOS Simulator,name=iPhone Air,OS=26.2' \
-          -derivedDataPath ./DerivedData
+          -derivedDataPath ./DerivedData \
+          ENABLE_ONLY_ACTIVE_RESOURCES=NO
 
     - name: Build for testing (PulseSnapshotTests)
       run: |
@@ -192,7 +193,8 @@ jobs:
           -project Pulse.xcodeproj \
           -scheme PulseSnapshotTests \
           -destination 'platform=iOS Simulator,name=iPhone Air,OS=26.2' \
-          -derivedDataPath ./DerivedData
+          -derivedDataPath ./DerivedData \
+          ENABLE_ONLY_ACTIVE_RESOURCES=NO
 
     - name: Upload build artifacts
       uses: actions/upload-artifact@v4

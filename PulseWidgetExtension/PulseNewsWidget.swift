@@ -119,7 +119,8 @@ struct ArticleRowView: View {
     @ViewBuilder
     private var articleImage: some View {
         if let imageData = article.imageData,
-           let uiImage = UIImage(data: imageData) {
+           let uiImage = UIImage(data: imageData)
+        {
             Image(uiImage: uiImage)
                 .resizable()
                 .aspectRatio(contentMode: .fill)

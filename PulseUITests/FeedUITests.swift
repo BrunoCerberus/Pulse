@@ -1,7 +1,6 @@
 import XCTest
 
 final class FeedUITests: BaseUITestCase {
-
     // MARK: - Setup
 
     override func setUpWithError() throws {
@@ -77,7 +76,7 @@ final class FeedUITests: BaseUITestCase {
     // MARK: - Combined Flow Test
 
     /// Tests Feed tab navigation, content states, and interactions
-    func testFeedFlow() throws {
+    func testFeedFlow() {
         // --- Tab Navigation ---
         let feedTab = app.tabBars.buttons["Feed"]
         XCTAssertTrue(feedTab.waitForExistence(timeout: Self.launchTimeout), "Feed tab should exist")
@@ -156,7 +155,7 @@ final class FeedUITests: BaseUITestCase {
 
     // MARK: - Tab Bar Position Test
 
-    func testFeedTabPosition() throws {
+    func testFeedTabPosition() {
         let tabBar = app.tabBars.firstMatch
         XCTAssertTrue(tabBar.waitForExistence(timeout: Self.launchTimeout), "Tab bar should exist")
 
@@ -179,7 +178,7 @@ final class FeedUITests: BaseUITestCase {
 
     // MARK: - Source Articles Navigation Test
 
-    func testSourceArticleNavigation() throws {
+    func testSourceArticleNavigation() {
         navigateToFeed()
 
         let contentLoaded = waitForFeedContent(timeout: 15)
@@ -226,7 +225,7 @@ final class FeedUITests: BaseUITestCase {
 
     // MARK: - Generate Digest Interaction Test
 
-    func testGenerateDigestInteraction() throws {
+    func testGenerateDigestInteraction() {
         navigateToFeed()
 
         let contentLoaded = waitForFeedContent(timeout: 15)

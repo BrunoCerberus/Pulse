@@ -1,7 +1,6 @@
 import XCTest
 
 final class ArticleDetailUITests: BaseUITestCase {
-
     // MARK: - Helper Methods
 
     /// Navigate to an article detail by tapping the first available article
@@ -36,7 +35,7 @@ final class ArticleDetailUITests: BaseUITestCase {
     // MARK: - Combined Flow Test
 
     /// Tests article detail toolbar, content, navigation, and bookmarking flow
-    func testArticleDetailFlow() throws {
+    func testArticleDetailFlow() {
         let navigated = navigateToArticleDetail()
         if !navigated {
             let errorState = app.staticTexts["Unable to Load News"].exists || app.staticTexts["No News Available"].exists
@@ -111,7 +110,7 @@ final class ArticleDetailUITests: BaseUITestCase {
         XCTAssertTrue(readFullButton.waitForExistence(timeout: 3), "Read Full Article button should be visible after scrolling")
 
         // Scroll to top by repeated swipe down gestures
-        for _ in 0..<3 {
+        for _ in 0 ..< 3 {
             scrollViewGeneric.swipeDown()
         }
 

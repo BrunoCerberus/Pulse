@@ -1,11 +1,10 @@
 import XCTest
 
 final class AuthenticationUITests: BaseUITestCase {
-
     // MARK: - Combined Flow Test
 
     /// Tests authentication UI states and settings account section when authenticated
-    func testAuthenticationFlow() throws {
+    func testAuthenticationFlow() {
         let tabBar = app.tabBars.firstMatch
         let signInWithAppleButton = app.buttons["Sign in with Apple"]
         let signInWithGoogleButton = app.buttons["Sign in with Google"]
@@ -21,7 +20,7 @@ final class AuthenticationUITests: BaseUITestCase {
             let homeTab = app.tabBars.buttons["Home"]
             XCTAssertTrue(homeTab.exists, "Home tab should exist")
 
-            if homeTab.exists && !homeTab.isSelected {
+            if homeTab.exists, !homeTab.isSelected {
                 homeTab.tap()
             }
 
@@ -35,7 +34,7 @@ final class AuthenticationUITests: BaseUITestCase {
             let accountSection = app.staticTexts["Account"]
             XCTAssertTrue(accountSection.waitForExistence(timeout: 5), "Account section should exist in settings")
 
-            for _ in 0..<5 {
+            for _ in 0 ..< 5 {
                 app.swipeUp()
             }
 
