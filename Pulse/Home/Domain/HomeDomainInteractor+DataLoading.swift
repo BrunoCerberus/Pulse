@@ -18,9 +18,11 @@ extension HomeDomainInteractor {
             .receive(on: DispatchQueue.main)
             .handleEvents(
                 receiveOutput: { [weak self] headlines in
+                    // Filter out media items (videos/podcasts) - they belong in MediaView
+                    let filteredHeadlines = headlines.filter { !$0.isMedia }
                     self?.updateState { state in
                         state.breakingNews = []
-                        state.headlines = headlines
+                        state.headlines = filteredHeadlines
                         state.isLoading = false
                         state.isRefreshing = false
                         state.currentPage = page
@@ -55,9 +57,12 @@ extension HomeDomainInteractor {
         .handleEvents(
             receiveOutput: { [weak self] breaking, headlines in
                 guard let self else { return }
-                let deduplicated = self.deduplicateArticles(headlines, excluding: breaking)
+                // Filter out media items (videos/podcasts) - they belong in MediaView
+                let filteredBreaking = breaking.filter { !$0.isMedia }
+                let filteredHeadlines = headlines.filter { !$0.isMedia }
+                let deduplicated = self.deduplicateArticles(filteredHeadlines, excluding: filteredBreaking)
                 self.updateState { state in
-                    state.breakingNews = breaking
+                    state.breakingNews = filteredBreaking
                     state.headlines = deduplicated
                     state.isLoading = false
                     state.isRefreshing = false
@@ -65,8 +70,8 @@ extension HomeDomainInteractor {
                     state.hasMorePages = headlines.count >= 20
                     state.hasLoadedInitialData = true
                 }
-                // Update widget with latest headlines
-                let allArticles = breaking + headlines
+                // Update widget with latest headlines (excluding media)
+                let allArticles = filteredBreaking + filteredHeadlines
                 WidgetDataManager.shared.saveArticlesForWidget(allArticles)
             },
             receiveCompletion: { [weak self] completion in
