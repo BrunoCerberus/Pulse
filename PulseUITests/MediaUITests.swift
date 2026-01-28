@@ -282,5 +282,4 @@ final class MediaUITests: BaseUITestCase {
         ]
         return waitForAny(detailIndicators, timeout: timeout)
     }
-
 }

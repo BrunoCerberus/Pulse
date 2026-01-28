@@ -14,7 +14,8 @@ final class SharedDataManager {
 
     func getArticles() -> [SharedArticle] {
         guard let defaults = sharedDefaults,
-              let data = defaults.data(forKey: articlesKey) else {
+              let data = defaults.data(forKey: articlesKey)
+        else {
             return []
         }
 

@@ -5,7 +5,6 @@ import XCTest
 /// Tests premium feature gating for non-premium users.
 /// These tests verify that premium features are properly locked.
 final class PremiumGatingNonPremiumUITests: BaseUITestCase {
-
     // MARK: - Feed Tab Premium Gate
 
     /// Tests that non-premium users see the premium gate on Feed tab
@@ -303,7 +302,7 @@ final class PremiumGatingPremiumUITests: XCTestCase {
             tabBar.buttons.element(boundBy: 0).tap()
         }
 
-        for _ in 0..<3 {
+        for _ in 0 ..< 3 {
             let backButton = app.buttons["backButton"]
             guard backButton.exists, backButton.isHittable else { break }
             backButton.tap()

@@ -1,7 +1,6 @@
 import XCTest
 
 final class FeedUITests: BaseUITestCase {
-
     // MARK: - Setup
 
     override func setUpWithError() throws {

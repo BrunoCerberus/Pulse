@@ -1,7 +1,6 @@
 import XCTest
 
 final class PulseSearchUITests: BaseUITestCase {
-
     // MARK: - Helper Methods
 
     /// Dismiss keyboard if visible
@@ -194,7 +193,7 @@ final class PulseSearchUITests: BaseUITestCase {
         let scrollView = app.scrollViews.firstMatch
         if scrollView.exists {
             // Consolidated swipe with content check - more efficient than 3 separate swipes
-            for _ in 0..<2 {
+            for _ in 0 ..< 2 {
                 scrollView.swipeUp()
             }
         }

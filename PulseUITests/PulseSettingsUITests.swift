@@ -1,7 +1,6 @@
 import XCTest
 
 final class PulseSettingsUITests: BaseUITestCase {
-
     // MARK: - Helper Methods
 
     private func isSwitchOn(_ toggle: XCUIElement) -> Bool {

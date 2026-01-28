@@ -1,7 +1,6 @@
 import XCTest
 
 final class PulseUITests: BaseUITestCase {
-
     /// Tests tab bar exists, tab navigation, and settings access
     func testMainAppNavigationFlow() throws {
         XCTAssertTrue(app.tabBars.firstMatch.exists)

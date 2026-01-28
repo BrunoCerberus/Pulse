@@ -16,10 +16,11 @@ public struct Prompt {
     public let userMessage: String
     public let history: [Chat]
 
-    public init(type: `Type`,
+    public init(type: Type,
                 systemPrompt: String = "",
                 userMessage: String,
-                history: [Chat] = []) {
+                history: [Chat] = [])
+    {
         self.type = type
         self.systemPrompt = systemPrompt
         self.userMessage = userMessage

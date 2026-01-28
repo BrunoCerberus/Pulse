@@ -1,7 +1,6 @@
 import XCTest
 
 final class HomeUITests: BaseUITestCase {
-
     // MARK: - Category Tabs Tests
 
     /// Tests category tabs visibility and interaction after enabling topics in Settings

@@ -20,10 +20,11 @@ public struct Configuration {
                 nCTX: Int = 2048,
                 temperature: Float = 0.2,
                 batchSize: Int = 2048,
-                stopSequence: String? = nil,
+                stopSequence _: String? = nil,
                 maxTokenCount: Int = 1024,
                 stopTokens: [String] = [],
-                timeout: TimeInterval = 30.0) {
+                timeout: TimeInterval = 30.0)
+    {
         self.seed = seed
         self.topK = topK
         self.topP = topP
@@ -42,7 +43,7 @@ extension Configuration {
         // Use more threads on capable devices (modern iPhones have 6 cores)
         let cores = ProcessInfo.processInfo.processorCount
         let threadCount = max(1, min(cores - 1, 6))
-        params.n_ctx = max(8, UInt32(self.nCTX)) // minimum context size is 8
+        params.n_ctx = max(8, UInt32(nCTX)) // minimum context size is 8
         params.n_threads = Int32(threadCount)
         params.n_threads_batch = Int32(threadCount)
         // Flash attention enabled for 10-15% throughput improvement on Metal

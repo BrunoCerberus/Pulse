@@ -1,7 +1,6 @@
 import XCTest
 
 final class NavigationUITests: BaseUITestCase {
-
     // MARK: - Combined Flow Test
 
     /// Tests tab bar existence, tab navigation, settings flow, and article detail navigation

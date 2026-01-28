@@ -1,7 +1,6 @@
 import XCTest
 
 final class BookmarksUITests: BaseUITestCase {
-
     // MARK: - Combined Flow Test
 
     /// Tests bookmarks navigation, content, context menu, and bookmark persistence

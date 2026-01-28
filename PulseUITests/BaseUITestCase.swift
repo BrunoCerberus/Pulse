@@ -89,8 +89,8 @@ class BaseUITestCase: XCTestCase {
             let hasStaticTexts = app.staticTexts.count > 0
             let allButtonLabels = app.buttons.allElementsBoundByIndex.prefix(10).map { $0.label }
             XCTFail("App did not reach ready state - neither tab bar nor sign-in view appeared. " +
-                    "Debug: hasActivityIndicator=\(hasActivityIndicator), buttons=\(hasButtons), " +
-                    "texts=\(hasStaticTexts), buttonLabels=\(allButtonLabels)")
+                "Debug: hasActivityIndicator=\(hasActivityIndicator), buttons=\(hasButtons), " +
+                "texts=\(hasStaticTexts), buttonLabels=\(allButtonLabels)")
             return
         }
 
@@ -141,7 +141,7 @@ class BaseUITestCase: XCTestCase {
         }
 
         // Pop all navigation stack levels (handles deep navigation states)
-        for _ in 0..<3 {
+        for _ in 0 ..< 3 {
             let backButton = app.buttons["backButton"]
             guard backButton.exists, backButton.isHittable else { break }
             backButton.tap()
@@ -327,7 +327,7 @@ class BaseUITestCase: XCTestCase {
         let container = scrollView ?? app.scrollViews.firstMatch
         guard container.exists else { return false }
 
-        for _ in 0..<maxSwipes {
+        for _ in 0 ..< maxSwipes {
             container.swipeUp()
             // Use element check instead of fixed delay
             if element.waitForExistence(timeout: 0.1), element.isHittable {

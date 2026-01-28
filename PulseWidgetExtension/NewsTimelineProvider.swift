@@ -77,7 +77,8 @@ struct NewsTimelineProvider: TimelineProvider {
 
         for article in articles {
             guard let urlString = article.imageURL,
-                  let url = URL(string: urlString) else {
+                  let url = URL(string: urlString)
+            else {
                 continue
             }
 
@@ -88,7 +89,8 @@ struct NewsTimelineProvider: TimelineProvider {
 
                 guard let data = data,
                       let httpResponse = response as? HTTPURLResponse,
-                      httpResponse.statusCode == 200 else {
+                      httpResponse.statusCode == 200
+                else {
                     return
                 }
 
