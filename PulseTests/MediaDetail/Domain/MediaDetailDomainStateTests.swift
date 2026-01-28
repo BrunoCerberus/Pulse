@@ -4,13 +4,16 @@ import Testing
 
 @Suite("MediaDetailDomainState Tests")
 struct MediaDetailDomainStateTests {
+    // Use a fixed reference date to ensure consistent test results
+    private static let referenceDate = Date(timeIntervalSince1970: 1_700_000_000)
+
     private var testVideoArticle: Article {
         Article(
             id: "video-1",
             title: "Test Video",
             source: ArticleSource(id: "source", name: "Source"),
             url: "https://youtube.com/watch?v=1",
-            publishedAt: Date(),
+            publishedAt: Self.referenceDate,
             category: .technology,
             mediaType: .video
         )
@@ -22,7 +25,7 @@ struct MediaDetailDomainStateTests {
             title: "Test Podcast",
             source: ArticleSource(id: "source", name: "Source"),
             url: "https://spotify.com/episode/1",
-            publishedAt: Date(),
+            publishedAt: Self.referenceDate,
             category: .business,
             mediaType: .podcast
         )

@@ -435,6 +435,9 @@ extension ServiceLocator {
 }
 
 extension Article {
+    // Use a fixed reference date for consistent mock data
+    private static let mockReferenceDate = Date(timeIntervalSince1970: 1_700_000_000)
+
     static var mockArticles: [Article] {
         [
             Article(
@@ -446,7 +449,7 @@ extension Article {
                 source: ArticleSource(id: "techcrunch", name: "TechCrunch"),
                 url: "https://example.com/1",
                 imageURL: "https://picsum.photos/400/300",
-                publishedAt: Date(),
+                publishedAt: mockReferenceDate,
                 category: .technology
             ),
             Article(
@@ -458,7 +461,7 @@ extension Article {
                 source: ArticleSource(id: "reuters", name: "Reuters"),
                 url: "https://example.com/2",
                 imageURL: "https://picsum.photos/400/301",
-                publishedAt: Date().addingTimeInterval(-3600),
+                publishedAt: mockReferenceDate.addingTimeInterval(-3600),
                 category: .business
             ),
             Article(
@@ -470,7 +473,7 @@ extension Article {
                 source: ArticleSource(id: "bbc", name: "BBC Health"),
                 url: "https://example.com/3",
                 imageURL: "https://picsum.photos/400/302",
-                publishedAt: Date().addingTimeInterval(-7200),
+                publishedAt: mockReferenceDate.addingTimeInterval(-7200),
                 category: .health
             ),
             Article(
@@ -482,7 +485,7 @@ extension Article {
                 source: ArticleSource(id: "espn", name: "ESPN"),
                 url: "https://example.com/4",
                 imageURL: "https://picsum.photos/400/303",
-                publishedAt: Date().addingTimeInterval(-10800),
+                publishedAt: mockReferenceDate.addingTimeInterval(-10800),
                 category: .sports
             ),
             Article(
@@ -494,7 +497,7 @@ extension Article {
                 source: ArticleSource(id: "nature", name: "Nature"),
                 url: "https://example.com/5",
                 imageURL: "https://picsum.photos/400/304",
-                publishedAt: Date().addingTimeInterval(-14400),
+                publishedAt: mockReferenceDate.addingTimeInterval(-14400),
                 category: .science
             ),
         ]

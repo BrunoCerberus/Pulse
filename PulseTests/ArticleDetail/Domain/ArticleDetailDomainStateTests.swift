@@ -4,6 +4,9 @@ import Testing
 
 @Suite("ArticleDetailDomainState Tests")
 struct ArticleDetailDomainStateTests {
+    // Use a fixed reference date to ensure consistent test results
+    private static let referenceDate = Date(timeIntervalSince1970: 1_700_000_000)
+
     private var testArticle: Article {
         Article(
             id: "test-article-1",
@@ -14,7 +17,7 @@ struct ArticleDetailDomainStateTests {
             source: ArticleSource(id: "test-source", name: "Test Source"),
             url: "https://example.com/article",
             imageURL: "https://example.com/image.jpg",
-            publishedAt: Date(),
+            publishedAt: Self.referenceDate,
             category: .technology
         )
     }

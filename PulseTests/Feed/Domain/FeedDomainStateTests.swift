@@ -4,6 +4,9 @@ import Testing
 
 @Suite("FeedDomainState Tests")
 struct FeedDomainStateTests {
+    // Use a fixed reference date to ensure consistent test results
+    private static let referenceDate = Date(timeIntervalSince1970: 1_700_000_000)
+
     private var testArticles: [Article] {
         [
             Article(
@@ -11,7 +14,7 @@ struct FeedDomainStateTests {
                 title: "Article 1",
                 source: ArticleSource(id: "source-1", name: "Source 1"),
                 url: "https://example.com/1",
-                publishedAt: Date(),
+                publishedAt: Self.referenceDate,
                 category: .technology
             ),
             Article(
@@ -19,7 +22,7 @@ struct FeedDomainStateTests {
                 title: "Article 2",
                 source: ArticleSource(id: "source-2", name: "Source 2"),
                 url: "https://example.com/2",
-                publishedAt: Date().addingTimeInterval(-3600),
+                publishedAt: Self.referenceDate.addingTimeInterval(-3600),
                 category: .business
             ),
         ]
@@ -30,7 +33,7 @@ struct FeedDomainStateTests {
             id: "digest-1",
             summary: "Test summary content",
             sourceArticles: testArticles,
-            generatedAt: Date()
+            generatedAt: Self.referenceDate
         )
     }
 

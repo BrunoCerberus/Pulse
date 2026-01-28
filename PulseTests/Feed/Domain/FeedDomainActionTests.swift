@@ -4,13 +4,16 @@ import Testing
 
 @Suite("FeedDomainAction Tests")
 struct FeedDomainActionTests {
+    // Use a fixed reference date to ensure consistent test results
+    private static let referenceDate = Date(timeIntervalSince1970: 1_700_000_000)
+
     private var testArticle: Article {
         Article(
             id: "test-article",
             title: "Test Article",
             source: ArticleSource(id: "test-source", name: "Test Source"),
             url: "https://example.com/article",
-            publishedAt: Date(),
+            publishedAt: Self.referenceDate,
             category: .technology
         )
     }

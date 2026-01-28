@@ -4,6 +4,9 @@ import Testing
 
 @Suite("BookmarksDomainState Tests")
 struct BookmarksDomainStateTests {
+    // Use a fixed reference date to ensure consistent test results
+    private static let referenceDate = Date(timeIntervalSince1970: 1_700_000_000)
+
     private var testArticles: [Article] {
         [
             Article(
@@ -11,14 +14,14 @@ struct BookmarksDomainStateTests {
                 title: "Article 1",
                 source: ArticleSource(id: "source-1", name: "Source 1"),
                 url: "https://example.com/1",
-                publishedAt: Date()
+                publishedAt: Self.referenceDate
             ),
             Article(
                 id: "article-2",
                 title: "Article 2",
                 source: ArticleSource(id: "source-2", name: "Source 2"),
                 url: "https://example.com/2",
-                publishedAt: Date().addingTimeInterval(-3600)
+                publishedAt: Self.referenceDate.addingTimeInterval(-3600)
             ),
         ]
     }

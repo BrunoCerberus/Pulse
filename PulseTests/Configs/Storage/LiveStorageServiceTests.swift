@@ -8,6 +8,9 @@ import Testing
 struct LiveStorageServiceTests {
     private var sut: LiveStorageService!
 
+    // Use a fixed reference date to ensure consistent test results
+    private static let referenceDate = Date(timeIntervalSince1970: 1_700_000_000)
+
     private var testArticle: Article {
         Article(
             id: "test-article-1",
@@ -18,7 +21,7 @@ struct LiveStorageServiceTests {
             source: ArticleSource(id: "test-source", name: "Test Source"),
             url: "https://example.com/article",
             imageURL: "https://example.com/image.jpg",
-            publishedAt: Date(),
+            publishedAt: Self.referenceDate,
             category: .technology
         )
     }
@@ -29,7 +32,7 @@ struct LiveStorageServiceTests {
             title: "Another Article",
             source: ArticleSource(id: "another-source", name: "Another Source"),
             url: "https://example.com/another",
-            publishedAt: Date().addingTimeInterval(-3600),
+            publishedAt: Self.referenceDate.addingTimeInterval(-3600),
             category: .business
         )
     }
