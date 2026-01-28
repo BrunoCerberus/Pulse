@@ -58,6 +58,7 @@ struct FeedView<R: FeedNavigationRouter>: View {
                     serviceLocator: serviceLocator
                 )
                 .navigationTitle(Constants.title)
+                .navigationBarTitleDisplayMode(.large)
             }
         }
         .onAppear {
@@ -77,6 +78,7 @@ struct FeedView<R: FeedNavigationRouter>: View {
         }
         .animation(.easeInOut(duration: 0.35), value: viewModel.viewState.displayState)
         .navigationTitle(isProcessing ? "" : Constants.title)
+        .navigationBarTitleDisplayMode(.large)
         .toolbarBackground(.hidden, for: .navigationBar)
         .toolbar(isProcessing ? .hidden : .automatic, for: .navigationBar)
         .onAppear {

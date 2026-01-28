@@ -51,6 +51,7 @@ struct MediaView<R: MediaNavigationRouter>: View {
             content
         }
         .navigationTitle(Constants.title)
+        .navigationBarTitleDisplayMode(.large)
         .toolbarBackground(.hidden, for: .navigationBar)
         .refreshable {
             HapticManager.shared.refresh()

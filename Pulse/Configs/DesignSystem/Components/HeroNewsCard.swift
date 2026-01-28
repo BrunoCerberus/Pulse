@@ -4,6 +4,7 @@ import SwiftUI
 
 struct HeroNewsCard: View {
     let item: ArticleViewItem
+    var cardWidth: CGFloat = 300
     let onTap: () -> Void
 
     @State private var isPulsing = false
@@ -11,8 +12,9 @@ struct HeroNewsCard: View {
     @Environment(\.colorScheme) private var colorScheme
     @Environment(\.accessibilityReduceMotion) private var reduceMotion
 
-    private let cardWidth: CGFloat = 300
-    private let cardHeight: CGFloat = 200
+    private var cardHeight: CGFloat {
+        cardWidth * (200.0 / 300.0)
+    }
 
     var body: some View {
         Button {
@@ -139,6 +141,7 @@ struct HeroNewsCard: View {
             Circle()
                 .fill(.white.opacity(0.6))
                 .frame(width: 3, height: 3)
+                .accessibilityHidden(true)
 
             Text(item.formattedDate)
                 .font(Typography.captionMedium)
@@ -245,6 +248,7 @@ struct FeaturedArticleCard: View {
                 Circle()
                     .fill(.secondary)
                     .frame(width: 3, height: 3)
+                    .accessibilityHidden(true)
 
                 Text(item.formattedDate)
                     .font(Typography.captionLarge)
