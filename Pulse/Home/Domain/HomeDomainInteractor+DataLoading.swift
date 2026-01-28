@@ -26,6 +26,8 @@ extension HomeDomainInteractor {
                         state.isLoading = false
                         state.isRefreshing = false
                         state.currentPage = page
+                        // Use unfiltered count for pagination: backend page size determines if more exist.
+                        // Filtering happens client-side; backend doesn't know about media exclusion.
                         state.hasMorePages = headlines.count >= 20
                         state.hasLoadedInitialData = true
                     }
@@ -67,6 +69,8 @@ extension HomeDomainInteractor {
                     state.isLoading = false
                     state.isRefreshing = false
                     state.currentPage = page
+                    // Use unfiltered count for pagination: backend page size determines if more exist.
+                    // Filtering happens client-side; backend doesn't know about media exclusion.
                     state.hasMorePages = headlines.count >= 20
                     state.hasLoadedInitialData = true
                 }

@@ -154,6 +154,8 @@ final class HomeDomainInteractor: CombineInteractor {
                     state.headlines.append(contentsOf: newArticles)
                     state.isLoadingMore = false
                     state.currentPage = nextPage
+                    // Use unfiltered count for pagination: backend page size determines if more exist.
+                    // Filtering happens client-side; backend doesn't know about media exclusion.
                     state.hasMorePages = articles.count >= 20
                 }
             }

@@ -29,7 +29,11 @@ final class MockNewsService: NewsService {
                         url: article.url,
                         imageURL: article.imageURL,
                         publishedAt: article.publishedAt,
-                        category: category
+                        category: category,
+                        mediaType: article.mediaType,
+                        mediaURL: article.mediaURL,
+                        mediaDuration: article.mediaDuration,
+                        mediaMimeType: article.mediaMimeType
                     )
                 }
             }
