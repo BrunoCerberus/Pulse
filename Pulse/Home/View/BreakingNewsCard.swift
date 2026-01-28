@@ -11,6 +11,11 @@ private enum Constants {
 struct BreakingNewsCard: View {
     let item: ArticleViewItem
     let onTap: () -> Void
+    var cardWidth: CGFloat = 280
+
+    private var cardHeight: CGFloat {
+        cardWidth * (200.0 / 280.0)
+    }
 
     var body: some View {
         Button(action: onTap) {
@@ -21,7 +26,7 @@ struct BreakingNewsCard: View {
                         image
                             .resizable()
                             .aspectRatio(contentMode: .fill)
-                            .frame(width: 280, height: 200)
+                            .frame(width: cardWidth, height: cardHeight)
                             .clipped()
                     } placeholder: {
                         Rectangle()
@@ -82,7 +87,7 @@ struct BreakingNewsCard: View {
                 }
                 .padding()
             }
-            .frame(width: 280, height: 200)
+            .frame(width: cardWidth, height: cardHeight)
             .clipShape(RoundedRectangle(cornerRadius: 12))
             .shadow(radius: 4)
         }

@@ -43,6 +43,7 @@ struct MediaCard: View {
                         Circle()
                             .fill(.secondary)
                             .frame(width: 3, height: 3)
+                            .accessibilityHidden(true)
 
                         Text(item.formattedDate)
                             .font(Typography.captionLarge)
@@ -122,12 +123,13 @@ struct MediaCard: View {
     private var playOverlay: some View {
         Circle()
             .fill(Color.Glass.overlay.opacity(1.67))
-            .frame(width: 36, height: 36)
+            .frame(width: 44, height: 44)
             .overlay {
                 Image(systemName: "play.fill")
-                    .font(.system(size: IconSize.sm))
+                    .font(.system(size: IconSize.md))
                     .foregroundStyle(.white)
             }
+            .accessibilityHidden(true)
     }
 
     private func durationBadge(_ duration: String) -> some View {

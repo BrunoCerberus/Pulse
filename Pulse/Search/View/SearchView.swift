@@ -39,6 +39,7 @@ struct SearchView<R: SearchNavigationRouter>: View {
             content
         }
         .navigationTitle(Constants.title)
+        .navigationBarTitleDisplayMode(.large)
         .toolbarBackground(.hidden, for: .navigationBar)
         .searchable(
             text: Binding(

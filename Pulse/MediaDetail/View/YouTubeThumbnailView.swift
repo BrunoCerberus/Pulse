@@ -7,6 +7,10 @@ struct YouTubeThumbnailView: View {
     let urlString: String
     let articleImageURL: String?
 
+    @ScaledMetric(relativeTo: .title) private var playButtonSize: CGFloat = 68
+    @ScaledMetric(relativeTo: .title) private var playIconSize: CGFloat = 28
+    @ScaledMetric(relativeTo: .largeTitle) private var placeholderIconSize: CGFloat = 48
+
     var body: some View {
         let thumbnailURL = extractYouTubeThumbnail(from: urlString)
 
@@ -47,10 +51,10 @@ struct YouTubeThumbnailView: View {
                     ZStack {
                         Circle()
                             .fill(.red)
-                            .frame(width: 68, height: 68)
+                            .frame(width: playButtonSize, height: playButtonSize)
 
                         Image(systemName: "play.fill")
-                            .font(.system(size: 28))
+                            .font(.system(size: playIconSize))
                             .foregroundStyle(.white)
                             .offset(x: 2)
                     }
@@ -68,6 +72,7 @@ struct YouTubeThumbnailView: View {
             }
         }
         .buttonStyle(.plain)
+        .accessibilityLabel("Watch video on YouTube")
         .aspectRatio(16 / 9, contentMode: .fit)
         .clipShape(RoundedRectangle(cornerRadius: CornerRadius.lg))
         .padding(.horizontal, Spacing.md)
@@ -111,8 +116,8 @@ struct YouTubeThumbnailView: View {
             .fill(Color.Glass.surface)
             .overlay {
                 Image(systemName: "play.rectangle.fill")
-                    .font(.system(size: 48))
-                    .foregroundStyle(.white.opacity(0.3))
+                    .font(.system(size: placeholderIconSize))
+                    .foregroundStyle(.white.opacity(0.6))
             }
     }
 

@@ -17,6 +17,10 @@ struct AudioPlayerView: View {
     let article: Article
     @StateObject private var playerManager = AudioPlayerManager()
 
+    @ScaledMetric(relativeTo: .largeTitle) private var headphonesIconSize: CGFloat = 64
+    @ScaledMetric(relativeTo: .title) private var controlIconSize: CGFloat = 28
+    @ScaledMetric(relativeTo: .title) private var playButtonSize: CGFloat = 72
+
     /// Callback when playback progress updates.
     var onProgressUpdate: ((Double, TimeInterval) -> Void)?
 
@@ -84,32 +88,38 @@ struct AudioPlayerView: View {
     // MARK: - Artwork
 
     private var artworkImage: some View {
-        Group {
-            if let imageURL = article.heroImageURL, let url = URL(string: imageURL) {
-                AsyncImage(url: url) { phase in
-                    switch phase {
-                    case .empty:
-                        artworkPlaceholder
-                            .overlay {
-                                ProgressView()
-                            }
-                    case let .success(image):
-                        image
-                            .resizable()
-                            .aspectRatio(contentMode: .fill)
-                    case .failure:
-                        artworkPlaceholder
-                    @unknown default:
-                        artworkPlaceholder
+        GeometryReader { geometry in
+            let size = min(geometry.size.width, 300)
+            Group {
+                if let imageURL = article.heroImageURL, let url = URL(string: imageURL) {
+                    AsyncImage(url: url) { phase in
+                        switch phase {
+                        case .empty:
+                            artworkPlaceholder
+                                .overlay {
+                                    ProgressView()
+                                }
+                        case let .success(image):
+                            image
+                                .resizable()
+                                .aspectRatio(contentMode: .fill)
+                        case .failure:
+                            artworkPlaceholder
+                        @unknown default:
+                            artworkPlaceholder
+                        }
                     }
+                } else {
+                    artworkPlaceholder
                 }
-            } else {
-                artworkPlaceholder
             }
+            .frame(width: size, height: size)
+            .clipShape(RoundedRectangle(cornerRadius: CornerRadius.lg))
+            .depthShadow(.floating)
+            .frame(maxWidth: .infinity)
         }
-        .frame(width: 280, height: 280)
-        .clipShape(RoundedRectangle(cornerRadius: CornerRadius.lg))
-        .depthShadow(.floating)
+        .aspectRatio(1, contentMode: .fit)
+        .frame(maxWidth: 300)
     }
 
     private var artworkPlaceholder: some View {
@@ -121,7 +131,7 @@ struct AudioPlayerView: View {
             )
 
             Image(systemName: "headphones")
-                .font(.system(size: 64))
+                .font(.system(size: headphonesIconSize))
                 .foregroundStyle(.white.opacity(0.8))
         }
     }
@@ -217,7 +227,7 @@ struct AudioPlayerView: View {
                 playerManager.skipBackward(seconds: 15)
             } label: {
                 Image(systemName: "gobackward.15")
-                    .font(.system(size: 28))
+                    .font(.system(size: controlIconSize))
                     .foregroundStyle(.primary)
             }
             .accessibilityLabel(Constants.skipBackward)
@@ -234,14 +244,14 @@ struct AudioPlayerView: View {
                 ZStack {
                     Circle()
                         .fill(Color.Accent.gradient)
-                        .frame(width: 72, height: 72)
+                        .frame(width: playButtonSize, height: playButtonSize)
 
                     if playerManager.isLoading {
                         ProgressView()
                             .tint(.white)
                     } else {
                         Image(systemName: playerManager.isPlaying ? "pause.fill" : "play.fill")
-                            .font(.system(size: 28))
+                            .font(.system(size: controlIconSize))
                             .foregroundStyle(.white)
                             .offset(x: playerManager.isPlaying ? 0 : 2)
                     }
@@ -256,7 +266,7 @@ struct AudioPlayerView: View {
                 playerManager.skipForward(seconds: 30)
             } label: {
                 Image(systemName: "goforward.30")
-                    .font(.system(size: 28))
+                    .font(.system(size: controlIconSize))
                     .foregroundStyle(.primary)
             }
             .accessibilityLabel(Constants.skipForward)

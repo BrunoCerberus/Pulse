@@ -61,6 +61,7 @@ struct HomeView<R: HomeNavigationRouter>: View {
             content
         }
         .navigationTitle(HomeViewConstants.title)
+        .navigationBarTitleDisplayMode(.large)
         .toolbarBackground(.hidden, for: .navigationBar)
         .toolbar {
             ToolbarItem(placement: .topBarTrailing) {

@@ -5,6 +5,8 @@ import SwiftUI
 struct StreamingTextView: View {
     let text: String
 
+    @ScaledMetric(relativeTo: .largeTitle) private var dropCapWidth: CGFloat = 44
+
     var body: some View {
         HStack(alignment: .top, spacing: 0) {
             // Left accent border (matching DigestCard style)
@@ -46,7 +48,7 @@ struct StreamingTextView: View {
                 Text(firstChar)
                     .font(Typography.aiDropCap)
                     .foregroundStyle(Color.Accent.primary)
-                    .frame(width: 44, alignment: .leading)
+                    .frame(width: dropCapWidth, alignment: .leading)
                     .padding(.trailing, Spacing.xs)
 
                 // Remaining text
@@ -64,11 +66,12 @@ struct StreamingTextView: View {
 
 private struct BlinkingCursor: View {
     @State private var isVisible = true
+    @ScaledMetric(relativeTo: .body) private var cursorHeight: CGFloat = 16
 
     var body: some View {
         Rectangle()
             .fill(Color.Accent.primary)
-            .frame(width: 2, height: 16)
+            .frame(width: 2, height: cursorHeight)
             .opacity(isVisible ? 1 : 0)
             .onAppear {
                 withAnimation(.easeInOut(duration: 0.5).repeatForever(autoreverses: true)) {

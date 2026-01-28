@@ -15,6 +15,7 @@ struct GlassArticleCard: View {
     let onShare: () -> Void
 
     @Environment(\.colorScheme) private var colorScheme
+    @ScaledMetric(relativeTo: .body) private var imageSize: CGFloat = 100
 
     init(
         title: String,
@@ -72,6 +73,7 @@ struct GlassArticleCard: View {
                         Circle()
                             .fill(.secondary)
                             .frame(width: 3, height: 3)
+                            .accessibilityHidden(true)
 
                         Text(formattedDate)
                             .font(Typography.captionLarge)
@@ -114,7 +116,7 @@ struct GlassArticleCard: View {
                 image
                     .resizable()
                     .aspectRatio(contentMode: .fill)
-                    .frame(width: 100, height: 100)
+                    .frame(width: imageSize, height: imageSize)
                     .clipped()
             } placeholder: {
                 imagePlaceholder
@@ -123,7 +125,7 @@ struct GlassArticleCard: View {
                             .tint(.secondary)
                     }
             }
-            .frame(width: 100, height: 100)
+            .frame(width: imageSize, height: imageSize)
             .clipShape(RoundedRectangle(cornerRadius: CornerRadius.sm, style: .continuous))
             .overlay(
                 RoundedRectangle(cornerRadius: CornerRadius.sm, style: .continuous)
@@ -135,7 +137,7 @@ struct GlassArticleCard: View {
     private var imagePlaceholder: some View {
         RoundedRectangle(cornerRadius: CornerRadius.sm, style: .continuous)
             .fill(Color.primary.opacity(0.05))
-            .frame(width: 100, height: 100)
+            .frame(width: imageSize, height: imageSize)
     }
 }
 
@@ -173,6 +175,7 @@ struct GlassArticleCardCompact: View {
     let onTap: () -> Void
 
     @Environment(\.colorScheme) private var colorScheme
+    @ScaledMetric(relativeTo: .body) private var imageSize: CGFloat = 60
 
     var body: some View {
         Button {
@@ -188,7 +191,7 @@ struct GlassArticleCardCompact: View {
                     } placeholder: {
                         Color.primary.opacity(0.05)
                     }
-                    .frame(width: 60, height: 60)
+                    .frame(width: imageSize, height: imageSize)
                     .clipShape(RoundedRectangle(cornerRadius: CornerRadius.sm, style: .continuous))
                 }
 

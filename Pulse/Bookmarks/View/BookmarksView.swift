@@ -37,6 +37,7 @@ struct BookmarksView<R: BookmarksNavigationRouter>: View {
             content
         }
         .navigationTitle(Constants.title)
+        .navigationBarTitleDisplayMode(.large)
         .toolbarBackground(.hidden, for: .navigationBar)
         .refreshable {
             HapticManager.shared.refresh()
