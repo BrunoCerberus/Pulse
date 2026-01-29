@@ -246,8 +246,11 @@ struct FeedDomainActionTests {
         #expect(action == .clearError)
     }
 
-    // MARK: - Equatable Tests
+}
 
+// MARK: - Equatable Tests Extension
+
+extension FeedDomainActionTests {
     @Test("Same simple actions are equal")
     func sameSimpleActionsAreEqual() {
         #expect(FeedDomainAction.loadInitialData == FeedDomainAction.loadInitialData)
@@ -374,6 +377,11 @@ struct FeedDomainActionTests {
         )
     }
 
+}
+
+// MARK: - Equatable Tests Extension
+
+extension FeedDomainActionTests {
     @Test("selectArticle with different articles are not equal")
     func selectArticleDifferentArticlesAreNotEqual() {
         let article2 = Article(
