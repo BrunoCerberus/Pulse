@@ -1,3 +1,4 @@
+import EntropyCore
 import SwiftUI
 
 /// Type of media content for articles.

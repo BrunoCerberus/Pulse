@@ -1,3 +1,4 @@
+import EntropyCore
 import Lottie
 import SwiftUI
 

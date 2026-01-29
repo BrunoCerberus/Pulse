@@ -1,28 +1,5 @@
+import EntropyCore
 import SwiftUI
-
-// MARK: - Skeleton Shape
-
-struct SkeletonShape: View {
-    var width: CGFloat?
-    var height: CGFloat
-    var cornerRadius: CGFloat
-
-    init(
-        width: CGFloat? = nil,
-        height: CGFloat = 16,
-        cornerRadius: CGFloat = CornerRadius.xs
-    ) {
-        self.width = width
-        self.height = height
-        self.cornerRadius = cornerRadius
-    }
-
-    var body: some View {
-        RoundedRectangle(cornerRadius: cornerRadius, style: .continuous)
-            .fill(Color.primary.opacity(0.1))
-            .frame(width: width, height: height)
-    }
-}
 
 // MARK: - Glass Article Skeleton
 

@@ -1,4 +1,5 @@
 import Combine
+import EntropyCore
 import Foundation
 
 /// A decorator that wraps a NewsService implementation and adds client-side caching.

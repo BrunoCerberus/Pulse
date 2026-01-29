@@ -1,3 +1,4 @@
+import EntropyCore
 import FirebaseCore
 import GoogleSignIn
 import UIKit

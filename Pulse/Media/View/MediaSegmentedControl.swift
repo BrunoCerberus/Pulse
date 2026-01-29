@@ -1,3 +1,4 @@
+import EntropyCore
 import SwiftUI
 
 /// Segmented control for filtering media by type (All/Videos/Podcasts).
