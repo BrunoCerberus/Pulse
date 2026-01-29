@@ -106,18 +106,45 @@ struct SummarizationDomainActionTests {
 
     @Test("Same actions are equal")
     func sameActionsAreEqual() {
-        #expect(SummarizationDomainAction.startSummarization == SummarizationDomainAction.startSummarization)
-        #expect(SummarizationDomainAction.cancelSummarization == SummarizationDomainAction.cancelSummarization)
-        #expect(SummarizationDomainAction.summarizationStateChanged(.idle) == SummarizationDomainAction.summarizationStateChanged(.idle))
-        #expect(SummarizationDomainAction.summarizationTokenReceived("test") == SummarizationDomainAction.summarizationTokenReceived("test"))
-        #expect(SummarizationDomainAction.modelStatusChanged(.ready) == SummarizationDomainAction.modelStatusChanged(.ready))
+        #expect(
+            SummarizationDomainAction.startSummarization ==
+                SummarizationDomainAction.startSummarization
+        )
+        #expect(
+            SummarizationDomainAction.cancelSummarization ==
+                SummarizationDomainAction.cancelSummarization
+        )
+        #expect(
+            SummarizationDomainAction.summarizationStateChanged(.idle) ==
+                SummarizationDomainAction.summarizationStateChanged(.idle)
+        )
+        #expect(
+            SummarizationDomainAction.summarizationTokenReceived("test") ==
+                SummarizationDomainAction.summarizationTokenReceived("test")
+        )
+        #expect(
+            SummarizationDomainAction.modelStatusChanged(.ready) ==
+                SummarizationDomainAction.modelStatusChanged(.ready)
+        )
     }
 
     @Test("Different actions are not equal")
     func differentActionsAreNotEqual() {
-        #expect(SummarizationDomainAction.startSummarization != SummarizationDomainAction.cancelSummarization)
-        #expect(SummarizationDomainAction.summarizationTokenReceived("a") != SummarizationDomainAction.summarizationTokenReceived("b"))
-        #expect(SummarizationDomainAction.summarizationStateChanged(.idle) != SummarizationDomainAction.summarizationStateChanged(.generating))
-        #expect(SummarizationDomainAction.modelStatusChanged(.notLoaded) != SummarizationDomainAction.modelStatusChanged(.ready))
+        #expect(
+            SummarizationDomainAction.startSummarization !=
+                SummarizationDomainAction.cancelSummarization
+        )
+        #expect(
+            SummarizationDomainAction.summarizationTokenReceived("a") !=
+                SummarizationDomainAction.summarizationTokenReceived("b")
+        )
+        #expect(
+            SummarizationDomainAction.summarizationStateChanged(.idle) !=
+                SummarizationDomainAction.summarizationStateChanged(.generating)
+        )
+        #expect(
+            SummarizationDomainAction.modelStatusChanged(.notLoaded) !=
+                SummarizationDomainAction.modelStatusChanged(.ready)
+        )
     }
 }

@@ -201,7 +201,6 @@ final class PremiumGatingPremiumUITests: XCTestCase {
         navigateToFeedTab()
 
         // Premium users should see actual content, not the gate
-        let premiumGateTitle = app.staticTexts["AI Daily Digest"]
         let unlockButton = app.buttons["Unlock Premium"]
 
         // Wait for content to load

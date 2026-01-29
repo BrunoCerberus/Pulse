@@ -41,7 +41,7 @@ struct MediaTypeTests {
 
         switch type {
         case .video:
-            #expect(true)
+            #expect(Bool(true))
         case .podcast:
             Issue.record("Expected video type")
         }

@@ -276,7 +276,6 @@ struct LLMInferenceConfigSummarizationTests {
 // MARK: - Mock Helpers
 
 /// Mock LLMService that always fails to load
-@MainActor
 private final class FailingMockLLMService: LLMService {
     enum LoadError: Error {
         case alwaysFails
@@ -296,11 +295,19 @@ private final class FailingMockLLMService: LLMService {
 
     func unloadModel() async {}
 
-    func generate(prompt _: String, systemPrompt _: String?, config _: LLMInferenceConfig) -> AnyPublisher<String, Error> {
+    func generate(
+        prompt _: String,
+        systemPrompt _: String?,
+        config _: LLMInferenceConfig
+    ) -> AnyPublisher<String, Error> {
         Fail(error: LoadError.alwaysFails).eraseToAnyPublisher()
     }
 
-    func generateStream(prompt _: String, systemPrompt _: String?, config _: LLMInferenceConfig) -> AsyncThrowingStream<String, Error> {
+    func generateStream(
+        prompt _: String,
+        systemPrompt _: String?,
+        config _: LLMInferenceConfig
+    ) -> AsyncThrowingStream<String, Error> {
         AsyncThrowingStream { continuation in
             continuation.finish(throwing: LoadError.alwaysFails)
         }
@@ -310,7 +317,6 @@ private final class FailingMockLLMService: LLMService {
 }
 
 /// Mock LLMService that always throws errors during generation
-@MainActor
 private final class ErrorMockLLMService: LLMService {
     struct TestError: Error {}
 
@@ -326,11 +332,19 @@ private final class ErrorMockLLMService: LLMService {
 
     func unloadModel() async {}
 
-    func generate(prompt _: String, systemPrompt _: String?, config _: LLMInferenceConfig) -> AnyPublisher<String, Error> {
+    func generate(
+        prompt _: String,
+        systemPrompt _: String?,
+        config _: LLMInferenceConfig
+    ) -> AnyPublisher<String, Error> {
         Fail(error: TestError()).eraseToAnyPublisher()
     }
 
-    func generateStream(prompt _: String, systemPrompt _: String?, config _: LLMInferenceConfig) -> AsyncThrowingStream<String, Error> {
+    func generateStream(
+        prompt _: String,
+        systemPrompt _: String?,
+        config _: LLMInferenceConfig
+    ) -> AsyncThrowingStream<String, Error> {
         AsyncThrowingStream { continuation in
             continuation.finish(throwing: TestError())
         }

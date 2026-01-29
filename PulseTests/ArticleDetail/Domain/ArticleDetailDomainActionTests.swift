@@ -136,7 +136,10 @@ struct ArticleDetailDomainActionTests {
         #expect(ArticleDetailDomainAction.dismissShareSheet == ArticleDetailDomainAction.dismissShareSheet)
         #expect(ArticleDetailDomainAction.openInBrowser == ArticleDetailDomainAction.openInBrowser)
         #expect(ArticleDetailDomainAction.showSummarizationSheet == ArticleDetailDomainAction.showSummarizationSheet)
-        #expect(ArticleDetailDomainAction.dismissSummarizationSheet == ArticleDetailDomainAction.dismissSummarizationSheet)
+        #expect(
+            ArticleDetailDomainAction.dismissSummarizationSheet ==
+                ArticleDetailDomainAction.dismissSummarizationSheet
+        )
     }
 
     @Test("Different actions are not equal")

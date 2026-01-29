@@ -46,7 +46,7 @@ class BaseUITestCase: XCTestCase {
         // Wait for either tab bar (authenticated) or sign-in view (not authenticated)
         // This handles both states and avoids timeout when MockAuthService is initializing
         let tabBar = app.tabBars.firstMatch
-        let signInButton = app.buttons["Sign in with Apple"]
+        _ = app.buttons["Sign in with Apple"]
 
         // First, wait for the loading state to clear (if app shows loading spinner)
         // The loading view has a ProgressView which we need to wait past

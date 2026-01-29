@@ -293,80 +293,6 @@ struct LLMErrorTests {
         }
     }
 
-    // MARK: - Error Description Tests
-
-    @Test("LLMError errorDescription returns value for modelNotLoaded")
-    func errorDescriptionForModelNotLoaded() throws {
-        let error = LLMError.modelNotLoaded
-        #expect(error.errorDescription != nil)
-        #expect(try !#require(error.errorDescription?.isEmpty))
-    }
-
-    @Test("LLMError errorDescription returns value for modelLoadFailed")
-    func errorDescriptionForModelLoadFailed() throws {
-        let error = LLMError.modelLoadFailed("test reason")
-        #expect(error.errorDescription != nil)
-        #expect(try !#require(error.errorDescription?.isEmpty))
-    }
-
-    @Test("LLMError errorDescription returns value for inferenceTimeout")
-    func errorDescriptionForInferenceTimeout() throws {
-        let error = LLMError.inferenceTimeout
-        #expect(error.errorDescription != nil)
-        #expect(try !#require(error.errorDescription?.isEmpty))
-    }
-
-    @Test("LLMError errorDescription returns value for memoryPressure")
-    func errorDescriptionForMemoryPressure() throws {
-        let error = LLMError.memoryPressure
-        #expect(error.errorDescription != nil)
-        #expect(try !#require(error.errorDescription?.isEmpty))
-    }
-
-    @Test("LLMError errorDescription returns value for generationCancelled")
-    func errorDescriptionForGenerationCancelled() throws {
-        let error = LLMError.generationCancelled
-        #expect(error.errorDescription != nil)
-        #expect(try !#require(error.errorDescription?.isEmpty))
-    }
-
-    @Test("LLMError errorDescription returns value for serviceUnavailable")
-    func errorDescriptionForServiceUnavailable() throws {
-        let error = LLMError.serviceUnavailable
-        #expect(error.errorDescription != nil)
-        #expect(try !#require(error.errorDescription?.isEmpty))
-    }
-
-    @Test("LLMError errorDescription returns value for tokenizationFailed")
-    func errorDescriptionForTokenizationFailed() throws {
-        let error = LLMError.tokenizationFailed
-        #expect(error.errorDescription != nil)
-        #expect(try !#require(error.errorDescription?.isEmpty))
-    }
-
-    @Test("LLMError errorDescription returns value for generationFailed")
-    func errorDescriptionForGenerationFailed() throws {
-        let error = LLMError.generationFailed("test failure")
-        #expect(error.errorDescription != nil)
-        #expect(try !#require(error.errorDescription?.isEmpty))
-    }
-
-    @Test("LLMError errorDescription includes reason for modelLoadFailed")
-    func errorDescriptionIncludesReasonForModelLoadFailed() {
-        let reason = "specific error reason"
-        let error = LLMError.modelLoadFailed(reason)
-        // The description should contain or reference the reason
-        #expect(error.errorDescription != nil)
-    }
-
-    @Test("LLMError errorDescription includes reason for generationFailed")
-    func errorDescriptionIncludesReasonForGenerationFailed() {
-        let reason = "generation failure reason"
-        let error = LLMError.generationFailed(reason)
-        // The description should contain or reference the reason
-        #expect(error.errorDescription != nil)
-    }
-
     // MARK: - Equatable Tests
 
     @Test("LLMError Equatable works for simple cases")
@@ -414,5 +340,27 @@ struct LLMErrorTests {
     func differentAssociatedValueTypesNotEqual() {
         #expect(LLMError.modelLoadFailed("test") != LLMError.generationFailed("test"))
         #expect(LLMError.modelNotLoaded != LLMError.modelLoadFailed("test"))
+    }
+}
+
+// MARK: - LLMError Description Tests Extension
+
+extension LLMErrorTests {
+    @Test("LLMError errorDescription returns values for all cases")
+    func errorDescriptionReturnsValues() throws {
+        let errors: [LLMError] = [
+            .modelNotLoaded,
+            .modelLoadFailed("test"),
+            .inferenceTimeout,
+            .memoryPressure,
+            .generationCancelled,
+            .serviceUnavailable,
+            .tokenizationFailed,
+            .generationFailed("test"),
+        ]
+        for error in errors {
+            #expect(error.errorDescription != nil)
+            #expect(try !#require(error.errorDescription?.isEmpty))
+        }
     }
 }
