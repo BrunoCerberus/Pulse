@@ -100,6 +100,7 @@ final class PulseAppDelegate: UIResponder, UIApplicationDelegate {
 }
 
 extension PulseAppDelegate: UNUserNotificationCenterDelegate {
+    /// Using completion handler version to avoid Swift 6 async method signature mismatch
     func userNotificationCenter(
         _: UNUserNotificationCenter,
         willPresent _: UNNotification
@@ -119,9 +120,7 @@ extension PulseAppDelegate: UNUserNotificationCenterDelegate {
             return
         }
 
-        await MainActor.run {
-            self.deeplinkManager.handle(deeplink: deeplink)
-        }
+        deeplinkManager.handle(deeplink: deeplink)
     }
 
     func application(
