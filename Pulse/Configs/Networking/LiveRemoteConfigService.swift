@@ -1,3 +1,4 @@
+import EntropyCore
 import FirebaseRemoteConfig
 import Foundation
 

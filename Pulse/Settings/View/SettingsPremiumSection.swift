@@ -1,3 +1,4 @@
+import EntropyCore
 import SwiftUI
 
 struct SettingsPremiumSection: View {

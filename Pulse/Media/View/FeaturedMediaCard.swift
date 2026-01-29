@@ -1,3 +1,4 @@
+import EntropyCore
 import SwiftUI
 
 /// Large hero card for displaying featured media in the carousel.

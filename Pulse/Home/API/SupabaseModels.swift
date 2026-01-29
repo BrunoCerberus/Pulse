@@ -1,3 +1,4 @@
+import EntropyCore
 import Foundation
 
 // MARK: - Edge Functions Response Models

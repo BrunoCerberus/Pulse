@@ -1,5 +1,5 @@
 {
-  "originHash" : "65084dcbff350936f14cc283a698ff98b0b4624d5399c7b42aa0eceae2680c9f",
+  "originHash" : "e0a597924854ed8729b3f3c3290921eaa057b9fe2dcb825096c82c6da9255e6d",
   "pins" : [
     {
       "identity" : "abseil-cpp-binary",
@@ -33,7 +33,7 @@
       "kind" : "remoteSourceControl",
       "location" : "https://github.com/BrunoCerberus/EntropyCore.git",
       "state" : {
-        "revision" : "29a981230b89ef26fba90094ed81be79e996557e"
+        "revision" : "c67b14083bfbf981f194c925848f1e842b75127a"
       }
     },
     {

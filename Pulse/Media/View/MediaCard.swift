@@ -1,3 +1,4 @@
+import EntropyCore
 import SwiftUI
 
 /// Card component for displaying a media item (video or podcast) in a list.
