@@ -245,7 +245,6 @@ struct FeedDomainActionTests {
         let action = FeedDomainAction.clearError
         #expect(action == .clearError)
     }
-
 }
 
 // MARK: - Equatable Tests Extension
@@ -376,7 +375,6 @@ extension FeedDomainActionTests {
                 FeedDomainAction.selectArticle(testArticle)
         )
     }
-
 }
 
 // MARK: - Equatable Tests Extension
