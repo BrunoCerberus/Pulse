@@ -8,7 +8,7 @@ import Foundation
 /// - Loading bookmarked articles from local storage
 /// - Pull-to-refresh functionality
 /// - Removing bookmarks
-/// - Article selection and reading history tracking
+/// - Article selection
 ///
 /// ## Data Flow
 /// 1. Views dispatch `BookmarksDomainAction` via `dispatch(action:)`
@@ -17,17 +17,14 @@ import Foundation
 ///
 /// ## Dependencies
 /// - `BookmarksService`: Fetches and manages bookmarks
-/// - `StorageService`: Persists reading history
 @MainActor
 final class BookmarksDomainInteractor: CombineInteractor {
     typealias DomainState = BookmarksDomainState
     typealias DomainAction = BookmarksDomainAction
 
     private let bookmarksService: BookmarksService
-    private let storageService: StorageService
     private let stateSubject = CurrentValueSubject<BookmarksDomainState, Never>(.initial)
     private var cancellables = Set<AnyCancellable>()
-    private var backgroundTasks = Set<Task<Void, Never>>()
 
     var statePublisher: AnyPublisher<BookmarksDomainState, Never> {
         stateSubject.eraseToAnyPublisher()
@@ -43,13 +40,6 @@ final class BookmarksDomainInteractor: CombineInteractor {
         } catch {
             Logger.shared.service("Failed to retrieve BookmarksService: \(error)", level: .warning)
             bookmarksService = LiveBookmarksService(storageService: LiveStorageService())
-        }
-
-        do {
-            storageService = try serviceLocator.retrieve(StorageService.self)
-        } catch {
-            Logger.shared.service("Failed to retrieve StorageService: \(error)", level: .warning)
-            storageService = LiveStorageService()
         }
     }
 
@@ -137,40 +127,11 @@ final class BookmarksDomainInteractor: CombineInteractor {
         updateState { state in
             state.selectedArticle = article
         }
-        saveToReadingHistory(article)
     }
 
     private func clearSelectedArticle() {
         updateState { state in
             state.selectedArticle = nil
-        }
-    }
-
-    private func saveToReadingHistory(_ article: Article) {
-        trackBackgroundTask { [weak self] in
-            guard let self else { return }
-            try? await storageService.saveReadingHistory(article)
-        }
-    }
-
-    /// Safely tracks and auto-removes background tasks with proper cleanup on deinit.
-    /// Uses detached task for background work, tracks completion on MainActor.
-    private func trackBackgroundTask(_ operation: @escaping @Sendable () async -> Void) {
-        let task = Task.detached {
-            await operation()
-        }
-        backgroundTasks.insert(task)
-
-        Task { @MainActor [weak self] in
-            _ = await task.result
-            self?.backgroundTasks.remove(task)
-        }
-    }
-
-    deinit {
-        // Cancel all pending tasks on deallocation
-        for task in backgroundTasks {
-            task.cancel()
         }
     }
 

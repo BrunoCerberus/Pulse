@@ -37,19 +37,4 @@ final class LiveSettingsService: SettingsService {
         .receive(on: DispatchQueue.main)
         .eraseToAnyPublisher()
     }
-
-    func clearReadingHistory() -> AnyPublisher<Void, Error> {
-        Future { [storageService] promise in
-            Task {
-                do {
-                    try await storageService.clearReadingHistory()
-                    promise(.success(()))
-                } catch {
-                    promise(.failure(error))
-                }
-            }
-        }
-        .receive(on: DispatchQueue.main)
-        .eraseToAnyPublisher()
-    }
 }

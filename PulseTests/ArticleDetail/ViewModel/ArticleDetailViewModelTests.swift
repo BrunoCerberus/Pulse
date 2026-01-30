@@ -276,19 +276,6 @@ struct ArticleDetailVMBookmarkTests {
         #expect(unbookmarked)
     }
 
-    @Test("OnAppear saves to reading history")
-    func onAppearSavesToReadingHistory() async throws {
-        let (serviceLocator, mockStorageService) = createTestServiceLocator()
-        let testArticle = createTestArticle()
-        let sut = ArticleDetailViewModel(article: testArticle, serviceLocator: serviceLocator)
-        sut.handle(event: .onAppear)
-
-        // Wait for reading history to be saved
-        try await Task.sleep(nanoseconds: 300_000_000)
-        let history = try await mockStorageService.fetchReadingHistory()
-        #expect(history.contains(where: { $0.id == testArticle.id }))
-    }
-
     @Test("OnAppear checks bookmark status")
     func onAppearChecksBookmarkStatus() async throws {
         let (serviceLocator, mockStorageService) = createTestServiceLocator()

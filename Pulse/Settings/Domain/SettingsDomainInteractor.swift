@@ -15,7 +15,6 @@ extension Notification.Name {
 /// - Topic management (follow/unfollow)
 /// - Notification settings
 /// - Muted sources and keywords
-/// - Clearing reading history
 ///
 /// ## Data Flow
 /// 1. Views dispatch `SettingsDomainAction` via `dispatch(action:)`
@@ -53,8 +52,6 @@ final class SettingsDomainInteractor: CombineInteractor {
         switch action {
         case .loadPreferences:
             loadPreferences()
-        case .clearReadingHistory:
-            clearReadingHistory()
         case let .toggleTopic(topic):
             toggleTopic(topic)
         case let .toggleNotifications(enabled):
@@ -63,8 +60,7 @@ final class SettingsDomainInteractor: CombineInteractor {
             toggleBreakingNews(enabled)
         case .addMutedSource, .removeMutedSource, .addMutedKeyword, .removeMutedKeyword:
             handleMutedContentAction(action)
-        case .setShowClearHistoryConfirmation, .setShowSignOutConfirmation,
-             .setNewMutedSource, .setNewMutedKeyword:
+        case .setShowSignOutConfirmation, .setNewMutedSource, .setNewMutedKeyword:
             handleUIStateAction(action)
         }
     }
@@ -87,8 +83,6 @@ final class SettingsDomainInteractor: CombineInteractor {
     private func handleUIStateAction(_ action: SettingsDomainAction) {
         updateState { state in
             switch action {
-            case let .setShowClearHistoryConfirmation(show):
-                state.showClearHistoryConfirmation = show
             case let .setShowSignOutConfirmation(show):
                 state.showSignOutConfirmation = show
             case let .setNewMutedSource(source):
@@ -206,16 +200,6 @@ final class SettingsDomainInteractor: CombineInteractor {
             .store(in: &cancellables)
     }
 
-    private func clearReadingHistory() {
-        settingsService.clearReadingHistory()
-            .sink { _ in } receiveValue: { [weak self] in
-                self?.updateState { state in
-                    state.showClearHistoryConfirmation = false
-                }
-            }
-            .store(in: &cancellables)
-    }
-
     private func updateState(_ transform: (inout SettingsDomainState) -> Void) {
         var state = stateSubject.value
         transform(&state)
@@ -232,8 +216,6 @@ enum SettingsDomainAction: Equatable {
     case removeMutedSource(String)
     case addMutedKeyword(String)
     case removeMutedKeyword(String)
-    case clearReadingHistory
-    case setShowClearHistoryConfirmation(Bool)
     case setShowSignOutConfirmation(Bool)
     case setNewMutedSource(String)
     case setNewMutedKeyword(String)

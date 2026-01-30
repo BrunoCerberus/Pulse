@@ -35,32 +35,6 @@ protocol StorageService {
     /// - Returns: `true` if the article is bookmarked, `false` otherwise.
     func isBookmarked(_ articleID: String) async -> Bool
 
-    // MARK: - Reading History
-
-    /// Records an article in the user's reading history.
-    /// - Parameter article: The article that was read.
-    /// - Throws: Storage errors if the save operation fails.
-    func saveReadingHistory(_ article: Article) async throws
-
-    /// Fetches the complete reading history.
-    /// - Returns: An array of read articles, ordered by read date (newest first).
-    /// - Throws: Storage errors if the fetch operation fails.
-    func fetchReadingHistory() async throws -> [Article]
-
-    /// Fetches reading history since a specific date.
-    ///
-    /// This is used by the AI Daily Digest feature to summarize recently read articles.
-    /// - Parameter cutoffDate: The earliest date to include in the history.
-    /// - Returns: Articles read since the cutoff date.
-    /// - Throws: Storage errors if the fetch operation fails.
-    func fetchRecentReadingHistory(since cutoffDate: Date) async throws -> [Article]
-
-    /// Clears all reading history.
-    ///
-    /// This permanently deletes all reading history records. The operation cannot be undone.
-    /// - Throws: Storage errors if the clear operation fails.
-    func clearReadingHistory() async throws
-
     // MARK: - User Preferences
 
     /// Saves the user's preferences.

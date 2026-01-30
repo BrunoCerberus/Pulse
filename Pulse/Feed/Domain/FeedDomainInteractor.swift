@@ -5,7 +5,7 @@ import Foundation
 /// Domain interactor for the Feed (AI Daily Digest) feature.
 ///
 /// Manages business logic and state for AI-powered digest generation, including:
-/// - Loading reading history from the last 48 hours
+/// - Loading the latest news articles from the API by category
 /// - On-device LLM model lifecycle (preload, load, generate)
 /// - Streaming text generation with token batching
 /// - Digest caching and retrieval
@@ -17,7 +17,7 @@ import Foundation
 ///
 /// ## Dependencies
 /// - `FeedService`: Manages LLM model and digest generation
-/// - `StorageService`: Fetches reading history
+/// - `NewsService`: Fetches latest articles from the API
 ///
 /// - Note: This is a **Premium** feature.
 final class FeedDomainInteractor: CombineInteractor {
@@ -25,7 +25,7 @@ final class FeedDomainInteractor: CombineInteractor {
     typealias DomainAction = FeedDomainAction
 
     private let feedService: FeedService
-    private let storageService: StorageService
+    private let newsService: NewsService
     private let stateSubject = CurrentValueSubject<FeedDomainState, Never>(.initial)
     private var cancellables = Set<AnyCancellable>()
     private var generationTask: Task<Void, Never>?
@@ -42,10 +42,10 @@ final class FeedDomainInteractor: CombineInteractor {
     init(serviceLocator: ServiceLocator) {
         do {
             feedService = try serviceLocator.retrieve(FeedService.self)
-            storageService = try serviceLocator.retrieve(StorageService.self)
+            newsService = try serviceLocator.retrieve(NewsService.self)
         } catch {
-            Logger.shared.service("Failed to retrieve FeedService: \(error)", level: .warning)
-            fatalError("FeedService and StorageService are required")
+            Logger.shared.service("Failed to retrieve required services: \(error)", level: .warning)
+            fatalError("FeedService and NewsService are required")
         }
 
         setupModelStatusBinding()
@@ -60,9 +60,9 @@ final class FeedDomainInteractor: CombineInteractor {
             preloadModel()
         case let .modelStatusChanged(status):
             handleModelStatusChanged(status)
-        case let .readingHistoryLoaded(articles):
-            handleHistoryLoaded(articles)
-        case let .readingHistoryFailed(error):
+        case let .latestArticlesLoaded(articles):
+            handleArticlesLoaded(articles)
+        case let .latestArticlesFailed(error):
             updateState { state in
                 state.generationState = .error(error)
             }
@@ -110,19 +110,19 @@ final class FeedDomainInteractor: CombineInteractor {
         if let cachedDigest = feedService.fetchTodaysDigest() {
             updateState { state in
                 state.currentDigest = cachedDigest
-                state.readingHistory = cachedDigest.sourceArticles
+                state.latestArticles = cachedDigest.sourceArticles
                 state.hasLoadedInitialData = true
                 state.generationState = .completed
             }
             return
         }
 
-        // No cached digest - preload model in background while fetching history
-        // This parallelizes model loading with history fetch for faster generation
+        // No cached digest - preload model in background while fetching articles
+        // This parallelizes model loading with article fetch for faster generation
         preloadModel()
 
-        // Fetch reading history if no cached digest
-        fetchReadingHistory()
+        // Fetch latest news articles if no cached digest
+        fetchLatestNews()
     }
 
     // MARK: - Model Preloading
@@ -145,31 +145,76 @@ final class FeedDomainInteractor: CombineInteractor {
         }
     }
 
-    // MARK: - Reading History
+    // MARK: - Fetch Latest News
 
-    private func fetchReadingHistory() {
-        updateState { $0.generationState = .loadingHistory }
+    private func fetchLatestNews() {
+        updateState { $0.generationState = .loadingArticles }
+
+        // Capture newsService on MainActor before entering task group
+        let newsService = self.newsService
 
         Task { @MainActor in
-            do {
-                // Filter to articles read in the last 48 hours (by readAt, not publishedAt)
-                let cutoff = Date().addingTimeInterval(-48 * 60 * 60)
-                let recentHistory = try await storageService.fetchRecentReadingHistory(since: cutoff)
-                dispatch(action: .readingHistoryLoaded(recentHistory))
-            } catch {
-                dispatch(action: .readingHistoryFailed(error.localizedDescription))
+            var allArticles: [Article] = []
+
+            // Fetch 10 articles from each category in parallel
+            await withTaskGroup(of: [Article].self) { group in
+                for category in NewsCategory.allCases {
+                    group.addTask {
+                        do {
+                            // Convert Combine publisher to async
+                            let articles = try await withCheckedThrowingContinuation { continuation in
+                                var cancellable: AnyCancellable?
+                                cancellable = newsService
+                                    .fetchTopHeadlines(category: category, country: "us", page: 1)
+                                    .first()
+                                    .sink(
+                                        receiveCompletion: { completion in
+                                            if case let .failure(error) = completion {
+                                                continuation.resume(throwing: error)
+                                            }
+                                            cancellable?.cancel()
+                                        },
+                                        receiveValue: { articles in
+                                            continuation.resume(returning: articles)
+                                        }
+                                    )
+                            }
+                            // Take first 10 articles from this category
+                            return Array(articles.prefix(10))
+                        } catch {
+                            Logger.shared.warning(
+                                "Failed to fetch \(category.displayName): \(error)",
+                                category: "FeedDomainInteractor"
+                            )
+                            return [] // Continue with other categories
+                        }
+                    }
+                }
+
+                for await articles in group {
+                    allArticles.append(contentsOf: articles)
+                }
+            }
+
+            // Sort by publishedAt (most recent first) - capping happens in generateDigest()
+            allArticles.sort { $0.publishedAt > $1.publishedAt }
+
+            if allArticles.isEmpty {
+                dispatch(action: .latestArticlesFailed("Unable to fetch news"))
+            } else {
+                dispatch(action: .latestArticlesLoaded(allArticles))
             }
         }
     }
 
-    private func handleHistoryLoaded(_ articles: [Article]) {
+    private func handleArticlesLoaded(_ articles: [Article]) {
         updateState { state in
-            state.readingHistory = articles
+            state.latestArticles = articles
             state.hasLoadedInitialData = true
             state.generationState = articles.isEmpty ? .idle : state.generationState
         }
 
-        // Auto-generate if we have history and no digest
+        // Auto-generate if we have articles and no digest
         if !articles.isEmpty, currentState.currentDigest == nil {
             dispatch(action: .generateDigest)
         } else if articles.isEmpty {
@@ -181,16 +226,16 @@ final class FeedDomainInteractor: CombineInteractor {
 
     // swiftlint:disable:next function_body_length
     private func generateDigest() {
-        guard !currentState.readingHistory.isEmpty else {
-            updateState { $0.generationState = .error("No recent reading history") }
+        guard !currentState.latestArticles.isEmpty else {
+            updateState { $0.generationState = .error("No articles available") }
             return
         }
 
         generationTask?.cancel()
 
         // Cap articles to prevent context overflow and long generation times
-        let articlesToProcess = FeedDigestPromptBuilder.cappedArticles(from: currentState.readingHistory)
-        let totalArticles = currentState.readingHistory.count
+        let articlesToProcess = FeedDigestPromptBuilder.cappedArticles(from: currentState.latestArticles)
+        let totalArticles = currentState.latestArticles.count
         let cappedCount = articlesToProcess.count
 
         if totalArticles > cappedCount {

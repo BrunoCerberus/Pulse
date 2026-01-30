@@ -4,12 +4,12 @@ import SwiftUI
 // MARK: - Constants
 
 private enum Constants {
-    static let title = "No Recent Reading"
+    static let title = "No Articles Available"
     static let message = """
-    Read some articles to get your personalized daily digest. \
-    Your digest will summarize what you've read in the past 48 hours.
+    Unable to fetch the latest news articles. \
+    Please check your connection and try again.
     """
-    static let startReading = "Start Reading"
+    static let startReading = "Retry"
 }
 
 // MARK: - FeedEmptyStateView

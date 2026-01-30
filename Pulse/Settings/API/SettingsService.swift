@@ -17,11 +17,4 @@ protocol SettingsService {
     /// - Parameter preferences: The preferences to save.
     /// - Returns: Publisher that completes on success or emits an error.
     func savePreferences(_ preferences: UserPreferences) -> AnyPublisher<Void, Error>
-
-    /// Clears the user's reading history.
-    ///
-    /// This permanently deletes all reading history records. The operation
-    /// cannot be undone.
-    /// - Returns: Publisher that completes on success or emits an error.
-    func clearReadingHistory() -> AnyPublisher<Void, Error>
 }

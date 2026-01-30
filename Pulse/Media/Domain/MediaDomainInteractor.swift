@@ -18,17 +18,14 @@ import Foundation
 ///
 /// ## Dependencies
 /// - `MediaService`: Fetches media content from Supabase
-/// - `StorageService`: Persists reading history and bookmarks
 @MainActor
 final class MediaDomainInteractor: CombineInteractor {
     typealias DomainState = MediaDomainState
     typealias DomainAction = MediaDomainAction
 
     private let mediaService: MediaService
-    private let storageService: StorageService
     private let stateSubject = CurrentValueSubject<MediaDomainState, Never>(.initial)
     private var cancellables = Set<AnyCancellable>()
-    private var backgroundTasks = Set<Task<Void, Never>>()
 
     var statePublisher: AnyPublisher<MediaDomainState, Never> {
         stateSubject.eraseToAnyPublisher()
@@ -44,13 +41,6 @@ final class MediaDomainInteractor: CombineInteractor {
         } catch {
             Logger.shared.service("Failed to retrieve MediaService: \(error)", level: .warning)
             mediaService = LiveMediaService()
-        }
-
-        do {
-            storageService = try serviceLocator.retrieve(StorageService.self)
-        } catch {
-            Logger.shared.service("Failed to retrieve StorageService: \(error)", level: .warning)
-            storageService = LiveStorageService()
         }
     }
 
@@ -231,7 +221,6 @@ final class MediaDomainInteractor: CombineInteractor {
         updateState { state in
             state.selectedMedia = media
         }
-        saveToReadingHistory(media)
     }
 
     private func clearSelectedMedia() {
@@ -256,38 +245,11 @@ final class MediaDomainInteractor: CombineInteractor {
         updateState { state in
             state.mediaToPlay = media
         }
-        saveToReadingHistory(media)
     }
 
     private func clearMediaToPlay() {
         updateState { state in
             state.mediaToPlay = nil
-        }
-    }
-
-    private func saveToReadingHistory(_ media: Article) {
-        trackBackgroundTask { [weak self] in
-            guard let self else { return }
-            try? await storageService.saveReadingHistory(media)
-        }
-    }
-
-    /// Safely tracks and auto-removes background tasks with proper cleanup on deinit.
-    private func trackBackgroundTask(_ operation: @escaping @Sendable () async -> Void) {
-        let task = Task.detached {
-            await operation()
-        }
-        backgroundTasks.insert(task)
-
-        Task { @MainActor [weak self] in
-            _ = await task.result
-            self?.backgroundTasks.remove(task)
-        }
-    }
-
-    deinit {
-        for task in backgroundTasks {
-            task.cancel()
         }
     }
 

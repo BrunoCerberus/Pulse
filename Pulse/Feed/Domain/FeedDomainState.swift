@@ -5,13 +5,13 @@ import Foundation
 /// Represents the current state of AI digest generation.
 ///
 /// The generation process progresses through these states:
-/// `idle` → `loadingHistory` → `generating` → `completed` (or `error`)
+/// `idle` → `loadingArticles` → `generating` → `completed` (or `error`)
 enum FeedGenerationState: Equatable {
     /// No generation in progress, ready to start.
     case idle
 
-    /// Loading the user's recent reading history.
-    case loadingHistory
+    /// Loading the latest news articles from the API.
+    case loadingArticles
 
     /// AI model is generating the digest (streaming tokens).
     case generating
@@ -29,15 +29,15 @@ enum FeedGenerationState: Equatable {
 ///
 /// This state is owned by `FeedDomainInteractor` and published via `statePublisher`.
 /// The Feed feature uses on-device LLM (Llama 3.2-1B) to generate personalized
-/// daily digests based on the user's reading history.
+/// daily digests based on the latest news articles from the API.
 ///
 /// - Note: This is a **Premium** feature.
 struct FeedDomainState: Equatable {
     /// Current state of the digest generation process.
     var generationState: FeedGenerationState
 
-    /// Articles read in the last 48 hours, used as input for digest generation.
-    var readingHistory: [Article]
+    /// Latest articles fetched from the API, used as input for digest generation.
+    var latestArticles: [Article]
 
     /// The generated daily digest, if available.
     var currentDigest: DailyDigest?
@@ -58,7 +58,7 @@ struct FeedDomainState: Equatable {
     static var initial: FeedDomainState {
         FeedDomainState(
             generationState: .idle,
-            readingHistory: [],
+            latestArticles: [],
             currentDigest: nil,
             streamingText: "",
             modelStatus: .notLoaded,
@@ -67,8 +67,8 @@ struct FeedDomainState: Equatable {
         )
     }
 
-    var hasRecentReadingHistory: Bool {
-        !readingHistory.isEmpty
+    var hasArticles: Bool {
+        !latestArticles.isEmpty
     }
 
     var digestDate: String {

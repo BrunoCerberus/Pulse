@@ -8,9 +8,9 @@ enum FeedDomainAction: Equatable {
     case preloadModel
     case modelStatusChanged(LLMModelStatus)
 
-    // History
-    case readingHistoryLoaded([Article])
-    case readingHistoryFailed(String)
+    // Articles
+    case latestArticlesLoaded([Article])
+    case latestArticlesFailed(String)
 
     // Digest generation
     case generateDigest

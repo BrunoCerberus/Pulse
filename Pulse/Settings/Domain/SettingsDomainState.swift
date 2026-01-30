@@ -18,9 +18,6 @@ struct SettingsDomainState: Equatable {
     /// Error message to display, if any.
     var error: String?
 
-    /// Whether to show the clear reading history confirmation dialog.
-    var showClearHistoryConfirmation: Bool
-
     /// Whether to show the sign out confirmation dialog.
     var showSignOutConfirmation: Bool
 
@@ -37,7 +34,6 @@ struct SettingsDomainState: Equatable {
             isLoading: false,
             isSaving: false,
             error: nil,
-            showClearHistoryConfirmation: false,
             showSignOutConfirmation: false,
             newMutedSource: "",
             newMutedKeyword: ""

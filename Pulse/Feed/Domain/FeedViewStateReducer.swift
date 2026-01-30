@@ -5,7 +5,7 @@ struct FeedViewStateReducer: ViewStateReducing {
     func reduce(domainState: FeedDomainState) -> FeedViewState {
         let displayState = mapToDisplayState(domainState)
         let digest = domainState.currentDigest.map { DigestViewItem(from: $0) }
-        let sourceArticles = domainState.readingHistory.map { FeedSourceArticle(from: $0) }
+        let sourceArticles = domainState.latestArticles.map { FeedSourceArticle(from: $0) }
 
         let errorMessage: String? = {
             if case let .error(message) = domainState.generationState {
@@ -28,11 +28,11 @@ struct FeedViewStateReducer: ViewStateReducing {
     private func mapToDisplayState(_ domainState: FeedDomainState) -> FeedDisplayState {
         switch domainState.generationState {
         case .idle:
-            if domainState.readingHistory.isEmpty && domainState.hasLoadedInitialData {
+            if domainState.latestArticles.isEmpty && domainState.hasLoadedInitialData {
                 return .empty
             }
             return .idle
-        case .loadingHistory:
+        case .loadingArticles:
             return .loading
         case .generating:
             return .processing(phase: .generating)

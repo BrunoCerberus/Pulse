@@ -271,7 +271,7 @@ struct MediaDomainInteractorTests {
 
     // MARK: - Play Tests
 
-    @Test("Play media sets mediaToPlay and saves to reading history")
+    @Test("Play media sets mediaToPlay")
     func testPlayMedia() async throws {
         sut.dispatch(action: .loadInitialData)
         try await Task.sleep(nanoseconds: 300_000_000)
@@ -281,10 +281,6 @@ struct MediaDomainInteractorTests {
             try await Task.sleep(nanoseconds: 300_000_000)
 
             #expect(sut.currentState.mediaToPlay?.id == mediaId)
-
-            // Check reading history
-            let history = try await mockStorageService.fetchReadingHistory()
-            #expect(history.contains(where: { $0.id == mediaId }))
         }
     }
 

@@ -109,17 +109,10 @@ final class MockSettingsService: SettingsService {
             .setFailureType(to: Error.self)
             .eraseToAnyPublisher()
     }
-
-    func clearReadingHistory() -> AnyPublisher<Void, Error> {
-        Just(())
-            .setFailureType(to: Error.self)
-            .eraseToAnyPublisher()
-    }
 }
 
 final class MockStorageService: StorageService {
     var bookmarkedArticles: [Article] = []
-    var readingHistory: [Article] = []
     var userPreferences: UserPreferences?
 
     // Error simulation properties
@@ -127,7 +120,6 @@ final class MockStorageService: StorageService {
     var deleteArticleError: Error?
     var fetchPreferencesError: Error?
     var savePreferencesError: Error?
-    var clearHistoryError: Error?
 
     func saveArticle(_ article: Article) async throws {
         bookmarkedArticles.append(article)
@@ -149,27 +141,6 @@ final class MockStorageService: StorageService {
 
     func isBookmarked(_ articleID: String) async -> Bool {
         bookmarkedArticles.contains { $0.id == articleID }
-    }
-
-    func saveReadingHistory(_ article: Article) async throws {
-        readingHistory.removeAll { $0.id == article.id }
-        readingHistory.insert(article, at: 0)
-    }
-
-    func fetchReadingHistory() async throws -> [Article] {
-        readingHistory
-    }
-
-    func fetchRecentReadingHistory(since _: Date) async throws -> [Article] {
-        // For tests, return all reading history (tests control the data)
-        readingHistory
-    }
-
-    func clearReadingHistory() async throws {
-        if let error = clearHistoryError {
-            throw error
-        }
-        readingHistory.removeAll()
     }
 
     func saveUserPreferences(_ preferences: UserPreferences) async throws {

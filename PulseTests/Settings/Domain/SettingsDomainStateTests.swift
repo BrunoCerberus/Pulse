@@ -12,7 +12,6 @@ struct SettingsDomainStateTests {
         #expect(state.isLoading == false)
         #expect(state.isSaving == false)
         #expect(state.error == nil)
-        #expect(state.showClearHistoryConfirmation == false)
         #expect(state.showSignOutConfirmation == false)
         #expect(state.newMutedSource == "")
         #expect(state.newMutedKeyword == "")
@@ -47,13 +46,6 @@ struct SettingsDomainStateTests {
         var state = SettingsDomainState.initial
         state.error = "Save failed"
         #expect(state.error == "Save failed")
-    }
-
-    @Test("Show clear history confirmation can be set")
-    func showClearHistoryConfirmationCanBeSet() {
-        var state = SettingsDomainState.initial
-        state.showClearHistoryConfirmation = true
-        #expect(state.showClearHistoryConfirmation == true)
     }
 
     @Test("Show sign out confirmation can be set")
@@ -97,14 +89,6 @@ struct SettingsDomainStateTests {
         let state1 = SettingsDomainState.initial
         var state2 = SettingsDomainState.initial
         state2.isSaving = true
-        #expect(state1 != state2)
-    }
-
-    @Test("States with different showClearHistoryConfirmation are not equal")
-    func differentShowClearHistoryConfirmation() {
-        let state1 = SettingsDomainState.initial
-        var state2 = SettingsDomainState.initial
-        state2.showClearHistoryConfirmation = true
         #expect(state1 != state2)
     }
 }

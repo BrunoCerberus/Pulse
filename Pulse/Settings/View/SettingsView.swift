@@ -5,9 +5,6 @@ import SwiftUI
 
 private enum Constants {
     static let title = String(localized: "settings.title")
-    static let clearHistory = String(localized: "settings.clear_history")
-    static let clearHistoryAction = String(localized: "settings.clear_history.action")
-    static let clearHistoryConfirm = String(localized: "settings.clear_history.confirm")
     static let followedTopics = String(localized: "settings.followed_topics")
     static let followedTopicsDescription = String(localized: "settings.followed_topics.description")
     static let viewGithub = String(localized: "settings.view_github")
@@ -71,28 +68,12 @@ struct SettingsView: View {
                     onRemoveMutedKeyword: { viewModel.handle(event: .onRemoveMutedKeyword($0)) }
                 )
 
-                dataSection
                 aboutSection
             }
             .scrollContentBackground(.hidden)
         }
         .navigationTitle(Constants.title)
         .toolbarBackground(.ultraThinMaterial, for: .navigationBar)
-        .alert(Constants.clearHistory, isPresented: Binding(
-            get: { viewModel.viewState.showClearHistoryConfirmation },
-            set: { _ in viewModel.handle(event: .onCancelClearHistory) }
-        )) {
-            Button(Constants.cancel, role: .cancel) {
-                HapticManager.shared.tap()
-                viewModel.handle(event: .onCancelClearHistory)
-            }
-            Button(Constants.clearHistoryAction, role: .destructive) {
-                HapticManager.shared.notification(.warning)
-                viewModel.handle(event: .onConfirmClearHistory)
-            }
-        } message: {
-            Text(Constants.clearHistoryConfirm)
-        }
         .alert(Constants.signOut, isPresented: Binding(
             get: { viewModel.viewState.showSignOutConfirmation },
             set: { _ in viewModel.handle(event: .onCancelSignOut) }
@@ -183,17 +164,6 @@ struct SettingsView: View {
                     set: { viewModel.handle(event: .onToggleDarkMode($0)) }
                 ))
             }
-        }
-    }
-
-    private var dataSection: some View {
-        Section("Data") {
-            Button(role: .destructive) {
-                viewModel.handle(event: .onClearReadingHistory)
-            } label: {
-                Label(Constants.clearHistory, systemImage: "trash")
-            }
-            .accessibilityIdentifier("clearReadingHistoryButton")
         }
     }
 

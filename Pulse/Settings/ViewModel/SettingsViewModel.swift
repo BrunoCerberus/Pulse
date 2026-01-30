@@ -13,7 +13,6 @@ import Foundation
 /// - Dark mode and system theme toggle
 /// - Muted sources and keywords
 /// - Account management (sign out)
-/// - Clear reading history
 @MainActor
 final class SettingsViewModel: CombineViewModel, ObservableObject {
     typealias ViewState = SettingsViewState
@@ -68,12 +67,6 @@ final class SettingsViewModel: CombineViewModel, ObservableObject {
             interactor.dispatch(action: .addMutedKeyword(interactor.currentState.newMutedKeyword))
         case let .onRemoveMutedKeyword(keyword):
             interactor.dispatch(action: .removeMutedKeyword(keyword))
-        case .onClearReadingHistory:
-            interactor.dispatch(action: .setShowClearHistoryConfirmation(true))
-        case .onConfirmClearHistory:
-            interactor.dispatch(action: .clearReadingHistory)
-        case .onCancelClearHistory:
-            interactor.dispatch(action: .setShowClearHistoryConfirmation(false))
         case .onSignOutTapped:
             interactor.dispatch(action: .setShowSignOutConfirmation(true))
         case .onConfirmSignOut:
@@ -126,7 +119,6 @@ final class SettingsViewModel: CombineViewModel, ObservableObject {
                 isDarkMode: isDarkMode,
                 useSystemTheme: useSystemTheme,
                 isLoading: state.isLoading,
-                showClearHistoryConfirmation: state.showClearHistoryConfirmation,
                 showSignOutConfirmation: state.showSignOutConfirmation,
                 currentUser: currentUser,
                 errorMessage: state.error,
@@ -150,7 +142,6 @@ struct SettingsViewState: Equatable {
     var isDarkMode: Bool
     var useSystemTheme: Bool
     var isLoading: Bool
-    var showClearHistoryConfirmation: Bool
     var showSignOutConfirmation: Bool
     var currentUser: AuthUser?
     var errorMessage: String?
@@ -168,7 +159,6 @@ struct SettingsViewState: Equatable {
             isDarkMode: false,
             useSystemTheme: true,
             isLoading: false,
-            showClearHistoryConfirmation: false,
             showSignOutConfirmation: false,
             currentUser: nil,
             errorMessage: nil,
@@ -191,9 +181,6 @@ enum SettingsViewEvent: Equatable {
     case onNewMutedKeywordChanged(String)
     case onAddMutedKeyword
     case onRemoveMutedKeyword(String)
-    case onClearReadingHistory
-    case onConfirmClearHistory
-    case onCancelClearHistory
     case onSignOutTapped
     case onConfirmSignOut
     case onCancelSignOut
