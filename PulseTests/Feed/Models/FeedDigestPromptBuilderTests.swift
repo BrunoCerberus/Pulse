@@ -78,7 +78,7 @@ struct FeedDigestPromptBuilderTests {
         let articles = Article.mockArticles
         let prompt = FeedDigestPromptBuilder.buildPrompt(for: articles)
 
-        #expect(prompt.contains("\(articles.count) articles"))
+        #expect(prompt.contains("\(articles.count) news articles"))
     }
 
     @Test("Build prompt includes category breakdown")
