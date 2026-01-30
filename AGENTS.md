@@ -27,7 +27,7 @@ Pulse/
 │   │   ├── ViewModel/          # MediaDetailViewModel
 │   │   ├── View/               # MediaDetailView, VideoPlayerView, AudioPlayerView, YouTubeThumbnailView
 │   │   └── Player/             # AudioPlayerManager (AVPlayer wrapper)
-│   ├── Feed/                   # AI-powered Daily Digest
+│   ├── Feed/                   # AI-powered Daily Digest (latest news from API)
 │   │   ├── API/                # FeedService protocol + Live/Mock
 │   │   ├── Domain/             # FeedDomainInteractor, State, Action, Reducer, EventActionMap
 │   │   ├── ViewModel/          # FeedViewModel
@@ -309,7 +309,7 @@ All llama.cpp operations run on a **dedicated pinned thread** (not just serializ
 - **CPU inference**: Small models (~1B params) run faster on CPU than GPU due to Metal transfer overhead
 - **Flash attention**: Enabled for faster KV cache operations
 - **Memory mapping**: Model loaded via mmap for faster startup
-- **Model preloading**: Triggered when Feed tab appears (parallel with history fetch)
+- **Model preloading**: Triggered when Feed tab appears (parallel with article fetch)
 
 ## Navigation Architecture
 

@@ -7,7 +7,7 @@ A modern iOS news aggregation app built with Clean Architecture, SwiftUI, and Co
 - **Authentication**: Firebase Auth with Google and Apple Sign-In (required before accessing app)
 - **Home Feed**: Breaking news carousel, top headlines with infinite scrolling, and category tabs for filtering by followed topics (settings accessible via gear icon)
 - **Media**: Browse and play Videos and Podcasts with in-app playback (YouTube videos open in YouTube app, podcasts use native AVPlayer)
-- **Feed**: AI-powered Daily Digest summarizing articles read in the last 48 hours using on-device LLM (Llama 3.2-1B) (**Premium**)
+- **Feed**: AI-powered Daily Digest summarizing latest news articles from the API using on-device LLM (Llama 3.2-1B) (**Premium**)
 - **Article Summarization**: On-device AI article summarization via sparkles button (**Premium**)
 - **Bookmarks**: Save articles for offline reading with SwiftData persistence
 - **Search**: Full-text search with 300ms debounce, suggestions, recent searches, and sort options
@@ -21,7 +21,7 @@ The app uses StoreKit 2 for subscription management. Two AI-powered features req
 
 | Feature | Description |
 |---------|-------------|
-| AI Daily Digest | Personalized summaries of your reading activity |
+| AI Daily Digest | Summaries of the latest news across all categories |
 | Article Summarization | On-device AI summaries for any article |
 
 Non-premium users see a `PremiumGateView` with an "Unlock Premium" button that presents the native StoreKit subscription UI.
