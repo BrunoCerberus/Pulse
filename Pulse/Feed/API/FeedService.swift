@@ -3,15 +3,15 @@ import Foundation
 
 /// Errors for feed service operations
 enum FeedServiceError: Error, LocalizedError {
-    case noReadingHistory
+    case noArticles
     case generationFailed(String)
     case modelNotReady
     case insufficientMemory
 
     var errorDescription: String? {
         switch self {
-        case .noReadingHistory:
-            return "No articles read in the past 48 hours"
+        case .noArticles:
+            return "No articles available to summarize"
         case let .generationFailed(reason):
             return "Failed to generate digest: \(reason)"
         case .modelNotReady:

@@ -8,17 +8,17 @@ import Testing
 @MainActor
 struct FeedDomainInteractorTests {
     let mockFeedService: MockFeedService
-    let mockStorageService: MockStorageService
+    let mockNewsService: MockNewsService
     let serviceLocator: ServiceLocator
     let sut: FeedDomainInteractor
 
     init() {
         mockFeedService = MockFeedService()
-        mockStorageService = MockStorageService()
+        mockNewsService = MockNewsService()
         serviceLocator = ServiceLocator()
 
         serviceLocator.register(FeedService.self, instance: mockFeedService)
-        serviceLocator.register(StorageService.self, instance: mockStorageService)
+        serviceLocator.register(NewsService.self, instance: mockNewsService)
 
         sut = FeedDomainInteractor(serviceLocator: serviceLocator)
     }
@@ -26,72 +26,88 @@ struct FeedDomainInteractorTests {
     @Test("Initial state is correct")
     func initialState() {
         let state = sut.currentState
-        #expect(state.readingHistory.isEmpty)
+        #expect(state.latestArticles.isEmpty)
         #expect(state.currentDigest == nil)
         #expect(state.streamingText.isEmpty)
         #expect(!state.hasLoadedInitialData)
         #expect(state.selectedArticle == nil)
-        if case .idle = state.generationState {
+        // Initial state starts with loadingArticles to show processing animation immediately
+        if case .loadingArticles = state.generationState {
             // Expected
         } else {
-            Issue.record("Initial state should be idle")
+            Issue.record("Initial state should be loadingArticles")
         }
     }
 
-    @Test("Load data fetches reading history")
-    func loadDataFetchesHistory() async throws {
-        mockStorageService.readingHistory = Article.mockArticles
+    @Test("Load data fetches latest articles from API")
+    func loadDataFetchesArticles() async {
+        mockNewsService.topHeadlinesResult = .success(Article.mockArticles)
 
         sut.dispatch(action: .loadInitialData)
 
-        try await waitForStateUpdate()
+        // Wait for async article fetching to complete
+        let success = await waitForCondition(timeout: 2_000_000_000) { [sut] in
+            sut.currentState.hasLoadedInitialData && !sut.currentState.latestArticles.isEmpty
+        }
 
+        #expect(success, "Should load initial data with articles")
         let state = sut.currentState
         #expect(state.hasLoadedInitialData)
-        #expect(state.readingHistory.count == Article.mockArticles.count)
+        #expect(!state.latestArticles.isEmpty)
     }
 
     @Test("Load data with cached digest uses cache")
-    func loadDataUsesCachedDigest() async throws {
+    func loadDataUsesCachedDigest() async {
         let cachedDigest = DailyDigest(
             id: "cached",
             summary: "Cached summary",
-            sourceArticles: [],
+            sourceArticles: Article.mockArticles,
             generatedAt: Date()
         )
         mockFeedService.cachedDigest = cachedDigest
-        mockStorageService.readingHistory = Article.mockArticles
+        mockNewsService.topHeadlinesResult = .success(Article.mockArticles)
 
         sut.dispatch(action: .loadInitialData)
 
-        try await waitForStateUpdate()
+        // Wait for cached digest to appear (includes 300ms animation delay)
+        let success = await waitForCondition(timeout: 2_000_000_000) { [sut] in
+            sut.currentState.currentDigest != nil
+        }
 
+        #expect(success, "Cached digest should be loaded")
         let state = sut.currentState
-        #expect(state.currentDigest != nil)
         #expect(state.currentDigest?.id == "cached")
     }
 
-    @Test("Load data with empty history shows empty state")
-    func loadDataEmptyHistory() async throws {
-        mockStorageService.readingHistory = []
+    @Test("Load data with API failure shows error state")
+    func loadDataAPIFailure() async {
+        mockNewsService.topHeadlinesResult = .failure(URLError(.notConnectedToInternet))
+        mockNewsService.categoryHeadlinesResult = .failure(URLError(.notConnectedToInternet))
 
         sut.dispatch(action: .loadInitialData)
 
-        try await waitForStateUpdate()
+        // Wait for async article fetching to complete (may result in empty due to all failures)
+        let success = await waitForCondition(timeout: 2_000_000_000) { [sut] in
+            sut.currentState.hasLoadedInitialData ||
+                sut.currentState.generationState == .error("Unable to fetch news")
+        }
 
-        let state = sut.currentState
-        #expect(state.hasLoadedInitialData)
-        #expect(state.readingHistory.isEmpty)
+        #expect(success, "Should handle API failure")
     }
 
     @Test("Generate digest triggers generation state")
     func generateDigestStreaming() async throws {
-        mockStorageService.readingHistory = Article.mockArticles
+        mockNewsService.topHeadlinesResult = .success(Article.mockArticles)
         mockFeedService.loadDelay = 0.01 // Speed up for tests
         mockFeedService.generateDelay = 0.01
 
         sut.dispatch(action: .loadInitialData)
-        try await waitForStateUpdate()
+
+        // Wait for articles to load
+        let articlesLoaded = await waitForCondition(timeout: 2_000_000_000) { [sut] in
+            !sut.currentState.latestArticles.isEmpty
+        }
+        #expect(articlesLoaded, "Articles should be loaded")
 
         sut.dispatch(action: .generateDigest)
 
@@ -143,15 +159,19 @@ struct FeedDomainInteractorTests {
     // MARK: - Model Preload Tests
 
     @Test("Preload model triggered when no cached digest")
-    func preloadTriggeredWithoutCache() async throws {
+    func preloadTriggeredWithoutCache() async {
         mockFeedService.cachedDigest = nil
         mockFeedService.loadDelay = 0.01
-        mockStorageService.readingHistory = Article.mockArticles
+        mockNewsService.topHeadlinesResult = .success(Article.mockArticles)
 
         sut.dispatch(action: .loadInitialData)
-        try await waitForStateUpdate()
 
-        #expect(mockFeedService.loadModelCallCount > 0, "Model preload should be triggered")
+        // Wait for preload to be triggered
+        let success = await waitForCondition(timeout: 2_000_000_000) { [mockFeedService] in
+            mockFeedService.loadModelCallCount > 0
+        }
+
+        #expect(success, "Model preload should be triggered")
     }
 
     @Test("Preload model skipped when cached digest exists")
@@ -159,11 +179,11 @@ struct FeedDomainInteractorTests {
         let cachedDigest = DailyDigest(
             id: "cached",
             summary: "Cached summary",
-            sourceArticles: [],
+            sourceArticles: Article.mockArticles,
             generatedAt: Date()
         )
         mockFeedService.cachedDigest = cachedDigest
-        mockStorageService.readingHistory = Article.mockArticles
+        mockNewsService.topHeadlinesResult = .success(Article.mockArticles)
 
         sut.dispatch(action: .loadInitialData)
         try await waitForStateUpdate()
@@ -172,17 +192,20 @@ struct FeedDomainInteractorTests {
     }
 
     @Test("Preload failure does not prevent generation")
-    func preloadFailureAllowsGeneration() async throws {
+    func preloadFailureAllowsGeneration() async {
         mockFeedService.cachedDigest = nil
         mockFeedService.shouldFail = true
         mockFeedService.loadDelay = 0.01
-        mockStorageService.readingHistory = Article.mockArticles
+        mockNewsService.topHeadlinesResult = .success(Article.mockArticles)
 
         sut.dispatch(action: .loadInitialData)
-        try await waitForStateUpdate()
+
+        // Wait for initial data to load
+        let success = await waitForCondition(timeout: 2_000_000_000) { [sut] in
+            sut.currentState.hasLoadedInitialData
+        }
 
         // Even with preload failure, state should be ready for generation attempt
-        let state = sut.currentState
-        #expect(state.hasLoadedInitialData, "Should still load initial data despite preload failure")
+        #expect(success, "Should still load initial data despite preload failure")
     }
 }

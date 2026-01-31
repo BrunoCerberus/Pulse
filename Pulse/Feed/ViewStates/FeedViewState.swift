@@ -38,7 +38,7 @@ struct FeedViewState: Equatable {
 
     static var initial: FeedViewState {
         FeedViewState(
-            displayState: .loading,
+            displayState: .processing(phase: .generating),
             headerDate: "",
             streamingText: "",
             digest: nil,
@@ -72,6 +72,8 @@ struct FeedSourceArticle: Identifiable, Equatable {
     let category: String?
     let categoryType: NewsCategory?
     let imageURL: String?
+    let publishedAt: Date
+    let formattedDate: String
     let article: Article
 
     init(from article: Article) {
@@ -81,6 +83,8 @@ struct FeedSourceArticle: Identifiable, Equatable {
         category = article.category?.displayName
         categoryType = article.category
         imageURL = article.displayImageURL
+        publishedAt = article.publishedAt
+        formattedDate = article.formattedDate
         self.article = article
     }
 }

@@ -43,17 +43,6 @@ struct ArticleDetailDomainInteractorTests {
 
     // MARK: - onAppear Tests
 
-    @Test("onAppear saves article to reading history")
-    func onAppearSavesReadingHistory() async throws {
-        let sut = createSUT()
-
-        sut.dispatch(action: .onAppear)
-        try await waitForStateUpdate(duration: TestWaitDuration.long)
-
-        let history = try await mockStorageService.fetchReadingHistory()
-        #expect(history.contains(where: { $0.id == testArticle.id }))
-    }
-
     @Test("onAppear checks bookmark status")
     func onAppearChecksBookmarkStatus() async throws {
         mockStorageService.bookmarkedArticles = [testArticle]

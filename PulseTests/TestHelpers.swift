@@ -117,12 +117,6 @@ extension MockStorageService {
         set { bookmarkedArticles = newValue }
     }
 
-    /// Convenience property for setting mocked reading history
-    var mockReadingHistory: [Article] {
-        get { readingHistory }
-        set { readingHistory = newValue }
-    }
-
     /// Convenience property for setting mocked user preferences
     var mockUserPreferences: UserPreferences? {
         get { userPreferences }

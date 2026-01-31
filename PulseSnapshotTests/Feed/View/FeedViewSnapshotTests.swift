@@ -8,7 +8,7 @@ import XCTest
 final class FeedViewSnapshotTests: XCTestCase {
     private var serviceLocator: ServiceLocator!
     private var mockFeedService: MockFeedService!
-    private var mockStorageService: MockStorageService!
+    private var mockNewsService: MockNewsService!
 
     /// Custom device config matching CI's iPhone Air simulator (forced dark mode)
     private let iPhoneAirConfig = ViewImageConfig(
@@ -54,10 +54,10 @@ final class FeedViewSnapshotTests: XCTestCase {
     override func setUp() {
         super.setUp()
         mockFeedService = MockFeedService()
-        mockStorageService = MockStorageService()
+        mockNewsService = MockNewsService()
         serviceLocator = ServiceLocator()
         serviceLocator.register(FeedService.self, instance: mockFeedService)
-        serviceLocator.register(StorageService.self, instance: mockStorageService)
+        serviceLocator.register(NewsService.self, instance: mockNewsService)
 
         // Register StoreKitService with premium enabled for testing
         let mockStoreKitService = MockStoreKitService(isPremium: true)
@@ -81,7 +81,7 @@ final class FeedViewSnapshotTests: XCTestCase {
     }
 
     func testFeedViewEmpty() {
-        mockStorageService.readingHistory = []
+        mockNewsService.topHeadlinesResult = .success([])
         let viewModel = FeedViewModel(serviceLocator: serviceLocator)
 
         // Trigger load to show empty state
@@ -118,7 +118,7 @@ final class FeedViewSnapshotTests: XCTestCase {
             generatedAt: Date(timeIntervalSince1970: 1_672_531_200)
         )
         mockFeedService.cachedDigest = digest
-        mockStorageService.readingHistory = snapshotArticles
+        mockNewsService.topHeadlinesResult = .success(snapshotArticles)
 
         let viewModel = FeedViewModel(serviceLocator: serviceLocator)
         viewModel.handle(event: .onAppear)
@@ -146,7 +146,7 @@ final class FeedViewSnapshotTests: XCTestCase {
             generatedAt: Date(timeIntervalSince1970: 1_672_531_200)
         )
         mockFeedService.cachedDigest = digest
-        mockStorageService.readingHistory = snapshotArticles
+        mockNewsService.topHeadlinesResult = .success(snapshotArticles)
 
         let viewModel = FeedViewModel(serviceLocator: serviceLocator)
         viewModel.handle(event: .onAppear)

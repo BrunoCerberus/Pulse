@@ -77,40 +77,40 @@ struct FeedDomainActionTests {
         }
     }
 
-    // MARK: - History Tests
+    // MARK: - Articles Tests
 
-    @Test("readingHistoryLoaded action with articles")
-    func readingHistoryLoaded() {
+    @Test("latestArticlesLoaded action with articles")
+    func latestArticlesLoaded() {
         let articles = [testArticle]
-        let action = FeedDomainAction.readingHistoryLoaded(articles)
+        let action = FeedDomainAction.latestArticlesLoaded(articles)
 
-        if case let .readingHistoryLoaded(loadedArticles) = action {
+        if case let .latestArticlesLoaded(loadedArticles) = action {
             #expect(loadedArticles.count == 1)
             #expect(loadedArticles[0].id == testArticle.id)
         } else {
-            Issue.record("Expected readingHistoryLoaded action")
+            Issue.record("Expected latestArticlesLoaded action")
         }
     }
 
-    @Test("readingHistoryLoaded action with empty array")
-    func readingHistoryLoadedEmpty() {
-        let action = FeedDomainAction.readingHistoryLoaded([])
+    @Test("latestArticlesLoaded action with empty array")
+    func latestArticlesLoadedEmpty() {
+        let action = FeedDomainAction.latestArticlesLoaded([])
 
-        if case let .readingHistoryLoaded(loadedArticles) = action {
+        if case let .latestArticlesLoaded(loadedArticles) = action {
             #expect(loadedArticles.isEmpty)
         } else {
-            Issue.record("Expected readingHistoryLoaded action")
+            Issue.record("Expected latestArticlesLoaded action")
         }
     }
 
-    @Test("readingHistoryFailed action with error message")
-    func readingHistoryFailed() {
-        let action = FeedDomainAction.readingHistoryFailed("Failed to load history")
+    @Test("latestArticlesFailed action with error message")
+    func latestArticlesFailed() {
+        let action = FeedDomainAction.latestArticlesFailed("Failed to load articles")
 
-        if case let .readingHistoryFailed(message) = action {
-            #expect(message == "Failed to load history")
+        if case let .latestArticlesFailed(message) = action {
+            #expect(message == "Failed to load articles")
         } else {
-            Issue.record("Expected readingHistoryFailed action")
+            Issue.record("Expected latestArticlesFailed action")
         }
     }
 
@@ -194,12 +194,12 @@ struct FeedDomainActionTests {
         }
     }
 
-    @Test("generationStateChanged action with loadingHistory")
-    func generationStateChangedLoadingHistory() {
-        let action = FeedDomainAction.generationStateChanged(.loadingHistory)
+    @Test("generationStateChanged action with loadingArticles")
+    func generationStateChangedLoadingArticles() {
+        let action = FeedDomainAction.generationStateChanged(.loadingArticles)
 
         if case let .generationStateChanged(state) = action {
-            #expect(state == .loadingHistory)
+            #expect(state == .loadingArticles)
         } else {
             Issue.record("Expected generationStateChanged action")
         }
@@ -281,16 +281,16 @@ extension FeedDomainActionTests {
         )
     }
 
-    @Test("readingHistoryLoaded with same articles are equal")
-    func readingHistoryLoadedSameArticlesAreEqual() {
+    @Test("latestArticlesLoaded with same articles are equal")
+    func latestArticlesLoadedSameArticlesAreEqual() {
         #expect(
-            FeedDomainAction.readingHistoryLoaded([testArticle]) ==
-                FeedDomainAction.readingHistoryLoaded([testArticle])
+            FeedDomainAction.latestArticlesLoaded([testArticle]) ==
+                FeedDomainAction.latestArticlesLoaded([testArticle])
         )
     }
 
-    @Test("readingHistoryLoaded with different articles are not equal")
-    func readingHistoryLoadedDifferentArticlesAreNotEqual() {
+    @Test("latestArticlesLoaded with different articles are not equal")
+    func latestArticlesLoadedDifferentArticlesAreNotEqual() {
         let article2 = Article(
             id: "different-id",
             title: "Different",
@@ -299,24 +299,24 @@ extension FeedDomainActionTests {
             publishedAt: Date()
         )
         #expect(
-            FeedDomainAction.readingHistoryLoaded([testArticle]) !=
-                FeedDomainAction.readingHistoryLoaded([article2])
+            FeedDomainAction.latestArticlesLoaded([testArticle]) !=
+                FeedDomainAction.latestArticlesLoaded([article2])
         )
     }
 
-    @Test("readingHistoryFailed with same message are equal")
-    func readingHistoryFailedSameMessageAreEqual() {
+    @Test("latestArticlesFailed with same message are equal")
+    func latestArticlesFailedSameMessageAreEqual() {
         #expect(
-            FeedDomainAction.readingHistoryFailed("Error") ==
-                FeedDomainAction.readingHistoryFailed("Error")
+            FeedDomainAction.latestArticlesFailed("Error") ==
+                FeedDomainAction.latestArticlesFailed("Error")
         )
     }
 
-    @Test("readingHistoryFailed with different messages are not equal")
-    func readingHistoryFailedDifferentMessagesAreNotEqual() {
+    @Test("latestArticlesFailed with different messages are not equal")
+    func latestArticlesFailedDifferentMessagesAreNotEqual() {
         #expect(
-            FeedDomainAction.readingHistoryFailed("Error 1") !=
-                FeedDomainAction.readingHistoryFailed("Error 2")
+            FeedDomainAction.latestArticlesFailed("Error 1") !=
+                FeedDomainAction.latestArticlesFailed("Error 2")
         )
     }
 

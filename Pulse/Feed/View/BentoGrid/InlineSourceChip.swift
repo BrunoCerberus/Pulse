@@ -4,8 +4,8 @@ import SwiftUI
 // MARK: - Constants
 
 private enum Constants {
-    static let chipWidth: CGFloat = 140
-    static let thumbnailSize: CGFloat = 40
+    static let chipWidth: CGFloat = 180
+    static let thumbnailSize: CGFloat = 48
 }
 
 // MARK: - InlineSourceChip
@@ -16,14 +16,34 @@ struct InlineSourceChip: View {
 
     var body: some View {
         Button(action: onTap) {
-            HStack(spacing: Spacing.xs) {
+            HStack(spacing: Spacing.sm) {
                 thumbnailView
 
-                Text(article.title)
-                    .font(Typography.captionLarge)
-                    .foregroundStyle(.primary)
-                    .lineLimit(2)
-                    .multilineTextAlignment(.leading)
+                VStack(alignment: .leading, spacing: 2) {
+                    Text(article.title)
+                        .font(Typography.captionLarge)
+                        .fontWeight(.medium)
+                        .foregroundStyle(.primary)
+                        .lineLimit(2)
+                        .multilineTextAlignment(.leading)
+
+                    HStack(spacing: Spacing.xxs) {
+                        Text(article.source)
+                            .font(Typography.captionSmall)
+                            .foregroundStyle(.secondary)
+                            .lineLimit(1)
+
+                        Text("•")
+                            .font(Typography.captionSmall)
+                            .foregroundStyle(.secondary.opacity(0.5))
+
+                        Text(article.formattedDate)
+                            .font(Typography.captionSmall)
+                            .foregroundStyle(.secondary)
+                            .lineLimit(1)
+                    }
+                }
+                .frame(maxWidth: .infinity, alignment: .leading)
             }
             .frame(width: Constants.chipWidth, alignment: .leading)
             .padding(Spacing.xs)

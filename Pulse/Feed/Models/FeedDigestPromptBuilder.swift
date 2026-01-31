@@ -24,7 +24,7 @@ enum FeedDigestPromptBuilder {
     """
 
     /// Caps articles to a safe limit and returns the subset for digest generation
-    /// - Parameter articles: Full list of articles from reading history
+    /// - Parameter articles: Full list of articles from API
     /// - Returns: Capped list of most recent articles, safe for context window
     static func cappedArticles(from articles: [Article]) -> [Article] {
         let maxArticles = LLMConfiguration.maxArticlesForDigest
@@ -34,7 +34,7 @@ enum FeedDigestPromptBuilder {
         return Array(articles.prefix(maxArticles))
     }
 
-    /// Builds the user message prompt from reading history
+    /// Builds the user message prompt from latest articles
     /// - Parameter articles: Articles to include (should be pre-capped via `cappedArticles`)
     static func buildPrompt(for articles: [Article]) -> String {
         let articleSummaries = articles.enumerated().map { index, article in
@@ -44,7 +44,7 @@ enum FeedDigestPromptBuilder {
         let categoryBreakdown = buildCategoryBreakdown(articles)
 
         return """
-        Here are \(articles.count) articles I read, organized by category:
+        Here are the latest \(articles.count) news articles, organized by category:
 
         \(categoryBreakdown)
 

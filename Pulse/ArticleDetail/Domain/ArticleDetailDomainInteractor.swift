@@ -80,7 +80,6 @@ final class ArticleDetailDomainInteractor: CombineInteractor {
     // MARK: - Lifecycle
 
     private func onAppear() {
-        saveToReadingHistory()
         checkBookmarkStatus()
     }
 
@@ -119,15 +118,6 @@ final class ArticleDetailDomainInteractor: CombineInteractor {
             await MainActor.run { [weak self] in
                 self?.dispatch(action: .bookmarkStatusLoaded(isBookmarked))
             }
-        }
-        trackBackgroundTask(task)
-    }
-
-    private func saveToReadingHistory() {
-        let article = currentState.article
-        let task = Task { [weak self] in
-            guard let self else { return }
-            try? await storageService.saveReadingHistory(article)
         }
         trackBackgroundTask(task)
     }

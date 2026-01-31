@@ -42,8 +42,9 @@ struct FeedDomainStateTests {
     func initialState() {
         let state = FeedDomainState.initial
 
-        #expect(state.generationState == .idle)
-        #expect(state.readingHistory.isEmpty)
+        // Initial state starts with loadingArticles to show processing animation immediately
+        #expect(state.generationState == .loadingArticles)
+        #expect(state.latestArticles.isEmpty)
         #expect(state.currentDigest == nil)
         #expect(state.streamingText == "")
         #expect(state.modelStatus == .notLoaded)
@@ -57,8 +58,8 @@ struct FeedDomainStateTests {
     func generationStateCanBeChanged() {
         var state = FeedDomainState.initial
 
-        state.generationState = .loadingHistory
-        #expect(state.generationState == .loadingHistory)
+        state.generationState = .loadingArticles
+        #expect(state.generationState == .loadingArticles)
 
         state.generationState = .generating
         #expect(state.generationState == .generating)
@@ -72,13 +73,13 @@ struct FeedDomainStateTests {
         }
     }
 
-    @Test("Reading history can be set")
-    func readingHistoryCanBeSet() {
+    @Test("Latest articles can be set")
+    func latestArticlesCanBeSet() {
         var state = FeedDomainState.initial
-        state.readingHistory = testArticles
+        state.latestArticles = testArticles
 
-        #expect(state.readingHistory.count == 2)
-        #expect(state.readingHistory[0].id == "article-1")
+        #expect(state.latestArticles.count == 2)
+        #expect(state.latestArticles[0].id == "article-1")
     }
 
     @Test("Current digest can be set")
@@ -131,17 +132,17 @@ struct FeedDomainStateTests {
 
     // MARK: - Computed Properties Tests
 
-    @Test("hasRecentReadingHistory returns false when empty")
-    func hasRecentReadingHistoryFalseWhenEmpty() {
+    @Test("hasArticles returns false when empty")
+    func hasArticlesFalseWhenEmpty() {
         let state = FeedDomainState.initial
-        #expect(state.hasRecentReadingHistory == false)
+        #expect(state.hasArticles == false)
     }
 
-    @Test("hasRecentReadingHistory returns true when not empty")
-    func hasRecentReadingHistoryTrueWhenNotEmpty() {
+    @Test("hasArticles returns true when not empty")
+    func hasArticlesTrueWhenNotEmpty() {
         var state = FeedDomainState.initial
-        state.readingHistory = testArticles
-        #expect(state.hasRecentReadingHistory == true)
+        state.latestArticles = testArticles
+        #expect(state.hasArticles == true)
     }
 
     @Test("digestDate returns formatted date from digest")
@@ -185,11 +186,11 @@ struct FeedDomainStateTests {
         #expect(state1 != state2)
     }
 
-    @Test("States with different readingHistory are not equal")
-    func statesWithDifferentReadingHistory() {
+    @Test("States with different latestArticles are not equal")
+    func statesWithDifferentLatestArticles() {
         let state1 = FeedDomainState.initial
         var state2 = FeedDomainState.initial
-        state2.readingHistory = testArticles
+        state2.latestArticles = testArticles
 
         #expect(state1 != state2)
     }
@@ -242,12 +243,12 @@ struct FeedDomainStateTests {
     @Test("States with same values are equal")
     func statesWithSameValuesAreEqual() {
         var state1 = FeedDomainState.initial
-        state1.readingHistory = testArticles
+        state1.latestArticles = testArticles
         state1.generationState = .completed
         state1.hasLoadedInitialData = true
 
         var state2 = FeedDomainState.initial
-        state2.readingHistory = testArticles
+        state2.latestArticles = testArticles
         state2.generationState = .completed
         state2.hasLoadedInitialData = true
 
@@ -265,10 +266,10 @@ struct FeedGenerationStateTests {
         #expect(state == .idle)
     }
 
-    @Test("LoadingHistory state exists")
-    func loadingHistoryState() {
-        let state = FeedGenerationState.loadingHistory
-        #expect(state == .loadingHistory)
+    @Test("LoadingArticles state exists")
+    func loadingArticlesState() {
+        let state = FeedGenerationState.loadingArticles
+        #expect(state == .loadingArticles)
     }
 
     @Test("Generating state exists")
@@ -296,8 +297,8 @@ struct FeedGenerationStateTests {
 
     @Test("Different states are not equal")
     func differentStatesAreNotEqual() {
-        #expect(FeedGenerationState.idle != FeedGenerationState.loadingHistory)
-        #expect(FeedGenerationState.loadingHistory != FeedGenerationState.generating)
+        #expect(FeedGenerationState.idle != FeedGenerationState.loadingArticles)
+        #expect(FeedGenerationState.loadingArticles != FeedGenerationState.generating)
         #expect(FeedGenerationState.generating != FeedGenerationState.completed)
         #expect(FeedGenerationState.completed != FeedGenerationState.error("test"))
     }
@@ -305,7 +306,7 @@ struct FeedGenerationStateTests {
     @Test("Same states are equal")
     func sameStatesAreEqual() {
         #expect(FeedGenerationState.idle == FeedGenerationState.idle)
-        #expect(FeedGenerationState.loadingHistory == FeedGenerationState.loadingHistory)
+        #expect(FeedGenerationState.loadingArticles == FeedGenerationState.loadingArticles)
         #expect(FeedGenerationState.generating == FeedGenerationState.generating)
         #expect(FeedGenerationState.completed == FeedGenerationState.completed)
         #expect(FeedGenerationState.error("test") == FeedGenerationState.error("test"))

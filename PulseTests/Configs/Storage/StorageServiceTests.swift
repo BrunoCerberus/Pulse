@@ -50,30 +50,6 @@ struct StorageServiceProtocolTests {
         #expect(bookmarks.isEmpty)
     }
 
-    @Test("MockStorageService can save and fetch reading history")
-    func mockSaveAndFetchHistory() async throws {
-        let mock = MockStorageService()
-        let article = Article.mockArticles[0]
-
-        try await mock.saveReadingHistory(article)
-        let history = try await mock.fetchReadingHistory()
-
-        #expect(history.count == 1)
-        #expect(history.first?.id == article.id)
-    }
-
-    @Test("MockStorageService can clear reading history")
-    func mockClearHistory() async throws {
-        let mock = MockStorageService()
-        let article = Article.mockArticles[0]
-
-        try await mock.saveReadingHistory(article)
-        try await mock.clearReadingHistory()
-
-        let history = try await mock.fetchReadingHistory()
-        #expect(history.isEmpty)
-    }
-
     @Test("MockStorageService can save and fetch user preferences")
     func mockSaveAndFetchPreferences() async throws {
         let mock = MockStorageService()

@@ -226,10 +226,6 @@ final class SearchDomainInteractor: CombineInteractor {
         updateState { state in
             state.selectedArticle = article
         }
-        trackBackgroundTask { [weak self] in
-            guard let self else { return }
-            try? await storageService.saveReadingHistory(article)
-        }
     }
 
     /// Safely tracks and auto-removes background tasks with proper cleanup on deinit.

@@ -179,22 +179,7 @@ final class PulseSettingsUITests: BaseUITestCase {
         let contentFiltersFooter = app.staticTexts["Muted sources and keywords will be hidden from all feeds."]
         XCTAssertTrue(contentFiltersFooter.waitForExistence(timeout: 5), "Footer text should explain content filters")
 
-        // --- Data and About Sections ---
-        let dataSection = app.staticTexts["Data"]
-        XCTAssertTrue(scrollToElement(dataSection, in: container), "Data section should exist")
-
-        let clearHistoryButton = app.buttons["clearReadingHistoryButton"]
-        XCTAssertTrue(clearHistoryButton.waitForExistence(timeout: 5), "Clear Reading History button should exist")
-
-        clearHistoryButton.tap()
-
-        let alertTitle = app.staticTexts["Clear Reading History"]
-        XCTAssertTrue(alertTitle.waitForExistence(timeout: 3), "Confirmation alert should appear")
-
-        let cancelButton = app.buttons["Cancel"]
-        XCTAssertTrue(cancelButton.waitForExistence(timeout: 3), "Cancel button should exist")
-        cancelButton.tap()
-
+        // --- About Section ---
         let aboutSection = app.staticTexts["About"]
         XCTAssertTrue(scrollToElement(aboutSection, in: container), "About section should exist")
 

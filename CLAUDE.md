@@ -228,7 +228,7 @@ Pulse/
 | **Authentication** | Firebase Auth with Google and Apple Sign-In (required before accessing app) |
 | **Home** | Breaking news carousel, top headlines with infinite scroll, category tabs for filtering by followed topics, settings access via gear icon |
 | **Media** | Browse and play Videos and Podcasts with in-app playback (YouTube videos open in YouTube app, podcasts use native AVPlayer) |
-| **Feed** | AI-powered Daily Digest summarizing articles read in last 48 hours using on-device LLM (Llama 3.2-1B) (**Premium**) |
+| **Feed** | AI-powered Daily Digest summarizing latest news articles from the API using on-device LLM (Llama 3.2-1B) (**Premium**) |
 | **Article Summarization** | On-device AI article summarization via sparkles button (**Premium**) |
 | **Search** | Full-text search with 300ms debounce, suggestions, and sort options (last tab with liquid glass style) |
 | **Bookmarks** | Save articles for offline reading (SwiftData) |

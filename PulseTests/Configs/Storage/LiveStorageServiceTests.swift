@@ -101,68 +101,6 @@ struct LiveStorageServiceTests {
         #expect(isBookmarked == false)
     }
 
-    // MARK: - Reading History Tests
-
-    @Test("Save reading history adds entry")
-    func saveReadingHistoryAddsEntry() async throws {
-        try await sut.saveReadingHistory(testArticle)
-
-        let history = try await sut.fetchReadingHistory()
-        #expect(history.count == 1)
-        #expect(history.first?.id == testArticle.id)
-    }
-
-    @Test("Save reading history updates existing entry")
-    func saveReadingHistoryUpdates() async throws {
-        try await sut.saveReadingHistory(testArticle)
-        try await Task.sleep(nanoseconds: 100_000_000)
-        try await sut.saveReadingHistory(testArticle)
-
-        let history = try await sut.fetchReadingHistory()
-        #expect(history.count == 1) // Still one entry, updated
-    }
-
-    @Test("Fetch reading history returns articles in reverse chronological order")
-    func fetchReadingHistoryOrder() async throws {
-        try await sut.saveReadingHistory(testArticle)
-        try await Task.sleep(nanoseconds: 100_000_000)
-        try await sut.saveReadingHistory(anotherArticle)
-
-        let history = try await sut.fetchReadingHistory()
-        #expect(history.count == 2)
-        #expect(history[0].id == anotherArticle.id)
-        #expect(history[1].id == testArticle.id)
-    }
-
-    @Test("Fetch recent reading history respects cutoff date")
-    func fetchRecentReadingHistory() async throws {
-        let oldDate = Date().addingTimeInterval(-86400 * 7) // 7 days ago
-        let recentDate = Date().addingTimeInterval(-3600) // 1 hour ago
-
-        var oldArticle = testArticle
-        var recentArticle = anotherArticle
-
-        try await sut.saveReadingHistory(oldArticle)
-        try await sut.saveReadingHistory(recentArticle)
-
-        let cutoffDate = Date().addingTimeInterval(-86400) // 1 day ago
-        let recentHistory = try await sut.fetchRecentReadingHistory(since: cutoffDate)
-
-        // Only recent article should be returned
-        #expect(recentHistory.count >= 1)
-    }
-
-    @Test("Clear reading history removes all entries")
-    func clearReadingHistory() async throws {
-        try await sut.saveReadingHistory(testArticle)
-        try await sut.saveReadingHistory(anotherArticle)
-
-        try await sut.clearReadingHistory()
-
-        let history = try await sut.fetchReadingHistory()
-        #expect(history.isEmpty)
-    }
-
     // MARK: - User Preferences Tests
 
     @Test("Save and fetch user preferences")

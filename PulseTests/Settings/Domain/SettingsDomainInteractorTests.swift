@@ -27,7 +27,6 @@ struct SettingsInteractorStateTests {
         #expect(!state.isLoading)
         #expect(!state.isSaving)
         #expect(state.error == nil)
-        #expect(!state.showClearHistoryConfirmation)
     }
 
     @Test("Load preferences populates state")
@@ -272,36 +271,11 @@ struct SettingsInteractorMutedTests {
     }
 }
 
-// MARK: - History & Saving Tests
+// MARK: - Saving Tests
 
-@Suite("SettingsDomainInteractor History Tests")
+@Suite("SettingsDomainInteractor Saving Tests")
 @MainActor
-struct SettingsInteractorHistoryTests {
-    @Test("Clear reading history calls service")
-    func clearReadingHistoryCallsService() async throws {
-        let (sut, _) = createSUT()
-        sut.dispatch(action: .setShowClearHistoryConfirmation(true))
-        #expect(sut.currentState.showClearHistoryConfirmation)
-        sut.dispatch(action: .clearReadingHistory)
-        try await Task.sleep(nanoseconds: 300_000_000)
-        #expect(!sut.currentState.showClearHistoryConfirmation)
-    }
-
-    @Test("Set show clear history confirmation shows dialog")
-    func setShowClearHistoryConfirmationShows() {
-        let (sut, _) = createSUT()
-        sut.dispatch(action: .setShowClearHistoryConfirmation(true))
-        #expect(sut.currentState.showClearHistoryConfirmation)
-    }
-
-    @Test("Set show clear history confirmation hides dialog")
-    func setShowClearHistoryConfirmationHides() {
-        let (sut, _) = createSUT()
-        sut.dispatch(action: .setShowClearHistoryConfirmation(true))
-        sut.dispatch(action: .setShowClearHistoryConfirmation(false))
-        #expect(!sut.currentState.showClearHistoryConfirmation)
-    }
-
+struct SettingsInteractorSavingTests {
     @Test("Save operation sets saving state")
     func saveOperationSetsSavingState() async throws {
         let (sut, mock) = createSUT()

@@ -8,11 +8,11 @@ import Testing
 struct FeedViewStateReducerTests {
     let sut = FeedViewStateReducer()
 
-    @Test("Idle state with empty history maps to empty display state")
-    func idleEmptyHistory() {
+    @Test("Idle state with empty articles maps to empty display state")
+    func idleEmptyArticles() {
         let domainState = FeedDomainState(
             generationState: .idle,
-            readingHistory: [],
+            latestArticles: [],
             currentDigest: nil,
             streamingText: "",
             modelStatus: .notLoaded,
@@ -26,11 +26,11 @@ struct FeedViewStateReducerTests {
         #expect(viewState.sourceArticles.isEmpty)
     }
 
-    @Test("Idle state with history maps to idle display state")
-    func idleWithHistory() {
+    @Test("Idle state with articles maps to idle display state")
+    func idleWithArticles() {
         let domainState = FeedDomainState(
             generationState: .idle,
-            readingHistory: Article.mockArticles,
+            latestArticles: Article.mockArticles,
             currentDigest: nil,
             streamingText: "",
             modelStatus: .notLoaded,
@@ -44,11 +44,11 @@ struct FeedViewStateReducerTests {
         #expect(viewState.sourceArticles.count == Article.mockArticles.count)
     }
 
-    @Test("Loading history maps to loading display state")
-    func loadingHistory() {
+    @Test("Loading articles maps to processing display state")
+    func loadingArticles() {
         let domainState = FeedDomainState(
-            generationState: .loadingHistory,
-            readingHistory: [],
+            generationState: .loadingArticles,
+            latestArticles: [],
             currentDigest: nil,
             streamingText: "",
             modelStatus: .notLoaded,
@@ -58,14 +58,15 @@ struct FeedViewStateReducerTests {
 
         let viewState = sut.reduce(domainState: domainState)
 
-        #expect(viewState.displayState == .loading)
+        // Show processing animation while fetching articles (auto-generates after)
+        #expect(viewState.displayState == .processing(phase: .generating))
     }
 
     @Test("Generating maps to processing display state with generating phase")
     func generating() {
         let domainState = FeedDomainState(
             generationState: .generating,
-            readingHistory: Article.mockArticles,
+            latestArticles: Article.mockArticles,
             currentDigest: nil,
             streamingText: "Generating text...",
             modelStatus: .ready,
@@ -90,7 +91,7 @@ struct FeedViewStateReducerTests {
 
         let domainState = FeedDomainState(
             generationState: .completed,
-            readingHistory: Article.mockArticles,
+            latestArticles: Article.mockArticles,
             currentDigest: digest,
             streamingText: "",
             modelStatus: .ready,
@@ -109,7 +110,7 @@ struct FeedViewStateReducerTests {
     func error() {
         let domainState = FeedDomainState(
             generationState: .error("Generation failed"),
-            readingHistory: Article.mockArticles,
+            latestArticles: Article.mockArticles,
             currentDigest: nil,
             streamingText: "",
             modelStatus: .error("Model failed"),
@@ -129,7 +130,7 @@ struct FeedViewStateReducerTests {
 
         let domainState = FeedDomainState(
             generationState: .idle,
-            readingHistory: articles,
+            latestArticles: articles,
             currentDigest: nil,
             streamingText: "",
             modelStatus: .notLoaded,
@@ -153,7 +154,7 @@ struct FeedViewStateReducerTests {
     func headerDateComputed() {
         let domainState = FeedDomainState(
             generationState: .idle,
-            readingHistory: [],
+            latestArticles: [],
             currentDigest: nil,
             streamingText: "",
             modelStatus: .notLoaded,
@@ -173,7 +174,7 @@ struct FeedViewStateReducerTests {
 
         let domainState = FeedDomainState(
             generationState: .idle,
-            readingHistory: [],
+            latestArticles: [],
             currentDigest: nil,
             streamingText: "",
             modelStatus: .notLoaded,

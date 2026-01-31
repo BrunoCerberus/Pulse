@@ -182,7 +182,6 @@ final class HomeDomainInteractor: CombineInteractor {
         updateState { state in
             state.selectedArticle = article
         }
-        saveToReadingHistory(article)
     }
 
     private func clearSelectedArticle() {
@@ -235,13 +234,6 @@ final class HomeDomainInteractor: CombineInteractor {
                 }
             )
             .store(in: &cancellables)
-    }
-
-    private func saveToReadingHistory(_ article: Article) {
-        trackBackgroundTask { [weak self] in
-            guard let self else { return }
-            try? await storageService.saveReadingHistory(article)
-        }
     }
 
     private func toggleBookmark(_ article: Article) {

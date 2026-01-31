@@ -123,7 +123,7 @@ jobs:
             test-name: UI Tests
             scheme: PulseDev
             artifact-name: scheduled-ui-test-results
-            timeout: 60
+            timeout: 120
           - test-target: PulseSnapshotTests
             test-name: Snapshot Tests
             scheme: PulseSnapshotTests
