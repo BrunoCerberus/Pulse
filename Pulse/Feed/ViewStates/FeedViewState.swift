@@ -38,7 +38,7 @@ struct FeedViewState: Equatable {
 
     static var initial: FeedViewState {
         FeedViewState(
-            displayState: .loading,
+            displayState: .idle,
             headerDate: "",
             streamingText: "",
             digest: nil,

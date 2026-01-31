@@ -33,7 +33,9 @@ struct FeedViewStateReducer: ViewStateReducing {
             }
             return .idle
         case .loadingArticles:
-            return .loading
+            // Show idle state while fetching articles from API
+            // User can see "Generate Digest" button, articles load in background
+            return .idle
         case .generating:
             return .processing(phase: .generating)
         case .completed:
