@@ -123,11 +123,9 @@ struct FeedView<R: FeedNavigationRouter>: View {
     @ViewBuilder
     private var content: some View {
         switch viewModel.viewState.displayState {
-        case .idle:
-            idleContent
-                .transition(.opacity)
-        case .loading:
-            loadingView
+        case .idle, .loading:
+            // These states shouldn't occur - digest auto-generates on tab open
+            processingView(phase: .generating)
                 .transition(.opacity)
         case let .processing(phase):
             processingView(phase: phase)
@@ -144,66 +142,6 @@ struct FeedView<R: FeedNavigationRouter>: View {
         case .error:
             errorView
                 .transition(.opacity)
-        }
-    }
-
-    // MARK: - Idle Content
-
-    private var idleContent: some View {
-        VStack(spacing: Spacing.lg) {
-            dateHeader
-
-            GlassCard(style: .thin, shadowStyle: .medium, padding: Spacing.lg) {
-                VStack(spacing: Spacing.md) {
-                    Image(systemName: "sparkles")
-                        .font(.system(size: IconSize.xxl))
-                        .foregroundStyle(Color.Accent.gradient)
-
-                    Text("Generate Your Digest")
-                        .font(Typography.titleMedium)
-
-                    Text("Tap the button below to create a summary of your recent reading.")
-                        .font(Typography.bodyMedium)
-                        .foregroundStyle(.secondary)
-                        .multilineTextAlignment(.center)
-
-                    Button {
-                        HapticManager.shared.buttonPress()
-                        viewModel.handle(event: .onGenerateDigestTapped)
-                    } label: {
-                        HStack(spacing: Spacing.sm) {
-                            Image(systemName: "sparkles")
-                            Text("Generate Digest")
-                        }
-                        .font(Typography.labelLarge)
-                        .foregroundStyle(.white)
-                        .frame(maxWidth: .infinity)
-                        .padding(.vertical, Spacing.md)
-                        .background(Color.Accent.gradient)
-                        .clipShape(RoundedRectangle(cornerRadius: CornerRadius.md))
-                    }
-                    .pressEffect()
-                }
-            }
-            .padding(.horizontal, Spacing.md)
-
-            Spacer()
-        }
-    }
-
-    // MARK: - Loading View
-
-    private var loadingView: some View {
-        ScrollView {
-            VStack(spacing: Spacing.lg) {
-                dateHeader
-
-                DigestCardSkeleton()
-                    .padding(.horizontal, Spacing.md)
-
-                SourceArticlesSkeleton()
-                    .padding(.horizontal, Spacing.md)
-            }
         }
     }
 
@@ -321,67 +259,6 @@ struct FeedView<R: FeedNavigationRouter>: View {
         }
         .padding(.horizontal, Spacing.md)
         .padding(.top, Spacing.md)
-    }
-}
-
-// MARK: - Skeleton Views
-
-private struct DigestCardSkeleton: View {
-    var body: some View {
-        GlassCard(style: .thin, shadowStyle: .medium, padding: Spacing.md) {
-            VStack(alignment: .leading, spacing: Spacing.md) {
-                HStack {
-                    RoundedRectangle(cornerRadius: CornerRadius.xs)
-                        .fill(Color.Semantic.skeleton)
-                        .frame(width: 100, height: 16)
-                    Spacer()
-                }
-
-                VStack(alignment: .leading, spacing: Spacing.sm) {
-                    RoundedRectangle(cornerRadius: CornerRadius.xs)
-                        .fill(Color.Semantic.skeleton)
-                        .frame(height: 14)
-
-                    RoundedRectangle(cornerRadius: CornerRadius.xs)
-                        .fill(Color.Semantic.skeleton)
-                        .frame(height: 14)
-
-                    RoundedRectangle(cornerRadius: CornerRadius.xs)
-                        .fill(Color.Semantic.skeleton)
-                        .frame(width: 200, height: 14)
-                }
-            }
-        }
-        .shimmer()
-    }
-}
-
-private struct SourceArticlesSkeleton: View {
-    var body: some View {
-        VStack(spacing: Spacing.sm) {
-            ForEach(0 ..< 3, id: \.self) { _ in
-                GlassCard(style: .ultraThin, shadowStyle: .subtle, padding: Spacing.md) {
-                    HStack(spacing: Spacing.md) {
-                        RoundedRectangle(cornerRadius: CornerRadius.sm)
-                            .fill(Color.Semantic.skeleton)
-                            .frame(width: 60, height: 60)
-
-                        VStack(alignment: .leading, spacing: Spacing.xs) {
-                            RoundedRectangle(cornerRadius: CornerRadius.xs)
-                                .fill(Color.Semantic.skeleton)
-                                .frame(height: 14)
-
-                            RoundedRectangle(cornerRadius: CornerRadius.xs)
-                                .fill(Color.Semantic.skeleton)
-                                .frame(width: 100, height: 12)
-                        }
-
-                        Spacer()
-                    }
-                }
-            }
-        }
-        .shimmer()
     }
 }
 
