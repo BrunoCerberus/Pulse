@@ -44,7 +44,7 @@ struct FeedViewStateReducerTests {
         #expect(viewState.sourceArticles.count == Article.mockArticles.count)
     }
 
-    @Test("Loading articles maps to idle display state")
+    @Test("Loading articles maps to processing display state")
     func loadingArticles() {
         let domainState = FeedDomainState(
             generationState: .loadingArticles,
@@ -58,8 +58,8 @@ struct FeedViewStateReducerTests {
 
         let viewState = sut.reduce(domainState: domainState)
 
-        // While fetching articles from API, show idle state with Generate button
-        #expect(viewState.displayState == .idle)
+        // Show processing animation while fetching articles (auto-generates after)
+        #expect(viewState.displayState == .processing(phase: .generating))
     }
 
     @Test("Generating maps to processing display state with generating phase")

@@ -29,8 +29,8 @@ struct FeedViewModelTests {
         try await waitForStateUpdate()
 
         let state = sut.viewState
-        // Initial state with idle generationState and empty history maps to idle
-        #expect(state.displayState == .idle)
+        // Initial state shows processing animation (articles load then auto-generate)
+        #expect(state.displayState == .processing(phase: .generating))
         #expect(state.sourceArticles.isEmpty)
         #expect(state.digest == nil)
     }
