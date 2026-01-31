@@ -55,9 +55,10 @@ struct FeedDomainState: Equatable {
     var selectedArticle: Article?
 
     /// Creates the default initial state.
+    /// Starts with `.loadingArticles` to ensure processing animation shows immediately.
     static var initial: FeedDomainState {
         FeedDomainState(
-            generationState: .idle,
+            generationState: .loadingArticles,
             latestArticles: [],
             currentDigest: nil,
             streamingText: "",

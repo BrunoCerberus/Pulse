@@ -137,8 +137,8 @@ struct FeedViewModelTests {
         #expect(success)
     }
 
-    @Test("Cached digest shows completed state immediately")
-    func cachedDigestShowsCompleted() async throws {
+    @Test("Cached digest shows completed state after animation delay")
+    func cachedDigestShowsCompleted() async {
         let cachedDigest = DailyDigest(
             id: "cached",
             summary: "Cached summary",
@@ -150,10 +150,13 @@ struct FeedViewModelTests {
 
         sut.handle(event: .onAppear)
 
-        try await waitForStateUpdate()
+        // Wait for completed state (includes 300ms animation delay)
+        let success = await waitForCondition(timeout: 2_000_000_000) { [sut] in
+            sut.viewState.displayState == .completed
+        }
+        #expect(success, "Should show completed state after animation delay")
 
         let state = sut.viewState
-        #expect(state.displayState == .completed)
         #expect(state.digest?.summary == "Cached summary")
     }
 

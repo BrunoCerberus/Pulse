@@ -31,10 +31,11 @@ struct FeedDomainInteractorTests {
         #expect(state.streamingText.isEmpty)
         #expect(!state.hasLoadedInitialData)
         #expect(state.selectedArticle == nil)
-        if case .idle = state.generationState {
+        // Initial state starts with loadingArticles to show processing animation immediately
+        if case .loadingArticles = state.generationState {
             // Expected
         } else {
-            Issue.record("Initial state should be idle")
+            Issue.record("Initial state should be loadingArticles")
         }
     }
 
@@ -56,7 +57,7 @@ struct FeedDomainInteractorTests {
     }
 
     @Test("Load data with cached digest uses cache")
-    func loadDataUsesCachedDigest() async throws {
+    func loadDataUsesCachedDigest() async {
         let cachedDigest = DailyDigest(
             id: "cached",
             summary: "Cached summary",
@@ -68,10 +69,13 @@ struct FeedDomainInteractorTests {
 
         sut.dispatch(action: .loadInitialData)
 
-        try await waitForStateUpdate()
+        // Wait for cached digest to appear (includes 300ms animation delay)
+        let success = await waitForCondition(timeout: 2_000_000_000) { [sut] in
+            sut.currentState.currentDigest != nil
+        }
 
+        #expect(success, "Cached digest should be loaded")
         let state = sut.currentState
-        #expect(state.currentDigest != nil)
         #expect(state.currentDigest?.id == "cached")
     }
 

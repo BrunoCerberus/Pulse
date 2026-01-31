@@ -1,11 +1,26 @@
 import EntropyCore
 import SwiftUI
 
+// MARK: - Constants
+
+private enum Constants {
+    static let featuredImageHeight: CGFloat = 140
+    static let featuredImageCornerRadius: CGFloat = 12
+}
+
 // MARK: - ContentSectionCard
 
 struct ContentSectionCard: View {
     let section: DigestSection
     let onArticleTapped: (FeedSourceArticle) -> Void
+
+    private var featuredArticle: FeedSourceArticle? {
+        section.relatedArticles.first
+    }
+
+    private var remainingArticles: [FeedSourceArticle] {
+        Array(section.relatedArticles.dropFirst())
+    }
 
     var body: some View {
         VStack(alignment: .leading, spacing: Spacing.md) {
@@ -13,7 +28,11 @@ struct ContentSectionCard: View {
 
             sectionContent
 
-            if !section.relatedArticles.isEmpty {
+            if let featured = featuredArticle {
+                featuredArticleView(featured)
+            }
+
+            if !remainingArticles.isEmpty {
                 sourcesRow
             }
         }
@@ -74,7 +93,27 @@ struct ContentSectionCard: View {
             Text(section.title)
                 .font(Typography.labelMedium)
                 .foregroundStyle(.primary)
+
+            Spacer()
+
+            // Article count badge
+            if !section.relatedArticles.isEmpty {
+                articleCountBadge
+            }
         }
+    }
+
+    private var articleCountBadge: some View {
+        let count = section.relatedArticles.count
+        let text = count == 1 ? "1 article" : "\(count) articles"
+
+        return Text(text)
+            .font(Typography.captionSmall)
+            .foregroundStyle(.secondary)
+            .padding(.horizontal, Spacing.xs)
+            .padding(.vertical, 2)
+            .background(Color.secondary.opacity(0.1))
+            .clipShape(Capsule())
     }
 
     // MARK: - Content
@@ -87,15 +126,101 @@ struct ContentSectionCard: View {
             .frame(maxWidth: .infinity, alignment: .leading)
     }
 
+    // MARK: - Featured Article
+
+    private func featuredArticleView(_ article: FeedSourceArticle) -> some View {
+        Button {
+            HapticManager.shared.tap()
+            onArticleTapped(article)
+        } label: {
+            VStack(alignment: .leading, spacing: Spacing.sm) {
+                // Featured image
+                featuredImage(for: article)
+
+                // Article info
+                VStack(alignment: .leading, spacing: Spacing.xxs) {
+                    Text(article.title)
+                        .font(Typography.titleSmall)
+                        .foregroundStyle(.primary)
+                        .lineLimit(2)
+                        .multilineTextAlignment(.leading)
+
+                    HStack(spacing: Spacing.xs) {
+                        Text(article.source)
+                            .font(Typography.captionLarge)
+                            .foregroundStyle(.secondary)
+
+                        Text("•")
+                            .font(Typography.captionLarge)
+                            .foregroundStyle(.secondary.opacity(0.5))
+
+                        Text(article.formattedDate)
+                            .font(Typography.captionLarge)
+                            .foregroundStyle(.secondary)
+                    }
+                }
+            }
+            .frame(maxWidth: .infinity, alignment: .leading)
+            .padding(Spacing.sm)
+            .glassBackground(style: .ultraThin, cornerRadius: CornerRadius.md)
+        }
+        .buttonStyle(.plain)
+        .pressEffect(scale: 0.98)
+    }
+
+    @ViewBuilder
+    private func featuredImage(for article: FeedSourceArticle) -> some View {
+        if let imageURL = article.imageURL, let url = URL(string: imageURL) {
+            AsyncImage(url: url) { phase in
+                switch phase {
+                case .empty:
+                    featuredImagePlaceholder
+                case let .success(image):
+                    image
+                        .resizable()
+                        .aspectRatio(contentMode: .fill)
+                        .frame(height: Constants.featuredImageHeight)
+                        .clipShape(RoundedRectangle(cornerRadius: Constants.featuredImageCornerRadius))
+                case .failure:
+                    featuredImagePlaceholder
+                @unknown default:
+                    featuredImagePlaceholder
+                }
+            }
+            .frame(maxWidth: .infinity)
+            .frame(height: Constants.featuredImageHeight)
+            .clipShape(RoundedRectangle(cornerRadius: Constants.featuredImageCornerRadius))
+        } else {
+            featuredImagePlaceholder
+        }
+    }
+
+    private var featuredImagePlaceholder: some View {
+        RoundedRectangle(cornerRadius: Constants.featuredImageCornerRadius)
+            .fill(Color.secondary.opacity(0.1))
+            .frame(height: Constants.featuredImageHeight)
+            .overlay {
+                Image(systemName: "newspaper.fill")
+                    .font(.system(size: IconSize.xl))
+                    .foregroundStyle(.secondary.opacity(0.3))
+            }
+    }
+
     // MARK: - Sources Row
 
     private var sourcesRow: some View {
-        ScrollView(.horizontal, showsIndicators: false) {
-            HStack(spacing: Spacing.xs) {
-                ForEach(section.relatedArticles) { article in
-                    InlineSourceChip(article: article) {
-                        HapticManager.shared.tap()
-                        onArticleTapped(article)
+        VStack(alignment: .leading, spacing: Spacing.xs) {
+            Text("Related Articles")
+                .font(Typography.captionSmall)
+                .foregroundStyle(.secondary)
+
+            ScrollView(.horizontal, showsIndicators: false) {
+                HStack(spacing: Spacing.xs) {
+                    ForEach(remainingArticles) { article in
+                        InlineSourceChip(article: article) {
+                            HapticManager.shared.tap()
+                            onArticleTapped(article)
+                        }
                     }
                 }
             }
@@ -106,20 +231,25 @@ struct ContentSectionCard: View {
 // MARK: - Preview
 
 #Preview {
+    // swiftlint:disable:next line_length
+    let content = "The technology sector saw significant developments this week with major AI announcements from leading tech companies. New breakthrough models promise enhanced capabilities across various domains."
     let previewSection = DigestSection(
         title: "Technology",
-        content: "The technology sector saw significant developments with new AI models.",
+        content: content,
         category: .technology,
         relatedArticles: [
             FeedSourceArticle(from: Article.mockArticles[0]),
             FeedSourceArticle(from: Article.mockArticles[1]),
+            FeedSourceArticle(from: Article.mockArticles[2]),
         ]
     )
 
-    return ContentSectionCard(
-        section: previewSection,
-        onArticleTapped: { _ in }
-    )
-    .padding()
+    return ScrollView {
+        ContentSectionCard(
+            section: previewSection,
+            onArticleTapped: { _ in }
+        )
+        .padding()
+    }
     .background(LinearGradient.subtleBackground)
 }

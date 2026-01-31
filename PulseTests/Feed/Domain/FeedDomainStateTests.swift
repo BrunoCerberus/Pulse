@@ -42,7 +42,8 @@ struct FeedDomainStateTests {
     func initialState() {
         let state = FeedDomainState.initial
 
-        #expect(state.generationState == .idle)
+        // Initial state starts with loadingArticles to show processing animation immediately
+        #expect(state.generationState == .loadingArticles)
         #expect(state.latestArticles.isEmpty)
         #expect(state.currentDigest == nil)
         #expect(state.streamingText == "")

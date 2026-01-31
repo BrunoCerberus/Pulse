@@ -106,13 +106,20 @@ final class FeedDomainInteractor: CombineInteractor {
     private func loadInitialData() {
         guard !currentState.hasLoadedInitialData else { return }
 
+        // Always show processing animation first for consistent UX
+        updateState { $0.generationState = .loadingArticles }
+
         // Check for cached digest first
         if let cachedDigest = feedService.fetchTodaysDigest() {
-            updateState { state in
-                state.currentDigest = cachedDigest
-                state.latestArticles = cachedDigest.sourceArticles
-                state.hasLoadedInitialData = true
-                state.generationState = .completed
+            // Brief delay to ensure animation is visible before showing cached content
+            Task { @MainActor in
+                try? await Task.sleep(nanoseconds: 300_000_000) // 300ms
+                updateState { state in
+                    state.currentDigest = cachedDigest
+                    state.latestArticles = cachedDigest.sourceArticles
+                    state.hasLoadedInitialData = true
+                    state.generationState = .completed
+                }
             }
             return
         }
