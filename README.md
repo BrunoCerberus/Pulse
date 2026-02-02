@@ -12,6 +12,7 @@ A modern iOS news aggregation app built with Clean Architecture, SwiftUI, and Co
 - **Bookmarks**: Save articles for offline reading with SwiftData persistence
 - **Search**: Full-text search with 300ms debounce, suggestions, recent searches, and sort options
 - **Settings**: Customize topics, notifications, theme, content filters, and account/logout (accessed from Home navigation bar)
+- **Widget**: Home screen widget showing recent headlines (WidgetKit extension)
 
 The app uses iOS 26's liquid glass TabView style with tabs: Home, Media, Feed, Bookmarks, and Search. Users must sign in with Google or Apple before accessing the main app.
 
@@ -24,7 +25,7 @@ The app uses StoreKit 2 for subscription management. Two AI-powered features req
 | AI Daily Digest | Summaries of the latest news across all categories |
 | Article Summarization | On-device AI summaries for any article |
 
-Non-premium users see a `PremiumGateView` with an "Unlock Premium" button that presents the native StoreKit subscription UI.
+Non-premium users see a `PremiumGateView` on Feed or a paywall sheet when tapping the summarization button; both present the native StoreKit subscription UI.
 
 ## Architecture
 
@@ -79,8 +80,8 @@ CoordinatorView (@StateObject Coordinator)
        │
    TabView (selection: $coordinator.selectedTab)
        │
-   ┌───┴───┬──────┬─────────┬───────┐
- Home    Feed   Bookmarks  Search
+   ┌───┴───┬──────┬──────┬─────────┬───────┐
+ Home   Media   Feed   Bookmarks  Search
    │        │           │         │
 NavigationStack(path: $coordinator.homePath)
        │
@@ -189,7 +190,7 @@ final class MyFeatureDomainInteractor: CombineInteractor {
 
 ### 5. Register the Service
 
-In `PulseSceneDelegate.setupServices()`:
+In `PulseSceneDelegate.registerLiveServices()` (and add a mock in test setup if needed):
 
 ```swift
 serviceLocator.register(MyFeatureService.self, instance: LiveMyFeatureService())
@@ -288,8 +289,8 @@ func createTestServiceLocator() -> ServiceLocator {
 
 ## Requirements
 
-- Xcode 26.0.1+
-- iOS 26.1+
+- Xcode 26.2+
+- iOS 26.2+
 - Swift 5.0+
 
 ## Setup
@@ -319,19 +320,24 @@ API keys are managed via **Firebase Remote Config** (primary) with environment v
 ```bash
 # For CI/CD or local development without Remote Config
 export GUARDIAN_API_KEY="your_guardian_key"
+export NEWS_API_KEY="your_newsapi_key"
+export GNEWS_API_KEY="your_gnews_key"
 
 # Supabase backend configuration (optional - falls back to Guardian API)
 export SUPABASE_URL="https://your-project.supabase.co"
 export SUPABASE_ANON_KEY="your_anon_key"
 ```
 
-The app fetches keys from Remote Config on launch. Environment variables are used as fallback when Remote Config is unavailable. If Supabase is not configured, the app automatically falls back to the Guardian API.
+The app fetches keys from Remote Config on launch. Environment variables are used as fallback when Remote Config is unavailable. If Supabase is not configured, the app automatically falls back to the Guardian API. `APIKeysProvider` also supports `NEWS_API_KEY` and `GNEWS_API_KEY` (wired for future providers).
 
 ## Commands
 
 | Command | Description |
 |---------|-------------|
-| `make setup` | Install XcodeGen and generate project |
+| `make init` | Setup Mint, SwiftFormat, and SwiftLint |
+| `make install-xcodegen` | Install XcodeGen using Homebrew |
+| `make generate` | Generate project from project.yml |
+| `make setup` | install-xcodegen + generate |
 | `make xcode` | Generate project and open in Xcode |
 | `make build` | Build for development |
 | `make build-release` | Build for release |
@@ -342,10 +348,16 @@ The app fetches keys from Remote Config on launch. Environment variables are use
 | `make test-unit` | Run unit tests only |
 | `make test-ui` | Run UI tests only |
 | `make test-snapshot` | Run snapshot tests only |
+| `make test-debug` | Verbose unit test output |
 | `make coverage` | Run tests with coverage report |
+| `make coverage-report` | Per-file coverage report |
+| `make coverage-badge` | Generate SVG coverage badge |
 | `make lint` | Run SwiftFormat and SwiftLint |
 | `make format` | Auto-format code |
+| `make deeplink-test` | Run deeplink tests |
 | `make clean` | Remove generated project |
+| `make clean-packages` | Clean SPM caches |
+| `make docs` | Generate DocC documentation |
 
 ## Project Structure
 
@@ -359,30 +371,26 @@ Pulse/
 │   │   ├── View/           # SignInView
 │   │   └── Manager/        # AuthenticationManager (global state)
 │   ├── Home/               # Home feed with category filtering
-│   │   ├── API/            # NewsService, SupabaseAPI, SupabaseModels
-│   │   ├── Domain/         # Interactor, State, Action, Reducer, EventActionMap
-│   │   ├── ViewModel/      # HomeViewModel
-│   │   ├── View/           # SwiftUI views (includes category tabs)
-│   │   ├── ViewEvents/     # HomeViewEvent
-│   │   ├── ViewStates/     # HomeViewState
-│   │   └── Router/         # HomeNavigationRouter
 │   ├── Media/              # Videos and Podcasts browsing
 │   ├── MediaDetail/        # Video/Podcast playback (AVPlayer, WKWebView)
-│   ├── Feed/               # AI-powered Daily Digest
+│   ├── Feed/               # AI-powered Daily Digest (Premium)
+│   ├── Digest/             # On-device LLM infra (LLMService, LLMModelManager, prompts)
+│   ├── Summarization/      # Article summarization (Premium)
 │   ├── Search/             # Search functionality
 │   ├── Bookmarks/          # Saved articles
 │   ├── Settings/           # User preferences + account/logout
 │   ├── ArticleDetail/      # Article view
+│   ├── Paywall/            # StoreKit paywall UI
 │   ├── SplashScreen/       # Launch animation
 │   └── Configs/
-│       ├── Navigation/     # Coordinator, Page, CoordinatorView, DeeplinkRouter
+│       ├── Navigation/     # Coordinator, Page, CoordinatorView, DeeplinkRouter, AnimatedTabView
 │       ├── DesignSystem/   # ColorSystem, Typography, Components, HapticManager
-│       ├── Extensions/     # SwipeBackGesture and other utilities
 │       ├── Models/         # Article, NewsCategory, UserPreferences
-│       ├── Networking/     # APIKeysProvider, BaseURLs, SupabaseConfig
+│       ├── Networking/     # APIKeysProvider, BaseURLs, SupabaseConfig, RemoteConfig
 │       ├── Storage/        # StorageService (SwiftData)
 │       ├── Mocks/          # Mock services for testing
 │       └── Widget/         # WidgetDataManager
+├── PulseWidgetExtension/   # WidgetKit extension
 ├── PulseTests/             # Unit tests (Swift Testing)
 ├── PulseUITests/           # UI tests (XCTest)
 ├── PulseSnapshotTests/     # Snapshot tests (SnapshotTesting)
@@ -406,6 +414,8 @@ Pulse/
 GitHub Actions workflows:
 
 - **ci.yml**: Runs on PRs - code quality, build, tests
+- **claude.yml**: Claude Code on @claude mentions (issues/PRs/comments)
+- **claude-code-review.yml**: Claude Code review on PR open/sync
 - **scheduled-tests.yml**: Daily test runs at 2 AM UTC
 
 ## Schemes
@@ -462,7 +472,7 @@ The app fetches articles from a self-hosted RSS feed aggregator backend that:
 
 - Aggregates news from multiple RSS sources (Guardian, BBC, TechCrunch, Science Daily, etc.)
 - Extracts high-resolution `og:image` from article pages for hero images
-- Extracts full article content using Mozilla Readability
+- Extracts full article content using go-readability (Mozilla Readability port)
 - Stores articles in Supabase database with automatic cleanup
 
 ### Guardian API (Fallback)

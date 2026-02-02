@@ -15,8 +15,7 @@ Pulse/
 │   │   ├── ViewModel/          # SignInViewModel
 │   │   ├── View/               # SignInView
 │   │   └── Manager/            # AuthenticationManager (global state)
-│   ├── [Feature]/              # Feature modules (Home, Search, Bookmarks, etc.)
-│   │   └── API/                # Service protocols + SupabaseAPI, SupabaseModels
+│   ├── Home/                   # Home feed with category filtering
 │   ├── Media/                  # Videos and Podcasts browsing
 │   │   ├── Domain/             # MediaDomainInteractor, State, Action, Reducer, EventActionMap
 │   │   ├── ViewModel/          # MediaViewModel
@@ -27,7 +26,7 @@ Pulse/
 │   │   ├── ViewModel/          # MediaDetailViewModel
 │   │   ├── View/               # MediaDetailView, VideoPlayerView, AudioPlayerView, YouTubeThumbnailView
 │   │   └── Player/             # AudioPlayerManager (AVPlayer wrapper)
-│   ├── Feed/                   # AI-powered Daily Digest (latest news from API)
+│   ├── Feed/                   # AI-powered Daily Digest (Premium)
 │   │   ├── API/                # FeedService protocol + Live/Mock
 │   │   ├── Domain/             # FeedDomainInteractor, State, Action, Reducer, EventActionMap
 │   │   ├── ViewModel/          # FeedViewModel
@@ -37,28 +36,26 @@ Pulse/
 │   │   ├── ViewStates/         # FeedViewState
 │   │   ├── Router/             # FeedNavigationRouter
 │   │   └── Models/             # DailyDigest, FeedDigestPromptBuilder
-│   │   ├── API/                # DigestService protocol + Live/Mock
+│   ├── Digest/                 # On-device LLM infra (LLMService, LLMModelManager, prompts)
+│   │   ├── API/                # SummarizationService protocol + Live/Mock
 │   │   ├── AI/                 # LLMService, LLMModelManager (llama.cpp via LocalLlama)
-│   │   ├── Domain/             # DigestDomainInteractor, State, Action
-│   │   ├── ViewModel/          # DigestViewModel
-│   │   ├── View/               # DigestView, source selection components
-│   │   ├── Router/             # DigestNavigationRouter
-│   │   └── Models/             # DigestResult, DigestPromptBuilder
-│   │   ├── API/                # Service protocols + implementations
-│   │   ├── Domain/             # Interactor, State, Action, Reducer, EventActionMap
-│   │   ├── ViewModel/          # CombineViewModel implementation
-│   │   ├── View/               # SwiftUI views (generic over Router)
-│   │   ├── ViewEvents/         # User interaction events
-│   │   ├── ViewStates/         # Presentation-layer state
-│   │   └── Router/             # Navigation routers (NavigationRouter protocol)
+│   │   └── Models/             # Prompt builders and LLM helpers
+│   ├── Summarization/          # Article summarization (Premium)
+│   ├── ArticleDetail/          # Article view + summarization entry point
+│   ├── Bookmarks/              # Offline reading
+│   ├── Search/                 # Search feature
+│   ├── Settings/               # User preferences (includes account/logout)
+│   ├── Paywall/                # StoreKit paywall UI
+│   ├── SplashScreen/           # App launch animation
 │   └── Configs/
-│       ├── Navigation/         # Coordinator, Page, CoordinatorView, DeeplinkRouter
-│       ├── Extensions/         # SwipeBackGesture and other utilities
-│       ├── DesignSystem/       # ColorSystem, Typography, Components
+│       ├── Navigation/         # Coordinator, Page, CoordinatorView, DeeplinkRouter, AnimatedTabView
+│       ├── DesignSystem/       # ColorSystem, Typography, Components, Haptics
 │       ├── Models/             # Article, NewsCategory, UserPreferences
+│       ├── Networking/         # API keys, base URLs, SupabaseConfig, RemoteConfig
 │       ├── Storage/            # StorageService (SwiftData)
 │       ├── Mocks/              # Mock services for testing
-│       └── ...                 # Other shared infrastructure
+│       └── Widget/             # WidgetDataManager + shared widget models
+├── PulseWidgetExtension/       # WidgetKit extension
 ├── PulseTests/                 # Unit tests (Swift Testing)
 ├── PulseUITests/               # UI tests (XCTest)
 ├── PulseSnapshotTests/         # Snapshot tests (SnapshotTesting)
@@ -69,14 +66,27 @@ Pulse/
 ## Build & Test Commands
 
 ```bash
-make setup          # Initial project setup
-make test           # Run all tests
-make test-unit      # Run unit tests only
-make test-ui        # Run UI tests only
-make test-snapshot  # Run snapshot tests only
-make lint           # Code quality checks
-make format         # Auto-format code
-make coverage       # Test with coverage
+make init            # Setup Mint, SwiftFormat, and SwiftLint
+make install-xcodegen # Install XcodeGen
+make generate        # Generate project from project.yml
+make setup           # install-xcodegen + generate
+make xcode           # Generate project and open in Xcode
+make build           # Debug build
+make build-release   # Release build
+make test            # Run all tests
+make test-unit       # Run unit tests only
+make test-ui         # Run UI tests only
+make test-snapshot   # Run snapshot tests only
+make test-debug      # Verbose unit tests
+make lint            # Code quality checks
+make format          # Auto-format code
+make coverage        # Test with coverage
+make coverage-report # Per-file coverage report
+make coverage-badge  # Generate SVG coverage badge
+make deeplink-test   # Deeplink tests
+make clean           # Remove generated project
+make clean-packages  # Clean SPM caches
+make docs            # Generate DocC documentation
 ```
 
 ## Coding Style
@@ -227,10 +237,13 @@ The app uses a two-tier data source strategy:
 struct Article {
     let imageURL: String?      // High-res og:image from backend
     let thumbnailURL: String?  // RSS feed image (smaller)
+    let mediaType: MediaType?
+    let mediaURL: String?
 
-    var heroImageURL: String? {
-        imageURL ?? thumbnailURL  // Prefer high-res for hero display
-    }
+    // Prefer YouTube thumbnail, then full image, then thumbnail, then source favicon.
+    var heroImageURL: String? { ... }
+    // Prefer YouTube thumbnail, then thumbnail, then full image, then source favicon.
+    var displayImageURL: String? { ... }
 }
 ```
 
@@ -285,7 +298,7 @@ struct FeedView<R: FeedNavigationRouter>: View {
 - **UI tests**: Set `MOCK_PREMIUM=1` in launch environment for premium user tests
 - **Snapshot tests**: Register `MockStoreKitService` in test ServiceLocator
 
-## On-Device AI (Digest Feature)
+## On-Device AI (Digest + Summarization)
 
 The Digest feature uses **Llama 3.2 1B Instruct** (Q4_K_M quantization, ~700MB GGUF) for on-device inference:
 
@@ -306,10 +319,10 @@ All llama.cpp operations run on a **dedicated pinned thread** (not just serializ
 - Auto-unloads on `UIApplication.didReceiveMemoryWarningNotification`
 
 ### Performance Optimizations
-- **CPU inference**: Small models (~1B params) run faster on CPU than GPU due to Metal transfer overhead
+- **Metal acceleration**: On device, llama.cpp offloads up to 32 layers to GPU (`n_gpu_layers = 32`); simulator stays CPU-only
 - **Flash attention**: Enabled for faster KV cache operations
 - **Memory mapping**: Model loaded via mmap for faster startup
-- **Model preloading**: Triggered when Feed tab appears (parallel with article fetch)
+- **Model preloading**: Triggered at app launch for premium users (`PulseSceneDelegate.preloadLLMModelIfPremium()`)
 
 ## Navigation Architecture
 
@@ -463,7 +476,7 @@ refactor: extract common loading state
 3. Create Domain layer (State, Action, Interactor)
 4. Create ViewModel with ViewStateReducer
 5. Create SwiftUI View
-6. Register service in SceneDelegate
+6. Register service in `PulseSceneDelegate.registerLiveServices()` (and add a mock in test setup)
 7. Add unit tests
 8. Add snapshot tests
 
@@ -492,6 +505,8 @@ API keys are managed via **Firebase Remote Config** (primary) with fallbacks:
 ```bash
 # Environment variable fallback for CI/CD
 GUARDIAN_API_KEY      # Guardian API key (fallback data source)
+NEWS_API_KEY          # NewsAPI.org key (wired in APIKeysProvider)
+GNEWS_API_KEY         # GNews API key (wired in APIKeysProvider)
 SUPABASE_URL          # Supabase project URL (primary data source)
 SUPABASE_ANON_KEY     # Supabase anonymous key
 ```

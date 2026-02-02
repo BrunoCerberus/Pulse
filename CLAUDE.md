@@ -82,9 +82,9 @@ Pulse is an iOS news aggregation app built with **Unidirectional Data Flow Archi
 
 3. **ServiceLocator**: Instance-based dependency injection (passed through initializers)
    ```swift
-   // Service Registration (PulseSceneDelegate.swift)
+   // Service Registration (PulseSceneDelegate.registerLiveServices())
    let serviceLocator = ServiceLocator()
-   serviceLocator.register(NewsService.self, instance: LiveNewsService())
+   serviceLocator.register(NewsService.self, instance: CachingNewsService(wrapping: LiveNewsService()))
    serviceLocator.register(StorageService.self, instance: LiveStorageService())
 
    // Component Initialization
@@ -161,64 +161,38 @@ Pulse is an iOS news aggregation app built with **Unidirectional Data Flow Archi
 
 ```
 Pulse/
-├── Authentication/             # Firebase Auth (Google + Apple Sign-In)
-│   ├── API/                    # AuthService protocol + Live/Mock implementations
-│   ├── Domain/                 # AuthDomainInteractor, State, Action
-│   ├── ViewModel/              # SignInViewModel
-│   ├── View/                   # SignInView
-│   └── Manager/                # AuthenticationManager (global state)
-├── Home/                       # Home feed with category filtering
-│   ├── API/                    # NewsAPI, NewsService, SupabaseAPI, SupabaseModels
-│   ├── Domain/                 # Interactor, State, Action, Reducer, EventActionMap
-│   ├── ViewModel/              # HomeViewModel
-│   ├── View/                   # SwiftUI views (includes category tabs)
-│   ├── ViewEvents/             # HomeViewEvent
-│   ├── ViewStates/             # HomeViewState
-│   └── Router/                 # HomeNavigationRouter
-├── Media/                      # Videos and Podcasts browsing
-│   ├── Domain/                 # MediaDomainInteractor, State, Action, Reducer, EventActionMap
-│   ├── ViewModel/              # MediaViewModel
-│   ├── View/                   # MediaView, MediaCard, FeaturedMediaCard
-│   ├── ViewEvents/             # MediaViewEvent
-│   ├── ViewStates/             # MediaViewState
-│   └── Router/                 # MediaNavigationRouter
-├── MediaDetail/                # Video/Podcast playback
-│   ├── Domain/                 # MediaDetailDomainInteractor, State, Action, Reducer, EventActionMap
-│   ├── ViewModel/              # MediaDetailViewModel
-│   ├── View/                   # MediaDetailView, VideoPlayerView, AudioPlayerView, YouTubeThumbnailView
-│   ├── ViewEvents/             # MediaDetailViewEvent
-│   ├── ViewStates/             # MediaDetailViewState
-│   └── Player/                 # AudioPlayerManager (AVPlayer wrapper)
-├── Feed/                       # AI-powered Daily Digest
-│   ├── API/                    # FeedService protocol + Live/Mock
-│   ├── Domain/                 # FeedDomainInteractor, State, Action, Reducer, EventActionMap
-│   ├── ViewModel/              # FeedViewModel
-│   ├── View/                   # FeedView, DigestCard, StreamingTextView, BentoGrid components
-│   │   └── BentoGrid/          # BentoDigestGrid, StatsCard, TopicsBreakdownCard, ContentSectionCard
-│   ├── ViewEvents/             # FeedViewEvent
-│   ├── ViewStates/             # FeedViewState
-│   ├── Router/                 # FeedNavigationRouter
-│   └── Models/                 # DailyDigest, FeedDigestPromptBuilder
-├── Digest/                     # Article summarization (AI)
-│   ├── API/                    # SummarizationService protocol + Live/Mock
-│   ├── AI/                     # LLMService, LLMModelManager, LLMConfiguration
-│   ├── Domain/                 # SummarizationDomainInteractor, State, Action
-│   ├── ViewModel/              # SummarizationViewModel
-│   └── View/                   # SummarizationSheet
-├── Search/                     # Search feature
-├── Bookmarks/                  # Offline reading
-├── Settings/                   # User preferences (includes account/logout)
-├── ArticleDetail/              # Article view
-├── SplashScreen/               # App launch animation
-└── Configs/
-    ├── Navigation/             # Coordinator, Page, CoordinatorView, DeeplinkRouter
-    ├── DesignSystem/           # ColorSystem, Typography, Components
-    ├── Extensions/             # CombineViewModel, CombineInteractor, etc.
-    ├── Models/                 # Article, NewsCategory, UserPreferences
-    ├── Storage/                # StorageService (SwiftData)
-    ├── Networking/             # API keys, base URLs, SupabaseConfig
-    ├── Mocks/                  # Mock services for testing
-    └── Widget/                 # WidgetDataManager
+├── Pulse/                      # Main app source
+│   ├── Authentication/         # Firebase Auth (Google + Apple Sign-In)
+│   │   ├── API/                # AuthService protocol + Live/Mock implementations
+│   │   ├── Domain/             # AuthDomainInteractor, State, Action
+│   │   ├── ViewModel/          # SignInViewModel
+│   │   ├── View/               # SignInView
+│   │   └── Manager/            # AuthenticationManager (global state)
+│   ├── Home/                   # Home feed with category filtering
+│   ├── Media/                  # Videos and Podcasts browsing
+│   ├── MediaDetail/            # Video/Podcast playback
+│   ├── Feed/                   # AI-powered Daily Digest (Premium)
+│   ├── Digest/                 # On-device LLM infra (LLMService, LLMModelManager, prompts)
+│   ├── Summarization/          # Article summarization (Premium)
+│   ├── ArticleDetail/          # Article view + summarization entry point
+│   ├── Bookmarks/              # Offline reading
+│   ├── Search/                 # Search feature
+│   ├── Settings/               # User preferences (includes account/logout)
+│   ├── Paywall/                # StoreKit paywall UI
+│   ├── SplashScreen/           # App launch animation
+│   └── Configs/
+│       ├── Navigation/         # Coordinator, Page, CoordinatorView, DeeplinkRouter, AnimatedTabView
+│       ├── DesignSystem/       # ColorSystem, Typography, Components
+│       ├── Models/             # Article, NewsCategory, UserPreferences
+│       ├── Networking/         # API keys, base URLs, SupabaseConfig, RemoteConfig
+│       ├── Storage/            # StorageService (SwiftData)
+│       ├── Mocks/              # Mock services for testing
+│       └── Widget/             # WidgetDataManager + shared widget models
+├── PulseWidgetExtension/       # WidgetKit extension
+├── PulseTests/                 # Unit tests (Swift Testing)
+├── PulseUITests/               # UI tests (XCTest)
+├── PulseSnapshotTests/         # Snapshot tests (SnapshotTesting)
+└── .github/workflows/          # CI/CD
 ```
 
 ## Features
@@ -233,6 +207,7 @@ Pulse/
 | **Search** | Full-text search with 300ms debounce, suggestions, and sort options (last tab with liquid glass style) |
 | **Bookmarks** | Save articles for offline reading (SwiftData) |
 | **Settings** | Topics, notifications, theme, muted content, account/logout (accessed from Home navigation bar) |
+| **Widget** | Home screen widget showing recent headlines (WidgetKit extension) |
 
 ## Premium Features
 
@@ -272,7 +247,10 @@ View conditionally shows:
 
 ```bash
 # Setup
-make setup              # Install XcodeGen + generate project
+make init               # Setup Mint, SwiftFormat, and SwiftLint
+make install-xcodegen   # Install XcodeGen using Homebrew
+make generate           # Generate project from project.yml
+make setup              # install-xcodegen + generate
 make xcode              # Generate project + open in Xcode
 
 # Building
@@ -289,6 +267,7 @@ make test               # All tests
 make test-unit          # Unit tests only
 make test-ui            # UI tests only
 make test-snapshot      # Snapshot tests only
+make test-debug         # Verbose unit test output
 
 # Code Quality
 make lint               # SwiftFormat + SwiftLint check
@@ -296,7 +275,14 @@ make format             # Auto-fix formatting
 
 # Coverage
 make coverage           # Run tests with coverage
+make coverage-report    # Per-file coverage report
 make coverage-badge     # Generate SVG badge
+
+# Utilities
+make deeplink-test      # Deeplink tests
+make clean              # Remove generated Xcode project
+make clean-packages     # Clean SPM caches
+make docs               # Generate DocC documentation
 ```
 
 ## Custom Slash Commands
@@ -330,9 +316,13 @@ All Live services (LiveNewsService, LiveSearchService) use Supabase as the prima
 enum SupabaseAPI: APIFetcher {
     case articles(page: Int, pageSize: Int)
     case articlesByCategory(category: String, page: Int, pageSize: Int)
-    case breakingNews(since: String)
+    case breakingNews(limit: Int)
     case article(id: String)
-    case search(query: String, page: Int, pageSize: Int, orderBy: String)
+    case search(query: String, page: Int, pageSize: Int)
+    case categories
+    case sources
+    case media(type: String?, page: Int, pageSize: Int)
+    case featuredMedia(type: String?, limit: Int)
 
     var path: String { ... }
     var method: HTTPMethod { .GET }
@@ -394,13 +384,7 @@ serviceLocator.register(NewsService.self, instance: cachingService)
 
 ### TTL Configuration
 
-| Content Type | TTL | Rationale |
-|-------------|-----|-----------|
-| Breaking News | 5 min | High freshness expectation |
-| Headlines Page 1 | 10 min | Balance freshness vs API savings |
-| Headlines Page 2+ | 30 min | Less critical, saves API calls |
-| Category Headlines | 10 min | Similar to page 1 |
-| Individual Articles | 60 min | Content rarely changes |
+- Client-side cache uses a single TTL (`NewsCacheTTL.default`) of **10 minutes** for all news content.
 
 ### Cache Invalidation
 
@@ -456,7 +440,8 @@ if let cachingService = newsService as? CachingNewsService {
 | `DeeplinkManager.swift` | URL scheme handling |
 | `ThemeManager.swift` | Dark/light mode management |
 | `StorageService.swift` | SwiftData persistence |
-| `NewsAPI.swift` | Guardian API endpoint definitions |
+| `GuardianAPI.swift` | Guardian API endpoint definitions (fallback) |
+| `NewsAPI.swift` | NewsAPI.org endpoint definitions (wired in APIKeysProvider) |
 | `GoogleService-Info.plist` | Firebase configuration |
 | **Supabase Backend** | |
 | `SupabaseConfig.swift` | Supabase URL and API key configuration |
@@ -465,6 +450,8 @@ if let cachingService = newsService as? CachingNewsService {
 | **Caching** | |
 | `NewsCacheStore.swift` | Cache protocol, NSCache implementation, TTL configuration |
 | `CachingNewsService.swift` | Decorator wrapping LiveNewsService with in-memory caching |
+| **Widget** | |
+| `WidgetDataManager.swift` | Persists shared widget articles and triggers WidgetKit reloads |
 | **Media Playback** | |
 | `MediaDetailView.swift` | Main view for video/podcast playback |
 | `VideoPlayerView.swift` | WKWebView wrapper for non-YouTube video embedding |
@@ -476,7 +463,7 @@ if let cachingService = newsService as? CachingNewsService {
 | `LiveLLMService.swift` | llama.cpp implementation via LocalLlama package |
 | `LLMModelManager.swift` | Model lifecycle (load/unload, memory checks) |
 | `LLMConfiguration.swift` | Model paths, inference parameters (context size, batch size) |
-| **LLM Performance** | CPU inference (faster than GPU for small models), flash attention, mmap loading, model preloading |
+| **LLM Performance** | Metal acceleration on device, flash attention, mmap loading, model preloading |
 | **Premium/Subscription** | |
 | `StoreKitService.swift` | Protocol for subscription status and purchases |
 | `LiveStoreKitService.swift` | StoreKit 2 implementation |
@@ -513,6 +500,8 @@ API keys are managed via **Firebase Remote Config** (primary) with fallbacks:
 ```bash
 # For CI/CD or local development without Remote Config
 export GUARDIAN_API_KEY="your_key"
+export NEWS_API_KEY="your_key"
+export GNEWS_API_KEY="your_key"
 
 # Supabase backend configuration (optional)
 export SUPABASE_URL="https://your-project.supabase.co"
