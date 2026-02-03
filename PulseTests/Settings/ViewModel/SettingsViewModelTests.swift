@@ -23,8 +23,6 @@ struct SettingsViewModelTests {
     @Test("Initial view state is correct")
     func initialViewState() {
         let state = sut.viewState
-        #expect(state.followedTopics.isEmpty)
-        #expect(state.allTopics == NewsCategory.allCases)
         #expect(state.mutedSources.isEmpty)
         #expect(state.mutedKeywords.isEmpty)
         #expect(!state.isLoading)
@@ -46,19 +44,7 @@ struct SettingsViewModelTests {
 
         try await Task.sleep(nanoseconds: 500_000_000)
 
-        #expect(sut.viewState.followedTopics.contains(.technology))
         #expect(sut.viewState.mutedSources.contains("source1"))
-    }
-
-    @Test("Toggle topic adds/removes topic")
-    func toggleTopic() async throws {
-        sut.handle(event: .onAppear)
-        try await Task.sleep(nanoseconds: 300_000_000)
-
-        sut.handle(event: .onToggleTopic(.technology))
-        try await Task.sleep(nanoseconds: 300_000_000)
-
-        #expect(sut.viewState.followedTopics.contains(.technology))
     }
 
     @Test("Toggle notifications updates state")
@@ -219,31 +205,6 @@ struct SettingsViewModelTests {
         #expect(!sut.viewState.breakingNewsEnabled)
     }
 
-    // MARK: - Topic Toggle Tests
-
-    @Test("Toggle topic removes when already followed")
-    func toggleTopicRemovesWhenFollowed() async throws {
-        mockSettingsService.preferences = UserPreferences(
-            followedTopics: [.technology],
-            followedSources: [],
-            mutedSources: [],
-            mutedKeywords: [],
-            preferredLanguage: "en",
-            notificationsEnabled: true,
-            breakingNewsNotifications: true
-        )
-
-        sut.handle(event: .onAppear)
-        try await Task.sleep(nanoseconds: 300_000_000)
-
-        #expect(sut.viewState.followedTopics.contains(.technology))
-
-        sut.handle(event: .onToggleTopic(.technology))
-        try await Task.sleep(nanoseconds: 300_000_000)
-
-        #expect(!sut.viewState.followedTopics.contains(.technology))
-    }
-
     // MARK: - View State Binding Tests
 
     @Test("View state updates through publisher binding")
@@ -262,11 +223,5 @@ struct SettingsViewModelTests {
         try await Task.sleep(nanoseconds: 500_000_000)
 
         #expect(states.count > 1)
-    }
-
-    @Test("All topics are available in state")
-    func allTopicsAvailableInState() {
-        #expect(sut.viewState.allTopics == NewsCategory.allCases)
-        #expect(sut.viewState.allTopics.count == 7)
     }
 }

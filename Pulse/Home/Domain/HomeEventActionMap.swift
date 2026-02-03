@@ -22,6 +22,12 @@ struct HomeEventActionMap: DomainEventActionMap {
             return .clearArticleToShare
         case let .onCategorySelected(category):
             return .selectCategory(category)
+        case let .onToggleTopic(topic):
+            return .toggleTopic(topic)
+        case .onEditTopicsTapped:
+            return .setEditingTopics(true)
+        case .onEditTopicsDismissed:
+            return .setEditingTopics(false)
         }
     }
 }

@@ -43,6 +43,8 @@
 "home.error.title" = "Unable to Load News";
 "home.empty.title" = "No News Available";
 "home.empty.message" = "Check back later for the latest headlines.";
+"home.edit_topics.title" = "Edit Topics";
+"home.edit_topics.description" = "Select topics to filter your news feed";
 
 /* ==================== */
 /* MARK: - For You      */

@@ -116,7 +116,9 @@ struct HomeViewModelTests {
             selectedArticle: nil,
             articleToShare: nil,
             selectedCategory: nil,
-            followedTopics: []
+            followedTopics: [],
+            allTopics: NewsCategory.allCases,
+            isEditingTopics: false
         )
 
         let viewState = reducer.reduce(domainState: domainState)
@@ -127,5 +129,41 @@ struct HomeViewModelTests {
         #expect(viewState.isLoadingMore)
         #expect(viewState.errorMessage == nil)
         #expect(!viewState.showEmptyState)
+    }
+
+    @Test("Handle onToggleTopic toggles topic")
+    func testOnToggleTopic() async throws {
+        sut.handle(event: .onToggleTopic(.technology))
+        try await Task.sleep(nanoseconds: 500_000_000)
+
+        #expect(sut.viewState.followedTopics.contains(.technology))
+    }
+
+    @Test("Handle onEditTopicsTapped opens sheet")
+    func testOnEditTopicsTapped() async throws {
+        #expect(!sut.viewState.isEditingTopics)
+
+        sut.handle(event: .onEditTopicsTapped)
+
+        // Wait for Combine pipeline to propagate state
+        try await Task.sleep(nanoseconds: 50_000_000)
+
+        #expect(sut.viewState.isEditingTopics)
+    }
+
+    @Test("Handle onEditTopicsDismissed closes sheet")
+    func testOnEditTopicsDismissed() async throws {
+        sut.handle(event: .onEditTopicsTapped)
+
+        // Wait for state to propagate
+        try await Task.sleep(nanoseconds: 50_000_000)
+        #expect(sut.viewState.isEditingTopics)
+
+        sut.handle(event: .onEditTopicsDismissed)
+
+        // Wait for state to propagate
+        try await Task.sleep(nanoseconds: 50_000_000)
+
+        #expect(!sut.viewState.isEditingTopics)
     }
 }

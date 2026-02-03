@@ -89,6 +89,10 @@ final class HomeDomainInteractor: CombineInteractor {
             clearArticleToShare()
         case let .selectCategory(category):
             handleSelectCategory(category)
+        case let .toggleTopic(topic):
+            toggleTopic(topic)
+        case let .setEditingTopics(editing):
+            setEditingTopics(editing)
         }
     }
 
@@ -234,6 +238,55 @@ final class HomeDomainInteractor: CombineInteractor {
                 }
             )
             .store(in: &cancellables)
+    }
+
+    private func toggleTopic(_ topic: NewsCategory) {
+        settingsService.fetchPreferences()
+            .receive(on: DispatchQueue.main)
+            .sink(
+                receiveCompletion: { completion in
+                    if case let .failure(error) = completion {
+                        Logger.shared.service("Failed to fetch preferences for toggle: \(error)", level: .warning)
+                    }
+                },
+                receiveValue: { [weak self] preferences in
+                    guard let self else { return }
+                    var updatedPreferences = preferences
+                    if updatedPreferences.followedTopics.contains(topic) {
+                        updatedPreferences.followedTopics.removeAll { $0 == topic }
+                    } else {
+                        updatedPreferences.followedTopics.append(topic)
+                    }
+                    self.savePreferences(updatedPreferences)
+                }
+            )
+            .store(in: &cancellables)
+    }
+
+    private func savePreferences(_ preferences: UserPreferences) {
+        settingsService.savePreferences(preferences)
+            .receive(on: DispatchQueue.main)
+            .sink(
+                receiveCompletion: { completion in
+                    if case let .failure(error) = completion {
+                        Logger.shared.service("Failed to save preferences: \(error)", level: .warning)
+                    }
+                },
+                receiveValue: { [weak self] in
+                    self?.updateState { state in
+                        state.followedTopics = preferences.followedTopics
+                    }
+                    // Notify other components that preferences changed
+                    NotificationCenter.default.post(name: .userPreferencesDidChange, object: nil)
+                }
+            )
+            .store(in: &cancellables)
+    }
+
+    private func setEditingTopics(_ editing: Bool) {
+        updateState { state in
+            state.isEditingTopics = editing
+        }
     }
 
     private func toggleBookmark(_ article: Article) {

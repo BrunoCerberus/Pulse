@@ -45,6 +45,12 @@ struct HomeDomainState: Equatable {
     /// User's followed topics from preferences.
     var followedTopics: [NewsCategory]
 
+    /// All available topics for the topic editor.
+    var allTopics: [NewsCategory]
+
+    /// Whether the topic editor sheet is presented.
+    var isEditingTopics: Bool
+
     /// Creates the default initial state.
     static var initial: HomeDomainState {
         HomeDomainState(
@@ -60,7 +66,9 @@ struct HomeDomainState: Equatable {
             selectedArticle: nil,
             articleToShare: nil,
             selectedCategory: nil,
-            followedTopics: []
+            followedTopics: [],
+            allTopics: NewsCategory.allCases,
+            isEditingTopics: false
         )
     }
 }

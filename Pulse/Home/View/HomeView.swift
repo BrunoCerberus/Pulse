@@ -66,16 +66,29 @@ struct HomeView<R: HomeNavigationRouter>: View {
         .toolbarBackground(.hidden, for: .navigationBar)
         .toolbar {
             ToolbarItem(placement: .topBarTrailing) {
-                Button {
-                    HapticManager.shared.tap()
-                    router.route(navigationEvent: .settings)
-                } label: {
-                    Image(systemName: "gearshape")
-                        .font(.system(size: IconSize.md))
-                        .foregroundStyle(.primary)
+                HStack(spacing: Spacing.sm) {
+                    Button {
+                        HapticManager.shared.tap()
+                        viewModel.handle(event: .onEditTopicsTapped)
+                    } label: {
+                        Image(systemName: "line.3.horizontal.decrease.circle")
+                            .font(.system(size: IconSize.md))
+                            .foregroundStyle(.primary)
+                    }
+                    .accessibilityLabel("Edit Topics")
+                    .accessibilityHint("Opens topic editor to customize your feed")
+
+                    Button {
+                        HapticManager.shared.tap()
+                        router.route(navigationEvent: .settings)
+                    } label: {
+                        Image(systemName: "gearshape")
+                            .font(.system(size: IconSize.md))
+                            .foregroundStyle(.primary)
+                    }
+                    .accessibilityLabel("Settings")
+                    .accessibilityHint("Opens your preferences and account settings")
                 }
-                .accessibilityLabel("Settings")
-                .accessibilityHint("Opens your preferences and account settings")
             }
         }
         .refreshable {
@@ -87,6 +100,21 @@ struct HomeView<R: HomeNavigationRouter>: View {
             set: { _ in viewModel.handle(event: .onShareDismissed) }
         )) { article in
             ShareSheet(activityItems: [URL(string: article.url) ?? article.title])
+        }
+        .sheet(isPresented: Binding(
+            get: { viewModel.viewState.isEditingTopics },
+            set: { _ in viewModel.handle(event: .onEditTopicsDismissed) }
+        )) {
+            TopicEditorSheet(
+                allTopics: viewModel.viewState.allTopics,
+                followedTopics: viewModel.viewState.followedTopics,
+                onToggleTopic: { topic in
+                    viewModel.handle(event: .onToggleTopic(topic))
+                },
+                onDismiss: {
+                    viewModel.handle(event: .onEditTopicsDismissed)
+                }
+            )
         }
         .onAppear {
             viewModel.handle(event: .onAppear)

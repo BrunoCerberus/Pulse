@@ -20,7 +20,9 @@ struct HomeViewStateReducerTests {
         selectedArticle: Article? = nil,
         articleToShare: Article? = nil,
         selectedCategory: NewsCategory? = nil,
-        followedTopics: [NewsCategory] = []
+        followedTopics: [NewsCategory] = [],
+        allTopics: [NewsCategory] = NewsCategory.allCases,
+        isEditingTopics: Bool = false
     ) -> HomeDomainState {
         HomeDomainState(
             breakingNews: breakingNews,
@@ -35,7 +37,9 @@ struct HomeViewStateReducerTests {
             selectedArticle: selectedArticle,
             articleToShare: articleToShare,
             selectedCategory: selectedCategory,
-            followedTopics: followedTopics
+            followedTopics: followedTopics,
+            allTopics: allTopics,
+            isEditingTopics: isEditingTopics
         )
     }
 

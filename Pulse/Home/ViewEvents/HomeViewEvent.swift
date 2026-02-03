@@ -10,4 +10,7 @@ enum HomeViewEvent: Equatable {
     case onShareTapped(articleId: String)
     case onShareDismissed
     case onCategorySelected(NewsCategory?)
+    case onToggleTopic(NewsCategory)
+    case onEditTopicsTapped
+    case onEditTopicsDismissed
 }
