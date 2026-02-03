@@ -52,8 +52,6 @@ final class SettingsDomainInteractor: CombineInteractor {
         switch action {
         case .loadPreferences:
             loadPreferences()
-        case let .toggleTopic(topic):
-            toggleTopic(topic)
         case let .toggleNotifications(enabled):
             toggleNotifications(enabled)
         case let .toggleBreakingNews(enabled):
@@ -116,16 +114,6 @@ final class SettingsDomainInteractor: CombineInteractor {
                 }
             }
             .store(in: &cancellables)
-    }
-
-    private func toggleTopic(_ topic: NewsCategory) {
-        var preferences = currentState.preferences
-        if preferences.followedTopics.contains(topic) {
-            preferences.followedTopics.removeAll { $0 == topic }
-        } else {
-            preferences.followedTopics.append(topic)
-        }
-        savePreferences(preferences)
     }
 
     private func toggleNotifications(_ enabled: Bool) {
@@ -209,7 +197,6 @@ final class SettingsDomainInteractor: CombineInteractor {
 
 enum SettingsDomainAction: Equatable {
     case loadPreferences
-    case toggleTopic(NewsCategory)
     case toggleNotifications(Bool)
     case toggleBreakingNews(Bool)
     case addMutedSource(String)

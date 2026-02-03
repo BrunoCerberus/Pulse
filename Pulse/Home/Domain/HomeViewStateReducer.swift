@@ -20,7 +20,9 @@ struct HomeViewStateReducer: ViewStateReducing {
             articleToShare: domainState.articleToShare,
             selectedCategory: domainState.selectedCategory,
             followedTopics: domainState.followedTopics,
-            showCategoryTabs: !domainState.followedTopics.isEmpty
+            showCategoryTabs: !domainState.followedTopics.isEmpty,
+            allTopics: domainState.allTopics,
+            isEditingTopics: domainState.isEditingTopics
         )
     }
 }

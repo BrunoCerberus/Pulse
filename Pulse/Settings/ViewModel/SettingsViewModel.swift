@@ -40,13 +40,10 @@ final class SettingsViewModel: CombineViewModel, ObservableObject {
         setupBindings()
     }
 
-    // swiftlint:disable:next cyclomatic_complexity
     func handle(event: SettingsViewEvent) {
         switch event {
         case .onAppear:
             interactor.dispatch(action: .loadPreferences)
-        case let .onToggleTopic(topic):
-            interactor.dispatch(action: .toggleTopic(topic))
         case let .onToggleNotifications(enabled):
             interactor.dispatch(action: .toggleNotifications(enabled))
         case let .onToggleBreakingNews(enabled):
@@ -110,8 +107,6 @@ final class SettingsViewModel: CombineViewModel, ObservableObject {
                 return nil
             }()
             return SettingsViewState(
-                followedTopics: state.preferences.followedTopics,
-                allTopics: NewsCategory.allCases,
                 mutedSources: state.preferences.mutedSources,
                 mutedKeywords: state.preferences.mutedKeywords,
                 notificationsEnabled: state.preferences.notificationsEnabled,
@@ -133,8 +128,6 @@ final class SettingsViewModel: CombineViewModel, ObservableObject {
 }
 
 struct SettingsViewState: Equatable {
-    var followedTopics: [NewsCategory]
-    var allTopics: [NewsCategory]
     var mutedSources: [String]
     var mutedKeywords: [String]
     var notificationsEnabled: Bool
@@ -150,8 +143,6 @@ struct SettingsViewState: Equatable {
 
     static var initial: SettingsViewState {
         SettingsViewState(
-            followedTopics: [],
-            allTopics: NewsCategory.allCases,
             mutedSources: [],
             mutedKeywords: [],
             notificationsEnabled: true,
@@ -170,7 +161,6 @@ struct SettingsViewState: Equatable {
 
 enum SettingsViewEvent: Equatable {
     case onAppear
-    case onToggleTopic(NewsCategory)
     case onToggleNotifications(Bool)
     case onToggleBreakingNews(Bool)
     case onToggleDarkMode(Bool)

@@ -53,13 +53,10 @@ final class PulseSettingsUITests: BaseUITestCase {
         let subscriptionSection = app.staticTexts["Subscription"]
         XCTAssertTrue(subscriptionSection.waitForExistence(timeout: 5), "Subscription section should exist")
 
-        let topicsSection = app.staticTexts["Followed Topics"]
-        XCTAssertTrue(topicsSection.waitForExistence(timeout: 5), "Followed Topics section should exist")
-
         let goPremiumText = app.staticTexts.matching(NSPredicate(format: "label CONTAINS[c] 'Premium' OR label CONTAINS[c] 'premium'")).firstMatch
         XCTAssertTrue(goPremiumText.waitForExistence(timeout: 5), "Premium section should be visible")
 
-        let sectionHeaders = ["Subscription", "Followed Topics", "Notifications", "Appearance"]
+        let sectionHeaders = ["Subscription", "Notifications", "Appearance"]
         var foundSections = 0
         for header in sectionHeaders {
             if app.staticTexts[header].exists {
@@ -68,30 +65,7 @@ final class PulseSettingsUITests: BaseUITestCase {
         }
         XCTAssertGreaterThan(foundSections, 0, "Settings should have visible section headers")
 
-        let categoryNames = ["World", "Business", "Technology", "Science", "Health", "Sports", "Entertainment"]
-        var foundCategory = false
-        for category in categoryNames {
-            let categoryLabel = app.staticTexts[category]
-            let categoryButton = app.buttons.matching(NSPredicate(format: "label CONTAINS[c] '\(category)'")).firstMatch
-
-            if categoryLabel.exists || categoryButton.exists {
-                foundCategory = true
-                break
-            }
-        }
-
-        XCTAssertTrue(foundCategory, "At least one category should be displayed")
-
-        let technologyRow = app.buttons.matching(NSPredicate(format: "label CONTAINS[c] 'Technology'")).firstMatch
-        if technologyRow.exists {
-            technologyRow.tap()
-            technologyRow.tap()
-        }
-
         app.swipeUp()
-
-        let topicsFooterText = app.staticTexts["Articles from followed topics will appear in your Home feed."]
-        XCTAssertTrue(topicsFooterText.waitForExistence(timeout: 5), "Footer text should explain followed topics")
 
         let notificationsToggle = app.switches["Enable Notifications"]
         XCTAssertTrue(notificationsToggle.waitForExistence(timeout: 5), "Notifications toggle should exist")

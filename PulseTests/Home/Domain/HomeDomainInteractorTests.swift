@@ -229,6 +229,66 @@ struct HomeDomainInteractorTests {
     }
 }
 
+// MARK: - Topic Toggle Tests
+
+extension HomeDomainInteractorTests {
+    @Test("Toggle topic adds when not followed")
+    func toggleTopicAddsWhenNotFollowed() async throws {
+        let mockSettingsService = try #require(serviceLocator.retrieve(SettingsService.self) as? MockSettingsService)
+        mockSettingsService.preferences = .default
+        #expect(!mockSettingsService.preferences.followedTopics.contains(.technology))
+
+        sut.dispatch(action: .toggleTopic(.technology))
+        try await Task.sleep(nanoseconds: 500_000_000)
+
+        #expect(mockSettingsService.preferences.followedTopics.contains(.technology))
+    }
+
+    @Test("Toggle topic removes when followed")
+    func toggleTopicRemovesWhenFollowed() async throws {
+        let mockSettingsService = try #require(serviceLocator.retrieve(SettingsService.self) as? MockSettingsService)
+        mockSettingsService.preferences = UserPreferences(
+            followedTopics: [.technology],
+            followedSources: [],
+            mutedSources: [],
+            mutedKeywords: [],
+            preferredLanguage: "en",
+            notificationsEnabled: true,
+            breakingNewsNotifications: true
+        )
+
+        sut.dispatch(action: .toggleTopic(.technology))
+        try await Task.sleep(nanoseconds: 500_000_000)
+
+        #expect(!mockSettingsService.preferences.followedTopics.contains(.technology))
+    }
+
+    @Test("Toggle topic saves preferences")
+    func toggleTopicSavesPreferences() async throws {
+        let mockSettingsService = try #require(serviceLocator.retrieve(SettingsService.self) as? MockSettingsService)
+        mockSettingsService.preferences = .default
+
+        sut.dispatch(action: .toggleTopic(.sports))
+        try await Task.sleep(nanoseconds: 500_000_000)
+
+        #expect(mockSettingsService.preferences.followedTopics.contains(.sports))
+        #expect(sut.currentState.followedTopics.contains(.sports))
+    }
+
+    @Test("Set editing topics shows sheet")
+    func setEditingTopicsShowsSheet() {
+        #expect(!sut.currentState.isEditingTopics)
+
+        sut.dispatch(action: .setEditingTopics(true))
+
+        #expect(sut.currentState.isEditingTopics)
+
+        sut.dispatch(action: .setEditingTopics(false))
+
+        #expect(!sut.currentState.isEditingTopics)
+    }
+}
+
 // MARK: - Media Filtering Tests
 
 extension HomeDomainInteractorTests {

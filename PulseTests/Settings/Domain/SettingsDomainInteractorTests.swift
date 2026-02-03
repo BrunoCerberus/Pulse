@@ -56,63 +56,6 @@ struct SettingsInteractorStateTests {
     }
 }
 
-// MARK: - Topic Tests
-
-@Suite("SettingsDomainInteractor Topic Tests")
-@MainActor
-struct SettingsInteractorTopicTests {
-    @Test("Toggle topic adds when not followed")
-    func toggleTopicAddsWhenNotFollowed() async throws {
-        let (sut, mock) = createSUT()
-        mock.preferences = .default
-        sut.dispatch(action: .loadPreferences)
-        try await Task.sleep(nanoseconds: 300_000_000)
-        #expect(!sut.currentState.preferences.followedTopics.contains(.technology))
-        sut.dispatch(action: .toggleTopic(.technology))
-        try await Task.sleep(nanoseconds: 300_000_000)
-        #expect(sut.currentState.preferences.followedTopics.contains(.technology))
-    }
-
-    @Test("Toggle topic removes when already followed")
-    func toggleTopicRemovesWhenFollowed() async throws {
-        let (sut, mock) = createSUT()
-        mock.preferences = UserPreferences(
-            followedTopics: [.technology, .science], followedSources: [], mutedSources: [],
-            mutedKeywords: [], preferredLanguage: "en", notificationsEnabled: true, breakingNewsNotifications: true
-        )
-        sut.dispatch(action: .loadPreferences)
-        try await Task.sleep(nanoseconds: 300_000_000)
-        sut.dispatch(action: .toggleTopic(.technology))
-        try await Task.sleep(nanoseconds: 300_000_000)
-        #expect(!sut.currentState.preferences.followedTopics.contains(.technology))
-    }
-
-    @Test("Toggle topic saves preferences")
-    func toggleTopicSavesPreferences() async throws {
-        let (sut, mock) = createSUT()
-        mock.preferences = .default
-        sut.dispatch(action: .loadPreferences)
-        try await Task.sleep(nanoseconds: 300_000_000)
-        sut.dispatch(action: .toggleTopic(.sports))
-        try await Task.sleep(nanoseconds: 300_000_000)
-        #expect(mock.preferences.followedTopics.contains(.sports))
-    }
-
-    @Test("Multiple topics can be toggled")
-    func multipleTopicsCanBeToggled() async throws {
-        let (sut, mock) = createSUT()
-        mock.preferences = .default
-        sut.dispatch(action: .loadPreferences)
-        try await Task.sleep(nanoseconds: 300_000_000)
-        for topic in [NewsCategory.technology, .science, .health] {
-            sut.dispatch(action: .toggleTopic(topic))
-            try await Task.sleep(nanoseconds: 200_000_000)
-        }
-        let topics = sut.currentState.preferences.followedTopics
-        #expect(topics.contains(.technology) && topics.contains(.science) && topics.contains(.health))
-    }
-}
-
 // MARK: - Notification Tests
 
 @Suite("SettingsDomainInteractor Notification Tests")
@@ -285,7 +228,7 @@ struct SettingsInteractorSavingTests {
         var cancellables = Set<AnyCancellable>()
         var savingStates: [Bool] = []
         sut.statePublisher.map(\.isSaving).sink { savingStates.append($0) }.store(in: &cancellables)
-        sut.dispatch(action: .toggleTopic(.business))
+        sut.dispatch(action: .toggleNotifications(false))
         try await Task.sleep(nanoseconds: 300_000_000)
         #expect(savingStates.contains(true) && savingStates.last == false)
     }

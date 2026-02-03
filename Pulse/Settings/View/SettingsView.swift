@@ -5,8 +5,6 @@ import SwiftUI
 
 private enum Constants {
     static let title = String(localized: "settings.title")
-    static let followedTopics = String(localized: "settings.followed_topics")
-    static let followedTopicsDescription = String(localized: "settings.followed_topics.description")
     static let viewGithub = String(localized: "settings.view_github")
     static let signOut = String(localized: "account.sign_out")
     static let signOutConfirm = String(localized: "account.sign_out.confirm")
@@ -47,7 +45,6 @@ struct SettingsView: View {
                     onUpgradeTapped: { isPaywallPresented = true }
                 )
 
-                topicsSection
                 notificationsSection
                 appearanceSection
 
@@ -106,33 +103,6 @@ struct SettingsView: View {
             isPremium = storeKitService.isPremium
         } catch {
             isPremium = false
-        }
-    }
-
-    private var topicsSection: some View {
-        Section {
-            ForEach(viewModel.viewState.allTopics) { topic in
-                Button {
-                    viewModel.handle(event: .onToggleTopic(topic))
-                } label: {
-                    HStack {
-                        Label(topic.displayName, systemImage: topic.icon)
-                            .foregroundStyle(topic.color)
-
-                        Spacer()
-
-                        if viewModel.viewState.followedTopics.contains(topic) {
-                            Image(systemName: "checkmark")
-                                .foregroundStyle(.blue)
-                        }
-                    }
-                }
-                .buttonStyle(.plain)
-            }
-        } header: {
-            Text(Constants.followedTopics)
-        } footer: {
-            Text(Constants.followedTopicsDescription)
         }
     }
 

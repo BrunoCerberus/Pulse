@@ -1,49 +1,67 @@
 import XCTest
 
 final class HomeUITests: BaseUITestCase {
+    // MARK: - Edit Topics Tests
+
+    /// Tests opening the edit topics sheet from Home and toggling topics
+    func testEditTopicsFromHome() {
+        // Verify we're on Home
+        XCTAssertTrue(app.navigationBars["News"].waitForExistence(timeout: Self.shortTimeout), "Should be on Home")
+
+        // Find and tap the edit topics button
+        let editTopicsButton = app.navigationBars.buttons["line.3.horizontal.decrease.circle"]
+        XCTAssertTrue(editTopicsButton.waitForExistence(timeout: Self.shortTimeout), "Edit topics button should exist")
+        editTopicsButton.tap()
+
+        // Verify the edit topics sheet opens
+        let editTopicsTitle = app.staticTexts["Edit Topics"]
+        XCTAssertTrue(editTopicsTitle.waitForExistence(timeout: Self.defaultTimeout), "Edit Topics sheet should open")
+
+        // Verify topics are displayed
+        let technologyTopic = app.buttons.matching(NSPredicate(format: "label CONTAINS[c] 'Technology'")).firstMatch
+        XCTAssertTrue(technologyTopic.waitForExistence(timeout: Self.shortTimeout), "Technology topic should be visible")
+
+        // Toggle a topic
+        technologyTopic.tap()
+
+        // Verify Done button exists and tap it
+        let doneButton = app.buttons["Done"]
+        XCTAssertTrue(doneButton.waitForExistence(timeout: Self.shortTimeout), "Done button should exist")
+        doneButton.tap()
+
+        // Verify sheet is dismissed and we're back on Home
+        XCTAssertTrue(app.navigationBars["News"].waitForExistence(timeout: Self.shortTimeout), "Should return to Home after dismissing sheet")
+    }
+
     // MARK: - Category Tabs Tests
 
-    /// Tests category tabs visibility and interaction after enabling topics in Settings
+    /// Tests category tabs visibility and interaction after enabling topics
     func testCategoryTabsAfterEnablingTopics() {
-        // Navigate to Settings
-        let gearButton = app.navigationBars.buttons["gearshape"]
-        XCTAssertTrue(gearButton.waitForExistence(timeout: Self.shortTimeout), "Gear button should exist")
-        gearButton.tap()
+        // Open edit topics sheet
+        let editTopicsButton = app.navigationBars.buttons["line.3.horizontal.decrease.circle"]
+        XCTAssertTrue(editTopicsButton.waitForExistence(timeout: Self.shortTimeout), "Edit topics button should exist")
+        editTopicsButton.tap()
 
-        // Verify Settings opened
-        let settingsNavBar = app.navigationBars["Settings"]
-        XCTAssertTrue(settingsNavBar.waitForExistence(timeout: Self.defaultTimeout), "Settings should open")
+        // Verify the edit topics sheet opens
+        let editTopicsTitle = app.staticTexts["Edit Topics"]
+        XCTAssertTrue(editTopicsTitle.waitForExistence(timeout: Self.defaultTimeout), "Edit Topics sheet should open")
 
-        // Find and tap on Topics section (scroll if needed)
-        let topicsSection = app.staticTexts["Topics"]
-        if topicsSection.waitForExistence(timeout: Self.shortTimeout) {
-            // Look for category buttons (they should be in a grid or list)
-            let technologyButton = app.buttons["Technology"]
-            let businessButton = app.buttons["Business"]
+        // Enable some topics
+        let technologyTopic = app.buttons.matching(NSPredicate(format: "label CONTAINS[c] 'Technology'")).firstMatch
+        let businessTopic = app.buttons.matching(NSPredicate(format: "label CONTAINS[c] 'Business'")).firstMatch
 
-            // Try to enable some topics if not already enabled
-            if technologyButton.waitForExistence(timeout: Self.shortTimeout) {
-                technologyButton.tap()
-            }
-
-            if businessButton.waitForExistence(timeout: Self.shortTimeout) {
-                businessButton.tap()
-            }
+        if technologyTopic.waitForExistence(timeout: Self.shortTimeout) {
+            technologyTopic.tap()
         }
 
-        // Navigate back to Home
-        var backButton = settingsNavBar.buttons["Pulse"]
-        if !backButton.exists {
-            backButton = settingsNavBar.buttons["Back"]
-        }
-        if !backButton.exists {
-            backButton = settingsNavBar.buttons.firstMatch
+        if businessTopic.waitForExistence(timeout: Self.shortTimeout) {
+            businessTopic.tap()
         }
 
-        if backButton.exists {
-            backButton.tap()
-        } else {
-            app.swipeRight()
+        // Dismiss sheet
+        let doneButton = app.buttons["Done"]
+        if doneButton.exists {
+            doneButton.tap()
         }
 
         // Verify we're back on Home

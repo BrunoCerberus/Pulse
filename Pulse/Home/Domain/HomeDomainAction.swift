@@ -10,4 +10,6 @@ enum HomeDomainAction: Equatable {
     case shareArticle(articleId: String)
     case clearArticleToShare
     case selectCategory(NewsCategory?)
+    case toggleTopic(NewsCategory)
+    case setEditingTopics(Bool)
 }
