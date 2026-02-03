@@ -60,7 +60,8 @@ GoogleService-Info.plist
 
 # LLM Models (too large for git, download separately)
 *.gguf
-Pulse/Resources/Models/
+Pulse/Resources/Models/*
+!Pulse/Resources/Models/README.md
 
 # Archives
 *.zip
