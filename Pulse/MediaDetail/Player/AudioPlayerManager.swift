@@ -81,7 +81,7 @@ final class AudioPlayerManager: ObservableObject {
     func load(url: URL) {
         cleanup()
 
-        Logger.debug("Loading URL: \(url.absoluteString)")
+        Logger.shared.debug("Loading URL: \(url.absoluteString)")
 
         // Configure audio session before loading
         configureAudioSession()
