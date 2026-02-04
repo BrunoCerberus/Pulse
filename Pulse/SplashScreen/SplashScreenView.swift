@@ -36,6 +36,7 @@ struct SplashScreenView: View {
                         }
                     }
                     DispatchQueue.main.asyncAfter(deadline: .now() + 0.3) {
+                        Logger.shared.debug("Animation complete!")
                         onComplete()
                     }
                 }
