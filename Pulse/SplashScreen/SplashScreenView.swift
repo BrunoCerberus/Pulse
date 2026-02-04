@@ -100,6 +100,6 @@ struct SplashScreenView: View {
 
 #Preview {
     SplashScreenView {
-        Logger.shared.debug("Animation complete!")
+        Logger.shared.debug("Animation complete!", category: "UI")
     }
 }

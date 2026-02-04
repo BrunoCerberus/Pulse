@@ -105,7 +105,7 @@ struct FeedView<R: FeedNavigationRouter>: View {
                     self.isPremium = newStatus
                 }
         } catch {
-            Logger.shared.error("Failed to retrieve StoreKitService: \(error)")
+            Logger.shared.warning("Failed to retrieve StoreKitService: \(error)", category: "Feed")
             isPremium = false
         }
     }

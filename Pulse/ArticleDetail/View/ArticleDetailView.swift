@@ -153,7 +153,7 @@ struct ArticleDetailView: View {
                     self.isPremium = newStatus
                 }
         } catch {
-            Logger.shared.error("Failed to retrieve StoreKitService: \(error)")
+            Logger.shared.warning("Failed to retrieve StoreKitService: \(error)", category: "ArticleDetail")
             isPremium = false
         }
     }

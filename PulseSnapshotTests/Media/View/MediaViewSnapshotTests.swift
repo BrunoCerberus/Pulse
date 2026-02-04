@@ -35,15 +35,15 @@ final class MediaViewSnapshotTests: XCTestCase {
             content: nil,
             author: "WWDC",
             source: ArticleSource(id: "apple", name: "Apple Developer"),
-            url: "https://youtube.com/watch?v=test123",
+            url: "https://example.com/video/test123",
             imageURL: nil,
             thumbnailURL: nil,
             publishedAt: fixedDate,
             category: .technology,
             mediaType: .video,
-            mediaURL: "https://youtube.com/watch?v=test123",
+            mediaURL: "https://example.com/video/test123",
             mediaDuration: 1845,
-            mediaMimeType: "video/youtube"
+            mediaMimeType: "video/mp4"
         )
     }
 
@@ -74,16 +74,16 @@ final class MediaViewSnapshotTests: XCTestCase {
             description: "A brief description that accompanies this video with the very long title.",
             content: nil,
             author: "Long Form Creator",
-            source: ArticleSource(id: "youtube", name: "YouTube"),
-            url: "https://youtube.com/watch?v=long",
+            source: ArticleSource(id: "vimeo", name: "Vimeo"),
+            url: "https://example.com/video/long",
             imageURL: nil,
             thumbnailURL: nil,
             publishedAt: fixedDate,
             category: .entertainment,
             mediaType: .video,
-            mediaURL: "https://youtube.com/watch?v=long",
+            mediaURL: "https://example.com/video/long",
             mediaDuration: 7200,
-            mediaMimeType: "video/youtube"
+            mediaMimeType: "video/mp4"
         )
     }
 
