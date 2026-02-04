@@ -1,5 +1,6 @@
 import AVFoundation
 import Combine
+import EntropyCore
 import Foundation
 
 /// Manages AVPlayer for podcast audio playback.
@@ -61,7 +62,7 @@ final class AudioPlayerManager: ObservableObject {
             try session.setActive(true)
         } catch {
             // Log but don't fail - some devices may have restrictions
-            print("⚠️ Audio session configuration warning: \(error.localizedDescription)")
+            Logger.shared.error("Audio session configuration warning: \(error.localizedDescription)")
         }
     }
 
@@ -80,7 +81,7 @@ final class AudioPlayerManager: ObservableObject {
     func load(url: URL) {
         cleanup()
 
-        print("🎵 AudioPlayerManager: Loading URL: \(url.absoluteString)")
+        Logger.shared.debug("Loading URL: \(url.absoluteString)")
 
         // Configure audio session before loading
         configureAudioSession()
