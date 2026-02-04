@@ -111,10 +111,9 @@ final class MediaViewSnapshotTests: XCTestCase {
 
         let controller = UIHostingController(rootView: view)
 
-        // Lower precision (0.97) to account for YouTube thumbnail loading differences across environments
         assertSnapshot(
             of: controller,
-            as: .wait(for: 1.0, on: .image(on: iPhoneAirConfig, precision: 0.97)),
+            as: .wait(for: 1.0, on: .image(on: iPhoneAirConfig, precision: 0.99)),
             record: false
         )
     }
@@ -173,10 +172,9 @@ final class MediaViewSnapshotTests: XCTestCase {
 
         let controller = UIHostingController(rootView: view)
 
-        // Lower precision (0.97) to account for YouTube thumbnail loading differences across environments
         assertSnapshot(
             of: controller,
-            as: .wait(for: 1.0, on: .image(on: iPhoneAirLightConfig, precision: 0.97)),
+            as: .wait(for: 1.0, on: .image(on: iPhoneAirLightConfig, precision: 0.99)),
             record: false
         )
     }
@@ -194,10 +192,9 @@ final class MediaViewSnapshotTests: XCTestCase {
 
         let controller = UIHostingController(rootView: view)
 
-        // Lower precision (0.85) to account for YouTube thumbnail loading differences across environments
         assertSnapshot(
             of: controller,
-            as: .wait(for: 1.0, on: .image(on: iPhoneAirConfig, precision: 0.85)),
+            as: .wait(for: 1.0, on: .image(on: iPhoneAirConfig, precision: 0.99)),
             record: false
         )
     }
@@ -213,10 +210,9 @@ final class MediaViewSnapshotTests: XCTestCase {
 
         let controller = UIHostingController(rootView: view)
 
-        // Lower precision (0.97) to account for favicon image loading differences across environments
         assertSnapshot(
             of: controller,
-            as: .wait(for: 1.0, on: .image(on: iPhoneAirConfig, precision: 0.97)),
+            as: .wait(for: 1.0, on: .image(on: iPhoneAirConfig, precision: 0.99)),
             record: false
         )
     }
@@ -232,10 +228,9 @@ final class MediaViewSnapshotTests: XCTestCase {
 
         let controller = UIHostingController(rootView: view)
 
-        // Lower precision (0.85) to account for YouTube thumbnail loading differences across environments
         assertSnapshot(
             of: controller,
-            as: .wait(for: 1.0, on: .image(on: iPhoneAirLightConfig, precision: 0.85)),
+            as: .wait(for: 1.0, on: .image(on: iPhoneAirLightConfig, precision: 0.99)),
             record: false
         )
     }
