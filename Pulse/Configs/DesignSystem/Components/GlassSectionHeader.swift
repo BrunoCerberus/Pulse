@@ -106,7 +106,7 @@ struct StickySectionHeader: View {
                 subtitle: "Updated 5 minutes ago",
                 actionTitle: "See All"
             ) {
-                print("See all tapped")
+                Logger.shared.debug("See all tapped", category: "UI")
             }
 
             StickySectionHeader("Technology")
