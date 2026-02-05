@@ -32,9 +32,13 @@ final class PulseUITests: BaseUITestCase {
         // Return to Home tab for settings test
         homeTab.tap()
 
+        // Wait for Home content to fully load before checking navigation elements
+        // This handles slow CI environments where content loads after tab switch
+        waitForHomeContent(timeout: Self.defaultTimeout)
+
         let homeNavBar = app.navigationBars["News"]
         let gearButton = app.navigationBars.buttons["gearshape"]
-        let homeLoaded = homeNavBar.waitForExistence(timeout: Self.defaultTimeout) || gearButton.waitForExistence(timeout: 2)
+        let homeLoaded = waitForAny([homeNavBar, gearButton], timeout: Self.defaultTimeout)
         XCTAssertTrue(homeLoaded, "Home navigation bar should exist")
 
         // Settings is accessed via the gear button in Home navigation bar, not a tab
