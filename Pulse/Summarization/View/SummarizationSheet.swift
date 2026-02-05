@@ -31,10 +31,14 @@ private enum AnimationConstants {
 // MARK: - SummarizationSheet
 
 struct SummarizationSheet: View {
-    @ObservedObject var viewModel: SummarizationViewModel
+    @StateObject var viewModel: SummarizationViewModel
     @Environment(\.accessibilityReduceMotion) private var reduceMotion
     @State private var headerAppeared = false
     @State private var contentAppeared = false
+
+    init(viewModel: SummarizationViewModel) {
+        _viewModel = StateObject(wrappedValue: viewModel)
+    }
 
     var body: some View {
         NavigationStack {

@@ -10,7 +10,7 @@ final class LiveSettingsService: SettingsService {
 
     func fetchPreferences() -> AnyPublisher<UserPreferences, Error> {
         Future { [storageService] promise in
-            Task {
+            Task.detached {
                 do {
                     let preferences = try await storageService.fetchUserPreferences() ?? .default
                     promise(.success(preferences))
@@ -25,7 +25,7 @@ final class LiveSettingsService: SettingsService {
 
     func savePreferences(_ preferences: UserPreferences) -> AnyPublisher<Void, Error> {
         Future { [storageService] promise in
-            Task {
+            Task.detached {
                 do {
                     try await storageService.saveUserPreferences(preferences)
                     promise(.success(()))

@@ -132,6 +132,17 @@ final class CachingNewsService: NewsService {
 
     // MARK: - Cache Management
 
+    /// Invalidates cached data for the given keys only.
+    ///
+    /// Use this when refreshing specific content (e.g., pull-to-refresh on the home feed)
+    /// to avoid discarding unrelated cached data that may still be valid.
+    func invalidateCache(for keys: [NewsCacheKey]) {
+        for key in keys {
+            cacheStore.remove(for: key)
+        }
+        Logger.shared.service("News cache invalidated for \(keys.count) key(s)", level: .debug)
+    }
+
     /// Invalidates all cached data.
     ///
     /// Call this method when the user performs a pull-to-refresh action

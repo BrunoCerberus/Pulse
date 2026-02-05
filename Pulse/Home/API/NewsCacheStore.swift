@@ -64,6 +64,10 @@ protocol NewsCacheStore: AnyObject {
     ///   - key: The cache key to associate with the entry
     func set<T>(_ entry: CacheEntry<T>, for key: NewsCacheKey)
 
+    /// Removes a specific cached entry.
+    /// - Parameter key: The cache key to remove
+    func remove(for key: NewsCacheKey)
+
     /// Removes all cached entries.
     func removeAll()
 }
@@ -124,6 +128,11 @@ final class LiveNewsCacheStore: NewsCacheStore {
         // Estimate cost based on data type
         let cost = estimateCost(for: entry.data)
         cache.setObject(wrapper, forKey: nsKey, cost: cost)
+    }
+
+    func remove(for key: NewsCacheKey) {
+        let nsKey = key.stringKey as NSString
+        cache.removeObject(forKey: nsKey)
     }
 
     func removeAll() {

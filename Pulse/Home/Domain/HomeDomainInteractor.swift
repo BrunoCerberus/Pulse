@@ -29,6 +29,7 @@ final class HomeDomainInteractor: CombineInteractor {
     let stateSubject = CurrentValueSubject<HomeDomainState, Never>(.initial)
     var cancellables = Set<AnyCancellable>()
     private var backgroundTasks = Set<Task<Void, Never>>()
+    private var isLocalPreferenceChange = false
 
     var statePublisher: AnyPublisher<HomeDomainState, Never> {
         stateSubject.eraseToAnyPublisher()
@@ -64,7 +65,13 @@ final class HomeDomainInteractor: CombineInteractor {
         NotificationCenter.default.publisher(for: .userPreferencesDidChange)
             .receive(on: DispatchQueue.main)
             .sink { [weak self] _ in
-                self?.loadFollowedTopics()
+                guard let self else { return }
+                // Skip re-fetch when the change originated from our own toggleTopic
+                if self.isLocalPreferenceChange {
+                    self.isLocalPreferenceChange = false
+                    return
+                }
+                self.loadFollowedTopics()
             }
             .store(in: &cancellables)
     }
@@ -156,6 +163,11 @@ final class HomeDomainInteractor: CombineInteractor {
                     let existingIDs = Set(state.headlines.map { $0.id } + state.breakingNews.map { $0.id })
                     let newArticles = nonMediaArticles.filter { !existingIDs.contains($0.id) }
                     state.headlines.append(contentsOf: newArticles)
+                    // Cap headlines to prevent unbounded memory growth during infinite scroll
+                    let maxHeadlines = 500
+                    if state.headlines.count > maxHeadlines {
+                        state.headlines.removeFirst(state.headlines.count - maxHeadlines)
+                    }
                     state.isLoadingMore = false
                     state.currentPage = nextPage
                     // Use unfiltered count for pagination: backend page size determines if more exist.
@@ -257,6 +269,10 @@ final class HomeDomainInteractor: CombineInteractor {
                     } else {
                         updatedPreferences.followedTopics.append(topic)
                     }
+                    // Update local state immediately to avoid redundant re-fetch
+                    self.updateState { state in
+                        state.followedTopics = updatedPreferences.followedTopics
+                    }
                     self.savePreferences(updatedPreferences)
                 }
             )
@@ -273,9 +289,8 @@ final class HomeDomainInteractor: CombineInteractor {
                     }
                 },
                 receiveValue: { [weak self] in
-                    self?.updateState { state in
-                        state.followedTopics = preferences.followedTopics
-                    }
+                    // Mark as local change so our notification observer skips the redundant re-fetch
+                    self?.isLocalPreferenceChange = true
                     // Notify other components that preferences changed
                     NotificationCenter.default.post(name: .userPreferencesDidChange, object: nil)
                 }
@@ -302,17 +317,15 @@ final class HomeDomainInteractor: CombineInteractor {
     }
 
     /// Safely tracks and auto-removes background tasks with proper cleanup on deinit.
-    /// Uses detached task for background work, tracks completion on MainActor.
     private func trackBackgroundTask(_ operation: @escaping @Sendable () async -> Void) {
-        let task = Task.detached {
+        var task: Task<Void, Never>!
+        task = Task.detached { [weak self] in
             await operation()
+            await MainActor.run {
+                self?.backgroundTasks.remove(task)
+            }
         }
         backgroundTasks.insert(task)
-
-        Task { @MainActor [weak self] in
-            _ = await task.result
-            self?.backgroundTasks.remove(task)
-        }
     }
 
     deinit {
