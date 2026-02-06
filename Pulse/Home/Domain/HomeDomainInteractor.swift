@@ -85,13 +85,13 @@ final class HomeDomainInteractor: CombineInteractor {
         case .refresh:
             refresh()
         case let .selectArticle(articleId):
-            findArticle(by: articleId).map { selectArticle($0) }
+            handleSelectArticle(articleId)
         case .clearSelectedArticle:
             clearSelectedArticle()
         case let .bookmarkArticle(articleId):
-            findArticle(by: articleId).map { toggleBookmark($0) }
+            handleBookmarkArticle(articleId)
         case let .shareArticle(articleId):
-            findArticle(by: articleId).map { shareArticle($0) }
+            handleShareArticle(articleId)
         case .clearArticleToShare:
             clearArticleToShare()
         case let .selectCategory(category):
@@ -101,6 +101,18 @@ final class HomeDomainInteractor: CombineInteractor {
         case let .setEditingTopics(editing):
             setEditingTopics(editing)
         }
+    }
+
+    private func handleSelectArticle(_ articleId: String) {
+        findArticle(by: articleId).map { selectArticle($0) }
+    }
+
+    private func handleBookmarkArticle(_ articleId: String) {
+        findArticle(by: articleId).map { toggleBookmark($0) }
+    }
+
+    private func handleShareArticle(_ articleId: String) {
+        findArticle(by: articleId).map { shareArticle($0) }
     }
 
     private func findArticle(by id: String) -> Article? {
