@@ -176,23 +176,39 @@ struct LLMConfigurationTests {
     @Test("LLMConfiguration maxArticlesForDigest returns valid value")
     func maxArticlesForDigestReturnsValidValue() {
         let maxArticles = LLMConfiguration.maxArticlesForDigest
-        // Should be either 5 (constrained) or 8 (standard/high)
-        #expect(maxArticles == 5 || maxArticles == 8)
+        // Should be either 10 (constrained) or 18 (standard/high)
+        #expect(maxArticles == 10 || maxArticles == 18)
     }
 
     @Test("LLMConfiguration maxArticlesForDigest values match memory tiers")
     func maxArticlesForDigestMatchesMemoryTiers() {
         switch MemoryTier.current {
         case .constrained:
-            #expect(LLMConfiguration.maxArticlesForDigest == 5)
+            #expect(LLMConfiguration.maxArticlesForDigest == 10)
         case .standard, .high:
-            #expect(LLMConfiguration.maxArticlesForDigest == 8)
+            #expect(LLMConfiguration.maxArticlesForDigest == 18)
         }
     }
 
     @Test("LLMConfiguration maxArticlesForDigest is positive")
     func maxArticlesForDigestIsPositive() {
         #expect(LLMConfiguration.maxArticlesForDigest > 0)
+    }
+
+    @Test("LLMConfiguration maxArticlesPerCategory returns valid value")
+    func maxArticlesPerCategoryReturnsValidValue() {
+        let maxPerCat = LLMConfiguration.maxArticlesPerCategory
+        #expect(maxPerCat == 2 || maxPerCat == 3)
+    }
+
+    @Test("LLMConfiguration maxArticlesPerCategory values match memory tiers")
+    func maxArticlesPerCategoryMatchesMemoryTiers() {
+        switch MemoryTier.current {
+        case .constrained:
+            #expect(LLMConfiguration.maxArticlesPerCategory == 2)
+        case .standard, .high:
+            #expect(LLMConfiguration.maxArticlesPerCategory == 3)
+        }
     }
 
     // MARK: - Token Estimation Tests

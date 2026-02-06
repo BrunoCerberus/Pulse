@@ -3,21 +3,39 @@ import Foundation
 enum FeedDigestPromptBuilder {
     /// System prompt for daily digest generation
     static let systemPrompt = """
-    You write casual, punchy news digests like a well-informed friend catching someone up over coffee. \
+    You write casual, info-packed news digests like a well-informed friend catching someone up. \
     Group by category using **CategoryName** as a header. \
-    2-3 sentences per category — name real people, companies, and numbers. \
+    Write 4-6 sentences per category — cover every key story, name real people, companies, and numbers. \
+    Connect related stories when possible. \
     Skip categories with no articles. No intro, no sign-off. Start with the first **Category** immediately.
     """
 
-    /// Caps articles to a safe limit and returns the subset for digest generation
-    /// - Parameter articles: Full list of articles from API
-    /// - Returns: Capped list of most recent articles, safe for context window
+    /// Caps articles to a safe limit with balanced category coverage
+    /// - Parameter articles: Full list of articles from API (sorted by recency)
+    /// - Returns: Capped list ensuring each category gets fair representation
     static func cappedArticles(from articles: [Article]) -> [Article] {
-        let maxArticles = LLMConfiguration.maxArticlesForDigest
-        guard articles.count > maxArticles else { return articles }
+        let maxTotal = LLMConfiguration.maxArticlesForDigest
+        let maxPerCategory = LLMConfiguration.maxArticlesPerCategory
+        guard articles.count > maxTotal else { return articles }
 
-        // Take the most recent articles (assuming already sorted by recency)
-        return Array(articles.prefix(maxArticles))
+        // Take top N from each category for balanced coverage
+        var grouped = Dictionary(grouping: articles) { $0.category ?? .world }
+        var selected: [Article] = []
+        for (_, categoryArticles) in grouped {
+            // Articles are already sorted by recency globally;
+            // preserve that order within each category
+            selected.append(contentsOf: categoryArticles.prefix(maxPerCategory))
+        }
+
+        // If we still have room, fill with remaining most-recent articles
+        if selected.count < maxTotal {
+            let selectedIds = Set(selected.map(\.id))
+            let remaining = articles.filter { !selectedIds.contains($0.id) }
+            selected.append(contentsOf: remaining.prefix(maxTotal - selected.count))
+        }
+
+        // Final cap and sort by recency for prompt coherence
+        return Array(selected.prefix(maxTotal).sorted { $0.publishedAt > $1.publishedAt })
     }
 
     /// Builds the user message prompt from latest articles
@@ -31,7 +49,7 @@ enum FeedDigestPromptBuilder {
             let cat = article.category?.displayName ?? "World"
             var line = "\(index + 1). \(article.title) (\(article.source.name), \(cat))"
             if let desc = article.description, !desc.isEmpty {
-                line += " — \(String(stripHTML(from: desc).prefix(250)))"
+                line += " — \(String(stripHTML(from: desc).prefix(150)))"
             }
             return line
         }.joined(separator: "\n")
@@ -40,14 +58,14 @@ enum FeedDigestPromptBuilder {
         Articles:
         \(articleList)
 
-        Write a digest with these categories: \(categoryNames.joined(separator: ", ")). \
-        Use **CategoryName** before each section, like this:
+        Write a digest covering: \(categoryNames.joined(separator: ", ")). \
+        Use **CategoryName** before each section. Cover every major story. Example:
 
-        **Technology** Apple announced a new chip today, pushing performance 40% higher. Meanwhile, OpenAI rolled out...
+        **Technology** Apple dropped its M5 chip with 40% faster performance — a big deal for Pro users. \
+        OpenAI rolled out GPT-5 with real-time reasoning, and Google fired back with Gemini 2.5 hitting the App Store. \
+        Meanwhile, the EU finalized its AI Act enforcement rules, giving companies until March to comply.
 
-        **Business** Markets rallied after the Fed signaled a pause on rate hikes...
-
-        Now write the digest:
+        Now write the full digest:
         """
     }
 

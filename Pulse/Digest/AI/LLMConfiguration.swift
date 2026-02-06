@@ -113,11 +113,19 @@ enum LLMConfiguration {
 
     /// Maximum articles to include in digest prompt - memory-adaptive
     /// Scales with context size to prevent overflow
-    /// Note: More articles = longer generation time; 8 provides good coverage without excessive delay
+    /// Higher caps give the model more material per category for richer summaries
     static var maxArticlesForDigest: Int {
         switch MemoryTier.current {
-        case .constrained: return 5
-        case .standard, .high: return 8
+        case .constrained: return 10
+        case .standard, .high: return 18
+        }
+    }
+
+    /// Maximum articles to include per category for balanced digest coverage
+    static var maxArticlesPerCategory: Int {
+        switch MemoryTier.current {
+        case .constrained: return 2
+        case .standard, .high: return 3
         }
     }
 
