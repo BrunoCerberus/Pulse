@@ -78,17 +78,17 @@ struct LLMConfigurationTests {
     @Test("LLMConfiguration batchSize returns valid value")
     func batchSizeReturnsValidValue() {
         let batchSize = LLMConfiguration.batchSize
-        // Batch size should be one of: 256, 512, or 2048
-        #expect(batchSize == 256 || batchSize == 512 || batchSize == 2048)
+        // Batch size should be one of: 512, 1024, or 2048
+        #expect(batchSize == 512 || batchSize == 1024 || batchSize == 2048)
     }
 
     @Test("LLMConfiguration batchSize values match memory tiers")
     func batchSizeMatchesMemoryTiers() {
         switch MemoryTier.current {
         case .constrained:
-            #expect(LLMConfiguration.batchSize == 256)
-        case .standard:
             #expect(LLMConfiguration.batchSize == 512)
+        case .standard:
+            #expect(LLMConfiguration.batchSize == 1024)
         case .high:
             #expect(LLMConfiguration.batchSize == 2048)
         }
@@ -176,17 +176,17 @@ struct LLMConfigurationTests {
     @Test("LLMConfiguration maxArticlesForDigest returns valid value")
     func maxArticlesForDigestReturnsValidValue() {
         let maxArticles = LLMConfiguration.maxArticlesForDigest
-        // Should be either 5 (constrained) or 8 (standard/high)
-        #expect(maxArticles == 5 || maxArticles == 8)
+        // Should be either 10 (constrained) or 18 (standard/high)
+        #expect(maxArticles == 10 || maxArticles == 18)
     }
 
     @Test("LLMConfiguration maxArticlesForDigest values match memory tiers")
     func maxArticlesForDigestMatchesMemoryTiers() {
         switch MemoryTier.current {
         case .constrained:
-            #expect(LLMConfiguration.maxArticlesForDigest == 5)
+            #expect(LLMConfiguration.maxArticlesForDigest == 10)
         case .standard, .high:
-            #expect(LLMConfiguration.maxArticlesForDigest == 8)
+            #expect(LLMConfiguration.maxArticlesForDigest == 18)
         }
     }
 
@@ -195,20 +195,66 @@ struct LLMConfigurationTests {
         #expect(LLMConfiguration.maxArticlesForDigest > 0)
     }
 
+    @Test("LLMConfiguration maxArticlesPerCategory returns valid value")
+    func maxArticlesPerCategoryReturnsValidValue() {
+        let maxPerCat = LLMConfiguration.maxArticlesPerCategory
+        #expect(maxPerCat == 2 || maxPerCat == 3)
+    }
+
+    @Test("LLMConfiguration maxArticlesPerCategory values match memory tiers")
+    func maxArticlesPerCategoryMatchesMemoryTiers() {
+        switch MemoryTier.current {
+        case .constrained:
+            #expect(LLMConfiguration.maxArticlesPerCategory == 2)
+        case .standard, .high:
+            #expect(LLMConfiguration.maxArticlesPerCategory == 3)
+        }
+    }
+
     // MARK: - Token Estimation Tests
 
     @Test("LLMConfiguration estimatedTokensPerArticle returns correct value")
     func estimatedTokensPerArticleReturnsCorrectValue() {
-        #expect(LLMConfiguration.estimatedTokensPerArticle == 175)
+        #expect(LLMConfiguration.estimatedTokensPerArticle == 100)
     }
 
     @Test("LLMConfiguration reservedContextTokens returns correct value")
     func reservedContextTokensReturnsCorrectValue() {
-        #expect(LLMConfiguration.reservedContextTokens == 1500)
+        #expect(LLMConfiguration.reservedContextTokens == 1200)
     }
 
     @Test("LLMConfiguration reservedContextTokens is less than contextSize")
     func reservedContextTokensLessThanContextSize() {
         #expect(LLMConfiguration.reservedContextTokens < LLMConfiguration.contextSize)
+    }
+
+    // MARK: - Max Output Tokens Tests
+
+    @Test("LLMConfiguration maxOutputTokens returns valid value")
+    func maxOutputTokensReturnsValidValue() {
+        let maxOutput = LLMConfiguration.maxOutputTokens
+        #expect(maxOutput == 400 || maxOutput == 600)
+    }
+
+    @Test("LLMConfiguration maxOutputTokens values match memory tiers")
+    func maxOutputTokensMatchesMemoryTiers() {
+        switch MemoryTier.current {
+        case .constrained:
+            #expect(LLMConfiguration.maxOutputTokens == 400)
+        case .standard, .high:
+            #expect(LLMConfiguration.maxOutputTokens == 600)
+        }
+    }
+
+    @Test("LLMConfiguration maxOutputTokens is less than contextSize")
+    func maxOutputTokensLessThanContextSize() {
+        #expect(LLMConfiguration.maxOutputTokens < LLMConfiguration.contextSize)
+    }
+
+    // MARK: - Max Paragraphs Per Section Tests
+
+    @Test("LLMConfiguration maxParagraphsPerSection returns correct value")
+    func maxParagraphsPerSectionReturnsCorrectValue() {
+        #expect(LLMConfiguration.maxParagraphsPerSection == 3)
     }
 }

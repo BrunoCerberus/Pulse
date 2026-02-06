@@ -196,15 +196,16 @@ struct LLMInferenceConfigDailyDigestTests {
     func dailyDigestConfig() {
         let config = LLMInferenceConfig.dailyDigest
 
-        // maxTokens is dynamically calculated: contextSize - (maxArticles * tokensPerArticle + overhead)
+        // maxTokens is capped to prevent repetition: min(available, maxOutputTokens)
         let expectedInputTokens =
-            (LLMConfiguration.maxArticlesForDigest * LLMConfiguration.estimatedTokensPerArticle) + 150
-        let expectedMaxTokens = LLMConfiguration.contextSize - expectedInputTokens
+            (LLMConfiguration.maxArticlesForDigest * LLMConfiguration.estimatedTokensPerArticle) + 90
+        let availableTokens = LLMConfiguration.contextSize - expectedInputTokens
+        let expectedMaxTokens = min(availableTokens, LLMConfiguration.maxOutputTokens)
         #expect(config.maxTokens == expectedMaxTokens)
-        #expect(config.temperature == 0.6)
+        #expect(config.temperature == 0.7)
         #expect(config.topP == 0.9)
         #expect(config.stopSequences.contains("</digest>"))
         #expect(config.stopSequences.contains("---"))
-        #expect(config.stopSequences.count == 2) // Only </digest> and ---
+        #expect(config.stopSequences.count == 2)
     }
 }

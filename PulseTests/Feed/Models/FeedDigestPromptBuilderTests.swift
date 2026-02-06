@@ -17,13 +17,28 @@ struct FeedDigestPromptBuilderTests {
 
     @Test("Capped articles limits to max when over limit")
     func cappedArticlesOverLimit() {
-        let articles = generateMockArticles(count: 20)
+        let articles = generateMockArticles(count: 30)
         let capped = FeedDigestPromptBuilder.cappedArticles(from: articles)
 
-        #expect(capped.count == LLMConfiguration.maxArticlesForDigest)
-        // Should take the first N (most recent) articles
-        let expectedIds = articles.prefix(LLMConfiguration.maxArticlesForDigest).map(\.id)
-        #expect(capped.map(\.id) == expectedIds)
+        #expect(capped.count <= LLMConfiguration.maxArticlesForDigest)
+    }
+
+    @Test("Capped articles balances across categories")
+    func cappedArticlesBalancesCategories() {
+        let maxPerCat = LLMConfiguration.maxArticlesPerCategory
+        let techArticles = generateMockArticles(count: 10, category: .technology)
+        let worldArticles = generateMockArticles(
+            count: 10, category: .world, idPrefix: "world"
+        )
+        let all = (techArticles + worldArticles).sorted { $0.publishedAt > $1.publishedAt }
+        let capped = FeedDigestPromptBuilder.cappedArticles(from: all)
+
+        let techCount = capped.filter { $0.category == .technology }.count
+        let worldCount = capped.filter { $0.category == .world }.count
+
+        // Each category should get at least maxPerCategory articles
+        #expect(techCount >= maxPerCat)
+        #expect(worldCount >= maxPerCat)
     }
 
     @Test("Capped articles handles empty array")
@@ -38,7 +53,6 @@ struct FeedDigestPromptBuilderTests {
         let capped = FeedDigestPromptBuilder.cappedArticles(from: articles)
 
         #expect(capped.count == LLMConfiguration.maxArticlesForDigest)
-        #expect(capped.map(\.id) == articles.map(\.id))
     }
 
     // MARK: - Token Estimation Tests
@@ -73,20 +87,25 @@ struct FeedDigestPromptBuilderTests {
         }
     }
 
-    @Test("Build prompt includes article count")
-    func buildPromptIncludesCount() {
+    @Test("Build prompt includes numbered article list")
+    func buildPromptIncludesNumberedList() {
         let articles = Article.mockArticles
         let prompt = FeedDigestPromptBuilder.buildPrompt(for: articles)
 
-        #expect(prompt.contains("\(articles.count) news articles"))
+        #expect(prompt.contains("1."))
+        #expect(prompt.contains("Articles:"))
     }
 
-    @Test("Build prompt includes category breakdown")
-    func buildPromptIncludesCategoryBreakdown() {
+    @Test("Build prompt includes category names for digest")
+    func buildPromptIncludesCategoryNames() {
         let articles = Article.mockArticles
         let prompt = FeedDigestPromptBuilder.buildPrompt(for: articles)
 
-        #expect(prompt.contains("Topics covered:"))
+        // Should list categories and instruct prose format
+        #expect(prompt.contains("**CategoryName**"))
+        #expect(prompt.contains("Summarize into flowing paragraphs"))
+        #expect(prompt.contains("Do NOT list articles"))
+        #expect(prompt.contains("ALL categories"))
     }
 
     @Test("System prompt provides clear instructions")
@@ -95,24 +114,31 @@ struct FeedDigestPromptBuilderTests {
 
         #expect(!systemPrompt.isEmpty)
         #expect(systemPrompt.contains("news digest"))
-        #expect(systemPrompt.contains("summary"))
+        #expect(systemPrompt.contains("**CategoryName**"))
+        #expect(systemPrompt.contains("DO NOT list"))
+        #expect(systemPrompt.contains("Do NOT repeat yourself"))
+        #expect(systemPrompt.contains("Cover ALL categories equally"))
     }
 
     // MARK: - Helpers
 
-    private func generateMockArticles(count: Int) -> [Article] {
+    private func generateMockArticles(
+        count: Int,
+        category: NewsCategory = .technology,
+        idPrefix: String = "test"
+    ) -> [Article] {
         (0 ..< count).map { index in
             Article(
-                id: "test-\(index)",
+                id: "\(idPrefix)-\(index)",
                 title: "Test Article \(index)",
                 description: "Description for article \(index)",
                 content: "Content for article \(index)",
                 author: "Author \(index)",
                 source: ArticleSource(id: "test-source", name: "Test Source"),
-                url: "https://example.com/\(index)",
+                url: "https://example.com/\(idPrefix)-\(index)",
                 imageURL: nil,
                 publishedAt: Date().addingTimeInterval(Double(-index * 3600)),
-                category: .technology
+                category: category
             )
         }
     }

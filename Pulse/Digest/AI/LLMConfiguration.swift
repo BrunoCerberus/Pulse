@@ -70,8 +70,8 @@ enum LLMConfiguration {
     /// Token generation is sequential, so batch size doesn't affect generation speed
     static var batchSize: Int {
         switch MemoryTier.current {
-        case .constrained: return 256
-        case .standard: return 512
+        case .constrained: return 512
+        case .standard: return 1024
         case .high: return 2048
         }
     }
@@ -113,23 +113,46 @@ enum LLMConfiguration {
 
     /// Maximum articles to include in digest prompt - memory-adaptive
     /// Scales with context size to prevent overflow
-    /// Note: More articles = longer generation time; 8 provides good coverage without excessive delay
+    /// Higher caps give the model more material per category for richer summaries
     static var maxArticlesForDigest: Int {
         switch MemoryTier.current {
-        case .constrained: return 5
-        case .standard, .high: return 8
+        case .constrained: return 10
+        case .standard, .high: return 18
         }
     }
 
-    /// Estimated tokens per article in digest prompt (title + source + category + 150 char description)
-    /// ~15 title + ~3 source + ~2 category + ~37 description (150 chars / 4) + ~5 structure ≈ 62
-    /// Using 175 as conservative estimate with safety margin
+    /// Maximum articles to include per category for balanced digest coverage
+    static var maxArticlesPerCategory: Int {
+        switch MemoryTier.current {
+        case .constrained: return 2
+        case .standard, .high: return 3
+        }
+    }
+
+    /// Estimated tokens per article in digest prompt (title + source + category + 250 char description)
+    /// ~15 title + ~3 source + ~2 category + ~63 description (250 chars / 4) + ~5 structure ≈ 88
+    /// Using 100 as estimate with modest safety margin
     static var estimatedTokensPerArticle: Int {
-        175
+        100
+    }
+
+    /// Maximum output tokens for digest generation
+    /// Capping output prevents the 1B model from entering repetition loops
+    /// ~5 sentences per category × ~20 tokens/sentence × ~4 categories ≈ 400-600 tokens
+    static var maxOutputTokens: Int {
+        switch MemoryTier.current {
+        case .constrained: return 400
+        case .standard, .high: return 600
+        }
+    }
+
+    /// Maximum paragraphs per category section in parsed digest output
+    static var maxParagraphsPerSection: Int {
+        3
     }
 
     /// Reserved tokens for system prompt and generation output
     static var reservedContextTokens: Int {
-        1500
+        1200
     }
 }

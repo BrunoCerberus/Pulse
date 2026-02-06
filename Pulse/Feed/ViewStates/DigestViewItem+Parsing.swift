@@ -82,10 +82,13 @@ extension DigestViewItem {
                 content = extractCategoryContent(for: category, articles: articles)
             }
 
+            // Apply paragraph cap and deduplication to all content sources
+            let finalContent = Self.capAndDeduplicateContent(content)
+
             sections.append(DigestSection(
                 id: "\(id)-section-\(category.rawValue)",
                 title: category.displayName,
-                content: content,
+                content: finalContent,
                 category: category,
                 relatedArticles: Array(articles.prefix(3)),
                 isHighlight: false
@@ -107,6 +110,11 @@ extension DigestViewItem {
             // Markdown heading format
             ("## \(category)\n", 4 + category.count),
             ("## \(category) ", 4 + category.count),
+            // Bracket format (LLM sometimes echoes input formatting)
+            ("\n[\(category)]", 3 + category.count),
+            ("[\(category)]", 2 + category.count),
+            // Bare category with colon (common LLM output pattern)
+            ("\n\(category):", 2 + category.count),
             // List formats with markers (less reliable, require bullet prefix)
             ("\n• \(category):", 3 + category.count),
             ("\n- \(category):", 3 + category.count),
@@ -135,29 +143,52 @@ extension DigestViewItem {
                 with: "",
                 options: .caseInsensitive
             )
+            result = result.replacingOccurrences(
+                of: "\\[\(category)\\]:?",
+                with: "",
+                options: [.regularExpression, .caseInsensitive]
+            )
         }
 
         result = result.replacingOccurrences(of: "  +", with: " ", options: .regularExpression)
         return result.trimmingCharacters(in: .whitespacesAndNewlines)
     }
 
-    /// Removes duplicate paragraphs/sentences from content (common LLM repetition issue)
+    /// Computes word overlap ratio between two strings (0.0 to 1.0)
+    /// Uses significant words (>3 chars) to avoid matching on common stop words
+    private static func wordOverlap(_ lhs: String, _ rhs: String) -> Double {
+        let wordsLHS = Set(
+            lhs.lowercased()
+                .split(whereSeparator: { !$0.isLetter })
+                .filter { $0.count > 3 }
+        )
+        let wordsRHS = Set(
+            rhs.lowercased()
+                .split(whereSeparator: { !$0.isLetter })
+                .filter { $0.count > 3 }
+        )
+        guard !wordsLHS.isEmpty, !wordsRHS.isEmpty else { return 0 }
+        let intersection = wordsLHS.intersection(wordsRHS).count
+        let smaller = min(wordsLHS.count, wordsRHS.count)
+        return Double(intersection) / Double(smaller)
+    }
+
+    /// Removes duplicate and near-duplicate paragraphs/sentences from content
+    /// Uses fuzzy word-overlap matching to catch paraphrased repetition from small LLMs
     private static func deduplicateContent(_ content: String) -> String {
-        // Split into paragraphs (double newline) or sentences
         let paragraphs = content.components(separatedBy: "\n\n")
             .map { $0.trimmingCharacters(in: .whitespacesAndNewlines) }
             .filter { !$0.isEmpty }
 
-        // If we have multiple paragraphs, deduplicate them
+        // Fuzzy paragraph deduplication
         if paragraphs.count > 1 {
-            var seen = Set<String>()
             var uniqueParagraphs: [String] = []
 
             for paragraph in paragraphs {
-                // Normalize for comparison (lowercase, trimmed)
-                let normalized = paragraph.lowercased().trimmingCharacters(in: .whitespacesAndNewlines)
-                if !seen.contains(normalized) {
-                    seen.insert(normalized)
+                let isSimilar = uniqueParagraphs.contains { existing in
+                    wordOverlap(existing, paragraph) > 0.5
+                }
+                if !isSimilar {
                     uniqueParagraphs.append(paragraph)
                 }
             }
@@ -173,24 +204,24 @@ extension DigestViewItem {
             .filter { !$0.isEmpty }
 
         if sentences.count > 2 {
-            var seen = Set<String>()
             var uniqueSentences: [String] = []
 
             for sentence in sentences {
                 let normalized = sentence.lowercased().trimmingCharacters(in: .whitespacesAndNewlines)
-                // Skip very short fragments and duplicates
-                if normalized.count > 10, !seen.contains(normalized) {
-                    seen.insert(normalized)
+                guard normalized.count > 10 else {
                     uniqueSentences.append(sentence)
-                } else if normalized.count <= 10, !sentence.isEmpty {
-                    // Keep short fragments (might be important)
+                    continue
+                }
+                let isSimilar = uniqueSentences.contains { existing in
+                    wordOverlap(existing, sentence) > 0.5
+                }
+                if !isSimilar {
                     uniqueSentences.append(sentence)
                 }
             }
 
             if uniqueSentences.count < sentences.count {
                 var result = uniqueSentences.joined(separator: ". ")
-                // Ensure proper ending
                 if !result.hasSuffix(".") && !result.hasSuffix("?") && !result.hasSuffix("!") {
                     result += "."
                 }
@@ -199,6 +230,16 @@ extension DigestViewItem {
         }
 
         return content
+    }
+
+    /// Caps paragraphs and deduplicates content for final display
+    private static func capAndDeduplicateContent(_ content: String) -> String {
+        let deduplicated = deduplicateContent(content)
+        let paragraphs = deduplicated.components(separatedBy: "\n\n")
+            .map { $0.trimmingCharacters(in: .whitespacesAndNewlines) }
+            .filter { !$0.isEmpty }
+        let capped = Array(paragraphs.prefix(LLMConfiguration.maxParagraphsPerSection))
+        return capped.joined(separator: "\n\n")
     }
 
     /// Parses all category content from the summary in a single pass
@@ -286,7 +327,7 @@ extension DigestViewItem {
     private func extractWithRegex(category: String, from text: String) -> String? {
         let allCategories = "technology|business|world|science|health|sports|entertainment"
         // swiftlint:disable:next line_length
-        let pattern = "(?:\\*\\*\(category)\\*\\*|\\b\(category)\\b[:\\-]?)\\s*(.+?)(?=\\*\\*(?:\(allCategories))\\*\\*|\\b(?:\(allCategories))\\b[:\\-]|$)"
+        let pattern = "(?:\\*\\*\(category)\\*\\*|\\[\(category)\\]|\\b\(category)\\b[:\\-]?)\\s*(.+?)(?=\\*\\*(?:\(allCategories))\\*\\*|\\[(?:\(allCategories))\\]|\\b(?:\(allCategories))\\b[:\\-]|$)"
 
         let regexOptions: NSRegularExpression.Options = [.caseInsensitive, .dotMatchesLineSeparators]
         guard let regex = try? NSRegularExpression(pattern: pattern, options: regexOptions) else {
@@ -325,6 +366,9 @@ extension DigestViewItem {
                 "- **\(cat)**",
                 "## \(cat)",
                 "\n## \(cat)",
+                "\n[\(cat)]",
+                "[\(cat)]",
+                "\n\(cat):",
             ]
             for pattern in patterns {
                 if let range = searchText.range(of: pattern) {
@@ -344,28 +388,55 @@ extension DigestViewItem {
         return Self.deduplicateContent(cleaned)
     }
 
-    /// Cleans category content by removing bullet points and markdown
+    /// Cleans category content by removing bullet points and markdown, preserving paragraph breaks
     private func cleanCategoryContent(_ content: String) -> String {
         var result = content
         result = Self.stripCategoryMarkers(from: result)
 
-        let lines = result.components(separatedBy: "\n")
-            .map { line -> String in
-                var cleaned = line.trimmingCharacters(in: .whitespaces)
-                let prefixes = ["+ ", "- ", "* ", "• "]
-                for prefix in prefixes where cleaned.hasPrefix(prefix) {
-                    cleaned = String(cleaned.dropFirst(prefix.count))
-                    break
-                }
-                return cleaned
-            }
-            .filter { !$0.isEmpty }
-
-        result = lines.joined(separator: " ")
+        // Strip bold markdown
         result = result.replacingOccurrences(of: "**", with: "")
+
+        // Strip inline source references like "(BBC News - Health, Health)"
+        result = result.replacingOccurrences(
+            of: #"\([^)]*(?:News|Guardian|BBC|Reuters|CNN|Times)[^)]*\)"#,
+            with: "",
+            options: .regularExpression
+        )
+
+        // Process line by line: strip bullets but preserve paragraph structure
+        let paragraphs = result.components(separatedBy: "\n\n")
+        let cleanedParagraphs = paragraphs.map { paragraph -> String in
+            let lines = paragraph.components(separatedBy: "\n")
+                .map { line -> String in
+                    var cleaned = line.trimmingCharacters(in: .whitespaces)
+                    let prefixes = ["+ ", "- ", "* ", "• ", "· "]
+                    for prefix in prefixes where cleaned.hasPrefix(prefix) {
+                        cleaned = String(cleaned.dropFirst(prefix.count))
+                        break
+                    }
+                    // Strip numbered list prefixes (e.g. "1. ", "2. ")
+                    if let range = cleaned.range(
+                        of: #"^\d+\.\s+"#,
+                        options: .regularExpression
+                    ) {
+                        cleaned = String(cleaned[range.upperBound...])
+                    }
+                    return cleaned
+                }
+                .filter { !$0.isEmpty }
+            return lines.joined(separator: " ")
+        }
+        .filter { !$0.isEmpty }
+
+        // Cap paragraphs per section to prevent repetition-bloated output
+        let cappedParagraphs = Array(cleanedParagraphs.prefix(LLMConfiguration.maxParagraphsPerSection))
+
+        // Collapse excessive dashes/em-dashes from stripped sources
+        result = cappedParagraphs.joined(separator: "\n\n")
+        result = result.replacingOccurrences(of: " — —", with: " —")
+        result = result.replacingOccurrences(of: "  +", with: " ", options: .regularExpression)
         result = result.trimmingCharacters(in: .whitespacesAndNewlines)
 
-        // Apply deduplication to handle LLM repetition
         return Self.deduplicateContent(result)
     }
 
