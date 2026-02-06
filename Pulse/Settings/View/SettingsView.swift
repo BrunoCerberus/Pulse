@@ -46,6 +46,7 @@ struct SettingsView: View {
                 )
 
                 notificationsSection
+                securitySection
                 appearanceSection
 
                 SettingsMutedContentSection(
@@ -118,6 +119,16 @@ struct SettingsView: View {
                 set: { viewModel.handle(event: .onToggleBreakingNews($0)) }
             ))
             .disabled(!viewModel.viewState.notificationsEnabled)
+        }
+    }
+
+    private var securitySection: some View {
+        Section("Security") {
+            Toggle(viewModel.viewState.biometricName, isOn: Binding(
+                get: { viewModel.viewState.isBiometricEnabled },
+                set: { viewModel.handle(event: .onToggleBiometric($0)) }
+            ))
+            .disabled(!viewModel.viewState.isBiometricAvailable)
         }
     }
 

@@ -348,6 +348,26 @@ final class PulseSceneDelegate: UIResponder, UIWindowSceneDelegate {
         DeeplinkManager.shared.parse(url: url)
     }
 
+    // MARK: - Scene Lifecycle (Biometric Lock)
+
+    func sceneWillResignActive(_: UIScene) {
+        MainActor.assumeIsolated {
+            AppLockManager.shared.handleSceneWillResignActive()
+        }
+    }
+
+    func sceneDidEnterBackground(_: UIScene) {
+        MainActor.assumeIsolated {
+            AppLockManager.shared.handleSceneDidEnterBackground()
+        }
+    }
+
+    func sceneDidBecomeActive(_: UIScene) {
+        MainActor.assumeIsolated {
+            AppLockManager.shared.handleSceneDidBecomeActive()
+        }
+    }
+
     /**
      * Converts a SwiftUI ColorScheme to a UIKit UIUserInterfaceStyle.
      *

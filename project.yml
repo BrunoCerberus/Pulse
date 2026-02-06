@@ -119,6 +119,7 @@ targets:
             UIWindowSceneSessionRoleApplication:
               - UISceneConfigurationName: Default Configuration
                 UISceneDelegateClassName: $(PRODUCT_MODULE_NAME).PulseSceneDelegate
+        NSFaceIDUsageDescription: "Pulse uses Face ID to protect your app and keep your data secure."
         UISupportedInterfaceOrientations:
           - UIInterfaceOrientationPortrait
           - UIInterfaceOrientationLandscapeLeft

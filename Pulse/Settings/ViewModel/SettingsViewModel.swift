@@ -24,18 +24,21 @@ final class SettingsViewModel: CombineViewModel, ObservableObject {
     private let interactor: SettingsDomainInteractor
     private let themeManager: ThemeManager
     private let authenticationManager: AuthenticationManager
+    private let appLockManager: AppLockManager
     private var authService: AuthService?
     private var cancellables = Set<AnyCancellable>()
 
     init(
         serviceLocator: ServiceLocator,
         themeManager: ThemeManager? = nil,
-        authenticationManager: AuthenticationManager? = nil
+        authenticationManager: AuthenticationManager? = nil,
+        appLockManager: AppLockManager? = nil
     ) {
         self.serviceLocator = serviceLocator
         interactor = SettingsDomainInteractor(serviceLocator: serviceLocator)
         self.themeManager = themeManager ?? .shared
         self.authenticationManager = authenticationManager ?? .shared
+        self.appLockManager = appLockManager ?? .shared
         authService = try? serviceLocator.retrieve(AuthService.self)
         setupBindings()
     }
@@ -70,6 +73,12 @@ final class SettingsViewModel: CombineViewModel, ObservableObject {
             handleSignOut()
         case .onCancelSignOut:
             interactor.dispatch(action: .setShowSignOutConfirmation(false))
+        case let .onToggleBiometric(enabled):
+            if enabled {
+                appLockManager.enableBiometric()
+            } else {
+                appLockManager.disableBiometric()
+            }
         }
     }
 
@@ -90,16 +99,20 @@ final class SettingsViewModel: CombineViewModel, ObservableObject {
     }
 
     private func setupBindings() {
-        // Use CombineLatest4 directly instead of nested combineLatest to reduce overhead
-        Publishers.CombineLatest4(
-            interactor.statePublisher,
-            themeManager.$isDarkMode.removeDuplicates(),
-            themeManager.$useSystemTheme.removeDuplicates(),
-            authenticationManager.authStatePublisher.removeDuplicates()
+        // Combine all state sources including biometric preferences
+        Publishers.CombineLatest(
+            Publishers.CombineLatest4(
+                interactor.statePublisher,
+                themeManager.$isDarkMode.removeDuplicates(),
+                themeManager.$useSystemTheme.removeDuplicates(),
+                authenticationManager.authStatePublisher.removeDuplicates()
+            ),
+            appLockManager.$isBiometricEnabled.removeDuplicates()
         )
         // Debounce rapid changes to prevent excessive UI updates during theme toggling
         .debounce(for: .milliseconds(16), scheduler: DispatchQueue.main)
-        .map { state, isDarkMode, useSystemTheme, authState in
+        .map { [appLockManager] combined, isBiometricEnabled in
+            let (state, isDarkMode, useSystemTheme, authState) = combined
             let currentUser: AuthUser? = {
                 if case let .authenticated(user) = authState {
                     return user
@@ -118,7 +131,10 @@ final class SettingsViewModel: CombineViewModel, ObservableObject {
                 currentUser: currentUser,
                 errorMessage: state.error,
                 newMutedSource: state.newMutedSource,
-                newMutedKeyword: state.newMutedKeyword
+                newMutedKeyword: state.newMutedKeyword,
+                isBiometricEnabled: isBiometricEnabled,
+                isBiometricAvailable: appLockManager.isBiometricAvailable,
+                biometricName: appLockManager.biometricName
             )
         }
         .removeDuplicates()
@@ -140,6 +156,9 @@ struct SettingsViewState: Equatable {
     var errorMessage: String?
     var newMutedSource: String
     var newMutedKeyword: String
+    var isBiometricEnabled: Bool
+    var isBiometricAvailable: Bool
+    var biometricName: String
 
     static var initial: SettingsViewState {
         SettingsViewState(
@@ -154,7 +173,10 @@ struct SettingsViewState: Equatable {
             currentUser: nil,
             errorMessage: nil,
             newMutedSource: "",
-            newMutedKeyword: ""
+            newMutedKeyword: "",
+            isBiometricEnabled: false,
+            isBiometricAvailable: false,
+            biometricName: "Face ID"
         )
     }
 }
@@ -174,4 +196,5 @@ enum SettingsViewEvent: Equatable {
     case onSignOutTapped
     case onConfirmSignOut
     case onCancelSignOut
+    case onToggleBiometric(Bool)
 }
