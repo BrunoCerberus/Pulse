@@ -104,15 +104,21 @@ final class HomeDomainInteractor: CombineInteractor {
     }
 
     private func handleSelectArticle(_ articleId: String) {
-        findArticle(by: articleId).map { selectArticle($0) }
+        if let article = findArticle(by: articleId) {
+            selectArticle(article)
+        }
     }
 
     private func handleBookmarkArticle(_ articleId: String) {
-        findArticle(by: articleId).map { toggleBookmark($0) }
+        if let article = findArticle(by: articleId) {
+            toggleBookmark(article)
+        }
     }
 
     private func handleShareArticle(_ articleId: String) {
-        findArticle(by: articleId).map { shareArticle($0) }
+        if let article = findArticle(by: articleId) {
+            shareArticle(article)
+        }
     }
 
     private func findArticle(by id: String) -> Article? {
@@ -346,6 +352,4 @@ final class HomeDomainInteractor: CombineInteractor {
             task.cancel()
         }
     }
-
-    // deduplicateArticles and updateState moved to HomeDomainInteractor+DataLoading.swift
 }
