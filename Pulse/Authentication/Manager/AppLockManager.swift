@@ -28,9 +28,13 @@ final class AppLockManager: ObservableObject {
     private var backgroundTimestamp: Date?
 
     /// Whether a biometric/passcode evaluation is in progress.
-    /// When true, scene lifecycle callbacks skip re-locking (the FaceID dialog
-    /// causes sceneWillResignActive/sceneDidBecomeActive to fire).
+    /// Used to suppress the privacy overlay during the FaceID system dialog.
     private var isAuthenticating = false
+
+    /// Whether sceneDidEnterBackground was called (as opposed to just sceneWillResignActive).
+    /// The FaceID dialog only triggers resignActive/becomeActive — NOT enterBackground.
+    /// Re-locking only happens when the app actually went to background.
+    private var didEnterBackground = false
 
     /// Grace period in seconds — skip re-auth for brief app switches
     private let gracePeriod: TimeInterval = 5.0
@@ -151,16 +155,20 @@ final class AppLockManager: ObservableObject {
     /// Called when scene enters background
     func handleSceneDidEnterBackground() {
         backgroundTimestamp = Date()
+        didEnterBackground = true
     }
 
     /// Called when scene becomes active (returning from background/app switcher)
     func handleSceneDidBecomeActive() {
         isPrivacyOverlayActive = false
 
-        // Don't re-lock while FaceID/passcode dialog is dismissing —
-        // the system fires sceneWillResignActive/sceneDidBecomeActive
-        // around the biometric prompt
-        guard isBiometricEnabled, !isAuthenticating else { return }
+        guard isBiometricEnabled else { return }
+
+        // Only re-lock if the app actually went to background.
+        // The FaceID/passcode system dialog only triggers resignActive/becomeActive
+        // WITHOUT enterBackground — so we must not re-lock for those transitions.
+        guard didEnterBackground else { return }
+        didEnterBackground = false
 
         // Check grace period
         if let timestamp = backgroundTimestamp,
@@ -170,7 +178,6 @@ final class AppLockManager: ObservableObject {
             return
         }
 
-        // Beyond grace period or first activation — lock the app
         if !isLocked {
             isLocked = true
         }
@@ -226,6 +233,7 @@ final class AppLockManager: ObservableObject {
             isPrivacyOverlayActive = false
             isBiometricEnabled = false
             isAuthenticating = false
+            didEnterBackground = false
             backgroundTimestamp = nil
         }
     #endif
