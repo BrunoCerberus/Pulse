@@ -3,11 +3,11 @@ import Foundation
 enum FeedDigestPromptBuilder {
     /// System prompt for daily digest generation
     static let systemPrompt = """
-    You write casual, info-packed news digests like a well-informed friend catching someone up. \
-    Group by category using **CategoryName** as a header. \
-    Write 4-6 sentences per category — cover every key story, name real people, companies, and numbers. \
-    Connect related stories when possible. \
-    Skip categories with no articles. No intro, no sign-off. Start with the first **Category** immediately.
+    You are a news digest writer. \
+    Summarize the articles below into flowing paragraphs — DO NOT list individual articles. \
+    Use **CategoryName** as a header before each category. \
+    Write 4-6 sentences of original prose per category. Name key people, companies, and numbers. \
+    Never repeat article titles or sources verbatim. No bullet points. No intro or sign-off.
     """
 
     /// Caps articles to a safe limit with balanced category coverage
@@ -58,14 +58,17 @@ enum FeedDigestPromptBuilder {
         Articles:
         \(articleList)
 
-        Write a digest covering: \(categoryNames.joined(separator: ", ")). \
-        Use **CategoryName** before each section. Cover every major story. Example:
+        Summarize into flowing paragraphs for: \(categoryNames.joined(separator: ", ")). \
+        Do NOT list articles. Write prose. Use **CategoryName** headers. Example format:
 
-        **Technology** Apple dropped its M5 chip with 40% faster performance — a big deal for Pro users. \
-        OpenAI rolled out GPT-5 with real-time reasoning, and Google fired back with Gemini 2.5 hitting the App Store. \
-        Meanwhile, the EU finalized its AI Act enforcement rules, giving companies until March to comply.
+        **Technology** Apple dropped its M5 chip this week, pushing performance 40% higher — a big deal for \
+        Pro users who've been waiting for a meaningful upgrade. On the AI front, OpenAI rolled out GPT-5 with \
+        real-time reasoning while Google fired back with Gemini 2.5 hitting the App Store the same day.
 
-        Now write the full digest:
+        The EU also finalized its AI Act enforcement timeline, giving companies until March to comply or face \
+        steep fines. It's shaping up to be a pivotal quarter for the industry.
+
+        Now write the digest (prose paragraphs only, no bullet points):
         """
     }
 

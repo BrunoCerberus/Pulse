@@ -119,11 +119,20 @@ struct ContentSectionCard: View {
     // MARK: - Content
 
     private var sectionContent: some View {
-        Text(section.content)
-            .font(Typography.aiContentMedium)
-            .foregroundStyle(.primary.opacity(0.9))
-            .lineSpacing(4)
-            .frame(maxWidth: .infinity, alignment: .leading)
+        let paragraphs = section.content
+            .components(separatedBy: "\n\n")
+            .map { $0.trimmingCharacters(in: .whitespacesAndNewlines) }
+            .filter { !$0.isEmpty }
+
+        return VStack(alignment: .leading, spacing: Spacing.sm) {
+            ForEach(Array(paragraphs.enumerated()), id: \.offset) { _, paragraph in
+                Text(paragraph)
+                    .font(Typography.aiContentMedium)
+                    .foregroundStyle(.primary.opacity(0.9))
+                    .lineSpacing(4)
+                    .frame(maxWidth: .infinity, alignment: .leading)
+            }
+        }
     }
 
     // MARK: - Featured Article

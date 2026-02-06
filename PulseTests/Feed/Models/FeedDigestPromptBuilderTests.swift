@@ -101,9 +101,9 @@ struct FeedDigestPromptBuilderTests {
         let articles = Article.mockArticles
         let prompt = FeedDigestPromptBuilder.buildPrompt(for: articles)
 
-        // Should list categories for the model to use as headers
+        // Should list categories and instruct prose format
         #expect(prompt.contains("**CategoryName**"))
-        #expect(prompt.contains("Write a digest"))
+        #expect(prompt.contains("Summarize into flowing paragraphs"))
     }
 
     @Test("System prompt provides clear instructions")
@@ -111,8 +111,9 @@ struct FeedDigestPromptBuilderTests {
         let systemPrompt = FeedDigestPromptBuilder.systemPrompt
 
         #expect(!systemPrompt.isEmpty)
-        #expect(systemPrompt.contains("news digests"))
+        #expect(systemPrompt.contains("news digest"))
         #expect(systemPrompt.contains("**CategoryName**"))
+        #expect(systemPrompt.contains("DO NOT list"))
     }
 
     // MARK: - Helpers

@@ -357,28 +357,52 @@ extension DigestViewItem {
         return Self.deduplicateContent(cleaned)
     }
 
-    /// Cleans category content by removing bullet points and markdown
+    /// Cleans category content by removing bullet points and markdown, preserving paragraph breaks
     private func cleanCategoryContent(_ content: String) -> String {
         var result = content
         result = Self.stripCategoryMarkers(from: result)
 
-        let lines = result.components(separatedBy: "\n")
-            .map { line -> String in
-                var cleaned = line.trimmingCharacters(in: .whitespaces)
-                let prefixes = ["+ ", "- ", "* ", "• "]
-                for prefix in prefixes where cleaned.hasPrefix(prefix) {
-                    cleaned = String(cleaned.dropFirst(prefix.count))
-                    break
-                }
-                return cleaned
-            }
-            .filter { !$0.isEmpty }
-
-        result = lines.joined(separator: " ")
+        // Strip bold markdown
         result = result.replacingOccurrences(of: "**", with: "")
+
+        // Strip inline source references like "(BBC News - Health, Health)"
+        result = result.replacingOccurrences(
+            of: #"\([^)]*(?:News|Guardian|BBC|Reuters|CNN|Times)[^)]*\)"#,
+            with: "",
+            options: .regularExpression
+        )
+
+        // Process line by line: strip bullets but preserve paragraph structure
+        let paragraphs = result.components(separatedBy: "\n\n")
+        let cleanedParagraphs = paragraphs.map { paragraph -> String in
+            let lines = paragraph.components(separatedBy: "\n")
+                .map { line -> String in
+                    var cleaned = line.trimmingCharacters(in: .whitespaces)
+                    let prefixes = ["+ ", "- ", "* ", "• ", "· "]
+                    for prefix in prefixes where cleaned.hasPrefix(prefix) {
+                        cleaned = String(cleaned.dropFirst(prefix.count))
+                        break
+                    }
+                    // Strip numbered list prefixes (e.g. "1. ", "2. ")
+                    if let range = cleaned.range(
+                        of: #"^\d+\.\s+"#,
+                        options: .regularExpression
+                    ) {
+                        cleaned = String(cleaned[range.upperBound...])
+                    }
+                    return cleaned
+                }
+                .filter { !$0.isEmpty }
+            return lines.joined(separator: " ")
+        }
+        .filter { !$0.isEmpty }
+
+        // Collapse excessive dashes/em-dashes from stripped sources
+        result = cleanedParagraphs.joined(separator: "\n\n")
+        result = result.replacingOccurrences(of: " — —", with: " —")
+        result = result.replacingOccurrences(of: "  +", with: " ", options: .regularExpression)
         result = result.trimmingCharacters(in: .whitespacesAndNewlines)
 
-        // Apply deduplication to handle LLM repetition
         return Self.deduplicateContent(result)
     }
 
