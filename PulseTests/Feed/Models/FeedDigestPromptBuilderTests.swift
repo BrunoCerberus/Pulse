@@ -104,6 +104,7 @@ struct FeedDigestPromptBuilderTests {
         // Should list categories and instruct prose format
         #expect(prompt.contains("**CategoryName**"))
         #expect(prompt.contains("Summarize into flowing paragraphs"))
+        #expect(prompt.contains("Do NOT list articles"))
     }
 
     @Test("System prompt provides clear instructions")
@@ -114,6 +115,7 @@ struct FeedDigestPromptBuilderTests {
         #expect(systemPrompt.contains("news digest"))
         #expect(systemPrompt.contains("**CategoryName**"))
         #expect(systemPrompt.contains("DO NOT list"))
+        #expect(systemPrompt.contains("Do NOT repeat yourself"))
     }
 
     // MARK: - Helpers

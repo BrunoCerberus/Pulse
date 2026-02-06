@@ -64,9 +64,11 @@ extension LLMInferenceConfig {
     static var dailyDigest: LLMInferenceConfig {
         let inputTokens = (LLMConfiguration.maxArticlesForDigest * LLMConfiguration.estimatedTokensPerArticle) + 90
         let availableTokens = LLMConfiguration.contextSize - inputTokens
+        // Cap output tokens to prevent 1B model repetition loops
+        let cappedTokens = min(availableTokens, LLMConfiguration.maxOutputTokens)
 
         return LLMInferenceConfig(
-            maxTokens: availableTokens,
+            maxTokens: cappedTokens,
             temperature: 0.7,
             topP: 0.9,
             stopSequences: ["</digest>", "---", "\n\n\n"]

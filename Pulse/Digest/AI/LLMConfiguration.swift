@@ -136,6 +136,21 @@ enum LLMConfiguration {
         100
     }
 
+    /// Maximum output tokens for digest generation
+    /// Capping output prevents the 1B model from entering repetition loops
+    /// ~5 sentences per category × ~20 tokens/sentence × ~4 categories ≈ 400-600 tokens
+    static var maxOutputTokens: Int {
+        switch MemoryTier.current {
+        case .constrained: return 400
+        case .standard, .high: return 600
+        }
+    }
+
+    /// Maximum paragraphs per category section in parsed digest output
+    static var maxParagraphsPerSection: Int {
+        3
+    }
+
     /// Reserved tokens for system prompt and generation output
     static var reservedContextTokens: Int {
         1200

@@ -6,7 +6,8 @@ enum FeedDigestPromptBuilder {
     You are a news digest writer. \
     Summarize the articles below into flowing paragraphs — DO NOT list individual articles. \
     Use **CategoryName** as a header before each category. \
-    Write 4-6 sentences of original prose per category. Name key people, companies, and numbers. \
+    Write 3-4 sentences of original prose per category. Be concise. Do NOT repeat yourself. \
+    Name key people, companies, and numbers. \
     Never repeat article titles or sources verbatim. No bullet points. No intro or sign-off.
     """
 

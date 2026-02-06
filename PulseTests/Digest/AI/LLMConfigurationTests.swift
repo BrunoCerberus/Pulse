@@ -227,4 +227,34 @@ struct LLMConfigurationTests {
     func reservedContextTokensLessThanContextSize() {
         #expect(LLMConfiguration.reservedContextTokens < LLMConfiguration.contextSize)
     }
+
+    // MARK: - Max Output Tokens Tests
+
+    @Test("LLMConfiguration maxOutputTokens returns valid value")
+    func maxOutputTokensReturnsValidValue() {
+        let maxOutput = LLMConfiguration.maxOutputTokens
+        #expect(maxOutput == 400 || maxOutput == 600)
+    }
+
+    @Test("LLMConfiguration maxOutputTokens values match memory tiers")
+    func maxOutputTokensMatchesMemoryTiers() {
+        switch MemoryTier.current {
+        case .constrained:
+            #expect(LLMConfiguration.maxOutputTokens == 400)
+        case .standard, .high:
+            #expect(LLMConfiguration.maxOutputTokens == 600)
+        }
+    }
+
+    @Test("LLMConfiguration maxOutputTokens is less than contextSize")
+    func maxOutputTokensLessThanContextSize() {
+        #expect(LLMConfiguration.maxOutputTokens < LLMConfiguration.contextSize)
+    }
+
+    // MARK: - Max Paragraphs Per Section Tests
+
+    @Test("LLMConfiguration maxParagraphsPerSection returns correct value")
+    func maxParagraphsPerSectionReturnsCorrectValue() {
+        #expect(LLMConfiguration.maxParagraphsPerSection == 3)
+    }
 }
