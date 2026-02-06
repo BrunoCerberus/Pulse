@@ -82,10 +82,13 @@ extension DigestViewItem {
                 content = extractCategoryContent(for: category, articles: articles)
             }
 
+            // Apply paragraph cap and deduplication to all content sources
+            let finalContent = Self.capAndDeduplicateContent(content)
+
             sections.append(DigestSection(
                 id: "\(id)-section-\(category.rawValue)",
                 title: category.displayName,
-                content: content,
+                content: finalContent,
                 category: category,
                 relatedArticles: Array(articles.prefix(3)),
                 isHighlight: false
@@ -227,6 +230,16 @@ extension DigestViewItem {
         }
 
         return content
+    }
+
+    /// Caps paragraphs and deduplicates content for final display
+    private static func capAndDeduplicateContent(_ content: String) -> String {
+        let deduplicated = deduplicateContent(content)
+        let paragraphs = deduplicated.components(separatedBy: "\n\n")
+            .map { $0.trimmingCharacters(in: .whitespacesAndNewlines) }
+            .filter { !$0.isEmpty }
+        let capped = Array(paragraphs.prefix(LLMConfiguration.maxParagraphsPerSection))
+        return capped.joined(separator: "\n\n")
     }
 
     /// Parses all category content from the summary in a single pass

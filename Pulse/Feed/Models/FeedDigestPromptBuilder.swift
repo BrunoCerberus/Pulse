@@ -6,8 +6,8 @@ enum FeedDigestPromptBuilder {
     You are a news digest writer. \
     Summarize the articles below into flowing paragraphs — DO NOT list individual articles. \
     Use **CategoryName** as a header before each category. \
-    Write 3-4 sentences of original prose per category. Be concise. Do NOT repeat yourself. \
-    Name key people, companies, and numbers. \
+    Write exactly 2-3 sentences per category. Keep it short. Cover ALL categories equally. \
+    Do NOT repeat yourself. Name key people, companies, and numbers. \
     Never repeat article titles or sources verbatim. No bullet points. No intro or sign-off.
     """
 
@@ -60,16 +60,16 @@ enum FeedDigestPromptBuilder {
         \(articleList)
 
         Summarize into flowing paragraphs for: \(categoryNames.joined(separator: ", ")). \
-        Do NOT list articles. Write prose. Use **CategoryName** headers. Example format:
+        Do NOT list articles. Write prose. Use **CategoryName** headers. \
+        Keep each category to 2-3 sentences. Cover ALL categories. Example:
 
-        **Technology** Apple dropped its M5 chip this week, pushing performance 40% higher — a big deal for \
-        Pro users who've been waiting for a meaningful upgrade. On the AI front, OpenAI rolled out GPT-5 with \
-        real-time reasoning while Google fired back with Gemini 2.5 hitting the App Store the same day.
+        **Technology** Apple's M5 chip delivers 40% faster performance, a meaningful upgrade for Pro users. \
+        Meanwhile, the EU finalized its AI Act enforcement timeline with steep fines starting in March.
 
-        The EU also finalized its AI Act enforcement timeline, giving companies until March to comply or face \
-        steep fines. It's shaping up to be a pivotal quarter for the industry.
+        **Business** Amazon shares dropped 8% amid concerns over its massive AI spending plans. \
+        Canada unveiled a new auto industry strategy aimed at competing with Chinese EV manufacturers.
 
-        Now write the digest (prose paragraphs only, no bullet points):
+        Now write the digest for ALL categories (2-3 sentences each, no bullet points):
         """
     }
 

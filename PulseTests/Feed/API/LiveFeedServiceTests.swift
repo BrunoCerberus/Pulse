@@ -206,7 +206,6 @@ struct LLMInferenceConfigDailyDigestTests {
         #expect(config.topP == 0.9)
         #expect(config.stopSequences.contains("</digest>"))
         #expect(config.stopSequences.contains("---"))
-        #expect(config.stopSequences.contains("\n\n\n"))
-        #expect(config.stopSequences.count == 3)
+        #expect(config.stopSequences.count == 2)
     }
 }
