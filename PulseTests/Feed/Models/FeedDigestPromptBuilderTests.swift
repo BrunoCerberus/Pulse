@@ -73,20 +73,23 @@ struct FeedDigestPromptBuilderTests {
         }
     }
 
-    @Test("Build prompt includes article count")
-    func buildPromptIncludesCount() {
+    @Test("Build prompt includes numbered article list")
+    func buildPromptIncludesNumberedList() {
         let articles = Article.mockArticles
         let prompt = FeedDigestPromptBuilder.buildPrompt(for: articles)
 
-        #expect(prompt.contains("\(articles.count) news articles"))
+        #expect(prompt.contains("1."))
+        #expect(prompt.contains("Articles:"))
     }
 
-    @Test("Build prompt includes category breakdown")
-    func buildPromptIncludesCategoryBreakdown() {
+    @Test("Build prompt includes category names for digest")
+    func buildPromptIncludesCategoryNames() {
         let articles = Article.mockArticles
         let prompt = FeedDigestPromptBuilder.buildPrompt(for: articles)
 
-        #expect(prompt.contains("Topics covered:"))
+        // Should list categories for the model to use as headers
+        #expect(prompt.contains("**CategoryName**"))
+        #expect(prompt.contains("Write a digest"))
     }
 
     @Test("System prompt provides clear instructions")
@@ -94,8 +97,8 @@ struct FeedDigestPromptBuilderTests {
         let systemPrompt = FeedDigestPromptBuilder.systemPrompt
 
         #expect(!systemPrompt.isEmpty)
-        #expect(systemPrompt.contains("news digest"))
-        #expect(systemPrompt.contains("summary"))
+        #expect(systemPrompt.contains("news digests"))
+        #expect(systemPrompt.contains("**CategoryName**"))
     }
 
     // MARK: - Helpers

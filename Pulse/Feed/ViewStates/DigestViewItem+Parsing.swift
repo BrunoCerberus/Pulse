@@ -107,6 +107,11 @@ extension DigestViewItem {
             // Markdown heading format
             ("## \(category)\n", 4 + category.count),
             ("## \(category) ", 4 + category.count),
+            // Bracket format (LLM sometimes echoes input formatting)
+            ("\n[\(category)]", 3 + category.count),
+            ("[\(category)]", 2 + category.count),
+            // Bare category with colon (common LLM output pattern)
+            ("\n\(category):", 2 + category.count),
             // List formats with markers (less reliable, require bullet prefix)
             ("\n• \(category):", 3 + category.count),
             ("\n- \(category):", 3 + category.count),
@@ -134,6 +139,11 @@ extension DigestViewItem {
                 of: "## \(category)",
                 with: "",
                 options: .caseInsensitive
+            )
+            result = result.replacingOccurrences(
+                of: "\\[\(category)\\]:?",
+                with: "",
+                options: [.regularExpression, .caseInsensitive]
             )
         }
 
@@ -286,7 +296,7 @@ extension DigestViewItem {
     private func extractWithRegex(category: String, from text: String) -> String? {
         let allCategories = "technology|business|world|science|health|sports|entertainment"
         // swiftlint:disable:next line_length
-        let pattern = "(?:\\*\\*\(category)\\*\\*|\\b\(category)\\b[:\\-]?)\\s*(.+?)(?=\\*\\*(?:\(allCategories))\\*\\*|\\b(?:\(allCategories))\\b[:\\-]|$)"
+        let pattern = "(?:\\*\\*\(category)\\*\\*|\\[\(category)\\]|\\b\(category)\\b[:\\-]?)\\s*(.+?)(?=\\*\\*(?:\(allCategories))\\*\\*|\\[(?:\(allCategories))\\]|\\b(?:\(allCategories))\\b[:\\-]|$)"
 
         let regexOptions: NSRegularExpression.Options = [.caseInsensitive, .dotMatchesLineSeparators]
         guard let regex = try? NSRegularExpression(pattern: pattern, options: regexOptions) else {
@@ -325,6 +335,9 @@ extension DigestViewItem {
                 "- **\(cat)**",
                 "## \(cat)",
                 "\n## \(cat)",
+                "\n[\(cat)]",
+                "[\(cat)]",
+                "\n\(cat):",
             ]
             for pattern in patterns {
                 if let range = searchText.range(of: pattern) {

@@ -3,24 +3,10 @@ import Foundation
 enum FeedDigestPromptBuilder {
     /// System prompt for daily digest generation
     static let systemPrompt = """
-    You are a personal news digest curator. Summarize articles by category.
-
-    OUTPUT FORMAT (follow exactly):
-    **Technology** Your 2-3 sentence summary of technology articles goes here.
-    **Business** Your 2-3 sentence summary of business articles goes here.
-    **World** Your 2-3 sentence summary of world news goes here.
-    **Science** Your 2-3 sentence summary of science articles goes here.
-    **Health** Your 2-3 sentence summary of health articles goes here.
-    **Sports** Your 2-3 sentence summary of sports articles goes here.
-    **Entertainment** Your 2-3 sentence summary of entertainment articles goes here.
-
-    RULES:
-    - Start each section with **CategoryName** in bold (double asterisks)
-    - Write engaging, conversational summaries (2-3 sentences each)
-    - Mention specific topics, companies, or events from the articles
-    - Only include categories that have articles in the input
-    - NO introductions, NO conclusions, NO meta-commentary
-    - Start immediately with the first **Category**
+    You write casual, punchy news digests like a well-informed friend catching someone up over coffee. \
+    Group by category using **CategoryName** as a header. \
+    2-3 sentences per category — name real people, companies, and numbers. \
+    Skip categories with no articles. No intro, no sign-off. Start with the first **Category** immediately.
     """
 
     /// Caps articles to a safe limit and returns the subset for digest generation
@@ -37,57 +23,41 @@ enum FeedDigestPromptBuilder {
     /// Builds the user message prompt from latest articles
     /// - Parameter articles: Articles to include (should be pre-capped via `cappedArticles`)
     static func buildPrompt(for articles: [Article]) -> String {
-        let articleSummaries = articles.enumerated().map { index, article in
-            buildArticleSummary(article, index: index + 1)
-        }.joined(separator: "\n\n")
+        let grouped = Dictionary(grouping: articles) { $0.category ?? .world }
+        let categoryNames = grouped.sorted { $0.value.count > $1.value.count }
+            .map { $0.key.displayName }
 
-        let categoryBreakdown = buildCategoryBreakdown(articles)
+        let articleList = articles.enumerated().map { index, article in
+            let cat = article.category?.displayName ?? "World"
+            var line = "\(index + 1). \(article.title) (\(article.source.name), \(cat))"
+            if let desc = article.description, !desc.isEmpty {
+                line += " — \(String(stripHTML(from: desc).prefix(250)))"
+            }
+            return line
+        }.joined(separator: "\n")
 
         return """
-        Here are the latest \(articles.count) news articles, organized by category:
-
-        \(categoryBreakdown)
-
         Articles:
-        \(articleSummaries)
+        \(articleList)
 
-        Now write a summary for each category. Start with **CategoryName** then your summary. Example:
-        **Technology** The tech world buzzed with news about...
+        Write a digest with these categories: \(categoryNames.joined(separator: ", ")). \
+        Use **CategoryName** before each section, like this:
 
-        Begin:
+        **Technology** Apple announced a new chip today, pushing performance 40% higher. Meanwhile, OpenAI rolled out...
+
+        **Business** Markets rallied after the Fed signaled a pause on rate hikes...
+
+        Now write the digest:
         """
     }
 
     /// Estimates the token count for a given set of articles
     /// Used to verify prompt will fit within context window
     static func estimatedTokenCount(for articles: [Article]) -> Int {
-        let systemTokens = 100 // Approximate system prompt tokens
+        let systemTokens = 60 // Compact system prompt tokens
         let articleTokens = articles.count * LLMConfiguration.estimatedTokensPerArticle
-        let overheadTokens = 50 // Prompt structure overhead
+        let overheadTokens = 30 // Prompt structure overhead
         return systemTokens + articleTokens + overheadTokens
-    }
-
-    private static func buildArticleSummary(_ article: Article, index: Int) -> String {
-        var summary = "[\(index)] \(article.title)"
-        summary += "\nSource: \(article.source.name)"
-
-        if let category = article.category {
-            summary += " | Category: \(category.displayName)"
-        }
-
-        if let description = article.description, !description.isEmpty {
-            let clean = stripHTML(from: description)
-            summary += "\nSummary: \(String(clean.prefix(150)))"
-        }
-
-        return summary
-    }
-
-    private static func buildCategoryBreakdown(_ articles: [Article]) -> String {
-        let grouped = Dictionary(grouping: articles) { $0.category ?? .world }
-        let breakdown = grouped.map { "\($0.key.displayName): \($0.value.count) articles" }
-            .joined(separator: ", ")
-        return "Topics covered: \(breakdown)"
     }
 
     private static func stripHTML(from html: String) -> String {

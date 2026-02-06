@@ -70,8 +70,8 @@ enum LLMConfiguration {
     /// Token generation is sequential, so batch size doesn't affect generation speed
     static var batchSize: Int {
         switch MemoryTier.current {
-        case .constrained: return 256
-        case .standard: return 512
+        case .constrained: return 512
+        case .standard: return 1024
         case .high: return 2048
         }
     }
@@ -121,15 +121,15 @@ enum LLMConfiguration {
         }
     }
 
-    /// Estimated tokens per article in digest prompt (title + source + category + 150 char description)
-    /// ~15 title + ~3 source + ~2 category + ~37 description (150 chars / 4) + ~5 structure ≈ 62
-    /// Using 175 as conservative estimate with safety margin
+    /// Estimated tokens per article in digest prompt (title + source + category + 250 char description)
+    /// ~15 title + ~3 source + ~2 category + ~63 description (250 chars / 4) + ~5 structure ≈ 88
+    /// Using 100 as estimate with modest safety margin
     static var estimatedTokensPerArticle: Int {
-        175
+        100
     }
 
     /// Reserved tokens for system prompt and generation output
     static var reservedContextTokens: Int {
-        1500
+        1200
     }
 }

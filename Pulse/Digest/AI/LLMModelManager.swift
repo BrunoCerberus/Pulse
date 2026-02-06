@@ -282,7 +282,7 @@ final class LLMModelManager: @unchecked Sendable { // swiftlint:disable:this typ
             topK: 40,
             topP: 0.9,
             nCTX: LLMConfiguration.contextSize,
-            temperature: 0.5,
+            temperature: 0.7,
             batchSize: LLMConfiguration.batchSize,
             maxTokenCount: LLMConfiguration.contextSize,
             stopTokens: ["</digest>", "---"],

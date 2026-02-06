@@ -369,7 +369,11 @@ final class FeedDomainInteractor: CombineInteractor {
         }
 
         // Remove common instruction artifacts (case-insensitive, at start)
-        let prefixes = ["here's the digest:", "here is the digest:", "digest:", "here's your daily digest:"]
+        let prefixes = [
+            "here's the digest:", "here is the digest:", "digest:", "here's your daily digest:",
+            "here is your daily digest:", "sure, here", "sure! here", "here's your news digest:",
+            "here are the summaries:", "here is a summary:",
+        ]
         let lowercased = cleaned.lowercased()
         for prefix in prefixes where lowercased.hasPrefix(prefix) {
             cleaned = String(cleaned.dropFirst(prefix.count))

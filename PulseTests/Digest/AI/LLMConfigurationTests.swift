@@ -78,17 +78,17 @@ struct LLMConfigurationTests {
     @Test("LLMConfiguration batchSize returns valid value")
     func batchSizeReturnsValidValue() {
         let batchSize = LLMConfiguration.batchSize
-        // Batch size should be one of: 256, 512, or 2048
-        #expect(batchSize == 256 || batchSize == 512 || batchSize == 2048)
+        // Batch size should be one of: 512, 1024, or 2048
+        #expect(batchSize == 512 || batchSize == 1024 || batchSize == 2048)
     }
 
     @Test("LLMConfiguration batchSize values match memory tiers")
     func batchSizeMatchesMemoryTiers() {
         switch MemoryTier.current {
         case .constrained:
-            #expect(LLMConfiguration.batchSize == 256)
-        case .standard:
             #expect(LLMConfiguration.batchSize == 512)
+        case .standard:
+            #expect(LLMConfiguration.batchSize == 1024)
         case .high:
             #expect(LLMConfiguration.batchSize == 2048)
         }
@@ -199,12 +199,12 @@ struct LLMConfigurationTests {
 
     @Test("LLMConfiguration estimatedTokensPerArticle returns correct value")
     func estimatedTokensPerArticleReturnsCorrectValue() {
-        #expect(LLMConfiguration.estimatedTokensPerArticle == 175)
+        #expect(LLMConfiguration.estimatedTokensPerArticle == 100)
     }
 
     @Test("LLMConfiguration reservedContextTokens returns correct value")
     func reservedContextTokensReturnsCorrectValue() {
-        #expect(LLMConfiguration.reservedContextTokens == 1500)
+        #expect(LLMConfiguration.reservedContextTokens == 1200)
     }
 
     @Test("LLMConfiguration reservedContextTokens is less than contextSize")
