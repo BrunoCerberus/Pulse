@@ -97,9 +97,17 @@ extension HomeDomainInteractor {
 
     /// Resets state for a refresh operation.
     func resetStateForRefresh() {
-        // Invalidate cache on refresh to ensure fresh data
+        // Invalidate only the keys being refreshed instead of the entire cache
         if let cachingService = newsService as? CachingNewsService {
-            cachingService.invalidateCache()
+            let country = "us"
+            var keysToInvalidate: [NewsCacheKey] = [
+                .breakingNews(country: country),
+                .topHeadlines(country: country, page: 1),
+            ]
+            if let category = currentState.selectedCategory {
+                keysToInvalidate.append(.categoryHeadlines(category: category, country: country, page: 1))
+            }
+            cachingService.invalidateCache(for: keysToInvalidate)
         }
 
         updateState { state in

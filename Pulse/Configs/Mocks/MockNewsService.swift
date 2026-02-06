@@ -302,6 +302,7 @@ final class MockNewsCacheStore: NewsCacheStore {
     // Tracking properties for tests
     var getCallCount = 0
     var setCallCount = 0
+    var removeCallCount = 0
     var removeAllCallCount = 0
 
     func get<T>(for key: NewsCacheKey) -> CacheEntry<T>? {
@@ -312,6 +313,11 @@ final class MockNewsCacheStore: NewsCacheStore {
     func set<T>(_ entry: CacheEntry<T>, for key: NewsCacheKey) {
         setCallCount += 1
         storage[key.stringKey] = entry
+    }
+
+    func remove(for key: NewsCacheKey) {
+        removeCallCount += 1
+        storage.removeValue(forKey: key.stringKey)
     }
 
     func removeAll() {

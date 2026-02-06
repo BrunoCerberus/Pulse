@@ -35,7 +35,6 @@ struct FeedView<R: FeedNavigationRouter>: View {
 
     @ObservedObject var viewModel: FeedViewModel
     @State private var isPremium = false
-    @State private var subscriptionCancellable: AnyCancellable?
 
     init(router: R, viewModel: FeedViewModel, serviceLocator: ServiceLocator) {
         self.router = router
@@ -62,10 +61,10 @@ struct FeedView<R: FeedNavigationRouter>: View {
             }
         }
         .onAppear {
-            observeSubscriptionStatus()
+            initializeSubscriptionStatus()
         }
-        .onDisappear {
-            subscriptionCancellable?.cancel()
+        .onReceive(subscriptionStatusPublisher) { newStatus in
+            isPremium = newStatus
         }
     }
 
@@ -92,18 +91,19 @@ struct FeedView<R: FeedNavigationRouter>: View {
         }
     }
 
-    private func observeSubscriptionStatus() {
-        subscriptionCancellable?.cancel()
+    private var subscriptionStatusPublisher: AnyPublisher<Bool, Never> {
+        guard let storeKitService = try? serviceLocator.retrieve(StoreKitService.self) else {
+            return Empty().eraseToAnyPublisher()
+        }
+        return storeKitService.subscriptionStatusPublisher
+            .receive(on: DispatchQueue.main)
+            .eraseToAnyPublisher()
+    }
+
+    private func initializeSubscriptionStatus() {
         do {
             let storeKitService = try serviceLocator.retrieve(StoreKitService.self)
-            // Set initial status immediately to avoid UI flicker
             isPremium = storeKitService.isPremium
-            // Then observe for changes
-            subscriptionCancellable = storeKitService.subscriptionStatusPublisher
-                .receive(on: DispatchQueue.main)
-                .sink { newStatus in
-                    self.isPremium = newStatus
-                }
         } catch {
             Logger.shared.warning("Failed to retrieve StoreKitService: \(error)", category: "Feed")
             isPremium = false

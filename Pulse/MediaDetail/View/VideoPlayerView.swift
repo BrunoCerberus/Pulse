@@ -6,6 +6,8 @@ import WebKit
 /// This view embeds videos using an HTML iframe with proper configuration
 /// for mobile playback, allowing videos to play directly within the app.
 struct VideoPlayerView: UIViewRepresentable {
+    private static let sharedProcessPool = WKProcessPool()
+
     /// The URL of the video to embed.
     let url: URL
 
@@ -28,6 +30,7 @@ struct VideoPlayerView: UIViewRepresentable {
 
     func makeUIView(context: Context) -> WKWebView {
         let config = WKWebViewConfiguration()
+        config.processPool = Self.sharedProcessPool
         config.allowsInlineMediaPlayback = true
         config.mediaTypesRequiringUserActionForPlayback = []
         config.allowsPictureInPictureMediaPlayback = true

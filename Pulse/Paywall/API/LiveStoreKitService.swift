@@ -171,7 +171,6 @@ final class LiveStoreKitService: StoreKitService {
         }
     }
 
-    @MainActor
     private func updateSubscriptionStatus() async {
         var hasActiveSubscription = false
 
@@ -188,7 +187,9 @@ final class LiveStoreKitService: StoreKitService {
             }
         }
 
-        subscriptionStatusSubject.send(hasActiveSubscription)
+        await MainActor.run {
+            subscriptionStatusSubject.send(hasActiveSubscription)
+        }
     }
 }
 
