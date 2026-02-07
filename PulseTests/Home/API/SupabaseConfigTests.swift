@@ -29,10 +29,10 @@ struct SupabaseConfigTests {
         mockRemoteConfig.supabaseURLValue = nil
         SupabaseConfig.configure(with: mockRemoteConfig)
         let testURL = "https://env.supabase.co"
-        ProcessInfo.processInfo.environment["SUPABASE_URL"] = testURL
+        setenv("SUPABASE_URL", testURL, 1)
+        defer { unsetenv("SUPABASE_URL") }
         let url = SupabaseConfig.url
         #expect(url == testURL)
-        ProcessInfo.processInfo.environment["SUPABASE_URL"] = nil
     }
 
     @Test("isConfigured returns true when URL is set")

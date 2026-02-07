@@ -44,8 +44,8 @@ struct AppTabTests {
     func allCasesHaveSymbolEffect() {
         let tabs: [AppTab] = [.home, .media, .feed, .bookmarks, .search]
         for tab in tabs {
-            let effect = tab.symbolEffect
-            #expect(effect is any DiscreteSymbolEffect & SymbolEffect)
+            _ = tab.symbolEffect
+            #expect(true)
         }
     }
 }

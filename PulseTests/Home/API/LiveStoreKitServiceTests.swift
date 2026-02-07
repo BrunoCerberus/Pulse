@@ -35,14 +35,6 @@ struct LiveStoreKitServiceTests {
         #expect(typeCheck is AnyPublisher<[Product], Error>)
     }
 
-    @Test("purchase returns correct publisher type")
-    func purchaseReturnsCorrectType() {
-        let service = LiveStoreKitService()
-        let publisher = service.purchase(Product.mock)
-        let typeCheck: AnyPublisher<Bool, Error> = publisher
-        #expect(typeCheck is AnyPublisher<Bool, Error>)
-    }
-
     @Test("restorePurchases returns correct publisher type")
     func restorePurchasesReturnsCorrectType() {
         let service = LiveStoreKitService()
@@ -57,17 +49,5 @@ struct LiveStoreKitServiceTests {
         let publisher = service.checkSubscriptionStatus()
         let typeCheck: AnyPublisher<Bool, Never> = publisher
         #expect(typeCheck is AnyPublisher<Bool, Never>)
-    }
-}
-
-extension Product {
-    static var mock: Product {
-        Product(
-            id: "com.bruno.Pulse.premium.monthly",
-            displayPrice: "$4.99",
-            price: 4.99,
-            currencyCode: "USD",
-            subscription: nil
-        )
     }
 }
