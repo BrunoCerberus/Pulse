@@ -18,12 +18,9 @@ final class BookmarksViewModel: CombineViewModel, ObservableObject {
 
     @Published private(set) var viewState: BookmarksViewState = .initial
 
-    private let serviceLocator: ServiceLocator
     private let interactor: BookmarksDomainInteractor
-    private var cancellables = Set<AnyCancellable>()
 
     init(serviceLocator: ServiceLocator) {
-        self.serviceLocator = serviceLocator
         interactor = BookmarksDomainInteractor(serviceLocator: serviceLocator)
         setupBindings()
     }

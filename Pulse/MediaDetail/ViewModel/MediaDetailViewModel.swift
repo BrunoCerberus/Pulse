@@ -25,7 +25,6 @@ final class MediaDetailViewModel: CombineViewModel, ObservableObject {
     private let interactor: MediaDetailDomainInteractor
     private let eventActionMap: MediaDetailEventActionMap
     private let viewStateReducer: MediaDetailViewStateReducer
-    private var cancellables = Set<AnyCancellable>()
 
     init(
         article: Article,

@@ -22,18 +22,15 @@ final class MediaViewModel: CombineViewModel, ObservableObject {
 
     @Published private(set) var viewState: MediaViewState = .initial
 
-    private let serviceLocator: ServiceLocator
     private let interactor: MediaDomainInteractor
     private let reducer: MediaViewStateReducer
     private let eventMap: MediaEventActionMap
-    private var cancellables = Set<AnyCancellable>()
 
     init(
         serviceLocator: ServiceLocator,
         reducer: MediaViewStateReducer = MediaViewStateReducer(),
         eventMap: MediaEventActionMap = MediaEventActionMap()
     ) {
-        self.serviceLocator = serviceLocator
         interactor = MediaDomainInteractor(serviceLocator: serviceLocator)
         self.reducer = reducer
         self.eventMap = eventMap

@@ -26,7 +26,6 @@ final class ArticleDetailViewModel: CombineViewModel, ObservableObject {
     private let interactor: ArticleDetailDomainInteractor
     private let eventActionMap: ArticleDetailEventActionMap
     private let viewStateReducer: ArticleDetailViewStateReducer
-    private var cancellables = Set<AnyCancellable>()
 
     init(
         article: Article,

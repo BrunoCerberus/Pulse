@@ -24,7 +24,6 @@ final class SummarizationViewModel: CombineViewModel, ObservableObject {
     private let interactor: SummarizationDomainInteractor
     private let eventActionMap: SummarizationEventActionMap
     private let viewStateReducer: SummarizationViewStateReducer
-    private var cancellables = Set<AnyCancellable>()
 
     init(
         article: Article,
