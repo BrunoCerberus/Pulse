@@ -10,6 +10,8 @@ struct FeedViewTests {
     @Test("FeedView can be instantiated")
     func canBeInstantiated() {
         let serviceLocator = ServiceLocator()
+        serviceLocator.register(FeedService.self, instance: MockFeedService())
+        serviceLocator.register(NewsService.self, instance: MockNewsService())
         let viewModel = FeedViewModel(serviceLocator: serviceLocator)
         let router = FeedNavigationRouter()
         let view = FeedView(router: router, viewModel: viewModel, serviceLocator: serviceLocator)
