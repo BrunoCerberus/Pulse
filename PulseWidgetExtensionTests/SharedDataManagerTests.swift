@@ -1,5 +1,4 @@
 import Foundation
-@testable import PulseWidgetExtension
 import Testing
 
 @Suite("SharedDataManager Tests")

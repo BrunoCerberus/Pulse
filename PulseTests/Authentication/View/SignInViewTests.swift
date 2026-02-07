@@ -12,11 +12,4 @@ struct SignInViewTests {
         let view = SignInView(serviceLocator: serviceLocator)
         #expect(view is SignInView)
     }
-
-    @Test("init creates viewModel")
-    func initCreatesViewModel() {
-        let serviceLocator = ServiceLocator()
-        let view = SignInView(serviceLocator: serviceLocator)
-        #expect(view is SignInView)
-    }
 }

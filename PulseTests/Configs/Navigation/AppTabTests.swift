@@ -45,7 +45,7 @@ struct AppTabTests {
         let tabs: [AppTab] = [.home, .media, .feed, .bookmarks, .search]
         for tab in tabs {
             _ = tab.symbolEffect
-            #expect(true)
         }
+        #expect(tabs.count == AppTab.allCases.count)
     }
 }

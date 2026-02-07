@@ -45,6 +45,6 @@ struct LiveLLMServiceTests {
     func cancelGenerationCanBeCalledSafely() {
         let service = LiveLLMService()
         service.cancelGeneration()
-        #expect(service is LiveLLMService)
+        #expect(service.isModelLoaded == false)
     }
 }

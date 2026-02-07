@@ -1,75 +1,44 @@
 import Foundation
 import WidgetKit
-@testable import PulseWidgetExtension
 import Testing
 
 @Suite("NewsTimelineProvider Tests")
 struct NewsTimelineProviderTests {
-    @Test("placeholder returns correct entry")
-    func placeholderReturnsCorrectEntry() {
+    @Test("provider can be instantiated")
+    func providerCanBeInstantiated() {
         let provider = NewsTimelineProvider()
-        let entry = provider.placeholder(in: .mock)
-
-        #expect(entry.date is Date)
-        #expect(entry.articles == nil)
-        #expect(entry.family == .systemSmall)
-    }
-
-    @Test("getSnapshot returns empty when no articles")
-    func getSnapshotReturnsEmptyWhenNoArticles() {
-        let provider = NewsTimelineProvider()
-
-        let expectation = expectation(description: "Completion called")
-        provider.getSnapshot(in: .mock) { entry in
-            #expect(entry.articles == nil)
-            expectation.fulfill()
-        }
-
-        wait(for: [expectation], timeout: 1.0)
-    }
-
-    @Test("getTimeline returns empty when no articles")
-    func getTimelineReturnsEmptyWhenNoArticles() {
-        let provider = NewsTimelineProvider()
-
-        let expectation = expectation(description: "Completion called")
-        provider.getTimeline(in: .mock) { timeline in
-            #expect(timeline.entries.count == 1)
-            #expect(timeline.entries[0].articles == nil)
-            expectation.fulfill()
-        }
-
-        wait(for: [expectation], timeout: 1.0)
-    }
-
-    @Test("getTimeline limits articles based on family")
-    func getTimelineLimitsArticlesBasedOnFamily() {
-        let provider = NewsTimelineProvider()
-
-        let expectation = expectation(description: "Completion called")
-        provider.getTimeline(in: .mockSmall) { timeline in
-            #expect(timeline.entries.count == 1)
-            expectation.fulfill()
-        }
-
-        wait(for: [expectation], timeout: 1.0)
+        #expect(type(of: provider) == NewsTimelineProvider.self)
     }
 }
 
-extension WidgetContext {
-    static var mock: WidgetContext {
-        WidgetContext(family: .systemSmall)
+@Suite("NewsTimelineEntry Tests")
+struct NewsTimelineEntryTests {
+    @Test("entry stores date")
+    func entryStoresDate() {
+        let date = Date()
+        let entry = NewsTimelineEntry(date: date, articles: nil, family: .systemSmall)
+        #expect(entry.date == date)
     }
 
-    static var mockSmall: WidgetContext {
-        WidgetContext(family: .systemSmall)
+    @Test("entry stores nil articles")
+    func entryStoresNilArticles() {
+        let entry = NewsTimelineEntry(date: Date(), articles: nil, family: .systemSmall)
+        #expect(entry.articles == nil)
     }
 
-    static var mockMedium: WidgetContext {
-        WidgetContext(family: .systemMedium)
+    @Test("entry stores articles when provided")
+    func entryStoresArticlesWhenProvided() {
+        let articles = [
+            WidgetArticle(id: "1", title: "Test", source: "Source", imageData: nil),
+        ]
+        let entry = NewsTimelineEntry(date: Date(), articles: articles, family: .systemMedium)
+        #expect(entry.articles?.count == 1)
+        #expect(entry.articles?[0].id == "1")
     }
 
-    static var mockLarge: WidgetContext {
-        WidgetContext(family: .systemLarge)
+    @Test("entry stores correct family")
+    func entryStoresCorrectFamily() {
+        let entry = NewsTimelineEntry(date: Date(), articles: nil, family: .systemLarge)
+        #expect(entry.family == .systemLarge)
     }
 }

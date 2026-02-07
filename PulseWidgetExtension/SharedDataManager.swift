@@ -6,7 +6,7 @@ final class SharedDataManager {
     private let appGroupIdentifier = "group.com.bruno.Pulse-News"
     private let articlesKey = "shared_articles"
 
-    private init() {}
+    init() {}
 
     private var sharedDefaults: UserDefaults? {
         UserDefaults(suiteName: appGroupIdentifier)

@@ -1,6 +1,5 @@
 import Foundation
 import WidgetKit
-@testable import PulseWidgetExtension
 import Testing
 
 @Suite("WidgetArticle Tests")
