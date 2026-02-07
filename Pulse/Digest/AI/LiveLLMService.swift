@@ -1,5 +1,7 @@
 import Combine
+import EntropyCore
 import Foundation
+import LocalLlama
 
 /// Live implementation of LLMService using llama.cpp
 final class LiveLLMService: LLMService {
@@ -92,8 +94,6 @@ final class LiveLLMService: LLMService {
                         prompt: prompt,
                         systemPrompt: systemPrompt ?? LLMModelManager.defaultSystemPrompt,
                         maxTokens: config.maxTokens,
-                        temperature: config.temperature,
-                        topP: config.topP,
                         stopSequences: config.stopSequences
                     )
 
