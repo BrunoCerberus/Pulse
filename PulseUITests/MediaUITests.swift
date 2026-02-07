@@ -12,7 +12,7 @@ final class MediaUITests: BaseUITestCase {
     }
 
     func testNavigateToMediaTab() {
-        navigateToTab("Media")
+        navigateToMediaTab()
 
         // Verify we're on Media tab
         let mediaNavBar = app.navigationBars["Media"]
@@ -23,7 +23,7 @@ final class MediaUITests: BaseUITestCase {
     }
 
     func testMediaTabShowsSegmentedControl() {
-        navigateToTab("Media")
+        navigateToMediaTab()
 
         // Wait for content to load
         wait(for: 1.0)
@@ -41,7 +41,7 @@ final class MediaUITests: BaseUITestCase {
     // MARK: - Media Type Filter Tests
 
     func testFilterByVideos() {
-        navigateToTab("Media")
+        navigateToMediaTab()
         wait(for: 1.0)
 
         let videosButton = app.buttons["Videos"]
@@ -55,7 +55,7 @@ final class MediaUITests: BaseUITestCase {
     }
 
     func testFilterByPodcasts() {
-        navigateToTab("Media")
+        navigateToMediaTab()
         wait(for: 1.0)
 
         let podcastsButton = app.buttons["Podcasts"]
@@ -69,7 +69,7 @@ final class MediaUITests: BaseUITestCase {
     }
 
     func testFilterAllShowsBothTypes() {
-        navigateToTab("Media")
+        navigateToMediaTab()
         wait(for: 1.0)
 
         // First filter to Videos
@@ -93,7 +93,7 @@ final class MediaUITests: BaseUITestCase {
     // MARK: - Media Card Interaction Tests
 
     func testTapMediaCard() {
-        navigateToTab("Media")
+        navigateToMediaTab()
 
         // Wait for content to load
         let contentLoaded = waitForMediaContent(timeout: 30)
@@ -118,7 +118,7 @@ final class MediaUITests: BaseUITestCase {
     }
 
     func testMediaCardContextMenu() {
-        navigateToTab("Media")
+        navigateToMediaTab()
 
         let contentLoaded = waitForMediaContent(timeout: 30)
 
@@ -145,7 +145,7 @@ final class MediaUITests: BaseUITestCase {
     // MARK: - Pull to Refresh Tests
 
     func testPullToRefresh() {
-        navigateToTab("Media")
+        navigateToMediaTab()
 
         let contentLoaded = waitForMediaContent(timeout: 30)
 
@@ -165,7 +165,7 @@ final class MediaUITests: BaseUITestCase {
     // MARK: - Scroll Tests
 
     func testScrollMediaFeed() {
-        navigateToTab("Media")
+        navigateToMediaTab()
 
         let contentLoaded = waitForMediaContent(timeout: 30)
 
@@ -189,7 +189,7 @@ final class MediaUITests: BaseUITestCase {
     // MARK: - Featured Media Tests
 
     func testFeaturedMediaCarousel() {
-        navigateToTab("Media")
+        navigateToMediaTab()
 
         let contentLoaded = waitForMediaContent(timeout: 30)
 
@@ -215,7 +215,7 @@ final class MediaUITests: BaseUITestCase {
     // MARK: - Tab Switching Tests
 
     func testSwitchFromMediaToOtherTabs() {
-        navigateToTab("Media")
+        navigateToMediaTab()
         XCTAssertTrue(app.navigationBars["Media"].waitForExistence(timeout: Self.defaultTimeout))
 
         // Switch to Home
@@ -226,7 +226,7 @@ final class MediaUITests: BaseUITestCase {
         )
 
         // Switch back to Media
-        navigateToTab("Media")
+        navigateToMediaTab()
         XCTAssertTrue(app.navigationBars["Media"].waitForExistence(timeout: Self.shortTimeout))
 
         // Switch to Bookmarks
@@ -240,7 +240,7 @@ final class MediaUITests: BaseUITestCase {
     // MARK: - Error State Tests
 
     func testHandlesErrorState() {
-        navigateToTab("Media")
+        navigateToMediaTab()
         wait(for: 2.0)
 
         // Check for error state if it appears
