@@ -6,24 +6,16 @@ import Testing
 
 @Suite("LiveNewsService Tests")
 struct LiveNewsServiceTests {
-    // MARK: - Smoke Tests
-
     @Test("LiveNewsService can be instantiated")
     func canBeInstantiated() {
         let service = LiveNewsService()
-
         #expect(service is NewsService)
     }
-
-    // MARK: - Protocol Conformance Tests
 
     @Test("fetchTopHeadlines returns correct publisher type")
     func fetchTopHeadlinesReturnsCorrectType() {
         let service = LiveNewsService()
-
         let publisher = service.fetchTopHeadlines(country: "us", page: 1)
-
-        // Verify the publisher has the expected type signature
         let typeCheck: AnyPublisher<[Article], Error> = publisher
         #expect(typeCheck is AnyPublisher<[Article], Error>)
     }
@@ -31,10 +23,7 @@ struct LiveNewsServiceTests {
     @Test("fetchBreakingNews returns correct publisher type")
     func fetchBreakingNewsReturnsCorrectType() {
         let service = LiveNewsService()
-
         let publisher = service.fetchBreakingNews(country: "us")
-
-        // Verify the publisher has the expected type signature
         let typeCheck: AnyPublisher<[Article], Error> = publisher
         #expect(typeCheck is AnyPublisher<[Article], Error>)
     }
@@ -42,10 +31,7 @@ struct LiveNewsServiceTests {
     @Test("fetchTopHeadlines by category returns correct publisher type")
     func fetchTopHeadlinesByCategoryReturnsCorrectType() {
         let service = LiveNewsService()
-
         let publisher = service.fetchTopHeadlines(category: .technology, country: "us", page: 1)
-
-        // Verify the publisher has the expected type signature
         let typeCheck: AnyPublisher<[Article], Error> = publisher
         #expect(typeCheck is AnyPublisher<[Article], Error>)
     }
@@ -53,10 +39,7 @@ struct LiveNewsServiceTests {
     @Test("fetchArticle returns correct publisher type")
     func fetchArticleReturnsCorrectType() {
         let service = LiveNewsService()
-
         let publisher = service.fetchArticle(id: "test/article/id")
-
-        // Verify the publisher has the expected type signature
         let typeCheck: AnyPublisher<Article, Error> = publisher
         #expect(typeCheck is AnyPublisher<Article, Error>)
     }
@@ -64,14 +47,10 @@ struct LiveNewsServiceTests {
 
 @Suite("GuardianAPI Tests")
 struct GuardianAPITests {
-    // MARK: - Path Construction Tests
-
     @Test("GuardianAPI search path includes required parameters")
     func searchPathIncludesRequiredParameters() {
         let api = GuardianAPI.search(query: nil, section: nil, page: 1, pageSize: 20, orderBy: "newest")
-
         let path = api.path
-
         #expect(path.contains("/search"))
         #expect(path.contains("page=1"))
         #expect(path.contains("page-size=20"))
@@ -83,37 +62,28 @@ struct GuardianAPITests {
     @Test("GuardianAPI search includes query when provided")
     func searchIncludesQuery() {
         let api = GuardianAPI.search(query: "swift", section: nil, page: 1, pageSize: 20, orderBy: "relevance")
-
         let path = api.path
-
         #expect(path.contains("q=swift"))
     }
 
     @Test("GuardianAPI search includes section when provided")
     func searchIncludesSection() {
         let api = GuardianAPI.search(query: nil, section: "technology", page: 1, pageSize: 10, orderBy: "newest")
-
         let path = api.path
-
         #expect(path.contains("section=technology"))
     }
 
     @Test("GuardianAPI search omits empty query")
     func searchOmitsEmptyQuery() {
         let api = GuardianAPI.search(query: "", section: nil, page: 1, pageSize: 20, orderBy: "newest")
-
         let path = api.path
-
-        // Empty query should not add q= parameter
         #expect(!path.contains("q="))
     }
 
     @Test("GuardianAPI sections path is correct")
     func sectionsPath() {
         let api = GuardianAPI.sections
-
         let path = api.path
-
         #expect(path.contains("/sections"))
         #expect(path.contains("api-key="))
     }
@@ -121,9 +91,7 @@ struct GuardianAPITests {
     @Test("GuardianAPI article path includes id")
     func articlePathIncludesId() {
         let api = GuardianAPI.article(id: "world/2024/jan/01/test-article")
-
         let path = api.path
-
         #expect(path.contains("/world/2024/jan/01/test-article"))
         #expect(path.contains("show-fields="))
         #expect(path.contains("api-key="))
@@ -134,7 +102,6 @@ struct GuardianAPITests {
         let searchAPI = GuardianAPI.search(query: nil, section: nil, page: 1, pageSize: 20, orderBy: "newest")
         let sectionsAPI = GuardianAPI.sections
         let articleAPI = GuardianAPI.article(id: "test")
-
         #expect(searchAPI.method == .GET)
         #expect(sectionsAPI.method == .GET)
         #expect(articleAPI.method == .GET)
@@ -143,18 +110,14 @@ struct GuardianAPITests {
     @Test("GuardianAPI task is nil")
     func taskIsNil() {
         let api = GuardianAPI.search(query: nil, section: nil, page: 1, pageSize: 20, orderBy: "newest")
-
         #expect(api.task == nil)
     }
 
     @Test("GuardianAPI header is nil")
     func headerIsNil() {
         let api = GuardianAPI.search(query: nil, section: nil, page: 1, pageSize: 20, orderBy: "newest")
-
         #expect(api.header == nil)
     }
-
-    // MARK: - Category Section Mapping Tests
 
     @Test("NewsCategory guardianSection mappings are correct")
     func categoryGuardianSectionMappings() {

@@ -63,15 +63,15 @@ struct PulseNewsWidgetEntryView: View {
         }
     }
 
-    private var headerSpacing: CGFloat {
+    var headerSpacing: CGFloat {
         entry.family == .systemSmall ? 6 : 8
     }
 
-    private var contentSpacing: CGFloat {
+    var contentSpacing: CGFloat {
         entry.family == .systemSmall ? 8 : 10
     }
 
-    private func articleLimit(for family: WidgetFamily) -> Int {
+    func articleLimit(for family: WidgetFamily) -> Int {
         switch family {
         case .systemSmall:
             1
