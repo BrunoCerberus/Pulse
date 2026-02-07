@@ -69,10 +69,11 @@ extension DigestViewItem {
                let parsed = parsedContent[categoryName], !parsed.isEmpty
             {
                 // Check if this exact parsed content was already used by another category
-                // This indicates a parsing failure where all content ended up in one category
                 let normalizedParsed = parsed.lowercased().trimmingCharacters(in: .whitespacesAndNewlines)
                 if seenParsedContent.contains(normalizedParsed) {
-                    // Same content already used - generate fallback instead
+                    content = generateContentFromArticles(articles, category: category)
+                } else if Self.containsOtherCategorySubjects(normalizedParsed, excluding: categoryName) {
+                    // Content mentions other categories as subjects — LLM mixed categories
                     content = generateContentFromArticles(articles, category: category)
                 } else {
                     seenParsedContent.insert(normalizedParsed)
@@ -142,6 +143,23 @@ extension DigestViewItem {
     private static let allCategoryNames = [
         "technology", "business", "world", "science", "health", "sports", "entertainment",
     ]
+
+    /// Detects if content mentions other categories as sentence subjects,
+    /// indicating the LLM wrote one mixed paragraph instead of separate sections
+    private static func containsOtherCategorySubjects(_ content: String, excluding category: String) -> Bool {
+        let otherCategories = allCategoryNames.filter { $0 != category }
+        var matches = 0
+        for other in otherCategories {
+            // Match patterns like "Business news reveals", "Health reports", "Science continues"
+            // These indicate the LLM is discussing another category's content inline
+            let pattern = "\\b\(other)\\s+(?:news|report|update|coverage|sector|analysis|development)"
+            if content.range(of: pattern, options: [.regularExpression, .caseInsensitive]) != nil {
+                matches += 1
+            }
+        }
+        // If 2+ other categories are mentioned as subjects, the content is mixed
+        return matches >= 2
+    }
 
     /// Strips any remaining category markers from extracted content
     private static func stripCategoryMarkers(from content: String) -> String {

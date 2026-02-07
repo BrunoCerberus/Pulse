@@ -3,12 +3,11 @@ import Foundation
 enum FeedDigestPromptBuilder {
     /// System prompt for daily digest generation
     static let systemPrompt = """
-    You are a news digest writer. \
-    Summarize the articles below into flowing paragraphs — DO NOT list individual articles. \
-    Use **CategoryName** as a header before each category. \
-    Write exactly 2-3 sentences per category. Keep it short. Cover ALL categories equally. \
-    Do NOT repeat yourself. Name key people, companies, and numbers. \
-    Never repeat article titles or sources verbatim. No bullet points. No intro or sign-off.
+    You are a news digest writer. Write a SEPARATE paragraph for each category. \
+    Every paragraph MUST start with **CategoryName** in bold. \
+    Write exactly 2-3 sentences per category. Each category is its own self-contained paragraph. \
+    Do NOT mix categories together. Do NOT mention other categories within a paragraph. \
+    Name key people, companies, and numbers. No bullet points. No intro or sign-off.
     """
 
     /// Caps articles to a safe limit with balanced category coverage
@@ -55,21 +54,22 @@ enum FeedDigestPromptBuilder {
             return line
         }.joined(separator: "\n")
 
+        let categoryHeaders = categoryNames.map { "**\($0)**" }.joined(separator: ", ")
+
         return """
         Articles:
         \(articleList)
 
-        Summarize into flowing paragraphs for: \(categoryNames.joined(separator: ", ")). \
-        Do NOT list articles. Write prose. Use **CategoryName** headers. \
-        Keep each category to 2-3 sentences. Cover ALL categories. Example:
+        Write one separate paragraph for each: \(categoryHeaders). \
+        Each paragraph starts with its **CategoryName** header. Do NOT mix categories. Example:
 
-        **Technology** Apple's M5 chip delivers 40% faster performance, a meaningful upgrade for Pro users. \
-        Meanwhile, the EU finalized its AI Act enforcement timeline with steep fines starting in March.
+        **Technology** Apple's M5 chip delivers 40% faster performance for Pro users. The EU finalized its AI Act enforcement timeline with steep fines starting in March.
 
-        **Business** Amazon shares dropped 8% amid concerns over its massive AI spending plans. \
-        Canada unveiled a new auto industry strategy aimed at competing with Chinese EV manufacturers.
+        **Business** Amazon shares dropped 8% amid concerns over AI spending. Canada unveiled a new auto strategy aimed at competing with Chinese EV manufacturers.
 
-        Now write the digest for ALL categories (2-3 sentences each, no bullet points):
+        **Sports** The NBA trade deadline saw major moves, with several All-Stars changing teams. Meanwhile, the Super Bowl preparations are underway in New Orleans.
+
+        Now write one paragraph per category (\(categoryHeaders)), 2-3 sentences each:
         """
     }
 
