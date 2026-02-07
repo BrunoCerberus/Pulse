@@ -203,6 +203,22 @@ class BaseUITestCase: XCTestCase {
         _ = app.navigationBars["Daily Digest"].waitForExistence(timeout: Self.defaultTimeout)
     }
 
+    /// Navigate to Media tab and verify navigation bar appears
+    func navigateToMediaTab() {
+        let mediaTab = app.tabBars.buttons["Media"]
+        // Use waitForExistence for CI reliability
+        if mediaTab.waitForExistence(timeout: Self.shortTimeout), !mediaTab.isSelected {
+            mediaTab.tap()
+        } else if !mediaTab.exists {
+            // Fallback: try finding the button directly
+            let mediaButton = app.buttons["Media"]
+            if mediaButton.waitForExistence(timeout: 2), !mediaButton.isSelected {
+                mediaButton.tap()
+            }
+        }
+        _ = app.navigationBars["Media"].waitForExistence(timeout: Self.defaultTimeout)
+    }
+
     /// Navigate to Bookmarks tab and verify navigation bar appears
     func navigateToBookmarksTab() {
         let bookmarksTab = app.tabBars.buttons["Bookmarks"]
