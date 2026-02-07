@@ -133,17 +133,11 @@ final class LLMModelManager: @unchecked Sendable { // swiftlint:disable:this typ
     ///   - prompt: The user prompt/message to generate from
     ///   - systemPrompt: System prompt defining assistant behavior
     ///   - maxTokens: Maximum tokens to generate
-    ///   - temperature: Sampling temperature (unused - LocalLlama Configuration.temperature is used instead)
-    ///   - topP: Top-p sampling (unused - LocalLlama Configuration.topP is used instead)
     ///   - stopSequences: Sequences that stop generation when encountered
-    /// - Note: temperature and topP are kept for API compatibility. To customize these values,
-    ///   configure them when creating the SwiftLlama instance via Configuration.
     func generate(
         prompt: String,
         systemPrompt: String = LLMModelManager.defaultSystemPrompt,
         maxTokens: Int,
-        temperature _: Float,
-        topP _: Float,
         stopSequences: [String]
     ) -> AsyncThrowingStream<String, Error> {
         AsyncThrowingStream { [weak self] continuation in
