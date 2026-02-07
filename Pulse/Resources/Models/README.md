@@ -4,17 +4,17 @@ This directory contains the GGUF model files required for on-device AI features 
 
 ## Required Model
 
-**Llama 3.2 1B Instruct (Q4_K_M quantization)**
+**LFM 2.5 1.2B Instruct (Q4_K_M quantization)**
 
-- **Filename**: `Llama-3.2-1B-Instruct-Q4_K_M.gguf`
-- **Size**: ~770 MB
-- **Source**: [Hugging Face](https://huggingface.co/bartowski/Llama-3.2-1B-Instruct-GGUF)
+- **Filename**: `LFM2.5-1.2B-Instruct-Q4_K_M.gguf`
+- **Size**: ~731 MB
+- **Source**: [Hugging Face](https://huggingface.co/LiquidAI/LFM2.5-1.2B-Instruct-GGUF)
 
 ## Download
 
 ```bash
-curl -L -o Pulse/Resources/Models/Llama-3.2-1B-Instruct-Q4_K_M.gguf \
-  "https://huggingface.co/bartowski/Llama-3.2-1B-Instruct-GGUF/resolve/main/Llama-3.2-1B-Instruct-Q4_K_M.gguf"
+curl -L -o Pulse/Resources/Models/LFM2.5-1.2B-Instruct-Q4_K_M.gguf \
+  "https://huggingface.co/LiquidAI/LFM2.5-1.2B-Instruct-GGUF/resolve/main/LFM2.5-1.2B-Instruct-Q4_K_M.gguf"
 ```
 
 Or download manually from the Hugging Face link above and place the file in this directory.

@@ -334,20 +334,10 @@ final class FeedDomainInteractor: CombineInteractor {
     }
 
     private func handleDigestCompleted(_ digest: DailyDigest) {
-        // Step 1: Clear streaming text and set digest while still in .generating state.
-        // This hides the streaming card BEFORE the transition animation starts.
         updateState { state in
             state.currentDigest = digest
             state.streamingText = ""
-        }
-
-        // Step 2: After one frame, transition to .completed.
-        // The processing view now shows only the orb (no streaming card) during fade-out.
-        Task { @MainActor in
-            try? await Task.sleep(nanoseconds: 50_000_000) // 50ms
-            updateState { state in
-                state.generationState = .completed
-            }
+            state.generationState = .completed
         }
     }
 

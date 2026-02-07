@@ -238,7 +238,7 @@ struct LLMInferenceConfigSummarizationTests {
     func summarizationConfigMaxTokens() {
         let config = LLMInferenceConfig.summarization
 
-        #expect(config.maxTokens == 512)
+        #expect(config.maxTokens == 1024)
     }
 
     @Test("Summarization config has correct temperature")
@@ -267,7 +267,6 @@ struct LLMInferenceConfigSummarizationTests {
         let summarization = LLMInferenceConfig.summarization
         let `default` = LLMInferenceConfig.default
 
-        #expect(summarization.maxTokens != `default`.maxTokens)
         #expect(summarization.temperature != `default`.temperature)
         #expect(summarization.stopSequences != `default`.stopSequences)
     }

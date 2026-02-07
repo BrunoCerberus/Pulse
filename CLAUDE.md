@@ -460,7 +460,7 @@ if let cachingService = newsService as? CachingNewsService {
 | `AudioPlayerManager.swift` | AVPlayer wrapper managing playback state and time observation |
 | **AI/LLM** | |
 | `LLMService.swift` | Protocol for LLM operations (load, generate, cancel) |
-| `LiveLLMService.swift` | llama.cpp implementation via LocalLlama package |
+| `LiveLLMService.swift` | LEAP SDK implementation for on-device LLM inference |
 | `LLMModelManager.swift` | Model lifecycle (load/unload, memory checks) |
 | `LLMConfiguration.swift` | Model paths, inference parameters (context size, batch size) |
 | **LLM Performance** | Metal acceleration on device, flash attention, mmap loading, model preloading |

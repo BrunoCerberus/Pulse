@@ -1,6 +1,6 @@
 import EntropyCore
 import Foundation
-import LocalLlama
+import LeapSDK
 import os
 #if canImport(UIKit)
     import UIKit
@@ -10,8 +10,8 @@ import os
 
 /// Manages the lifecycle of the LLM model (loading, inference, unloading)
 ///
-/// Uses SwiftLlama actor for thread-safe on-device inference with GGUF models.
-final class LLMModelManager: @unchecked Sendable { // swiftlint:disable:this type_body_length
+/// Uses LEAP SDK's ModelRunner for on-device inference with GGUF models.
+final class LLMModelManager: @unchecked Sendable {
     static let shared = LLMModelManager()
 
     /// Default system prompt for general-purpose LLM interactions
@@ -20,12 +20,12 @@ final class LLMModelManager: @unchecked Sendable { // swiftlint:disable:this typ
     private let logger = Logger.shared
     private let logCategory = "LLMModelManager"
 
-    /// SwiftLlama actor instance - all operations are thread-safe
-    private var swiftLlama: SwiftLlama?
-    private var isCancelled = false
+    /// LEAP ModelRunner instance
+    private var modelRunner: ModelRunner?
+    private var generationTask: Task<Void, Never>?
     private var memoryWarningObserverToken: NSObjectProtocol?
 
-    /// Async-safe lock for protecting swiftLlama reference changes
+    /// Async-safe lock for protecting modelRunner reference changes
     private let lock = OSAllocatedUnfairLock()
 
     // MARK: - Simulator Warning State
@@ -60,12 +60,12 @@ final class LLMModelManager: @unchecked Sendable { // swiftlint:disable:this typ
 
     /// Check if model is currently loaded
     var modelIsLoaded: Bool {
-        lock.withLock { swiftLlama != nil }
+        lock.withLock { modelRunner != nil }
     }
 
     /// Load the GGUF model into memory
     func loadModel(progressHandler: @escaping @Sendable (Double) -> Void) async throws {
-        let alreadyLoaded = lock.withLock { swiftLlama != nil }
+        let alreadyLoaded = lock.withLock { modelRunner != nil }
         if alreadyLoaded { return }
 
         let memoryTier = MemoryTier.current
@@ -78,34 +78,33 @@ final class LLMModelManager: @unchecked Sendable { // swiftlint:disable:this typ
 
         progressHandler(0.1)
 
-        guard let modelPath = LLMConfiguration.modelURL?.path,
-              FileManager.default.fileExists(atPath: modelPath)
+        guard let modelURL = LLMConfiguration.modelURL,
+              FileManager.default.fileExists(atPath: modelURL.path)
         else {
             logger.warning("Model file not found", category: logCategory)
             throw LLMError.modelLoadFailed("Model file not bundled. Please add the GGUF model to Resources/Models/")
         }
 
-        logger.info("Loading model from: \(modelPath)", category: logCategory)
+        logger.info("Loading model from: \(modelURL.path)", category: logCategory)
         progressHandler(0.3)
-
-        let llama = SwiftLlama(modelPath: modelPath, modelConfiguration: makeConfiguration())
 
         do {
             progressHandler(0.5)
-            try llama.initialize()
+            let runner = try await Leap.load(url: modelURL)
             progressHandler(0.8)
 
             // Only lock when setting the shared state
             // Double-check: another caller may have loaded while we were initializing
             let wasAlreadyLoaded = lock.withLock {
-                if swiftLlama != nil {
+                if modelRunner != nil {
                     return true
                 }
-                swiftLlama = llama
+                modelRunner = runner
                 return false
             }
             if wasAlreadyLoaded {
                 // Another thread loaded first, discard our instance
+                await runner.unload()
                 return
             }
 
@@ -119,13 +118,19 @@ final class LLMModelManager: @unchecked Sendable { // swiftlint:disable:this typ
 
     /// Unload model and free memory
     func unloadModel() async {
-        lock.withLock { swiftLlama = nil }
+        let runner = lock.withLock { () -> ModelRunner? in
+            let r = modelRunner
+            modelRunner = nil
+            return r
+        }
+        await runner?.unload()
         logger.info("Model unloaded", category: logCategory)
     }
 
     /// Cancel current generation
     func cancelGeneration() {
-        isCancelled = true
+        generationTask?.cancel()
+        generationTask = nil
     }
 
     /// Generate text from prompt
@@ -146,7 +151,7 @@ final class LLMModelManager: @unchecked Sendable { // swiftlint:disable:this typ
                 return
             }
 
-            Task {
+            self.generationTask = Task {
                 await self.runInference(
                     prompt: prompt,
                     systemPrompt: systemPrompt,
@@ -168,7 +173,7 @@ final class LLMModelManager: @unchecked Sendable { // swiftlint:disable:this typ
         stopSequences: [String],
         continuation: AsyncThrowingStream<String, Error>.Continuation
     ) async {
-        guard let llama = lock.withLock({ swiftLlama }) else {
+        guard let runner = lock.withLock({ modelRunner }) else {
             continuation.finish(throwing: LLMError.modelNotLoaded)
             return
         }
@@ -180,15 +185,6 @@ final class LLMModelManager: @unchecked Sendable { // swiftlint:disable:this typ
             continuation.finish(throwing: LLMError.memoryPressure)
             return
         }
-
-        isCancelled = false
-
-        // Create Prompt for Llama 3.2 model
-        let llamaPrompt = Prompt(
-            type: .llama3,
-            systemPrompt: systemPrompt,
-            userMessage: prompt
-        )
 
         // Log prompt size for debugging context overflow issues
         let estimatedPromptTokens = (systemPrompt.count + prompt.count) / 4
@@ -207,59 +203,82 @@ final class LLMModelManager: @unchecked Sendable { // swiftlint:disable:this typ
         }
 
         do {
-            // Generate on the SwiftLlama actor - fully thread-safe
-            let result = try await llama.generate(for: llamaPrompt)
+            // Create conversation with system prompt using LEAP SDK
+            let conversation = runner.createConversation(systemPrompt: systemPrompt)
 
-            // Check cancellation before processing results to avoid yielding cancelled output
-            if isCancelled {
-                logger.info("Generation cancelled by user", category: logCategory)
-                continuation.finish(throwing: LLMError.generationCancelled)
-                return
-            }
+            // Send user message and stream response
+            let userMessage = ChatMessage(role: .user, content: [.text(prompt)])
+            let responseStream = conversation.generateResponse(message: userMessage)
 
-            // Process result - apply stop sequences and max length
-            var processedResult = result
-            for stop in stopSequences {
-                if let range = processedResult.range(of: stop) {
-                    processedResult = String(processedResult[..<range.lowerBound])
+            var totalCharacters = 0
+            var stopDetected = false
+
+            for try await response in responseStream {
+                if Task.isCancelled {
+                    logger.info("Generation cancelled by user", category: logCategory)
+                    continuation.finish(throwing: LLMError.generationCancelled)
+                    return
+                }
+
+                switch response {
+                case let .chunk(text):
+                    // Check for stop sequences in the accumulated text
+                    for stop in stopSequences {
+                        if text.contains(stop) {
+                            // Yield text up to the stop sequence
+                            if let range = text.range(of: stop) {
+                                let prefix = String(text[..<range.lowerBound])
+                                if !prefix.isEmpty {
+                                    continuation.yield(prefix)
+                                }
+                            }
+                            stopDetected = true
+                            break
+                        }
+                    }
+
+                    if stopDetected { break }
+
+                    // Check max tokens (approximate by characters / 4)
+                    totalCharacters += text.count
+                    if totalCharacters > maxTokens * 4 {
+                        break
+                    }
+
+                    continuation.yield(text)
+
+                case .complete:
+                    break
+
+                default:
+                    break
+                }
+
+                if stopDetected || totalCharacters > maxTokens * 4 {
                     break
                 }
             }
 
-            // Trim to approximate max tokens (multiply by 4 as rough chars-per-token estimate)
-            let maxCharacters = maxTokens * 4
-            if processedResult.count > maxCharacters {
-                processedResult = String(processedResult.prefix(maxCharacters))
-            }
-
-            // Final cancellation check before yielding
-            if isCancelled {
-                logger.info("Generation cancelled before yielding result", category: logCategory)
-                continuation.finish(throwing: LLMError.generationCancelled)
-                return
-            }
-
-            // Yield the entire result at once
-            continuation.yield(processedResult)
             continuation.finish()
+            logger.info("Inference completed, generated \(totalCharacters) characters", category: logCategory)
 
-            logger.info("Inference completed, generated \(processedResult.count) characters", category: logCategory)
-        } catch let error as NSError {
-            // Handle specific error cases that could indicate crashes
-            logger.error("Inference failed: \(error)", category: logCategory)
+        } catch let error as LeapError {
+            logger.error("LEAP inference failed: \(error)", category: logCategory)
 
-            if error.domain == "LocalLlama" || error.domain == NSPOSIXErrorDomain {
-                // Native library errors - may indicate memory or context issues
-                if error.code == ENOMEM || error.localizedDescription.lowercased().contains("memory") {
-                    continuation.finish(throwing: LLMError.memoryPressure)
-                    return
-                }
+            switch error {
+            case .promptExceedContextLengthFailure:
+                continuation.finish(throwing: LLMError.generationFailed("Prompt exceeds context window"))
+            default:
+                continuation.finish(throwing: LLMError.generationFailed(error.localizedDescription))
             }
-
-            continuation.finish(throwing: LLMError.generationFailed(error.localizedDescription))
         } catch {
-            logger.error("Inference failed with unexpected error: \(error)", category: logCategory)
-            continuation.finish(throwing: LLMError.generationFailed(error.localizedDescription))
+            if Task.isCancelled {
+                logger.info("Generation cancelled", category: logCategory)
+                continuation.finish(throwing: LLMError.generationCancelled)
+            } else {
+                logger.error("Inference failed with unexpected error: \(error)", category: logCategory)
+                continuation.finish(throwing: LLMError.generationFailed(error.localizedDescription))
+            }
         }
     }
 
@@ -267,21 +286,7 @@ final class LLMModelManager: @unchecked Sendable { // swiftlint:disable:this typ
 
     private func logMemoryTier(_ tier: MemoryTier) {
         let ctx = LLMConfiguration.contextSize
-        let batch = LLMConfiguration.batchSize
-        logger.info("Memory tier: \(tier.description), ctx: \(ctx), batch: \(batch)", category: logCategory)
-    }
-
-    private func makeConfiguration() -> Configuration {
-        Configuration(
-            topK: 40,
-            topP: 0.9,
-            nCTX: LLMConfiguration.contextSize,
-            temperature: 0.7,
-            batchSize: LLMConfiguration.batchSize,
-            maxTokenCount: LLMConfiguration.contextSize,
-            stopTokens: ["</digest>", "---"],
-            timeout: LLMConfiguration.generationTimeout
-        )
+        logger.info("Memory tier: \(tier.description), ctx: \(ctx)", category: logCategory)
     }
 
     /// Checks if the device has adequate memory for the specified operation.

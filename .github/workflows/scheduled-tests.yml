@@ -651,7 +651,8 @@ jobs:
           -scheme PulseDev \
           -destination 'platform=iOS Simulator,name=iPhone Air,OS=26.2' \
           -quiet \
-          CODE_SIGNING_ALLOWED=NO || {
+          CODE_SIGNING_ALLOWED=NO \
+          -skipMacroValidation || {
             echo "build_failed=true" >> $GITHUB_OUTPUT
             echo "::warning::Build failed after Claude's fixes - changes may be incomplete"
             exit 0

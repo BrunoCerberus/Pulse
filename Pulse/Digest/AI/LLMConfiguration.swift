@@ -34,9 +34,9 @@ enum MemoryTier: String {
 /// Configuration for the bundled LLM model
 enum LLMConfiguration {
     /// Model file name without extension
-    /// Note: Download from https://huggingface.co/bartowski/Llama-3.2-1B-Instruct-GGUF
+    /// Note: Download from https://huggingface.co/LiquidAI/LFM2.5-1.2B-Instruct-GGUF
     static var modelFileName: String {
-        "Llama-3.2-1B-Instruct-Q4_K_M"
+        "LFM2.5-1.2B-Instruct-Q4_K_M"
     }
 
     /// Model file extension
@@ -55,24 +55,13 @@ enum LLMConfiguration {
     }
 
     /// Context window size (tokens) - memory-adaptive for device safety
-    /// - Constrained: 2048 (prevents OOM on 3GB devices)
-    /// - Standard/High: 3072 (balanced performance vs speed)
-    /// Note: Larger context (4096) significantly slows generation without proportional benefit
+    /// - Constrained: 4096 (conservative use of 32K to balance speed)
+    /// - Standard/High: 8192 (balanced performance vs speed)
+    /// Note: LFM 2.5 supports up to 32K context but we cap for inference speed
     static var contextSize: Int {
         switch MemoryTier.current {
-        case .constrained: return 2048
-        case .standard, .high: return 3072
-        }
-    }
-
-    /// Batch size for prompt processing - memory-adaptive
-    /// Larger batch = faster prompt ingestion (prompt tokens processed in parallel)
-    /// Token generation is sequential, so batch size doesn't affect generation speed
-    static var batchSize: Int {
-        switch MemoryTier.current {
-        case .constrained: return 512
-        case .standard: return 1024
-        case .high: return 2048
+        case .constrained: return 4096
+        case .standard, .high: return 8192
         }
     }
 
@@ -116,16 +105,16 @@ enum LLMConfiguration {
     /// Higher caps give the model more material per category for richer summaries
     static var maxArticlesForDigest: Int {
         switch MemoryTier.current {
-        case .constrained: return 10
-        case .standard, .high: return 18
+        case .constrained: return 15
+        case .standard, .high: return 25
         }
     }
 
     /// Maximum articles to include per category for balanced digest coverage
     static var maxArticlesPerCategory: Int {
         switch MemoryTier.current {
-        case .constrained: return 2
-        case .standard, .high: return 3
+        case .constrained: return 3
+        case .standard, .high: return 4
         }
     }
 
@@ -136,13 +125,12 @@ enum LLMConfiguration {
         100
     }
 
-    /// Maximum output tokens for digest generation
-    /// Capping output prevents the 1B model from entering repetition loops
-    /// ~5 sentences per category × ~20 tokens/sentence × ~4 categories ≈ 400-600 tokens
+    /// Maximum output tokens for generation
+    /// LFM 2.5 handles longer outputs well with its 32K context window
     static var maxOutputTokens: Int {
         switch MemoryTier.current {
-        case .constrained: return 400
-        case .standard, .high: return 600
+        case .constrained: return 1024
+        case .standard, .high: return 2048
         }
     }
 
@@ -153,6 +141,6 @@ enum LLMConfiguration {
 
     /// Reserved tokens for system prompt and generation output
     static var reservedContextTokens: Int {
-        1200
+        1500
     }
 }
