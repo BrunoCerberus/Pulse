@@ -24,7 +24,6 @@ final class FeedViewModel: CombineViewModel, ObservableObject {
     private let interactor: FeedDomainInteractor
     private let eventActionMap: FeedEventActionMap
     private let viewStateReducer: FeedViewStateReducer
-    private var cancellables = Set<AnyCancellable>()
 
     init(
         serviceLocator: ServiceLocator,

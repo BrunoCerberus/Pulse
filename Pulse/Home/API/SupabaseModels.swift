@@ -211,25 +211,3 @@ struct SupabaseSearchResult: Codable {
         }
     }
 }
-
-// MARK: - Category Response Model
-
-/// Category data from /api-categories endpoint
-struct SupabaseCategory: Codable {
-    let id: String
-    let name: String
-    let slug: String
-}
-
-// MARK: - Source Response Model
-
-/// Source data from /api-sources endpoint
-struct SupabaseSource: Codable {
-    let id: String
-    let name: String
-    let slug: String
-    let websiteUrl: String?
-    let logoUrl: String?
-    let categoryId: String?
-    let isActive: Bool?
-}

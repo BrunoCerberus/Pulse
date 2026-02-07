@@ -20,7 +20,6 @@ final class SignInViewModel: CombineViewModel, ObservableObject {
     @Published private(set) var viewState: SignInViewState = .initial
 
     private let interactor: AuthDomainInteractor
-    private var cancellables = Set<AnyCancellable>()
 
     init(serviceLocator: ServiceLocator) {
         interactor = AuthDomainInteractor(serviceLocator: serviceLocator)

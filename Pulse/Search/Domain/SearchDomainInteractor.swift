@@ -28,7 +28,6 @@ final class SearchDomainInteractor: CombineInteractor {
     private let stateSubject = CurrentValueSubject<SearchDomainState, Never>(.initial)
     private var cancellables = Set<AnyCancellable>()
     private var searchCancellable: AnyCancellable?
-    private var backgroundTasks = Set<Task<Void, Never>>()
 
     var statePublisher: AnyPublisher<SearchDomainState, Never> {
         stateSubject.eraseToAnyPublisher()
@@ -225,27 +224,6 @@ final class SearchDomainInteractor: CombineInteractor {
     private func selectArticle(_ article: Article) {
         updateState { state in
             state.selectedArticle = article
-        }
-    }
-
-    /// Safely tracks and auto-removes background tasks with proper cleanup on deinit.
-    /// Uses a single MainActor Task to ensure atomic insertion and removal (no race condition).
-    private func trackBackgroundTask(_ operation: @escaping @Sendable () async -> Void) {
-        let task = Task.detached {
-            await operation()
-        }
-        backgroundTasks.insert(task)
-
-        Task { @MainActor [weak self] in
-            _ = await task.result
-            self?.backgroundTasks.remove(task)
-        }
-    }
-
-    deinit {
-        // Cancel all pending tasks on deallocation
-        for task in backgroundTasks {
-            task.cancel()
         }
     }
 

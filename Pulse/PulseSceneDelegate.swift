@@ -21,12 +21,6 @@ final class PulseSceneDelegate: UIResponder, UIWindowSceneDelegate {
     /// Service locator for dependency injection
     private let serviceLocator: ServiceLocator = .init()
 
-    /// Deeplink router for handling navigation from deeplinks
-    private var deeplinkRouter: DeeplinkRouter?
-
-    /// Tracks whether splash screen has been shown
-    private var hasSplashBeenShown = false
-
     /**
      * Called when a scene is being created and connected to the app.
      *
@@ -54,9 +48,6 @@ final class PulseSceneDelegate: UIResponder, UIWindowSceneDelegate {
 
         // Preload LLM model in background for faster digest generation
         preloadLLMModelIfPremium()
-
-        // Initialize deeplink router for coordinator-based navigation
-        deeplinkRouter = DeeplinkRouter()
 
         // Ensure we have a valid window scene
         guard let windowScene = scene as? UIWindowScene else { return }
@@ -154,7 +145,6 @@ final class PulseSceneDelegate: UIResponder, UIWindowSceneDelegate {
         if shouldReduceMotion {
             // No animation for reduce motion
             window.rootViewController = rootView
-            hasSplashBeenShown = true
         } else {
             UIView.transition(
                 with: window,
@@ -163,9 +153,7 @@ final class PulseSceneDelegate: UIResponder, UIWindowSceneDelegate {
                 animations: {
                     window.rootViewController = rootView
                 },
-                completion: { [weak self] _ in
-                    self?.hasSplashBeenShown = true
-                }
+                completion: nil
             )
         }
     }

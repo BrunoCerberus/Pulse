@@ -32,7 +32,6 @@ final class PaywallViewModel: ObservableObject, CombineViewModel {
 
     private let domainInteractor: PaywallDomainInteractor
     private let viewStateReducer: PaywallViewStateReducing
-    private var cancellables = Set<AnyCancellable>()
 
     // MARK: - Initialization
 

@@ -36,7 +36,6 @@ final class LiveStoreKitService: StoreKitService {
     private let subscriptionStatusSubject = CurrentValueSubject<Bool, Never>(false)
     private var updateListenerTask: Task<Void, Never>?
     private var initialStatusTask: Task<Void, Never>?
-    private var cancellables = Set<AnyCancellable>()
     private var isListening = true
 
     var subscriptionStatusPublisher: AnyPublisher<Bool, Never> {
