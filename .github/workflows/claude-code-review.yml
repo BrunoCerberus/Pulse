@@ -2,7 +2,7 @@ name: Claude Code Review
 
 on:
   pull_request:
-    types: [opened, synchronize]
+    types: [opened, synchronize, ready_for_review, reopened]
     # Optional: Only run on specific file changes
     # paths:
     #   - "src/**/*.ts"
@@ -21,7 +21,7 @@ jobs:
     runs-on: ubuntu-latest
     permissions:
       contents: read
-      pull-requests: write
+      pull-requests: read
       issues: read
       id-token: write
 
@@ -36,24 +36,9 @@ jobs:
         uses: anthropics/claude-code-action@v1
         with:
           claude_code_oauth_token: ${{ secrets.CLAUDE_CODE_OAUTH_TOKEN }}
-          prompt: |
-            REPO: ${{ github.repository }}
-            PR NUMBER: ${{ github.event.pull_request.number }}
-
-            Please review this pull request and provide feedback on:
-            - Code quality and best practices
-            - Potential bugs or issues
-            - Performance considerations
-            - Security concerns
-            - Test coverage
-
-            Use the repository's CLAUDE.md for guidance on style and conventions. Be constructive and helpful in your feedback.
-
-            After your review:
-            - If the PR looks good with no significant issues, APPROVE it using `gh pr review --approve -b "Your approval message"`
-            - If there are issues that need addressing, leave a comment using `gh pr comment` with your feedback
-
+          plugin_marketplaces: 'https://github.com/anthropics/claude-code.git'
+          plugins: 'code-review@claude-code-plugins'
+          prompt: '/code-review:code-review ${{ github.repository }}/pull/${{ github.event.pull_request.number }}'
           # See https://github.com/anthropics/claude-code-action/blob/main/docs/usage.md
           # or https://code.claude.com/docs/en/cli-reference for available options
-          claude_args: '--model claude-opus-4-6 --allowed-tools "Bash(gh issue view:*)" --allowed-tools "Bash(gh search:*)" --allowed-tools "Bash(gh issue list:*)" --allowed-tools "Bash(gh pr comment:*)" --allowed-tools "Bash(gh pr diff:*)" --allowed-tools "Bash(gh pr view:*)" --allowed-tools "Bash(gh pr list:*)" --allowed-tools "Bash(gh pr review:*)"'
 
