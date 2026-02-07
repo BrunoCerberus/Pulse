@@ -153,44 +153,6 @@ struct PremiumGateView: View {
     }
 }
 
-// MARK: - Premium Gated Modifier
-
-/// A view modifier that conditionally shows premium content or a gate.
-///
-/// This modifier provides an alternative approach to premium gating where views can
-/// declaratively specify their premium-only content. Currently unused but available
-/// for future refactoring if a more declarative approach is preferred.
-///
-/// Example usage:
-/// ```swift
-/// myPremiumContent
-///     .premiumGated(isPremium: isPremium) {
-///         PremiumGateView(feature: .dailyDigest, serviceLocator: serviceLocator)
-///     }
-/// ```
-struct PremiumGatedModifier<GateContent: View>: ViewModifier {
-    let isPremium: Bool
-    @ViewBuilder let gateContent: GateContent
-
-    func body(content: Content) -> some View {
-        if isPremium {
-            content
-        } else {
-            gateContent
-        }
-    }
-}
-
-extension View {
-    /// Conditionally shows this view if premium, otherwise shows the gate content.
-    func premiumGated<GateContent: View>(
-        isPremium: Bool,
-        @ViewBuilder gateContent: () -> GateContent
-    ) -> some View {
-        modifier(PremiumGatedModifier(isPremium: isPremium, gateContent: gateContent))
-    }
-}
-
 // MARK: - Preview
 
 #Preview {
