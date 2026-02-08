@@ -184,6 +184,7 @@ jobs:
           -scheme PulseDev \
           -destination 'platform=iOS Simulator,name=iPhone Air,OS=26.2' \
           -derivedDataPath ./DerivedData \
+          -skipMacroValidation \
           ENABLE_ONLY_ACTIVE_RESOURCES=NO
 
     - name: Build for testing (PulseSnapshotTests)
@@ -194,6 +195,7 @@ jobs:
           -scheme PulseSnapshotTests \
           -destination 'platform=iOS Simulator,name=iPhone Air,OS=26.2' \
           -derivedDataPath ./DerivedData \
+          -skipMacroValidation \
           ENABLE_ONLY_ACTIVE_RESOURCES=NO
 
     - name: Upload build artifacts
