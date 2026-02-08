@@ -119,9 +119,9 @@ final class LLMModelManager: @unchecked Sendable {
     /// Unload model and free memory
     func unloadModel() async {
         let runner = lock.withLock { () -> ModelRunner? in
-            let r = modelRunner
+            let current = modelRunner
             modelRunner = nil
-            return r
+            return current
         }
         await runner?.unload()
         logger.info("Model unloaded", category: logCategory)
