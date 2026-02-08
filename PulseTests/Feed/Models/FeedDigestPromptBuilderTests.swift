@@ -101,11 +101,22 @@ struct FeedDigestPromptBuilderTests {
         let articles = Article.mockArticles
         let prompt = FeedDigestPromptBuilder.buildPrompt(for: articles)
 
-        // Should list categories and instruct prose format
+        // Should list categories and instruct separate paragraphs
         #expect(prompt.contains("**CategoryName**"))
-        #expect(prompt.contains("Summarize into flowing paragraphs"))
-        #expect(prompt.contains("Do NOT list articles"))
-        #expect(prompt.contains("ALL categories"))
+        #expect(prompt.contains("separate paragraph"))
+        #expect(prompt.contains("Do NOT mix categories"))
+        #expect(prompt.contains("per category"))
+    }
+
+    @Test("Build prompt includes bold category headers in final instruction")
+    func buildPromptIncludesBoldHeaders() {
+        let articles = generateMockArticles(count: 3, category: .technology)
+            + generateMockArticles(count: 2, category: .business, idPrefix: "biz")
+        let prompt = FeedDigestPromptBuilder.buildPrompt(for: articles)
+
+        // Final instruction should list actual bold category headers
+        #expect(prompt.contains("**Technology**"))
+        #expect(prompt.contains("**Business**"))
     }
 
     @Test("System prompt provides clear instructions")
@@ -115,9 +126,8 @@ struct FeedDigestPromptBuilderTests {
         #expect(!systemPrompt.isEmpty)
         #expect(systemPrompt.contains("news digest"))
         #expect(systemPrompt.contains("**CategoryName**"))
-        #expect(systemPrompt.contains("DO NOT list"))
-        #expect(systemPrompt.contains("Do NOT repeat yourself"))
-        #expect(systemPrompt.contains("Cover ALL categories equally"))
+        #expect(systemPrompt.contains("SEPARATE paragraph"))
+        #expect(systemPrompt.contains("Do NOT mix categories"))
     }
 
     // MARK: - Helpers

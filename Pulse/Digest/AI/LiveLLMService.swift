@@ -1,9 +1,9 @@
 import Combine
 import EntropyCore
 import Foundation
-import LocalLlama
+import LeapSDK
 
-/// Live implementation of LLMService using llama.cpp
+/// Live implementation of LLMService using LEAP SDK
 final class LiveLLMService: LLMService {
     private let modelManager: LLMModelManager
     private let modelStatusSubject = CurrentValueSubject<LLMModelStatus, Never>(.notLoaded)

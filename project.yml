@@ -29,8 +29,9 @@ packages:
   GoogleSignIn:
     url: https://github.com/google/GoogleSignIn-iOS.git
     from: 8.0.0
-  LocalLlama:
-    path: LocalPackages/LocalLlama
+  LeapSDK:
+    url: https://github.com/Liquid4All/leap-ios.git
+    from: 0.9.2
 
 settings:
   base:
@@ -147,8 +148,8 @@ targets:
       - package: firebase-ios-sdk
         product: FirebaseRemoteConfig
       - package: GoogleSignIn
-      - package: LocalLlama
-        product: LocalLlama
+      - package: LeapSDK
+        product: LeapSDK
       - target: PulseWidgetExtension
         embed: true
 

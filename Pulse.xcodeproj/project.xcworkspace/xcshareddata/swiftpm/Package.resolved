@@ -1,5 +1,5 @@
 {
-  "originHash" : "9ab94cbbc614198b870d99f32dfe7e8d3390ca6e2a183eeee085b8bf01714419",
+  "originHash" : "c4f311ee7daeeb17908ef280ae44339c860560313cd9121487a24b7e5ba8c1f4",
   "pins" : [
     {
       "identity" : "abseil-cpp-binary",
@@ -127,6 +127,15 @@
       }
     },
     {
+      "identity" : "leap-ios",
+      "kind" : "remoteSourceControl",
+      "location" : "https://github.com/Liquid4All/leap-ios.git",
+      "state" : {
+        "revision" : "d5a820805fd12b366daeeb2d2ea8ba2934377a7a",
+        "version" : "0.9.2"
+      }
+    },
+    {
       "identity" : "leveldb",
       "kind" : "remoteSourceControl",
       "location" : "https://github.com/firebase/leveldb.git",
@@ -194,8 +203,8 @@
       "kind" : "remoteSourceControl",
       "location" : "https://github.com/swiftlang/swift-syntax",
       "state" : {
-        "revision" : "4799286537280063c85a32f09884cfbca301b1a1",
-        "version" : "602.0.0"
+        "revision" : "0687f71944021d616d34d922343dcef086855920",
+        "version" : "600.0.1"
       }
     },
     {

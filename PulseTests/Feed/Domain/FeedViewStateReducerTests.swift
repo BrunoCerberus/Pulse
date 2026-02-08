@@ -709,6 +709,43 @@ struct DigestViewItemParsingTests {
         #expect(uniqueContents.count == sections.count) // All content should be unique
     }
 
+    @Test("parseSections detects mixed category content and falls back")
+    func parseSectionsDetectsMixedContent() {
+        // LLM wrote one flowing paragraph mentioning all categories inline
+        // swiftlint:disable line_length
+        let summary = """
+        **Technology** The tech landscape continues to evolve. Business news reveals challenges in the UK data center sector. Health reports underscore the growing awareness of flavanols. Science continues to intrigue with discoveries about ancient fossils.
+        """
+        // swiftlint:enable line_length
+
+        let articles = [
+            createMockArticle(category: .technology, title: "Tech Innovation"),
+            createMockArticle(category: .business, title: "UK Data Centers"),
+            createMockArticle(category: .science, title: "Ancient Fossils"),
+        ]
+
+        let digest = DigestViewItem(
+            from: DailyDigest(
+                id: "test",
+                summary: summary,
+                sourceArticles: articles,
+                generatedAt: Date()
+            )
+        )
+
+        let sourceArticles = articles.map { FeedSourceArticle(from: $0) }
+        let sections = digest.parseSections(with: sourceArticles)
+
+        #expect(sections.count == 3)
+
+        // Technology section should NOT contain "Business news reveals" or "Health reports"
+        // because mixed content detection should trigger fallback
+        let techSection = sections.first { $0.category == .technology }
+        #expect(techSection != nil)
+        #expect(techSection?.content.lowercased().contains("business news reveals") == false)
+        #expect(techSection?.content.lowercased().contains("health reports") == false)
+    }
+
     /// Helper to create mock articles with specific categories
     private func createMockArticle(category: NewsCategory, title: String) -> Article {
         Article(
@@ -778,17 +815,21 @@ struct LLMOutputCleaningTests {
         // Remove null characters (LLM sometimes outputs these between tokens)
         cleaned = cleaned.replacingOccurrences(of: "\0", with: "")
 
-        // Remove chat template markers
+        // Remove chat template markers (ChatML + general)
         let markers = [
             "<|system|>", "<|user|>", "<|assistant|>", "<|end|>",
-            "</s>", "<s>", "<|eot_id|>", "<|start_header_id|>", "<|end_header_id|>",
+            "<|im_start|>", "<|im_end|>", "</s>", "<s>",
         ]
         for marker in markers {
             cleaned = cleaned.replacingOccurrences(of: marker, with: "")
         }
 
         // Remove common instruction artifacts (case-insensitive, at start)
-        let prefixes = ["here's the digest:", "here is the digest:", "digest:", "here's your daily digest:"]
+        let prefixes = [
+            "here's the digest:", "here is the digest:", "digest:", "here's your daily digest:",
+            "here is your daily digest:", "sure, here", "sure! here", "here's your news digest:",
+            "here are the summaries:", "here is a summary:",
+        ]
         let lowercased = cleaned.lowercased()
         for prefix in prefixes where lowercased.hasPrefix(prefix) {
             cleaned = String(cleaned.dropFirst(prefix.count))

@@ -148,7 +148,7 @@ struct FeedView<R: FeedNavigationRouter>: View {
     private func processingView(phase: AIProcessingPhase) -> some View {
         AIProcessingView(
             phase: phase,
-            streamingText: viewModel.viewState.streamingText
+            streamingText: ""
         )
     }
 

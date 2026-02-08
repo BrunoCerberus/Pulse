@@ -336,6 +336,7 @@ final class FeedDomainInteractor: CombineInteractor {
     private func handleDigestCompleted(_ digest: DailyDigest) {
         updateState { state in
             state.currentDigest = digest
+            state.streamingText = ""
             state.generationState = .completed
         }
     }
@@ -359,10 +360,10 @@ final class FeedDomainInteractor: CombineInteractor {
         // Remove null characters (LLM sometimes outputs these between tokens)
         cleaned = cleaned.replacingOccurrences(of: "\0", with: "")
 
-        // Remove chat template markers
+        // Remove chat template markers (ChatML + general)
         let markers = [
             "<|system|>", "<|user|>", "<|assistant|>", "<|end|>",
-            "</s>", "<s>", "<|eot_id|>", "<|start_header_id|>", "<|end_header_id|>",
+            "<|im_start|>", "<|im_end|>", "</s>", "<s>",
         ]
         for marker in markers {
             cleaned = cleaned.replacingOccurrences(of: marker, with: "")

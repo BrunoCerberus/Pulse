@@ -37,16 +37,16 @@ jobs:
           ${{ runner.os }}-brew-
 
     # Cache SPM dependencies
-    # Note: Using static version key (spm-v4) due to hashFiles() limitations in this CI environment
-    # Manually increment version (v4 -> v5) when project.yml package dependencies change
+    # Note: Using static version key (spm-v5) due to hashFiles() limitations in this CI environment
+    # Manually increment version (v5 -> v6) when project.yml package dependencies change
     # IMPORTANT: Do NOT use broad restore-keys fallback - it can restore stale package versions
-    # v4: Extracted design system components to EntropyCore
+    # v5: Migrated from LocalLlama to LEAP SDK (LeapSDK)
     - name: Cache SPM dependencies
       uses: actions/cache@v4
       with:
         path: |
           Pulse.xcodeproj/project.xcworkspace/xcshareddata/swiftpm
-        key: ${{ runner.os }}-spm-v4
+        key: ${{ runner.os }}-spm-v5
 
     - name: Install XcodeGen
       run: |
@@ -88,7 +88,8 @@ jobs:
           -project Pulse.xcodeproj \
           -scheme PulseDev \
           -destination 'platform=iOS Simulator,name=iPhone Air,OS=26.2' \
-          -derivedDataPath ./DerivedData
+          -derivedDataPath ./DerivedData \
+          -skipMacroValidation
 
     - name: Build for testing (PulseSnapshotTests)
       run: |
@@ -97,7 +98,8 @@ jobs:
           -project Pulse.xcodeproj \
           -scheme PulseSnapshotTests \
           -destination 'platform=iOS Simulator,name=iPhone Air,OS=26.2' \
-          -derivedDataPath ./DerivedData
+          -derivedDataPath ./DerivedData \
+          -skipMacroValidation
 
     - name: Upload build artifacts
       uses: actions/upload-artifact@v4
@@ -152,16 +154,16 @@ jobs:
           ${{ runner.os }}-brew-
 
     # Cache SPM dependencies
-    # Note: Using static version key (spm-v4) due to hashFiles() limitations in this CI environment
-    # Manually increment version (v4 -> v5) when project.yml package dependencies change
+    # Note: Using static version key (spm-v5) due to hashFiles() limitations in this CI environment
+    # Manually increment version (v5 -> v6) when project.yml package dependencies change
     # IMPORTANT: Do NOT use broad restore-keys fallback - it can restore stale package versions
-    # v4: Extracted design system components to EntropyCore
+    # v5: Migrated from LocalLlama to LEAP SDK (LeapSDK)
     - name: Cache SPM dependencies
       uses: actions/cache@v4
       with:
         path: |
           Pulse.xcodeproj/project.xcworkspace/xcshareddata/swiftpm
-        key: ${{ runner.os }}-spm-v4
+        key: ${{ runner.os }}-spm-v5
 
     - name: Install XcodeGen
       run: |
@@ -464,7 +466,7 @@ jobs:
       with:
         path: |
           Pulse.xcodeproj/project.xcworkspace/xcshareddata/swiftpm
-        key: ${{ runner.os }}-spm-v4
+        key: ${{ runner.os }}-spm-v5
 
     - name: Install dependencies
       run: |
@@ -651,7 +653,8 @@ jobs:
           -scheme PulseDev \
           -destination 'platform=iOS Simulator,name=iPhone Air,OS=26.2' \
           -quiet \
-          CODE_SIGNING_ALLOWED=NO || {
+          CODE_SIGNING_ALLOWED=NO \
+          -skipMacroValidation || {
             echo "build_failed=true" >> $GITHUB_OUTPUT
             echo "::warning::Build failed after Claude's fixes - changes may be incomplete"
             exit 0

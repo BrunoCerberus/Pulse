@@ -69,10 +69,11 @@ extension DigestViewItem {
                let parsed = parsedContent[categoryName], !parsed.isEmpty
             {
                 // Check if this exact parsed content was already used by another category
-                // This indicates a parsing failure where all content ended up in one category
                 let normalizedParsed = parsed.lowercased().trimmingCharacters(in: .whitespacesAndNewlines)
                 if seenParsedContent.contains(normalizedParsed) {
-                    // Same content already used - generate fallback instead
+                    content = generateContentFromArticles(articles, category: category)
+                } else if Self.containsOtherCategorySubjects(normalizedParsed, excluding: categoryName) {
+                    // Content mentions other categories as subjects — LLM mixed categories
                     content = generateContentFromArticles(articles, category: category)
                 } else {
                     seenParsedContent.insert(normalizedParsed)
@@ -99,23 +100,38 @@ extension DigestViewItem {
     }
 
     /// Shared patterns for category marker matching
-    /// IMPORTANT: Order matters - most specific patterns first to avoid false positives
+    /// IMPORTANT: Order matters - most specific patterns first to avoid content leakage
     private static func categoryPatterns(for category: String) -> [(pattern: String, markerLength: Int)] {
         [
-            // Most reliable: Markdown bold headers (prioritize these)
-            ("**\(category)**", 4 + category.count),
-            ("**\(category):**", 5 + category.count),
-            ("**\(category)** ", 5 + category.count),
-            ("**\(category)**\n", 5 + category.count),
-            // Markdown heading format
+            // 1. Numbered list with bold (LFM 2.5) - MUST be before plain bold
+            //    Captures the \n so previous category content ends cleanly
+            ("\n1. **\(category)**", 7 + category.count),
+            ("\n2. **\(category)**", 7 + category.count),
+            ("\n3. **\(category)**", 7 + category.count),
+            ("\n4. **\(category)**", 7 + category.count),
+            ("\n5. **\(category)**", 7 + category.count),
+            ("\n6. **\(category)**", 7 + category.count),
+            ("\n7. **\(category)**", 7 + category.count),
+            // 2. Heading formats
             ("## \(category)\n", 4 + category.count),
             ("## \(category) ", 4 + category.count),
-            // Bracket format (LLM sometimes echoes input formatting)
+            ("# \(category)\n", 3 + category.count),
+            ("# \(category) ", 3 + category.count),
+            ("### \(category)\n", 5 + category.count),
+            ("### \(category) ", 5 + category.count),
+            // 3. Bold with colon - BEFORE plain bold to avoid colon leaking into content
+            ("**\(category):**", 5 + category.count),
+            // 4. Bold with space/newline
+            ("**\(category)** ", 5 + category.count),
+            ("**\(category)**\n", 5 + category.count),
+            // 5. Plain bold - most general, LAST among bold patterns
+            ("**\(category)**", 4 + category.count),
+            // 6. Bracket format (LLM sometimes echoes input formatting)
             ("\n[\(category)]", 3 + category.count),
             ("[\(category)]", 2 + category.count),
-            // Bare category with colon (common LLM output pattern)
+            // 7. Bare category with colon
             ("\n\(category):", 2 + category.count),
-            // List formats with markers (less reliable, require bullet prefix)
+            // 8. List formats with markers
             ("\n• \(category):", 3 + category.count),
             ("\n- \(category):", 3 + category.count),
             ("\n• \(category) ", 3 + category.count),
@@ -128,6 +144,23 @@ extension DigestViewItem {
         "technology", "business", "world", "science", "health", "sports", "entertainment",
     ]
 
+    /// Detects if content mentions other categories as sentence subjects,
+    /// indicating the LLM wrote one mixed paragraph instead of separate sections
+    private static func containsOtherCategorySubjects(_ content: String, excluding category: String) -> Bool {
+        let otherCategories = allCategoryNames.filter { $0 != category }
+        var matches = 0
+        for other in otherCategories {
+            // Match patterns like "Business news reveals", "Health reports", "Science continues"
+            // These indicate the LLM is discussing another category's content inline
+            let pattern = "\\b\(other)\\s+(?:news|report|update|coverage|sector|analysis|development)"
+            if content.range(of: pattern, options: [.regularExpression, .caseInsensitive]) != nil {
+                matches += 1
+            }
+        }
+        // If 2+ other categories are mentioned as subjects, the content is mixed
+        return matches >= 2
+    }
+
     /// Strips any remaining category markers from extracted content
     private static func stripCategoryMarkers(from content: String) -> String {
         var result = content
@@ -139,9 +172,9 @@ extension DigestViewItem {
                 options: [.regularExpression, .caseInsensitive]
             )
             result = result.replacingOccurrences(
-                of: "## \(category)",
+                of: "#{1,3} \(category)",
                 with: "",
-                options: .caseInsensitive
+                options: [.regularExpression, .caseInsensitive]
             )
             result = result.replacingOccurrences(
                 of: "\\[\(category)\\]:?",
@@ -364,8 +397,22 @@ extension DigestViewItem {
                 "\n**\(cat)**",
                 "* **\(cat)**",
                 "- **\(cat)**",
+                // Numbered list with bold (LFM 2.5)
+                "\n1. **\(cat)**",
+                "\n2. **\(cat)**",
+                "\n3. **\(cat)**",
+                "\n4. **\(cat)**",
+                "\n5. **\(cat)**",
+                "\n6. **\(cat)**",
+                "\n7. **\(cat)**",
+                // Heading formats
                 "## \(cat)",
                 "\n## \(cat)",
+                "# \(cat)",
+                "\n# \(cat)",
+                "### \(cat)",
+                "\n### \(cat)",
+                // Bracket and bare colon
                 "\n[\(cat)]",
                 "[\(cat)]",
                 "\n\(cat):",
@@ -392,6 +439,9 @@ extension DigestViewItem {
     private func cleanCategoryContent(_ content: String) -> String {
         var result = content
         result = Self.stripCategoryMarkers(from: result)
+
+        // Strip leading colons/dashes left over from category headers
+        result = result.replacingOccurrences(of: #"^[:\-–—]\s*"#, with: "", options: .regularExpression)
 
         // Strip bold markdown
         result = result.replacingOccurrences(of: "**", with: "")
