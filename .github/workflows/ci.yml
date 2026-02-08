@@ -132,16 +132,16 @@ jobs:
           ${{ runner.os }}-brew-
 
     # Cache SPM dependencies
-    # Note: Using static version key (spm-v4) due to hashFiles() limitations in this CI environment
-    # Manually increment version (v4 -> v5) when project.yml package dependencies change
+    # Note: Using static version key (spm-v5) due to hashFiles() limitations in this CI environment
+    # Manually increment version (v5 -> v6) when project.yml package dependencies change
     # IMPORTANT: Do NOT use broad restore-keys fallback - it can restore stale package versions
-    # v4: Extracted design system components to EntropyCore
+    # v5: Migrated from LocalLlama to LEAP SDK (LeapSDK)
     - name: Cache SPM dependencies
       uses: actions/cache@v4
       with:
         path: |
           Pulse.xcodeproj/project.xcworkspace/xcshareddata/swiftpm
-        key: ${{ runner.os }}-spm-v4
+        key: ${{ runner.os }}-spm-v5
 
     - name: Install XcodeGen
       run: |
@@ -249,16 +249,16 @@ jobs:
           ${{ runner.os }}-brew-
 
     # Cache SPM dependencies
-    # Note: Using static version key (spm-v4) due to hashFiles() limitations in this CI environment
-    # Manually increment version (v4 -> v5) when project.yml package dependencies change
+    # Note: Using static version key (spm-v5) due to hashFiles() limitations in this CI environment
+    # Manually increment version (v5 -> v6) when project.yml package dependencies change
     # IMPORTANT: Do NOT use broad restore-keys fallback - it can restore stale package versions
-    # v4: Extracted design system components to EntropyCore
+    # v5: Migrated from LocalLlama to LEAP SDK (LeapSDK)
     - name: Cache SPM dependencies
       uses: actions/cache@v4
       with:
         path: |
           Pulse.xcodeproj/project.xcworkspace/xcshareddata/swiftpm
-        key: ${{ runner.os }}-spm-v4
+        key: ${{ runner.os }}-spm-v5
 
     - name: Install XcodeGen
       run: |
