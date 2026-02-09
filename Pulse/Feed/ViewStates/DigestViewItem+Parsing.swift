@@ -4,7 +4,7 @@ import Foundation
 
 extension DigestViewItem {
     /// Category names for pattern matching (case-insensitive)
-    private static let categoryNames: [NewsCategory: String] = [
+    static let categoryNames: [NewsCategory: String] = [
         .technology: "technology",
         .business: "business",
         .world: "world",
@@ -15,7 +15,7 @@ extension DigestViewItem {
     ]
 
     /// Category-specific intro phrases for natural language generation
-    private static let categoryIntros: [NewsCategory: [String]] = [
+    static let categoryIntros: [NewsCategory: [String]] = [
         .technology: ["Your tech reading covered", "In the tech world, you explored", "On the technology front,"],
         .business: ["From the business sector,", "Your business reading included", "In markets and business,"],
         .world: ["Around the globe,", "In international news,", "From world affairs,"],
@@ -101,7 +101,7 @@ extension DigestViewItem {
 
     /// Shared patterns for category marker matching
     /// IMPORTANT: Order matters - most specific patterns first to avoid content leakage
-    private static func categoryPatterns(for category: String) -> [(pattern: String, markerLength: Int)] {
+    static func categoryPatterns(for category: String) -> [(pattern: String, markerLength: Int)] {
         [
             // 1. Numbered list with bold (LFM 2.5) - MUST be before plain bold
             //    Captures the \n so previous category content ends cleanly
@@ -162,7 +162,7 @@ extension DigestViewItem {
     }
 
     /// Strips any remaining category markers from extracted content
-    private static func stripCategoryMarkers(from content: String) -> String {
+    static func stripCategoryMarkers(from content: String) -> String {
         var result = content
 
         for category in allCategoryNames {
@@ -208,7 +208,7 @@ extension DigestViewItem {
 
     /// Removes duplicate and near-duplicate paragraphs/sentences from content
     /// Uses fuzzy word-overlap matching to catch paraphrased repetition from small LLMs
-    private static func deduplicateContent(_ content: String) -> String {
+    static func deduplicateContent(_ content: String) -> String {
         let paragraphs = content.components(separatedBy: "\n\n")
             .map { $0.trimmingCharacters(in: .whitespacesAndNewlines) }
             .filter { !$0.isEmpty }
@@ -321,197 +321,5 @@ extension DigestViewItem {
         }
 
         return result
-    }
-
-    /// Extracts content for a specific category from the structured summary
-    private func extractCategoryContent(for category: NewsCategory, articles: [FeedSourceArticle]) -> String {
-        guard let categoryName = Self.categoryNames[category] else {
-            return generateContentFromArticles(articles, category: category)
-        }
-
-        let normalizedText = summary.lowercased()
-        let originalText = summary
-        let categoryLower = categoryName.lowercased()
-
-        let patterns = Self.categoryPatterns(for: categoryLower)
-
-        for (pattern, _) in patterns {
-            if let markerRange = normalizedText.range(of: pattern) {
-                let afterMarkerOriginal = String(originalText[markerRange.upperBound...])
-                let afterMarkerNormalized = String(normalizedText[markerRange.upperBound...])
-                let content = extractContentUntilNextCategory(
-                    afterMarkerOriginal,
-                    normalizedText: afterMarkerNormalized
-                )
-                if !content.isEmpty {
-                    return cleanCategoryContent(content)
-                }
-            }
-        }
-
-        if let content = extractWithRegex(category: categoryLower, from: originalText) {
-            return content
-        }
-
-        return generateContentFromArticles(articles, category: category)
-    }
-
-    /// Uses regex to find category content more flexibly
-    private func extractWithRegex(category: String, from text: String) -> String? {
-        let allCategories = "technology|business|world|science|health|sports|entertainment"
-        // swiftlint:disable:next line_length
-        let pattern = "(?:\\*\\*\(category)\\*\\*|\\[\(category)\\]|\\b\(category)\\b[:\\-]?)\\s*(.+?)(?=\\*\\*(?:\(allCategories))\\*\\*|\\[(?:\(allCategories))\\]|\\b(?:\(allCategories))\\b[:\\-]|$)"
-
-        let regexOptions: NSRegularExpression.Options = [.caseInsensitive, .dotMatchesLineSeparators]
-        guard let regex = try? NSRegularExpression(pattern: pattern, options: regexOptions) else {
-            return nil
-        }
-
-        let range = NSRange(text.startIndex..., in: text)
-        if let match = regex.firstMatch(in: text, options: [], range: range),
-           let contentRange = Range(match.range(at: 1), in: text)
-        {
-            let rawContent = String(text[contentRange]).trimmingCharacters(in: .whitespacesAndNewlines)
-            if !rawContent.isEmpty {
-                let cleaned = Self.stripCategoryMarkers(from: rawContent)
-                return cleanCategoryContent(cleaned)
-            }
-        }
-
-        return nil
-    }
-
-    /// Extracts text content until the next category marker or end of string
-    private func extractContentUntilNextCategory(_ originalText: String, normalizedText: String? = nil) -> String {
-        let trimmedOriginal = originalText.trimmingCharacters(in: .whitespacesAndNewlines)
-        let searchText = (normalizedText ?? originalText.lowercased())
-            .trimmingCharacters(in: .whitespacesAndNewlines)
-
-        let categories = ["technology", "business", "world", "science", "health", "sports", "entertainment"]
-        var earliestEnd = trimmedOriginal.endIndex
-
-        for cat in categories {
-            // Only match structured category headers, not category names in prose
-            let patterns = [
-                "**\(cat)**",
-                "\n**\(cat)**",
-                "* **\(cat)**",
-                "- **\(cat)**",
-                // Numbered list with bold (LFM 2.5)
-                "\n1. **\(cat)**",
-                "\n2. **\(cat)**",
-                "\n3. **\(cat)**",
-                "\n4. **\(cat)**",
-                "\n5. **\(cat)**",
-                "\n6. **\(cat)**",
-                "\n7. **\(cat)**",
-                // Heading formats
-                "## \(cat)",
-                "\n## \(cat)",
-                "# \(cat)",
-                "\n# \(cat)",
-                "### \(cat)",
-                "\n### \(cat)",
-                // Bracket and bare colon
-                "\n[\(cat)]",
-                "[\(cat)]",
-                "\n\(cat):",
-            ]
-            for pattern in patterns {
-                if let range = searchText.range(of: pattern) {
-                    let offset = searchText.distance(from: searchText.startIndex, to: range.lowerBound)
-                    if offset < trimmedOriginal.count {
-                        let originalIndex = trimmedOriginal.index(trimmedOriginal.startIndex, offsetBy: offset)
-                        if originalIndex < earliestEnd {
-                            earliestEnd = originalIndex
-                        }
-                    }
-                }
-            }
-        }
-
-        let rawContent = String(trimmedOriginal[..<earliestEnd]).trimmingCharacters(in: .whitespacesAndNewlines)
-        let cleaned = Self.stripCategoryMarkers(from: rawContent)
-        return Self.deduplicateContent(cleaned)
-    }
-
-    /// Cleans category content by removing bullet points and markdown, preserving paragraph breaks
-    private func cleanCategoryContent(_ content: String) -> String {
-        var result = content
-        result = Self.stripCategoryMarkers(from: result)
-
-        // Strip leading colons/dashes left over from category headers
-        result = result.replacingOccurrences(of: #"^[:\-–—]\s*"#, with: "", options: .regularExpression)
-
-        // Strip bold markdown
-        result = result.replacingOccurrences(of: "**", with: "")
-
-        // Strip inline source references like "(BBC News - Health, Health)"
-        result = result.replacingOccurrences(
-            of: #"\([^)]*(?:News|Guardian|BBC|Reuters|CNN|Times)[^)]*\)"#,
-            with: "",
-            options: .regularExpression
-        )
-
-        // Process line by line: strip bullets but preserve paragraph structure
-        let paragraphs = result.components(separatedBy: "\n\n")
-        let cleanedParagraphs = paragraphs.map { paragraph -> String in
-            let lines = paragraph.components(separatedBy: "\n")
-                .map { line -> String in
-                    var cleaned = line.trimmingCharacters(in: .whitespaces)
-                    let prefixes = ["+ ", "- ", "* ", "• ", "· "]
-                    for prefix in prefixes where cleaned.hasPrefix(prefix) {
-                        cleaned = String(cleaned.dropFirst(prefix.count))
-                        break
-                    }
-                    // Strip numbered list prefixes (e.g. "1. ", "2. ")
-                    if let range = cleaned.range(
-                        of: #"^\d+\.\s+"#,
-                        options: .regularExpression
-                    ) {
-                        cleaned = String(cleaned[range.upperBound...])
-                    }
-                    return cleaned
-                }
-                .filter { !$0.isEmpty }
-            return lines.joined(separator: " ")
-        }
-        .filter { !$0.isEmpty }
-
-        // Cap paragraphs per section to prevent repetition-bloated output
-        let cappedParagraphs = Array(cleanedParagraphs.prefix(LLMConfiguration.maxParagraphsPerSection))
-
-        // Collapse excessive dashes/em-dashes from stripped sources
-        result = cappedParagraphs.joined(separator: "\n\n")
-        result = result.replacingOccurrences(of: " — —", with: " —")
-        result = result.replacingOccurrences(of: "  +", with: " ", options: .regularExpression)
-        result = result.trimmingCharacters(in: .whitespacesAndNewlines)
-
-        return Self.deduplicateContent(result)
-    }
-
-    /// Generates a humanized summary from article titles when LLM parsing fails
-    private func generateContentFromArticles(_ articles: [FeedSourceArticle], category: NewsCategory? = nil) -> String {
-        guard !articles.isEmpty else {
-            return "No articles in this category."
-        }
-
-        let topArticles = Array(articles.prefix(3))
-        let sources = Set(topArticles.map { $0.source }).joined(separator: ", ")
-        let articleCount = articles.count
-
-        let defaultIntros = ["You read about", "Your reading covered", "Notable stories included"]
-        let intros = category.flatMap { Self.categoryIntros[$0] } ?? defaultIntros
-        let intro = intros[articleCount % intros.count]
-
-        if topArticles.count == 1 {
-            let article = topArticles[0]
-            return "\(intro) \"\(article.title)\" from \(article.source)."
-        } else if topArticles.count == 2 {
-            return "\(intro) stories like \"\(topArticles[0].title)\" and coverage from \(sources)."
-        } else {
-            let moreCount = articleCount > 3 ? " and \(articleCount - 2) more" : ""
-            return "\(intro) \"\(topArticles[0].title),\" plus stories from \(sources)\(moreCount)."
-        }
     }
 }

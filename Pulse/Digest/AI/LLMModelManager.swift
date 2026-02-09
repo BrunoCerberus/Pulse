@@ -164,10 +164,105 @@ final class LLMModelManager: @unchecked Sendable {
         }
     }
 
-    // MARK: - Private Inference
+    // MARK: - Private Helpers
 
+    private func logMemoryTier(_ tier: MemoryTier) {
+        let ctx = LLMConfiguration.contextSize
+        logger.info("Memory tier: \(tier.description), ctx: \(ctx)", category: logCategory)
+    }
+
+    /// Checks if the device has adequate memory for the specified operation.
+    private func hasAdequateMemory(for operation: MemoryOperation) -> Bool {
+        // Check system memory pressure first (available on iOS 13+)
+        if isUnderMemoryPressure() {
+            logger.warning("System is under memory pressure", category: logCategory)
+            return false
+        }
+
+        var info = mach_task_basic_info()
+        var count = mach_msg_type_number_t(MemoryLayout<mach_task_basic_info>.size) / 4
+
+        let result = withUnsafeMutablePointer(to: &info) {
+            $0.withMemoryRebound(to: integer_t.self, capacity: 1) {
+                task_info(mach_task_self_, task_flavor_t(MACH_TASK_BASIC_INFO), $0, &count)
+            }
+        }
+
+        guard result == KERN_SUCCESS else { return true }
+
+        let usedMemory = info.resident_size
+        let totalMemory = ProcessInfo.processInfo.physicalMemory
+        let availableMemory = totalMemory - usedMemory
+
+        let hasEnough = availableMemory > operation.minimumMemory
+
+        if !hasEnough {
+            let availableMB = availableMemory / (1024 * 1024)
+            let requiredMB = operation.minimumMemory / (1024 * 1024)
+            logger.warning(
+                "Memory check failed: \(availableMB)MB available, \(requiredMB)MB required for \(operation)",
+                category: logCategory
+            )
+        }
+
+        return hasEnough
+    }
+
+    /// Checks if the system is under memory pressure using `os_proc_available_memory`.
+    /// Memory pressure detection is disabled in simulator - test on physical devices.
+    private func isUnderMemoryPressure() -> Bool {
+        #if targetEnvironment(simulator)
+            #if DEBUG
+                if ProcessInfo.processInfo.environment["FORCE_MEMORY_PRESSURE_CHECK"] == "1" {
+                    return checkActualMemoryPressure()
+                }
+                Self.simulatorWarningLock.withLock { state in
+                    if !state.hasLogged {
+                        state.hasLogged = true
+                        logger.debug("Memory check disabled in sim", category: logCategory)
+                    }
+                }
+            #endif
+            return false
+        #else
+            return checkActualMemoryPressure()
+        #endif
+    }
+
+    /// Performs the actual memory pressure check using os_proc_available_memory.
+    /// Extracted to allow testing via FORCE_MEMORY_PRESSURE_CHECK environment variable.
+    private func checkActualMemoryPressure() -> Bool {
+        // Use os_proc_available_memory (iOS 13+)
+        // This is more accurate than calculating from task_info
+        let availableMemory = os_proc_available_memory()
+        // Consider system under pressure if less than 200MB available at OS level
+        // This is a conservative threshold that catches critical states before OOM killer acts
+        let criticalThreshold = 200 * 1024 * 1024 // 200MB
+        return availableMemory < criticalThreshold
+    }
+
+    private func setupMemoryWarningObserver() {
+        #if canImport(UIKit)
+            memoryWarningObserverToken = NotificationCenter.default.addObserver(
+                forName: UIApplication.didReceiveMemoryWarningNotification,
+                object: nil,
+                queue: .main
+            ) { [weak self] _ in
+                guard let self else { return }
+                self.logger.warning("Memory warning received - unloading model", category: self.logCategory)
+                Task {
+                    await self.unloadModel()
+                }
+            }
+        #endif
+    }
+}
+
+// MARK: - Private Inference
+
+private extension LLMModelManager {
     // swiftlint:disable:next function_body_length cyclomatic_complexity
-    private func runInference(
+    func runInference(
         prompt: String,
         systemPrompt: String,
         maxTokens: Int,
@@ -279,98 +374,5 @@ final class LLMModelManager: @unchecked Sendable {
                 continuation.finish(throwing: LLMError.generationFailed(error.localizedDescription))
             }
         }
-    }
-
-    // MARK: - Private Helpers
-
-    private func logMemoryTier(_ tier: MemoryTier) {
-        let ctx = LLMConfiguration.contextSize
-        logger.info("Memory tier: \(tier.description), ctx: \(ctx)", category: logCategory)
-    }
-
-    /// Checks if the device has adequate memory for the specified operation.
-    private func hasAdequateMemory(for operation: MemoryOperation) -> Bool {
-        // Check system memory pressure first (available on iOS 13+)
-        if isUnderMemoryPressure() {
-            logger.warning("System is under memory pressure", category: logCategory)
-            return false
-        }
-
-        var info = mach_task_basic_info()
-        var count = mach_msg_type_number_t(MemoryLayout<mach_task_basic_info>.size) / 4
-
-        let result = withUnsafeMutablePointer(to: &info) {
-            $0.withMemoryRebound(to: integer_t.self, capacity: 1) {
-                task_info(mach_task_self_, task_flavor_t(MACH_TASK_BASIC_INFO), $0, &count)
-            }
-        }
-
-        guard result == KERN_SUCCESS else { return true }
-
-        let usedMemory = info.resident_size
-        let totalMemory = ProcessInfo.processInfo.physicalMemory
-        let availableMemory = totalMemory - usedMemory
-
-        let hasEnough = availableMemory > operation.minimumMemory
-
-        if !hasEnough {
-            let availableMB = availableMemory / (1024 * 1024)
-            let requiredMB = operation.minimumMemory / (1024 * 1024)
-            logger.warning(
-                "Memory check failed: \(availableMB)MB available, \(requiredMB)MB required for \(operation)",
-                category: logCategory
-            )
-        }
-
-        return hasEnough
-    }
-
-    /// Checks if the system is under memory pressure using `os_proc_available_memory`.
-    /// Memory pressure detection is disabled in simulator - test on physical devices.
-    private func isUnderMemoryPressure() -> Bool {
-        #if targetEnvironment(simulator)
-            #if DEBUG
-                if ProcessInfo.processInfo.environment["FORCE_MEMORY_PRESSURE_CHECK"] == "1" {
-                    return checkActualMemoryPressure()
-                }
-                Self.simulatorWarningLock.withLock { state in
-                    if !state.hasLogged {
-                        state.hasLogged = true
-                        logger.debug("Memory check disabled in sim", category: logCategory)
-                    }
-                }
-            #endif
-            return false
-        #else
-            return checkActualMemoryPressure()
-        #endif
-    }
-
-    /// Performs the actual memory pressure check using os_proc_available_memory.
-    /// Extracted to allow testing via FORCE_MEMORY_PRESSURE_CHECK environment variable.
-    private func checkActualMemoryPressure() -> Bool {
-        // Use os_proc_available_memory (iOS 13+)
-        // This is more accurate than calculating from task_info
-        let availableMemory = os_proc_available_memory()
-        // Consider system under pressure if less than 200MB available at OS level
-        // This is a conservative threshold that catches critical states before OOM killer acts
-        let criticalThreshold = 200 * 1024 * 1024 // 200MB
-        return availableMemory < criticalThreshold
-    }
-
-    private func setupMemoryWarningObserver() {
-        #if canImport(UIKit)
-            memoryWarningObserverToken = NotificationCenter.default.addObserver(
-                forName: UIApplication.didReceiveMemoryWarningNotification,
-                object: nil,
-                queue: .main
-            ) { [weak self] _ in
-                guard let self else { return }
-                self.logger.warning("Memory warning received - unloading model", category: self.logCategory)
-                Task {
-                    await self.unloadModel()
-                }
-            }
-        #endif
     }
 }

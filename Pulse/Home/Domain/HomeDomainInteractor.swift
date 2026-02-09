@@ -77,6 +77,16 @@ final class HomeDomainInteractor: CombineInteractor {
     }
 
     func dispatch(action: HomeDomainAction) {
+        if handleLoadingActions(action) {
+            return
+        }
+        if handleArticleActions(action) {
+            return
+        }
+        handlePreferenceActions(action)
+    }
+
+    private func handleLoadingActions(_ action: HomeDomainAction) -> Bool {
         switch action {
         case .loadInitialData:
             loadInitialData()
@@ -84,6 +94,16 @@ final class HomeDomainInteractor: CombineInteractor {
             loadMoreHeadlines()
         case .refresh:
             refresh()
+        case let .selectCategory(category):
+            handleSelectCategory(category)
+        default:
+            return false
+        }
+        return true
+    }
+
+    private func handleArticleActions(_ action: HomeDomainAction) -> Bool {
+        switch action {
         case let .selectArticle(articleId):
             findArticle(by: articleId).map { selectArticle($0) }
         case .clearSelectedArticle:
@@ -94,12 +114,20 @@ final class HomeDomainInteractor: CombineInteractor {
             findArticle(by: articleId).map { shareArticle($0) }
         case .clearArticleToShare:
             clearArticleToShare()
-        case let .selectCategory(category):
-            handleSelectCategory(category)
+        default:
+            return false
+        }
+        return true
+    }
+
+    private func handlePreferenceActions(_ action: HomeDomainAction) {
+        switch action {
         case let .toggleTopic(topic):
             toggleTopic(topic)
         case let .setEditingTopics(editing):
             setEditingTopics(editing)
+        default:
+            break
         }
     }
 
@@ -108,7 +136,20 @@ final class HomeDomainInteractor: CombineInteractor {
             ?? currentState.headlines.first { $0.id == id }
     }
 
-    private func loadInitialData() {
+    deinit {
+        // Cancel all pending tasks on deallocation
+        for task in backgroundTasks {
+            task.cancel()
+        }
+    }
+
+    // deduplicateArticles and updateState moved to HomeDomainInteractor+DataLoading.swift
+}
+
+// MARK: - Home Data Flow
+
+private extension HomeDomainInteractor {
+    func loadInitialData() {
         loadFollowedTopics()
         guard !currentState.isLoading, !currentState.hasLoadedInitialData else { return }
 
@@ -117,19 +158,10 @@ final class HomeDomainInteractor: CombineInteractor {
             state.error = nil
         }
 
-        let country = "us"
-        if let category = currentState.selectedCategory {
-            fetchCategoryHeadlines(category: category, country: country, page: 1)
-                .sink { _ in }
-                .store(in: &cancellables)
-        } else {
-            fetchAllHeadlines(country: country, page: 1)
-                .sink { _ in }
-                .store(in: &cancellables)
-        }
+        fetchHeadlinesForCurrentCategory(page: 1)
     }
 
-    private func loadMoreHeadlines() {
+    func loadMoreHeadlines() {
         guard !currentState.isLoadingMore, currentState.hasMorePages else { return }
 
         updateState { state in
@@ -178,63 +210,88 @@ final class HomeDomainInteractor: CombineInteractor {
             .store(in: &cancellables)
     }
 
-    private func refresh() {
+    func refresh() {
         resetStateForRefresh()
         loadFollowedTopics()
+        fetchHeadlinesForCurrentCategory(page: 1, isRefreshing: true)
+    }
 
+    func fetchHeadlinesForCurrentCategory(page: Int, isRefreshing: Bool = false) {
         let country = "us"
         if let category = currentState.selectedCategory {
-            fetchCategoryHeadlines(category: category, country: country, page: 1, isRefreshing: true)
+            fetchCategoryHeadlines(category: category, country: country, page: page, isRefreshing: isRefreshing)
                 .sink { _ in }
                 .store(in: &cancellables)
         } else {
-            fetchAllHeadlines(country: country, page: 1, isRefreshing: true)
+            fetchAllHeadlines(country: country, page: page, isRefreshing: isRefreshing)
                 .sink { _ in }
                 .store(in: &cancellables)
         }
     }
 
-    private func selectArticle(_ article: Article) {
+    func handleSelectCategory(_ category: NewsCategory?) {
+        guard category != currentState.selectedCategory else { return }
+        resetStateForCategoryChange(to: category)
+        fetchHeadlinesForCurrentCategory(page: 1)
+    }
+}
+
+// MARK: - Home Article Actions
+
+private extension HomeDomainInteractor {
+    func selectArticle(_ article: Article) {
         updateState { state in
             state.selectedArticle = article
         }
     }
 
-    private func clearSelectedArticle() {
+    func clearSelectedArticle() {
         updateState { state in
             state.selectedArticle = nil
         }
     }
 
-    private func shareArticle(_ article: Article) {
+    func shareArticle(_ article: Article) {
         updateState { state in
             state.articleToShare = article
         }
     }
 
-    private func clearArticleToShare() {
+    func clearArticleToShare() {
         updateState { state in
             state.articleToShare = nil
         }
     }
 
-    private func handleSelectCategory(_ category: NewsCategory?) {
-        guard category != currentState.selectedCategory else { return }
-        resetStateForCategoryChange(to: category)
-
-        let country = "us"
-        if let category {
-            fetchCategoryHeadlines(category: category, country: country, page: 1)
-                .sink { _ in }
-                .store(in: &cancellables)
-        } else {
-            fetchAllHeadlines(country: country, page: 1)
-                .sink { _ in }
-                .store(in: &cancellables)
+    func toggleBookmark(_ article: Article) {
+        trackBackgroundTask { [weak self] in
+            guard let self else { return }
+            let isBookmarked = await storageService.isBookmarked(article.id)
+            if isBookmarked {
+                try? await storageService.deleteArticle(article)
+            } else {
+                try? await storageService.saveArticle(article)
+            }
         }
     }
 
-    private func loadFollowedTopics() {
+    /// Safely tracks and auto-removes background tasks with proper cleanup on deinit.
+    func trackBackgroundTask(_ operation: @escaping @Sendable () async -> Void) {
+        var task: Task<Void, Never>!
+        task = Task.detached { [weak self] in
+            await operation()
+            await MainActor.run {
+                self?.backgroundTasks.remove(task)
+            }
+        }
+        backgroundTasks.insert(task)
+    }
+}
+
+// MARK: - Home Preferences
+
+private extension HomeDomainInteractor {
+    func loadFollowedTopics() {
         settingsService.fetchPreferences()
             .receive(on: DispatchQueue.main)
             .sink(
@@ -252,7 +309,7 @@ final class HomeDomainInteractor: CombineInteractor {
             .store(in: &cancellables)
     }
 
-    private func toggleTopic(_ topic: NewsCategory) {
+    func toggleTopic(_ topic: NewsCategory) {
         settingsService.fetchPreferences()
             .receive(on: DispatchQueue.main)
             .sink(
@@ -279,7 +336,7 @@ final class HomeDomainInteractor: CombineInteractor {
             .store(in: &cancellables)
     }
 
-    private func savePreferences(_ preferences: UserPreferences) {
+    func savePreferences(_ preferences: UserPreferences) {
         settingsService.savePreferences(preferences)
             .receive(on: DispatchQueue.main)
             .sink(
@@ -298,42 +355,9 @@ final class HomeDomainInteractor: CombineInteractor {
             .store(in: &cancellables)
     }
 
-    private func setEditingTopics(_ editing: Bool) {
+    func setEditingTopics(_ editing: Bool) {
         updateState { state in
             state.isEditingTopics = editing
         }
     }
-
-    private func toggleBookmark(_ article: Article) {
-        trackBackgroundTask { [weak self] in
-            guard let self else { return }
-            let isBookmarked = await storageService.isBookmarked(article.id)
-            if isBookmarked {
-                try? await storageService.deleteArticle(article)
-            } else {
-                try? await storageService.saveArticle(article)
-            }
-        }
-    }
-
-    /// Safely tracks and auto-removes background tasks with proper cleanup on deinit.
-    private func trackBackgroundTask(_ operation: @escaping @Sendable () async -> Void) {
-        var task: Task<Void, Never>!
-        task = Task.detached { [weak self] in
-            await operation()
-            await MainActor.run {
-                self?.backgroundTasks.remove(task)
-            }
-        }
-        backgroundTasks.insert(task)
-    }
-
-    deinit {
-        // Cancel all pending tasks on deallocation
-        for task in backgroundTasks {
-            task.cancel()
-        }
-    }
-
-    // deduplicateArticles and updateState moved to HomeDomainInteractor+DataLoading.swift
 }

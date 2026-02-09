@@ -41,35 +41,89 @@ final class SettingsViewModel: CombineViewModel, ObservableObject {
     }
 
     func handle(event: SettingsViewEvent) {
+        if handleAppearanceAndSignOutEvents(event) {
+            return
+        }
+        if handleThemeEvents(event) {
+            return
+        }
+        if handleMutedSourceEvents(event) {
+            return
+        }
+        if handleMutedKeywordEvents(event) {
+            return
+        }
+        handleNotificationEvents(event)
+    }
+
+    @discardableResult
+    private func handleAppearanceAndSignOutEvents(_ event: SettingsViewEvent) -> Bool {
         switch event {
         case .onAppear:
             interactor.dispatch(action: .loadPreferences)
-        case let .onToggleNotifications(enabled):
-            interactor.dispatch(action: .toggleNotifications(enabled))
-        case let .onToggleBreakingNews(enabled):
-            interactor.dispatch(action: .toggleBreakingNews(enabled))
-        case let .onToggleDarkMode(enabled):
-            themeManager.isDarkMode = enabled
-        case let .onToggleSystemTheme(enabled):
-            themeManager.useSystemTheme = enabled
-        case let .onNewMutedSourceChanged(source):
-            interactor.dispatch(action: .setNewMutedSource(source))
-        case .onAddMutedSource:
-            interactor.dispatch(action: .addMutedSource(interactor.currentState.newMutedSource))
-        case let .onRemoveMutedSource(source):
-            interactor.dispatch(action: .removeMutedSource(source))
-        case let .onNewMutedKeywordChanged(keyword):
-            interactor.dispatch(action: .setNewMutedKeyword(keyword))
-        case .onAddMutedKeyword:
-            interactor.dispatch(action: .addMutedKeyword(interactor.currentState.newMutedKeyword))
-        case let .onRemoveMutedKeyword(keyword):
-            interactor.dispatch(action: .removeMutedKeyword(keyword))
         case .onSignOutTapped:
             interactor.dispatch(action: .setShowSignOutConfirmation(true))
         case .onConfirmSignOut:
             handleSignOut()
         case .onCancelSignOut:
             interactor.dispatch(action: .setShowSignOutConfirmation(false))
+        default:
+            return false
+        }
+        return true
+    }
+
+    @discardableResult
+    private func handleThemeEvents(_ event: SettingsViewEvent) -> Bool {
+        switch event {
+        case let .onToggleDarkMode(enabled):
+            themeManager.isDarkMode = enabled
+        case let .onToggleSystemTheme(enabled):
+            themeManager.useSystemTheme = enabled
+        default:
+            return false
+        }
+        return true
+    }
+
+    @discardableResult
+    private func handleMutedSourceEvents(_ event: SettingsViewEvent) -> Bool {
+        switch event {
+        case let .onNewMutedSourceChanged(source):
+            interactor.dispatch(action: .setNewMutedSource(source))
+        case .onAddMutedSource:
+            interactor.dispatch(action: .addMutedSource(interactor.currentState.newMutedSource))
+        case let .onRemoveMutedSource(source):
+            interactor.dispatch(action: .removeMutedSource(source))
+        default:
+            return false
+        }
+        return true
+    }
+
+    @discardableResult
+    private func handleMutedKeywordEvents(_ event: SettingsViewEvent) -> Bool {
+        switch event {
+        case let .onNewMutedKeywordChanged(keyword):
+            interactor.dispatch(action: .setNewMutedKeyword(keyword))
+        case .onAddMutedKeyword:
+            interactor.dispatch(action: .addMutedKeyword(interactor.currentState.newMutedKeyword))
+        case let .onRemoveMutedKeyword(keyword):
+            interactor.dispatch(action: .removeMutedKeyword(keyword))
+        default:
+            return false
+        }
+        return true
+    }
+
+    private func handleNotificationEvents(_ event: SettingsViewEvent) {
+        switch event {
+        case let .onToggleNotifications(enabled):
+            interactor.dispatch(action: .toggleNotifications(enabled))
+        case let .onToggleBreakingNews(enabled):
+            interactor.dispatch(action: .toggleBreakingNews(enabled))
+        default:
+            break
         }
     }
 
