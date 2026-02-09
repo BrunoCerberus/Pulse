@@ -11,6 +11,7 @@ import os
 /// Manages the lifecycle of the LLM model (loading, inference, unloading)
 ///
 /// Uses LEAP SDK's ModelRunner for on-device inference with GGUF models.
+/// This class is thread-safe using OSAllocatedUnfairLock for modelRunner access.
 final class LLMModelManager: @unchecked Sendable {
     static let shared = LLMModelManager()
 
@@ -223,18 +224,16 @@ final class LLMModelManager: @unchecked Sendable {
                 switch response {
                 case let .chunk(text):
                     // Check for stop sequences in the accumulated text
-                    for stop in stopSequences {
-                        if text.contains(stop) {
-                            // Yield text up to the stop sequence
-                            if let range = text.range(of: stop) {
-                                let prefix = String(text[..<range.lowerBound])
-                                if !prefix.isEmpty {
-                                    continuation.yield(prefix)
-                                }
+                    for stop in stopSequences where text.contains(stop) {
+                        // Yield text up to the stop sequence
+                        if let range = text.range(of: stop) {
+                            let prefix = String(text[..<range.lowerBound])
+                            if !prefix.isEmpty {
+                                continuation.yield(prefix)
                             }
-                            stopDetected = true
-                            break
                         }
+                        stopDetected = true
+                        break
                     }
 
                     if stopDetected { break }

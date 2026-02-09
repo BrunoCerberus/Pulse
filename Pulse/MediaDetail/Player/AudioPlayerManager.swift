@@ -62,7 +62,10 @@ final class AudioPlayerManager: ObservableObject {
             try session.setActive(true)
         } catch {
             // Log but don't fail - some devices may have restrictions
-            Logger.shared.warning("Audio session configuration warning: \(error.localizedDescription)", category: "Audio")
+            Logger.shared.warning(
+                "Audio session configuration warning: \(error.localizedDescription)",
+                category: "Audio"
+            )
         }
     }
 

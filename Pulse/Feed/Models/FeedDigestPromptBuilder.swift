@@ -58,18 +58,21 @@ enum FeedDigestPromptBuilder {
 
         return """
         Articles:
-        \(articleList)
+         \(articleList)
 
-        Write one separate paragraph for each: \(categoryHeaders). \
-        Each paragraph starts with its **CategoryName** header. Do NOT mix categories. Example:
+         Write one separate paragraph for each: \(categoryHeaders). \
+         Each paragraph starts with its **CategoryName** header. Do NOT mix categories. Example:
 
-        **Technology** Apple's M5 chip delivers 40% faster performance for Pro users. The EU finalized its AI Act enforcement timeline with steep fines starting in March.
+         **Technology** Apple's M5 chip delivers 40% faster performance for Pro users.
+         The EU finalized its AI Act enforcement timeline with steep fines starting in March.
 
-        **Business** Amazon shares dropped 8% amid concerns over AI spending. Canada unveiled a new auto strategy aimed at competing with Chinese EV manufacturers.
+         **Business** Amazon shares dropped 8% amid concerns over AI spending.
+         Canada unveiled a new auto strategy aimed at competing with Chinese EV manufacturers.
 
-        **Sports** The NBA trade deadline saw major moves, with several All-Stars changing teams. Meanwhile, the Super Bowl preparations are underway in New Orleans.
+         **Sports** The NBA trade deadline saw major moves, with several All-Stars changing teams.
+         Meanwhile, the Super Bowl preparations are underway in New Orleans.
 
-        Now write one paragraph per category (\(categoryHeaders)), 2-3 sentences each:
+         Now write one paragraph per category (\(categoryHeaders)), 2-3 sentences each:
         """
     }
 
