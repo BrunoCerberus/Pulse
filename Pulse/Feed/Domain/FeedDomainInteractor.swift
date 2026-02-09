@@ -101,9 +101,22 @@ final class FeedDomainInteractor: CombineInteractor {
             .store(in: &cancellables)
     }
 
-    // MARK: - Initial Load
+    private func updateState(_ transform: (inout FeedDomainState) -> Void) {
+        var state = stateSubject.value
+        transform(&state)
+        stateSubject.send(state)
+    }
 
-    private func loadInitialData() {
+    deinit {
+        generationTask?.cancel()
+        preloadTask?.cancel()
+    }
+}
+
+// MARK: - Feed Initial Load
+
+private extension FeedDomainInteractor {
+    func loadInitialData() {
         guard !currentState.hasLoadedInitialData else { return }
 
         // Always show processing animation first for consistent UX
@@ -132,9 +145,7 @@ final class FeedDomainInteractor: CombineInteractor {
         fetchLatestNews()
     }
 
-    // MARK: - Model Preloading
-
-    private func preloadModel() {
+    func preloadModel() {
         // Skip if preload already in progress (task-based synchronization)
         guard preloadTask == nil else { return }
 
@@ -152,9 +163,7 @@ final class FeedDomainInteractor: CombineInteractor {
         }
     }
 
-    // MARK: - Fetch Latest News
-
-    private func fetchLatestNews() {
+    func fetchLatestNews() {
         updateState { $0.generationState = .loadingArticles }
 
         // Capture newsService on MainActor before entering task group
@@ -214,7 +223,7 @@ final class FeedDomainInteractor: CombineInteractor {
         }
     }
 
-    private func handleArticlesLoaded(_ articles: [Article]) {
+    func handleArticlesLoaded(_ articles: [Article]) {
         updateState { state in
             state.latestArticles = articles
             state.hasLoadedInitialData = true
@@ -228,11 +237,13 @@ final class FeedDomainInteractor: CombineInteractor {
             updateState { $0.generationState = .idle }
         }
     }
+}
 
-    // MARK: - Digest Generation
+// MARK: - Feed Digest Generation
 
+private extension FeedDomainInteractor {
     // swiftlint:disable:next function_body_length
-    private func generateDigest() {
+    func generateDigest() {
         guard !currentState.latestArticles.isEmpty else {
             updateState { $0.generationState = .error("No articles available") }
             return
@@ -333,17 +344,19 @@ final class FeedDomainInteractor: CombineInteractor {
         }
     }
 
-    private func handleDigestCompleted(_ digest: DailyDigest) {
+    func handleDigestCompleted(_ digest: DailyDigest) {
         updateState { state in
             state.currentDigest = digest
             state.streamingText = ""
             state.generationState = .completed
         }
     }
+}
 
-    // MARK: - Model Status
+// MARK: - Feed Helpers
 
-    private func handleModelStatusChanged(_ status: LLMModelStatus) {
+private extension FeedDomainInteractor {
+    func handleModelStatusChanged(_ status: LLMModelStatus) {
         updateState { state in
             state.modelStatus = status
             if case let .error(message) = status {
@@ -352,9 +365,7 @@ final class FeedDomainInteractor: CombineInteractor {
         }
     }
 
-    // MARK: - Helpers
-
-    private nonisolated func cleanLLMOutput(_ text: String) -> String {
+    nonisolated func cleanLLMOutput(_ text: String) -> String {
         var cleaned = text
 
         // Remove null characters (LLM sometimes outputs these between tokens)
@@ -382,16 +393,5 @@ final class FeedDomainInteractor: CombineInteractor {
         }
 
         return cleaned.trimmingCharacters(in: .whitespacesAndNewlines)
-    }
-
-    private func updateState(_ transform: (inout FeedDomainState) -> Void) {
-        var state = stateSubject.value
-        transform(&state)
-        stateSubject.send(state)
-    }
-
-    deinit {
-        generationTask?.cancel()
-        preloadTask?.cancel()
     }
 }

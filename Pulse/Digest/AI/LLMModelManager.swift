@@ -11,6 +11,7 @@ import os
 /// Manages the lifecycle of the LLM model (loading, inference, unloading)
 ///
 /// Uses LEAP SDK's ModelRunner for on-device inference with GGUF models.
+/// This class is thread-safe using OSAllocatedUnfairLock for modelRunner access.
 final class LLMModelManager: @unchecked Sendable {
     static let shared = LLMModelManager()
 
@@ -163,125 +164,6 @@ final class LLMModelManager: @unchecked Sendable {
         }
     }
 
-    // MARK: - Private Inference
-
-    // swiftlint:disable:next function_body_length cyclomatic_complexity
-    private func runInference(
-        prompt: String,
-        systemPrompt: String,
-        maxTokens: Int,
-        stopSequences: [String],
-        continuation: AsyncThrowingStream<String, Error>.Continuation
-    ) async {
-        guard let runner = lock.withLock({ modelRunner }) else {
-            continuation.finish(throwing: LLMError.modelNotLoaded)
-            return
-        }
-
-        // Pre-inference memory check to prevent crashes during generation
-        guard hasAdequateMemory(for: .inference) else {
-            let tier = MemoryTier.current.rawValue
-            logger.warning("Insufficient memory for inference (tier: \(tier))", category: logCategory)
-            continuation.finish(throwing: LLMError.memoryPressure)
-            return
-        }
-
-        // Log prompt size for debugging context overflow issues
-        let estimatedPromptTokens = (systemPrompt.count + prompt.count) / 4
-        logger.info(
-            "Starting inference... (estimated prompt tokens: \(estimatedPromptTokens))",
-            category: logCategory
-        )
-
-        // Warn if prompt might be too large for context window
-        if estimatedPromptTokens > LLMConfiguration.contextSize - LLMConfiguration.reservedContextTokens {
-            logger.warning(
-                // swiftlint:disable:next line_length
-                "Prompt may exceed safe context size (\(estimatedPromptTokens) estimated vs \(LLMConfiguration.contextSize) max)",
-                category: logCategory
-            )
-        }
-
-        do {
-            // Create conversation with system prompt using LEAP SDK
-            let conversation = runner.createConversation(systemPrompt: systemPrompt)
-
-            // Send user message and stream response
-            let userMessage = ChatMessage(role: .user, content: [.text(prompt)])
-            let responseStream = conversation.generateResponse(message: userMessage)
-
-            var totalCharacters = 0
-            var stopDetected = false
-
-            for try await response in responseStream {
-                if Task.isCancelled {
-                    logger.info("Generation cancelled by user", category: logCategory)
-                    continuation.finish(throwing: LLMError.generationCancelled)
-                    return
-                }
-
-                switch response {
-                case let .chunk(text):
-                    // Check for stop sequences in the accumulated text
-                    for stop in stopSequences {
-                        if text.contains(stop) {
-                            // Yield text up to the stop sequence
-                            if let range = text.range(of: stop) {
-                                let prefix = String(text[..<range.lowerBound])
-                                if !prefix.isEmpty {
-                                    continuation.yield(prefix)
-                                }
-                            }
-                            stopDetected = true
-                            break
-                        }
-                    }
-
-                    if stopDetected { break }
-
-                    // Check max tokens (approximate by characters / 4)
-                    totalCharacters += text.count
-                    if totalCharacters > maxTokens * 4 {
-                        break
-                    }
-
-                    continuation.yield(text)
-
-                case .complete:
-                    break
-
-                default:
-                    break
-                }
-
-                if stopDetected || totalCharacters > maxTokens * 4 {
-                    break
-                }
-            }
-
-            continuation.finish()
-            logger.info("Inference completed, generated \(totalCharacters) characters", category: logCategory)
-
-        } catch let error as LeapError {
-            logger.error("LEAP inference failed: \(error)", category: logCategory)
-
-            switch error {
-            case .promptExceedContextLengthFailure:
-                continuation.finish(throwing: LLMError.generationFailed("Prompt exceeds context window"))
-            default:
-                continuation.finish(throwing: LLMError.generationFailed(error.localizedDescription))
-            }
-        } catch {
-            if Task.isCancelled {
-                logger.info("Generation cancelled", category: logCategory)
-                continuation.finish(throwing: LLMError.generationCancelled)
-            } else {
-                logger.error("Inference failed with unexpected error: \(error)", category: logCategory)
-                continuation.finish(throwing: LLMError.generationFailed(error.localizedDescription))
-            }
-        }
-    }
-
     // MARK: - Private Helpers
 
     private func logMemoryTier(_ tier: MemoryTier) {
@@ -373,5 +255,124 @@ final class LLMModelManager: @unchecked Sendable {
                 }
             }
         #endif
+    }
+}
+
+// MARK: - Private Inference
+
+private extension LLMModelManager {
+    // swiftlint:disable:next function_body_length cyclomatic_complexity
+    func runInference(
+        prompt: String,
+        systemPrompt: String,
+        maxTokens: Int,
+        stopSequences: [String],
+        continuation: AsyncThrowingStream<String, Error>.Continuation
+    ) async {
+        guard let runner = lock.withLock({ modelRunner }) else {
+            continuation.finish(throwing: LLMError.modelNotLoaded)
+            return
+        }
+
+        // Pre-inference memory check to prevent crashes during generation
+        guard hasAdequateMemory(for: .inference) else {
+            let tier = MemoryTier.current.rawValue
+            logger.warning("Insufficient memory for inference (tier: \(tier))", category: logCategory)
+            continuation.finish(throwing: LLMError.memoryPressure)
+            return
+        }
+
+        // Log prompt size for debugging context overflow issues
+        let estimatedPromptTokens = (systemPrompt.count + prompt.count) / 4
+        logger.info(
+            "Starting inference... (estimated prompt tokens: \(estimatedPromptTokens))",
+            category: logCategory
+        )
+
+        // Warn if prompt might be too large for context window
+        if estimatedPromptTokens > LLMConfiguration.contextSize - LLMConfiguration.reservedContextTokens {
+            logger.warning(
+                // swiftlint:disable:next line_length
+                "Prompt may exceed safe context size (\(estimatedPromptTokens) estimated vs \(LLMConfiguration.contextSize) max)",
+                category: logCategory
+            )
+        }
+
+        do {
+            // Create conversation with system prompt using LEAP SDK
+            let conversation = runner.createConversation(systemPrompt: systemPrompt)
+
+            // Send user message and stream response
+            let userMessage = ChatMessage(role: .user, content: [.text(prompt)])
+            let responseStream = conversation.generateResponse(message: userMessage)
+
+            var totalCharacters = 0
+            var stopDetected = false
+
+            for try await response in responseStream {
+                if Task.isCancelled {
+                    logger.info("Generation cancelled by user", category: logCategory)
+                    continuation.finish(throwing: LLMError.generationCancelled)
+                    return
+                }
+
+                switch response {
+                case let .chunk(text):
+                    // Check for stop sequences in the accumulated text
+                    for stop in stopSequences where text.contains(stop) {
+                        // Yield text up to the stop sequence
+                        if let range = text.range(of: stop) {
+                            let prefix = String(text[..<range.lowerBound])
+                            if !prefix.isEmpty {
+                                continuation.yield(prefix)
+                            }
+                        }
+                        stopDetected = true
+                        break
+                    }
+
+                    if stopDetected { break }
+
+                    // Check max tokens (approximate by characters / 4)
+                    totalCharacters += text.count
+                    if totalCharacters > maxTokens * 4 {
+                        break
+                    }
+
+                    continuation.yield(text)
+
+                case .complete:
+                    break
+
+                default:
+                    break
+                }
+
+                if stopDetected || totalCharacters > maxTokens * 4 {
+                    break
+                }
+            }
+
+            continuation.finish()
+            logger.info("Inference completed, generated \(totalCharacters) characters", category: logCategory)
+
+        } catch let error as LeapError {
+            logger.error("LEAP inference failed: \(error)", category: logCategory)
+
+            switch error {
+            case .promptExceedContextLengthFailure:
+                continuation.finish(throwing: LLMError.generationFailed("Prompt exceeds context window"))
+            default:
+                continuation.finish(throwing: LLMError.generationFailed(error.localizedDescription))
+            }
+        } catch {
+            if Task.isCancelled {
+                logger.info("Generation cancelled", category: logCategory)
+                continuation.finish(throwing: LLMError.generationCancelled)
+            } else {
+                logger.error("Inference failed with unexpected error: \(error)", category: logCategory)
+                continuation.finish(throwing: LLMError.generationFailed(error.localizedDescription))
+            }
+        }
     }
 }
