@@ -29,7 +29,9 @@ struct VideoPlayerView: UIViewRepresentable {
 
     func makeUIView(context: Context) -> WKWebView {
         let config = WKWebViewConfiguration()
+        config.allowsInlineMediaPlayback = true
         config.mediaTypesRequiringUserActionForPlayback = []
+        config.allowsPictureInPictureMediaPlayback = true
 
         let preferences = WKWebpagePreferences()
         preferences.allowsContentJavaScript = true
