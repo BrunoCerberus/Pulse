@@ -8,6 +8,7 @@ final class WidgetDataManager {
 
     private let appGroupIdentifier = "group.com.bruno.Pulse-News"
     private let articlesKey = "shared_articles"
+    private var lastSavedHash: Int?
 
     private init() {}
 
@@ -32,10 +33,14 @@ final class WidgetDataManager {
             )
         }
 
+        // Skip encoding and widget reload if data hasn't changed
+        let currentHash = sharedArticles.map(\.id).hashValue
+        guard currentHash != lastSavedHash else { return }
+
         do {
             let data = try JSONEncoder().encode(Array(sharedArticles))
             defaults.set(data, forKey: articlesKey)
-            // Reload widget timelines
+            lastSavedHash = currentHash
             WidgetCenter.shared.reloadAllTimelines()
         } catch {
             Logger.shared.service("Failed to encode articles for widget: \(error)", level: .warning)

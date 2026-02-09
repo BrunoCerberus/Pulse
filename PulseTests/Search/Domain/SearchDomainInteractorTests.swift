@@ -77,7 +77,8 @@ struct SearchDomainInteractorTests {
 
         sut.dispatch(action: .updateQuery("swift"))
 
-        try await Task.sleep(nanoseconds: 200_000_000)
+        // Wait for 300ms debounce + Combine scheduling overhead
+        try await Task.sleep(nanoseconds: 500_000_000)
 
         let state = sut.currentState
         #expect(!state.suggestions.isEmpty)

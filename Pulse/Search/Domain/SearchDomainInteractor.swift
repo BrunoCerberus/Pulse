@@ -26,6 +26,7 @@ final class SearchDomainInteractor: CombineInteractor {
     private let searchService: SearchService
     private let storageService: StorageService
     private let stateSubject = CurrentValueSubject<SearchDomainState, Never>(.initial)
+    private let suggestionQuerySubject = PassthroughSubject<String, Never>()
     private var cancellables = Set<AnyCancellable>()
     private var searchCancellable: AnyCancellable?
 
@@ -51,6 +52,29 @@ final class SearchDomainInteractor: CombineInteractor {
             Logger.shared.service("Failed to retrieve StorageService: \(error)", level: .warning)
             storageService = LiveStorageService()
         }
+
+        setupSuggestionDebounce()
+    }
+
+    private func setupSuggestionDebounce() {
+        suggestionQuerySubject
+            .debounce(for: .milliseconds(300), scheduler: DispatchQueue.main)
+            .removeDuplicates()
+            .sink { [weak self] query in
+                guard let self, !query.isEmpty else { return }
+                self.fetchSuggestions(for: query)
+            }
+            .store(in: &cancellables)
+    }
+
+    private func fetchSuggestions(for query: String) {
+        searchService.getSuggestions(for: query)
+            .sink { [weak self] suggestions in
+                self?.updateState { state in
+                    state.suggestions = suggestions
+                }
+            }
+            .store(in: &cancellables)
     }
 
     func dispatch(action: SearchDomainAction) {
@@ -92,13 +116,7 @@ final class SearchDomainInteractor: CombineInteractor {
             return
         }
 
-        searchService.getSuggestions(for: query)
-            .sink { [weak self] suggestions in
-                self?.updateState { state in
-                    state.suggestions = suggestions
-                }
-            }
-            .store(in: &cancellables)
+        suggestionQuerySubject.send(query)
     }
 
     private func performSearch() {

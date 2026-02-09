@@ -143,10 +143,10 @@ final class LiveNewsCacheStore: NewsCacheStore {
     private func estimateCost(for data: Any) -> Int {
         switch data {
         case let articles as [Article]:
-            // Rough estimate: ~1KB per article
-            return articles.count * 1024
+            // ~4KB per article (title, description, URLs, source data)
+            return articles.count * 4096
         case _ as Article:
-            return 1024
+            return 4096
         default:
             return 1024
         }

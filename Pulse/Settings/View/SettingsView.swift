@@ -1,3 +1,4 @@
+import Combine
 import EntropyCore
 import SwiftUI
 
@@ -90,6 +91,9 @@ struct SettingsView: View {
             viewModel.handle(event: .onAppear)
             checkPremiumStatus()
         }
+        .onReceive(subscriptionStatusPublisher) { newStatus in
+            isPremium = newStatus
+        }
         .sheet(
             isPresented: $isPaywallPresented,
             onDismiss: { checkPremiumStatus() },
@@ -104,6 +108,15 @@ struct SettingsView: View {
         } catch {
             isPremium = false
         }
+    }
+
+    private var subscriptionStatusPublisher: AnyPublisher<Bool, Never> {
+        guard let storeKitService = try? serviceLocator.retrieve(StoreKitService.self) else {
+            return Empty().eraseToAnyPublisher()
+        }
+        return storeKitService.subscriptionStatusPublisher
+            .receive(on: DispatchQueue.main)
+            .eraseToAnyPublisher()
     }
 
     private var notificationsSection: some View {

@@ -195,7 +195,7 @@ final class AudioPlayerManager: ObservableObject {
         // Observe time updates (every 0.5 seconds)
         let interval = CMTime(seconds: 0.5, preferredTimescale: 600)
         timeObserver = player.addPeriodicTimeObserver(forInterval: interval, queue: .main) { [weak self] time in
-            Task { @MainActor [weak self] in
+            MainActor.assumeIsolated {
                 guard let self, self.duration > 0 else { return }
                 self.currentTime = time.seconds
                 self.progress = time.seconds / self.duration

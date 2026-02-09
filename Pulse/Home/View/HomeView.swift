@@ -257,15 +257,10 @@ struct HomeView<R: HomeNavigationRouter>: View {
                             )
                             .fadeIn(delay: Double(item.animationIndex) * 0.03)
                             .onAppear {
-                                // Pre-computed lastItemId avoids recalculating .last on every appear
                                 if item.id == lastItemId {
                                     viewModel.handle(event: .onLoadMore)
                                 }
-                                // Prefetch next 5 images for smoother scrolling
-                                // Index lookup only happens on appear, not every body render
-                                if let index = headlines.firstIndex(where: { $0.id == item.id }) {
-                                    prefetchUpcomingImages(from: index, in: headlines)
-                                }
+                                prefetchUpcomingImages(from: item.animationIndex, in: headlines)
                             }
                             .onDisappear {
                                 // Cancel prefetch for scrolled-past items to free resources
