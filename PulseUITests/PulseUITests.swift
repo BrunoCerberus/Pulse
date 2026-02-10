@@ -32,21 +32,27 @@ final class PulseUITests: BaseUITestCase {
         // Return to Home tab for settings test
         homeTab.tap()
 
-        // Wait for Home content to fully load before checking navigation elements
-        // This handles slow CI environments where content loads after tab switch
-        waitForHomeContent(timeout: Self.defaultTimeout)
+        // Allow UI to fully settle after multi-tab navigation.
+        // CI simulators need extra time to re-render the Home tab's NavigationStack.
+        wait(for: 1.0)
 
-        let homeNavBar = app.navigationBars["News"]
+        // Wait for Home content with a longer timeout for CI.
+        // After navigating through multiple tabs, the Home view's accessibility tree
+        // can take significantly longer to populate on shared CI runners.
+        waitForHomeContent(timeout: Self.launchTimeout)
+
+        // Find the gear button using both system image name and accessibility label.
+        // On iOS 26+, the button may be identified by its accessibilityLabel ("Settings")
+        // rather than its system image name ("gearshape").
         let gearButton = app.navigationBars.buttons["gearshape"]
-        let homeLoaded = waitForAny([homeNavBar, gearButton], timeout: Self.defaultTimeout)
-        XCTAssertTrue(homeLoaded, "Home navigation bar should exist")
+        let settingsButton = app.navigationBars.buttons["Settings"]
+        let gearFound = waitForAny([gearButton, settingsButton], timeout: Self.launchTimeout)
+        XCTAssertTrue(gearFound, "Gear/Settings button should exist in navigation bar")
 
-        // Settings is accessed via the gear button in Home navigation bar, not a tab
-        XCTAssertTrue(gearButton.waitForExistence(timeout: 5), "Gear button should exist")
-
-        gearButton.tap()
+        let buttonToTap = gearButton.exists ? gearButton : settingsButton
+        buttonToTap.tap()
 
         let settingsNavBar = app.navigationBars["Settings"]
-        XCTAssertTrue(settingsNavBar.waitForExistence(timeout: 5), "Settings should open")
+        XCTAssertTrue(settingsNavBar.waitForExistence(timeout: Self.defaultTimeout), "Settings should open")
     }
 }
