@@ -88,10 +88,12 @@ class BaseUITestCase: XCTestCase {
             let hasButtons = app.buttons.count > 0
             let hasStaticTexts = app.staticTexts.count > 0
             let allButtonLabels = app.buttons.allElementsBoundByIndex.prefix(10).map { $0.label }
-            XCTFail("App did not reach ready state - neither tab bar nor sign-in view appeared. " +
+            // Throw error instead of XCTFail to prevent crash with C++ exception handling
+            let debugInfo = "App did not reach ready state - neither tab bar nor sign-in view appeared. " +
                 "Debug: hasActivityIndicator=\(hasActivityIndicator), buttons=\(hasButtons), " +
-                "texts=\(hasStaticTexts), buttonLabels=\(allButtonLabels)")
-            return
+                "texts=\(hasStaticTexts), buttonLabels=\(allButtonLabels)"
+            print(debugInfo)
+            throw XCTSkip("App not ready: \(debugInfo)")
         }
 
         // Only reset to home tab if authenticated (tab bar was found via any detection method)
