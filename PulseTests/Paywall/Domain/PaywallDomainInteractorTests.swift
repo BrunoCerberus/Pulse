@@ -127,4 +127,96 @@ struct PaywallDomainInteractorTests {
         #expect(modified.products.isEmpty) // Unchanged
         #expect(!modified.isPurchasing) // Unchanged
     }
+
+    // MARK: - Failure Path Tests
+
+    @Test("Restore purchases failure sets error")
+    func restorePurchasesFailureSetsError() async throws {
+        mockStoreKitService.configureRestoreFailure(true)
+
+        var cancellables = Set<AnyCancellable>()
+        var errors: [String?] = []
+
+        sut.statePublisher
+            .map(\.error)
+            .sink { error in
+                errors.append(error)
+            }
+            .store(in: &cancellables)
+
+        sut.dispatch(action: .restorePurchases)
+
+        try await Task.sleep(nanoseconds: 300_000_000)
+
+        // Should have received an error
+        #expect(errors.contains(where: { $0 != nil }))
+        #expect(!sut.currentState.isRestoring)
+    }
+
+    @Test("Check subscription status updates premium to false")
+    func checkSubscriptionStatusUpdatesFalse() async throws {
+        mockStoreKitService.setSubscriptionStatus(false)
+
+        sut.dispatch(action: .checkSubscriptionStatus)
+
+        try await Task.sleep(nanoseconds: 200_000_000)
+
+        #expect(!sut.currentState.isPremium)
+    }
+
+    @Test("Multiple actions dispatched sequentially")
+    func multipleActionsDispatched() async throws {
+        sut.dispatch(action: .loadProducts)
+        sut.dispatch(action: .restorePurchases)
+        sut.dispatch(action: .dismiss)
+
+        try await Task.sleep(nanoseconds: 300_000_000)
+
+        #expect(sut.currentState.shouldDismiss)
+    }
+
+    @Test("Domain state copy preserves all fields when no overrides")
+    func domainStateCopyPreservesFields() {
+        var state = PaywallDomainState.initial
+        state = state.copy(isPremium: true, isPurchasing: true, error: "test error")
+
+        let copied = state.copy()
+
+        #expect(copied.isPremium == state.isPremium)
+        #expect(copied.isPurchasing == state.isPurchasing)
+        #expect(copied.error == state.error)
+    }
+
+    @Test("Domain state copy with shouldDismiss")
+    func domainStateCopyWithShouldDismiss() {
+        let state = PaywallDomainState.initial
+        let modified = state.copy(shouldDismiss: true)
+
+        #expect(modified.shouldDismiss)
+        #expect(!modified.isPremium) // Unchanged
+    }
+
+    @Test("Domain state copy with purchaseSuccessful")
+    func domainStateCopyWithPurchaseSuccessful() {
+        let state = PaywallDomainState.initial
+        let modified = state.copy(purchaseSuccessful: true)
+
+        #expect(modified.purchaseSuccessful)
+    }
+
+    @Test("Domain state copy with restoreSuccessful")
+    func domainStateCopyWithRestoreSuccessful() {
+        let state = PaywallDomainState.initial
+        let modified = state.copy(restoreSuccessful: true)
+
+        #expect(modified.restoreSuccessful)
+    }
+
+    @Test("Domain state copy with isRestoring")
+    func domainStateCopyWithIsRestoring() {
+        let state = PaywallDomainState.initial
+        let modified = state.copy(isRestoring: true)
+
+        #expect(modified.isRestoring)
+    }
 }

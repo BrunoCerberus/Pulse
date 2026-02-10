@@ -257,6 +257,170 @@ struct CachingNewsServiceTests {
 
         #expect(mockCacheStore.removeAllCallCount == 1)
     }
+
+    // MARK: - Selective Invalidation Tests
+
+    @Test("invalidateCache for specific keys removes only those keys")
+    func invalidateCacheForSpecificKeys() {
+        let articles = Article.mockArticles
+        let key1 = NewsCacheKey.topHeadlines(country: "us", page: 1)
+        let key2 = NewsCacheKey.breakingNews(country: "us")
+        let key3 = NewsCacheKey.categoryHeadlines(category: .technology, country: "us", page: 1)
+
+        mockCacheStore.set(CacheEntry(data: articles, timestamp: Date()), for: key1)
+        mockCacheStore.set(CacheEntry(data: articles, timestamp: Date()), for: key2)
+        mockCacheStore.set(CacheEntry(data: articles, timestamp: Date()), for: key3)
+        mockCacheStore.removeCallCount = 0
+
+        sut.invalidateCache(for: [key1, key2])
+
+        #expect(mockCacheStore.removeCallCount == 2)
+        #expect(!mockCacheStore.contains(key: key1))
+        #expect(!mockCacheStore.contains(key: key2))
+        #expect(mockCacheStore.contains(key: key3)) // Not invalidated
+    }
+
+    @Test("invalidateCache for empty keys array does nothing")
+    func invalidateCacheForEmptyKeys() {
+        mockCacheStore.removeCallCount = 0
+
+        sut.invalidateCache(for: [])
+
+        #expect(mockCacheStore.removeCallCount == 0)
+    }
+
+    // MARK: - Category Headlines Cache Miss
+
+    @Test("fetchTopHeadlines with category fetches from network when cache misses")
+    func fetchCategoryHeadlinesCacheMiss() async throws {
+        let networkArticles = Article.mockArticles
+        mockNewsService.topHeadlinesResult = .success(networkArticles)
+
+        var receivedArticles: [Article] = []
+        var cancellables = Set<AnyCancellable>()
+
+        sut.fetchTopHeadlines(category: .science, country: "us", page: 1)
+            .sink(
+                receiveCompletion: { _ in },
+                receiveValue: { articles in
+                    receivedArticles = articles
+                }
+            )
+            .store(in: &cancellables)
+
+        try await Task.sleep(nanoseconds: 100_000_000)
+
+        #expect(!receivedArticles.isEmpty)
+        #expect(mockCacheStore.setCallCount >= 1)
+
+        // Verify the data was cached with correct key
+        let cacheKey = NewsCacheKey.categoryHeadlines(category: .science, country: "us", page: 1)
+        #expect(mockCacheStore.contains(key: cacheKey))
+    }
+
+    // MARK: - Article Cache Expiry
+
+    @Test("fetchArticle fetches from network when cache is expired")
+    func fetchArticleExpiredCache() async throws {
+        let expiredTimestamp = Date().addingTimeInterval(-NewsCacheTTL.default - 1)
+        let cachedArticle = Article.mockArticles[0]
+        let cacheKey = NewsCacheKey.article(id: cachedArticle.id)
+        let entry = CacheEntry(data: cachedArticle, timestamp: expiredTimestamp)
+        mockCacheStore.set(entry, for: cacheKey)
+
+        let networkArticle = Article.mockArticles[1]
+        mockNewsService.fetchArticleResult = .success(networkArticle)
+
+        mockCacheStore.getCallCount = 0
+        mockCacheStore.setCallCount = 0
+
+        var receivedArticle: Article?
+        var cancellables = Set<AnyCancellable>()
+
+        sut.fetchArticle(id: cachedArticle.id)
+            .sink(
+                receiveCompletion: { _ in },
+                receiveValue: { article in
+                    receivedArticle = article
+                }
+            )
+            .store(in: &cancellables)
+
+        try await Task.sleep(nanoseconds: 100_000_000)
+
+        // Should return network article, not cached
+        #expect(receivedArticle == networkArticle)
+        // Should update cache with fresh data
+        #expect(mockCacheStore.setCallCount == 1)
+    }
+
+    // MARK: - Breaking News Cache Expiry
+
+    @Test("fetchBreakingNews fetches from network when cache is expired")
+    func fetchBreakingNewsExpiredCache() async throws {
+        let expiredTimestamp = Date().addingTimeInterval(-NewsCacheTTL.default - 1)
+        let cachedArticles = Array(Article.mockArticles.prefix(3))
+        let cacheKey = NewsCacheKey.breakingNews(country: "us")
+        let entry = CacheEntry(data: cachedArticles, timestamp: expiredTimestamp)
+        mockCacheStore.set(entry, for: cacheKey)
+
+        let networkArticles = Article.mockArticles
+        mockNewsService.breakingNewsResult = .success(networkArticles)
+
+        mockCacheStore.getCallCount = 0
+        mockCacheStore.setCallCount = 0
+
+        var receivedArticles: [Article] = []
+        var cancellables = Set<AnyCancellable>()
+
+        sut.fetchBreakingNews(country: "us")
+            .sink(
+                receiveCompletion: { _ in },
+                receiveValue: { articles in
+                    receivedArticles = articles
+                }
+            )
+            .store(in: &cancellables)
+
+        try await Task.sleep(nanoseconds: 100_000_000)
+
+        #expect(receivedArticles == networkArticles)
+        #expect(mockCacheStore.setCallCount == 1)
+    }
+
+    // MARK: - Category Headlines Cache Expiry
+
+    @Test("fetchTopHeadlines with category fetches from network when expired")
+    func fetchCategoryHeadlinesExpiredCache() async throws {
+        let expiredTimestamp = Date().addingTimeInterval(-NewsCacheTTL.default - 1)
+        let cachedArticles = [Article.mockArticles[0]]
+        let cacheKey = NewsCacheKey.categoryHeadlines(category: .technology, country: "us", page: 1)
+        let entry = CacheEntry(data: cachedArticles, timestamp: expiredTimestamp)
+        mockCacheStore.set(entry, for: cacheKey)
+
+        let networkArticles = Article.mockArticles
+        mockNewsService.topHeadlinesResult = .success(networkArticles)
+
+        mockCacheStore.getCallCount = 0
+        mockCacheStore.setCallCount = 0
+
+        var receivedArticles: [Article] = []
+        var cancellables = Set<AnyCancellable>()
+
+        sut.fetchTopHeadlines(category: .technology, country: "us", page: 1)
+            .sink(
+                receiveCompletion: { _ in },
+                receiveValue: { articles in
+                    receivedArticles = articles
+                }
+            )
+            .store(in: &cancellables)
+
+        try await Task.sleep(nanoseconds: 100_000_000)
+
+        #expect(!receivedArticles.isEmpty)
+        #expect(mockCacheStore.setCallCount == 1)
+    }
 }
 
 // MARK: - Cache Entry Tests
