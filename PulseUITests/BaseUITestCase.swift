@@ -152,17 +152,29 @@ class BaseUITestCase: XCTestCase {
     /// Navigate to a specific tab
     func navigateToTab(_ tabName: String) {
         let tab = app.tabBars.buttons[tabName]
-        if tab.waitForExistence(timeout: Self.shortTimeout), !tab.isSelected {
-            tab.tap()
+        if tab.waitForExistence(timeout: Self.defaultTimeout), !tab.isSelected {
+            wait(for: 0.3)
+            if tab.isHittable {
+                tab.tap()
+            }
+        } else if !tab.exists {
+            // Fallback: try finding the button directly
+            let button = app.buttons[tabName]
+            if button.waitForExistence(timeout: 2), !button.isSelected {
+                button.tap()
+            }
         }
     }
 
     /// Navigate to Search tab (handles role: .search accessibility)
     func navigateToSearchTab() {
         let searchTab = app.tabBars.buttons["Search"]
-        // Use waitForExistence for CI reliability
-        if searchTab.waitForExistence(timeout: Self.shortTimeout), !searchTab.isSelected {
-            searchTab.tap()
+        // Use defaultTimeout for CI reliability (shortTimeout caused flakes on slow runners)
+        if searchTab.waitForExistence(timeout: Self.defaultTimeout), !searchTab.isSelected {
+            wait(for: 0.3)
+            if searchTab.isHittable {
+                searchTab.tap()
+            }
         } else if !searchTab.exists {
             // Fallback: try finding the button directly
             let searchButton = app.buttons["Search"]
@@ -206,9 +218,13 @@ class BaseUITestCase: XCTestCase {
     /// Navigate to Media tab and verify navigation bar appears
     func navigateToMediaTab() {
         let mediaTab = app.tabBars.buttons["Media"]
-        // Use waitForExistence for CI reliability
-        if mediaTab.waitForExistence(timeout: Self.shortTimeout), !mediaTab.isSelected {
-            mediaTab.tap()
+        // Use defaultTimeout for CI reliability (shortTimeout caused flakes on slow runners)
+        if mediaTab.waitForExistence(timeout: Self.defaultTimeout), !mediaTab.isSelected {
+            // Wait for element to become hittable
+            wait(for: 0.3)
+            if mediaTab.isHittable {
+                mediaTab.tap()
+            }
         } else if !mediaTab.exists {
             // Fallback: try finding the button directly
             let mediaButton = app.buttons["Media"]
@@ -222,9 +238,12 @@ class BaseUITestCase: XCTestCase {
     /// Navigate to Bookmarks tab and verify navigation bar appears
     func navigateToBookmarksTab() {
         let bookmarksTab = app.tabBars.buttons["Bookmarks"]
-        // Use waitForExistence for CI reliability
-        if bookmarksTab.waitForExistence(timeout: Self.shortTimeout), !bookmarksTab.isSelected {
-            bookmarksTab.tap()
+        // Use defaultTimeout for CI reliability (shortTimeout caused flakes on slow runners)
+        if bookmarksTab.waitForExistence(timeout: Self.defaultTimeout), !bookmarksTab.isSelected {
+            wait(for: 0.3)
+            if bookmarksTab.isHittable {
+                bookmarksTab.tap()
+            }
         } else if !bookmarksTab.exists {
             // Fallback: try finding the button directly
             let bookmarksButton = app.buttons["Bookmarks"]
