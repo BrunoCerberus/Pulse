@@ -82,7 +82,8 @@ struct SettingsViewEventTests {
         #expect(event1 == event2)
         #expect(event1 != event3)
 
-        #expect(SettingsViewEvent.onRemoveMutedKeyword("politics") == SettingsViewEvent.onRemoveMutedKeyword("politics"))
+        let keywordEvent = SettingsViewEvent.onRemoveMutedKeyword("politics")
+        #expect(keywordEvent == keywordEvent)
     }
 
     @Test("Different event types are not equal")
