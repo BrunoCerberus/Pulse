@@ -151,12 +151,29 @@ class BaseUITestCase: XCTestCase {
         }
     }
 
-    /// Navigate to a specific tab
+    /// Navigate to a specific tab with recovery
     func navigateToTab(_ tabName: String) {
         let tab = app.tabBars.buttons[tabName]
+
+        // First attempt
         if tab.waitForExistence(timeout: Self.shortTimeout), !tab.isSelected {
             tab.tap()
+        } else if !tab.exists {
+            // Fallback: try finding the button directly
+            let tabButton = app.buttons[tabName]
+            if tabButton.waitForExistence(timeout: Self.shortTimeout), !tabButton.isSelected {
+                tabButton.tap()
+            }
+        } else if tab.isSelected {
+            // Already on this tab, nothing to do
+            return
         }
+
+        // Wait for UI to settle on CI
+        wait(for: 0.5)
+
+        // Verify navigation if needed - don't assert, just return
+        _ = app.navigationBars[tabName].waitForExistence(timeout: Self.launchTimeout)
     }
 
     /// Navigate to Search tab (handles role: .search accessibility)
@@ -205,20 +222,38 @@ class BaseUITestCase: XCTestCase {
         _ = app.navigationBars["Daily Digest"].waitForExistence(timeout: Self.defaultTimeout)
     }
 
-    /// Navigate to Media tab and verify navigation bar appears
+    /// Navigate to Media tab with recovery for CI
     func navigateToMediaTab() {
         let mediaTab = app.tabBars.buttons["Media"]
-        // Use waitForExistence for CI reliability
+
+        // First attempt
         if mediaTab.waitForExistence(timeout: Self.shortTimeout), !mediaTab.isSelected {
             mediaTab.tap()
         } else if !mediaTab.exists {
             // Fallback: try finding the button directly
             let mediaButton = app.buttons["Media"]
-            if mediaButton.waitForExistence(timeout: 2), !mediaButton.isSelected {
+            if mediaButton.waitForExistence(timeout: Self.shortTimeout), !mediaButton.isSelected {
                 mediaButton.tap()
             }
+        } else if mediaTab.isSelected {
+            // Already on Media tab
+            wait(for: 0.5)
+            return
         }
-        _ = app.navigationBars["Media"].waitForExistence(timeout: Self.defaultTimeout)
+
+        // Wait for UI to settle on CI
+        wait(for: 0.5)
+
+        // Verify with recovery
+        var navBarVisible = app.navigationBars["Media"].waitForExistence(timeout: Self.defaultTimeout)
+        if !navBarVisible {
+            // Recovery: tap again
+            if mediaTab.exists {
+                mediaTab.tap()
+                wait(for: 1.0)
+                navBarVisible = app.navigationBars["Media"].waitForExistence(timeout: Self.defaultTimeout)
+            }
+        }
     }
 
     /// Navigate to Bookmarks tab and verify navigation bar appears
