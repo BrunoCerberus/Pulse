@@ -372,4 +372,149 @@ struct SupabaseAPITests {
 
         #expect(api.header == nil)
     }
+
+    // MARK: - Media Endpoint Tests
+
+    @Test("SupabaseAPI media with specific type filters by category slug")
+    func mediaWithSpecificType() {
+        let api = SupabaseAPI.media(type: "videos", page: 1, pageSize: 20)
+
+        let path = api.path
+
+        #expect(path.contains("/api-articles"))
+        #expect(path.contains("category_slug=eq.videos"))
+        #expect(path.contains("limit=20"))
+        #expect(path.contains("order=published_at.desc"))
+    }
+
+    @Test("SupabaseAPI media with nil type filters both podcasts and videos")
+    func mediaWithNilType() {
+        let api = SupabaseAPI.media(type: nil, page: 1, pageSize: 20)
+
+        let path = api.path
+
+        #expect(path.contains("/api-articles"))
+        #expect(path.contains("in.(podcasts,videos)"))
+        #expect(path.contains("limit=20"))
+    }
+
+    @Test("SupabaseAPI media page 1 does not include offset")
+    func mediaPage1NoOffset() {
+        let api = SupabaseAPI.media(type: "videos", page: 1, pageSize: 20)
+
+        let path = api.path
+
+        #expect(!path.contains("offset="))
+    }
+
+    @Test("SupabaseAPI media page 2 includes offset")
+    func mediaPage2IncludesOffset() {
+        let api = SupabaseAPI.media(type: "videos", page: 2, pageSize: 20)
+
+        let path = api.path
+
+        #expect(path.contains("offset=20"))
+    }
+
+    @Test("SupabaseAPI media page 3 with pageSize 10 has offset 20")
+    func mediaPage3Offset() {
+        let api = SupabaseAPI.media(type: "podcasts", page: 3, pageSize: 10)
+
+        let path = api.path
+
+        #expect(path.contains("offset=20"))
+        #expect(path.contains("limit=10"))
+        #expect(path.contains("category_slug=eq.podcasts"))
+    }
+
+    // MARK: - Featured Media Endpoint Tests
+
+    @Test("SupabaseAPI featuredMedia with specific type")
+    func featuredMediaWithSpecificType() {
+        let api = SupabaseAPI.featuredMedia(type: "podcasts", limit: 10)
+
+        let path = api.path
+
+        #expect(path.contains("/api-articles"))
+        #expect(path.contains("category_slug=eq.podcasts"))
+        #expect(path.contains("limit=10"))
+        #expect(path.contains("order=published_at.desc"))
+    }
+
+    @Test("SupabaseAPI featuredMedia with nil type filters both types")
+    func featuredMediaWithNilType() {
+        let api = SupabaseAPI.featuredMedia(type: nil, limit: 5)
+
+        let path = api.path
+
+        #expect(path.contains("/api-articles"))
+        #expect(path.contains("in.(podcasts,videos)"))
+        #expect(path.contains("limit=5"))
+    }
+
+    @Test("SupabaseAPI featuredMedia does not include offset")
+    func featuredMediaNoOffset() {
+        let api = SupabaseAPI.featuredMedia(type: "videos", limit: 10)
+
+        let path = api.path
+
+        #expect(!path.contains("offset="))
+    }
+
+    // MARK: - Articles by Category Pagination Tests
+
+    @Test("SupabaseAPI articlesByCategory page 3 includes correct offset")
+    func articlesByCategoryPage3() {
+        let api = SupabaseAPI.articlesByCategory(category: "business", page: 3, pageSize: 15)
+
+        let path = api.path
+
+        #expect(path.contains("offset=30")) // (3-1) * 15 = 30
+        #expect(path.contains("limit=15"))
+        #expect(path.contains("category_slug=eq.business"))
+    }
+
+    @Test("SupabaseAPI articlesByCategory page 1 does not include offset")
+    func articlesByCategoryPage1NoOffset() {
+        let api = SupabaseAPI.articlesByCategory(category: "science", page: 1, pageSize: 20)
+
+        let path = api.path
+
+        #expect(!path.contains("offset="))
+    }
+
+    // MARK: - Debug Property Tests
+
+    @Test("SupabaseAPI debug is true in debug builds")
+    func debugPropertyIsTrue() {
+        let api = SupabaseAPI.articles(page: 1, pageSize: 20)
+
+        // In test builds (DEBUG), debug should be true
+        #expect(api.debug)
+    }
+
+    // MARK: - Media and Featured Media use GET
+
+    @Test("SupabaseAPI media uses GET method")
+    func mediaUsesGetMethod() {
+        let mediaAPI = SupabaseAPI.media(type: "videos", page: 1, pageSize: 20)
+        let featuredAPI = SupabaseAPI.featuredMedia(type: nil, limit: 10)
+
+        #expect(mediaAPI.method == .GET)
+        #expect(featuredAPI.method == .GET)
+    }
+
+    @Test("SupabaseAPI media task is nil")
+    func mediaTaskIsNil() {
+        let api = SupabaseAPI.media(type: "videos", page: 1, pageSize: 20)
+
+        #expect(api.task == nil)
+    }
+
+    @Test("SupabaseAPI media header is nil")
+    func mediaHeaderIsNil() {
+        let api = SupabaseAPI.media(type: "videos", page: 1, pageSize: 20)
+
+        #expect(api.header == nil)
+    }
 }

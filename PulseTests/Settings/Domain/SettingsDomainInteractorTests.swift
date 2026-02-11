@@ -233,3 +233,159 @@ struct SettingsInteractorSavingTests {
         #expect(savingStates.contains(true) && savingStates.last == false)
     }
 }
+
+// MARK: - UI State Action Tests
+
+@Suite("SettingsDomainInteractor UI State Tests")
+@MainActor
+struct SettingsInteractorUIStateTests {
+    @Test("Set show sign out confirmation")
+    func setShowSignOutConfirmation() async throws {
+        let (sut, _) = createSUT()
+
+        sut.dispatch(action: .setShowSignOutConfirmation(true))
+        try await Task.sleep(nanoseconds: 100_000_000)
+
+        #expect(sut.currentState.showSignOutConfirmation)
+    }
+
+    @Test("Set show sign out confirmation back to false")
+    func setShowSignOutConfirmationFalse() async throws {
+        let (sut, _) = createSUT()
+
+        sut.dispatch(action: .setShowSignOutConfirmation(true))
+        try await Task.sleep(nanoseconds: 100_000_000)
+
+        sut.dispatch(action: .setShowSignOutConfirmation(false))
+        try await Task.sleep(nanoseconds: 100_000_000)
+
+        #expect(!sut.currentState.showSignOutConfirmation)
+    }
+
+    @Test("Set new muted source text")
+    func setNewMutedSource() async throws {
+        let (sut, _) = createSUT()
+
+        sut.dispatch(action: .setNewMutedSource("CNN"))
+        try await Task.sleep(nanoseconds: 100_000_000)
+
+        #expect(sut.currentState.newMutedSource == "CNN")
+    }
+
+    @Test("Set new muted keyword text")
+    func setNewMutedKeyword() async throws {
+        let (sut, _) = createSUT()
+
+        sut.dispatch(action: .setNewMutedKeyword("politics"))
+        try await Task.sleep(nanoseconds: 100_000_000)
+
+        #expect(sut.currentState.newMutedKeyword == "politics")
+    }
+
+    @Test("Add muted source clears new muted source text")
+    func addMutedSourceClearsText() async throws {
+        let (sut, mock) = createSUT()
+        mock.preferences = .default
+        sut.dispatch(action: .loadPreferences)
+        try await Task.sleep(nanoseconds: 300_000_000)
+
+        sut.dispatch(action: .setNewMutedSource("CNN"))
+        try await Task.sleep(nanoseconds: 100_000_000)
+
+        sut.dispatch(action: .addMutedSource("CNN"))
+        try await Task.sleep(nanoseconds: 300_000_000)
+
+        #expect(sut.currentState.newMutedSource == "")
+        #expect(sut.currentState.preferences.mutedSources.contains("CNN"))
+    }
+
+    @Test("Add empty muted source does not add")
+    func addEmptyMutedSourceDoesNothing() async throws {
+        let (sut, mock) = createSUT()
+        mock.preferences = .default
+        sut.dispatch(action: .loadPreferences)
+        try await Task.sleep(nanoseconds: 300_000_000)
+
+        let initialCount = sut.currentState.preferences.mutedSources.count
+
+        sut.dispatch(action: .addMutedSource(""))
+        try await Task.sleep(nanoseconds: 200_000_000)
+
+        #expect(sut.currentState.preferences.mutedSources.count == initialCount)
+    }
+
+    @Test("Add muted keyword clears new muted keyword text")
+    func addMutedKeywordClearsText() async throws {
+        let (sut, mock) = createSUT()
+        mock.preferences = .default
+        sut.dispatch(action: .loadPreferences)
+        try await Task.sleep(nanoseconds: 300_000_000)
+
+        sut.dispatch(action: .setNewMutedKeyword("spam"))
+        try await Task.sleep(nanoseconds: 100_000_000)
+
+        sut.dispatch(action: .addMutedKeyword("spam"))
+        try await Task.sleep(nanoseconds: 300_000_000)
+
+        #expect(sut.currentState.newMutedKeyword == "")
+        #expect(sut.currentState.preferences.mutedKeywords.contains("spam"))
+    }
+
+    @Test("Add empty muted keyword does not add")
+    func addEmptyMutedKeywordDoesNothing() async throws {
+        let (sut, mock) = createSUT()
+        mock.preferences = .default
+        sut.dispatch(action: .loadPreferences)
+        try await Task.sleep(nanoseconds: 300_000_000)
+
+        let initialCount = sut.currentState.preferences.mutedKeywords.count
+
+        sut.dispatch(action: .addMutedKeyword(""))
+        try await Task.sleep(nanoseconds: 200_000_000)
+
+        #expect(sut.currentState.preferences.mutedKeywords.count == initialCount)
+    }
+}
+
+// MARK: - State Publisher Tests
+
+@Suite("SettingsDomainInteractor Publisher Tests")
+@MainActor
+struct SettingsInteractorPublisherTests {
+    @Test("State publisher emits initial state")
+    func statePublisherEmitsInitialState() async throws {
+        let (sut, _) = createSUT()
+        var cancellables = Set<AnyCancellable>()
+        var states: [SettingsDomainState] = []
+
+        sut.statePublisher
+            .sink { state in states.append(state) }
+            .store(in: &cancellables)
+
+        try await Task.sleep(nanoseconds: 100_000_000)
+
+        #expect(!states.isEmpty)
+        #expect(states[0].preferences == .default)
+    }
+
+    @Test("Notification posted on preferences change")
+    func notificationPosted() async throws {
+        let (sut, mock) = createSUT()
+        mock.preferences = .default
+        sut.dispatch(action: .loadPreferences)
+        try await Task.sleep(nanoseconds: 300_000_000)
+
+        var notificationReceived = false
+        let token = NotificationCenter.default.addObserver(
+            forName: .userPreferencesDidChange,
+            object: nil,
+            queue: .main
+        ) { _ in notificationReceived = true }
+
+        sut.dispatch(action: .toggleNotifications(false))
+        try await Task.sleep(nanoseconds: 300_000_000)
+
+        #expect(notificationReceived)
+        NotificationCenter.default.removeObserver(token)
+    }
+}

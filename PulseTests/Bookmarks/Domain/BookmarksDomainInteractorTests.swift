@@ -214,18 +214,83 @@ struct BookmarksDomainInteractorTests {
 
     // MARK: - Select Article Tests
 
-    @Test("Select article dispatches action")
-    func selectArticleDispatchesAction() async throws {
+    @Test("Select article sets selectedArticle state")
+    func selectArticleSetsState() async throws {
         let article = Article.mockArticles[0]
         mockBookmarksService.bookmarks = [article]
 
         sut.dispatch(action: .loadBookmarks)
         try await Task.sleep(nanoseconds: 300_000_000)
 
-        // Select article action should not throw
         sut.dispatch(action: .selectArticle(articleId: article.id))
 
-        // Just verify the action can be dispatched without error
-        #expect(true)
+        try await Task.sleep(nanoseconds: 100_000_000)
+
+        #expect(sut.currentState.selectedArticle?.id == article.id)
+    }
+
+    @Test("Select non-existent article does not change state")
+    func selectNonExistentArticle() async throws {
+        mockBookmarksService.bookmarks = Article.mockArticles
+
+        sut.dispatch(action: .loadBookmarks)
+        try await Task.sleep(nanoseconds: 300_000_000)
+
+        sut.dispatch(action: .selectArticle(articleId: "non-existent"))
+
+        try await Task.sleep(nanoseconds: 100_000_000)
+
+        #expect(sut.currentState.selectedArticle == nil)
+    }
+
+    // MARK: - Clear Selected Article Tests
+
+    @Test("Clear selected article resets to nil")
+    func clearSelectedArticle() async throws {
+        let article = Article.mockArticles[0]
+        mockBookmarksService.bookmarks = [article]
+
+        sut.dispatch(action: .loadBookmarks)
+        try await Task.sleep(nanoseconds: 300_000_000)
+
+        sut.dispatch(action: .selectArticle(articleId: article.id))
+        try await Task.sleep(nanoseconds: 100_000_000)
+
+        #expect(sut.currentState.selectedArticle != nil)
+
+        sut.dispatch(action: .clearSelectedArticle)
+        try await Task.sleep(nanoseconds: 100_000_000)
+
+        #expect(sut.currentState.selectedArticle == nil)
+    }
+
+    @Test("Clear selected article when already nil does not crash")
+    func clearSelectedArticleWhenNil() async throws {
+        #expect(sut.currentState.selectedArticle == nil)
+
+        sut.dispatch(action: .clearSelectedArticle)
+        try await Task.sleep(nanoseconds: 100_000_000)
+
+        #expect(sut.currentState.selectedArticle == nil)
+    }
+
+    // MARK: - State Publisher Tests
+
+    @Test("State publisher emits initial state")
+    func statePublisherEmitsInitialState() async throws {
+        var cancellables = Set<AnyCancellable>()
+        var states: [BookmarksDomainState] = []
+
+        sut.statePublisher
+            .sink { state in
+                states.append(state)
+            }
+            .store(in: &cancellables)
+
+        try await Task.sleep(nanoseconds: 100_000_000)
+
+        #expect(!states.isEmpty)
+        #expect(states[0].bookmarks.isEmpty)
+        #expect(!states[0].isLoading)
     }
 }

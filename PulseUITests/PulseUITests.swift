@@ -32,21 +32,41 @@ final class PulseUITests: BaseUITestCase {
         // Return to Home tab for settings test
         homeTab.tap()
 
-        // Wait for Home content to fully load before checking navigation elements
-        // This handles slow CI environments where content loads after tab switch
-        waitForHomeContent(timeout: Self.defaultTimeout)
+        // Allow UI to fully settle after multi-tab navigation.
+        // CI simulators need extra time to re-render the Home tab's NavigationStack.
+        wait(for: 1.0)
 
+        // Wait for Home content with a longer timeout for CI.
+        // After navigating through multiple tabs, the Home view's accessibility tree
+        // can take significantly longer to populate on shared CI runners.
+        // Use a recovery approach instead of hard assertion to prevent crashes.
+        let contentLoaded = waitForHomeContent(timeout: Self.launchTimeout)
+        if !contentLoaded {
+            // Recovery: try tapping Home tab again and wait longer
+            homeTab.tap()
+            wait(for: 2.0)
+            let recovered = waitForHomeContent(timeout: Self.launchTimeout)
+            XCTAssertTrue(recovered, "Home content should load after recovery attempt")
+        }
+
+        // Verify Home tab is ready by checking for navigation bar with longer timeout
+        // The Home screen uses "News" as its navigation bar title (see Localizable.strings: "home.title" = "News")
         let homeNavBar = app.navigationBars["News"]
+        let navBarReady = homeNavBar.waitForExistence(timeout: Self.launchTimeout)
+        XCTAssertTrue(navBarReady, "Home navigation bar ('News') should exist")
+
+        // Find the gear button using both system image name and accessibility label.
+        // On iOS 26+, the button may be identified by its accessibilityLabel ("Settings")
+        // rather than its system image name ("gearshape").
         let gearButton = app.navigationBars.buttons["gearshape"]
-        let homeLoaded = waitForAny([homeNavBar, gearButton], timeout: Self.defaultTimeout)
-        XCTAssertTrue(homeLoaded, "Home navigation bar should exist")
+        let settingsButton = app.navigationBars.buttons["Settings"]
+        let gearFound = waitForAny([gearButton, settingsButton], timeout: Self.launchTimeout)
+        XCTAssertTrue(gearFound, "Gear/Settings button should exist in navigation bar")
 
-        // Settings is accessed via the gear button in Home navigation bar, not a tab
-        XCTAssertTrue(gearButton.waitForExistence(timeout: 5), "Gear button should exist")
-
-        gearButton.tap()
+        let buttonToTap = gearButton.exists ? gearButton : settingsButton
+        buttonToTap.tap()
 
         let settingsNavBar = app.navigationBars["Settings"]
-        XCTAssertTrue(settingsNavBar.waitForExistence(timeout: 5), "Settings should open")
+        XCTAssertTrue(settingsNavBar.waitForExistence(timeout: Self.defaultTimeout), "Settings should open")
     }
 }
