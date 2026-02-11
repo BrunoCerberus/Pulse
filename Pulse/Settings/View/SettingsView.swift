@@ -18,6 +18,7 @@ private enum Constants {
 struct SettingsView: View {
     @StateObject private var viewModel: SettingsViewModel
     @StateObject private var paywallViewModel: PaywallViewModel
+    @StateObject private var lockManager = AppLockManager.shared
 
     private let serviceLocator: ServiceLocator
 
@@ -45,6 +46,8 @@ struct SettingsView: View {
                     isPremium: isPremium,
                     onUpgradeTapped: { isPaywallPresented = true }
                 )
+
+                SettingsSecuritySection(lockManager: lockManager)
 
                 notificationsSection
                 appearanceSection

@@ -187,3 +187,18 @@
 "media.error_title" = "Playback Error";
 "media.video_unavailable" = "Video URL is not available";
 "media.audio_unavailable" = "Audio URL is not available";
+
+/* ───── App Lock ───── */
+
+"applock.locked_title" = "Pulse is Locked";
+"applock.unlock" = "Unlock";
+"applock.auth_reason" = "Unlock Pulse";
+"applock.enable_reason" = "Enable Face ID for Pulse";
+"applock.prompt_title" = "Enable Face ID?";
+"applock.prompt_description" = "Add an extra layer of security. You can always change this in Settings.";
+"applock.prompt_enable" = "Enable";
+"applock.prompt_not_now" = "Not Now";
+"applock.settings_header" = "Security";
+"applock.settings_toggle" = "Lock with Face ID";
+"applock.settings_footer" = "Require Face ID to unlock the app after returning from the background.";
+"applock.settings_unavailable" = "Not Available";
