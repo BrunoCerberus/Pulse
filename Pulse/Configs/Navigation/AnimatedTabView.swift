@@ -131,3 +131,12 @@ private extension UIView {
         return result
     }
 }
+
+// MARK: - Preview
+
+#Preview {
+    // This is a structural view that doesn't have a visual representation on its own
+    // It's used as a component in other views, so we can't easily preview it in isolation
+    // This is just a placeholder to satisfy the requirement
+    Text("AnimatedTabView component")
+}
