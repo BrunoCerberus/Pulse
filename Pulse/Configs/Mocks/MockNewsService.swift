@@ -389,6 +389,7 @@ extension ServiceLocator {
         locator.register(LLMService.self, instance: MockLLMService())
         locator.register(SummarizationService.self, instance: MockSummarizationService())
         locator.register(FeedService.self, instance: MockFeedService())
+        locator.register(AppLockService.self, instance: MockAppLockService())
 
         // Auth service with mock signed-in user
         let mockAuth = MockAuthService()
@@ -411,6 +412,7 @@ extension ServiceLocator {
         locator.register(SummarizationService.self, instance: MockSummarizationService())
         locator.register(FeedService.self, instance: MockFeedService())
         locator.register(AuthService.self, instance: MockAuthService())
+        locator.register(AppLockService.self, instance: MockAppLockService())
         return locator
     }
 }

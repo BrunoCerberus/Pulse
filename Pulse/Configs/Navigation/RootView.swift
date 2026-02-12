@@ -10,20 +10,31 @@ import SwiftUI
 struct RootView: View {
     @StateObject private var authManager = AuthenticationManager.shared
     @StateObject private var themeManager = ThemeManager.shared
+    @StateObject private var lockManager = AppLockManager.shared
 
     let serviceLocator: ServiceLocator
 
     @Environment(\.accessibilityReduceMotion) private var reduceMotion
 
     var body: some View {
-        Group {
-            switch authManager.authState {
-            case .loading:
-                loadingView
-            case .unauthenticated:
-                SignInView(serviceLocator: serviceLocator)
-            case .authenticated:
-                CoordinatorView(serviceLocator: serviceLocator)
+        ZStack {
+            Group {
+                switch authManager.authState {
+                case .loading:
+                    loadingView
+                case .unauthenticated:
+                    SignInView(serviceLocator: serviceLocator)
+                case .authenticated:
+                    CoordinatorView(serviceLocator: serviceLocator)
+                        .onAppear { lockManager.checkPostSignupPrompt() }
+                        .sheet(isPresented: $lockManager.showFaceIDPrompt) {
+                            FaceIDPromptView()
+                        }
+                }
+            }
+
+            if lockManager.isLocked, case .authenticated = authManager.authState {
+                AppLockOverlayView()
             }
         }
         .preferredColorScheme(themeManager.colorScheme)

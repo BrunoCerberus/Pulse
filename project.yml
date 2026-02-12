@@ -129,6 +129,7 @@ targets:
           - UIInterfaceOrientationPortraitUpsideDown
           - UIInterfaceOrientationLandscapeLeft
           - UIInterfaceOrientationLandscapeRight
+        NSFaceIDUsageDescription: "Pulse uses Face ID to protect your app content."
         CFBundleURLTypes:
           - CFBundleURLName: com.bruno.Pulse
             CFBundleURLSchemes:
@@ -141,6 +142,7 @@ targets:
       - sdk: UIKit.framework
       - sdk: Combine.framework
       - sdk: AuthenticationServices.framework
+      - sdk: LocalAuthentication.framework
       - package: EntropyCore
       - package: Lottie
       - package: firebase-ios-sdk

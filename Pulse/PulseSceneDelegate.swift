@@ -46,6 +46,9 @@ final class PulseSceneDelegate: UIResponder, UIWindowSceneDelegate {
         // Configure authentication manager with auth service
         configureAuthenticationManager()
 
+        // Configure app lock manager with app lock service
+        configureAppLockManager()
+
         // Preload LLM model in background for faster digest generation
         preloadLLMModelIfPremium()
 
@@ -84,6 +87,18 @@ final class PulseSceneDelegate: UIResponder, UIWindowSceneDelegate {
             }
         } catch {
             Logger.shared.service("Failed to configure AuthenticationManager: \(error)", level: .warning)
+        }
+    }
+
+    /// Configure the AppLockManager with the registered AppLockService.
+    private func configureAppLockManager() {
+        do {
+            let appLockService = try serviceLocator.retrieve(AppLockService.self)
+            MainActor.assumeIsolated {
+                AppLockManager.shared.configure(with: appLockService)
+            }
+        } catch {
+            Logger.shared.service("Failed to configure AppLockManager: \(error)", level: .warning)
         }
     }
 
@@ -190,6 +205,7 @@ final class PulseSceneDelegate: UIResponder, UIWindowSceneDelegate {
 
                 serviceLocator.register(RemoteConfigService.self, instance: MockRemoteConfigService())
                 serviceLocator.register(AuthService.self, instance: MockAuthService())
+                serviceLocator.register(AppLockService.self, instance: MockAppLockService())
 
                 // Configure APIKeysProvider with mock service
                 APIKeysProvider.configure(with: MockRemoteConfigService())
@@ -241,6 +257,9 @@ final class PulseSceneDelegate: UIResponder, UIWindowSceneDelegate {
 
         // Register authentication service
         serviceLocator.register(AuthService.self, instance: LiveAuthService())
+
+        // Register app lock service
+        serviceLocator.register(AppLockService.self, instance: LiveAppLockService())
     }
 
     /**
@@ -285,6 +304,18 @@ final class PulseSceneDelegate: UIResponder, UIWindowSceneDelegate {
             } catch {
                 Logger.shared.service("Remote Config fetch failed: \(error)", level: .warning)
             }
+        }
+    }
+
+    func sceneDidBecomeActive(_: UIScene) {
+        MainActor.assumeIsolated {
+            AppLockManager.shared.handleSceneDidBecomeActive()
+        }
+    }
+
+    func sceneDidEnterBackground(_: UIScene) {
+        MainActor.assumeIsolated {
+            AppLockManager.shared.handleSceneDidEnterBackground()
         }
     }
 
