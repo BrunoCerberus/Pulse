@@ -21,7 +21,7 @@ final class FeedEmptyStateViewSnapshotTests: XCTestCase {
 
         assertSnapshot(
             of: controller,
-            as: .wait(for: 0.5, on: .image(on: iPhoneAirConfig, precision: 0.99)),
+            as: SnapshotConfig.snapshotting(on: iPhoneAirConfig),
             record: false
         )
     }

@@ -38,10 +38,9 @@ final class CachedAsyncImageSnapshotTests: XCTestCase {
 
         let controller = UIHostingController(rootView: view)
 
-        // Short wait to capture loading state
         assertSnapshot(
             of: controller,
-            as: .wait(for: 0.1, on: .image(on: iPhoneAirConfig, precision: 0.99)),
+            as: SnapshotConfig.snapshotting(on: iPhoneAirConfig),
             record: false
         )
     }
@@ -64,7 +63,7 @@ final class CachedAsyncImageSnapshotTests: XCTestCase {
 
         assertSnapshot(
             of: controller,
-            as: .wait(for: 0.1, on: .image(on: iPhoneAirLightConfig, precision: 0.99)),
+            as: SnapshotConfig.snapshotting(on: iPhoneAirLightConfig),
             record: false
         )
     }
@@ -94,7 +93,7 @@ final class CachedAsyncImageSnapshotTests: XCTestCase {
 
         assertSnapshot(
             of: controller,
-            as: .wait(for: 0.1, on: .image(on: iPhoneAirConfig, precision: 0.99)),
+            as: SnapshotConfig.snapshotting(on: iPhoneAirConfig),
             record: false
         )
     }
@@ -125,7 +124,7 @@ final class CachedAsyncImageSnapshotTests: XCTestCase {
         // With nil URL, placeholder should be shown indefinitely
         assertSnapshot(
             of: controller,
-            as: .wait(for: 1.0, on: .image(on: iPhoneAirConfig, precision: 0.99)),
+            as: SnapshotConfig.snapshotting(on: iPhoneAirConfig),
             record: false
         )
     }
@@ -153,7 +152,7 @@ final class CachedAsyncImageSnapshotTests: XCTestCase {
 
         assertSnapshot(
             of: controller,
-            as: .wait(for: 1.0, on: .image(on: iPhoneAirLightConfig, precision: 0.99)),
+            as: SnapshotConfig.snapshotting(on: iPhoneAirLightConfig),
             record: false
         )
     }
@@ -176,7 +175,7 @@ final class CachedAsyncImageSnapshotTests: XCTestCase {
 
         assertSnapshot(
             of: controller,
-            as: .wait(for: 0.1, on: .image(on: iPhoneAirConfig, precision: 0.99)),
+            as: SnapshotConfig.snapshotting(on: iPhoneAirConfig),
             record: false
         )
     }
@@ -223,7 +222,7 @@ final class CachedAsyncImageSnapshotTests: XCTestCase {
 
         assertSnapshot(
             of: controller,
-            as: .wait(for: 0.1, on: .image(on: iPhoneAirConfig, precision: 0.99)),
+            as: SnapshotConfig.snapshotting(on: iPhoneAirConfig),
             record: false
         )
     }

@@ -27,7 +27,7 @@ final class SignInViewSnapshotTests: XCTestCase {
 
         assertSnapshot(
             of: controller,
-            as: .wait(for: 1.0, on: .image(on: iPhoneAirConfig, precision: 0.99)),
+            as: SnapshotConfig.snapshotting(on: iPhoneAirConfig),
             record: false
         )
     }
@@ -44,7 +44,7 @@ final class SignInViewSnapshotTests: XCTestCase {
         // This test captures the initial non-loading state
         assertSnapshot(
             of: controller,
-            as: .wait(for: 1.0, on: .image(on: iPhoneAirConfig, precision: 0.99)),
+            as: SnapshotConfig.snapshotting(on: iPhoneAirConfig),
             record: false
         )
     }
@@ -61,7 +61,7 @@ final class SignInViewSnapshotTests: XCTestCase {
 
         assertSnapshot(
             of: controller,
-            as: .wait(for: 1.0, on: .image(on: lightModeConfig, precision: 0.99)),
+            as: SnapshotConfig.snapshotting(on: lightModeConfig),
             record: false
         )
     }
@@ -78,7 +78,7 @@ final class SignInViewSnapshotTests: XCTestCase {
 
         assertSnapshot(
             of: controller,
-            as: .wait(for: 1.0, on: .image(on: iPadConfig, precision: 0.99)),
+            as: SnapshotConfig.snapshotting(on: iPadConfig),
             record: false
         )
     }

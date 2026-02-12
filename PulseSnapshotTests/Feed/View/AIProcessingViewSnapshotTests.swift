@@ -15,7 +15,7 @@ final class AIProcessingViewSnapshotTests: XCTestCase {
 
         assertSnapshot(
             of: controller,
-            as: .wait(for: 0.5, on: .image(on: SnapshotConfig.iPhoneAir, precision: SnapshotConfig.standardPrecision)),
+            as: SnapshotConfig.snapshotting(on: SnapshotConfig.iPhoneAir),
             record: false
         )
     }
@@ -29,7 +29,7 @@ final class AIProcessingViewSnapshotTests: XCTestCase {
 
         assertSnapshot(
             of: controller,
-            as: .wait(for: 0.5, on: .image(on: SnapshotConfig.iPhoneAir, precision: SnapshotConfig.standardPrecision)),
+            as: SnapshotConfig.snapshotting(on: SnapshotConfig.iPhoneAir),
             record: false
         )
     }
@@ -43,7 +43,7 @@ final class AIProcessingViewSnapshotTests: XCTestCase {
 
         assertSnapshot(
             of: controller,
-            as: .wait(for: 0.5, on: .image(on: SnapshotConfig.iPhoneAirLight, precision: SnapshotConfig.standardPrecision)),
+            as: SnapshotConfig.snapshotting(on: SnapshotConfig.iPhoneAirLight),
             record: false
         )
     }

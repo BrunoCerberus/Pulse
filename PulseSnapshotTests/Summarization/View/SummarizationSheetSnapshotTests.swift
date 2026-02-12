@@ -20,7 +20,7 @@ final class SummarizationSheetSnapshotTests: XCTestCase {
 
         assertSnapshot(
             of: controller,
-            as: .wait(for: 0.5, on: .image(on: SnapshotConfig.iPhoneAir, precision: SnapshotConfig.standardPrecision)),
+            as: SnapshotConfig.snapshotting(on: SnapshotConfig.iPhoneAir),
             record: false
         )
     }
@@ -35,7 +35,7 @@ final class SummarizationSheetSnapshotTests: XCTestCase {
 
         assertSnapshot(
             of: controller,
-            as: .wait(for: 0.5, on: .image(on: SnapshotConfig.iPhoneAir, precision: SnapshotConfig.standardPrecision)),
+            as: SnapshotConfig.snapshotting(on: SnapshotConfig.iPhoneAir),
             record: false
         )
     }
@@ -50,7 +50,7 @@ final class SummarizationSheetSnapshotTests: XCTestCase {
 
         assertSnapshot(
             of: controller,
-            as: .wait(for: 0.5, on: .image(on: SnapshotConfig.iPhoneAir, precision: SnapshotConfig.standardPrecision)),
+            as: SnapshotConfig.snapshotting(on: SnapshotConfig.iPhoneAir),
             record: false
         )
     }
@@ -65,7 +65,7 @@ final class SummarizationSheetSnapshotTests: XCTestCase {
 
         assertSnapshot(
             of: controller,
-            as: .wait(for: 0.5, on: .image(on: SnapshotConfig.iPhoneAir, precision: SnapshotConfig.standardPrecision)),
+            as: SnapshotConfig.snapshotting(on: SnapshotConfig.iPhoneAir),
             record: false
         )
     }
@@ -80,7 +80,7 @@ final class SummarizationSheetSnapshotTests: XCTestCase {
 
         assertSnapshot(
             of: controller,
-            as: .wait(for: 0.5, on: .image(on: SnapshotConfig.iPhoneAir, precision: SnapshotConfig.standardPrecision)),
+            as: SnapshotConfig.snapshotting(on: SnapshotConfig.iPhoneAir),
             record: false
         )
     }

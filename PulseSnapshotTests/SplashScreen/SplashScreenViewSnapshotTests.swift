@@ -16,7 +16,7 @@ final class SplashScreenViewSnapshotTests: XCTestCase {
         // Wait a bit for initial animation state to settle
         assertSnapshot(
             of: controller,
-            as: .wait(for: 0.5, on: .image(on: SnapshotConfig.iPhoneAir, precision: SnapshotConfig.standardPrecision)),
+            as: SnapshotConfig.snapshotting(on: SnapshotConfig.iPhoneAir),
             record: false
         )
     }
@@ -30,7 +30,7 @@ final class SplashScreenViewSnapshotTests: XCTestCase {
         // Wait for logo animation to complete
         assertSnapshot(
             of: controller,
-            as: .wait(for: 1.0, on: .image(on: SnapshotConfig.iPhoneAir, precision: SnapshotConfig.standardPrecision)),
+            as: SnapshotConfig.snapshotting(on: SnapshotConfig.iPhoneAir),
             record: false
         )
     }
