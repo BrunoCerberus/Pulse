@@ -3,7 +3,7 @@ import Foundation
 /// Mock implementation of `AppLockService` for testing and previews.
 final class MockAppLockService: AppLockService {
     var isEnabled: Bool = false
-    var hasPromptedFaceID: Bool = false
+    var hasPromptedFaceID: Bool = true
 
     var canEvaluateResult: Bool = true
     var authenticateResult: Result<Bool, AppLockError> = .success(true)
