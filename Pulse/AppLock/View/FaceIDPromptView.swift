@@ -62,3 +62,7 @@ struct FaceIDPromptView: View {
         .presentationDetents([.medium])
     }
 }
+
+#Preview {
+    FaceIDPromptView()
+}

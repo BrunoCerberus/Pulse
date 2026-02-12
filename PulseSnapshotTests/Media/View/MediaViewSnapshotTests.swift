@@ -152,6 +152,9 @@ final class MediaViewSnapshotTests: XCTestCase {
 
         let controller = UIHostingController(rootView: view)
 
+        // Allow glass/material effects to fully render before snapshotting
+        RunLoop.current.run(until: Date().addingTimeInterval(1.0))
+
         assertSnapshot(
             of: controller,
             as: .wait(for: 1.0, on: .image(on: iPhoneAirConfig, precision: 0.99)),
@@ -172,6 +175,9 @@ final class MediaViewSnapshotTests: XCTestCase {
 
         let controller = UIHostingController(rootView: view)
 
+        // Allow glass/material effects to fully render before snapshotting
+        RunLoop.current.run(until: Date().addingTimeInterval(1.0))
+
         assertSnapshot(
             of: controller,
             as: .wait(for: 1.0, on: .image(on: iPhoneAirLightConfig, precision: 0.99)),
@@ -191,6 +197,9 @@ final class MediaViewSnapshotTests: XCTestCase {
         .padding()
 
         let controller = UIHostingController(rootView: view)
+
+        // Allow glass/material effects to fully render before snapshotting
+        RunLoop.current.run(until: Date().addingTimeInterval(1.0))
 
         assertSnapshot(
             of: controller,

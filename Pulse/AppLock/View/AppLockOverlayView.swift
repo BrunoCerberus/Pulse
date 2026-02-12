@@ -43,3 +43,7 @@ struct AppLockOverlayView: View {
         }
     }
 }
+
+#Preview {
+    AppLockOverlayView()
+}
