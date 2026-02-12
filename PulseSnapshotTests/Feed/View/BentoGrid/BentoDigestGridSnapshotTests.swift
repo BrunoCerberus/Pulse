@@ -86,7 +86,7 @@ final class BentoDigestGridSnapshotTests: XCTestCase {
 
         assertSnapshot(
             of: controller,
-            as: .wait(for: 1.5, on: .image(on: darkConfig, precision: SnapshotConfig.standardPrecision)),
+            as: SnapshotConfig.snapshotting(on: darkConfig),
             record: false
         )
     }
@@ -121,7 +121,7 @@ final class BentoDigestGridSnapshotTests: XCTestCase {
 
         assertSnapshot(
             of: controller,
-            as: .wait(for: 1.5, on: .image(on: lightConfig, precision: SnapshotConfig.standardPrecision)),
+            as: SnapshotConfig.snapshotting(on: lightConfig),
             record: false
         )
     }
@@ -152,7 +152,7 @@ final class BentoDigestGridSnapshotTests: XCTestCase {
 
         assertSnapshot(
             of: controller,
-            as: .wait(for: 1.5, on: .image(on: darkConfig, precision: SnapshotConfig.standardPrecision)),
+            as: SnapshotConfig.snapshotting(on: darkConfig),
             record: false
         )
     }
@@ -187,7 +187,7 @@ final class BentoDigestGridSnapshotTests: XCTestCase {
 
         assertSnapshot(
             of: controller,
-            as: .wait(for: 1.5, on: .image(on: darkConfig, precision: SnapshotConfig.standardPrecision)),
+            as: SnapshotConfig.snapshotting(on: darkConfig),
             record: false
         )
     }

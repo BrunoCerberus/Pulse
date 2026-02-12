@@ -38,7 +38,7 @@ final class InlineSourceChipSnapshotTests: XCTestCase {
 
         assertSnapshot(
             of: controller,
-            as: .wait(for: 0.5, on: .image(on: darkConfig, precision: SnapshotConfig.standardPrecision)),
+            as: SnapshotConfig.snapshotting(on: darkConfig),
             record: false
         )
     }
@@ -55,7 +55,7 @@ final class InlineSourceChipSnapshotTests: XCTestCase {
 
         assertSnapshot(
             of: controller,
-            as: .wait(for: 0.5, on: .image(on: lightConfig, precision: SnapshotConfig.standardPrecision)),
+            as: SnapshotConfig.snapshotting(on: lightConfig),
             record: false
         )
     }
@@ -87,7 +87,7 @@ final class InlineSourceChipSnapshotTests: XCTestCase {
 
         assertSnapshot(
             of: controller,
-            as: .wait(for: 0.5, on: .image(on: darkConfig, precision: SnapshotConfig.standardPrecision)),
+            as: SnapshotConfig.snapshotting(on: darkConfig),
             record: false
         )
     }

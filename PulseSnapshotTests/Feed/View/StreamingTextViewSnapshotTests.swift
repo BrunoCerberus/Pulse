@@ -24,7 +24,7 @@ final class StreamingTextViewSnapshotTests: XCTestCase {
 
         assertSnapshot(
             of: controller,
-            as: .wait(for: 0.5, on: .image(on: iPhoneAirConfig, precision: 0.99)),
+            as: SnapshotConfig.snapshotting(on: iPhoneAirConfig),
             record: false
         )
     }
@@ -41,7 +41,7 @@ final class StreamingTextViewSnapshotTests: XCTestCase {
         // Use lower precision since cursor may blink
         assertSnapshot(
             of: controller,
-            as: .wait(for: 0.5, on: .image(on: iPhoneAirConfig, precision: 0.95)),
+            as: SnapshotConfig.snapshotting(on: iPhoneAirConfig, precision: 0.95),
             record: false
         )
     }
@@ -57,7 +57,7 @@ final class StreamingTextViewSnapshotTests: XCTestCase {
 
         assertSnapshot(
             of: controller,
-            as: .wait(for: 0.5, on: .image(on: iPhoneAirConfig, precision: 0.95)),
+            as: SnapshotConfig.snapshotting(on: iPhoneAirConfig, precision: 0.95),
             record: false
         )
     }
@@ -80,7 +80,7 @@ final class StreamingTextViewSnapshotTests: XCTestCase {
 
         assertSnapshot(
             of: controller,
-            as: .wait(for: 0.5, on: .image(on: iPhoneAirConfig, precision: 0.99)),
+            as: SnapshotConfig.snapshotting(on: iPhoneAirConfig),
             record: false
         )
     }

@@ -26,4 +26,12 @@ enum SnapshotConfig {
 
     /// Standard precision for snapshot comparisons (99%).
     static let standardPrecision: Float = 0.99
+
+    /// Standard snapshotting strategy with a 1-second wait for view rendering.
+    static func snapshotting(
+        on config: ViewImageConfig,
+        precision: Float = standardPrecision
+    ) -> Snapshotting<UIViewController, UIImage> {
+        .wait(for: 1.0, on: .image(on: config, precision: precision))
+    }
 }
