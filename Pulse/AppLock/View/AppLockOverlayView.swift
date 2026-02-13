@@ -46,4 +46,5 @@ struct AppLockOverlayView: View {
 
 #Preview {
     AppLockOverlayView()
+        .preferredColorScheme(.dark)
 }

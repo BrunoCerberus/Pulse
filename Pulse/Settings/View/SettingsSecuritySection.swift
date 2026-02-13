@@ -45,8 +45,10 @@ struct SettingsSecuritySection: View {
 
 #Preview {
     SettingsSecuritySection(lockManager: .shared)
+        .preferredColorScheme(.dark)
 }
 
 #Preview("Biometrics Not Available") {
     SettingsSecuritySection(lockManager: .shared)
+        .preferredColorScheme(.dark)
 }

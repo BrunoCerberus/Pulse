@@ -173,6 +173,7 @@ struct SettingsView: View {
     NavigationStack {
         SettingsView(serviceLocator: .preview)
     }
+    .preferredColorScheme(.dark)
 }
 
 enum SettingsCoordinator {

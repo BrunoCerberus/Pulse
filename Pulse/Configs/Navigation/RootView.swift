@@ -53,8 +53,10 @@ struct RootView: View {
 
 #Preview("Authenticated") {
     RootView(serviceLocator: .preview)
+        .preferredColorScheme(.dark)
 }
 
 #Preview("Unauthenticated") {
     RootView(serviceLocator: .previewUnauthenticated)
+        .preferredColorScheme(.dark)
 }

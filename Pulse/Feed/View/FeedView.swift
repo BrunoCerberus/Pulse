@@ -268,4 +268,5 @@ struct FeedView<R: FeedNavigationRouter>: View {
             serviceLocator: .preview
         )
     }
+    .preferredColorScheme(.dark)
 }

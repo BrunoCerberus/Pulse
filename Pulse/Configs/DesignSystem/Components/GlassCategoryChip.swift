@@ -232,4 +232,5 @@ struct GlassTopicChip: View {
             }
         }
     }
+    .preferredColorScheme(.dark)
 }

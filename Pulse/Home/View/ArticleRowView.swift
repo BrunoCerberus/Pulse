@@ -118,4 +118,5 @@ struct ArticleRowView: View {
         onBookmark: {},
         onShare: {}
     )
+    .preferredColorScheme(.dark)
 }

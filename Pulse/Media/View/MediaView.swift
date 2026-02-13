@@ -378,4 +378,5 @@ private struct MediaListSkeleton: View {
             viewModel: MediaViewModel(serviceLocator: .preview)
         )
     }
+    .preferredColorScheme(.dark)
 }

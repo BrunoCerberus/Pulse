@@ -101,8 +101,10 @@ private struct InitialPlaceholderView: View {
 
 #Preview {
     SettingsAccountSection(currentUser: AuthUser.mock, onSignOutTapped: {})
+        .preferredColorScheme(.dark)
 }
 
 #Preview("No User") {
     SettingsAccountSection(currentUser: nil, onSignOutTapped: {})
+        .preferredColorScheme(.dark)
 }

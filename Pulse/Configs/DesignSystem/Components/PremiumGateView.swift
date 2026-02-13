@@ -160,6 +160,7 @@ struct PremiumGateView: View {
         feature: .dailyDigest,
         serviceLocator: .preview
     )
+    .preferredColorScheme(.dark)
 }
 
 #Preview("Summarization Gate") {
@@ -167,4 +168,5 @@ struct PremiumGateView: View {
         feature: .articleSummarization,
         serviceLocator: .preview
     )
+    .preferredColorScheme(.dark)
 }

@@ -145,4 +145,5 @@ private struct MediaTypeChip: View {
     }
 
     return PreviewWrapper()
+        .preferredColorScheme(.dark)
 }

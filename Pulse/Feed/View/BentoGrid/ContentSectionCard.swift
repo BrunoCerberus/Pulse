@@ -261,4 +261,5 @@ struct ContentSectionCard: View {
         .padding()
     }
     .background(LinearGradient.subtleBackground)
+    .preferredColorScheme(.dark)
 }

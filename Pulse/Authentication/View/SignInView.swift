@@ -193,4 +193,5 @@ struct SignInView: View {
 
 #Preview {
     SignInView(serviceLocator: .preview)
+        .preferredColorScheme(.dark)
 }

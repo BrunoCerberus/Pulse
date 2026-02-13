@@ -496,4 +496,5 @@ private struct BlinkingCursor: View {
             serviceLocator: .preview
         )
     )
+    .preferredColorScheme(.dark)
 }

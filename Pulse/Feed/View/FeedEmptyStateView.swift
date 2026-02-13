@@ -49,4 +49,5 @@ struct FeedEmptyStateView: View {
 #Preview {
     FeedEmptyStateView()
         .padding()
+        .preferredColorScheme(.dark)
 }

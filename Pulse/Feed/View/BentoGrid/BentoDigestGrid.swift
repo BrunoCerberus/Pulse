@@ -181,4 +181,5 @@ struct BentoDigestGrid: View {
         .padding(.horizontal, Spacing.md)
     }
     .background(LinearGradient.subtleBackground)
+    .preferredColorScheme(.dark)
 }

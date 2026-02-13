@@ -95,4 +95,5 @@ struct SettingsMutedContentSection: View {
         onAddMutedKeyword: {},
         onRemoveMutedKeyword: { _ in }
     )
+    .preferredColorScheme(.dark)
 }

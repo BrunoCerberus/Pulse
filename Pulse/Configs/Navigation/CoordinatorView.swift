@@ -113,4 +113,5 @@ struct CoordinatorView: View {
 
 #Preview {
     CoordinatorView(serviceLocator: .preview)
+        .preferredColorScheme(.dark)
 }

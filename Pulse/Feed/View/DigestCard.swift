@@ -148,4 +148,5 @@ struct DigestCard: View {
         )
     )
     .padding()
+    .preferredColorScheme(.dark)
 }

@@ -195,4 +195,5 @@ struct VideoPlayerView: UIViewRepresentable {
         .aspectRatio(16 / 9, contentMode: .fit)
         .clipShape(RoundedRectangle(cornerRadius: 12))
         .padding()
+        .preferredColorScheme(.dark)
 }

@@ -73,6 +73,7 @@ struct TopicEditorSheet: View {
         onToggleTopic: { _ in },
         onDismiss: {}
     )
+    .preferredColorScheme(.dark)
 }
 
 #Preview("Empty") {
@@ -82,6 +83,7 @@ struct TopicEditorSheet: View {
         onToggleTopic: { _ in },
         onDismiss: {}
     )
+    .preferredColorScheme(.dark)
 }
 
 #Preview("All Selected") {
@@ -91,4 +93,5 @@ struct TopicEditorSheet: View {
         onToggleTopic: { _ in },
         onDismiss: {}
     )
+    .preferredColorScheme(.dark)
 }

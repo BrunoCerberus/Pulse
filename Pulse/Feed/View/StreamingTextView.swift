@@ -87,4 +87,5 @@ private struct BlinkingCursor: View {
         text: "Today's reading covered a variety of topics including technology, business, and science..."
     )
     .padding()
+    .preferredColorScheme(.dark)
 }

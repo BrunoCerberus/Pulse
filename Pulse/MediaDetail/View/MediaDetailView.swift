@@ -338,6 +338,7 @@ private extension MediaDetailView {
             serviceLocator: .preview
         )
     }
+    .preferredColorScheme(.dark)
 }
 
 #Preview("Podcast") {
@@ -359,4 +360,5 @@ private extension MediaDetailView {
             serviceLocator: .preview
         )
     }
+    .preferredColorScheme(.dark)
 }

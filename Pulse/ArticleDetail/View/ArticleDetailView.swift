@@ -270,4 +270,5 @@ struct ArticleDetailView: View {
             serviceLocator: .preview
         )
     }
+    .preferredColorScheme(.dark)
 }

@@ -168,4 +168,5 @@ struct StatsCard: View {
     StatsCard(articleCount: 5, topicsCount: 3)
         .padding()
         .background(LinearGradient.subtleBackground)
+        .preferredColorScheme(.dark)
 }

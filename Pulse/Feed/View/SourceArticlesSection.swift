@@ -167,4 +167,5 @@ private struct SourceArticleRow: View {
         onArticleTapped: { _ in }
     )
     .padding()
+    .preferredColorScheme(.dark)
 }

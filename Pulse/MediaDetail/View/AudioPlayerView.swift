@@ -319,4 +319,5 @@ struct AudioPlayerView: View {
         )
     )
     .background(Color(.systemBackground))
+    .preferredColorScheme(.dark)
 }

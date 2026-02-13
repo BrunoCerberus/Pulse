@@ -177,4 +177,5 @@ struct BookmarksView<R: BookmarksNavigationRouter>: View {
             viewModel: BookmarksViewModel(serviceLocator: .preview)
         )
     }
+    .preferredColorScheme(.dark)
 }
