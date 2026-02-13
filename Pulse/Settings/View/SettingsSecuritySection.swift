@@ -42,3 +42,11 @@ struct SettingsSecuritySection: View {
         }
     }
 }
+
+#Preview {
+    SettingsSecuritySection(lockManager: .shared)
+}
+
+#Preview("Biometrics Not Available") {
+    SettingsSecuritySection(lockManager: .shared)
+}

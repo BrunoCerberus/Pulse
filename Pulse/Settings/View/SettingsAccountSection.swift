@@ -98,3 +98,11 @@ private struct InitialPlaceholderView: View {
         return "U"
     }
 }
+
+#Preview {
+    SettingsAccountSection(currentUser: AuthUser.mock, onSignOutTapped: {})
+}
+
+#Preview("No User") {
+    SettingsAccountSection(currentUser: nil, onSignOutTapped: {})
+}
