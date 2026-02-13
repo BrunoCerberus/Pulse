@@ -1,6 +1,24 @@
 import Combine
 import Foundation
 
+/// Live implementation of SummarizationService for AI-powered article summarization.
+///
+/// This service manages on-device article summarization, including:
+/// - LLM model lifecycle delegation to `LLMService`
+/// - Prompt building via `ArticleSummaryPromptBuilder`
+/// - Streaming summary generation with cancellation support
+///
+/// ## Usage
+/// The service is typically used from `SummarizationDomainInteractor`:
+/// ```swift
+/// try await summarizationService.loadModelIfNeeded()
+/// for try await token in summarizationService.summarize(article: article) {
+///     print(token)
+/// }
+/// ```
+///
+/// ## Premium Feature
+/// This service powers the Premium article summarization feature.
 final class LiveSummarizationService: SummarizationService {
     private let llmService: LLMService
 

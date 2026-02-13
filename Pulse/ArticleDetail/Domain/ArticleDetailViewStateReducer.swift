@@ -1,7 +1,20 @@
 import EntropyCore
 import Foundation
 
+/// Transforms `ArticleDetailDomainState` into `ArticleDetailViewState`.
+///
+/// This reducer is a pure function that passes through most domain state
+/// properties directly to the view state. The domain state handles content
+/// processing (converting HTML to AttributedString) asynchronously.
+///
+/// ## Key Transformations
+/// - Article and processed content are passed through directly
+/// - Bookmark status is reflected from storage
+/// - Sheet visibility flags control modal presentation
 struct ArticleDetailViewStateReducer: ViewStateReducing {
+    /// Reduces domain state to view state.
+    /// - Parameter domainState: The current domain state from the interactor.
+    /// - Returns: View state ready for consumption by SwiftUI views.
     func reduce(domainState: ArticleDetailDomainState) -> ArticleDetailViewState {
         ArticleDetailViewState(
             article: domainState.article,

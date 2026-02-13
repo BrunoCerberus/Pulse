@@ -1,6 +1,23 @@
 import Combine
 import SwiftUI
 
+/// Manages app theme preferences (dark mode, light mode, system default).
+///
+/// This singleton observes and persists theme settings to UserDefaults,
+/// publishing changes for SwiftUI views to observe.
+///
+/// ## Usage
+/// Apply the theme at the app root:
+/// ```swift
+/// ContentView()
+///     .preferredColorScheme(ThemeManager.shared.colorScheme)
+/// ```
+///
+/// ## Persistence
+/// - `isDarkMode`: Whether dark mode is enabled (when not using system theme)
+/// - `useSystemTheme`: Whether to follow the system appearance setting
+///
+/// On first launch, defaults to system theme.
 @MainActor
 final class ThemeManager: ObservableObject {
     static let shared = ThemeManager()

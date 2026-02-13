@@ -1,6 +1,23 @@
 import Combine
 import Foundation
 
+/// Live implementation of FeedService for AI-powered Daily Digest generation.
+///
+/// This service manages the AI digest feature, including:
+/// - LLM model lifecycle delegation to `LLMService`
+/// - Digest generation from news articles with balanced category coverage
+/// - In-memory digest caching (today's digest only)
+///
+/// ## Digest Caching
+/// - Caches the most recently generated digest in memory
+/// - Returns cached digest if generated today and non-empty
+/// - Cache is cleared on app restart
+///
+/// ## Article Processing
+/// Articles are capped using `FeedDigestPromptBuilder.cappedArticles` to:
+/// - Prevent context overflow
+/// - Ensure balanced category representation
+/// - Keep generation times reasonable
 final class LiveFeedService: FeedService {
     private let llmService: LLMService
     private var cachedDigest: DailyDigest?

@@ -1,5 +1,17 @@
 import Foundation
 
+/// Builds prompts for on-device article summarization.
+///
+/// This builder creates prompts optimized for the on-device LLM model,
+/// formatting article content for concise summary generation.
+///
+/// ## Prompt Structure
+/// - System prompt defines summarization guidelines (2-3 sentences, facts only)
+/// - User prompt contains article title, source, description, and truncated content
+///
+/// ## Content Processing
+/// - HTML is stripped from description and content
+/// - Content is truncated to 1500 characters to fit context window
 enum ArticleSummaryPromptBuilder {
     /// System prompt for article summarization
     static let systemPrompt = """
