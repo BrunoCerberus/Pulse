@@ -60,14 +60,30 @@ final class BookmarksViewModel: CombineViewModel, ObservableObject {
     }
 }
 
+/// View state for the Bookmarks screen.
+///
+/// Contains the user's saved articles and UI state for loading,
+/// refreshing, and navigation.
 struct BookmarksViewState: Equatable {
+    /// Bookmarked articles as view items for display.
     var bookmarks: [ArticleViewItem]
+
+    /// Indicates whether bookmarks are being loaded from storage.
     var isLoading: Bool
+
+    /// Indicates whether a pull-to-refresh operation is in progress.
     var isRefreshing: Bool
+
+    /// Error message to display, if any.
     var errorMessage: String?
+
+    /// Whether to show the empty state view (no bookmarks saved).
     var showEmptyState: Bool
+
+    /// Article selected for navigation to detail view.
     var selectedArticle: Article?
 
+    /// Creates the default initial state with empty bookmarks.
     static var initial: BookmarksViewState {
         BookmarksViewState(
             bookmarks: [],
@@ -80,10 +96,25 @@ struct BookmarksViewState: Equatable {
     }
 }
 
+/// Events that can be triggered from the Bookmarks view.
+///
+/// These events are handled by the `BookmarksViewModel` and mapped
+/// to domain actions via the interactor.
 enum BookmarksViewEvent: Equatable {
+    /// View appeared, should load bookmarks.
     case onAppear
+
+    /// User initiated pull-to-refresh.
     case onRefresh
+
+    /// User tapped on a bookmarked article.
+    /// - Parameter articleId: The unique identifier of the tapped article.
     case onArticleTapped(articleId: String)
+
+    /// Navigation to article detail completed.
     case onArticleNavigated
+
+    /// User requested to remove a bookmark (swipe action).
+    /// - Parameter articleId: The unique identifier of the article to unbookmark.
     case onRemoveBookmark(articleId: String)
 }

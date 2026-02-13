@@ -1,6 +1,18 @@
 import Combine
 import Foundation
 
+/// Live implementation of BookmarksService for managing saved articles.
+///
+/// This service bridges the Combine-based domain layer with the async/await
+/// `StorageService` for bookmark persistence, providing:
+/// - Fetching all bookmarked articles sorted by save date
+/// - Removing individual bookmarks
+///
+/// ## Thread Safety
+/// All operations are dispatched to the main queue for UI consistency.
+///
+/// ## Dependencies
+/// - `StorageService`: SwiftData-based persistence layer
 final class LiveBookmarksService: BookmarksService {
     private let storageService: StorageService
 

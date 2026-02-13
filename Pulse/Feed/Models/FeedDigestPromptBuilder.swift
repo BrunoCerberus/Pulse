@@ -1,5 +1,25 @@
 import Foundation
 
+/// Builds prompts for on-device daily digest generation.
+///
+/// This builder creates prompts optimized for the on-device LLM model,
+/// formatting multiple news articles into a structured daily digest.
+///
+/// ## Key Features
+/// - **Balanced Category Coverage**: `cappedArticles` ensures each category gets fair representation
+/// - **Token-Safe**: Respects `LLMConfiguration` context limits
+/// - **Structured Output**: Prompts model to write separate paragraphs per category
+///
+/// ## Prompt Structure
+/// - System prompt defines digest format (category headers, sentence limits)
+/// - User prompt lists articles with titles, sources, and truncated descriptions
+/// - Includes examples to guide model output format
+///
+/// ## Usage
+/// ```swift
+/// let capped = FeedDigestPromptBuilder.cappedArticles(from: articles)
+/// let prompt = FeedDigestPromptBuilder.buildPrompt(for: capped)
+/// ```
 enum FeedDigestPromptBuilder {
     /// System prompt for daily digest generation
     static let systemPrompt = """
