@@ -83,3 +83,16 @@ struct SettingsMutedContentSection: View {
         }
     }
 }
+
+#Preview {
+    SettingsMutedContentSection(
+        mutedSources: ["Source 1", "Source 2"],
+        mutedKeywords: ["Keyword 1", "Keyword 2"],
+        newMutedSource: .constant(""),
+        newMutedKeyword: .constant(""),
+        onAddMutedSource: {},
+        onRemoveMutedSource: { _ in },
+        onAddMutedKeyword: {},
+        onRemoveMutedKeyword: { _ in }
+    )
+}

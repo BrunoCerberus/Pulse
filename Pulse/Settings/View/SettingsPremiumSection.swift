@@ -66,3 +66,11 @@ struct SettingsPremiumSection: View {
         }
     }
 }
+
+#Preview {
+    SettingsPremiumSection(isPremium: false, onUpgradeTapped: {})
+}
+
+#Preview("Premium Active") {
+    SettingsPremiumSection(isPremium: true, onUpgradeTapped: {})
+}
