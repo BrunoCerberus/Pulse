@@ -128,4 +128,5 @@ extension View {
     }
 
     return PreviewWrapper()
+        .preferredColorScheme(.dark)
 }

@@ -102,4 +102,5 @@ struct SplashScreenView: View {
     SplashScreenView {
         Logger.shared.debug("Animation complete!", category: "UI")
     }
+    .preferredColorScheme(.dark)
 }

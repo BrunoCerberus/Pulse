@@ -360,4 +360,5 @@ enum PaywallCoordinator {
 #Preview {
     @Previewable @StateObject var viewModel = PaywallViewModel(serviceLocator: .preview)
     return PaywallView(viewModel: viewModel)
+        .preferredColorScheme(.dark)
 }

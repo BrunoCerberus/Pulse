@@ -288,4 +288,5 @@ struct SearchView<R: SearchNavigationRouter>: View {
             viewModel: SearchViewModel(serviceLocator: .preview)
         )
     }
+    .preferredColorScheme(.dark)
 }

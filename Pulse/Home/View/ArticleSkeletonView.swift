@@ -75,4 +75,5 @@ extension View {
         ArticleSkeletonView()
         ArticleSkeletonView()
     }
+    .preferredColorScheme(.dark)
 }

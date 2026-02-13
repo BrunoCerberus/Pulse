@@ -219,4 +219,5 @@ struct FeaturedMediaCard: View {
             .padding()
         }
     }
+    .preferredColorScheme(.dark)
 }

@@ -298,4 +298,5 @@ struct FeaturedArticleCard: View {
             .padding()
         }
     }
+    .preferredColorScheme(.dark)
 }

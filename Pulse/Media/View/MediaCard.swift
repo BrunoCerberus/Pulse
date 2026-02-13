@@ -218,4 +218,5 @@ struct MediaCard: View {
             .padding()
         }
     }
+    .preferredColorScheme(.dark)
 }

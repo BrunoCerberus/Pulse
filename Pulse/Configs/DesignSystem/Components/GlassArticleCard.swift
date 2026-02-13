@@ -266,4 +266,5 @@ struct GlassArticleCardCompact: View {
             .padding()
         }
     }
+    .preferredColorScheme(.dark)
 }

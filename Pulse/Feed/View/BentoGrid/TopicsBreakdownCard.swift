@@ -132,4 +132,5 @@ struct TopicsBreakdownCard: View {
     )
     .padding()
     .background(LinearGradient.subtleBackground)
+    .preferredColorScheme(.dark)
 }

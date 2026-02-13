@@ -110,4 +110,5 @@ struct BreakingNewsCard: View {
         onTap: {}
     )
     .padding()
+    .preferredColorScheme(.dark)
 }

@@ -65,4 +65,5 @@ struct FaceIDPromptView: View {
 
 #Preview {
     FaceIDPromptView()
+        .preferredColorScheme(.dark)
 }

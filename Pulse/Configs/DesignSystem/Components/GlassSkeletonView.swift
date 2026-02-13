@@ -150,4 +150,5 @@ struct HeroCarouselSkeleton: View {
             }
         }
     }
+    .preferredColorScheme(.dark)
 }

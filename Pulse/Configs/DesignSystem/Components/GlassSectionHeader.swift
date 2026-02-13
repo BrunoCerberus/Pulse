@@ -114,4 +114,5 @@ struct StickySectionHeader: View {
             Spacer()
         }
     }
+    .preferredColorScheme(.dark)
 }

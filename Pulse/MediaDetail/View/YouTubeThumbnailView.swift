@@ -145,4 +145,5 @@ struct YouTubeThumbnailView: View {
         urlString: "https://www.youtube.com/watch?v=dQw4w9WgXcQ",
         articleImageURL: nil
     )
+    .preferredColorScheme(.dark)
 }

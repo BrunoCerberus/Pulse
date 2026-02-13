@@ -69,8 +69,10 @@ struct SettingsPremiumSection: View {
 
 #Preview {
     SettingsPremiumSection(isPremium: false, onUpgradeTapped: {})
+        .preferredColorScheme(.dark)
 }
 
 #Preview("Premium Active") {
     SettingsPremiumSection(isPremium: true, onUpgradeTapped: {})
+        .preferredColorScheme(.dark)
 }
