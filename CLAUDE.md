@@ -184,7 +184,7 @@ Pulse/
 │       ├── Navigation/         # Coordinator, Page, CoordinatorView, DeeplinkRouter, AnimatedTabView
 │       ├── DesignSystem/       # ColorSystem, Typography, Components
 │       ├── Models/             # Article, NewsCategory, UserPreferences
-│       ├── Networking/         # API keys, base URLs, SupabaseConfig, RemoteConfig
+│       ├── Networking/         # API keys, base URLs, SupabaseConfig, RemoteConfig, NetworkMonitorService
 │       ├── Storage/            # StorageService (SwiftData)
 │       ├── Mocks/              # Mock services for testing
 │       └── Widget/             # WidgetDataManager + shared widget models
@@ -205,6 +205,7 @@ Pulse/
 | **Feed** | AI-powered Daily Digest summarizing latest news articles from the API using on-device LLM (Llama 3.2-1B) (**Premium**) |
 | **Article Summarization** | On-device AI article summarization via sparkles button (**Premium**) |
 | **Search** | Full-text search with 300ms debounce, suggestions, and sort options (last tab with liquid glass style) |
+| **Offline Experience** | Tiered cache (L1 memory + L2 disk), NWPathMonitor network monitoring, offline banner, graceful degradation |
 | **Bookmarks** | Save articles for offline reading (SwiftData) |
 | **Settings** | Topics, notifications, theme, muted content, account/logout (accessed from Home navigation bar) |
 | **Widget** | Home screen widget showing recent headlines (WidgetKit extension) |
@@ -372,30 +373,50 @@ Guardian API is used as fallback when:
 - Supabase is not configured (missing URL or API key)
 - Supabase API returns an error
 
-## Caching Layer
+## Caching & Offline Layer
 
-The app uses an in-memory caching layer to minimize Guardian API calls (500/day free tier limit):
+The app uses a two-tier caching strategy with offline resilience:
 
 ```swift
-// CachingNewsService wraps LiveNewsService using the Decorator Pattern
-let cachingService = CachingNewsService(wrapping: LiveNewsService())
+// CachingNewsService wraps LiveNewsService with L1 (memory) + L2 (disk) caches
+let networkMonitor = LiveNetworkMonitorService()
+let cachingService = CachingNewsService(wrapping: LiveNewsService(), networkMonitor: networkMonitor)
 serviceLocator.register(NewsService.self, instance: cachingService)
+serviceLocator.register(NetworkMonitorService.self, instance: networkMonitor)
 ```
 
-### TTL Configuration
+### Tiered Cache
 
-- Client-side cache uses a single TTL (`NewsCacheTTL.default`) of **10 minutes** for all news content.
+| Layer | Implementation | TTL | Survives App Kill |
+|-------|---------------|-----|-------------------|
+| L1 (Memory) | `NSCache` via `LiveNewsCacheStore` | 10 minutes | No |
+| L2 (Disk) | `DiskNewsCacheStore` (JSON files in `Caches/PulseNewsCache/`) | 24 hours | Yes |
+
+### Fetch Flow (`fetchWithTieredCache`)
+
+1. **L1 hit** (non-expired) → return immediately
+2. **L2 hit** (non-expired) → promote to L1, return
+3. **Offline**: serve stale data from L1 or L2; if nothing cached → `Fail(PulseError.offlineNoCache)`
+4. **Online**: network fetch → write-through to L1 + L2; on failure → fall back to stale L2
 
 ### Cache Invalidation
 
-Cache is automatically invalidated on pull-to-refresh:
+Pull-to-refresh clears L1 (memory) only. Disk cache is preserved as an offline fallback:
 
 ```swift
 // HomeDomainInteractor.refresh()
 if let cachingService = newsService as? CachingNewsService {
-    cachingService.invalidateCache()
+    cachingService.invalidateCache()  // Clears L1 only, disk preserved
 }
 ```
+
+### Network Monitoring
+
+`NetworkMonitorService` (protocol + `LiveNetworkMonitorService` + `MockNetworkMonitorService`) uses `NWPathMonitor` to track connectivity:
+- `isConnected: Bool` property and `isConnectedPublisher: AnyPublisher<Bool, Never>`
+- `CoordinatorView` subscribes to show/hide an animated `OfflineBannerView`
+- Domain states expose `isOfflineError: Bool` for offline-specific error views
+- Failed refreshes preserve existing cached content (headlines, breaking news, media) instead of clearing
 
 ## Testing Strategy
 
@@ -447,9 +468,13 @@ if let cachingService = newsService as? CachingNewsService {
 | `SupabaseConfig.swift` | Supabase URL and API key configuration |
 | `SupabaseAPI.swift` | Supabase REST API endpoint definitions |
 | `SupabaseModels.swift` | Supabase response models (SupabaseArticle, SupabaseSource, SupabaseCategory) |
-| **Caching** | |
-| `NewsCacheStore.swift` | Cache protocol, NSCache implementation, TTL configuration |
-| `CachingNewsService.swift` | Decorator wrapping LiveNewsService with in-memory caching |
+| **Caching & Offline** | |
+| `NewsCacheStore.swift` | Cache protocol, NSCache implementation (L1), TTL configuration |
+| `DiskNewsCacheStore.swift` | Persistent file-based cache (L2) in Caches/PulseNewsCache/ |
+| `CachingNewsService.swift` | Decorator wrapping LiveNewsService with tiered L1+L2 caching + offline awareness |
+| `NetworkMonitorService.swift` | Protocol + Live (NWPathMonitor) + Mock for connectivity monitoring |
+| `PulseError.swift` | Typed error enum distinguishing offline from server errors |
+| `OfflineBannerView.swift` | Animated offline banner shown at top of app when disconnected |
 | **Widget** | |
 | `WidgetDataManager.swift` | Persists shared widget articles and triggers WidgetKit reloads |
 | **Media Playback** | |
