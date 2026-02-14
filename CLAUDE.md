@@ -378,10 +378,11 @@ Guardian API is used as fallback when:
 The app uses a two-tier caching strategy with offline resilience:
 
 ```swift
-// CachingNewsService wraps LiveNewsService with L1 (memory) + L2 (disk) caches
+// CachingNewsService and CachingMediaService wrap live services with L1 (memory) + L2 (disk) caches
 let networkMonitor = LiveNetworkMonitorService()
-let cachingService = CachingNewsService(wrapping: LiveNewsService(), networkMonitor: networkMonitor)
-serviceLocator.register(NewsService.self, instance: cachingService)
+let cachingNewsService = CachingNewsService(wrapping: LiveNewsService(), networkMonitor: networkMonitor)
+serviceLocator.register(NewsService.self, instance: cachingNewsService)
+serviceLocator.register(MediaService.self, instance: CachingMediaService(wrapping: LiveMediaService(), networkMonitor: networkMonitor))
 serviceLocator.register(NetworkMonitorService.self, instance: networkMonitor)
 ```
 
@@ -472,6 +473,7 @@ if let cachingService = newsService as? CachingNewsService {
 | `NewsCacheStore.swift` | Cache protocol, NSCache implementation (L1), TTL configuration |
 | `DiskNewsCacheStore.swift` | Persistent file-based cache (L2) in Caches/PulseNewsCache/ |
 | `CachingNewsService.swift` | Decorator wrapping LiveNewsService with tiered L1+L2 caching + offline awareness |
+| `CachingMediaService.swift` | Decorator wrapping LiveMediaService with tiered L1+L2 caching + offline awareness |
 | `NetworkMonitorService.swift` | Protocol + Live (NWPathMonitor) + Mock for connectivity monitoring |
 | `PulseError.swift` | Typed error enum distinguishing offline from server errors |
 | `OfflineBannerView.swift` | Animated offline banner shown at top of app when disconnected |

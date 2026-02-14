@@ -17,6 +17,7 @@ Pulse/
 │   │   └── Manager/            # AuthenticationManager (global state)
 │   ├── Home/                   # Home feed with category filtering
 │   ├── Media/                  # Videos and Podcasts browsing
+│   │   ├── API/                # CachingMediaService (tiered cache decorator for LiveMediaService)
 │   │   ├── Domain/             # MediaDomainInteractor, State, Action, Reducer, EventActionMap
 │   │   ├── ViewModel/          # MediaViewModel
 │   │   ├── View/               # MediaView, MediaCard, FeaturedMediaCard
@@ -240,7 +241,8 @@ The app uses a tiered cache with offline resilience:
 
 | Component | Purpose |
 |-----------|---------|
-| `CachingNewsService` | Decorator with `fetchWithTieredCache()` - L1 → L2 → network with stale fallback |
+| `CachingNewsService` | Decorator wrapping `LiveNewsService` with `fetchWithTieredCache()` - L1 → L2 → network with stale fallback |
+| `CachingMediaService` | Decorator wrapping `LiveMediaService` with same tiered cache pattern for media endpoints |
 | `DiskNewsCacheStore` | Persistent file-based cache implementing `NewsCacheStore` protocol |
 | `NetworkMonitorService` | Protocol + Live (`NWPathMonitor`) + Mock for connectivity tracking |
 | `PulseError` | Typed error enum with `.offlineNoCache` case |
