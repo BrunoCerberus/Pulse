@@ -51,6 +51,9 @@ struct HomeDomainState: Equatable {
     /// Whether the topic editor sheet is presented.
     var isEditingTopics: Bool
 
+    /// Whether the current error is due to being offline.
+    var isOfflineError: Bool
+
     /// Creates the default initial state.
     static var initial: HomeDomainState {
         HomeDomainState(
@@ -68,7 +71,8 @@ struct HomeDomainState: Equatable {
             selectedCategory: nil,
             followedTopics: [],
             allTopics: NewsCategory.allCases,
-            isEditingTopics: false
+            isEditingTopics: false,
+            isOfflineError: false
         )
     }
 }

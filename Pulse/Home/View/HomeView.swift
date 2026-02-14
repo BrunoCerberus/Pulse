@@ -205,9 +205,13 @@ struct HomeView<R: HomeNavigationRouter>: View {
 
     @ViewBuilder
     private var content: some View {
-        let isInitialLoading = viewModel.viewState.isLoading && viewModel.viewState.headlines.isEmpty
+        let hasData = !viewModel.viewState.headlines.isEmpty || !viewModel.viewState.breakingNews.isEmpty
+        let isInitialLoading = viewModel.viewState.isLoading && !hasData
         if viewModel.viewState.isRefreshing || isInitialLoading {
             loadingView
+        } else if hasData {
+            // Show existing content even if a refresh failed (e.g., offline with cached data)
+            articlesList
         } else if let error = viewModel.viewState.errorMessage {
             errorView(error)
         } else if viewModel.viewState.showEmptyState {

@@ -28,8 +28,10 @@ enum FeedDomainAction: Equatable {
     case latestArticlesLoaded([Article])
 
     /// Failed to load articles from the API.
-    /// - Parameter error: A human-readable error message.
-    case latestArticlesFailed(String)
+    /// - Parameters:
+    ///   - error: A human-readable error message.
+    ///   - isOffline: Whether the failure is due to being offline.
+    case latestArticlesFailed(String, isOffline: Bool)
 
     // MARK: - Digest Generation
 
@@ -68,4 +70,7 @@ enum FeedDomainAction: Equatable {
 
     /// Clear any displayed error message.
     case clearError
+
+    /// Retry after an error by resetting state and re-fetching articles.
+    case retryAfterError
 }

@@ -17,6 +17,7 @@ Pulse/
 │   │   └── Manager/            # AuthenticationManager (global state)
 │   ├── Home/                   # Home feed with category filtering
 │   ├── Media/                  # Videos and Podcasts browsing
+│   │   ├── API/                # CachingMediaService (tiered cache decorator for LiveMediaService)
 │   │   ├── Domain/             # MediaDomainInteractor, State, Action, Reducer, EventActionMap
 │   │   ├── ViewModel/          # MediaViewModel
 │   │   ├── View/               # MediaView, MediaCard, FeaturedMediaCard
@@ -51,7 +52,7 @@ Pulse/
 │       ├── Navigation/         # Coordinator, Page, CoordinatorView, DeeplinkRouter, AnimatedTabView
 │       ├── DesignSystem/       # ColorSystem, Typography, Components, Haptics
 │       ├── Models/             # Article, NewsCategory, UserPreferences
-│       ├── Networking/         # API keys, base URLs, SupabaseConfig, RemoteConfig
+│       ├── Networking/         # API keys, base URLs, SupabaseConfig, RemoteConfig, NetworkMonitorService
 │       ├── Storage/            # StorageService (SwiftData)
 │       ├── Mocks/              # Mock services for testing
 │       └── Widget/             # WidgetDataManager + shared widget models
@@ -216,6 +217,7 @@ struct HomeDomainInteractorTests {
 9. **Premium features are gated** - AI features require subscription (checked via StoreKitService)
 10. **Service decorators for cross-cutting concerns** - Use Decorator Pattern for caching, logging (e.g., `CachingNewsService` wraps `LiveNewsService`)
 11. **Graceful fallback for data sources** - Live services (NewsService, SearchService) use Supabase as primary and fall back to Guardian API when not configured or on error
+12. **Offline resilience** - Tiered cache (L1 memory + L2 disk) preserves content when offline; `NetworkMonitorService` tracks connectivity; failed refreshes keep existing data visible
 
 ## Data Source Architecture
 
@@ -225,6 +227,32 @@ The app uses a two-tier data source strategy:
 |--------|------|-------------|
 | Supabase Backend | Primary | Self-hosted RSS aggregator with og:image and content extraction |
 | Guardian API | Fallback | Direct API access when Supabase is not configured |
+
+## Caching & Offline Architecture
+
+The app uses a tiered cache with offline resilience:
+
+| Layer | Implementation | TTL | Survives App Kill |
+|-------|---------------|-----|-------------------|
+| L1 (Memory) | `LiveNewsCacheStore` (NSCache) | 10 minutes | No |
+| L2 (Disk) | `DiskNewsCacheStore` (JSON in Caches/) | 24 hours | Yes |
+
+### Key Components
+
+| Component | Purpose |
+|-----------|---------|
+| `CachingNewsService` | Decorator wrapping `LiveNewsService` with `fetchWithTieredCache()` - L1 → L2 → network with stale fallback |
+| `CachingMediaService` | Decorator wrapping `LiveMediaService` with same tiered cache pattern for media endpoints |
+| `DiskNewsCacheStore` | Persistent file-based cache implementing `NewsCacheStore` protocol |
+| `NetworkMonitorService` | Protocol + Live (`NWPathMonitor`) + Mock for connectivity tracking |
+| `PulseError` | Typed error enum with `.offlineNoCache` case |
+| `OfflineBannerView` | Animated banner in `CoordinatorView` shown when offline |
+
+### Offline Behavior
+- **Stale data served when offline**: L1 or L2 cache returned even if expired
+- **Content preserved on refresh failure**: Pull-to-refresh does not clear existing headlines/breaking news/media
+- **Offline error differentiation**: Domain states expose `isOfflineError: Bool` for offline-specific error views
+- **Cache invalidation is L1-only**: Pull-to-refresh clears memory cache; disk cache preserved as fallback
 
 ### Backend Features (pulse-backend)
 - Aggregates RSS feeds from Guardian, BBC, TechCrunch, Science Daily, etc.

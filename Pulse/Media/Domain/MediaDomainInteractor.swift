@@ -94,6 +94,7 @@ final class MediaDomainInteractor: CombineInteractor {
                 self?.updateState { state in
                     state.isLoading = false
                     state.error = error.localizedDescription
+                    state.isOfflineError = error.isOfflineError
                 }
             }
         } receiveValue: { [weak self] featured, media in
@@ -104,6 +105,7 @@ final class MediaDomainInteractor: CombineInteractor {
                 state.currentPage = 1
                 state.hasMorePages = media.count >= 20
                 state.hasLoadedInitialData = true
+                state.isOfflineError = false
             }
         }
         .store(in: &cancellables)
@@ -141,14 +143,17 @@ final class MediaDomainInteractor: CombineInteractor {
     }
 
     private func refresh() {
+        if let cachingService = mediaService as? CachingMediaService {
+            cachingService.invalidateCache()
+        }
+
         updateState { state in
             state.isRefreshing = true
-            state.featuredMedia = []
-            state.mediaItems = []
+            // Preserve existing content so it remains visible if refresh fails (e.g., offline)
             state.error = nil
+            state.isOfflineError = false
             state.currentPage = 1
             state.hasMorePages = true
-            state.hasLoadedInitialData = false
         }
 
         let selectedType = currentState.selectedType
@@ -162,6 +167,7 @@ final class MediaDomainInteractor: CombineInteractor {
                 self?.updateState { state in
                     state.isRefreshing = false
                     state.error = error.localizedDescription
+                    state.isOfflineError = error.isOfflineError
                 }
             }
         } receiveValue: { [weak self] featured, media in
@@ -172,6 +178,7 @@ final class MediaDomainInteractor: CombineInteractor {
                 state.currentPage = 1
                 state.hasMorePages = media.count >= 20
                 state.hasLoadedInitialData = true
+                state.isOfflineError = false
             }
         }
         .store(in: &cancellables)
@@ -202,6 +209,7 @@ final class MediaDomainInteractor: CombineInteractor {
                 self?.updateState { state in
                     state.isLoading = false
                     state.error = error.localizedDescription
+                    state.isOfflineError = error.isOfflineError
                 }
             }
         } receiveValue: { [weak self] featured, media in
@@ -212,6 +220,7 @@ final class MediaDomainInteractor: CombineInteractor {
                 state.currentPage = 1
                 state.hasMorePages = media.count >= 20
                 state.hasLoadedInitialData = true
+                state.isOfflineError = false
             }
         }
         .store(in: &cancellables)

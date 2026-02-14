@@ -38,6 +38,9 @@ struct SearchViewState: Equatable {
     /// Article selected for navigation to detail view.
     var selectedArticle: Article?
 
+    /// Whether the current error is due to being offline.
+    var isOfflineError: Bool
+
     /// Creates the default initial state with empty query and results.
     static var initial: SearchViewState {
         SearchViewState(
@@ -51,7 +54,8 @@ struct SearchViewState: Equatable {
             showNoResults: false,
             hasSearched: false,
             sortOption: .relevancy,
-            selectedArticle: nil
+            selectedArticle: nil,
+            isOfflineError: false
         )
     }
 }

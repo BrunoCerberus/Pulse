@@ -33,32 +33,49 @@ extension HomeView {
     func errorView(_ message: String) -> some View {
         GlassCard(style: .thin, shadowStyle: .medium, padding: Spacing.xl) {
             VStack(spacing: Spacing.md) {
-                Image(systemName: "exclamationmark.triangle.fill")
-                    .font(.system(size: IconSize.xxl))
-                    .foregroundStyle(Color.Semantic.warning)
+                if viewModel.viewState.isOfflineError {
+                    Image(systemName: "wifi.slash")
+                        .font(.system(size: IconSize.xxl))
+                        .foregroundStyle(.orange)
 
-                Text(HomeViewConstants.errorTitle)
-                    .font(Typography.titleMedium)
+                    Text(String(localized: "home.offline.title", defaultValue: "You're Offline"))
+                        .font(Typography.titleMedium)
 
-                Text(message)
+                    Text(String(
+                        localized: "home.offline.message",
+                        defaultValue: "Connect to the internet to load the latest news."
+                    ))
                     .font(Typography.bodyMedium)
                     .foregroundStyle(.secondary)
                     .multilineTextAlignment(.center)
+                } else {
+                    Image(systemName: "exclamationmark.triangle.fill")
+                        .font(.system(size: IconSize.xxl))
+                        .foregroundStyle(Color.Semantic.warning)
 
-                Button {
-                    HapticManager.shared.tap()
-                    viewModel.handle(event: .onRefresh)
-                } label: {
-                    Text(HomeViewConstants.tryAgain)
-                        .font(Typography.labelLarge)
-                        .foregroundStyle(.white)
-                        .padding(.horizontal, Spacing.lg)
-                        .padding(.vertical, Spacing.sm)
-                        .background(Color.Accent.primary)
-                        .clipShape(Capsule())
+                    Text(HomeViewConstants.errorTitle)
+                        .font(Typography.titleMedium)
+
+                    Text(message)
+                        .font(Typography.bodyMedium)
+                        .foregroundStyle(.secondary)
+                        .multilineTextAlignment(.center)
+
+                    Button {
+                        HapticManager.shared.tap()
+                        viewModel.handle(event: .onRefresh)
+                    } label: {
+                        Text(HomeViewConstants.tryAgain)
+                            .font(Typography.labelLarge)
+                            .foregroundStyle(.white)
+                            .padding(.horizontal, Spacing.lg)
+                            .padding(.vertical, Spacing.sm)
+                            .background(Color.Accent.primary)
+                            .clipShape(Capsule())
+                    }
+                    .buttonStyle(.plain)
+                    .pressEffect()
                 }
-                .buttonStyle(.plain)
-                .pressEffect()
             }
         }
         .padding(Spacing.lg)

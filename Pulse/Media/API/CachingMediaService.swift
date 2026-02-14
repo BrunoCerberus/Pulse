@@ -2,28 +2,28 @@ import Combine
 import EntropyCore
 import Foundation
 
-/// A decorator that wraps a NewsService implementation and adds tiered caching.
+/// A decorator that wraps a MediaService implementation and adds tiered caching.
 ///
-/// Uses a two-level cache strategy:
+/// Uses the same two-level cache strategy as `CachingNewsService`:
 /// - **L1 (memory)**: NSCache-based, 10-min TTL, cleared on memory warning
 /// - **L2 (disk)**: File-based, 24-hour TTL, survives app restarts
 ///
 /// When offline, serves stale data from either cache layer. When online,
 /// network failures fall back to stale disk cache data.
-final class CachingNewsService: NewsService {
-    private let wrapped: NewsService
+final class CachingMediaService: MediaService {
+    private let wrapped: MediaService
     private let memoryCacheStore: NewsCacheStore
     private let diskCacheStore: NewsCacheStore?
     private let networkMonitor: NetworkMonitorService?
 
-    /// Creates a new caching news service.
+    /// Creates a new caching media service.
     /// - Parameters:
-    ///   - wrapped: The underlying news service to wrap
+    ///   - wrapped: The underlying media service to wrap
     ///   - cacheStore: The L1 memory cache store (defaults to LiveNewsCacheStore)
     ///   - diskCacheStore: The L2 disk cache store (defaults to DiskNewsCacheStore)
     ///   - networkMonitor: Network monitor for offline detection (optional)
     init(
-        wrapping wrapped: NewsService,
+        wrapping wrapped: MediaService,
         cacheStore: NewsCacheStore = LiveNewsCacheStore(),
         diskCacheStore: NewsCacheStore? = DiskNewsCacheStore(),
         networkMonitor: NetworkMonitorService? = nil
@@ -34,36 +34,19 @@ final class CachingNewsService: NewsService {
         self.networkMonitor = networkMonitor
     }
 
-    // MARK: - NewsService Implementation
+    // MARK: - MediaService Implementation
 
-    func fetchTopHeadlines(country: String, page: Int) -> AnyPublisher<[Article], Error> {
-        let cacheKey = NewsCacheKey.topHeadlines(country: country, page: page)
-        return fetchWithTieredCache(key: cacheKey, label: "headlines (country: \(country), page: \(page))") {
-            self.wrapped.fetchTopHeadlines(country: country, page: page)
+    func fetchMedia(type: MediaType?, page: Int) -> AnyPublisher<[Article], Error> {
+        let cacheKey = NewsCacheKey.media(type: type?.rawValue, page: page)
+        return fetchWithTieredCache(key: cacheKey, label: "media (type: \(type?.rawValue ?? "all"), page: \(page))") {
+            self.wrapped.fetchMedia(type: type, page: page)
         }
     }
 
-    func fetchTopHeadlines(category: NewsCategory, country: String, page: Int) -> AnyPublisher<[Article], Error> {
-        let cacheKey = NewsCacheKey.categoryHeadlines(category: category, country: country, page: page)
-        return fetchWithTieredCache(
-            key: cacheKey,
-            label: "category headlines (category: \(category.rawValue), page: \(page))"
-        ) {
-            self.wrapped.fetchTopHeadlines(category: category, country: country, page: page)
-        }
-    }
-
-    func fetchBreakingNews(country: String) -> AnyPublisher<[Article], Error> {
-        let cacheKey = NewsCacheKey.breakingNews(country: country)
-        return fetchWithTieredCache(key: cacheKey, label: "breaking news (country: \(country))") {
-            self.wrapped.fetchBreakingNews(country: country)
-        }
-    }
-
-    func fetchArticle(id: String) -> AnyPublisher<Article, Error> {
-        let cacheKey = NewsCacheKey.article(id: id)
-        return fetchWithTieredCache(key: cacheKey, label: "article (id: \(id))") {
-            self.wrapped.fetchArticle(id: id)
+    func fetchFeaturedMedia(type: MediaType?) -> AnyPublisher<[Article], Error> {
+        let cacheKey = NewsCacheKey.featuredMedia(type: type?.rawValue)
+        return fetchWithTieredCache(key: cacheKey, label: "featured media (type: \(type?.rawValue ?? "all"))") {
+            self.wrapped.fetchFeaturedMedia(type: type)
         }
     }
 
@@ -75,14 +58,14 @@ final class CachingNewsService: NewsService {
         for key in keys {
             memoryCacheStore.remove(for: key)
         }
-        Logger.shared.service("L1 cache invalidated for \(keys.count) key(s)", level: .debug)
+        Logger.shared.service("Media L1 cache invalidated for \(keys.count) key(s)", level: .debug)
     }
 
     /// Invalidates all L1 memory cache.
     /// Disk cache is preserved as offline fallback.
     func invalidateCache() {
         memoryCacheStore.removeAll()
-        Logger.shared.service("L1 cache invalidated", level: .debug)
+        Logger.shared.service("Media L1 cache invalidated", level: .debug)
     }
 
     // MARK: - Tiered Cache Logic
@@ -114,13 +97,6 @@ final class CachingNewsService: NewsService {
             Logger.shared.service("L2 cache hit for \(label)", level: .debug)
             // Promote to L1
             memoryCacheStore.set(diskCached, for: key)
-
-            // If online, refresh in background but return disk data immediately
-            if networkMonitor?.isConnected != false {
-                return Just(diskCached.data)
-                    .setFailureType(to: Error.self)
-                    .eraseToAnyPublisher()
-            }
 
             return Just(diskCached.data)
                 .setFailureType(to: Error.self)

@@ -23,7 +23,8 @@ struct MediaViewStateReducer: ViewStateReducing {
                 && domainState.mediaItems.isEmpty && domainState.featuredMedia.isEmpty,
             selectedMedia: domainState.selectedMedia,
             mediaToShare: domainState.mediaToShare,
-            mediaToPlay: domainState.mediaToPlay
+            mediaToPlay: domainState.mediaToPlay,
+            isOfflineError: domainState.isOfflineError
         )
     }
 }

@@ -38,7 +38,8 @@ struct FeedViewStateReducer: ViewStateReducing {
             digest: digest,
             sourceArticles: sourceArticles,
             errorMessage: errorMessage,
-            selectedArticle: domainState.selectedArticle
+            selectedArticle: domainState.selectedArticle,
+            isOfflineError: domainState.isOfflineError
         )
     }
 

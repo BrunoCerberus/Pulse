@@ -47,6 +47,9 @@ struct HomeViewState: Equatable {
     /// Whether the user is currently editing their followed topics.
     var isEditingTopics: Bool
 
+    /// Whether the current error is due to being offline.
+    var isOfflineError: Bool
+
     /// Creates the default initial state with empty data and loading flags disabled.
     static var initial: HomeViewState {
         HomeViewState(
@@ -63,7 +66,8 @@ struct HomeViewState: Equatable {
             followedTopics: [],
             showCategoryTabs: false,
             allTopics: NewsCategory.allCases,
-            isEditingTopics: false
+            isEditingTopics: false,
+            isOfflineError: false
         )
     }
 }

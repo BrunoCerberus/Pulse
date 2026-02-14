@@ -33,10 +33,10 @@ struct FeedEventActionMapTests {
         #expect(action == .clearSelectedArticle)
     }
 
-    @Test("onRetryTapped event maps to generateDigest action")
+    @Test("onRetryTapped event maps to retryAfterError action")
     func onRetryTappedMapping() {
         let action = sut.map(event: .onRetryTapped)
-        #expect(action == .generateDigest)
+        #expect(action == .retryAfterError)
     }
 
     @Test("onDismissError event maps to clearError action")

@@ -240,12 +240,22 @@ final class PulseSceneDelegate: UIResponder, UIWindowSceneDelegate {
         let storageService = LiveStorageService()
         serviceLocator.register(StorageService.self, instance: storageService)
 
+        // Network monitor for offline detection
+        let networkMonitor = LiveNetworkMonitorService()
+        serviceLocator.register(NetworkMonitorService.self, instance: networkMonitor)
+
         // All Live services use Supabase backend with Guardian API fallback
         // Supabase backend provides RSS-aggregated articles with high-res images and full content
         // Falls back to Guardian API if Supabase is not configured or on error
-        serviceLocator.register(NewsService.self, instance: CachingNewsService(wrapping: LiveNewsService()))
+        serviceLocator.register(
+            NewsService.self,
+            instance: CachingNewsService(wrapping: LiveNewsService(), networkMonitor: networkMonitor)
+        )
         serviceLocator.register(SearchService.self, instance: LiveSearchService())
-        serviceLocator.register(MediaService.self, instance: LiveMediaService())
+        serviceLocator.register(
+            MediaService.self,
+            instance: CachingMediaService(wrapping: LiveMediaService(), networkMonitor: networkMonitor)
+        )
         serviceLocator.register(StoreKitService.self, instance: LiveStoreKitService())
         serviceLocator.register(LLMService.self, instance: LiveLLMService())
         serviceLocator.register(SummarizationService.self, instance: LiveSummarizationService())

@@ -42,6 +42,9 @@ struct SearchDomainState: Equatable {
     /// Article selected for navigation to detail view.
     var selectedArticle: Article?
 
+    /// Whether the current error is due to being offline.
+    var isOfflineError: Bool
+
     /// Creates the default initial state.
     static var initial: SearchDomainState {
         SearchDomainState(
@@ -56,7 +59,8 @@ struct SearchDomainState: Equatable {
             hasMorePages: true,
             sortBy: .relevancy,
             hasSearched: false,
-            selectedArticle: nil
+            selectedArticle: nil,
+            isOfflineError: false
         )
     }
 }

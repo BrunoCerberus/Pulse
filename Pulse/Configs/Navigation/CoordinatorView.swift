@@ -1,3 +1,4 @@
+import Combine
 import EntropyCore
 import SwiftUI
 
@@ -9,85 +10,101 @@ import SwiftUI
 struct CoordinatorView: View {
     @StateObject private var coordinator: Coordinator
     @StateObject private var themeManager = ThemeManager.shared
+    @State private var isOffline = false
+
+    private let networkMonitor: NetworkMonitorService?
 
     /// Creates the view with an injected ServiceLocator.
     /// - Parameter serviceLocator: Shared dependency resolver for the app
     init(serviceLocator: ServiceLocator) {
         _coordinator = StateObject(wrappedValue: Coordinator(serviceLocator: serviceLocator))
+        networkMonitor = try? serviceLocator.retrieve(NetworkMonitorService.self)
         configureTabBarAppearance()
     }
 
     var body: some View {
-        AnimatedTabView(selection: $coordinator.selectedTab) {
-            Tab("Home", systemImage: AppTab.home.symbolImage, value: .home) {
-                NavigationStack(path: $coordinator.homePath) {
-                    HomeView(
-                        router: HomeNavigationRouter(coordinator: coordinator),
-                        viewModel: coordinator.homeViewModel
-                    )
-                    .navigationDestination(for: Page.self) { page in
-                        coordinator.build(page: page)
-                    }
-                }
+        VStack(spacing: 0) {
+            if isOffline {
+                OfflineBannerView()
             }
 
-            Tab("Media", systemImage: AppTab.media.symbolImage, value: .media) {
-                NavigationStack(path: $coordinator.mediaPath) {
-                    MediaView(
-                        router: MediaNavigationRouter(coordinator: coordinator),
-                        viewModel: coordinator.mediaViewModel
-                    )
-                    .navigationDestination(for: Page.self) { page in
-                        coordinator.build(page: page)
+            AnimatedTabView(selection: $coordinator.selectedTab) {
+                Tab("Home", systemImage: AppTab.home.symbolImage, value: .home) {
+                    NavigationStack(path: $coordinator.homePath) {
+                        HomeView(
+                            router: HomeNavigationRouter(coordinator: coordinator),
+                            viewModel: coordinator.homeViewModel
+                        )
+                        .navigationDestination(for: Page.self) { page in
+                            coordinator.build(page: page)
+                        }
                     }
                 }
-            }
 
-            Tab("Feed", systemImage: AppTab.feed.symbolImage, value: .feed) {
-                NavigationStack(path: $coordinator.feedPath) {
-                    FeedView(
-                        router: FeedNavigationRouter(coordinator: coordinator),
-                        viewModel: coordinator.feedViewModel,
-                        serviceLocator: coordinator.serviceLocator
-                    )
-                    .navigationDestination(for: Page.self) { page in
-                        coordinator.build(page: page)
+                Tab("Media", systemImage: AppTab.media.symbolImage, value: .media) {
+                    NavigationStack(path: $coordinator.mediaPath) {
+                        MediaView(
+                            router: MediaNavigationRouter(coordinator: coordinator),
+                            viewModel: coordinator.mediaViewModel
+                        )
+                        .navigationDestination(for: Page.self) { page in
+                            coordinator.build(page: page)
+                        }
                     }
                 }
-            }
 
-            Tab("Bookmarks", systemImage: AppTab.bookmarks.symbolImage, value: .bookmarks) {
-                NavigationStack(path: $coordinator.bookmarksPath) {
-                    BookmarksView(
-                        router: BookmarksNavigationRouter(coordinator: coordinator),
-                        viewModel: coordinator.bookmarksViewModel
-                    )
-                    .navigationDestination(for: Page.self) { page in
-                        coordinator.build(page: page)
+                Tab("Feed", systemImage: AppTab.feed.symbolImage, value: .feed) {
+                    NavigationStack(path: $coordinator.feedPath) {
+                        FeedView(
+                            router: FeedNavigationRouter(coordinator: coordinator),
+                            viewModel: coordinator.feedViewModel,
+                            serviceLocator: coordinator.serviceLocator
+                        )
+                        .navigationDestination(for: Page.self) { page in
+                            coordinator.build(page: page)
+                        }
                     }
                 }
-            }
 
-            Tab("Search", systemImage: AppTab.search.symbolImage, value: .search, role: .search) {
-                NavigationStack(path: $coordinator.searchPath) {
-                    SearchView(
-                        router: SearchNavigationRouter(coordinator: coordinator),
-                        viewModel: coordinator.searchViewModel
-                    )
-                    .navigationDestination(for: Page.self) { page in
-                        coordinator.build(page: page)
+                Tab("Bookmarks", systemImage: AppTab.bookmarks.symbolImage, value: .bookmarks) {
+                    NavigationStack(path: $coordinator.bookmarksPath) {
+                        BookmarksView(
+                            router: BookmarksNavigationRouter(coordinator: coordinator),
+                            viewModel: coordinator.bookmarksViewModel
+                        )
+                        .navigationDestination(for: Page.self) { page in
+                            coordinator.build(page: page)
+                        }
                     }
                 }
+
+                Tab("Search", systemImage: AppTab.search.symbolImage, value: .search, role: .search) {
+                    NavigationStack(path: $coordinator.searchPath) {
+                        SearchView(
+                            router: SearchNavigationRouter(coordinator: coordinator),
+                            viewModel: coordinator.searchViewModel
+                        )
+                        .navigationDestination(for: Page.self) { page in
+                            coordinator.build(page: page)
+                        }
+                    }
+                }
+            } effects: { tab in
+                tab.symbolEffect
             }
-        } effects: { tab in
-            tab.symbolEffect
+            .preferredColorScheme(themeManager.colorScheme)
+            .onChange(of: coordinator.selectedTab) { _, _ in
+                HapticManager.shared.tabChange()
+            }
+            .onAppear {
+                setupDeeplinkRouter()
+            }
         }
-        .preferredColorScheme(themeManager.colorScheme)
-        .onChange(of: coordinator.selectedTab) { _, _ in
-            HapticManager.shared.tabChange()
-        }
-        .onAppear {
-            setupDeeplinkRouter()
+        .animation(.easeInOut(duration: 0.3), value: isOffline)
+        .onReceive(
+            networkMonitor?.isConnectedPublisher ?? Just(true).eraseToAnyPublisher()
+        ) { connected in
+            isOffline = !connected
         }
     }
 

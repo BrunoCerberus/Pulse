@@ -36,17 +36,18 @@ jobs:
         restore-keys: |
           ${{ runner.os }}-brew-
 
-    # Cache SPM dependencies
-    # Note: Using static version key (spm-v5) due to hashFiles() limitations in this CI environment
-    # Manually increment version (v5 -> v6) when project.yml package dependencies change
+    # Cache SPM dependencies (metadata + downloaded artifacts including binary XCFrameworks)
+    # Note: Using static version key due to hashFiles() limitations in this CI environment
+    # Manually increment version when project.yml package dependencies change
     # IMPORTANT: Do NOT use broad restore-keys fallback - it can restore stale package versions
-    # v5: Migrated from LocalLlama to LEAP SDK (LeapSDK)
+    # v6: Added ~/Library/Caches/org.swift.swiftpm to cache binary artifacts (LeapSDK)
     - name: Cache SPM dependencies
       uses: actions/cache@v4
       with:
         path: |
           Pulse.xcodeproj/project.xcworkspace/xcshareddata/swiftpm
-        key: ${{ runner.os }}-spm-v5
+          ~/Library/Caches/org.swift.swiftpm
+        key: ${{ runner.os }}-spm-v6
 
     - name: Install XcodeGen
       run: |
@@ -153,17 +154,18 @@ jobs:
         restore-keys: |
           ${{ runner.os }}-brew-
 
-    # Cache SPM dependencies
-    # Note: Using static version key (spm-v5) due to hashFiles() limitations in this CI environment
-    # Manually increment version (v5 -> v6) when project.yml package dependencies change
+    # Cache SPM dependencies (metadata + downloaded artifacts including binary XCFrameworks)
+    # Note: Using static version key due to hashFiles() limitations in this CI environment
+    # Manually increment version when project.yml package dependencies change
     # IMPORTANT: Do NOT use broad restore-keys fallback - it can restore stale package versions
-    # v5: Migrated from LocalLlama to LEAP SDK (LeapSDK)
+    # v6: Added ~/Library/Caches/org.swift.swiftpm to cache binary artifacts (LeapSDK)
     - name: Cache SPM dependencies
       uses: actions/cache@v4
       with:
         path: |
           Pulse.xcodeproj/project.xcworkspace/xcshareddata/swiftpm
-        key: ${{ runner.os }}-spm-v5
+          ~/Library/Caches/org.swift.swiftpm
+        key: ${{ runner.os }}-spm-v6
 
     - name: Install XcodeGen
       run: |
