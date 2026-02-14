@@ -143,6 +143,10 @@ final class MediaDomainInteractor: CombineInteractor {
     }
 
     private func refresh() {
+        if let cachingService = mediaService as? CachingMediaService {
+            cachingService.invalidateCache()
+        }
+
         updateState { state in
             state.isRefreshing = true
             // Preserve existing content so it remains visible if refresh fails (e.g., offline)

@@ -17,7 +17,8 @@ struct FeedViewStateReducerTests {
             streamingText: "",
             modelStatus: .notLoaded,
             hasLoadedInitialData: true,
-            selectedArticle: nil
+            selectedArticle: nil,
+            isOfflineError: false
         )
 
         let viewState = sut.reduce(domainState: domainState)
@@ -35,7 +36,8 @@ struct FeedViewStateReducerTests {
             streamingText: "",
             modelStatus: .notLoaded,
             hasLoadedInitialData: true,
-            selectedArticle: nil
+            selectedArticle: nil,
+            isOfflineError: false
         )
 
         let viewState = sut.reduce(domainState: domainState)
@@ -53,7 +55,8 @@ struct FeedViewStateReducerTests {
             streamingText: "",
             modelStatus: .notLoaded,
             hasLoadedInitialData: false,
-            selectedArticle: nil
+            selectedArticle: nil,
+            isOfflineError: false
         )
 
         let viewState = sut.reduce(domainState: domainState)
@@ -71,7 +74,8 @@ struct FeedViewStateReducerTests {
             streamingText: "Generating text...",
             modelStatus: .ready,
             hasLoadedInitialData: true,
-            selectedArticle: nil
+            selectedArticle: nil,
+            isOfflineError: false
         )
 
         let viewState = sut.reduce(domainState: domainState)
@@ -96,7 +100,8 @@ struct FeedViewStateReducerTests {
             streamingText: "",
             modelStatus: .ready,
             hasLoadedInitialData: true,
-            selectedArticle: nil
+            selectedArticle: nil,
+            isOfflineError: false
         )
 
         let viewState = sut.reduce(domainState: domainState)
@@ -115,7 +120,8 @@ struct FeedViewStateReducerTests {
             streamingText: "",
             modelStatus: .error("Model failed"),
             hasLoadedInitialData: true,
-            selectedArticle: nil
+            selectedArticle: nil,
+            isOfflineError: false
         )
 
         let viewState = sut.reduce(domainState: domainState)
@@ -135,7 +141,8 @@ struct FeedViewStateReducerTests {
             streamingText: "",
             modelStatus: .notLoaded,
             hasLoadedInitialData: true,
-            selectedArticle: nil
+            selectedArticle: nil,
+            isOfflineError: false
         )
 
         let viewState = sut.reduce(domainState: domainState)
@@ -159,7 +166,8 @@ struct FeedViewStateReducerTests {
             streamingText: "",
             modelStatus: .notLoaded,
             hasLoadedInitialData: true,
-            selectedArticle: nil
+            selectedArticle: nil,
+            isOfflineError: false
         )
 
         let viewState = sut.reduce(domainState: domainState)
@@ -179,7 +187,8 @@ struct FeedViewStateReducerTests {
             streamingText: "",
             modelStatus: .notLoaded,
             hasLoadedInitialData: true,
-            selectedArticle: article
+            selectedArticle: article,
+            isOfflineError: false
         )
 
         let viewState = sut.reduce(domainState: domainState)

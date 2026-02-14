@@ -54,6 +54,9 @@ struct FeedDomainState: Equatable {
     /// Article selected for navigation to detail view.
     var selectedArticle: Article?
 
+    /// Whether the current error is due to being offline.
+    var isOfflineError: Bool
+
     /// Creates the default initial state.
     /// Starts with `.loadingArticles` to ensure processing animation shows immediately.
     static var initial: FeedDomainState {
@@ -64,7 +67,8 @@ struct FeedDomainState: Equatable {
             streamingText: "",
             modelStatus: .notLoaded,
             hasLoadedInitialData: false,
-            selectedArticle: nil
+            selectedArticle: nil,
+            isOfflineError: false
         )
     }
 

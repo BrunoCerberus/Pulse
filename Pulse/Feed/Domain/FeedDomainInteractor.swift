@@ -26,6 +26,7 @@ final class FeedDomainInteractor: CombineInteractor {
 
     private let feedService: FeedService
     private let newsService: NewsService
+    private let networkMonitor: NetworkMonitorService?
     private let stateSubject = CurrentValueSubject<FeedDomainState, Never>(.initial)
     private var cancellables = Set<AnyCancellable>()
     private var generationTask: Task<Void, Never>?
@@ -48,6 +49,8 @@ final class FeedDomainInteractor: CombineInteractor {
             fatalError("FeedService and NewsService are required")
         }
 
+        networkMonitor = try? serviceLocator.retrieve(NetworkMonitorService.self)
+
         setupModelStatusBinding()
     }
 
@@ -62,9 +65,10 @@ final class FeedDomainInteractor: CombineInteractor {
             handleModelStatusChanged(status)
         case let .latestArticlesLoaded(articles):
             handleArticlesLoaded(articles)
-        case let .latestArticlesFailed(error):
+        case let .latestArticlesFailed(error, isOffline):
             updateState { state in
                 state.generationState = .error(error)
+                state.isOfflineError = isOffline
             }
         case .generateDigest:
             generateDigest()
@@ -87,7 +91,15 @@ final class FeedDomainInteractor: CombineInteractor {
                 if case .error = state.generationState {
                     state.generationState = .idle
                 }
+                state.isOfflineError = false
             }
+        case .retryAfterError:
+            updateState { state in
+                state.hasLoadedInitialData = false
+                state.isOfflineError = false
+                state.generationState = .loadingArticles
+            }
+            fetchLatestNews()
         }
     }
 
@@ -216,7 +228,11 @@ private extension FeedDomainInteractor {
             allArticles.sort { $0.publishedAt > $1.publishedAt }
 
             if allArticles.isEmpty {
-                dispatch(action: .latestArticlesFailed("Unable to fetch news"))
+                let isOffline = self.networkMonitor?.isConnected == false
+                let message = isOffline
+                    ? "You're offline. Connect to the internet to generate your daily digest."
+                    : "Unable to fetch news"
+                dispatch(action: .latestArticlesFailed(message, isOffline: isOffline))
             } else {
                 dispatch(action: .latestArticlesLoaded(allArticles))
             }
@@ -227,6 +243,7 @@ private extension FeedDomainInteractor {
         updateState { state in
             state.latestArticles = articles
             state.hasLoadedInitialData = true
+            state.isOfflineError = false
             state.generationState = articles.isEmpty ? .idle : state.generationState
         }
 

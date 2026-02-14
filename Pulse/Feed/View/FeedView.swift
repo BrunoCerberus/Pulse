@@ -12,6 +12,8 @@ private enum Constants {
     static let errorTitle = "Something went wrong"
     static let tryAgain = "Try Again"
     static let startReading = "Start Reading"
+    static let offlineTitle = "You're Offline"
+    static let offlineMessage = "Connect to the internet to generate your daily digest."
 }
 
 // MARK: - FeedView
@@ -201,45 +203,72 @@ struct FeedView<R: FeedNavigationRouter>: View {
         VStack(spacing: Spacing.lg) {
             dateHeader
 
-            GlassCard(style: .thin, shadowStyle: .medium, padding: Spacing.xl) {
-                VStack(spacing: Spacing.md) {
-                    Image(systemName: "exclamationmark.triangle.fill")
-                        .font(.system(size: IconSize.xxl))
-                        .foregroundStyle(Color.Semantic.warning)
-
-                    Text(Constants.errorTitle)
-                        .font(Typography.titleMedium)
-
-                    if let error = viewModel.viewState.errorMessage {
-                        Text(error)
-                            .font(Typography.bodyMedium)
-                            .foregroundStyle(.secondary)
-                            .multilineTextAlignment(.center)
-                    }
-
-                    Button {
-                        HapticManager.shared.tap()
-                        viewModel.handle(event: .onRetryTapped)
-                    } label: {
-                        HStack(spacing: Spacing.sm) {
-                            Image(systemName: "arrow.clockwise")
-                            Text(Constants.tryAgain)
-                        }
-                        .font(Typography.labelLarge)
-                        .foregroundStyle(.white)
-                        .padding(.horizontal, Spacing.lg)
-                        .padding(.vertical, Spacing.sm)
-                        .background(Color.Accent.primary)
-                        .clipShape(Capsule())
-                    }
-                    .buttonStyle(.plain)
-                    .pressEffect()
-                }
+            if viewModel.viewState.isOfflineError {
+                offlineErrorCard
+            } else {
+                genericErrorCard
             }
-            .padding(.horizontal, Spacing.md)
 
             Spacer()
         }
+    }
+
+    private var offlineErrorCard: some View {
+        GlassCard(style: .thin, shadowStyle: .medium, padding: Spacing.xl) {
+            VStack(spacing: Spacing.md) {
+                Image(systemName: "wifi.slash")
+                    .font(.system(size: IconSize.xxl))
+                    .foregroundStyle(.orange)
+
+                Text(Constants.offlineTitle)
+                    .font(Typography.titleMedium)
+
+                Text(Constants.offlineMessage)
+                    .font(Typography.bodyMedium)
+                    .foregroundStyle(.secondary)
+                    .multilineTextAlignment(.center)
+            }
+        }
+        .padding(.horizontal, Spacing.md)
+    }
+
+    private var genericErrorCard: some View {
+        GlassCard(style: .thin, shadowStyle: .medium, padding: Spacing.xl) {
+            VStack(spacing: Spacing.md) {
+                Image(systemName: "exclamationmark.triangle.fill")
+                    .font(.system(size: IconSize.xxl))
+                    .foregroundStyle(Color.Semantic.warning)
+
+                Text(Constants.errorTitle)
+                    .font(Typography.titleMedium)
+
+                if let error = viewModel.viewState.errorMessage {
+                    Text(error)
+                        .font(Typography.bodyMedium)
+                        .foregroundStyle(.secondary)
+                        .multilineTextAlignment(.center)
+                }
+
+                Button {
+                    HapticManager.shared.tap()
+                    viewModel.handle(event: .onRetryTapped)
+                } label: {
+                    HStack(spacing: Spacing.sm) {
+                        Image(systemName: "arrow.clockwise")
+                        Text(Constants.tryAgain)
+                    }
+                    .font(Typography.labelLarge)
+                    .foregroundStyle(.white)
+                    .padding(.horizontal, Spacing.lg)
+                    .padding(.vertical, Spacing.sm)
+                    .background(Color.Accent.primary)
+                    .clipShape(Capsule())
+                }
+                .buttonStyle(.plain)
+                .pressEffect()
+            }
+        }
+        .padding(.horizontal, Spacing.md)
     }
 
     // MARK: - Date Header

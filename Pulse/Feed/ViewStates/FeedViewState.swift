@@ -74,6 +74,9 @@ struct FeedViewState: Equatable {
     /// Article selected for navigation to detail view.
     var selectedArticle: Article?
 
+    /// Whether the current error is due to being offline.
+    var isOfflineError: Bool
+
     /// Creates the default initial state with generating phase active.
     static var initial: FeedViewState {
         FeedViewState(
@@ -83,7 +86,8 @@ struct FeedViewState: Equatable {
             digest: nil,
             sourceArticles: [],
             errorMessage: nil,
-            selectedArticle: nil
+            selectedArticle: nil,
+            isOfflineError: false
         )
     }
 }

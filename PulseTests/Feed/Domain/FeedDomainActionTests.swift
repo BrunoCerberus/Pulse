@@ -105,10 +105,11 @@ struct FeedDomainActionTests {
 
     @Test("latestArticlesFailed action with error message")
     func latestArticlesFailed() {
-        let action = FeedDomainAction.latestArticlesFailed("Failed to load articles")
+        let action = FeedDomainAction.latestArticlesFailed("Failed to load articles", isOffline: false)
 
-        if case let .latestArticlesFailed(message) = action {
+        if case let .latestArticlesFailed(message, isOffline) = action {
             #expect(message == "Failed to load articles")
+            #expect(!isOffline)
         } else {
             Issue.record("Expected latestArticlesFailed action")
         }
@@ -307,16 +308,16 @@ extension FeedDomainActionTests {
     @Test("latestArticlesFailed with same message are equal")
     func latestArticlesFailedSameMessageAreEqual() {
         #expect(
-            FeedDomainAction.latestArticlesFailed("Error") ==
-                FeedDomainAction.latestArticlesFailed("Error")
+            FeedDomainAction.latestArticlesFailed("Error", isOffline: false) ==
+                FeedDomainAction.latestArticlesFailed("Error", isOffline: false)
         )
     }
 
     @Test("latestArticlesFailed with different messages are not equal")
     func latestArticlesFailedDifferentMessagesAreNotEqual() {
         #expect(
-            FeedDomainAction.latestArticlesFailed("Error 1") !=
-                FeedDomainAction.latestArticlesFailed("Error 2")
+            FeedDomainAction.latestArticlesFailed("Error 1", isOffline: false) !=
+                FeedDomainAction.latestArticlesFailed("Error 2", isOffline: false)
         )
     }
 

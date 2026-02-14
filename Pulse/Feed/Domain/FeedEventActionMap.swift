@@ -10,7 +10,7 @@ import Foundation
 /// - `onAppear` → `loadInitialData`
 /// - `onGenerateDigestTapped` → `generateDigest`
 /// - `onArticleTapped` → `selectArticle`
-/// - `onRetryTapped` → `generateDigest` (retry after error)
+/// - `onRetryTapped` → `retryAfterError` (retry after error)
 /// - `onDismissError` → `clearError`
 struct FeedEventActionMap: DomainEventActionMap {
     /// Maps a view event to its corresponding domain action.
@@ -27,7 +27,7 @@ struct FeedEventActionMap: DomainEventActionMap {
         case .onArticleNavigated:
             return .clearSelectedArticle
         case .onRetryTapped:
-            return .generateDigest
+            return .retryAfterError
         case .onDismissError:
             return .clearError
         }

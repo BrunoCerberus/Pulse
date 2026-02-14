@@ -25,6 +25,8 @@ enum NewsCacheKey: Hashable {
     case topHeadlines(country: String, page: Int)
     case categoryHeadlines(category: NewsCategory, country: String, page: Int)
     case article(id: String)
+    case media(type: String?, page: Int)
+    case featuredMedia(type: String?)
 
     /// String representation of the cache key for NSCache storage.
     var stringKey: String {
@@ -37,6 +39,10 @@ enum NewsCacheKey: Hashable {
             return "category_\(category.rawValue)_\(country)_p\(page)"
         case let .article(id):
             return "article_\(id)"
+        case let .media(type, page):
+            return "media_\(type ?? "all")_p\(page)"
+        case let .featuredMedia(type):
+            return "featured_media_\(type ?? "all")"
         }
     }
 }

@@ -9,16 +9,19 @@ import Testing
 struct FeedDomainInteractorTests {
     let mockFeedService: MockFeedService
     let mockNewsService: MockNewsService
+    let mockNetworkMonitor: MockNetworkMonitorService
     let serviceLocator: ServiceLocator
     let sut: FeedDomainInteractor
 
     init() {
         mockFeedService = MockFeedService()
         mockNewsService = MockNewsService()
+        mockNetworkMonitor = MockNetworkMonitorService()
         serviceLocator = ServiceLocator()
 
         serviceLocator.register(FeedService.self, instance: mockFeedService)
         serviceLocator.register(NewsService.self, instance: mockNewsService)
+        serviceLocator.register(NetworkMonitorService.self, instance: mockNetworkMonitor)
 
         sut = FeedDomainInteractor(serviceLocator: serviceLocator)
     }
@@ -207,5 +210,74 @@ struct FeedDomainInteractorTests {
 
         // Even with preload failure, state should be ready for generation attempt
         #expect(success, "Should still load initial data despite preload failure")
+    }
+
+    // MARK: - Offline Tests
+
+    @Test("Offline error sets isOfflineError to true")
+    func offlineErrorSetsFlag() async {
+        mockNetworkMonitor.simulateOffline()
+        mockNewsService.topHeadlinesResult = .failure(URLError(.notConnectedToInternet))
+        mockNewsService.categoryHeadlinesResult = .failure(URLError(.notConnectedToInternet))
+
+        sut.dispatch(action: .loadInitialData)
+
+        let success = await waitForCondition(timeout: 2_000_000_000) { [sut] in
+            sut.currentState.isOfflineError
+        }
+
+        #expect(success, "Should set isOfflineError when offline")
+        let state = sut.currentState
+        #expect(state.isOfflineError)
+        if case .error = state.generationState {
+            // Expected
+        } else {
+            Issue.record("Should be in error state when offline")
+        }
+    }
+
+    @Test("Successful article load resets isOfflineError")
+    func successfulLoadResetsOfflineError() async {
+        // First trigger offline error
+        mockNetworkMonitor.simulateOffline()
+        mockNewsService.topHeadlinesResult = .failure(URLError(.notConnectedToInternet))
+        mockNewsService.categoryHeadlinesResult = .failure(URLError(.notConnectedToInternet))
+
+        sut.dispatch(action: .loadInitialData)
+
+        let offlineSet = await waitForCondition(timeout: 2_000_000_000) { [sut] in
+            sut.currentState.isOfflineError
+        }
+        #expect(offlineSet, "Should be offline first")
+
+        // Now simulate coming back online and retrying
+        mockNetworkMonitor.simulateOnline()
+        mockNewsService.topHeadlinesResult = .success(Article.mockArticles)
+        mockNewsService.categoryHeadlinesResult = nil
+
+        sut.dispatch(action: .retryAfterError)
+
+        let recovered = await waitForCondition(timeout: 2_000_000_000) { [sut] in
+            !sut.currentState.isOfflineError && sut.currentState.hasLoadedInitialData
+        }
+
+        #expect(recovered, "Should recover from offline state")
+        #expect(!sut.currentState.isOfflineError)
+    }
+
+    @Test("Retry after error resets state and re-fetches")
+    func retryAfterErrorResetsState() {
+        mockNewsService.topHeadlinesResult = .success(Article.mockArticles)
+
+        sut.dispatch(action: .retryAfterError)
+
+        #expect(!sut.currentState.hasLoadedInitialData)
+        #expect(!sut.currentState.isOfflineError)
+
+        if case .loadingArticles = sut.currentState.generationState {
+            // Expected
+        } else {
+            Issue.record("Should be in loadingArticles state after retry")
+        }
     }
 }

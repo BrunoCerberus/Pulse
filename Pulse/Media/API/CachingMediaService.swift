@@ -1,0 +1,148 @@
+import Combine
+import EntropyCore
+import Foundation
+
+/// A decorator that wraps a MediaService implementation and adds tiered caching.
+///
+/// Uses the same two-level cache strategy as `CachingNewsService`:
+/// - **L1 (memory)**: NSCache-based, 10-min TTL, cleared on memory warning
+/// - **L2 (disk)**: File-based, 24-hour TTL, survives app restarts
+///
+/// When offline, serves stale data from either cache layer. When online,
+/// network failures fall back to stale disk cache data.
+final class CachingMediaService: MediaService {
+    private let wrapped: MediaService
+    private let memoryCacheStore: NewsCacheStore
+    private let diskCacheStore: NewsCacheStore?
+    private let networkMonitor: NetworkMonitorService?
+
+    /// Creates a new caching media service.
+    /// - Parameters:
+    ///   - wrapped: The underlying media service to wrap
+    ///   - cacheStore: The L1 memory cache store (defaults to LiveNewsCacheStore)
+    ///   - diskCacheStore: The L2 disk cache store (defaults to DiskNewsCacheStore)
+    ///   - networkMonitor: Network monitor for offline detection (optional)
+    init(
+        wrapping wrapped: MediaService,
+        cacheStore: NewsCacheStore = LiveNewsCacheStore(),
+        diskCacheStore: NewsCacheStore? = DiskNewsCacheStore(),
+        networkMonitor: NetworkMonitorService? = nil
+    ) {
+        self.wrapped = wrapped
+        memoryCacheStore = cacheStore
+        self.diskCacheStore = diskCacheStore
+        self.networkMonitor = networkMonitor
+    }
+
+    // MARK: - MediaService Implementation
+
+    func fetchMedia(type: MediaType?, page: Int) -> AnyPublisher<[Article], Error> {
+        let cacheKey = NewsCacheKey.media(type: type?.rawValue, page: page)
+        return fetchWithTieredCache(key: cacheKey, label: "media (type: \(type?.rawValue ?? "all"), page: \(page))") {
+            self.wrapped.fetchMedia(type: type, page: page)
+        }
+    }
+
+    func fetchFeaturedMedia(type: MediaType?) -> AnyPublisher<[Article], Error> {
+        let cacheKey = NewsCacheKey.featuredMedia(type: type?.rawValue)
+        return fetchWithTieredCache(key: cacheKey, label: "featured media (type: \(type?.rawValue ?? "all"))") {
+            self.wrapped.fetchFeaturedMedia(type: type)
+        }
+    }
+
+    // MARK: - Cache Management
+
+    /// Invalidates L1 memory cache for the given keys only.
+    /// Disk cache is preserved as offline fallback.
+    func invalidateCache(for keys: [NewsCacheKey]) {
+        for key in keys {
+            memoryCacheStore.remove(for: key)
+        }
+        Logger.shared.service("Media L1 cache invalidated for \(keys.count) key(s)", level: .debug)
+    }
+
+    /// Invalidates all L1 memory cache.
+    /// Disk cache is preserved as offline fallback.
+    func invalidateCache() {
+        memoryCacheStore.removeAll()
+        Logger.shared.service("Media L1 cache invalidated", level: .debug)
+    }
+
+    // MARK: - Tiered Cache Logic
+
+    /// Generic tiered cache fetch:
+    /// 1. L1 hit (non-expired) → return immediately
+    /// 2. L2 hit (non-expired) → promote to L1, return
+    /// 3. Offline: serve stale from L1 or L2; if nothing → PulseError.offlineNoCache
+    /// 4. Online: network fetch → write-through L1+L2; on failure → stale L2 fallback
+    private func fetchWithTieredCache<T>(
+        key: NewsCacheKey,
+        label: String,
+        networkFetch: @escaping () -> AnyPublisher<T, Error>
+    ) -> AnyPublisher<T, Error> {
+        // 1. Check L1 (memory) cache
+        if let cached: CacheEntry<T> = memoryCacheStore.get(for: key),
+           !cached.isExpired(ttl: NewsCacheTTL.default)
+        {
+            Logger.shared.service("L1 cache hit for \(label)", level: .debug)
+            return Just(cached.data)
+                .setFailureType(to: Error.self)
+                .eraseToAnyPublisher()
+        }
+
+        // 2. Check L2 (disk) cache
+        if let diskCached: CacheEntry<T> = diskCacheStore?.get(for: key),
+           !diskCached.isExpired(ttl: DiskNewsCacheStore.diskTTL)
+        {
+            Logger.shared.service("L2 cache hit for \(label)", level: .debug)
+            // Promote to L1
+            memoryCacheStore.set(diskCached, for: key)
+
+            return Just(diskCached.data)
+                .setFailureType(to: Error.self)
+                .eraseToAnyPublisher()
+        }
+
+        // 3. If offline: serve stale data or fail
+        if networkMonitor?.isConnected == false {
+            // Try stale L1
+            if let staleL1: CacheEntry<T> = memoryCacheStore.get(for: key) {
+                Logger.shared.service("Offline: serving stale L1 for \(label)", level: .debug)
+                return Just(staleL1.data)
+                    .setFailureType(to: Error.self)
+                    .eraseToAnyPublisher()
+            }
+            // Try stale L2 (expired but better than nothing)
+            if let staleL2: CacheEntry<T> = diskCacheStore?.get(for: key) {
+                Logger.shared.service("Offline: serving stale L2 for \(label)", level: .debug)
+                return Just(staleL2.data)
+                    .setFailureType(to: Error.self)
+                    .eraseToAnyPublisher()
+            }
+            Logger.shared.service("Offline: no cache for \(label)", level: .debug)
+            return Fail(error: PulseError.offlineNoCache)
+                .eraseToAnyPublisher()
+        }
+
+        // 4. Online: fetch from network, write-through to both caches
+        Logger.shared.service("Cache miss for \(label)", level: .debug)
+        return networkFetch()
+            .handleEvents(receiveOutput: { [weak self] data in
+                let entry = CacheEntry(data: data, timestamp: Date())
+                self?.memoryCacheStore.set(entry, for: key)
+                self?.diskCacheStore?.set(entry, for: key)
+            })
+            .catch { [weak self] error -> AnyPublisher<T, Error> in
+                // On network failure, fall back to stale disk cache
+                if let staleL2: CacheEntry<T> = self?.diskCacheStore?.get(for: key) {
+                    Logger.shared.service("Network error: serving stale L2 for \(label)", level: .debug)
+                    return Just(staleL2.data)
+                        .setFailureType(to: Error.self)
+                        .eraseToAnyPublisher()
+                }
+                return Fail(error: error)
+                    .eraseToAnyPublisher()
+            }
+            .eraseToAnyPublisher()
+    }
+}

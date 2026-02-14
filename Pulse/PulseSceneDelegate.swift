@@ -252,7 +252,10 @@ final class PulseSceneDelegate: UIResponder, UIWindowSceneDelegate {
             instance: CachingNewsService(wrapping: LiveNewsService(), networkMonitor: networkMonitor)
         )
         serviceLocator.register(SearchService.self, instance: LiveSearchService())
-        serviceLocator.register(MediaService.self, instance: LiveMediaService())
+        serviceLocator.register(
+            MediaService.self,
+            instance: CachingMediaService(wrapping: LiveMediaService(), networkMonitor: networkMonitor)
+        )
         serviceLocator.register(StoreKitService.self, instance: LiveStoreKitService())
         serviceLocator.register(LLMService.self, instance: LiveLLMService())
         serviceLocator.register(SummarizationService.self, instance: LiveSummarizationService())
