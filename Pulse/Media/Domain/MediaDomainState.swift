@@ -45,6 +45,9 @@ struct MediaDomainState: Equatable {
     /// Media item selected for playback.
     var mediaToPlay: Article?
 
+    /// Whether the current error is due to being offline.
+    var isOfflineError: Bool
+
     /// Creates the default initial state.
     static var initial: MediaDomainState {
         MediaDomainState(
@@ -60,7 +63,8 @@ struct MediaDomainState: Equatable {
             hasLoadedInitialData: false,
             selectedMedia: nil,
             mediaToShare: nil,
-            mediaToPlay: nil
+            mediaToPlay: nil,
+            isOfflineError: false
         )
     }
 }

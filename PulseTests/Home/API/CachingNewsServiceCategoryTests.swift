@@ -12,7 +12,7 @@ struct CachingNewsServiceCategoryTests {
     init() {
         mockNewsService = MockNewsService()
         mockCacheStore = MockNewsCacheStore()
-        sut = CachingNewsService(wrapping: mockNewsService, cacheStore: mockCacheStore)
+        sut = CachingNewsService(wrapping: mockNewsService, cacheStore: mockCacheStore, diskCacheStore: nil)
     }
 
     @Test("fetchTopHeadlines with category returns cached data when available")

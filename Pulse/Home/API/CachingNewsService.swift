@@ -2,153 +2,171 @@ import Combine
 import EntropyCore
 import Foundation
 
-/// A decorator that wraps a NewsService implementation and adds client-side caching.
+/// A decorator that wraps a NewsService implementation and adds tiered caching.
 ///
-/// This service provides a second layer of caching on top of the server-side caching
-/// provided by Supabase Edge Functions (which use Cache-Control headers with 5min TTL).
+/// Uses a two-level cache strategy:
+/// - **L1 (memory)**: NSCache-based, 10-min TTL, cleared on memory warning
+/// - **L2 (disk)**: File-based, 24-hour TTL, survives app restarts
 ///
-/// Client-side caching benefits:
-/// - Instant response for repeated requests within TTL
-/// - Reduced network traffic
-/// - Offline fallback for cached content
-///
-/// Usage:
-/// ```swift
-/// let cachingService = CachingNewsService(wrapping: LiveNewsService())
-/// serviceLocator.register(NewsService.self, instance: cachingService)
-/// ```
+/// When offline, serves stale data from either cache layer. When online,
+/// network failures fall back to stale disk cache data.
 final class CachingNewsService: NewsService {
     private let wrapped: NewsService
-    private let cacheStore: NewsCacheStore
+    private let memoryCacheStore: NewsCacheStore
+    private let diskCacheStore: NewsCacheStore?
+    private let networkMonitor: NetworkMonitorService?
 
     /// Creates a new caching news service.
     /// - Parameters:
     ///   - wrapped: The underlying news service to wrap
-    ///   - cacheStore: The cache store to use (defaults to LiveNewsCacheStore)
-    init(wrapping wrapped: NewsService, cacheStore: NewsCacheStore = LiveNewsCacheStore()) {
+    ///   - cacheStore: The L1 memory cache store (defaults to LiveNewsCacheStore)
+    ///   - diskCacheStore: The L2 disk cache store (defaults to DiskNewsCacheStore)
+    ///   - networkMonitor: Network monitor for offline detection (optional)
+    init(
+        wrapping wrapped: NewsService,
+        cacheStore: NewsCacheStore = LiveNewsCacheStore(),
+        diskCacheStore: NewsCacheStore? = DiskNewsCacheStore(),
+        networkMonitor: NetworkMonitorService? = nil
+    ) {
         self.wrapped = wrapped
-        self.cacheStore = cacheStore
+        memoryCacheStore = cacheStore
+        self.diskCacheStore = diskCacheStore
+        self.networkMonitor = networkMonitor
     }
 
     // MARK: - NewsService Implementation
 
     func fetchTopHeadlines(country: String, page: Int) -> AnyPublisher<[Article], Error> {
         let cacheKey = NewsCacheKey.topHeadlines(country: country, page: page)
-
-        // Check cache first
-        if let cached: CacheEntry<[Article]> = cacheStore.get(for: cacheKey),
-           !cached.isExpired(ttl: NewsCacheTTL.default)
-        {
-            Logger.shared.service("Cache hit for headlines (country: \(country), page: \(page))", level: .debug)
-            return Just(cached.data)
-                .setFailureType(to: Error.self)
-                .eraseToAnyPublisher()
+        return fetchWithTieredCache(key: cacheKey, label: "headlines (country: \(country), page: \(page))") {
+            self.wrapped.fetchTopHeadlines(country: country, page: page)
         }
-
-        // Fetch from network and cache
-        Logger.shared.service("Cache miss for headlines (country: \(country), page: \(page))", level: .debug)
-        return wrapped.fetchTopHeadlines(country: country, page: page)
-            .handleEvents(receiveOutput: { [weak self] articles in
-                let entry = CacheEntry(data: articles, timestamp: Date())
-                self?.cacheStore.set(entry, for: cacheKey)
-            })
-            .eraseToAnyPublisher()
     }
 
     func fetchTopHeadlines(category: NewsCategory, country: String, page: Int) -> AnyPublisher<[Article], Error> {
         let cacheKey = NewsCacheKey.categoryHeadlines(category: category, country: country, page: page)
-
-        // Check cache first
-        if let cached: CacheEntry<[Article]> = cacheStore.get(for: cacheKey),
-           !cached.isExpired(ttl: NewsCacheTTL.default)
-        {
-            Logger.shared.service(
-                "Cache hit for category headlines (category: \(category.rawValue), page: \(page))",
-                level: .debug
-            )
-            return Just(cached.data)
-                .setFailureType(to: Error.self)
-                .eraseToAnyPublisher()
+        return fetchWithTieredCache(
+            key: cacheKey,
+            label: "category headlines (category: \(category.rawValue), page: \(page))"
+        ) {
+            self.wrapped.fetchTopHeadlines(category: category, country: country, page: page)
         }
-
-        // Fetch from network and cache
-        Logger.shared.service(
-            "Cache miss for category headlines (category: \(category.rawValue), page: \(page))",
-            level: .debug
-        )
-        return wrapped.fetchTopHeadlines(category: category, country: country, page: page)
-            .handleEvents(receiveOutput: { [weak self] articles in
-                let entry = CacheEntry(data: articles, timestamp: Date())
-                self?.cacheStore.set(entry, for: cacheKey)
-            })
-            .eraseToAnyPublisher()
     }
 
     func fetchBreakingNews(country: String) -> AnyPublisher<[Article], Error> {
         let cacheKey = NewsCacheKey.breakingNews(country: country)
-
-        // Check cache first
-        if let cached: CacheEntry<[Article]> = cacheStore.get(for: cacheKey),
-           !cached.isExpired(ttl: NewsCacheTTL.default)
-        {
-            Logger.shared.service("Cache hit for breaking news (country: \(country))", level: .debug)
-            return Just(cached.data)
-                .setFailureType(to: Error.self)
-                .eraseToAnyPublisher()
+        return fetchWithTieredCache(key: cacheKey, label: "breaking news (country: \(country))") {
+            self.wrapped.fetchBreakingNews(country: country)
         }
-
-        // Fetch from network and cache
-        Logger.shared.service("Cache miss for breaking news (country: \(country))", level: .debug)
-        return wrapped.fetchBreakingNews(country: country)
-            .handleEvents(receiveOutput: { [weak self] articles in
-                let entry = CacheEntry(data: articles, timestamp: Date())
-                self?.cacheStore.set(entry, for: cacheKey)
-            })
-            .eraseToAnyPublisher()
     }
 
     func fetchArticle(id: String) -> AnyPublisher<Article, Error> {
         let cacheKey = NewsCacheKey.article(id: id)
+        return fetchWithTieredCache(key: cacheKey, label: "article (id: \(id))") {
+            self.wrapped.fetchArticle(id: id)
+        }
+    }
 
-        // Check cache first
-        if let cached: CacheEntry<Article> = cacheStore.get(for: cacheKey),
+    // MARK: - Cache Management
+
+    /// Invalidates L1 memory cache for the given keys only.
+    /// Disk cache is preserved as offline fallback.
+    func invalidateCache(for keys: [NewsCacheKey]) {
+        for key in keys {
+            memoryCacheStore.remove(for: key)
+        }
+        Logger.shared.service("L1 cache invalidated for \(keys.count) key(s)", level: .debug)
+    }
+
+    /// Invalidates all L1 memory cache.
+    /// Disk cache is preserved as offline fallback.
+    func invalidateCache() {
+        memoryCacheStore.removeAll()
+        Logger.shared.service("L1 cache invalidated", level: .debug)
+    }
+
+    // MARK: - Tiered Cache Logic
+
+    /// Generic tiered cache fetch:
+    /// 1. L1 hit (non-expired) → return immediately
+    /// 2. L2 hit (non-expired) → promote to L1, return
+    /// 3. Offline: serve stale from L1 or L2; if nothing → PulseError.offlineNoCache
+    /// 4. Online: network fetch → write-through L1+L2; on failure → stale L2 fallback
+    private func fetchWithTieredCache<T>(
+        key: NewsCacheKey,
+        label: String,
+        networkFetch: @escaping () -> AnyPublisher<T, Error>
+    ) -> AnyPublisher<T, Error> {
+        // 1. Check L1 (memory) cache
+        if let cached: CacheEntry<T> = memoryCacheStore.get(for: key),
            !cached.isExpired(ttl: NewsCacheTTL.default)
         {
-            Logger.shared.service("Cache hit for article (id: \(id))", level: .debug)
+            Logger.shared.service("L1 cache hit for \(label)", level: .debug)
             return Just(cached.data)
                 .setFailureType(to: Error.self)
                 .eraseToAnyPublisher()
         }
 
-        // Fetch from network and cache
-        Logger.shared.service("Cache miss for article (id: \(id))", level: .debug)
-        return wrapped.fetchArticle(id: id)
-            .handleEvents(receiveOutput: { [weak self] article in
-                let entry = CacheEntry(data: article, timestamp: Date())
-                self?.cacheStore.set(entry, for: cacheKey)
-            })
-            .eraseToAnyPublisher()
-    }
+        // 2. Check L2 (disk) cache
+        if let diskCached: CacheEntry<T> = diskCacheStore?.get(for: key),
+           !diskCached.isExpired(ttl: DiskNewsCacheStore.diskTTL)
+        {
+            Logger.shared.service("L2 cache hit for \(label)", level: .debug)
+            // Promote to L1
+            memoryCacheStore.set(diskCached, for: key)
 
-    // MARK: - Cache Management
+            // If online, refresh in background but return disk data immediately
+            if networkMonitor?.isConnected != false {
+                return Just(diskCached.data)
+                    .setFailureType(to: Error.self)
+                    .eraseToAnyPublisher()
+            }
 
-    /// Invalidates cached data for the given keys only.
-    ///
-    /// Use this when refreshing specific content (e.g., pull-to-refresh on the home feed)
-    /// to avoid discarding unrelated cached data that may still be valid.
-    func invalidateCache(for keys: [NewsCacheKey]) {
-        for key in keys {
-            cacheStore.remove(for: key)
+            return Just(diskCached.data)
+                .setFailureType(to: Error.self)
+                .eraseToAnyPublisher()
         }
-        Logger.shared.service("News cache invalidated for \(keys.count) key(s)", level: .debug)
-    }
 
-    /// Invalidates all cached data.
-    ///
-    /// Call this method when the user performs a pull-to-refresh action
-    /// to ensure fresh data is fetched from the network.
-    func invalidateCache() {
-        cacheStore.removeAll()
-        Logger.shared.service("News cache invalidated", level: .debug)
+        // 3. If offline: serve stale data or fail
+        if networkMonitor?.isConnected == false {
+            // Try stale L1
+            if let staleL1: CacheEntry<T> = memoryCacheStore.get(for: key) {
+                Logger.shared.service("Offline: serving stale L1 for \(label)", level: .debug)
+                return Just(staleL1.data)
+                    .setFailureType(to: Error.self)
+                    .eraseToAnyPublisher()
+            }
+            // Try stale L2 (expired but better than nothing)
+            if let staleL2: CacheEntry<T> = diskCacheStore?.get(for: key) {
+                Logger.shared.service("Offline: serving stale L2 for \(label)", level: .debug)
+                return Just(staleL2.data)
+                    .setFailureType(to: Error.self)
+                    .eraseToAnyPublisher()
+            }
+            Logger.shared.service("Offline: no cache for \(label)", level: .debug)
+            return Fail(error: PulseError.offlineNoCache)
+                .eraseToAnyPublisher()
+        }
+
+        // 4. Online: fetch from network, write-through to both caches
+        Logger.shared.service("Cache miss for \(label)", level: .debug)
+        return networkFetch()
+            .handleEvents(receiveOutput: { [weak self] data in
+                let entry = CacheEntry(data: data, timestamp: Date())
+                self?.memoryCacheStore.set(entry, for: key)
+                self?.diskCacheStore?.set(entry, for: key)
+            })
+            .catch { [weak self] error -> AnyPublisher<T, Error> in
+                // On network failure, fall back to stale disk cache
+                if let staleL2: CacheEntry<T> = self?.diskCacheStore?.get(for: key) {
+                    Logger.shared.service("Network error: serving stale L2 for \(label)", level: .debug)
+                    return Just(staleL2.data)
+                        .setFailureType(to: Error.self)
+                        .eraseToAnyPublisher()
+                }
+                return Fail(error: error)
+                    .eraseToAnyPublisher()
+            }
+            .eraseToAnyPublisher()
     }
 }

@@ -12,7 +12,7 @@ struct CachingNewsServiceBreakingNewsTests {
     init() {
         mockNewsService = MockNewsService()
         mockCacheStore = MockNewsCacheStore()
-        sut = CachingNewsService(wrapping: mockNewsService, cacheStore: mockCacheStore)
+        sut = CachingNewsService(wrapping: mockNewsService, cacheStore: mockCacheStore, diskCacheStore: nil)
     }
 
     @Test("fetchBreakingNews returns cached data when available")

@@ -84,7 +84,8 @@ final class SearchViewModel: CombineViewModel, ObservableObject {
                     showNoResults: state.hasSearched && !state.isLoading && !state.isSorting && state.results.isEmpty,
                     hasSearched: state.hasSearched,
                     sortOption: state.sortBy,
-                    selectedArticle: state.selectedArticle
+                    selectedArticle: state.selectedArticle,
+                    isOfflineError: state.isOfflineError
                 )
             }
             .removeDuplicates()

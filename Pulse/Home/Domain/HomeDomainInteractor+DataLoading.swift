@@ -30,6 +30,7 @@ extension HomeDomainInteractor {
                         // Filtering happens client-side; backend doesn't know about media exclusion.
                         state.hasMorePages = headlines.count >= 20
                         state.hasLoadedInitialData = true
+                        state.isOfflineError = false
                     }
                 },
                 receiveCompletion: { [weak self] completion in
@@ -38,6 +39,7 @@ extension HomeDomainInteractor {
                             state.isLoading = false
                             state.isRefreshing = false
                             state.error = error.localizedDescription
+                            state.isOfflineError = error.isOfflineError
                         }
                     }
                 }
@@ -73,6 +75,7 @@ extension HomeDomainInteractor {
                     // Filtering happens client-side; backend doesn't know about media exclusion.
                     state.hasMorePages = headlines.count >= 20
                     state.hasLoadedInitialData = true
+                    state.isOfflineError = false
                 }
                 // Update widget with latest headlines (excluding media)
                 let allArticles = filteredBreaking + filteredHeadlines
@@ -84,6 +87,7 @@ extension HomeDomainInteractor {
                         state.isLoading = false
                         state.isRefreshing = false
                         state.error = error.localizedDescription
+                        state.isOfflineError = error.isOfflineError
                     }
                 }
             }
@@ -112,12 +116,11 @@ extension HomeDomainInteractor {
 
         updateState { state in
             state.isRefreshing = true
-            state.breakingNews = []
-            state.headlines = []
+            // Preserve existing content so it remains visible if refresh fails (e.g., offline)
             state.error = nil
+            state.isOfflineError = false
             state.currentPage = 1
             state.hasMorePages = true
-            state.hasLoadedInitialData = false
         }
     }
 

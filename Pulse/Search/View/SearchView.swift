@@ -73,6 +73,9 @@ struct SearchView<R: SearchNavigationRouter>: View {
                     .foregroundStyle(.secondary)
             }
             .frame(maxWidth: .infinity, maxHeight: .infinity)
+        } else if !viewModel.viewState.results.isEmpty {
+            // Show existing results even if a re-search failed (e.g., offline with prior results)
+            resultsList
         } else if let error = viewModel.viewState.errorMessage {
             errorView(error)
         } else if !viewModel.viewState.hasSearched {
@@ -161,31 +164,48 @@ struct SearchView<R: SearchNavigationRouter>: View {
     private func errorView(_ message: String) -> some View {
         GlassCard(style: .thin, shadowStyle: .medium, padding: Spacing.xl) {
             VStack(spacing: Spacing.md) {
-                Image(systemName: "exclamationmark.triangle.fill")
-                    .font(.largeTitle)
-                    .foregroundStyle(Color.Semantic.error)
+                if viewModel.viewState.isOfflineError {
+                    Image(systemName: "wifi.slash")
+                        .font(.largeTitle)
+                        .foregroundStyle(.orange)
 
-                Text(Constants.errorTitle)
-                    .font(Typography.titleMedium)
+                    Text(String(localized: "search.offline.title", defaultValue: "You're Offline"))
+                        .font(Typography.titleMedium)
 
-                Text(message)
+                    Text(String(
+                        localized: "search.offline.message",
+                        defaultValue: "Connect to the internet to search for articles."
+                    ))
                     .font(Typography.bodyMedium)
                     .foregroundStyle(.secondary)
                     .multilineTextAlignment(.center)
+                } else {
+                    Image(systemName: "exclamationmark.triangle.fill")
+                        .font(.largeTitle)
+                        .foregroundStyle(Color.Semantic.error)
 
-                Button {
-                    HapticManager.shared.tap()
-                    viewModel.handle(event: .onSearch)
-                } label: {
-                    Text(Constants.tryAgain)
-                        .font(Typography.labelLarge)
-                        .foregroundStyle(.white)
-                        .padding(.horizontal, Spacing.lg)
-                        .padding(.vertical, Spacing.sm)
-                        .background(Color.Accent.primary)
-                        .clipShape(Capsule())
+                    Text(Constants.errorTitle)
+                        .font(Typography.titleMedium)
+
+                    Text(message)
+                        .font(Typography.bodyMedium)
+                        .foregroundStyle(.secondary)
+                        .multilineTextAlignment(.center)
+
+                    Button {
+                        HapticManager.shared.tap()
+                        viewModel.handle(event: .onSearch)
+                    } label: {
+                        Text(Constants.tryAgain)
+                            .font(Typography.labelLarge)
+                            .foregroundStyle(.white)
+                            .padding(.horizontal, Spacing.lg)
+                            .padding(.vertical, Spacing.sm)
+                            .background(Color.Accent.primary)
+                            .clipShape(Capsule())
+                    }
+                    .pressEffect()
                 }
-                .pressEffect()
             }
         }
         .padding(Spacing.lg)

@@ -379,6 +379,7 @@ final class MockRemoteConfigService: RemoteConfigService {
 extension ServiceLocator {
     static var preview: ServiceLocator {
         let locator = ServiceLocator()
+        locator.register(NetworkMonitorService.self, instance: MockNetworkMonitorService())
         locator.register(NewsService.self, instance: MockNewsService())
         locator.register(SearchService.self, instance: MockSearchService())
         locator.register(BookmarksService.self, instance: MockBookmarksService())
@@ -401,6 +402,7 @@ extension ServiceLocator {
 
     static var previewUnauthenticated: ServiceLocator {
         let locator = ServiceLocator()
+        locator.register(NetworkMonitorService.self, instance: MockNetworkMonitorService())
         locator.register(NewsService.self, instance: MockNewsService())
         locator.register(SearchService.self, instance: MockSearchService())
         locator.register(BookmarksService.self, instance: MockBookmarksService())

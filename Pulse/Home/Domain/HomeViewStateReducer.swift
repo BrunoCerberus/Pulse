@@ -37,7 +37,8 @@ struct HomeViewStateReducer: ViewStateReducing {
             followedTopics: domainState.followedTopics,
             showCategoryTabs: !domainState.followedTopics.isEmpty,
             allTopics: domainState.allTopics,
-            isEditingTopics: domainState.isEditingTopics
+            isEditingTopics: domainState.isEditingTopics,
+            isOfflineError: domainState.isOfflineError
         )
     }
 }

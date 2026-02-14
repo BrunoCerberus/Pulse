@@ -85,9 +85,13 @@ struct MediaView<R: MediaNavigationRouter>: View {
 
     @ViewBuilder
     private var content: some View {
-        let isInitialLoading = viewModel.viewState.isLoading && viewModel.viewState.mediaItems.isEmpty
+        let hasData = !viewModel.viewState.mediaItems.isEmpty || !viewModel.viewState.featuredMedia.isEmpty
+        let isInitialLoading = viewModel.viewState.isLoading && !hasData
         if viewModel.viewState.isRefreshing || isInitialLoading {
             loadingView
+        } else if hasData {
+            // Show existing content even if a refresh failed (e.g., offline with cached data)
+            mediaList
         } else if let error = viewModel.viewState.errorMessage {
             errorView(error)
         } else if viewModel.viewState.showEmptyState {
@@ -114,32 +118,49 @@ struct MediaView<R: MediaNavigationRouter>: View {
     private func errorView(_ message: String) -> some View {
         GlassCard(style: .thin, shadowStyle: .medium, padding: Spacing.xl) {
             VStack(spacing: Spacing.md) {
-                Image(systemName: "exclamationmark.triangle.fill")
-                    .font(.system(size: IconSize.xxl))
-                    .foregroundStyle(Color.Semantic.warning)
+                if viewModel.viewState.isOfflineError {
+                    Image(systemName: "wifi.slash")
+                        .font(.system(size: IconSize.xxl))
+                        .foregroundStyle(.orange)
 
-                Text(Constants.errorTitle)
-                    .font(Typography.titleMedium)
+                    Text(String(localized: "media.offline.title", defaultValue: "You're Offline"))
+                        .font(Typography.titleMedium)
 
-                Text(message)
+                    Text(String(
+                        localized: "media.offline.message",
+                        defaultValue: "Connect to the internet to browse media."
+                    ))
                     .font(Typography.bodyMedium)
                     .foregroundStyle(.secondary)
                     .multilineTextAlignment(.center)
+                } else {
+                    Image(systemName: "exclamationmark.triangle.fill")
+                        .font(.system(size: IconSize.xxl))
+                        .foregroundStyle(Color.Semantic.warning)
 
-                Button {
-                    HapticManager.shared.tap()
-                    viewModel.handle(event: .onRefresh)
-                } label: {
-                    Text(Constants.tryAgain)
-                        .font(Typography.labelLarge)
-                        .foregroundStyle(.white)
-                        .padding(.horizontal, Spacing.lg)
-                        .padding(.vertical, Spacing.sm)
-                        .background(Color.Accent.primary)
-                        .clipShape(Capsule())
+                    Text(Constants.errorTitle)
+                        .font(Typography.titleMedium)
+
+                    Text(message)
+                        .font(Typography.bodyMedium)
+                        .foregroundStyle(.secondary)
+                        .multilineTextAlignment(.center)
+
+                    Button {
+                        HapticManager.shared.tap()
+                        viewModel.handle(event: .onRefresh)
+                    } label: {
+                        Text(Constants.tryAgain)
+                            .font(Typography.labelLarge)
+                            .foregroundStyle(.white)
+                            .padding(.horizontal, Spacing.lg)
+                            .padding(.vertical, Spacing.sm)
+                            .background(Color.Accent.primary)
+                            .clipShape(Capsule())
+                    }
+                    .buttonStyle(.plain)
+                    .pressEffect()
                 }
-                .buttonStyle(.plain)
-                .pressEffect()
             }
         }
         .padding(Spacing.lg)

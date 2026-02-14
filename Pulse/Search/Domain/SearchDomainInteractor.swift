@@ -143,6 +143,7 @@ final class SearchDomainInteractor: CombineInteractor {
                 self?.updateState { state in
                     state.isLoading = false
                     state.error = error.localizedDescription
+                    state.isOfflineError = error.isOfflineError
                 }
             }
         } receiveValue: { [weak self] articles in
@@ -150,6 +151,7 @@ final class SearchDomainInteractor: CombineInteractor {
                 state.results = articles
                 state.isLoading = false
                 state.hasMorePages = articles.count >= 20
+                state.isOfflineError = false
             }
         }
     }
@@ -228,6 +230,7 @@ final class SearchDomainInteractor: CombineInteractor {
                 self?.updateState { state in
                     state.isSorting = false
                     state.error = error.localizedDescription
+                    state.isOfflineError = error.isOfflineError
                 }
             }
         } receiveValue: { [weak self] articles in
@@ -235,6 +238,7 @@ final class SearchDomainInteractor: CombineInteractor {
                 state.results = articles
                 state.isSorting = false
                 state.hasMorePages = articles.count >= 20
+                state.isOfflineError = false
             }
         }
     }
