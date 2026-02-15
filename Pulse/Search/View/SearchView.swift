@@ -290,8 +290,12 @@ struct SearchView<R: SearchNavigationRouter>: View {
             .padding(.top, Spacing.sm)
         }
     }
+}
 
-    private var sortPicker: some View {
+// MARK: - Sort Picker
+
+private extension SearchView {
+    var sortPicker: some View {
         Picker("Sort by", selection: Binding(
             get: { viewModel.viewState.sortOption },
             set: {

@@ -227,7 +227,8 @@ struct CachingMediaServiceTests {
         // Store expired data in L1
         let cachedArticles = MockMediaService.sampleMedia
         let cacheKey = NewsCacheKey.media(type: nil, page: 1)
-        let expiredEntry = CacheEntry(data: cachedArticles, timestamp: Date().addingTimeInterval(-NewsCacheTTL.default - 1))
+        let expiredTimestamp = Date().addingTimeInterval(-NewsCacheTTL.default - 1)
+        let expiredEntry = CacheEntry(data: cachedArticles, timestamp: expiredTimestamp)
         mockCacheStore.set(expiredEntry, for: cacheKey)
         mockCacheStore.getCallCount = 0
 
