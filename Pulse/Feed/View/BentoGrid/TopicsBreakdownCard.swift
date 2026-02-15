@@ -60,6 +60,7 @@ struct TopicsBreakdownCard: View {
             Image(systemName: "tag.fill")
                 .font(.system(size: IconSize.sm))
                 .foregroundStyle(Color.Accent.gradient)
+                .accessibilityHidden(true)
 
             Text("Topics")
                 .font(Typography.labelMedium)

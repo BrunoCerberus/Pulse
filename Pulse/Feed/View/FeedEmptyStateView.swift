@@ -43,6 +43,7 @@ struct FeedEmptyStateView: View {
                 .font(.system(size: IconSize.xxl))
                 .foregroundStyle(Color.Accent.primary.opacity(0.6))
         }
+        .accessibilityHidden(true)
     }
 }
 

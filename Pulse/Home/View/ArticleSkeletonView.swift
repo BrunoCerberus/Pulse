@@ -41,6 +41,7 @@ struct ArticleSkeletonView: View {
                 }
             }
         }
+        .accessibilityHidden(true)
     }
 }
 

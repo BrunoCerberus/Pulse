@@ -135,6 +135,7 @@ struct AudioPlayerView: View {
                 .font(.system(size: headphonesIconSize))
                 .foregroundStyle(.white.opacity(0.8))
         }
+        .accessibilityHidden(true)
     }
 
     // MARK: - Metadata
@@ -195,6 +196,22 @@ struct AudioPlayerView: View {
                 )
             }
             .frame(height: 20)
+            .accessibilityElement()
+            .accessibilityLabel("Playback progress")
+            .accessibilityValue({
+                let current = formatTime(isDragging ? playerManager.duration * dragProgress : playerManager.currentTime)
+                return "\(current) of \(formatTime(playerManager.duration))"
+            }())
+            .accessibilityAdjustableAction { direction in
+                switch direction {
+                case .increment:
+                    playerManager.skipForward(seconds: 30)
+                case .decrement:
+                    playerManager.skipBackward(seconds: 15)
+                @unknown default:
+                    break
+                }
+            }
 
             // Time labels
             HStack {

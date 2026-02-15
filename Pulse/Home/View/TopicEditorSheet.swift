@@ -40,10 +40,13 @@ struct TopicEditorSheet: View {
                                     Image(systemName: "checkmark")
                                         .foregroundStyle(.blue)
                                         .fontWeight(.semibold)
+                                        .accessibilityHidden(true)
                                 }
                             }
                         }
                         .buttonStyle(.plain)
+                        .accessibilityAddTraits(followedTopics.contains(topic) ? .isSelected : [])
+                        .accessibilityHint("Double tap to \(followedTopics.contains(topic) ? "unfollow" : "follow")")
                     }
                 } footer: {
                     Text(Constants.description)

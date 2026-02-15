@@ -59,6 +59,7 @@ struct DigestCard: View {
             Image(systemName: "sparkles")
                 .foregroundStyle(Color.Accent.primary)
                 .symbolEffect(.pulse.byLayer, options: reduceMotion ? .repeat(1) : .repeat(.periodic(delay: 2.0)))
+                .accessibilityHidden(true)
 
             Text(Constants.aiSummary)
                 .font(Typography.labelMedium)

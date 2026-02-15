@@ -36,6 +36,7 @@ struct InlineSourceChip: View {
                         Text("•")
                             .font(Typography.captionSmall)
                             .foregroundStyle(.secondary.opacity(0.5))
+                            .accessibilityHidden(true)
 
                         Text(article.formattedDate)
                             .font(Typography.captionSmall)
@@ -51,6 +52,9 @@ struct InlineSourceChip: View {
         }
         .buttonStyle(.plain)
         .pressEffect(scale: 0.95)
+        .accessibilityElement(children: .combine)
+        .accessibilityLabel("\(article.title). From \(article.source). \(article.formattedDate)")
+        .accessibilityHint("Double tap to read article")
     }
 
     // MARK: - Thumbnail

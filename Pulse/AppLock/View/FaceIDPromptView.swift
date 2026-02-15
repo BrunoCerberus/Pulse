@@ -23,6 +23,7 @@ struct FaceIDPromptView: View {
             Image(systemName: "faceid")
                 .font(.system(size: 64))
                 .foregroundStyle(.tint)
+                .accessibilityHidden(true)
 
             Text(Constants.title)
                 .font(Typography.headlineLarge)

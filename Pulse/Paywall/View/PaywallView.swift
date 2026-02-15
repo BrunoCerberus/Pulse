@@ -39,6 +39,7 @@ struct PaywallView: View {
                                 .font(.system(size: IconSize.lg))
                                 .foregroundStyle(.secondary)
                         }
+                        .accessibilityLabel("Close")
                     }
                 }
         }
@@ -86,6 +87,7 @@ struct PaywallView: View {
                 Image(systemName: "exclamationmark.triangle.fill")
                     .font(.system(size: IconSize.xxl))
                     .foregroundStyle(Color.Semantic.warning)
+                    .accessibilityHidden(true)
 
                 Text(Localizable.paywall.errorTitle)
                     .font(Typography.titleMedium)
@@ -159,6 +161,7 @@ struct PaywallView: View {
             }
             .glowEffect(color: .orange, radius: 16)
             .padding(.top, Spacing.lg)
+            .accessibilityHidden(true)
 
             // Title
             Text(Localizable.paywall.title)
@@ -276,6 +279,7 @@ private struct FeatureRow: View {
                     .font(.system(size: IconSize.md))
                     .foregroundStyle(iconColor)
             }
+            .accessibilityHidden(true)
 
             VStack(alignment: .leading, spacing: Spacing.xxs) {
                 Text(title)
@@ -287,6 +291,7 @@ private struct FeatureRow: View {
                     .foregroundStyle(.secondary)
             }
         }
+        .accessibilityElement(children: .combine)
     }
 }
 

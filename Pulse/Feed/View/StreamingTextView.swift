@@ -51,6 +51,7 @@ struct StreamingTextView: View {
                     .foregroundStyle(Color.Accent.primary)
                     .frame(width: dropCapWidth, alignment: .leading)
                     .padding(.trailing, Spacing.xs)
+                    .accessibilityHidden(true)
 
                 // Remaining text
                 Text(remainingText)
@@ -59,6 +60,8 @@ struct StreamingTextView: View {
                     .lineSpacing(6)
                     .frame(maxWidth: .infinity, alignment: .leading)
             }
+            .accessibilityElement(children: .combine)
+            .accessibilityLabel(trimmedText)
         }
     }
 }
@@ -74,6 +77,7 @@ private struct BlinkingCursor: View {
             .fill(Color.Accent.primary)
             .frame(width: 2, height: cursorHeight)
             .opacity(isVisible ? 1 : 0)
+            .accessibilityHidden(true)
             .onAppear {
                 withAnimation(.easeInOut(duration: 0.5).repeatForever(autoreverses: true)) {
                     isVisible = false

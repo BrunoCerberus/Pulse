@@ -33,6 +33,7 @@ struct GlassArticleSkeleton: View {
         .onAppear {
             isAnimating = true
         }
+        .accessibilityHidden(true)
     }
 }
 
@@ -72,6 +73,7 @@ struct GlassHeroSkeleton: View {
         .onAppear {
             isAnimating = true
         }
+        .accessibilityHidden(true)
     }
 }
 
@@ -92,6 +94,7 @@ struct GlassCategorySkeleton: View {
         .onAppear {
             isAnimating = true
         }
+        .accessibilityHidden(true)
     }
 }
 

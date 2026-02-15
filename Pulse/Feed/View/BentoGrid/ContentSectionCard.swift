@@ -84,10 +84,12 @@ struct ContentSectionCard: View {
                 Image(systemName: category.icon)
                     .font(.system(size: IconSize.sm))
                     .foregroundStyle(category.color.gradient)
+                    .accessibilityHidden(true)
             } else {
                 Image(systemName: "doc.text")
                     .font(.system(size: IconSize.sm))
                     .foregroundStyle(Color.Accent.gradient)
+                    .accessibilityHidden(true)
             }
 
             Text(section.title)
@@ -162,6 +164,7 @@ struct ContentSectionCard: View {
                         Text("•")
                             .font(Typography.captionLarge)
                             .foregroundStyle(.secondary.opacity(0.5))
+                            .accessibilityHidden(true)
 
                         Text(article.formattedDate)
                             .font(Typography.captionLarge)
@@ -175,6 +178,9 @@ struct ContentSectionCard: View {
         }
         .buttonStyle(.plain)
         .pressEffect(scale: 0.98)
+        .accessibilityElement(children: .combine)
+        .accessibilityLabel("\(article.title). From \(article.source). \(article.formattedDate)")
+        .accessibilityHint("Double tap to read article")
     }
 
     @ViewBuilder
