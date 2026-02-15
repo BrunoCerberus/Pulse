@@ -90,6 +90,7 @@ struct SummarizationSheet: View {
                     .foregroundStyle(Color.Accent.gradient)
                     .symbolEffect(.bounce, options: reduceMotion ? .repeat(1) : .repeat(2))
             }
+            .accessibilityHidden(true)
 
             Text(Constants.subtitle)
                 .font(Typography.bodyMedium)
@@ -253,6 +254,7 @@ struct SummarizationSheet: View {
                 Image(systemName: "sparkles")
                     .foregroundStyle(Color.Accent.primary)
                     .symbolEffect(.pulse.byLayer, options: .repeat(.periodic(delay: 2.0)))
+                    .accessibilityHidden(true)
 
                 Text(Constants.aiSummary)
                     .font(Typography.labelMedium)
@@ -263,6 +265,7 @@ struct SummarizationSheet: View {
                 Image(systemName: "checkmark.circle.fill")
                     .foregroundStyle(.green)
                     .font(.system(size: IconSize.sm))
+                    .accessibilityHidden(true)
             }
 
             Divider()
@@ -293,6 +296,7 @@ struct SummarizationSheet: View {
                     .foregroundStyle(.orange)
                     .symbolEffect(.bounce, options: .repeat(1))
             }
+            .accessibilityHidden(true)
 
             Text(message)
                 .font(Typography.bodySmall)
@@ -404,6 +408,7 @@ private struct TypingIndicator: View {
                     .opacity(animatingDot == index ? 1 : 0.5)
             }
         }
+        .accessibilityHidden(true)
         .task {
             while !Task.isCancelled {
                 do {
@@ -481,6 +486,7 @@ private struct BlinkingCursor: View {
             .fill(Color.Accent.primary)
             .frame(width: 2, height: 16)
             .opacity(isVisible ? 1 : 0)
+            .accessibilityHidden(true)
             .onAppear {
                 withAnimation(.easeInOut(duration: 0.5).repeatForever(autoreverses: true)) {
                     isVisible = false

@@ -43,6 +43,7 @@ struct StatsCard: View {
                     Image(systemName: "clock")
                         .font(.system(size: IconSize.xs))
                         .foregroundStyle(.secondary)
+                        .accessibilityHidden(true)
 
                     Text(Constants.timeSpanLabel)
                         .font(Typography.captionMedium)
@@ -58,6 +59,8 @@ struct StatsCard: View {
         .frame(maxWidth: .infinity, minHeight: minHeight, alignment: .topLeading)
         .glassBackground(style: .thin, cornerRadius: CornerRadius.lg)
         .depthShadow(.medium)
+        .accessibilityElement(children: .combine)
+        .accessibilityLabel("Stats: \(articleCount) articles, \(topicsCount) topics, 48 hour span")
         .onAppear {
             animationTask?.cancel()
             animationTask = Task {
@@ -77,6 +80,7 @@ struct StatsCard: View {
             Image(systemName: "chart.bar.fill")
                 .font(.system(size: IconSize.sm))
                 .foregroundStyle(Color.Accent.gradient)
+                .accessibilityHidden(true)
 
             Text("Stats")
                 .font(Typography.labelMedium)
@@ -91,6 +95,7 @@ struct StatsCard: View {
             Image(systemName: icon)
                 .font(.system(size: IconSize.xs))
                 .foregroundStyle(Color.Accent.primary)
+                .accessibilityHidden(true)
 
             Text("\(value)")
                 .font(Typography.titleSmall)

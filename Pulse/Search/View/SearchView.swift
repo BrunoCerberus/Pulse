@@ -96,6 +96,7 @@ struct SearchView<R: SearchNavigationRouter>: View {
                     Image(systemName: "magnifyingglass")
                         .font(.largeTitle)
                         .foregroundStyle(Color.Accent.primary)
+                        .accessibilityHidden(true)
 
                     Text(Constants.placeholderTitle)
                         .font(Typography.titleMedium)
@@ -136,6 +137,8 @@ struct SearchView<R: SearchNavigationRouter>: View {
                                         .glassBackground(style: .thin, cornerRadius: CornerRadius.pill)
                                     }
                                     .pressEffect()
+                                    .accessibilityLabel("Recent search: \(suggestion)")
+                                    .accessibilityHint("Double tap to search")
                                 }
                             }
                             .padding(.horizontal, Spacing.md)
@@ -168,6 +171,7 @@ struct SearchView<R: SearchNavigationRouter>: View {
                     Image(systemName: "wifi.slash")
                         .font(.largeTitle)
                         .foregroundStyle(.orange)
+                        .accessibilityHidden(true)
 
                     Text(String(localized: "search.offline.title", defaultValue: "You're Offline"))
                         .font(Typography.titleMedium)
@@ -183,6 +187,7 @@ struct SearchView<R: SearchNavigationRouter>: View {
                     Image(systemName: "exclamationmark.triangle.fill")
                         .font(.largeTitle)
                         .foregroundStyle(Color.Semantic.error)
+                        .accessibilityHidden(true)
 
                     Text(Constants.errorTitle)
                         .font(Typography.titleMedium)
@@ -217,6 +222,7 @@ struct SearchView<R: SearchNavigationRouter>: View {
                 Image(systemName: "doc.text.magnifyingglass")
                     .font(.largeTitle)
                     .foregroundStyle(.secondary)
+                    .accessibilityHidden(true)
 
                 Text(Constants.emptyTitle)
                     .font(Typography.titleMedium)

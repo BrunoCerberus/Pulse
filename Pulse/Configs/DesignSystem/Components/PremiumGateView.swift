@@ -94,6 +94,7 @@ struct PremiumGateView: View {
                     .foregroundStyle(.white)
             }
             .glowEffect(color: feature.iconColor, radius: 20)
+            .accessibilityHidden(true)
 
             // Content
             VStack(spacing: Spacing.md) {
@@ -109,6 +110,7 @@ struct PremiumGateView: View {
                 .padding(.vertical, Spacing.xs)
                 .background(Color.orange.opacity(0.15))
                 .clipShape(Capsule())
+                .accessibilityHidden(true)
 
                 Text(feature.title)
                     .font(Typography.displaySmall)
@@ -141,6 +143,8 @@ struct PremiumGateView: View {
             }
             .pressEffect()
             .padding(.horizontal, Spacing.xl)
+            .accessibilityLabel("Unlock \(feature.title)")
+            .accessibilityHint("Double tap to view subscription options")
             .accessibilityIdentifier("unlockPremiumButton")
 
             Spacer()

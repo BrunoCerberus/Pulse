@@ -113,6 +113,7 @@ struct MediaView<R: MediaNavigationRouter>: View {
                 MediaListSkeleton(count: 5)
             }
         }
+        .accessibilityHidden(true)
     }
 
     private func errorView(_ message: String) -> some View {
@@ -122,6 +123,7 @@ struct MediaView<R: MediaNavigationRouter>: View {
                     Image(systemName: "wifi.slash")
                         .font(.system(size: IconSize.xxl))
                         .foregroundStyle(.orange)
+                        .accessibilityHidden(true)
 
                     Text(String(localized: "media.offline.title", defaultValue: "You're Offline"))
                         .font(Typography.titleMedium)
@@ -137,6 +139,7 @@ struct MediaView<R: MediaNavigationRouter>: View {
                     Image(systemName: "exclamationmark.triangle.fill")
                         .font(.system(size: IconSize.xxl))
                         .foregroundStyle(Color.Semantic.warning)
+                        .accessibilityHidden(true)
 
                     Text(Constants.errorTitle)
                         .font(Typography.titleMedium)
@@ -172,6 +175,7 @@ struct MediaView<R: MediaNavigationRouter>: View {
                 Image(systemName: "play.rectangle.on.rectangle")
                     .font(.system(size: IconSize.xxl))
                     .foregroundStyle(.secondary)
+                    .accessibilityHidden(true)
 
                 Text(Constants.emptyTitle)
                     .font(Typography.titleMedium)

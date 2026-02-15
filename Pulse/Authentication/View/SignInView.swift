@@ -88,6 +88,7 @@ struct SignInView: View {
                     .foregroundStyle(.white)
             }
             .glowEffect(color: Color.Accent.primary, radius: 20)
+            .accessibilityHidden(true)
 
             VStack(spacing: Spacing.xs) {
                 Text(Constants.appName)
@@ -122,6 +123,8 @@ struct SignInView: View {
                 .clipShape(RoundedRectangle(cornerRadius: CornerRadius.md))
             }
             .buttonStyle(.plain)
+            .accessibilityLabel(Constants.signInApple)
+            .accessibilityHint("Double tap to sign in with your Apple ID")
 
             // Sign in with Google
             Button {
@@ -146,6 +149,8 @@ struct SignInView: View {
                 .clipShape(RoundedRectangle(cornerRadius: CornerRadius.md))
             }
             .buttonStyle(.plain)
+            .accessibilityLabel(Constants.signInGoogle)
+            .accessibilityHint("Double tap to sign in with your Google account")
         }
     }
 
@@ -187,6 +192,8 @@ struct SignInView: View {
             .padding(Spacing.xl)
             .background(.ultraThinMaterial)
             .clipShape(RoundedRectangle(cornerRadius: CornerRadius.lg))
+            .accessibilityElement(children: .combine)
+            .accessibilityLabel(Constants.signingIn)
         }
     }
 }

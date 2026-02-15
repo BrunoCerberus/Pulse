@@ -142,6 +142,8 @@ struct GlassCategoryButton: View {
             )
         }
         .pressEffect(scale: 0.95)
+        .accessibilityLabel("\(category.displayName) category")
+        .accessibilityAddTraits(isSelected ? .isSelected : [])
     }
 }
 
@@ -191,6 +193,8 @@ struct GlassTopicChip: View {
                 .glowEffect(color: isSelected ? color : .clear, radius: 6)
         }
         .pressEffect(scale: 0.95)
+        .accessibilityLabel(topic)
+        .accessibilityAddTraits(isSelected ? .isSelected : [])
     }
 }
 

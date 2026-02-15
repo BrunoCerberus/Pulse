@@ -20,6 +20,9 @@ struct OfflineBannerView: View {
         .padding(.vertical, Spacing.xs)
         .background(Color.orange)
         .transition(.move(edge: .top).combined(with: .opacity))
+        .accessibilityElement(children: .combine)
+        .accessibilityLabel("You're offline")
+        .accessibilityAddTraits(.isStaticText)
     }
 }
 

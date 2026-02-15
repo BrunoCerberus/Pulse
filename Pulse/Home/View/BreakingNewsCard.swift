@@ -93,6 +93,9 @@ struct BreakingNewsCard: View {
             .shadow(radius: 4)
         }
         .buttonStyle(.plain)
+        .accessibilityElement(children: .combine)
+        .accessibilityLabel("Breaking news: \(item.title). From \(item.sourceName). \(item.formattedDate)")
+        .accessibilityHint("Double tap to read article")
     }
 }
 

@@ -18,7 +18,7 @@ final class PremiumGatingNonPremiumUITests: BaseUITestCase {
         // Non-premium users should see the premium gate
         let premiumBadge = app.staticTexts["Premium Feature"]
         let premiumTitle = app.staticTexts["AI Daily Digest"]
-        let unlockButton = app.buttons["Unlock Premium"]
+        let unlockButton = app.buttons["unlockPremiumButton"]
 
         let hasPremiumGate = waitForAny([premiumBadge, premiumTitle, unlockButton], timeout: 10)
         XCTAssertTrue(hasPremiumGate, "Non-premium user should see premium gate on Feed tab")
@@ -39,9 +39,9 @@ final class PremiumGatingNonPremiumUITests: BaseUITestCase {
         // Wait for content to load after navigation
         wait(for: 1.0)
 
-        let unlockButton = app.buttons["Unlock Premium"]
+        let unlockButton = app.buttons["unlockPremiumButton"]
         guard unlockButton.waitForExistence(timeout: 10) else {
-            XCTFail("Unlock Premium button should exist for non-premium user")
+            XCTFail("unlockPremiumButton should exist for non-premium user")
             return
         }
 
@@ -201,7 +201,7 @@ final class PremiumGatingPremiumUITests: XCTestCase {
         navigateToFeedTab()
 
         // Premium users should see actual content, not the gate
-        let unlockButton = app.buttons["Unlock Premium"]
+        let unlockButton = app.buttons["unlockPremiumButton"]
 
         // Wait for content to load
         wait(for: 2.0)

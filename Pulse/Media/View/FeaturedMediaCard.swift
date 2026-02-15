@@ -18,6 +18,19 @@ struct FeaturedMediaCard: View {
     private let cardWidth: CGFloat = 280
     private let cardHeight: CGFloat = 180
 
+    private var mediaAccessibilityLabel: String {
+        var parts = [String]()
+        if let mediaType = item.mediaType {
+            parts.append(mediaType.displayName)
+        }
+        parts.append(item.title)
+        parts.append("From \(item.sourceName)")
+        if let duration = item.formattedDuration {
+            parts.append(duration)
+        }
+        return parts.joined(separator: ". ")
+    }
+
     var body: some View {
         Button {
             HapticManager.shared.tap()
@@ -41,6 +54,9 @@ struct FeaturedMediaCard: View {
             .depthShadow(.elevated)
         }
         .pressEffect()
+        .accessibilityElement(children: .combine)
+        .accessibilityLabel(mediaAccessibilityLabel)
+        .accessibilityHint("Double tap to play")
     }
 
     // MARK: - Image Background
@@ -95,6 +111,7 @@ struct FeaturedMediaCard: View {
                     .offset(x: 2) // Optical centering for play icon
             }
             .depthShadow(.elevated)
+            .accessibilityHidden(true)
     }
 
     // MARK: - Content Overlay
@@ -151,6 +168,7 @@ struct FeaturedMediaCard: View {
                 Circle()
                     .fill(.white.opacity(0.6))
                     .frame(width: 3, height: 3)
+                    .accessibilityHidden(true)
 
                 Text(duration)
                     .font(Typography.captionMedium)

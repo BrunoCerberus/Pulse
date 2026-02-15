@@ -82,6 +82,9 @@ struct ArticleRowView: View {
             .padding()
         }
         .buttonStyle(.plain)
+        .accessibilityElement(children: .combine)
+        .accessibilityLabel("\(item.title). From \(item.sourceName). \(item.formattedDate)")
+        .accessibilityHint("Double tap to read article")
         .contextMenu {
             Button {
                 onBookmark()

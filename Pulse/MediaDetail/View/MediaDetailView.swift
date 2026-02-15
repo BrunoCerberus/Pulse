@@ -173,6 +173,7 @@ struct MediaDetailView: View {
             Image(systemName: "exclamationmark.triangle")
                 .font(.system(size: 48))
                 .foregroundStyle(.secondary)
+                .accessibilityHidden(true)
 
             Text("Unsupported media type")
                 .font(Typography.bodyLarge)
@@ -196,6 +197,7 @@ struct MediaDetailView: View {
                 if let mediaType = viewModel.viewState.article.mediaType {
                     Image(systemName: mediaType.icon)
                         .foregroundStyle(mediaType.color)
+                        .accessibilityHidden(true)
                 }
 
                 Text(viewModel.viewState.article.source.name)
@@ -204,6 +206,7 @@ struct MediaDetailView: View {
                 Circle()
                     .fill(.secondary)
                     .frame(width: 3, height: 3)
+                    .accessibilityHidden(true)
 
                 Text(viewModel.viewState.article.formattedDate)
             }
@@ -254,6 +257,7 @@ struct MediaDetailView: View {
             Image(systemName: "exclamationmark.triangle")
                 .font(.system(size: 48))
                 .foregroundStyle(.red.opacity(0.8))
+                .accessibilityHidden(true)
 
             Text(Constants.errorTitle)
                 .font(Typography.titleSmall)
@@ -273,6 +277,7 @@ struct MediaDetailView: View {
         HStack(spacing: Spacing.sm) {
             Image(systemName: "exclamationmark.triangle.fill")
                 .foregroundStyle(.orange)
+                .accessibilityHidden(true)
 
             Text(message)
                 .font(Typography.captionLarge)
@@ -301,6 +306,7 @@ struct MediaDetailView: View {
             .clipShape(RoundedRectangle(cornerRadius: CornerRadius.md, style: .continuous))
         }
         .pressEffect()
+        .accessibilityHint("Opens in Safari")
     }
 }
 

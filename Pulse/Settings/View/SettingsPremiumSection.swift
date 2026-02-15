@@ -34,6 +34,8 @@ struct SettingsPremiumSection: View {
             }
             .buttonStyle(.plain)
             .disabled(isPremium)
+            .accessibilityLabel(isPremium ? Localizable.paywall.premiumActive : Localizable.paywall.goPremium)
+            .accessibilityHint(isPremium ? "" : "Double tap to view subscription options")
         } header: {
             Text(String(localized: "settings.subscription"))
                 .font(Typography.captionLarge)
@@ -51,6 +53,7 @@ struct SettingsPremiumSection: View {
                 .foregroundStyle(isPremium ? .yellow : .orange)
         }
         .glowEffect(color: isPremium ? .yellow : .clear, radius: 8)
+        .accessibilityHidden(true)
     }
 
     @ViewBuilder
@@ -59,10 +62,12 @@ struct SettingsPremiumSection: View {
             Image(systemName: "checkmark.circle.fill")
                 .font(.system(size: IconSize.lg))
                 .foregroundStyle(Color.Semantic.success)
+                .accessibilityHidden(true)
         } else {
             Image(systemName: "chevron.right")
                 .font(Typography.captionLarge)
                 .foregroundStyle(.secondary)
+                .accessibilityHidden(true)
         }
     }
 }

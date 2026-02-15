@@ -226,6 +226,7 @@ struct ArticleDetailView: View {
                 Circle()
                     .fill(.secondary)
                     .frame(width: 3, height: 3)
+                    .accessibilityHidden(true)
             }
 
             Text(viewModel.viewState.article.source.name)
@@ -234,6 +235,7 @@ struct ArticleDetailView: View {
             Circle()
                 .fill(.secondary)
                 .frame(width: 3, height: 3)
+                .accessibilityHidden(true)
 
             Text(viewModel.viewState.article.formattedDate)
                 .lineLimit(1)
@@ -260,6 +262,7 @@ struct ArticleDetailView: View {
             .clipShape(RoundedRectangle(cornerRadius: CornerRadius.md, style: .continuous))
         }
         .pressEffect()
+        .accessibilityHint("Opens in Safari")
     }
 }
 

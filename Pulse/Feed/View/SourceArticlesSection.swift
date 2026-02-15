@@ -51,12 +51,16 @@ struct SourceArticlesSection: View {
                 Image(systemName: isExpanded ? "chevron.up" : "chevron.down")
                     .font(.system(size: IconSize.sm))
                     .foregroundStyle(.secondary)
+                    .accessibilityHidden(true)
             }
             .padding(Spacing.md)
             .glassBackground(style: .ultraThin, cornerRadius: CornerRadius.md)
         }
         .buttonStyle(.plain)
         .pressEffect()
+        .accessibilityLabel("\(Constants.sectionTitle), \(articles.count) articles")
+        .accessibilityValue(isExpanded ? "Expanded" : "Collapsed")
+        .accessibilityHint("Double tap to \(isExpanded ? "collapse" : "expand")")
     }
 
     // MARK: - Articles List
@@ -99,6 +103,7 @@ private struct SourceArticleRow: View {
                             Circle()
                                 .fill(.secondary)
                                 .frame(width: 3, height: 3)
+                                .accessibilityHidden(true)
 
                             Text(category)
                                 .font(Typography.captionLarge)
@@ -112,12 +117,16 @@ private struct SourceArticleRow: View {
                 Image(systemName: "chevron.right")
                     .font(.system(size: IconSize.xs))
                     .foregroundStyle(.tertiary)
+                    .accessibilityHidden(true)
             }
             .padding(Spacing.md)
             .glassBackground(style: .ultraThin, cornerRadius: CornerRadius.md)
         }
         .buttonStyle(.plain)
         .pressEffect()
+        .accessibilityElement(children: .combine)
+        .accessibilityLabel("\(article.title). From \(article.source)")
+        .accessibilityHint("Double tap to read article")
     }
 
     // MARK: - Thumbnail View

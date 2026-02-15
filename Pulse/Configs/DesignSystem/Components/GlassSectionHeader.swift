@@ -64,6 +64,7 @@ struct GlassSectionHeader: View {
                 .foregroundColor(Color.Border.adaptive(for: colorScheme)),
             alignment: .bottom
         )
+        .accessibilityAddTraits(.isHeader)
     }
 }
 
@@ -88,6 +89,7 @@ struct StickySectionHeader: View {
             .padding(.vertical, Spacing.sm)
             .frame(maxWidth: .infinity, alignment: .leading)
             .background(showBackground ? AnyShapeStyle(GlassStyle.ultraThin.material) : AnyShapeStyle(.clear))
+            .accessibilityAddTraits(.isHeader)
     }
 }
 

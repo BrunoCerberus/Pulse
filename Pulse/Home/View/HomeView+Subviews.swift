@@ -26,6 +26,7 @@ extension HomeView {
                 ArticleListSkeleton(count: 5)
             }
         }
+        .accessibilityHidden(true)
     }
 
     // MARK: - Error View
@@ -37,6 +38,7 @@ extension HomeView {
                     Image(systemName: "wifi.slash")
                         .font(.system(size: IconSize.xxl))
                         .foregroundStyle(.orange)
+                        .accessibilityHidden(true)
 
                     Text(String(localized: "home.offline.title", defaultValue: "You're Offline"))
                         .font(Typography.titleMedium)
@@ -52,6 +54,7 @@ extension HomeView {
                     Image(systemName: "exclamationmark.triangle.fill")
                         .font(.system(size: IconSize.xxl))
                         .foregroundStyle(Color.Semantic.warning)
+                        .accessibilityHidden(true)
 
                     Text(HomeViewConstants.errorTitle)
                         .font(Typography.titleMedium)
@@ -89,6 +92,7 @@ extension HomeView {
                 Image(systemName: "newspaper")
                     .font(.system(size: IconSize.xxl))
                     .foregroundStyle(.secondary)
+                    .accessibilityHidden(true)
 
                 Text(HomeViewConstants.emptyTitle)
                     .font(Typography.titleMedium)
