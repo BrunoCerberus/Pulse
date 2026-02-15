@@ -24,6 +24,7 @@ struct AppLockOverlayView: View {
                 Image(systemName: "lock.fill")
                     .font(.system(size: 48))
                     .foregroundStyle(.secondary)
+                    .accessibilityHidden(true)
 
                 Text(Constants.title)
                     .font(Typography.headlineLarge)
@@ -39,6 +40,8 @@ struct AppLockOverlayView: View {
                         .background(.tint, in: RoundedRectangle(cornerRadius: CornerRadius.md))
                         .foregroundStyle(.white)
                 }
+                .accessibilityLabel(Constants.unlock)
+                .accessibilityHint("Double tap to authenticate with Face ID")
             }
         }
     }

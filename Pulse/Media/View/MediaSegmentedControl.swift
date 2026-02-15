@@ -88,6 +88,9 @@ private struct MediaTypeChip: View {
         }
         .buttonStyle(.plain)
         .pressEffect(scale: 0.95)
+        .accessibilityLabel(label)
+        .accessibilityAddTraits(isSelected ? .isSelected : [])
+        .accessibilityHint("Filter by \(label)")
     }
 }
 

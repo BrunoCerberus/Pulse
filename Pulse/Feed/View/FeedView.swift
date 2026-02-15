@@ -219,6 +219,7 @@ struct FeedView<R: FeedNavigationRouter>: View {
                 Image(systemName: "wifi.slash")
                     .font(.system(size: IconSize.xxl))
                     .foregroundStyle(.orange)
+                    .accessibilityHidden(true)
 
                 Text(Constants.offlineTitle)
                     .font(Typography.titleMedium)
@@ -238,6 +239,7 @@ struct FeedView<R: FeedNavigationRouter>: View {
                 Image(systemName: "exclamationmark.triangle.fill")
                     .font(.system(size: IconSize.xxl))
                     .foregroundStyle(Color.Semantic.warning)
+                    .accessibilityHidden(true)
 
                 Text(Constants.errorTitle)
                     .font(Typography.titleMedium)
@@ -266,6 +268,7 @@ struct FeedView<R: FeedNavigationRouter>: View {
                 }
                 .buttonStyle(.plain)
                 .pressEffect()
+                .accessibilityHint("Double tap to retry generating the digest")
             }
         }
         .padding(.horizontal, Spacing.md)

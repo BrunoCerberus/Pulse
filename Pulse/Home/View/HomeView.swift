@@ -199,6 +199,9 @@ struct HomeView<R: HomeNavigationRouter>: View {
         }
         .buttonStyle(.plain)
         .pressEffect(scale: 0.95)
+        .accessibilityLabel(title)
+        .accessibilityAddTraits(isSelected ? .isSelected : [])
+        .accessibilityHint("Filter articles by \(title)")
     }
 
     // MARK: - Content Views

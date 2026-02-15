@@ -38,6 +38,9 @@ struct HeroNewsCard: View {
             .depthShadow(.elevated)
         }
         .pressEffect()
+        .accessibilityElement(children: .combine)
+        .accessibilityLabel("Breaking news: \(item.title). From \(item.sourceName). \(item.formattedDate)")
+        .accessibilityHint("Double tap to read article")
         .onAppear {
             startPulseAnimation()
         }
@@ -200,6 +203,9 @@ struct FeaturedArticleCard: View {
             .depthShadow(.medium)
         }
         .pressEffect()
+        .accessibilityElement(children: .combine)
+        .accessibilityLabel("\(item.title). From \(item.sourceName). \(item.formattedDate)")
+        .accessibilityHint("Double tap to read article")
     }
 
     @ViewBuilder

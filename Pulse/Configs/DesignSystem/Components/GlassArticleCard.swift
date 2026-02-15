@@ -91,6 +91,9 @@ struct GlassArticleCard: View {
             .depthShadow(.subtle)
         }
         .pressEffect()
+        .accessibilityElement(children: .combine)
+        .accessibilityLabel("\(title). From \(sourceName). \(formattedDate)")
+        .accessibilityHint("Double tap to read article")
         .accessibilityIdentifier("articleCard")
         .contextMenu {
             Button {
@@ -214,6 +217,9 @@ struct GlassArticleCardCompact: View {
             .glassBackground(style: .solid, cornerRadius: CornerRadius.md)
         }
         .pressEffect()
+        .accessibilityElement(children: .combine)
+        .accessibilityLabel("\(title). From \(sourceName)")
+        .accessibilityHint("Double tap to read article")
         .accessibilityIdentifier("articleCard")
     }
 }

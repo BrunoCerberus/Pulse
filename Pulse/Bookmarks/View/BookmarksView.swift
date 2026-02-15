@@ -81,6 +81,7 @@ struct BookmarksView<R: BookmarksNavigationRouter>: View {
                 Image(systemName: "exclamationmark.triangle.fill")
                     .font(.largeTitle)
                     .foregroundStyle(Color.Semantic.warning)
+                    .accessibilityHidden(true)
 
                 Text(Constants.errorTitle)
                     .font(Typography.titleMedium)
@@ -115,6 +116,7 @@ struct BookmarksView<R: BookmarksNavigationRouter>: View {
                 Image(systemName: "bookmark")
                     .font(.largeTitle)
                     .foregroundStyle(Color.Accent.primary)
+                    .accessibilityHidden(true)
 
                 Text(Constants.emptyTitle)
                     .font(Typography.titleMedium)
@@ -167,6 +169,7 @@ struct BookmarksView<R: BookmarksNavigationRouter>: View {
         }
         .padding(.horizontal, Spacing.xs)
         .padding(.bottom, Spacing.xs)
+        .accessibilityElement(children: .combine)
     }
 }
 

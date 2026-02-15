@@ -82,6 +82,9 @@ struct GlassTabBar: View {
             .padding(.vertical, Spacing.xs)
         }
         .buttonStyle(.plain)
+        .accessibilityLabel(item.title)
+        .accessibilityHint("Switch to \(item.title) tab")
+        .accessibilityAddTraits(isSelected ? .isSelected : [])
     }
 }
 

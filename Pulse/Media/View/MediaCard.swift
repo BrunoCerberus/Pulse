@@ -17,6 +17,20 @@ struct MediaCard: View {
 
     @Environment(\.colorScheme) private var colorScheme
 
+    private var mediaAccessibilityLabel: String {
+        var parts = [String]()
+        if let mediaType = item.mediaType {
+            parts.append(mediaType.displayName)
+        }
+        parts.append(item.title)
+        parts.append("From \(item.sourceName)")
+        parts.append(item.formattedDate)
+        if let duration = item.formattedDuration {
+            parts.append(duration)
+        }
+        return parts.joined(separator: ". ")
+    }
+
     var body: some View {
         Button {
             HapticManager.shared.tap()
@@ -59,6 +73,9 @@ struct MediaCard: View {
             .depthShadow(.subtle)
         }
         .pressEffect()
+        .accessibilityElement(children: .combine)
+        .accessibilityLabel(mediaAccessibilityLabel)
+        .accessibilityHint("Double tap to view details")
         .accessibilityIdentifier("mediaCard")
         .contextMenu {
             Button {
