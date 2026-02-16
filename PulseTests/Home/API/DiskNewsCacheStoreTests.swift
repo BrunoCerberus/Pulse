@@ -138,7 +138,7 @@ struct DiskNewsCacheStoreTests {
         let fileURL = testDirectory.appendingPathComponent(sanitized + ".json")
 
         try? FileManager.default.createDirectory(at: testDirectory, withIntermediateDirectories: true)
-        try? "not valid json".data(using: .utf8)?.write(to: fileURL)
+        try? Data("not valid json".utf8).write(to: fileURL)
 
         let result: CacheEntry<[Article]>? = sut.get(for: key)
 

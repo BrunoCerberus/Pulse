@@ -85,9 +85,7 @@ final class CachingMediaService: MediaService {
            !cached.isExpired(ttl: NewsCacheTTL.default)
         {
             Logger.shared.service("L1 cache hit for \(label)", level: .debug)
-            return Just(cached.data)
-                .setFailureType(to: Error.self)
-                .eraseToAnyPublisher()
+            return Just(cached.data).setFailureType(to: Error.self).eraseToAnyPublisher()
         }
 
         // 2. Check L2 (disk) cache
@@ -95,12 +93,8 @@ final class CachingMediaService: MediaService {
            !diskCached.isExpired(ttl: DiskNewsCacheStore.diskTTL)
         {
             Logger.shared.service("L2 cache hit for \(label)", level: .debug)
-            // Promote to L1
             memoryCacheStore.set(diskCached, for: key)
-
-            return Just(diskCached.data)
-                .setFailureType(to: Error.self)
-                .eraseToAnyPublisher()
+            return Just(diskCached.data).setFailureType(to: Error.self).eraseToAnyPublisher()
         }
 
         // 3. If offline: serve stale data or fail
