@@ -29,6 +29,7 @@ final class PaywallDomainInteractor: CombineInteractor {
 
     private let currentStateSubject: CurrentValueSubject<PaywallDomainState, Never>
     private let storeKitService: StoreKitService
+    private let analyticsService: AnalyticsService?
     private var cancellables: Set<AnyCancellable> = []
 
     var currentState: PaywallDomainState {
@@ -49,6 +50,8 @@ final class PaywallDomainInteractor: CombineInteractor {
             Logger.shared.service("Failed to retrieve StoreKitService: \(error)", level: .warning)
             storeKitService = LiveStoreKitService()
         }
+
+        analyticsService = try? serviceLocator.retrieve(AnalyticsService.self)
 
         observeSubscriptionStatus()
     }
@@ -80,6 +83,7 @@ final class PaywallDomainInteractor: CombineInteractor {
     // MARK: - Private Action Handlers
 
     private func handleLoadProducts() {
+        analyticsService?.logEvent(.paywallShown(feature: "subscription"))
         updateState(currentState.copy(isLoadingProducts: true, error: nil))
 
         storeKitService.fetchProducts()
@@ -109,6 +113,7 @@ final class PaywallDomainInteractor: CombineInteractor {
     }
 
     private func handlePurchase(_ product: Product) {
+        analyticsService?.logEvent(.purchaseStarted(productId: product.id))
         updateState(currentState.copy(isPurchasing: true, error: nil))
 
         storeKitService.purchase(product)
@@ -116,6 +121,9 @@ final class PaywallDomainInteractor: CombineInteractor {
                 receiveCompletion: { [weak self] completion in
                     guard let self else { return }
                     if case let .failure(error) = completion {
+                        analyticsService?.logEvent(
+                            .purchaseFailed(productId: product.id, error: error.localizedDescription)
+                        )
                         updateState(currentState.copy(
                             isPurchasing: false,
                             error: error.localizedDescription
@@ -124,6 +132,9 @@ final class PaywallDomainInteractor: CombineInteractor {
                 },
                 receiveValue: { [weak self] success in
                     guard let self else { return }
+                    if success {
+                        analyticsService?.logEvent(.purchaseCompleted(productId: product.id))
+                    }
                     updateState(currentState.copy(
                         isPremium: success,
                         isPurchasing: false,

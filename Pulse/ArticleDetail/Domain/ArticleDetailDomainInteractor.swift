@@ -24,6 +24,7 @@ final class ArticleDetailDomainInteractor: CombineInteractor {
     typealias DomainAction = ArticleDetailDomainAction
 
     private let storageService: StorageService
+    private let analyticsService: AnalyticsService?
     private let stateSubject: CurrentValueSubject<ArticleDetailDomainState, Never>
     private var cancellables = Set<AnyCancellable>()
     private var backgroundTasks = Set<Task<Void, Never>>()
@@ -46,6 +47,8 @@ final class ArticleDetailDomainInteractor: CombineInteractor {
             storageService = LiveStorageService()
         }
 
+        analyticsService = try? serviceLocator.retrieve(AnalyticsService.self)
+
         // Start content processing immediately on init
         startContentProcessing()
     }
@@ -59,6 +62,7 @@ final class ArticleDetailDomainInteractor: CombineInteractor {
         case let .bookmarkStatusLoaded(isBookmarked):
             updateState { $0.isBookmarked = isBookmarked }
         case .showShareSheet:
+            analyticsService?.logEvent(.articleShared)
             updateState { $0.showShareSheet = true }
         case .dismissShareSheet:
             updateState { $0.showShareSheet = false }
@@ -80,6 +84,7 @@ final class ArticleDetailDomainInteractor: CombineInteractor {
     // MARK: - Lifecycle
 
     private func onAppear() {
+        analyticsService?.logEvent(.screenView(screen: .articleDetail))
         checkBookmarkStatus()
     }
 
@@ -91,6 +96,7 @@ final class ArticleDetailDomainInteractor: CombineInteractor {
 
         // Optimistic update
         updateState { $0.isBookmarked = !wasBookmarked }
+        analyticsService?.logEvent(wasBookmarked ? .articleUnbookmarked : .articleBookmarked)
 
         let task = Task { [weak self] in
             guard let self else { return }

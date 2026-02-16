@@ -1,5 +1,6 @@
 import EntropyCore
 import FirebaseCore
+import FirebaseCrashlytics
 import GoogleSignIn
 import UIKit
 import UserNotifications
@@ -38,6 +39,11 @@ final class PulseAppDelegate: UIResponder, UIApplicationDelegate {
         let isUITesting = ProcessInfo.processInfo.environment["UI_TESTING"] == "1"
         if !isUITesting {
             FirebaseApp.configure()
+
+            // Disable Crashlytics collection in DEBUG builds to avoid polluting dashboard
+            #if DEBUG
+                Crashlytics.crashlytics().setCrashlyticsCollectionEnabled(false)
+            #endif
         }
 
         configureNotifications(application)

@@ -26,6 +26,7 @@ final class HomeDomainInteractor: CombineInteractor {
     let newsService: NewsService
     private let storageService: StorageService
     private let settingsService: SettingsService
+    private let analyticsService: AnalyticsService?
     let stateSubject = CurrentValueSubject<HomeDomainState, Never>(.initial)
     var cancellables = Set<AnyCancellable>()
     private var backgroundTasks = Set<Task<Void, Never>>()
@@ -60,6 +61,8 @@ final class HomeDomainInteractor: CombineInteractor {
             Logger.shared.service("Failed to retrieve SettingsService: \(error)", level: .warning)
             settingsService = LiveSettingsService(storageService: storageService)
         }
+
+        analyticsService = try? serviceLocator.retrieve(AnalyticsService.self)
 
         // Observe preference changes to update followed topics when returning from Settings
         NotificationCenter.default.publisher(for: .userPreferencesDidChange)
@@ -153,6 +156,8 @@ private extension HomeDomainInteractor {
         loadFollowedTopics()
         guard !currentState.isLoading, !currentState.hasLoadedInitialData else { return }
 
+        analyticsService?.logEvent(.screenView(screen: .home))
+
         updateState { state in
             state.isLoading = true
             state.error = nil
@@ -231,6 +236,9 @@ private extension HomeDomainInteractor {
 
     func handleSelectCategory(_ category: NewsCategory?) {
         guard category != currentState.selectedCategory else { return }
+        if let category {
+            analyticsService?.logEvent(.categorySelected(category: category.rawValue))
+        }
         resetStateForCategoryChange(to: category)
         fetchHeadlinesForCurrentCategory(page: 1)
     }
@@ -240,6 +248,7 @@ private extension HomeDomainInteractor {
 
 private extension HomeDomainInteractor {
     func selectArticle(_ article: Article) {
+        analyticsService?.logEvent(.articleOpened(source: .home))
         updateState { state in
             state.selectedArticle = article
         }
@@ -252,6 +261,7 @@ private extension HomeDomainInteractor {
     }
 
     func shareArticle(_ article: Article) {
+        analyticsService?.logEvent(.articleShared)
         updateState { state in
             state.articleToShare = article
         }
@@ -269,8 +279,10 @@ private extension HomeDomainInteractor {
             let isBookmarked = await storageService.isBookmarked(article.id)
             if isBookmarked {
                 try? await storageService.deleteArticle(article)
+                await MainActor.run { self.analyticsService?.logEvent(.articleUnbookmarked) }
             } else {
                 try? await storageService.saveArticle(article)
+                await MainActor.run { self.analyticsService?.logEvent(.articleBookmarked) }
             }
         }
     }

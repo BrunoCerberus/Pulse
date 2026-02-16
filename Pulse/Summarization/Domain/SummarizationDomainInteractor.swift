@@ -24,6 +24,7 @@ final class SummarizationDomainInteractor: CombineInteractor {
     typealias DomainAction = SummarizationDomainAction
 
     private let summarizationService: SummarizationService
+    private let analyticsService: AnalyticsService?
     private let stateSubject: CurrentValueSubject<SummarizationDomainState, Never>
     private var cancellables = Set<AnyCancellable>()
     private var summarizationTask: Task<Void, Never>?
@@ -45,6 +46,8 @@ final class SummarizationDomainInteractor: CombineInteractor {
             Logger.shared.service("Failed to retrieve SummarizationService: \(error)", level: .warning)
             summarizationService = LiveSummarizationService()
         }
+
+        analyticsService = try? serviceLocator.retrieve(AnalyticsService.self)
 
         setupBindings()
     }
@@ -117,14 +120,18 @@ final class SummarizationDomainInteractor: CombineInteractor {
 
                 let finalSummary = cleanLLMOutput(fullText)
                 await MainActor.run { [weak self] in
+                    let success = !finalSummary.isEmpty
+                    self?.analyticsService?.logEvent(.articleSummarized(success: success))
                     self?.updateState { state in
                         state.generatedSummary = finalSummary
-                        state.summarizationState = finalSummary.isEmpty ? .error("No summary generated") : .completed
+                        state.summarizationState = success ? .completed : .error("No summary generated")
                     }
                 }
             } catch {
                 guard !Task.isCancelled else { return }
                 await MainActor.run { [weak self] in
+                    self?.analyticsService?.logEvent(.articleSummarized(success: false))
+                    self?.analyticsService?.recordError(error)
                     self?.dispatch(action: .summarizationStateChanged(.error(error.localizedDescription)))
                 }
             }

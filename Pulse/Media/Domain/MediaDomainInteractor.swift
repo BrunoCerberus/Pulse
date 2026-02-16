@@ -24,6 +24,7 @@ final class MediaDomainInteractor: CombineInteractor {
     typealias DomainAction = MediaDomainAction
 
     private let mediaService: MediaService
+    private let analyticsService: AnalyticsService?
     private let stateSubject = CurrentValueSubject<MediaDomainState, Never>(.initial)
     private var cancellables = Set<AnyCancellable>()
 
@@ -42,6 +43,8 @@ final class MediaDomainInteractor: CombineInteractor {
             Logger.shared.service("Failed to retrieve MediaService: \(error)", level: .warning)
             mediaService = LiveMediaService()
         }
+
+        analyticsService = try? serviceLocator.retrieve(AnalyticsService.self)
     }
 
     func dispatch(action: MediaDomainAction) {
@@ -76,6 +79,8 @@ final class MediaDomainInteractor: CombineInteractor {
 
     private func loadInitialData() {
         guard !currentState.isLoading, !currentState.hasLoadedInitialData else { return }
+
+        analyticsService?.logEvent(.screenView(screen: .media))
 
         updateState { state in
             state.isLoading = true
