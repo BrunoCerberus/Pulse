@@ -1,3 +1,4 @@
+// swiftlint:disable file_length
 import Combine
 import EntropyCore
 import Foundation
@@ -9,16 +10,19 @@ import Testing
 struct SearchDomainInteractorTests {
     let mockSearchService: MockSearchService
     let mockStorageService: MockStorageService
+    let mockAnalyticsService: MockAnalyticsService
     let serviceLocator: ServiceLocator
     let sut: SearchDomainInteractor
 
     init() {
         mockSearchService = MockSearchService()
         mockStorageService = MockStorageService()
+        mockAnalyticsService = MockAnalyticsService()
         serviceLocator = ServiceLocator()
 
         serviceLocator.register(SearchService.self, instance: mockSearchService)
         serviceLocator.register(StorageService.self, instance: mockStorageService)
+        serviceLocator.register(AnalyticsService.self, instance: mockAnalyticsService)
 
         sut = SearchDomainInteractor(serviceLocator: serviceLocator)
     }
@@ -351,5 +355,51 @@ struct SearchDomainInteractorTests {
         #expect(state.hasSearched)
         #expect(!state.hasMorePages)
         #expect(state.error == nil)
+    }
+}
+
+// MARK: - Analytics Tests
+
+extension SearchDomainInteractorTests {
+    @Test("Logs search_performed on successful search")
+    func logsSearchPerformedOnSuccess() async throws {
+        let articles = Article.mockArticles
+        mockSearchService.searchResult = .success(articles)
+
+        sut.dispatch(action: .updateQuery("swift"))
+        sut.dispatch(action: .search)
+        try await Task.sleep(nanoseconds: 500_000_000)
+
+        let searchEvents = mockAnalyticsService.loggedEvents.filter { $0.name == "search_performed" }
+        #expect(searchEvents.count == 1)
+        #expect(searchEvents.first?.parameters?["query_length"] as? Int == 5)
+        #expect(searchEvents.first?.parameters?["result_count"] as? Int == articles.count)
+    }
+
+    @Test("Records error on search failure")
+    func recordsErrorOnSearchFailure() async throws {
+        mockSearchService.searchResult = .failure(NSError(domain: "test", code: 1))
+
+        sut.dispatch(action: .updateQuery("test"))
+        sut.dispatch(action: .search)
+        try await Task.sleep(nanoseconds: 500_000_000)
+
+        #expect(mockAnalyticsService.recordedErrors.count == 1)
+    }
+
+    @Test("Logs article_opened with search source")
+    func logsArticleOpenedFromSearch() async throws {
+        let articles = Article.mockArticles
+        mockSearchService.searchResult = .success(articles)
+
+        sut.dispatch(action: .updateQuery("test"))
+        sut.dispatch(action: .search)
+        try await Task.sleep(nanoseconds: 500_000_000)
+
+        sut.dispatch(action: .selectArticle(articleId: articles[0].id))
+
+        let openedEvents = mockAnalyticsService.loggedEvents.filter { $0.name == "article_opened" }
+        #expect(openedEvents.count == 1)
+        #expect(openedEvents.first?.parameters?["source"] as? String == "search")
     }
 }

@@ -9,17 +9,20 @@ import Testing
 struct HomeDomainInteractorTests {
     let mockNewsService: MockNewsService
     let mockStorageService: MockStorageService
+    let mockAnalyticsService: MockAnalyticsService
     let serviceLocator: ServiceLocator
     let sut: HomeDomainInteractor
 
     init() {
         mockNewsService = MockNewsService()
         mockStorageService = MockStorageService()
+        mockAnalyticsService = MockAnalyticsService()
         serviceLocator = ServiceLocator()
 
         serviceLocator.register(NewsService.self, instance: mockNewsService)
         serviceLocator.register(StorageService.self, instance: mockStorageService)
         serviceLocator.register(SettingsService.self, instance: MockSettingsService())
+        serviceLocator.register(AnalyticsService.self, instance: mockAnalyticsService)
 
         sut = HomeDomainInteractor(serviceLocator: serviceLocator)
     }
@@ -286,5 +289,78 @@ extension HomeDomainInteractorTests {
         sut.dispatch(action: .setEditingTopics(false))
 
         #expect(!sut.currentState.isEditingTopics)
+    }
+}
+
+// MARK: - Analytics Tests
+
+extension HomeDomainInteractorTests {
+    @Test("Logs screen_view on loadInitialData")
+    func logsScreenViewOnLoad() async throws {
+        mockNewsService.topHeadlinesResult = .success(Article.mockArticles)
+        mockNewsService.breakingNewsResult = .success([])
+
+        sut.dispatch(action: .loadInitialData)
+        try await Task.sleep(nanoseconds: 500_000_000)
+
+        let screenEvents = mockAnalyticsService.loggedEvents.filter { $0.name == "screen_view" }
+        #expect(screenEvents.count == 1)
+        #expect(screenEvents.first?.parameters?["screen_name"] as? String == "home")
+    }
+
+    @Test("Logs article_opened on selectArticle")
+    func logsArticleOpenedOnSelect() async throws {
+        let article = Article.mockArticles[0]
+        mockNewsService.topHeadlinesResult = .success([article])
+        mockNewsService.breakingNewsResult = .success([])
+        sut.dispatch(action: .loadInitialData)
+        try await Task.sleep(nanoseconds: 500_000_000)
+
+        sut.dispatch(action: .selectArticle(articleId: article.id))
+
+        let openedEvents = mockAnalyticsService.loggedEvents.filter { $0.name == "article_opened" }
+        #expect(openedEvents.count == 1)
+        #expect(openedEvents.first?.parameters?["source"] as? String == "home")
+    }
+
+    @Test("Logs article_shared on shareArticle")
+    func logsArticleSharedOnShare() async throws {
+        let article = Article.mockArticles[0]
+        mockNewsService.topHeadlinesResult = .success([article])
+        mockNewsService.breakingNewsResult = .success([])
+        sut.dispatch(action: .loadInitialData)
+        try await Task.sleep(nanoseconds: 500_000_000)
+
+        sut.dispatch(action: .shareArticle(articleId: article.id))
+
+        let sharedEvents = mockAnalyticsService.loggedEvents.filter { $0.name == "article_shared" }
+        #expect(sharedEvents.count == 1)
+    }
+
+    @Test("Logs category_selected on selectCategory")
+    func logsCategorySelectedOnSelect() async throws {
+        sut.dispatch(action: .selectCategory(.technology))
+        try await Task.sleep(nanoseconds: 500_000_000)
+
+        let categoryEvents = mockAnalyticsService.loggedEvents.filter { $0.name == "category_selected" }
+        #expect(categoryEvents.count == 1)
+        #expect(categoryEvents.first?.parameters?["category"] as? String == "technology")
+    }
+
+    @Test("Logs bookmark events on toggleBookmark")
+    func logsBookmarkEventsOnToggle() async throws {
+        let article = Article.mockArticles[0]
+        mockNewsService.topHeadlinesResult = .success([article])
+        mockNewsService.breakingNewsResult = .success([])
+        sut.dispatch(action: .loadInitialData)
+        try await Task.sleep(nanoseconds: 500_000_000)
+
+        sut.dispatch(action: .bookmarkArticle(articleId: article.id))
+        try await Task.sleep(nanoseconds: 500_000_000)
+
+        let bookmarkEvents = mockAnalyticsService.loggedEvents.filter {
+            $0.name == "article_bookmarked" || $0.name == "article_unbookmarked"
+        }
+        #expect(bookmarkEvents.count == 1)
     }
 }

@@ -8,14 +8,17 @@ import Testing
 @MainActor
 struct PaywallDomainInteractorTests {
     let mockStoreKitService: MockStoreKitService
+    let mockAnalyticsService: MockAnalyticsService
     let serviceLocator: ServiceLocator
     let sut: PaywallDomainInteractor
 
     init() {
         mockStoreKitService = MockStoreKitService()
+        mockAnalyticsService = MockAnalyticsService()
         serviceLocator = ServiceLocator()
 
         serviceLocator.register(StoreKitService.self, instance: mockStoreKitService)
+        serviceLocator.register(AnalyticsService.self, instance: mockAnalyticsService)
 
         sut = PaywallDomainInteractor(serviceLocator: serviceLocator)
     }
@@ -218,5 +221,19 @@ struct PaywallDomainInteractorTests {
         let modified = state.copy(isRestoring: true)
 
         #expect(modified.isRestoring)
+    }
+}
+
+// MARK: - Analytics Tests
+
+extension PaywallDomainInteractorTests {
+    @Test("Logs paywall_shown on loadProducts")
+    func logsPaywallShownOnLoad() async throws {
+        sut.dispatch(action: .loadProducts)
+        try await Task.sleep(nanoseconds: 300_000_000)
+
+        let paywallEvents = mockAnalyticsService.loggedEvents.filter { $0.name == "paywall_shown" }
+        #expect(paywallEvents.count == 1)
+        #expect(paywallEvents.first?.parameters?["feature"] as? String == "subscription")
     }
 }

@@ -8,15 +8,18 @@ import Testing
 @MainActor
 struct MediaDetailDomainInteractorTests {
     let mockStorageService: MockStorageService
+    let mockAnalyticsService: MockAnalyticsService
     let serviceLocator: ServiceLocator
     let testArticle: Article
     let sut: MediaDetailDomainInteractor
 
     init() {
         mockStorageService = MockStorageService()
+        mockAnalyticsService = MockAnalyticsService()
         serviceLocator = ServiceLocator()
 
         serviceLocator.register(StorageService.self, instance: mockStorageService)
+        serviceLocator.register(AnalyticsService.self, instance: mockAnalyticsService)
 
         testArticle = Article(
             id: "test-video-1",
@@ -260,5 +263,28 @@ struct MediaDetailDomainInteractorTests {
 
         sut.dispatch(action: .bookmarkStatusLoaded(false))
         #expect(!sut.currentState.isBookmarked)
+    }
+}
+
+// MARK: - Analytics Tests
+
+extension MediaDetailDomainInteractorTests {
+    @Test("Logs screen_view on onAppear")
+    func logsScreenViewOnAppear() async throws {
+        sut.dispatch(action: .onAppear)
+        try await Task.sleep(nanoseconds: 300_000_000)
+
+        let screenEvents = mockAnalyticsService.loggedEvents.filter { $0.name == "screen_view" }
+        #expect(screenEvents.count == 1)
+        #expect(screenEvents.first?.parameters?["screen_name"] as? String == "media_detail")
+    }
+
+    @Test("Logs media_played on play action")
+    func logsMediaPlayedOnPlay() {
+        sut.dispatch(action: .play)
+
+        let playEvents = mockAnalyticsService.loggedEvents.filter { $0.name == "media_played" }
+        #expect(playEvents.count == 1)
+        #expect(playEvents.first?.parameters?["media_type"] as? String == "video")
     }
 }
