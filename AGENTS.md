@@ -54,6 +54,7 @@ Pulse/
 │       ├── Models/             # Article, NewsCategory, UserPreferences
 │       ├── Networking/         # API keys, base URLs, SupabaseConfig, RemoteConfig, NetworkMonitorService
 │       ├── Storage/            # StorageService (SwiftData)
+│       ├── Analytics/          # AnalyticsService protocol + Live implementation
 │       ├── Mocks/              # Mock services for testing
 │       └── Widget/             # WidgetDataManager + shared widget models
 ├── PulseWidgetExtension/       # WidgetKit extension
@@ -218,6 +219,7 @@ struct HomeDomainInteractorTests {
 10. **Service decorators for cross-cutting concerns** - Use Decorator Pattern for caching, logging (e.g., `CachingNewsService` wraps `LiveNewsService`)
 11. **Graceful fallback for data sources** - Live services (NewsService, SearchService) use Supabase as primary and fall back to Guardian API when not configured or on error
 12. **Offline resilience** - Tiered cache (L1 memory + L2 disk) preserves content when offline; `NetworkMonitorService` tracks connectivity; failed refreshes keep existing data visible
+13. **Analytics is optional** - `try? serviceLocator.retrieve(AnalyticsService.self)` ensures missing analytics never crashes the app; every analytics event doubles as a Crashlytics breadcrumb
 
 ## Data Source Architecture
 
@@ -247,6 +249,11 @@ The app uses a tiered cache with offline resilience:
 | `NetworkMonitorService` | Protocol + Live (`NWPathMonitor`) + Mock for connectivity tracking |
 | `PulseError` | Typed error enum with `.offlineNoCache` case |
 | `OfflineBannerView` | Animated banner in `CoordinatorView` shown when offline |
+| **Analytics & Crashlytics** | |
+| `AnalyticsService` | Protocol with `logEvent`, `setUserID`, `recordError`, `log` |
+| `AnalyticsEvent` | Type-safe enum with 16 events (screen views, article actions, purchases, auth, etc.) |
+| `LiveAnalyticsService` | Firebase Analytics + Crashlytics (events + breadcrumbs, disabled in DEBUG) |
+| `MockAnalyticsService` | Records all events/errors in arrays for test assertions |
 
 ### Offline Behavior
 - **Stale data served when offline**: L1 or L2 cache returned even if expired

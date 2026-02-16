@@ -186,6 +186,7 @@ Pulse/
 │       ├── Models/             # Article, NewsCategory, UserPreferences
 │       ├── Networking/         # API keys, base URLs, SupabaseConfig, RemoteConfig, NetworkMonitorService
 │       ├── Storage/            # StorageService (SwiftData)
+│       ├── Analytics/          # AnalyticsService protocol + Live implementation
 │       ├── Mocks/              # Mock services for testing
 │       └── Widget/             # WidgetDataManager + shared widget models
 ├── PulseWidgetExtension/       # WidgetKit extension
@@ -208,6 +209,7 @@ Pulse/
 | **Offline Experience** | Tiered cache (L1 memory + L2 disk), NWPathMonitor network monitoring, offline banner, graceful degradation |
 | **Bookmarks** | Save articles for offline reading (SwiftData) |
 | **Settings** | Topics, notifications, theme, muted content, account/logout (accessed from Home navigation bar) |
+| **Analytics & Crashlytics** | Firebase Analytics (16 type-safe events) and Crashlytics for crash/non-fatal error tracking at DomainInteractor level |
 | **Widget** | Home screen widget showing recent headlines (WidgetKit extension) |
 
 ## Premium Features
@@ -498,6 +500,10 @@ if let cachingService = newsService as? CachingNewsService {
 | `PremiumGateView.swift` | Reusable premium upsell component |
 | `PremiumFeature.swift` | Enum defining gated features |
 | `PaywallView.swift` | Native StoreKit subscription UI |
+| **Analytics & Crashlytics** | |
+| `AnalyticsService.swift` | Protocol + `AnalyticsEvent` enum (16 events) + `AnalyticsScreen`/`AnalyticsSource` enums |
+| `LiveAnalyticsService.swift` | Firebase Analytics + Crashlytics implementation (events + breadcrumbs) |
+| `MockAnalyticsService.swift` | Test implementation recording all events/errors for assertions |
 
 ## Troubleshooting
 

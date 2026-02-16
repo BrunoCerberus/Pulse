@@ -13,6 +13,7 @@ A modern iOS news aggregation app built with Clean Architecture, SwiftUI, and Co
 - **Bookmarks**: Save articles for offline reading with SwiftData persistence
 - **Search**: Full-text search with 300ms debounce, suggestions, recent searches, and sort options
 - **Settings**: Customize topics, notifications, theme, content filters, and account/logout (accessed from Home navigation bar)
+- **Analytics & Crash Reporting**: Firebase Analytics (16 type-safe events) and Crashlytics for crash/non-fatal error tracking
 - **Widget**: Home screen widget showing recent headlines (WidgetKit extension)
 
 The app uses iOS 26's liquid glass TabView style with tabs: Home, Media, Feed, Bookmarks, and Search. Users must sign in with Google or Apple before accessing the main app.
@@ -389,6 +390,7 @@ Pulse/
 │       ├── Models/         # Article, NewsCategory, UserPreferences
 │       ├── Networking/     # APIKeysProvider, BaseURLs, SupabaseConfig, RemoteConfig, NetworkMonitorService
 │       ├── Storage/        # StorageService (SwiftData)
+│       ├── Analytics/      # AnalyticsService protocol + LiveAnalyticsService
 │       ├── Mocks/          # Mock services for testing
 │       └── Widget/         # WidgetDataManager
 ├── PulseWidgetExtension/   # WidgetKit extension
@@ -404,7 +406,7 @@ Pulse/
 | Package | Purpose |
 |---------|---------|
 | [EntropyCore](https://github.com/BrunoCerberus/EntropyCore) | UDF architecture protocols, networking, DI container |
-| [Firebase](https://github.com/firebase/firebase-ios-sdk) | Authentication (Google + Apple Sign-In) |
+| [Firebase](https://github.com/firebase/firebase-ios-sdk) | Authentication, Analytics, Crashlytics |
 | [GoogleSignIn](https://github.com/google/GoogleSignIn-iOS) | Google Sign-In SDK |
 | [SnapshotTesting](https://github.com/pointfreeco/swift-snapshot-testing) | Snapshot testing |
 | [Lottie](https://github.com/airbnb/lottie-ios) | Animations |
