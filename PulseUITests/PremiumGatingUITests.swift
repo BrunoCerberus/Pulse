@@ -152,6 +152,9 @@ final class PremiumGatingPremiumUITests: XCTestCase {
         app.launchArguments += ["-UIViewAnimationDuration", "0.01"]
         app.launchArguments += ["-CATransactionAnimationDuration", "0.01"]
 
+        // Skip onboarding flow in UI tests (sets UserDefaults via argument domain)
+        app.launchArguments += ["-pulse.hasCompletedOnboarding", "YES"]
+
         app.launch()
 
         _ = app.wait(for: .runningForeground, timeout: Self.launchTimeout)
