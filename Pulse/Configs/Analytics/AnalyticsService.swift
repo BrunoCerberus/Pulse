@@ -11,6 +11,7 @@ enum AnalyticsScreen: String {
     case settings
     case articleDetail = "article_detail"
     case mediaDetail = "media_detail"
+    case onboarding
 }
 
 // MARK: - Analytics Source
@@ -41,6 +42,8 @@ enum AnalyticsEvent {
     case purchaseFailed(productId: String, error: String)
     case signIn(provider: String, success: Bool)
     case signOut
+    case onboardingCompleted(page: Int)
+    case onboardingSkipped(page: Int)
 
     var name: String {
         switch self {
@@ -60,6 +63,8 @@ enum AnalyticsEvent {
         case .purchaseFailed: "purchase_failed"
         case .signIn: "sign_in"
         case .signOut: "sign_out"
+        case .onboardingCompleted: "onboarding_completed"
+        case .onboardingSkipped: "onboarding_skipped"
         }
     }
 
@@ -91,6 +96,10 @@ enum AnalyticsEvent {
             ["product_id": productId, "error": error]
         case let .signIn(provider, success):
             ["provider": provider, "success": success]
+        case let .onboardingCompleted(page):
+            ["page": page]
+        case let .onboardingSkipped(page):
+            ["page": page]
         }
     }
 }

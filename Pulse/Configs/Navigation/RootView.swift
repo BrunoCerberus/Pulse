@@ -11,6 +11,7 @@ struct RootView: View {
     @StateObject private var authManager = AuthenticationManager.shared
     @StateObject private var themeManager = ThemeManager.shared
     @StateObject private var lockManager = AppLockManager.shared
+    @AppStorage("pulse.hasCompletedOnboarding") private var hasCompletedOnboarding = false
 
     let serviceLocator: ServiceLocator
 
@@ -25,11 +26,15 @@ struct RootView: View {
                 case .unauthenticated:
                     SignInView(serviceLocator: serviceLocator)
                 case .authenticated:
-                    CoordinatorView(serviceLocator: serviceLocator)
-                        .onAppear { lockManager.checkPostSignupPrompt() }
-                        .sheet(isPresented: $lockManager.showFaceIDPrompt) {
-                            FaceIDPromptView()
-                        }
+                    if hasCompletedOnboarding {
+                        CoordinatorView(serviceLocator: serviceLocator)
+                            .onAppear { lockManager.checkPostSignupPrompt() }
+                            .sheet(isPresented: $lockManager.showFaceIDPrompt) {
+                                FaceIDPromptView()
+                            }
+                    } else {
+                        OnboardingView(viewModel: OnboardingViewModel(serviceLocator: serviceLocator))
+                    }
                 }
             }
 
