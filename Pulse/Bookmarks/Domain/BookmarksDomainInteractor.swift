@@ -23,6 +23,7 @@ final class BookmarksDomainInteractor: CombineInteractor {
     typealias DomainAction = BookmarksDomainAction
 
     private let bookmarksService: BookmarksService
+    private let analyticsService: AnalyticsService?
     private let stateSubject = CurrentValueSubject<BookmarksDomainState, Never>(.initial)
     private var cancellables = Set<AnyCancellable>()
 
@@ -41,6 +42,8 @@ final class BookmarksDomainInteractor: CombineInteractor {
             Logger.shared.service("Failed to retrieve BookmarksService: \(error)", level: .warning)
             bookmarksService = LiveBookmarksService(storageService: LiveStorageService())
         }
+
+        analyticsService = try? serviceLocator.retrieve(AnalyticsService.self)
     }
 
     func dispatch(action: BookmarksDomainAction) {
@@ -67,6 +70,8 @@ final class BookmarksDomainInteractor: CombineInteractor {
     }
 
     private func loadBookmarks() {
+        analyticsService?.logEvent(.screenView(screen: .bookmarks))
+
         updateState { state in
             state.isLoading = true
             state.error = nil
@@ -124,6 +129,7 @@ final class BookmarksDomainInteractor: CombineInteractor {
     }
 
     private func selectArticle(_ article: Article) {
+        analyticsService?.logEvent(.articleOpened(source: .bookmarks))
         updateState { state in
             state.selectedArticle = article
         }

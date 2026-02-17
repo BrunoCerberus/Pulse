@@ -24,6 +24,7 @@ final class MediaDetailDomainInteractor: CombineInteractor {
     typealias DomainAction = MediaDetailDomainAction
 
     private let storageService: StorageService
+    private let analyticsService: AnalyticsService?
     private let stateSubject: CurrentValueSubject<MediaDetailDomainState, Never>
     private var cancellables = Set<AnyCancellable>()
     private var backgroundTasks = Set<Task<Void, Never>>()
@@ -45,6 +46,8 @@ final class MediaDetailDomainInteractor: CombineInteractor {
             Logger.shared.service("Failed to retrieve StorageService: \(error)", level: .warning)
             storageService = LiveStorageService()
         }
+
+        analyticsService = try? serviceLocator.retrieve(AnalyticsService.self)
     }
 
     func dispatch(action: MediaDetailDomainAction) {
@@ -69,6 +72,8 @@ final class MediaDetailDomainInteractor: CombineInteractor {
     private func handlePlaybackControl(_ action: MediaDetailDomainAction) -> Bool {
         switch action {
         case .play:
+            let mediaType = currentState.article.mediaType == .video ? "video" : "podcast"
+            analyticsService?.logEvent(.mediaPlayed(type: mediaType))
             updateState { $0.isPlaying = true }
             return true
         case .pause:
@@ -173,6 +178,7 @@ final class MediaDetailDomainInteractor: CombineInteractor {
     // MARK: - Lifecycle
 
     private func onAppear() {
+        analyticsService?.logEvent(.screenView(screen: .mediaDetail))
         checkBookmarkStatus()
     }
 

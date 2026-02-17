@@ -10,6 +10,7 @@ struct FeedDomainInteractorTests {
     let mockFeedService: MockFeedService
     let mockNewsService: MockNewsService
     let mockNetworkMonitor: MockNetworkMonitorService
+    let mockAnalyticsService: MockAnalyticsService
     let serviceLocator: ServiceLocator
     let sut: FeedDomainInteractor
 
@@ -17,11 +18,13 @@ struct FeedDomainInteractorTests {
         mockFeedService = MockFeedService()
         mockNewsService = MockNewsService()
         mockNetworkMonitor = MockNetworkMonitorService()
+        mockAnalyticsService = MockAnalyticsService()
         serviceLocator = ServiceLocator()
 
         serviceLocator.register(FeedService.self, instance: mockFeedService)
         serviceLocator.register(NewsService.self, instance: mockNewsService)
         serviceLocator.register(NetworkMonitorService.self, instance: mockNetworkMonitor)
+        serviceLocator.register(AnalyticsService.self, instance: mockAnalyticsService)
 
         sut = FeedDomainInteractor(serviceLocator: serviceLocator)
     }
@@ -279,5 +282,44 @@ struct FeedDomainInteractorTests {
         } else {
             Issue.record("Should be in loadingArticles state after retry")
         }
+    }
+}
+
+// MARK: - Analytics Tests
+
+extension FeedDomainInteractorTests {
+    @Test("Logs screen_view on loadInitialData")
+    func logsScreenViewOnLoad() async throws {
+        sut.dispatch(action: .loadInitialData)
+        try await Task.sleep(nanoseconds: 500_000_000)
+
+        let screenEvents = mockAnalyticsService.loggedEvents.filter { $0.name == "screen_view" }
+        #expect(screenEvents.count == 1)
+        #expect(screenEvents.first?.parameters?["screen_name"] as? String == "feed")
+    }
+
+    @Test("Logs digest_generated success on digestCompleted")
+    func logsDigestGeneratedSuccess() {
+        let digest = DailyDigest(
+            id: "test",
+            summary: "Test summary",
+            sourceArticles: Article.mockArticles,
+            generatedAt: Date()
+        )
+        sut.dispatch(action: .digestCompleted(digest))
+
+        let digestEvents = mockAnalyticsService.loggedEvents.filter { $0.name == "digest_generated" }
+        #expect(digestEvents.count == 1)
+        #expect(digestEvents.first?.parameters?["success"] as? Bool == true)
+    }
+
+    @Test("Logs digest_generated failure and records error on digestFailed")
+    func logsDigestGeneratedFailure() {
+        sut.dispatch(action: .digestFailed("Generation failed"))
+
+        let digestEvents = mockAnalyticsService.loggedEvents.filter { $0.name == "digest_generated" }
+        #expect(digestEvents.count == 1)
+        #expect(digestEvents.first?.parameters?["success"] as? Bool == false)
+        #expect(mockAnalyticsService.recordedErrors.count == 1)
     }
 }

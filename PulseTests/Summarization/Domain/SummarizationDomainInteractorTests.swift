@@ -8,16 +8,19 @@ import Testing
 @MainActor
 struct SummarizationDomainInteractorTests {
     let mockSummarizationService: MockSummarizationService
+    let mockAnalyticsService: MockAnalyticsService
     let serviceLocator: ServiceLocator
     let article: Article
     let sut: SummarizationDomainInteractor
 
     init() {
         mockSummarizationService = MockSummarizationService()
+        mockAnalyticsService = MockAnalyticsService()
         serviceLocator = ServiceLocator()
         article = Article.mockArticles[0]
 
         serviceLocator.register(SummarizationService.self, instance: mockSummarizationService)
+        serviceLocator.register(AnalyticsService.self, instance: mockAnalyticsService)
 
         sut = SummarizationDomainInteractor(article: article, serviceLocator: serviceLocator)
     }
@@ -170,5 +173,34 @@ struct SummarizationDomainInteractorTests {
         } else {
             #expect(Bool(false), "Expected error state")
         }
+    }
+}
+
+// MARK: - Analytics Tests
+
+extension SummarizationDomainInteractorTests {
+    @Test("Logs article_summarized success on completion")
+    func logsSummarizedSuccessOnCompletion() async throws {
+        mockSummarizationService.generateResult = .success("This is a test summary.")
+
+        sut.dispatch(action: .startSummarization)
+        try await Task.sleep(nanoseconds: 2_000_000_000)
+
+        let summarizedEvents = mockAnalyticsService.loggedEvents.filter { $0.name == "article_summarized" }
+        #expect(summarizedEvents.count == 1)
+        #expect(summarizedEvents.first?.parameters?["success"] as? Bool == true)
+    }
+
+    @Test("Logs article_summarized failure and records error on error")
+    func logsSummarizedFailureOnError() async throws {
+        mockSummarizationService.generateResult = .failure(NSError(domain: "test", code: -1))
+
+        sut.dispatch(action: .startSummarization)
+        try await Task.sleep(nanoseconds: 2_000_000_000)
+
+        let summarizedEvents = mockAnalyticsService.loggedEvents.filter { $0.name == "article_summarized" }
+        #expect(summarizedEvents.count == 1)
+        #expect(summarizedEvents.first?.parameters?["success"] as? Bool == false)
+        #expect(mockAnalyticsService.recordedErrors.count == 1)
     }
 }

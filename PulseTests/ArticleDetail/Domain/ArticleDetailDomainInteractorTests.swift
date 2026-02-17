@@ -8,13 +8,16 @@ import Testing
 @MainActor
 struct ArticleDetailDomainInteractorTests {
     let mockStorageService: MockStorageService
+    let mockAnalyticsService: MockAnalyticsService
     let serviceLocator: ServiceLocator
     let testArticle: Article
 
     init() {
         mockStorageService = MockStorageService()
+        mockAnalyticsService = MockAnalyticsService()
         serviceLocator = ServiceLocator()
         serviceLocator.register(StorageService.self, instance: mockStorageService)
+        serviceLocator.register(AnalyticsService.self, instance: mockAnalyticsService)
         testArticle = Article.mockArticles[0]
     }
 
@@ -341,5 +344,41 @@ struct ArticleDetailTextProcessingTests {
             #expect(!descString.contains("&amp;"))
             #expect(!descString.contains("&quot;"))
         }
+    }
+}
+
+// MARK: - Analytics Tests
+
+extension ArticleDetailDomainInteractorTests {
+    @Test("Logs screen_view on onAppear")
+    func logsScreenViewOnAppear() async throws {
+        let sut = createSUT()
+        sut.dispatch(action: .onAppear)
+        try await Task.sleep(nanoseconds: 300_000_000)
+
+        let screenEvents = mockAnalyticsService.loggedEvents.filter { $0.name == "screen_view" }
+        #expect(screenEvents.count == 1)
+        #expect(screenEvents.first?.parameters?["screen_name"] as? String == "article_detail")
+    }
+
+    @Test("Logs article_shared on showShareSheet")
+    func logsArticleSharedOnShare() {
+        let sut = createSUT()
+        sut.dispatch(action: .showShareSheet)
+
+        let sharedEvents = mockAnalyticsService.loggedEvents.filter { $0.name == "article_shared" }
+        #expect(sharedEvents.count == 1)
+    }
+
+    @Test("Logs bookmark events on toggleBookmark")
+    func logsBookmarkEventsOnToggle() async throws {
+        let sut = createSUT()
+        sut.dispatch(action: .toggleBookmark)
+        try await Task.sleep(nanoseconds: 300_000_000)
+
+        let bookmarkEvents = mockAnalyticsService.loggedEvents.filter {
+            $0.name == "article_bookmarked" || $0.name == "article_unbookmarked"
+        }
+        #expect(bookmarkEvents.count == 1)
     }
 }

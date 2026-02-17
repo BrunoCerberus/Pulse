@@ -28,6 +28,7 @@ final class SettingsDomainInteractor: CombineInteractor {
     typealias DomainAction = SettingsDomainAction
 
     private let settingsService: SettingsService
+    private let analyticsService: AnalyticsService?
     private let stateSubject = CurrentValueSubject<SettingsDomainState, Never>(.initial)
     private var cancellables = Set<AnyCancellable>()
 
@@ -46,6 +47,8 @@ final class SettingsDomainInteractor: CombineInteractor {
             Logger.shared.service("Failed to retrieve SettingsService: \(error)", level: .warning)
             settingsService = LiveSettingsService(storageService: LiveStorageService())
         }
+
+        analyticsService = try? serviceLocator.retrieve(AnalyticsService.self)
     }
 
     func dispatch(action: SettingsDomainAction) {
@@ -94,6 +97,8 @@ final class SettingsDomainInteractor: CombineInteractor {
     }
 
     private func loadPreferences() {
+        analyticsService?.logEvent(.screenView(screen: .settings))
+
         updateState { state in
             state.isLoading = true
             state.error = nil

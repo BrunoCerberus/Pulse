@@ -25,6 +25,7 @@ final class SearchDomainInteractor: CombineInteractor {
 
     private let searchService: SearchService
     private let storageService: StorageService
+    private let analyticsService: AnalyticsService?
     private let stateSubject = CurrentValueSubject<SearchDomainState, Never>(.initial)
     private let suggestionQuerySubject = PassthroughSubject<String, Never>()
     private var cancellables = Set<AnyCancellable>()
@@ -52,6 +53,8 @@ final class SearchDomainInteractor: CombineInteractor {
             Logger.shared.service("Failed to retrieve StorageService: \(error)", level: .warning)
             storageService = LiveStorageService()
         }
+
+        analyticsService = try? serviceLocator.retrieve(AnalyticsService.self)
 
         setupSuggestionDebounce()
     }
@@ -140,6 +143,7 @@ final class SearchDomainInteractor: CombineInteractor {
         )
         .sink { [weak self] completion in
             if case let .failure(error) = completion {
+                self?.analyticsService?.recordError(error)
                 self?.updateState { state in
                     state.isLoading = false
                     state.error = error.localizedDescription
@@ -147,6 +151,7 @@ final class SearchDomainInteractor: CombineInteractor {
                 }
             }
         } receiveValue: { [weak self] articles in
+            self?.analyticsService?.logEvent(.searchPerformed(queryLength: query.count, resultCount: articles.count))
             self?.updateState { state in
                 state.results = articles
                 state.isLoading = false
@@ -244,6 +249,7 @@ final class SearchDomainInteractor: CombineInteractor {
     }
 
     private func selectArticle(_ article: Article) {
+        analyticsService?.logEvent(.articleOpened(source: .search))
         updateState { state in
             state.selectedArticle = article
         }

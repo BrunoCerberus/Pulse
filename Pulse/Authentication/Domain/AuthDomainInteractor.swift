@@ -23,6 +23,7 @@ final class AuthDomainInteractor: CombineInteractor {
     typealias DomainAction = AuthDomainAction
 
     private let authService: AuthService
+    private let analyticsService: AnalyticsService?
     private let stateSubject = CurrentValueSubject<AuthDomainState, Never>(.initial)
     private var cancellables = Set<AnyCancellable>()
 
@@ -41,6 +42,8 @@ final class AuthDomainInteractor: CombineInteractor {
             Logger.shared.service("Failed to retrieve AuthService: \(error)", level: .warning)
             authService = LiveAuthService()
         }
+
+        analyticsService = try? serviceLocator.retrieve(AnalyticsService.self)
     }
 
     func dispatch(action: AuthDomainAction) {
@@ -67,6 +70,12 @@ final class AuthDomainInteractor: CombineInteractor {
         authService.signInWithGoogle(presenting: viewController)
             .sink { [weak self] completion in
                 if case let .failure(error) = completion {
+                    if case AuthError.signInCancelled = error {
+                        // Don't track or show error for user cancellation
+                    } else {
+                        self?.analyticsService?.logEvent(.signIn(provider: "google", success: false))
+                        self?.analyticsService?.recordError(error)
+                    }
                     self?.updateState { state in
                         state.isLoading = false
                         if case AuthError.signInCancelled = error {
@@ -77,6 +86,7 @@ final class AuthDomainInteractor: CombineInteractor {
                     }
                 }
             } receiveValue: { [weak self] user in
+                self?.analyticsService?.logEvent(.signIn(provider: "google", success: true))
                 self?.updateState { state in
                     state.isLoading = false
                     state.user = user
@@ -94,6 +104,12 @@ final class AuthDomainInteractor: CombineInteractor {
         authService.signInWithApple()
             .sink { [weak self] completion in
                 if case let .failure(error) = completion {
+                    if case AuthError.signInCancelled = error {
+                        // Don't track or show error for user cancellation
+                    } else {
+                        self?.analyticsService?.logEvent(.signIn(provider: "apple", success: false))
+                        self?.analyticsService?.recordError(error)
+                    }
                     self?.updateState { state in
                         state.isLoading = false
                         if case AuthError.signInCancelled = error {
@@ -104,6 +120,7 @@ final class AuthDomainInteractor: CombineInteractor {
                     }
                 }
             } receiveValue: { [weak self] user in
+                self?.analyticsService?.logEvent(.signIn(provider: "apple", success: true))
                 self?.updateState { state in
                     state.isLoading = false
                     state.user = user
@@ -126,6 +143,7 @@ final class AuthDomainInteractor: CombineInteractor {
                     }
                 }
             } receiveValue: { [weak self] in
+                self?.analyticsService?.logEvent(.signOut)
                 self?.updateState { state in
                     state.isLoading = false
                     state.user = nil

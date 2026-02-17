@@ -1,19 +1,10 @@
+import Combine
 import EntropyCore
 import GoogleSignIn
 import SwiftUI
 import UIKit
 
-/**
- * Scene delegate responsible for managing the app's window and scene lifecycle.
- *
- * This delegate handles the creation and configuration of the app's main window
- * and sets up the root view controller with SwiftUI integration.
- * It also initializes the ServiceLocator with appropriate services based on
- * the current environment (debug/release, test/production).
- *
- * Note: This implementation prevents scene delegate execution during unit tests
- * to avoid conflicts with test environments.
- */
+/// Scene delegate managing the app's window, service setup, and navigation.
 final class PulseSceneDelegate: UIResponder, UIWindowSceneDelegate {
     /// The main window of the application
     var window: UIWindow?
@@ -21,17 +12,9 @@ final class PulseSceneDelegate: UIResponder, UIWindowSceneDelegate {
     /// Service locator for dependency injection
     private let serviceLocator: ServiceLocator = .init()
 
-    /**
-     * Called when a scene is being created and connected to the app.
-     *
-     * This method sets up the main window and configures the root view controller
-     * with the app's main content view. It also applies the theme preference
-     * and initializes the ServiceLocator with appropriate services.
-     *
-     * - Parameter scene: The scene being connected
-     * - Parameter session: The session that the scene will connect to
-     * - Parameter connectionOptions: Additional options for the scene connection
-     */
+    /// Cancellables for Combine subscriptions
+    private var cancellables = Set<AnyCancellable>()
+
     func scene(
         _ scene: UIScene,
         willConnectTo _: UISceneSession,
@@ -45,6 +28,9 @@ final class PulseSceneDelegate: UIResponder, UIWindowSceneDelegate {
 
         // Configure authentication manager with auth service
         configureAuthenticationManager()
+
+        // Sync analytics user ID with auth state
+        configureAnalyticsUserID()
 
         // Configure app lock manager with app lock service
         configureAppLockManager()
@@ -76,9 +62,6 @@ final class PulseSceneDelegate: UIResponder, UIWindowSceneDelegate {
         }
     }
 
-    /// Configure the AuthenticationManager with the registered AuthService.
-    /// Note: This is called from scene(_:willConnectTo:options:) which runs on main thread,
-    /// so we use MainActor.assumeIsolated to synchronously configure auth state.
     private func configureAuthenticationManager() {
         do {
             let authService = try serviceLocator.retrieve(AuthService.self)
@@ -90,7 +73,26 @@ final class PulseSceneDelegate: UIResponder, UIWindowSceneDelegate {
         }
     }
 
-    /// Configure the AppLockManager with the registered AppLockService.
+    /// Sync analytics user ID with authentication state changes.
+    private func configureAnalyticsUserID() {
+        guard let analyticsService = try? serviceLocator.retrieve(AnalyticsService.self) else { return }
+
+        MainActor.assumeIsolated {
+            AuthenticationManager.shared.$authState
+                .sink { state in
+                    switch state {
+                    case let .authenticated(user):
+                        analyticsService.setUserID(user.uid)
+                    case .unauthenticated:
+                        analyticsService.setUserID(nil)
+                    case .loading:
+                        break
+                    }
+                }
+                .store(in: &cancellables)
+        }
+    }
+
     private func configureAppLockManager() {
         do {
             let appLockService = try serviceLocator.retrieve(AppLockService.self)
@@ -102,23 +104,11 @@ final class PulseSceneDelegate: UIResponder, UIWindowSceneDelegate {
         }
     }
 
-    /**
-     * Checks if the app is running in UI test mode.
-     *
-     * - Returns: `true` if running UI tests, `false` otherwise
-     */
     private func isRunningUITests() -> Bool {
         let environment = ProcessInfo.processInfo.environment
         return environment["UI_TESTING"] == "1" || environment["XCTestConfigurationFilePath"] == "UI"
     }
 
-    /**
-     * Shows the main app directly without splash screen.
-     *
-     * Used during UI tests to skip the splash animation.
-     *
-     * - Parameter window: The main window to display content in
-     */
     private func showMainApp(in window: UIWindow) {
         let rootView = UIHostingController(
             rootView: RootView(serviceLocator: serviceLocator)
@@ -127,13 +117,6 @@ final class PulseSceneDelegate: UIResponder, UIWindowSceneDelegate {
         window.rootViewController = rootView
     }
 
-    /**
-     * Shows the splash screen with animation.
-     *
-     * After the animation completes, transitions to the main app content.
-     *
-     * - Parameter window: The main window to display content in
-     */
     private func showSplashScreen(in window: UIWindow) {
         let splashView = SplashScreenView { [weak self] in
             self?.transitionToMainApp(in: window)
@@ -144,11 +127,6 @@ final class PulseSceneDelegate: UIResponder, UIWindowSceneDelegate {
         window.rootViewController = splashViewController
     }
 
-    /**
-     * Transitions from splash screen to the main app content.
-     *
-     * - Parameter window: The main window to update
-     */
     private func transitionToMainApp(in window: UIWindow) {
         let rootView = UIHostingController(
             rootView: RootView(serviceLocator: serviceLocator)
@@ -173,12 +151,6 @@ final class PulseSceneDelegate: UIResponder, UIWindowSceneDelegate {
         }
     }
 
-    /**
-     * Setup services in the ServiceLocator based on current environment.
-     *
-     * This method registers the appropriate services (real or mock) based on
-     * the current build configuration and test environment detection.
-     */
     private func setupServices() {
         #if DEBUG
             // Check if running in test environment (unit tests or UI tests)
@@ -206,6 +178,7 @@ final class PulseSceneDelegate: UIResponder, UIWindowSceneDelegate {
                 serviceLocator.register(RemoteConfigService.self, instance: MockRemoteConfigService())
                 serviceLocator.register(AuthService.self, instance: MockAuthService())
                 serviceLocator.register(AppLockService.self, instance: MockAppLockService())
+                serviceLocator.register(AnalyticsService.self, instance: MockAnalyticsService())
 
                 // Configure APIKeysProvider with mock service
                 APIKeysProvider.configure(with: MockRemoteConfigService())
@@ -219,13 +192,6 @@ final class PulseSceneDelegate: UIResponder, UIWindowSceneDelegate {
         #endif
     }
 
-    /**
-     * Register all live services for production use.
-     *
-     * Note: Services that depend on other services (like LiveSettingsService,
-     * LiveBookmarksService) receive their dependencies directly rather than
-     * through ServiceLocator.
-     */
     private func registerLiveServices() {
         // Register and configure Remote Config service first
         let remoteConfigService = LiveRemoteConfigService()
@@ -270,15 +236,11 @@ final class PulseSceneDelegate: UIResponder, UIWindowSceneDelegate {
 
         // Register app lock service
         serviceLocator.register(AppLockService.self, instance: LiveAppLockService())
+
+        // Register analytics service
+        serviceLocator.register(AnalyticsService.self, instance: LiveAnalyticsService())
     }
 
-    /**
-     * Preload the LLM model in background for premium users.
-     *
-     * This improves perceived performance by having the model ready
-     * when the user opens the Feed tab. Only preloads for premium users
-     * since they're the only ones who can use the digest feature.
-     */
     private func preloadLLMModelIfPremium() {
         Task.detached(priority: .utility) { [serviceLocator] in
             do {
@@ -300,13 +262,6 @@ final class PulseSceneDelegate: UIResponder, UIWindowSceneDelegate {
         }
     }
 
-    /**
-     * Fetch Remote Config values asynchronously.
-     *
-     * This is fire-and-forget - the app uses fallback API keys until
-     * Remote Config values are fetched. Subsequent API calls will use
-     * the fetched values from Remote Config.
-     */
     private func fetchRemoteConfig(_ service: RemoteConfigService) {
         Task {
             do {
@@ -329,15 +284,6 @@ final class PulseSceneDelegate: UIResponder, UIWindowSceneDelegate {
         }
     }
 
-    /**
-     * Handle URL opening for the scene.
-     *
-     * This method is called when the app is opened via a custom URL scheme
-     * while the app is running in the foreground.
-     *
-     * - Parameter scene: The scene that received the URL
-     * - Parameter urlContexts: The URL contexts that were opened
-     */
     func scene(_: UIScene, openURLContexts URLContexts: Set<UIOpenURLContext>) {
         guard let url = URLContexts.first?.url else { return }
 
@@ -349,15 +295,6 @@ final class PulseSceneDelegate: UIResponder, UIWindowSceneDelegate {
         handleDeeplink(url)
     }
 
-    /**
-     * Handle universal links when the app is being activated.
-     *
-     * This method is called when the app is opened via a universal link.
-     * Universal links use HTTPS URLs and are handled differently from custom schemes.
-     *
-     * - Parameter scene: The scene that received the activity
-     * - Parameter userActivity: The user activity containing the universal link
-     */
     func scene(_: UIScene, continue userActivity: NSUserActivity) {
         guard userActivity.activityType == NSUserActivityTypeBrowsingWeb,
               let url = userActivity.webpageURL
@@ -368,21 +305,10 @@ final class PulseSceneDelegate: UIResponder, UIWindowSceneDelegate {
         handleDeeplink(url)
     }
 
-    /**
-     * Process a deeplink URL.
-     *
-     * - Parameter url: The URL to process
-     */
     private func handleDeeplink(_ url: URL) {
         DeeplinkManager.shared.parse(url: url)
     }
 
-    /**
-     * Converts a SwiftUI ColorScheme to a UIKit UIUserInterfaceStyle.
-     *
-     * - Parameter colorScheme: The SwiftUI color scheme (nil means follow system)
-     * - Returns: The corresponding UIUserInterfaceStyle
-     */
     private func uiUserInterfaceStyle(from colorScheme: ColorScheme?) -> UIUserInterfaceStyle {
         switch colorScheme {
         case .dark:

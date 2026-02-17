@@ -27,6 +27,7 @@ final class FeedDomainInteractor: CombineInteractor {
     private let feedService: FeedService
     private let newsService: NewsService
     private let networkMonitor: NetworkMonitorService?
+    private let analyticsService: AnalyticsService?
     private let stateSubject = CurrentValueSubject<FeedDomainState, Never>(.initial)
     private var cancellables = Set<AnyCancellable>()
     private var generationTask: Task<Void, Never>?
@@ -50,6 +51,7 @@ final class FeedDomainInteractor: CombineInteractor {
         }
 
         networkMonitor = try? serviceLocator.retrieve(NetworkMonitorService.self)
+        analyticsService = try? serviceLocator.retrieve(AnalyticsService.self)
 
         setupModelStatusBinding()
     }
@@ -77,6 +79,9 @@ final class FeedDomainInteractor: CombineInteractor {
         case let .digestCompleted(digest):
             handleDigestCompleted(digest)
         case let .digestFailed(error):
+            analyticsService?.logEvent(.digestGenerated(success: false))
+            let digestError = NSError(domain: "FeedDigest", code: -1, userInfo: [NSLocalizedDescriptionKey: error])
+            analyticsService?.recordError(digestError)
             updateState { state in
                 state.generationState = .error(error)
             }
@@ -130,6 +135,8 @@ final class FeedDomainInteractor: CombineInteractor {
 private extension FeedDomainInteractor {
     func loadInitialData() {
         guard !currentState.hasLoadedInitialData else { return }
+
+        analyticsService?.logEvent(.screenView(screen: .feed))
 
         // Always show processing animation first for consistent UX
         updateState { $0.generationState = .loadingArticles }
@@ -362,6 +369,7 @@ private extension FeedDomainInteractor {
     }
 
     func handleDigestCompleted(_ digest: DailyDigest) {
+        analyticsService?.logEvent(.digestGenerated(success: true))
         updateState { state in
             state.currentDigest = digest
             state.streamingText = ""

@@ -8,14 +8,17 @@ import Testing
 @MainActor
 struct BookmarksDomainInteractorTests {
     let mockBookmarksService: MockBookmarksService
+    let mockAnalyticsService: MockAnalyticsService
     let serviceLocator: ServiceLocator
     let sut: BookmarksDomainInteractor
 
     init() {
         mockBookmarksService = MockBookmarksService()
+        mockAnalyticsService = MockAnalyticsService()
         serviceLocator = ServiceLocator()
 
         serviceLocator.register(BookmarksService.self, instance: mockBookmarksService)
+        serviceLocator.register(AnalyticsService.self, instance: mockAnalyticsService)
 
         sut = BookmarksDomainInteractor(serviceLocator: serviceLocator)
     }
@@ -292,5 +295,33 @@ struct BookmarksDomainInteractorTests {
         #expect(!states.isEmpty)
         #expect(states[0].bookmarks.isEmpty)
         #expect(!states[0].isLoading)
+    }
+}
+
+// MARK: - Analytics Tests
+
+extension BookmarksDomainInteractorTests {
+    @Test("Logs screen_view on loadBookmarks")
+    func logsScreenViewOnLoad() async throws {
+        sut.dispatch(action: .loadBookmarks)
+        try await Task.sleep(nanoseconds: 300_000_000)
+
+        let screenEvents = mockAnalyticsService.loggedEvents.filter { $0.name == "screen_view" }
+        #expect(screenEvents.count == 1)
+        #expect(screenEvents.first?.parameters?["screen_name"] as? String == "bookmarks")
+    }
+
+    @Test("Logs article_opened with bookmarks source")
+    func logsArticleOpenedFromBookmarks() async throws {
+        let articles = Article.mockArticles
+        mockBookmarksService.bookmarks = articles
+        sut.dispatch(action: .loadBookmarks)
+        try await Task.sleep(nanoseconds: 300_000_000)
+
+        sut.dispatch(action: .selectArticle(articleId: articles[0].id))
+
+        let openedEvents = mockAnalyticsService.loggedEvents.filter { $0.name == "article_opened" }
+        #expect(openedEvents.count == 1)
+        #expect(openedEvents.first?.parameters?["source"] as? String == "bookmarks")
     }
 }

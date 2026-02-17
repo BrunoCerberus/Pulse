@@ -9,6 +9,7 @@ import Testing
 struct MediaDomainInteractorTests {
     let mockMediaService: MockMediaService
     let mockStorageService: MockStorageService
+    let mockAnalyticsService: MockAnalyticsService
     let serviceLocator: ServiceLocator
     let sut: MediaDomainInteractor
 
@@ -16,10 +17,12 @@ struct MediaDomainInteractorTests {
         mockMediaService = MockMediaService()
         mockMediaService.simulatedDelay = 0.1 // Fast for tests
         mockStorageService = MockStorageService()
+        mockAnalyticsService = MockAnalyticsService()
         serviceLocator = ServiceLocator()
 
         serviceLocator.register(MediaService.self, instance: mockMediaService)
         serviceLocator.register(StorageService.self, instance: mockStorageService)
+        serviceLocator.register(AnalyticsService.self, instance: mockAnalyticsService)
 
         sut = MediaDomainInteractor(serviceLocator: serviceLocator)
     }
@@ -296,5 +299,19 @@ struct MediaDomainInteractorTests {
             sut.dispatch(action: .clearMediaToPlay)
             #expect(sut.currentState.mediaToPlay == nil)
         }
+    }
+}
+
+// MARK: - Analytics Tests
+
+extension MediaDomainInteractorTests {
+    @Test("Logs screen_view on loadInitialData")
+    func logsScreenViewOnLoad() async throws {
+        sut.dispatch(action: .loadInitialData)
+        try await Task.sleep(nanoseconds: 500_000_000)
+
+        let screenEvents = mockAnalyticsService.loggedEvents.filter { $0.name == "screen_view" }
+        #expect(screenEvents.count == 1)
+        #expect(screenEvents.first?.parameters?["screen_name"] as? String == "media")
     }
 }
