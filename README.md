@@ -13,10 +13,11 @@ A modern iOS news aggregation app built with Clean Architecture, SwiftUI, and Co
 - **Bookmarks**: Save articles for offline reading with SwiftData persistence
 - **Search**: Full-text search with 300ms debounce, suggestions, recent searches, and sort options
 - **Settings**: Customize topics, notifications, theme, content filters, and account/logout (accessed from Home navigation bar)
-- **Analytics & Crash Reporting**: Firebase Analytics (16 type-safe events) and Crashlytics for crash/non-fatal error tracking
+- **Onboarding**: 4-page first-launch experience shown once after sign-in, highlighting key features before entering the app
+- **Analytics & Crash Reporting**: Firebase Analytics (18 type-safe events) and Crashlytics for crash/non-fatal error tracking
 - **Widget**: Home screen widget showing recent headlines (WidgetKit extension)
 
-The app uses iOS 26's liquid glass TabView style with tabs: Home, Media, Feed, Bookmarks, and Search. Users must sign in with Google or Apple before accessing the main app.
+The app uses iOS 26's liquid glass TabView style with tabs: Home, Media, Feed, Bookmarks, and Search. Users must sign in with Google or Apple before accessing the main app. A 4-page onboarding flow is shown once after first sign-in.
 
 ### Premium Features
 
@@ -382,6 +383,7 @@ Pulse/
 │   ├── Bookmarks/          # Saved articles
 │   ├── Settings/           # User preferences + account/logout
 │   ├── ArticleDetail/      # Article view
+│   ├── Onboarding/         # First-launch onboarding flow
 │   ├── Paywall/            # StoreKit paywall UI
 │   ├── SplashScreen/       # Launch animation
 │   └── Configs/

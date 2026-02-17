@@ -178,6 +178,7 @@ Pulse/
 │   ├── Bookmarks/              # Offline reading
 │   ├── Search/                 # Search feature
 │   ├── Settings/               # User preferences (includes account/logout)
+│   ├── Onboarding/             # First-launch onboarding flow
 │   ├── Paywall/                # StoreKit paywall UI
 │   ├── SplashScreen/           # App launch animation
 │   └── Configs/
@@ -209,7 +210,8 @@ Pulse/
 | **Offline Experience** | Tiered cache (L1 memory + L2 disk), NWPathMonitor network monitoring, offline banner, graceful degradation |
 | **Bookmarks** | Save articles for offline reading (SwiftData) |
 | **Settings** | Topics, notifications, theme, muted content, account/logout (accessed from Home navigation bar) |
-| **Analytics & Crashlytics** | Firebase Analytics (16 type-safe events) and Crashlytics for crash/non-fatal error tracking at DomainInteractor level |
+| **Onboarding** | 4-page first-launch experience (welcome, AI features, offline/bookmarks, get started) shown once after sign-in |
+| **Analytics & Crashlytics** | Firebase Analytics (18 type-safe events) and Crashlytics for crash/non-fatal error tracking at DomainInteractor level |
 | **Widget** | Home screen widget showing recent headlines (WidgetKit extension) |
 
 ## Premium Features
@@ -452,7 +454,7 @@ if let cachingService = newsService as? CachingNewsService {
 | `AuthService.swift` | Protocol for authentication operations |
 | `LiveAuthService.swift` | Firebase Auth implementation (Google + Apple) |
 | `AuthenticationManager.swift` | Global auth state observer singleton |
-| `RootView.swift` | Auth-gated root view (SignIn vs CoordinatorView) |
+| `RootView.swift` | Auth-gated root view (SignIn vs Onboarding vs CoordinatorView) |
 | `SignInView.swift` | Sign-in UI with Google/Apple buttons |
 | **Navigation** | |
 | `Coordinator.swift` | Central navigation manager with per-tab paths |
@@ -501,7 +503,14 @@ if let cachingService = newsService as? CachingNewsService {
 | `PremiumFeature.swift` | Enum defining gated features |
 | `PaywallView.swift` | Native StoreKit subscription UI |
 | **Analytics & Crashlytics** | |
-| `AnalyticsService.swift` | Protocol + `AnalyticsEvent` enum (16 events) + `AnalyticsScreen`/`AnalyticsSource` enums |
+| **Onboarding** | |
+| `OnboardingService.swift` | Protocol with `hasCompletedOnboarding: Bool` |
+| `LiveOnboardingService.swift` | UserDefaults-backed implementation (key: `pulse.hasCompletedOnboarding`) |
+| `OnboardingPage.swift` | Enum with 4 cases: welcome, aiPowered, stayConnected, getStarted |
+| `OnboardingDomainInteractor.swift` | Page navigation, completion persistence, analytics logging |
+| `OnboardingView.swift` | Main view with TabView(.page), custom dots, Skip/Next buttons |
+| **Analytics & Crashlytics** | |
+| `AnalyticsService.swift` | Protocol + `AnalyticsEvent` enum (18 events) + `AnalyticsScreen`/`AnalyticsSource` enums |
 | `LiveAnalyticsService.swift` | Firebase Analytics + Crashlytics implementation (events + breadcrumbs) |
 | `MockAnalyticsService.swift` | Test implementation recording all events/errors for assertions |
 
