@@ -564,6 +564,7 @@ struct LocalizationKeysExistenceTests {
         "article.read_full",
         "article.bookmark",
         "article.share",
+        "article.by_author",
         // Settings
         "settings.title",
         "settings.followed_topics",
