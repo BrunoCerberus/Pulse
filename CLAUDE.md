@@ -184,7 +184,7 @@ Pulse/
 │   └── Configs/
 │       ├── Navigation/         # Coordinator, Page, CoordinatorView, DeeplinkRouter, AnimatedTabView
 │       ├── DesignSystem/       # ColorSystem, Typography, Components
-│       ├── Models/             # Article, NewsCategory, UserPreferences
+│       ├── Models/             # Article, NewsCategory, UserPreferences, ContentLanguage
 │       ├── Networking/         # API keys, base URLs, SupabaseConfig, RemoteConfig, NetworkMonitorService
 │       ├── Storage/            # StorageService (SwiftData)
 │       ├── Analytics/          # AnalyticsService protocol + Live implementation
@@ -209,7 +209,8 @@ Pulse/
 | **Search** | Full-text search with 300ms debounce, suggestions, and sort options (last tab with liquid glass style) |
 | **Offline Experience** | Tiered cache (L1 memory + L2 disk), NWPathMonitor network monitoring, offline banner, graceful degradation |
 | **Bookmarks** | Save articles for offline reading (SwiftData) |
-| **Settings** | Topics, notifications, theme, muted content, account/logout (accessed from Home navigation bar) |
+| **Localization** | Multi-language support (English, Portuguese, Spanish) — translated UI strings (system language) + content language filtering (in-app preference via Settings) |
+| **Settings** | Topics, notifications, theme, content language, muted content, account/logout (accessed from Home navigation bar) |
 | **Onboarding** | 4-page first-launch experience (welcome, AI features, offline/bookmarks, get started) shown once after sign-in |
 | **Analytics & Crashlytics** | Firebase Analytics (18 type-safe events) and Crashlytics for crash/non-fatal error tracking at DomainInteractor level |
 | **Widget** | Home screen widget showing recent headlines (WidgetKit extension) |
@@ -319,17 +320,17 @@ All Live services (LiveNewsService, LiveSearchService) use Supabase as the prima
 
 ```swift
 enum SupabaseAPI: APIFetcher {
-    case articles(page: Int, pageSize: Int)
-    case articlesByCategory(category: String, page: Int, pageSize: Int)
-    case breakingNews(limit: Int)
+    case articles(language: String, page: Int, pageSize: Int)
+    case articlesByCategory(language: String, category: String, page: Int, pageSize: Int)
+    case breakingNews(language: String, limit: Int)
     case article(id: String)
     case search(query: String, page: Int, pageSize: Int)
     case categories
     case sources
-    case media(type: String?, page: Int, pageSize: Int)
-    case featuredMedia(type: String?, limit: Int)
+    case media(language: String, type: String?, page: Int, pageSize: Int)
+    case featuredMedia(language: String, type: String?, limit: Int)
 
-    var path: String { ... }
+    var path: String { ... }  // language cases append ?language=eq.<lang>
     var method: HTTPMethod { .GET }
 }
 
@@ -341,9 +342,9 @@ final class LiveNewsService: APIRequest, NewsService {
         super.init()
     }
 
-    func fetchTopHeadlines(country: String, page: Int) -> AnyPublisher<[Article], Error> {
+    func fetchTopHeadlines(language: String, country: String, page: Int) -> AnyPublisher<[Article], Error> {
         if useSupabase {
-            return fetchFromSupabase(page: page)
+            return fetchFromSupabase(language: language, page: page)
                 .catch { [weak self] error -> AnyPublisher<[Article], Error> in
                     // Automatic fallback to Guardian on Supabase error
                     return self?.fetchFromGuardian(page: page) ?? Fail(error: error).eraseToAnyPublisher()
@@ -471,7 +472,7 @@ if let cachingService = newsService as? CachingNewsService {
 | `GoogleService-Info.plist` | Firebase configuration |
 | **Supabase Backend** | |
 | `SupabaseConfig.swift` | Supabase URL and API key configuration |
-| `SupabaseAPI.swift` | Supabase REST API endpoint definitions |
+| `SupabaseAPI.swift` | Supabase REST API endpoint definitions (language-filtered) |
 | `SupabaseModels.swift` | Supabase response models (SupabaseArticle, SupabaseSource, SupabaseCategory) |
 | **Caching & Offline** | |
 | `NewsCacheStore.swift` | Cache protocol, NSCache implementation (L1), TTL configuration |
@@ -481,6 +482,11 @@ if let cachingService = newsService as? CachingNewsService {
 | `NetworkMonitorService.swift` | Protocol + Live (NWPathMonitor) + Mock for connectivity monitoring |
 | `PulseError.swift` | Typed error enum distinguishing offline from server errors |
 | `OfflineBannerView.swift` | Animated offline banner shown at top of app when disconnected |
+| **Localization** | |
+| `ContentLanguage.swift` | Enum (en/pt/es) with display names and flag emojis for language picker |
+| `en.lproj/Localizable.strings` | English UI strings (80+ keys) |
+| `pt.lproj/Localizable.strings` | Portuguese UI translations |
+| `es.lproj/Localizable.strings` | Spanish UI translations |
 | **Widget** | |
 | `WidgetDataManager.swift` | Persists shared widget articles and triggers WidgetKit reloads |
 | **Media Playback** | |
