@@ -35,6 +35,9 @@ class BaseUITestCase: XCTestCase {
         app.launchArguments += ["-UIViewAnimationDuration", "0.01"]
         app.launchArguments += ["-CATransactionAnimationDuration", "0.01"]
 
+        // Skip onboarding flow in UI tests (sets UserDefaults via argument domain)
+        app.launchArguments += ["-pulse.hasCompletedOnboarding", "YES"]
+
         app.launch()
 
         // Launch verification - uses longer timeout as app startup takes time

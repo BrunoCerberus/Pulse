@@ -179,6 +179,8 @@ final class PulseSceneDelegate: UIResponder, UIWindowSceneDelegate {
                 serviceLocator.register(AuthService.self, instance: MockAuthService())
                 serviceLocator.register(AppLockService.self, instance: MockAppLockService())
                 serviceLocator.register(AnalyticsService.self, instance: MockAnalyticsService())
+                let mockOnboarding = MockOnboardingService(hasCompletedOnboarding: true)
+                serviceLocator.register(OnboardingService.self, instance: mockOnboarding)
 
                 // Configure APIKeysProvider with mock service
                 APIKeysProvider.configure(with: MockRemoteConfigService())
@@ -239,6 +241,9 @@ final class PulseSceneDelegate: UIResponder, UIWindowSceneDelegate {
 
         // Register analytics service
         serviceLocator.register(AnalyticsService.self, instance: LiveAnalyticsService())
+
+        // Register onboarding service
+        serviceLocator.register(OnboardingService.self, instance: LiveOnboardingService())
     }
 
     private func preloadLLMModelIfPremium() {

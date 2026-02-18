@@ -202,3 +202,19 @@
 "applock.settings_toggle" = "Lock with Face ID";
 "applock.settings_footer" = "Require Face ID to unlock the app after returning from the background.";
 "applock.settings_unavailable" = "Not Available";
+
+/* ==================== */
+/* MARK: - Onboarding   */
+/* ==================== */
+
+"onboarding.skip" = "Skip";
+"onboarding.next" = "Next";
+"onboarding.get_started" = "Get Started";
+"onboarding.welcome.title" = "Your Personalized News Feed";
+"onboarding.welcome.subtitle" = "Curated headlines and breaking news from trusted sources, all in one place.";
+"onboarding.ai_powered.title" = "Smart Summaries at Your Fingertips";
+"onboarding.ai_powered.subtitle" = "AI-powered daily digest and article summaries help you stay informed faster.";
+"onboarding.stay_connected.title" = "Never Miss a Story";
+"onboarding.stay_connected.subtitle" = "Save articles for offline reading, bookmark your favorites, and search anything.";
+"onboarding.get_started.title" = "Ready to Explore?";
+"onboarding.get_started.subtitle" = "Your news journey starts now.";

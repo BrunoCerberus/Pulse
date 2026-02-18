@@ -46,6 +46,7 @@ Pulse/
 │   ├── Bookmarks/              # Offline reading
 │   ├── Search/                 # Search feature
 │   ├── Settings/               # User preferences (includes account/logout)
+│   ├── Onboarding/             # First-launch onboarding flow
 │   ├── Paywall/                # StoreKit paywall UI
 │   ├── SplashScreen/           # App launch animation
 │   └── Configs/
@@ -214,12 +215,13 @@ struct HomeDomainInteractorTests {
 5. **All dependencies injected via ServiceLocator**
 6. **State is immutable** - use Equatable structs for DomainState and ViewState
 7. **Authentication is required** - RootView gates access via AuthenticationManager
-8. **AuthenticationManager is a singleton** - observed by RootView to switch between SignInView and CoordinatorView
-9. **Premium features are gated** - AI features require subscription (checked via StoreKitService)
-10. **Service decorators for cross-cutting concerns** - Use Decorator Pattern for caching, logging (e.g., `CachingNewsService` wraps `LiveNewsService`)
-11. **Graceful fallback for data sources** - Live services (NewsService, SearchService) use Supabase as primary and fall back to Guardian API when not configured or on error
-12. **Offline resilience** - Tiered cache (L1 memory + L2 disk) preserves content when offline; `NetworkMonitorService` tracks connectivity; failed refreshes keep existing data visible
-13. **Analytics is optional** - `try? serviceLocator.retrieve(AnalyticsService.self)` ensures missing analytics never crashes the app; every analytics event doubles as a Crashlytics breadcrumb
+8. **AuthenticationManager is a singleton** - observed by RootView to switch between SignInView, OnboardingView, and CoordinatorView
+9. **Onboarding is shown once** - After first sign-in, a 4-page onboarding flow is shown; completion is persisted via `@AppStorage("pulse.hasCompletedOnboarding")` + `OnboardingService`
+10. **Premium features are gated** - AI features require subscription (checked via StoreKitService)
+11. **Service decorators for cross-cutting concerns** - Use Decorator Pattern for caching, logging (e.g., `CachingNewsService` wraps `LiveNewsService`)
+12. **Graceful fallback for data sources** - Live services (NewsService, SearchService) use Supabase as primary and fall back to Guardian API when not configured or on error
+13. **Offline resilience** - Tiered cache (L1 memory + L2 disk) preserves content when offline; `NetworkMonitorService` tracks connectivity; failed refreshes keep existing data visible
+14. **Analytics is optional** - `try? serviceLocator.retrieve(AnalyticsService.self)` ensures missing analytics never crashes the app; every analytics event doubles as a Crashlytics breadcrumb
 
 ## Data Source Architecture
 
@@ -251,7 +253,7 @@ The app uses a tiered cache with offline resilience:
 | `OfflineBannerView` | Animated banner in `CoordinatorView` shown when offline |
 | **Analytics & Crashlytics** | |
 | `AnalyticsService` | Protocol with `logEvent`, `setUserID`, `recordError`, `log` |
-| `AnalyticsEvent` | Type-safe enum with 16 events (screen views, article actions, purchases, auth, etc.) |
+| `AnalyticsEvent` | Type-safe enum with 18 events (screen views, article actions, purchases, auth, onboarding, etc.) |
 | `LiveAnalyticsService` | Firebase Analytics + Crashlytics (events + breadcrumbs, disabled in DEBUG) |
 | `MockAnalyticsService` | Records all events/errors in arrays for test assertions |
 
@@ -382,7 +384,7 @@ coordinator.build(page:)
 
 | Component | Purpose |
 |-----------|---------|
-| `RootView` | Auth-gated root (shows SignInView or CoordinatorView) |
+| `RootView` | Auth-gated root (shows SignInView, OnboardingView, or CoordinatorView) |
 | `AuthenticationManager` | Global singleton observing Firebase auth state |
 | `AuthService` | Protocol for sign-in/sign-out operations |
 | `Page` | Enum of all navigable destinations |
