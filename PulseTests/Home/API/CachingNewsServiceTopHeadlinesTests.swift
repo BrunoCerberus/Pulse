@@ -18,7 +18,7 @@ struct CachingNewsServiceTopHeadlinesTests {
     @Test("fetchTopHeadlines returns cached data when available and not expired")
     func fetchTopHeadlinesCacheHit() async throws {
         let cachedArticles = Article.mockArticles
-        let cacheKey = NewsCacheKey.topHeadlines(country: "us", page: 1)
+        let cacheKey = NewsCacheKey.topHeadlines(language: "en", country: "us", page: 1)
         let entry = CacheEntry(data: cachedArticles, timestamp: Date())
         mockCacheStore.set(entry, for: cacheKey)
 
@@ -28,7 +28,7 @@ struct CachingNewsServiceTopHeadlinesTests {
         var receivedArticles: [Article] = []
         var cancellables = Set<AnyCancellable>()
 
-        sut.fetchTopHeadlines(country: "us", page: 1)
+        sut.fetchTopHeadlines(language: "en", country: "us", page: 1)
             .sink(
                 receiveCompletion: { _ in },
                 receiveValue: { articles in
@@ -52,7 +52,7 @@ struct CachingNewsServiceTopHeadlinesTests {
         var receivedArticles: [Article] = []
         var cancellables = Set<AnyCancellable>()
 
-        sut.fetchTopHeadlines(country: "us", page: 1)
+        sut.fetchTopHeadlines(language: "en", country: "us", page: 1)
             .sink(
                 receiveCompletion: { _ in },
                 receiveValue: { articles in
@@ -67,7 +67,7 @@ struct CachingNewsServiceTopHeadlinesTests {
         #expect(mockCacheStore.getCallCount == 1)
         #expect(mockCacheStore.setCallCount == 1)
 
-        let cacheKey = NewsCacheKey.topHeadlines(country: "us", page: 1)
+        let cacheKey = NewsCacheKey.topHeadlines(language: "en", country: "us", page: 1)
         #expect(mockCacheStore.contains(key: cacheKey))
     }
 
@@ -75,7 +75,7 @@ struct CachingNewsServiceTopHeadlinesTests {
     func fetchTopHeadlinesExpiredCache() async throws {
         let expiredTimestamp = Date().addingTimeInterval(-NewsCacheTTL.default - 1)
         let cachedArticles = [Article.mockArticles[0]]
-        let cacheKey = NewsCacheKey.topHeadlines(country: "us", page: 1)
+        let cacheKey = NewsCacheKey.topHeadlines(language: "en", country: "us", page: 1)
         let entry = CacheEntry(data: cachedArticles, timestamp: expiredTimestamp)
         mockCacheStore.set(entry, for: cacheKey)
 
@@ -88,7 +88,7 @@ struct CachingNewsServiceTopHeadlinesTests {
         var receivedArticles: [Article] = []
         var cancellables = Set<AnyCancellable>()
 
-        sut.fetchTopHeadlines(country: "us", page: 1)
+        sut.fetchTopHeadlines(language: "en", country: "us", page: 1)
             .sink(
                 receiveCompletion: { _ in },
                 receiveValue: { articles in

@@ -9,11 +9,16 @@ final class MockNewsService: NewsService {
     var categoryHeadlinesResult: Result<[Article], Error>?
     var fetchArticleResult: Result<Article, Error>?
 
-    func fetchTopHeadlines(country _: String, page _: Int) -> AnyPublisher<[Article], Error> {
+    func fetchTopHeadlines(language _: String, country _: String, page _: Int) -> AnyPublisher<[Article], Error> {
         topHeadlinesResult.publisher.eraseToAnyPublisher()
     }
 
-    func fetchTopHeadlines(category: NewsCategory, country _: String, page _: Int) -> AnyPublisher<[Article], Error> {
+    func fetchTopHeadlines(
+        category: NewsCategory,
+        language _: String,
+        country _: String,
+        page _: Int
+    ) -> AnyPublisher<[Article], Error> {
         // Use categoryHeadlinesResult if set, otherwise fall back to topHeadlinesResult
         let result = categoryHeadlinesResult ?? topHeadlinesResult
         return result.publisher
@@ -40,7 +45,7 @@ final class MockNewsService: NewsService {
             .eraseToAnyPublisher()
     }
 
-    func fetchBreakingNews(country _: String) -> AnyPublisher<[Article], Error> {
+    func fetchBreakingNews(language _: String, country _: String) -> AnyPublisher<[Article], Error> {
         breakingNewsResult.publisher.eraseToAnyPublisher()
     }
 

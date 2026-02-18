@@ -12,12 +12,15 @@ protocol MediaService {
     /// Fetches media items with optional type filtering and pagination.
     /// - Parameters:
     ///   - type: Filter by media type (nil returns both videos and podcasts).
+    ///   - language: ISO 639-1 language code for content filtering (e.g., "en", "pt", "es").
     ///   - page: Page number for pagination (1-indexed).
     /// - Returns: Publisher emitting an array of media articles or an error.
-    func fetchMedia(type: MediaType?, page: Int) -> AnyPublisher<[Article], Error>
+    func fetchMedia(type: MediaType?, language: String, page: Int) -> AnyPublisher<[Article], Error>
 
     /// Fetches featured/trending media items for the carousel.
-    /// - Parameter type: Filter by media type (nil returns both).
+    /// - Parameters:
+    ///   - type: Filter by media type (nil returns both).
+    ///   - language: ISO 639-1 language code for content filtering.
     /// - Returns: Publisher emitting featured media articles or an error.
-    func fetchFeaturedMedia(type: MediaType?) -> AnyPublisher<[Article], Error>
+    func fetchFeaturedMedia(type: MediaType?, language: String) -> AnyPublisher<[Article], Error>
 }

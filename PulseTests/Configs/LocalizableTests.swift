@@ -599,6 +599,18 @@ struct LocalizationKeysExistenceTests {
         "paywall.unlock_features",
         "paywall.premium_active",
         "paywall.full_access",
+        // Search
+        "search.prompt",
+        // Media
+        "media.unsupported_type",
+        // Settings - Content Language
+        "settings.content_language",
+        "settings.content_language.label",
+        "settings.content_language.description",
+        // Language
+        "language.english",
+        "language.portuguese",
+        "language.spanish",
     ]
 
     @Test("All localization keys exist and are not empty", arguments: allKeys)

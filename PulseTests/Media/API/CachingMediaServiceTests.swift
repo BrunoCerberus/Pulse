@@ -25,7 +25,7 @@ struct CachingMediaServiceTests {
     @Test("fetchMedia returns cached data when available and not expired")
     func fetchMediaCacheHit() async throws {
         let cachedArticles = MockMediaService.sampleMedia
-        let cacheKey = NewsCacheKey.media(type: nil, page: 1)
+        let cacheKey = NewsCacheKey.media(language: "en", type: nil, page: 1)
         let entry = CacheEntry(data: cachedArticles, timestamp: Date())
         mockCacheStore.set(entry, for: cacheKey)
 
@@ -35,7 +35,7 @@ struct CachingMediaServiceTests {
         var receivedArticles: [Article] = []
         var cancellables = Set<AnyCancellable>()
 
-        sut.fetchMedia(type: nil, page: 1)
+        sut.fetchMedia(type: nil, language: "en", page: 1)
             .sink(
                 receiveCompletion: { _ in },
                 receiveValue: { articles in
@@ -56,7 +56,7 @@ struct CachingMediaServiceTests {
         var receivedArticles: [Article] = []
         var cancellables = Set<AnyCancellable>()
 
-        sut.fetchMedia(type: nil, page: 1)
+        sut.fetchMedia(type: nil, language: "en", page: 1)
             .sink(
                 receiveCompletion: { _ in },
                 receiveValue: { articles in
@@ -71,7 +71,7 @@ struct CachingMediaServiceTests {
         #expect(mockCacheStore.getCallCount == 1)
         #expect(mockCacheStore.setCallCount == 1)
 
-        let cacheKey = NewsCacheKey.media(type: nil, page: 1)
+        let cacheKey = NewsCacheKey.media(language: "en", type: nil, page: 1)
         #expect(mockCacheStore.contains(key: cacheKey))
     }
 
@@ -79,7 +79,7 @@ struct CachingMediaServiceTests {
     func fetchMediaExpiredCache() async throws {
         let expiredTimestamp = Date().addingTimeInterval(-NewsCacheTTL.default - 1)
         let cachedArticles = [MockMediaService.sampleMedia[0]]
-        let cacheKey = NewsCacheKey.media(type: nil, page: 1)
+        let cacheKey = NewsCacheKey.media(language: "en", type: nil, page: 1)
         let entry = CacheEntry(data: cachedArticles, timestamp: expiredTimestamp)
         mockCacheStore.set(entry, for: cacheKey)
 
@@ -89,7 +89,7 @@ struct CachingMediaServiceTests {
         var receivedArticles: [Article] = []
         var cancellables = Set<AnyCancellable>()
 
-        sut.fetchMedia(type: nil, page: 1)
+        sut.fetchMedia(type: nil, language: "en", page: 1)
             .sink(
                 receiveCompletion: { _ in },
                 receiveValue: { articles in
@@ -107,7 +107,7 @@ struct CachingMediaServiceTests {
     @Test("fetchMedia uses correct cache key for video type")
     func fetchMediaVideoType() async throws {
         let cachedArticles = MockMediaService.sampleMedia.filter { $0.mediaType == .video }
-        let cacheKey = NewsCacheKey.media(type: "video", page: 1)
+        let cacheKey = NewsCacheKey.media(language: "en", type: "video", page: 1)
         let entry = CacheEntry(data: cachedArticles, timestamp: Date())
         mockCacheStore.set(entry, for: cacheKey)
 
@@ -116,7 +116,7 @@ struct CachingMediaServiceTests {
         var receivedArticles: [Article] = []
         var cancellables = Set<AnyCancellable>()
 
-        sut.fetchMedia(type: .video, page: 1)
+        sut.fetchMedia(type: .video, language: "en", page: 1)
             .sink(
                 receiveCompletion: { _ in },
                 receiveValue: { articles in
@@ -136,7 +136,7 @@ struct CachingMediaServiceTests {
     @Test("fetchFeaturedMedia returns cached data when available")
     func fetchFeaturedMediaCacheHit() async throws {
         let cachedArticles = Array(MockMediaService.sampleMedia.prefix(3))
-        let cacheKey = NewsCacheKey.featuredMedia(type: nil)
+        let cacheKey = NewsCacheKey.featuredMedia(language: "en", type: nil)
         let entry = CacheEntry(data: cachedArticles, timestamp: Date())
         mockCacheStore.set(entry, for: cacheKey)
 
@@ -146,7 +146,7 @@ struct CachingMediaServiceTests {
         var receivedArticles: [Article] = []
         var cancellables = Set<AnyCancellable>()
 
-        sut.fetchFeaturedMedia(type: nil)
+        sut.fetchFeaturedMedia(type: nil, language: "en")
             .sink(
                 receiveCompletion: { _ in },
                 receiveValue: { articles in
@@ -167,7 +167,7 @@ struct CachingMediaServiceTests {
         var receivedArticles: [Article] = []
         var cancellables = Set<AnyCancellable>()
 
-        sut.fetchFeaturedMedia(type: nil)
+        sut.fetchFeaturedMedia(type: nil, language: "en")
             .sink(
                 receiveCompletion: { _ in },
                 receiveValue: { articles in
@@ -186,7 +186,7 @@ struct CachingMediaServiceTests {
 
     @Test("invalidateCache clears L1 memory cache")
     func invalidateCacheClearsL1() {
-        let cacheKey = NewsCacheKey.media(type: nil, page: 1)
+        let cacheKey = NewsCacheKey.media(language: "en", type: nil, page: 1)
         let entry = CacheEntry(data: MockMediaService.sampleMedia, timestamp: Date())
         mockCacheStore.set(entry, for: cacheKey)
 
@@ -197,8 +197,8 @@ struct CachingMediaServiceTests {
 
     @Test("invalidateCache for specific keys only removes those keys")
     func invalidateCacheForKeys() {
-        let key1 = NewsCacheKey.media(type: nil, page: 1)
-        let key2 = NewsCacheKey.media(type: nil, page: 2)
+        let key1 = NewsCacheKey.media(language: "en", type: nil, page: 1)
+        let key2 = NewsCacheKey.media(language: "en", type: nil, page: 2)
         let entry = CacheEntry(data: MockMediaService.sampleMedia, timestamp: Date())
         mockCacheStore.set(entry, for: key1)
         mockCacheStore.set(entry, for: key2)
@@ -226,7 +226,7 @@ struct CachingMediaServiceTests {
 
         // Store expired data in L1
         let cachedArticles = MockMediaService.sampleMedia
-        let cacheKey = NewsCacheKey.media(type: nil, page: 1)
+        let cacheKey = NewsCacheKey.media(language: "en", type: nil, page: 1)
         let expiredTimestamp = Date().addingTimeInterval(-NewsCacheTTL.default - 1)
         let expiredEntry = CacheEntry(data: cachedArticles, timestamp: expiredTimestamp)
         mockCacheStore.set(expiredEntry, for: cacheKey)
@@ -235,7 +235,7 @@ struct CachingMediaServiceTests {
         var receivedArticles: [Article] = []
         var cancellables = Set<AnyCancellable>()
 
-        offlineSut.fetchMedia(type: nil, page: 1)
+        offlineSut.fetchMedia(type: nil, language: "en", page: 1)
             .sink(
                 receiveCompletion: { _ in },
                 receiveValue: { articles in
@@ -262,7 +262,7 @@ struct CachingMediaServiceTests {
         var receivedError: Error?
         var cancellables = Set<AnyCancellable>()
 
-        offlineSut.fetchMedia(type: nil, page: 1)
+        offlineSut.fetchMedia(type: nil, language: "en", page: 1)
             .sink(
                 receiveCompletion: { completion in
                     if case let .failure(error) = completion {

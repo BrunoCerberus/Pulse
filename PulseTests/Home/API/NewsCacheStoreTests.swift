@@ -14,7 +14,7 @@ struct LiveNewsCacheStoreTests {
 
     @Test("get returns nil for empty cache")
     func getReturnsNilForEmptyCache() {
-        let result: CacheEntry<[Article]>? = sut.get(for: .breakingNews(country: "us"))
+        let result: CacheEntry<[Article]>? = sut.get(for: .breakingNews(language: "en", country: "us"))
         #expect(result == nil)
     }
 
@@ -22,7 +22,7 @@ struct LiveNewsCacheStoreTests {
     func setAndGetRoundTrips() {
         let articles = Article.mockArticles
         let entry = CacheEntry(data: articles, timestamp: Date())
-        let key = NewsCacheKey.topHeadlines(country: "us", page: 1)
+        let key = NewsCacheKey.topHeadlines(language: "en", country: "us", page: 1)
 
         sut.set(entry, for: key)
 
@@ -48,8 +48,8 @@ struct LiveNewsCacheStoreTests {
     @Test("remove deletes specific key")
     func removeDeletesSpecificKey() {
         let articles = Article.mockArticles
-        let key1 = NewsCacheKey.breakingNews(country: "us")
-        let key2 = NewsCacheKey.topHeadlines(country: "us", page: 1)
+        let key1 = NewsCacheKey.breakingNews(language: "en", country: "us")
+        let key2 = NewsCacheKey.topHeadlines(language: "en", country: "us", page: 1)
 
         sut.set(CacheEntry(data: articles, timestamp: Date()), for: key1)
         sut.set(CacheEntry(data: articles, timestamp: Date()), for: key2)
@@ -66,13 +66,16 @@ struct LiveNewsCacheStoreTests {
     @Test("removeAll clears entire cache")
     func removeAllClearsCache() {
         let articles = Article.mockArticles
-        sut.set(CacheEntry(data: articles, timestamp: Date()), for: .breakingNews(country: "us"))
-        sut.set(CacheEntry(data: articles, timestamp: Date()), for: .topHeadlines(country: "us", page: 1))
+        sut.set(CacheEntry(data: articles, timestamp: Date()), for: .breakingNews(language: "en", country: "us"))
+        sut.set(
+            CacheEntry(data: articles, timestamp: Date()),
+            for: .topHeadlines(language: "en", country: "us", page: 1)
+        )
 
         sut.removeAll()
 
-        let result1: CacheEntry<[Article]>? = sut.get(for: .breakingNews(country: "us"))
-        let result2: CacheEntry<[Article]>? = sut.get(for: .topHeadlines(country: "us", page: 1))
+        let result1: CacheEntry<[Article]>? = sut.get(for: .breakingNews(language: "en", country: "us"))
+        let result2: CacheEntry<[Article]>? = sut.get(for: .topHeadlines(language: "en", country: "us", page: 1))
 
         #expect(result1 == nil)
         #expect(result2 == nil)
@@ -81,7 +84,7 @@ struct LiveNewsCacheStoreTests {
     @Test("get returns nil for wrong type cast")
     func getReturnsNilForWrongType() {
         let articles = Article.mockArticles
-        let key = NewsCacheKey.topHeadlines(country: "us", page: 1)
+        let key = NewsCacheKey.topHeadlines(language: "en", country: "us", page: 1)
         sut.set(CacheEntry(data: articles, timestamp: Date()), for: key)
 
         // Try to retrieve as single article instead of array
@@ -93,8 +96,8 @@ struct LiveNewsCacheStoreTests {
     func differentKeysStoreIndependently() {
         let articles1 = Array(Article.mockArticles.prefix(1))
         let articles2 = Article.mockArticles
-        let key1 = NewsCacheKey.topHeadlines(country: "us", page: 1)
-        let key2 = NewsCacheKey.topHeadlines(country: "us", page: 2)
+        let key1 = NewsCacheKey.topHeadlines(language: "en", country: "us", page: 1)
+        let key2 = NewsCacheKey.topHeadlines(language: "en", country: "us", page: 2)
 
         sut.set(CacheEntry(data: articles1, timestamp: Date()), for: key1)
         sut.set(CacheEntry(data: articles2, timestamp: Date()), for: key2)
@@ -110,8 +113,8 @@ struct LiveNewsCacheStoreTests {
     func categoryHeadlinesDistinctKeys() {
         let techArticles = Article.mockArticles.filter { $0.category == .technology }
         let sportsArticles = Article.mockArticles.filter { $0.category == .sports }
-        let techKey = NewsCacheKey.categoryHeadlines(category: .technology, country: "us", page: 1)
-        let sportsKey = NewsCacheKey.categoryHeadlines(category: .sports, country: "us", page: 1)
+        let techKey = NewsCacheKey.categoryHeadlines(language: "en", category: .technology, country: "us", page: 1)
+        let sportsKey = NewsCacheKey.categoryHeadlines(language: "en", category: .sports, country: "us", page: 1)
 
         sut.set(CacheEntry(data: techArticles, timestamp: Date()), for: techKey)
         sut.set(CacheEntry(data: sportsArticles, timestamp: Date()), for: sportsKey)
@@ -171,19 +174,19 @@ struct NewsCacheKeyExtendedTests {
 
     @Test("Breaking news key contains country")
     func breakingNewsKeyContainsCountry() {
-        let key = NewsCacheKey.breakingNews(country: "gb")
+        let key = NewsCacheKey.breakingNews(language: "en", country: "gb")
         #expect(key.stringKey.contains("gb"))
     }
 
     @Test("Category key contains category name")
     func categoryKeyContainsCategoryName() {
-        let key = NewsCacheKey.categoryHeadlines(category: .technology, country: "us", page: 1)
+        let key = NewsCacheKey.categoryHeadlines(language: "en", category: .technology, country: "us", page: 1)
         #expect(key.stringKey.contains("technology"))
     }
 
     @Test("Headlines key contains page number")
     func headlinesKeyContainsPage() {
-        let key = NewsCacheKey.topHeadlines(country: "us", page: 3)
+        let key = NewsCacheKey.topHeadlines(language: "en", country: "us", page: 3)
         #expect(key.stringKey.contains("3"))
     }
 }

@@ -18,7 +18,7 @@ struct CachingNewsServiceBreakingNewsTests {
     @Test("fetchBreakingNews returns cached data when available")
     func fetchBreakingNewsCacheHit() async throws {
         let cachedArticles = Array(Article.mockArticles.prefix(3))
-        let cacheKey = NewsCacheKey.breakingNews(country: "us")
+        let cacheKey = NewsCacheKey.breakingNews(language: "en", country: "us")
         let entry = CacheEntry(data: cachedArticles, timestamp: Date())
         mockCacheStore.set(entry, for: cacheKey)
         mockCacheStore.getCallCount = 0
@@ -26,7 +26,7 @@ struct CachingNewsServiceBreakingNewsTests {
         var receivedArticles: [Article] = []
         var cancellables = Set<AnyCancellable>()
 
-        sut.fetchBreakingNews(country: "us")
+        sut.fetchBreakingNews(language: "en", country: "us")
             .sink(
                 receiveCompletion: { _ in },
                 receiveValue: { articles in
@@ -49,7 +49,7 @@ struct CachingNewsServiceBreakingNewsTests {
         var receivedArticles: [Article] = []
         var cancellables = Set<AnyCancellable>()
 
-        sut.fetchBreakingNews(country: "us")
+        sut.fetchBreakingNews(language: "en", country: "us")
             .sink(
                 receiveCompletion: { _ in },
                 receiveValue: { articles in
@@ -68,7 +68,7 @@ struct CachingNewsServiceBreakingNewsTests {
     func fetchBreakingNewsExpiredCache() async throws {
         let expiredTimestamp = Date().addingTimeInterval(-NewsCacheTTL.default - 1)
         let cachedArticles = Array(Article.mockArticles.prefix(3))
-        let cacheKey = NewsCacheKey.breakingNews(country: "us")
+        let cacheKey = NewsCacheKey.breakingNews(language: "en", country: "us")
         let entry = CacheEntry(data: cachedArticles, timestamp: expiredTimestamp)
         mockCacheStore.set(entry, for: cacheKey)
 
@@ -81,7 +81,7 @@ struct CachingNewsServiceBreakingNewsTests {
         var receivedArticles: [Article] = []
         var cancellables = Set<AnyCancellable>()
 
-        sut.fetchBreakingNews(country: "us")
+        sut.fetchBreakingNews(language: "en", country: "us")
             .sink(
                 receiveCompletion: { _ in },
                 receiveValue: { articles in

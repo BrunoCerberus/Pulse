@@ -59,6 +59,8 @@ final class SettingsDomainInteractor: CombineInteractor {
             toggleNotifications(enabled)
         case let .toggleBreakingNews(enabled):
             toggleBreakingNews(enabled)
+        case let .changeLanguage(language):
+            changeLanguage(language)
         case .addMutedSource, .removeMutedSource, .addMutedKeyword, .removeMutedKeyword:
             handleMutedContentAction(action)
         case .setShowSignOutConfirmation, .setNewMutedSource, .setNewMutedKeyword:
@@ -133,6 +135,12 @@ final class SettingsDomainInteractor: CombineInteractor {
         savePreferences(preferences)
     }
 
+    private func changeLanguage(_ language: String) {
+        var preferences = currentState.preferences
+        preferences.preferredLanguage = language
+        savePreferences(preferences)
+    }
+
     private func addMutedSource(_ source: String) {
         guard !source.isEmpty else { return }
         var preferences = currentState.preferences
@@ -204,6 +212,7 @@ enum SettingsDomainAction: Equatable {
     case loadPreferences
     case toggleNotifications(Bool)
     case toggleBreakingNews(Bool)
+    case changeLanguage(String)
     case addMutedSource(String)
     case removeMutedSource(String)
     case addMutedKeyword(String)

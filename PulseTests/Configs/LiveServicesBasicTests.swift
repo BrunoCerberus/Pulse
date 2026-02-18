@@ -37,7 +37,7 @@ struct LiveServicesBasicTests {
         let sut = LiveNewsService()
         var cancellables = Set<AnyCancellable>()
 
-        let publisher = sut.fetchTopHeadlines(country: "us", page: 1)
+        let publisher = sut.fetchTopHeadlines(language: "en", country: "us", page: 1)
 
         // Verify publisher type by attempting to sink
         publisher
@@ -57,7 +57,7 @@ struct LiveServicesBasicTests {
         let sut = LiveNewsService()
         var cancellables = Set<AnyCancellable>()
 
-        let publisher = sut.fetchTopHeadlines(category: .technology, country: "us", page: 1)
+        let publisher = sut.fetchTopHeadlines(category: .technology, language: "en", country: "us", page: 1)
 
         publisher
             .sink(
@@ -75,7 +75,7 @@ struct LiveServicesBasicTests {
         let sut = LiveNewsService()
         var cancellables = Set<AnyCancellable>()
 
-        let publisher = sut.fetchBreakingNews(country: "us")
+        let publisher = sut.fetchBreakingNews(language: "en", country: "us")
 
         publisher
             .sink(

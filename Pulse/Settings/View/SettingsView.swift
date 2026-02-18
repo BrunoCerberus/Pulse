@@ -50,6 +50,7 @@ struct SettingsView: View {
                 SettingsSecuritySection(lockManager: lockManager)
 
                 notificationsSection
+                contentLanguageSection
                 appearanceSection
 
                 SettingsMutedContentSection(
@@ -134,6 +135,23 @@ struct SettingsView: View {
                 set: { viewModel.handle(event: .onToggleBreakingNews($0)) }
             ))
             .disabled(!viewModel.viewState.notificationsEnabled)
+        }
+    }
+
+    private var contentLanguageSection: some View {
+        Section(String(localized: "settings.content_language")) {
+            Picker(
+                String(localized: "settings.content_language.label"),
+                selection: Binding(
+                    get: { viewModel.viewState.selectedLanguage },
+                    set: { viewModel.handle(event: .onLanguageChanged($0)) }
+                )
+            ) {
+                ForEach(ContentLanguage.allCases, id: \.self) { language in
+                    Text("\(language.flag) \(language.displayName)")
+                        .tag(language.rawValue)
+                }
+            }
         }
     }
 

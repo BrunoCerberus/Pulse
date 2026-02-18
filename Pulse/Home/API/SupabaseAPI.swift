@@ -8,15 +8,15 @@ import Foundation
 /// - ETag support for conditional requests (304 Not Modified)
 /// - No authentication required (public read-only endpoints)
 enum SupabaseAPI: APIFetcher {
-    case articles(page: Int, pageSize: Int)
-    case articlesByCategory(category: String, page: Int, pageSize: Int)
-    case breakingNews(limit: Int)
+    case articles(language: String, page: Int, pageSize: Int)
+    case articlesByCategory(language: String, category: String, page: Int, pageSize: Int)
+    case breakingNews(language: String, limit: Int)
     case article(id: String)
     case search(query: String, page: Int, pageSize: Int)
     case categories
     case sources
-    case media(type: String?, page: Int, pageSize: Int)
-    case featuredMedia(type: String?, limit: Int)
+    case media(language: String, type: String?, page: Int, pageSize: Int)
+    case featuredMedia(language: String, type: String?, limit: Int)
 
     private var baseURL: String {
         SupabaseConfig.url + "/functions/v1"
@@ -43,20 +43,22 @@ enum SupabaseAPI: APIFetcher {
         var queryItems: [URLQueryItem] = []
 
         switch self {
-        case let .articles(page, pageSize):
+        case let .articles(language, page, pageSize):
             endpoint = "/api-articles"
             let offset = (page - 1) * pageSize
             queryItems.append(URLQueryItem(name: "select", value: Self.listFields))
+            queryItems.append(URLQueryItem(name: "language", value: "eq.\(language)"))
             queryItems.append(URLQueryItem(name: "order", value: "published_at.desc"))
             queryItems.append(URLQueryItem(name: "limit", value: String(pageSize)))
             if offset > 0 {
                 queryItems.append(URLQueryItem(name: "offset", value: String(offset)))
             }
 
-        case let .articlesByCategory(category, page, pageSize):
+        case let .articlesByCategory(language, category, page, pageSize):
             endpoint = "/api-articles"
             let offset = (page - 1) * pageSize
             queryItems.append(URLQueryItem(name: "select", value: Self.listFields))
+            queryItems.append(URLQueryItem(name: "language", value: "eq.\(language)"))
             queryItems.append(URLQueryItem(name: "category_slug", value: "eq.\(category)"))
             queryItems.append(URLQueryItem(name: "order", value: "published_at.desc"))
             queryItems.append(URLQueryItem(name: "limit", value: String(pageSize)))
@@ -64,9 +66,10 @@ enum SupabaseAPI: APIFetcher {
                 queryItems.append(URLQueryItem(name: "offset", value: String(offset)))
             }
 
-        case let .breakingNews(limit):
+        case let .breakingNews(language, limit):
             endpoint = "/api-articles"
             queryItems.append(URLQueryItem(name: "select", value: Self.listFields))
+            queryItems.append(URLQueryItem(name: "language", value: "eq.\(language)"))
             queryItems.append(URLQueryItem(name: "order", value: "published_at.desc"))
             queryItems.append(URLQueryItem(name: "limit", value: String(limit)))
 
@@ -91,10 +94,11 @@ enum SupabaseAPI: APIFetcher {
         case .sources:
             endpoint = "/api-sources"
 
-        case let .media(type, page, pageSize):
+        case let .media(language, type, page, pageSize):
             endpoint = "/api-articles"
             let offset = (page - 1) * pageSize
             queryItems.append(URLQueryItem(name: "select", value: Self.listFields))
+            queryItems.append(URLQueryItem(name: "language", value: "eq.\(language)"))
 
             // Filter by category_slug for media content
             if let type {
@@ -110,9 +114,10 @@ enum SupabaseAPI: APIFetcher {
                 queryItems.append(URLQueryItem(name: "offset", value: String(offset)))
             }
 
-        case let .featuredMedia(type, limit):
+        case let .featuredMedia(language, type, limit):
             endpoint = "/api-articles"
             queryItems.append(URLQueryItem(name: "select", value: Self.listFields))
+            queryItems.append(URLQueryItem(name: "language", value: "eq.\(language)"))
 
             // Filter by category_slug for media content
             if let type {

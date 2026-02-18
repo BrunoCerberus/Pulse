@@ -122,6 +122,8 @@ final class SettingsViewModel: CombineViewModel, ObservableObject {
             interactor.dispatch(action: .toggleNotifications(enabled))
         case let .onToggleBreakingNews(enabled):
             interactor.dispatch(action: .toggleBreakingNews(enabled))
+        case let .onLanguageChanged(language):
+            interactor.dispatch(action: .changeLanguage(language))
         default:
             break
         }
@@ -172,7 +174,8 @@ final class SettingsViewModel: CombineViewModel, ObservableObject {
                 currentUser: currentUser,
                 errorMessage: state.error,
                 newMutedSource: state.newMutedSource,
-                newMutedKeyword: state.newMutedKeyword
+                newMutedKeyword: state.newMutedKeyword,
+                selectedLanguage: state.preferences.preferredLanguage
             )
         }
         .removeDuplicates()
@@ -194,6 +197,7 @@ struct SettingsViewState: Equatable {
     var errorMessage: String?
     var newMutedSource: String
     var newMutedKeyword: String
+    var selectedLanguage: String
 
     static var initial: SettingsViewState {
         SettingsViewState(
@@ -208,7 +212,8 @@ struct SettingsViewState: Equatable {
             currentUser: nil,
             errorMessage: nil,
             newMutedSource: "",
-            newMutedKeyword: ""
+            newMutedKeyword: "",
+            selectedLanguage: "en"
         )
     }
 }
@@ -219,6 +224,7 @@ enum SettingsViewEvent: Equatable {
     case onToggleBreakingNews(Bool)
     case onToggleDarkMode(Bool)
     case onToggleSystemTheme(Bool)
+    case onLanguageChanged(String)
     case onNewMutedSourceChanged(String)
     case onAddMutedSource
     case onRemoveMutedSource(String)

@@ -23,10 +23,12 @@ final class MediaDomainInteractor: CombineInteractor {
     typealias DomainState = MediaDomainState
     typealias DomainAction = MediaDomainAction
 
-    private let mediaService: MediaService
+    let mediaService: MediaService
+    let settingsService: SettingsService
     private let analyticsService: AnalyticsService?
-    private let stateSubject = CurrentValueSubject<MediaDomainState, Never>(.initial)
-    private var cancellables = Set<AnyCancellable>()
+    let stateSubject = CurrentValueSubject<MediaDomainState, Never>(.initial)
+    var cancellables = Set<AnyCancellable>()
+    var preferredLanguage: String = "en"
 
     var statePublisher: AnyPublisher<MediaDomainState, Never> {
         stateSubject.eraseToAnyPublisher()
@@ -44,7 +46,23 @@ final class MediaDomainInteractor: CombineInteractor {
             mediaService = LiveMediaService()
         }
 
+        do {
+            settingsService = try serviceLocator.retrieve(SettingsService.self)
+        } catch {
+            Logger.shared.service("Failed to retrieve SettingsService: \(error)", level: .warning)
+            let storageService = (try? serviceLocator.retrieve(StorageService.self)) ?? LiveStorageService()
+            settingsService = LiveSettingsService(storageService: storageService)
+        }
+
         analyticsService = try? serviceLocator.retrieve(AnalyticsService.self)
+
+        // Observe preference changes to detect language changes
+        NotificationCenter.default.publisher(for: .userPreferencesDidChange)
+            .receive(on: DispatchQueue.main)
+            .sink { [weak self] _ in
+                self?.checkLanguageChange()
+            }
+            .store(in: &cancellables)
     }
 
     func dispatch(action: MediaDomainAction) {
@@ -82,17 +100,21 @@ final class MediaDomainInteractor: CombineInteractor {
 
         analyticsService?.logEvent(.screenView(screen: .media))
 
+        // Load preferred language from settings
+        loadPreferredLanguage()
+
         updateState { state in
             state.isLoading = true
             state.error = nil
         }
 
         let selectedType = currentState.selectedType
+        let language = preferredLanguage
 
         // Fetch both featured media and first page of media items
         Publishers.Zip(
-            mediaService.fetchFeaturedMedia(type: selectedType),
-            mediaService.fetchMedia(type: selectedType, page: 1)
+            mediaService.fetchFeaturedMedia(type: selectedType, language: language),
+            mediaService.fetchMedia(type: selectedType, language: language, page: 1)
         )
         .sink { [weak self] completion in
             if case let .failure(error) = completion {
@@ -125,8 +147,9 @@ final class MediaDomainInteractor: CombineInteractor {
 
         let nextPage = currentState.currentPage + 1
         let selectedType = currentState.selectedType
+        let language = preferredLanguage
 
-        mediaService.fetchMedia(type: selectedType, page: nextPage)
+        mediaService.fetchMedia(type: selectedType, language: language, page: nextPage)
             .sink { [weak self] completion in
                 if case .failure = completion {
                     self?.updateState { state in
@@ -162,10 +185,11 @@ final class MediaDomainInteractor: CombineInteractor {
         }
 
         let selectedType = currentState.selectedType
+        let language = preferredLanguage
 
         Publishers.Zip(
-            mediaService.fetchFeaturedMedia(type: selectedType),
-            mediaService.fetchMedia(type: selectedType, page: 1)
+            mediaService.fetchFeaturedMedia(type: selectedType, language: language),
+            mediaService.fetchMedia(type: selectedType, language: language, page: 1)
         )
         .sink { [weak self] completion in
             if case let .failure(error) = completion {
@@ -205,9 +229,10 @@ final class MediaDomainInteractor: CombineInteractor {
         }
 
         // Fetch both featured media and first page of media items for new type
+        let language = preferredLanguage
         Publishers.Zip(
-            mediaService.fetchFeaturedMedia(type: type),
-            mediaService.fetchMedia(type: type, page: 1)
+            mediaService.fetchFeaturedMedia(type: type, language: language),
+            mediaService.fetchMedia(type: type, language: language, page: 1)
         )
         .sink { [weak self] completion in
             if case let .failure(error) = completion {
@@ -265,16 +290,5 @@ final class MediaDomainInteractor: CombineInteractor {
         updateState { state in
             state.mediaToPlay = nil
         }
-    }
-
-    private func deduplicateMedia(_ media: [Article], excluding: [Article]) -> [Article] {
-        let excludeIDs = Set(excluding.map { $0.id })
-        return media.filter { !excludeIDs.contains($0.id) }
-    }
-
-    private func updateState(_ transform: (inout MediaDomainState) -> Void) {
-        var state = stateSubject.value
-        transform(&state)
-        stateSubject.send(state)
     }
 }

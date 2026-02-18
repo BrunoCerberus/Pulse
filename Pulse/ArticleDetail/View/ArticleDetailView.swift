@@ -217,7 +217,7 @@ struct ArticleDetailView: View {
     private var metadataRow: some View {
         HStack(spacing: Spacing.xs) {
             if let author = viewModel.viewState.article.author {
-                Text("By \(author)")
+                Text(String(format: String(localized: "article.by_author"), author))
                     .fontWeight(.medium)
                     .lineLimit(1)
                     .truncationMode(.tail)

@@ -1,4 +1,5 @@
 import Combine
+import EntropyCore
 import Foundation
 
 // MARK: - Data Loading Helpers
@@ -14,7 +15,7 @@ extension HomeDomainInteractor {
         page: Int,
         isRefreshing _: Bool = false
     ) -> AnyPublisher<Void, Never> {
-        newsService.fetchTopHeadlines(category: category, country: country, page: page)
+        newsService.fetchTopHeadlines(category: category, language: preferredLanguage, country: country, page: page)
             .receive(on: DispatchQueue.main)
             .handleEvents(
                 receiveOutput: { [weak self] headlines in
@@ -54,8 +55,8 @@ extension HomeDomainInteractor {
     /// Fetches both breaking news and headlines for the "All" tab and updates state.
     func fetchAllHeadlines(country: String, page: Int, isRefreshing _: Bool = false) -> AnyPublisher<Void, Never> {
         Publishers.Zip(
-            newsService.fetchBreakingNews(country: country),
-            newsService.fetchTopHeadlines(country: country, page: page)
+            newsService.fetchBreakingNews(language: preferredLanguage, country: country),
+            newsService.fetchTopHeadlines(language: preferredLanguage, country: country, page: page)
         )
         .receive(on: DispatchQueue.main)
         .handleEvents(
@@ -104,12 +105,18 @@ extension HomeDomainInteractor {
         // Invalidate only the keys being refreshed instead of the entire cache
         if let cachingService = newsService as? CachingNewsService {
             let country = "us"
+            let language = preferredLanguage
             var keysToInvalidate: [NewsCacheKey] = [
-                .breakingNews(country: country),
-                .topHeadlines(country: country, page: 1),
+                .breakingNews(language: language, country: country),
+                .topHeadlines(language: language, country: country, page: 1),
             ]
             if let category = currentState.selectedCategory {
-                keysToInvalidate.append(.categoryHeadlines(category: category, country: country, page: 1))
+                keysToInvalidate.append(.categoryHeadlines(
+                    language: language,
+                    category: category,
+                    country: country,
+                    page: 1
+                ))
             }
             cachingService.invalidateCache(for: keysToInvalidate)
         }
@@ -151,5 +158,32 @@ extension HomeDomainInteractor {
         var state = stateSubject.value
         transform(&state)
         stateSubject.send(state)
+    }
+
+    // MARK: - Preferences Helpers
+
+    func savePreferences(_ preferences: UserPreferences) {
+        settingsService.savePreferences(preferences)
+            .receive(on: DispatchQueue.main)
+            .sink(
+                receiveCompletion: { completion in
+                    if case let .failure(error) = completion {
+                        Logger.shared.service("Failed to save preferences: \(error)", level: .warning)
+                    }
+                },
+                receiveValue: { [weak self] in
+                    // Mark as local change so our notification observer skips the redundant re-fetch
+                    self?.isLocalPreferenceChange = true
+                    // Notify other components that preferences changed
+                    NotificationCenter.default.post(name: .userPreferencesDidChange, object: nil)
+                }
+            )
+            .store(in: &cancellables)
+    }
+
+    func setEditingTopics(_ editing: Bool) {
+        updateState { state in
+            state.isEditingTopics = editing
+        }
     }
 }

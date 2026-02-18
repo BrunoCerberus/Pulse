@@ -25,12 +25,13 @@ final class HomeDomainInteractor: CombineInteractor {
 
     let newsService: NewsService
     private let storageService: StorageService
-    private let settingsService: SettingsService
+    let settingsService: SettingsService
     private let analyticsService: AnalyticsService?
     let stateSubject = CurrentValueSubject<HomeDomainState, Never>(.initial)
     var cancellables = Set<AnyCancellable>()
     private var backgroundTasks = Set<Task<Void, Never>>()
-    private var isLocalPreferenceChange = false
+    var isLocalPreferenceChange = false
+    private(set) var preferredLanguage: String = "en"
 
     var statePublisher: AnyPublisher<HomeDomainState, Never> {
         stateSubject.eraseToAnyPublisher()
@@ -74,7 +75,7 @@ final class HomeDomainInteractor: CombineInteractor {
                     self.isLocalPreferenceChange = false
                     return
                 }
-                self.loadFollowedTopics()
+                self.loadFollowedTopicsAndCheckLanguage()
             }
             .store(in: &cancellables)
     }
@@ -175,14 +176,20 @@ private extension HomeDomainInteractor {
 
         // NewsAPI free tier has best coverage for US
         let country = "us"
+        let language = preferredLanguage
         let nextPage = currentState.currentPage + 1
         let selectedCategory = currentState.selectedCategory
 
         let headlinesPublisher: AnyPublisher<[Article], Error>
         if let category = selectedCategory {
-            headlinesPublisher = newsService.fetchTopHeadlines(category: category, country: country, page: nextPage)
+            headlinesPublisher = newsService.fetchTopHeadlines(
+                category: category,
+                language: language,
+                country: country,
+                page: nextPage
+            )
         } else {
-            headlinesPublisher = newsService.fetchTopHeadlines(country: country, page: nextPage)
+            headlinesPublisher = newsService.fetchTopHeadlines(language: language, country: country, page: nextPage)
         }
 
         headlinesPublisher
@@ -313,8 +320,40 @@ private extension HomeDomainInteractor {
                     }
                 },
                 receiveValue: { [weak self] preferences in
-                    self?.updateState { state in
+                    guard let self else { return }
+                    self.preferredLanguage = preferences.preferredLanguage
+                    self.updateState { state in
                         state.followedTopics = preferences.followedTopics
+                    }
+                }
+            )
+            .store(in: &cancellables)
+    }
+
+    /// Loads followed topics and checks if language changed, triggering a full reload if so.
+    func loadFollowedTopicsAndCheckLanguage() {
+        let previousLanguage = preferredLanguage
+        settingsService.fetchPreferences()
+            .receive(on: DispatchQueue.main)
+            .sink(
+                receiveCompletion: { completion in
+                    if case let .failure(error) = completion {
+                        Logger.shared.service("Failed to load preferences: \(error)", level: .warning)
+                    }
+                },
+                receiveValue: { [weak self] preferences in
+                    guard let self else { return }
+                    self.preferredLanguage = preferences.preferredLanguage
+                    self.updateState { state in
+                        state.followedTopics = preferences.followedTopics
+                    }
+                    // If language changed, invalidate cache and do a full reload
+                    if previousLanguage != self.preferredLanguage {
+                        if let cachingService = self.newsService as? CachingNewsService {
+                            cachingService.invalidateCache()
+                        }
+                        self.resetStateForCategoryChange(to: self.currentState.selectedCategory)
+                        self.fetchHeadlinesForCurrentCategory(page: 1)
                     }
                 }
             )
@@ -346,30 +385,5 @@ private extension HomeDomainInteractor {
                 }
             )
             .store(in: &cancellables)
-    }
-
-    func savePreferences(_ preferences: UserPreferences) {
-        settingsService.savePreferences(preferences)
-            .receive(on: DispatchQueue.main)
-            .sink(
-                receiveCompletion: { completion in
-                    if case let .failure(error) = completion {
-                        Logger.shared.service("Failed to save preferences: \(error)", level: .warning)
-                    }
-                },
-                receiveValue: { [weak self] in
-                    // Mark as local change so our notification observer skips the redundant re-fetch
-                    self?.isLocalPreferenceChange = true
-                    // Notify other components that preferences changed
-                    NotificationCenter.default.post(name: .userPreferencesDidChange, object: nil)
-                }
-            )
-            .store(in: &cancellables)
-    }
-
-    func setEditingTopics(_ editing: Bool) {
-        updateState { state in
-            state.isEditingTopics = editing
-        }
     }
 }

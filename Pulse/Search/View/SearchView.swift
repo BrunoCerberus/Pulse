@@ -48,7 +48,7 @@ struct SearchView<R: SearchNavigationRouter>: View {
                 set: { viewModel.handle(event: .onQueryChanged($0)) }
             ),
             placement: .navigationBarDrawer(displayMode: .always),
-            prompt: "Search news..."
+            prompt: String(localized: "search.prompt")
         )
         .onSubmit(of: .search) {
             HapticManager.shared.tap()

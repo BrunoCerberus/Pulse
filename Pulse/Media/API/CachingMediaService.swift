@@ -36,17 +36,23 @@ final class CachingMediaService: MediaService {
 
     // MARK: - MediaService Implementation
 
-    func fetchMedia(type: MediaType?, page: Int) -> AnyPublisher<[Article], Error> {
-        let cacheKey = NewsCacheKey.media(type: type?.rawValue, page: page)
-        return fetchWithTieredCache(key: cacheKey, label: "media (type: \(type?.rawValue ?? "all"), page: \(page))") {
-            self.wrapped.fetchMedia(type: type, page: page)
+    func fetchMedia(type: MediaType?, language: String, page: Int) -> AnyPublisher<[Article], Error> {
+        let cacheKey = NewsCacheKey.media(language: language, type: type?.rawValue, page: page)
+        return fetchWithTieredCache(
+            key: cacheKey,
+            label: "media (lang: \(language), type: \(type?.rawValue ?? "all"), page: \(page))"
+        ) {
+            self.wrapped.fetchMedia(type: type, language: language, page: page)
         }
     }
 
-    func fetchFeaturedMedia(type: MediaType?) -> AnyPublisher<[Article], Error> {
-        let cacheKey = NewsCacheKey.featuredMedia(type: type?.rawValue)
-        return fetchWithTieredCache(key: cacheKey, label: "featured media (type: \(type?.rawValue ?? "all"))") {
-            self.wrapped.fetchFeaturedMedia(type: type)
+    func fetchFeaturedMedia(type: MediaType?, language: String) -> AnyPublisher<[Article], Error> {
+        let cacheKey = NewsCacheKey.featuredMedia(language: language, type: type?.rawValue)
+        return fetchWithTieredCache(
+            key: cacheKey,
+            label: "featured media (lang: \(language), type: \(type?.rawValue ?? "all"))"
+        ) {
+            self.wrapped.fetchFeaturedMedia(type: type, language: language)
         }
     }
 
