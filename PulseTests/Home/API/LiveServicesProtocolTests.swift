@@ -22,7 +22,7 @@ struct LiveServicesProtocolTests {
     @Test("LiveNewsService fetchTopHeadlines returns correct publisher type")
     func newsServiceFetchTopHeadlinesType() {
         let service = LiveNewsService()
-        let publisher = service.fetchTopHeadlines(country: "us", page: 1)
+        let publisher = service.fetchTopHeadlines(language: "en", country: "us", page: 1)
         let typeCheck: AnyPublisher<[Article], Error> = publisher
         #expect(typeCheck is AnyPublisher<[Article], Error>)
     }

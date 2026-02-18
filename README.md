@@ -12,7 +12,8 @@ A modern iOS news aggregation app built with Clean Architecture, SwiftUI, and Co
 - **Offline Experience**: Tiered cache (in-memory L1 + persistent disk L2), network monitoring via NWPathMonitor, offline banner, and graceful degradation preserving cached content
 - **Bookmarks**: Save articles for offline reading with SwiftData persistence
 - **Search**: Full-text search with 300ms debounce, suggestions, recent searches, and sort options
-- **Settings**: Customize topics, notifications, theme, content filters, and account/logout (accessed from Home navigation bar)
+- **Localization**: Full multi-language support (English, Portuguese, Spanish) with translated UI strings and content language filtering via Supabase backend
+- **Settings**: Customize topics, notifications, theme, content language, content filters, and account/logout (accessed from Home navigation bar)
 - **Onboarding**: 4-page first-launch experience shown once after sign-in, highlighting key features before entering the app
 - **Analytics & Crash Reporting**: Firebase Analytics (18 type-safe events) and Crashlytics for crash/non-fatal error tracking
 - **Widget**: Home screen widget showing recent headlines (WidgetKit extension)

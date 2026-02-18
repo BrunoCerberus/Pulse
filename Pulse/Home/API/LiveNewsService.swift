@@ -21,9 +21,9 @@ final class LiveNewsService: APIRequest, NewsService {
         }
     }
 
-    func fetchTopHeadlines(country _: String, page: Int) -> AnyPublisher<[Article], Error> {
+    func fetchTopHeadlines(language: String, country _: String, page: Int) -> AnyPublisher<[Article], Error> {
         if useSupabase {
-            return fetchFromSupabase(page: page)
+            return fetchFromSupabase(language: language, page: page)
                 .catch { [weak self] error -> AnyPublisher<[Article], Error> in
                     let message = "LiveNewsService: Supabase failed, falling back to Guardian"
                     Logger.shared.service("\(message) - \(error.localizedDescription)", level: .warning)
@@ -35,9 +35,14 @@ final class LiveNewsService: APIRequest, NewsService {
         return fetchFromGuardian(page: page)
     }
 
-    func fetchTopHeadlines(category: NewsCategory, country _: String, page: Int) -> AnyPublisher<[Article], Error> {
+    func fetchTopHeadlines(
+        category: NewsCategory,
+        language: String,
+        country _: String,
+        page: Int
+    ) -> AnyPublisher<[Article], Error> {
         if useSupabase {
-            return fetchFromSupabase(category: category, page: page)
+            return fetchFromSupabase(language: language, category: category, page: page)
                 .catch { [weak self] error -> AnyPublisher<[Article], Error> in
                     let message = "LiveNewsService: Supabase category fetch failed"
                     Logger.shared.service("\(message) - \(error.localizedDescription)", level: .warning)
@@ -49,9 +54,9 @@ final class LiveNewsService: APIRequest, NewsService {
         return fetchFromGuardian(category: category, page: page)
     }
 
-    func fetchBreakingNews(country _: String) -> AnyPublisher<[Article], Error> {
+    func fetchBreakingNews(language: String, country _: String) -> AnyPublisher<[Article], Error> {
         if useSupabase {
-            return fetchBreakingFromSupabase()
+            return fetchBreakingFromSupabase(language: language)
                 .catch { [weak self] error -> AnyPublisher<[Article], Error> in
                     let message = "LiveNewsService: Supabase breaking news failed"
                     Logger.shared.service("\(message) - \(error.localizedDescription)", level: .warning)
@@ -79,9 +84,9 @@ final class LiveNewsService: APIRequest, NewsService {
 
     // MARK: - Supabase Fetchers
 
-    private func fetchFromSupabase(page: Int) -> AnyPublisher<[Article], Error> {
+    private func fetchFromSupabase(language: String, page: Int) -> AnyPublisher<[Article], Error> {
         fetchRequest(
-            target: SupabaseAPI.articles(page: page, pageSize: 20),
+            target: SupabaseAPI.articles(language: language, page: page, pageSize: 20),
             dataType: [SupabaseArticle].self
         )
         .map { $0.map { $0.toArticle() } }
@@ -92,9 +97,18 @@ final class LiveNewsService: APIRequest, NewsService {
         .eraseToAnyPublisher()
     }
 
-    private func fetchFromSupabase(category: NewsCategory, page: Int) -> AnyPublisher<[Article], Error> {
+    private func fetchFromSupabase(
+        language: String,
+        category: NewsCategory,
+        page: Int
+    ) -> AnyPublisher<[Article], Error> {
         fetchRequest(
-            target: SupabaseAPI.articlesByCategory(category: category.rawValue, page: page, pageSize: 20),
+            target: SupabaseAPI.articlesByCategory(
+                language: language,
+                category: category.rawValue,
+                page: page,
+                pageSize: 20
+            ),
             dataType: [SupabaseArticle].self
         )
         .map { $0.map { $0.toArticle() } }
@@ -107,9 +121,9 @@ final class LiveNewsService: APIRequest, NewsService {
         .eraseToAnyPublisher()
     }
 
-    private func fetchBreakingFromSupabase() -> AnyPublisher<[Article], Error> {
+    private func fetchBreakingFromSupabase(language: String) -> AnyPublisher<[Article], Error> {
         fetchRequest(
-            target: SupabaseAPI.breakingNews(limit: 10),
+            target: SupabaseAPI.breakingNews(language: language, limit: 10),
             dataType: [SupabaseArticle].self
         )
         .map { $0.map { $0.toArticle() } }

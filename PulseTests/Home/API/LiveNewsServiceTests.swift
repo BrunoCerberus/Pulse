@@ -15,7 +15,7 @@ struct LiveNewsServiceTests {
     @Test("fetchTopHeadlines returns correct publisher type")
     func fetchTopHeadlinesReturnsCorrectType() {
         let service = LiveNewsService()
-        let publisher = service.fetchTopHeadlines(country: "us", page: 1)
+        let publisher = service.fetchTopHeadlines(language: "en", country: "us", page: 1)
         let typeCheck: AnyPublisher<[Article], Error> = publisher
         #expect(typeCheck is AnyPublisher<[Article], Error>)
     }
@@ -23,7 +23,7 @@ struct LiveNewsServiceTests {
     @Test("fetchBreakingNews returns correct publisher type")
     func fetchBreakingNewsReturnsCorrectType() {
         let service = LiveNewsService()
-        let publisher = service.fetchBreakingNews(country: "us")
+        let publisher = service.fetchBreakingNews(language: "en", country: "us")
         let typeCheck: AnyPublisher<[Article], Error> = publisher
         #expect(typeCheck is AnyPublisher<[Article], Error>)
     }
@@ -31,7 +31,7 @@ struct LiveNewsServiceTests {
     @Test("fetchTopHeadlines by category returns correct publisher type")
     func fetchTopHeadlinesByCategoryReturnsCorrectType() {
         let service = LiveNewsService()
-        let publisher = service.fetchTopHeadlines(category: .technology, country: "us", page: 1)
+        let publisher = service.fetchTopHeadlines(category: .technology, language: "en", country: "us", page: 1)
         let typeCheck: AnyPublisher<[Article], Error> = publisher
         #expect(typeCheck is AnyPublisher<[Article], Error>)
     }

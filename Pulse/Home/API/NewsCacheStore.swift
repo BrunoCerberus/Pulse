@@ -21,28 +21,28 @@ struct CacheEntry<T> {
 
 /// Represents the different types of cacheable news content with their unique identifiers.
 enum NewsCacheKey: Hashable {
-    case breakingNews(country: String)
-    case topHeadlines(country: String, page: Int)
-    case categoryHeadlines(category: NewsCategory, country: String, page: Int)
+    case breakingNews(language: String, country: String)
+    case topHeadlines(language: String, country: String, page: Int)
+    case categoryHeadlines(language: String, category: NewsCategory, country: String, page: Int)
     case article(id: String)
-    case media(type: String?, page: Int)
-    case featuredMedia(type: String?)
+    case media(language: String, type: String?, page: Int)
+    case featuredMedia(language: String, type: String?)
 
     /// String representation of the cache key for NSCache storage.
     var stringKey: String {
         switch self {
-        case let .breakingNews(country):
-            return "breaking_\(country)"
-        case let .topHeadlines(country, page):
-            return "headlines_\(country)_p\(page)"
-        case let .categoryHeadlines(category, country, page):
-            return "category_\(category.rawValue)_\(country)_p\(page)"
+        case let .breakingNews(language, country):
+            return "\(language)_breaking_\(country)"
+        case let .topHeadlines(language, country, page):
+            return "\(language)_headlines_\(country)_p\(page)"
+        case let .categoryHeadlines(language, category, country, page):
+            return "\(language)_category_\(category.rawValue)_\(country)_p\(page)"
         case let .article(id):
             return "article_\(id)"
-        case let .media(type, page):
-            return "media_\(type ?? "all")_p\(page)"
-        case let .featuredMedia(type):
-            return "featured_media_\(type ?? "all")"
+        case let .media(language, type, page):
+            return "\(language)_media_\(type ?? "all")_p\(page)"
+        case let .featuredMedia(language, type):
+            return "\(language)_featured_media_\(type ?? "all")"
         }
     }
 }

@@ -22,6 +22,7 @@ struct MediaDomainInteractorTests {
 
         serviceLocator.register(MediaService.self, instance: mockMediaService)
         serviceLocator.register(StorageService.self, instance: mockStorageService)
+        serviceLocator.register(SettingsService.self, instance: MockSettingsService())
         serviceLocator.register(AnalyticsService.self, instance: mockAnalyticsService)
 
         sut = MediaDomainInteractor(serviceLocator: serviceLocator)

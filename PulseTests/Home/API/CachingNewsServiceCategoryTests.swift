@@ -18,7 +18,7 @@ struct CachingNewsServiceCategoryTests {
     @Test("fetchTopHeadlines with category returns cached data when available")
     func fetchCategoryHeadlinesCacheHit() async throws {
         let cachedArticles = Article.mockArticles
-        let cacheKey = NewsCacheKey.categoryHeadlines(category: .technology, country: "us", page: 1)
+        let cacheKey = NewsCacheKey.categoryHeadlines(language: "en", category: .technology, country: "us", page: 1)
         let entry = CacheEntry(data: cachedArticles, timestamp: Date())
         mockCacheStore.set(entry, for: cacheKey)
         mockCacheStore.getCallCount = 0
@@ -26,7 +26,7 @@ struct CachingNewsServiceCategoryTests {
         var receivedArticles: [Article] = []
         var cancellables = Set<AnyCancellable>()
 
-        sut.fetchTopHeadlines(category: .technology, country: "us", page: 1)
+        sut.fetchTopHeadlines(category: .technology, language: "en", country: "us", page: 1)
             .sink(
                 receiveCompletion: { _ in },
                 receiveValue: { articles in
@@ -49,7 +49,7 @@ struct CachingNewsServiceCategoryTests {
         var receivedArticles: [Article] = []
         var cancellables = Set<AnyCancellable>()
 
-        sut.fetchTopHeadlines(category: .science, country: "us", page: 1)
+        sut.fetchTopHeadlines(category: .science, language: "en", country: "us", page: 1)
             .sink(
                 receiveCompletion: { _ in },
                 receiveValue: { articles in
@@ -63,7 +63,7 @@ struct CachingNewsServiceCategoryTests {
         #expect(!receivedArticles.isEmpty)
         #expect(mockCacheStore.setCallCount >= 1)
 
-        let cacheKey = NewsCacheKey.categoryHeadlines(category: .science, country: "us", page: 1)
+        let cacheKey = NewsCacheKey.categoryHeadlines(language: "en", category: .science, country: "us", page: 1)
         #expect(mockCacheStore.contains(key: cacheKey))
     }
 
@@ -71,7 +71,7 @@ struct CachingNewsServiceCategoryTests {
     func fetchCategoryHeadlinesExpiredCache() async throws {
         let expiredTimestamp = Date().addingTimeInterval(-NewsCacheTTL.default - 1)
         let cachedArticles = [Article.mockArticles[0]]
-        let cacheKey = NewsCacheKey.categoryHeadlines(category: .technology, country: "us", page: 1)
+        let cacheKey = NewsCacheKey.categoryHeadlines(language: "en", category: .technology, country: "us", page: 1)
         let entry = CacheEntry(data: cachedArticles, timestamp: expiredTimestamp)
         mockCacheStore.set(entry, for: cacheKey)
 
@@ -84,7 +84,7 @@ struct CachingNewsServiceCategoryTests {
         var receivedArticles: [Article] = []
         var cancellables = Set<AnyCancellable>()
 
-        sut.fetchTopHeadlines(category: .technology, country: "us", page: 1)
+        sut.fetchTopHeadlines(category: .technology, language: "en", country: "us", page: 1)
             .sink(
                 receiveCompletion: { _ in },
                 receiveValue: { articles in

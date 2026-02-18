@@ -200,7 +200,7 @@ private extension FeedDomainInteractor {
                             let articles = try await withCheckedThrowingContinuation { continuation in
                                 var cancellable: AnyCancellable?
                                 cancellable = newsService
-                                    .fetchTopHeadlines(category: category, country: "us", page: 1)
+                                    .fetchTopHeadlines(category: category, language: "en", country: "us", page: 1)
                                     .first()
                                     .sink(
                                         receiveCompletion: { completion in

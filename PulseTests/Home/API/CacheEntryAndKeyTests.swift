@@ -34,10 +34,10 @@ struct CacheEntryTests {
 struct NewsCacheKeyTests {
     @Test("Cache keys generate unique string keys")
     func uniqueStringKeys() {
-        let key1 = NewsCacheKey.breakingNews(country: "us")
-        let key2 = NewsCacheKey.topHeadlines(country: "us", page: 1)
-        let key3 = NewsCacheKey.topHeadlines(country: "us", page: 2)
-        let key4 = NewsCacheKey.categoryHeadlines(category: .technology, country: "us", page: 1)
+        let key1 = NewsCacheKey.breakingNews(language: "en", country: "us")
+        let key2 = NewsCacheKey.topHeadlines(language: "en", country: "us", page: 1)
+        let key3 = NewsCacheKey.topHeadlines(language: "en", country: "us", page: 2)
+        let key4 = NewsCacheKey.categoryHeadlines(language: "en", category: .technology, country: "us", page: 1)
         let key5 = NewsCacheKey.article(id: "test-article")
 
         let allKeys = [key1.stringKey, key2.stringKey, key3.stringKey, key4.stringKey, key5.stringKey]
@@ -48,8 +48,8 @@ struct NewsCacheKeyTests {
 
     @Test("Same parameters produce same cache key")
     func sameParametersSameKey() {
-        let key1 = NewsCacheKey.topHeadlines(country: "us", page: 1)
-        let key2 = NewsCacheKey.topHeadlines(country: "us", page: 1)
+        let key1 = NewsCacheKey.topHeadlines(language: "en", country: "us", page: 1)
+        let key2 = NewsCacheKey.topHeadlines(language: "en", country: "us", page: 1)
 
         #expect(key1.stringKey == key2.stringKey)
         #expect(key1 == key2)
@@ -57,9 +57,9 @@ struct NewsCacheKeyTests {
 
     @Test("Different parameters produce different cache keys")
     func differentParametersDifferentKeys() {
-        let key1 = NewsCacheKey.topHeadlines(country: "us", page: 1)
-        let key2 = NewsCacheKey.topHeadlines(country: "uk", page: 1)
-        let key3 = NewsCacheKey.topHeadlines(country: "us", page: 2)
+        let key1 = NewsCacheKey.topHeadlines(language: "en", country: "us", page: 1)
+        let key2 = NewsCacheKey.topHeadlines(language: "en", country: "uk", page: 1)
+        let key3 = NewsCacheKey.topHeadlines(language: "en", country: "us", page: 2)
 
         #expect(key1.stringKey != key2.stringKey)
         #expect(key1.stringKey != key3.stringKey)

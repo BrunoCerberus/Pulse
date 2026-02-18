@@ -1,0 +1,233 @@
+/* ==================== */
+/* MARK: - Common       */
+/* ==================== */
+
+"app.name" = "Pulse";
+"common.ok" = "OK";
+"common.cancel" = "Cancelar";
+"common.error" = "Error";
+"common.try_again" = "Intentar de Nuevo";
+"common.back" = "Volver";
+"common.loading_more" = "Cargando más...";
+"common.version" = "Versión";
+"common.share" = "Compartir";
+"common.done" = "Listo";
+
+/* ==================== */
+/* MARK: - Tab Bar      */
+/* ==================== */
+
+"tab.home" = "Inicio";
+"tab.for_you" = "Para Ti";
+"tab.search" = "Buscar";
+"tab.bookmarks" = "Guardados";
+
+/* ==================== */
+/* MARK: - Categories   */
+/* ==================== */
+
+"category.world" = "Mundo";
+"category.business" = "Negocios";
+"category.technology" = "Tecnología";
+"category.science" = "Ciencia";
+"category.health" = "Salud";
+"category.sports" = "Deportes";
+"category.entertainment" = "Entretenimiento";
+
+/* ==================== */
+/* MARK: - Home         */
+/* ==================== */
+
+"home.title" = "Noticias";
+"home.breaking" = "URGENTE";
+"home.error.title" = "No Se Pudieron Cargar las Noticias";
+"home.empty.title" = "Sin Noticias Disponibles";
+"home.empty.message" = "Vuelve más tarde para ver los últimos titulares.";
+"home.edit_topics.title" = "Editar Temas";
+"home.edit_topics.description" = "Selecciona temas para filtrar tu feed de noticias";
+
+/* ==================== */
+/* MARK: - For You      */
+/* ==================== */
+
+"for_you.title" = "Para Ti";
+"for_you.error.title" = "No Se Pudo Cargar el Feed";
+"for_you.empty.title" = "Personaliza Tu Feed";
+"for_you.empty.message" = "Sigue temas y fuentes para ver artículos adaptados a tus intereses.";
+"for_you.set_preferences" = "Configurar Preferencias";
+"for_you.no_articles.title" = "Sin Artículos";
+"for_you.no_articles.message" = "No se encontraron artículos según tus preferencias.";
+
+/* ==================== */
+/* MARK: - Summarization */
+/* ==================== */
+
+"summarization.title" = "Resumir";
+"summarization.subtitle" = "Genera un resumen con IA de este artículo";
+"summarization.generate" = "Generar Resumen";
+"summarization.cancel" = "Cancelar";
+"summarization.retry" = "Intentar de Nuevo";
+"summarization.loading_model" = "Cargando modelo de IA...";
+"summarization.generating" = "Generando...";
+"summarization.button" = "Resumir";
+"summarization.ai_summary" = "Resumen con IA";
+
+/* ==================== */
+/* MARK: - Search       */
+/* ==================== */
+
+"search.title" = "Buscar";
+"search.searching" = "Buscando...";
+"search.placeholder.title" = "Buscar Noticias";
+"search.placeholder.message" = "Encuentra artículos de miles de fuentes en todo el mundo";
+"search.error.title" = "Error en la Búsqueda";
+"search.empty.title" = "Sin Resultados";
+"search.prompt" = "Buscar noticias...";
+
+/* ==================== */
+/* MARK: - Bookmarks    */
+/* ==================== */
+
+"bookmarks.title" = "Guardados";
+"bookmarks.loading" = "Cargando guardados...";
+"bookmarks.error.title" = "No Se Pudieron Cargar los Guardados";
+"bookmarks.empty.title" = "Sin Guardados";
+"bookmarks.empty.message" = "Los artículos que guardes aparecerán aquí para lectura sin conexión.";
+"bookmarks.saved_count" = "%d artículos guardados";
+
+/* ==================== */
+/* MARK: - Article      */
+/* ==================== */
+
+"article.by_author" = "Por %@";
+"article.read_full" = "Leer Artículo Completo";
+"article.bookmark" = "Guardar";
+"article.share" = "Compartir";
+
+/* ==================== */
+/* MARK: - Settings     */
+/* ==================== */
+
+"settings.title" = "Configuración";
+"settings.followed_topics" = "Temas Seguidos";
+"settings.followed_topics.description" = "Los artículos de los temas seguidos aparecerán en tu feed de Inicio.";
+"settings.content_filters" = "Filtros de Contenido";
+"settings.content_filters.description" = "Las fuentes y palabras clave silenciadas se ocultarán de todos los feeds.";
+"settings.clear_history" = "Borrar Historial de Lectura";
+"settings.clear_history.confirm" = "Esto eliminará todos los artículos de tu historial de lectura. Esta acción no se puede deshacer.";
+"settings.clear_history.action" = "Borrar";
+"settings.view_github" = "Ver en GitHub";
+"settings.subscription" = "Suscripción";
+"settings.content_language" = "Idioma del Contenido";
+"settings.content_language.label" = "Idioma";
+"settings.content_language.description" = "Elige el idioma de los artículos de noticias";
+
+/* ==================== */
+/* MARK: - Account      */
+/* ==================== */
+
+"account.title" = "Cuenta";
+"account.sign_out" = "Cerrar Sesión";
+"account.sign_out.confirm" = "¿Estás seguro de que quieres cerrar sesión?";
+
+/* ==================== */
+/* MARK: - Auth         */
+/* ==================== */
+
+"auth.tagline" = "Tu experiencia de noticias personalizada";
+"auth.sign_in_apple" = "Iniciar sesión con Apple";
+"auth.sign_in_google" = "Iniciar sesión con Google";
+"auth.terms" = "Al iniciar sesión, aceptas nuestros Términos de Servicio y Política de Privacidad";
+"auth.signing_in" = "Iniciando sesión...";
+
+/* ==================== */
+/* MARK: - Paywall      */
+/* ==================== */
+
+"paywall.loading" = "Cargando...";
+"paywall.title" = "Desbloquear Premium";
+"paywall.subtitle" = "Obtén la experiencia completa de Pulse con acceso ilimitado";
+"paywall.feature1.title" = "Artículos Ilimitados";
+"paywall.feature1.description" = "Lee todos los artículos que quieras sin límites";
+"paywall.feature2.title" = "Lectura Sin Conexión";
+"paywall.feature2.description" = "Guarda artículos ilimitados para acceso sin conexión";
+"paywall.feature3.title" = "Sin Anuncios";
+"paywall.feature3.description" = "Disfruta de una experiencia de lectura limpia y sin distracciones";
+"paywall.error.title" = "Error";
+"paywall.retry" = "Reintentar";
+"paywall.restore_purchases" = "Restaurar Compras";
+"paywall.go_premium" = "Obtener Premium";
+"paywall.unlock_features" = "Desbloquea todas las funciones premium";
+"paywall.premium_active" = "Premium Activo";
+"paywall.full_access" = "Tienes acceso completo a todas las funciones";
+
+/* ==================== */
+/* MARK: - Premium Gate */
+/* ==================== */
+
+"premium_gate.badge" = "Función Premium";
+"premium_gate.unlock_button" = "Desbloquear Premium";
+
+"premium_gate.daily_digest.title" = "Resumen Diario con IA";
+"premium_gate.daily_digest.description" = "Recibe resúmenes personalizados generados por IA de tu actividad de lectura, entregados frescos cada día.";
+
+"premium_gate.summarization.title" = "Resúmenes de Artículos con IA";
+"premium_gate.summarization.description" = "Resume instantáneamente cualquier artículo con nuestra potente IA en el dispositivo.";
+
+"premium_gate.for_you.title" = "Personalizado Para Ti";
+"premium_gate.for_you.description" = "Recibe un feed curado de artículos adaptados a tus intereses y hábitos de lectura.";
+
+/* ==================== */
+/* MARK: - Media        */
+/* ==================== */
+
+"media.type.videos" = "Videos";
+"media.type.podcasts" = "Podcasts";
+"media.open_in_browser" = "Abrir en Navegador";
+"media.skip_backward" = "Retroceder 15 segundos";
+"media.skip_forward" = "Avanzar 30 segundos";
+"media.play" = "Reproducir";
+"media.pause" = "Pausar";
+"media.error_title" = "Error de Reproducción";
+"media.video_unavailable" = "URL del video no disponible";
+"media.audio_unavailable" = "URL del audio no disponible";
+"media.unsupported_type" = "Tipo de medio no compatible";
+
+/* ───── App Lock ───── */
+
+"applock.locked_title" = "Pulse está Bloqueado";
+"applock.unlock" = "Desbloquear";
+"applock.auth_reason" = "Desbloquear Pulse";
+"applock.enable_reason" = "Activar Face ID para Pulse";
+"applock.prompt_title" = "¿Activar Face ID?";
+"applock.prompt_description" = "Agrega una capa extra de seguridad. Puedes cambiar esto en Configuración.";
+"applock.prompt_enable" = "Activar";
+"applock.prompt_not_now" = "Ahora No";
+"applock.settings_header" = "Seguridad";
+"applock.settings_toggle" = "Bloquear con Face ID";
+"applock.settings_footer" = "Requerir Face ID para desbloquear la app después de volver del segundo plano.";
+"applock.settings_unavailable" = "No Disponible";
+
+/* ==================== */
+/* MARK: - Onboarding   */
+/* ==================== */
+
+"onboarding.skip" = "Omitir";
+"onboarding.next" = "Siguiente";
+"onboarding.get_started" = "Comenzar";
+"onboarding.welcome.title" = "Tu Feed de Noticias Personalizado";
+"onboarding.welcome.subtitle" = "Titulares curados y noticias de última hora de fuentes confiables, todo en un solo lugar.";
+"onboarding.ai_powered.title" = "Resúmenes Inteligentes al Alcance";
+"onboarding.ai_powered.subtitle" = "Resumen diario y resúmenes de artículos con IA te ayudan a mantenerte informado más rápido.";
+"onboarding.stay_connected.title" = "Nunca Te Pierdas una Noticia";
+"onboarding.stay_connected.subtitle" = "Guarda artículos para lectura sin conexión, marca tus favoritos y busca cualquier cosa.";
+"onboarding.get_started.title" = "¿Listo para Explorar?";
+"onboarding.get_started.subtitle" = "Tu viaje de noticias comienza ahora.";
+
+/* ==================== */
+/* MARK: - Language     */
+/* ==================== */
+
+"language.english" = "Inglés";
+"language.portuguese" = "Portugués";
+"language.spanish" = "Español";

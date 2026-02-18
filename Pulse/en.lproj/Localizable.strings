@@ -82,6 +82,7 @@
 "search.placeholder.message" = "Find articles from thousands of sources worldwide";
 "search.error.title" = "Search Failed";
 "search.empty.title" = "No Results Found";
+"search.prompt" = "Search news...";
 
 /* ==================== */
 /* MARK: - Bookmarks    */
@@ -117,6 +118,9 @@
 "settings.clear_history.action" = "Clear";
 "settings.view_github" = "View on GitHub";
 "settings.subscription" = "Subscription";
+"settings.content_language" = "Content Language";
+"settings.content_language.label" = "Language";
+"settings.content_language.description" = "Choose the language for news articles";
 
 /* ==================== */
 /* MARK: - Account      */
@@ -187,6 +191,7 @@
 "media.error_title" = "Playback Error";
 "media.video_unavailable" = "Video URL is not available";
 "media.audio_unavailable" = "Audio URL is not available";
+"media.unsupported_type" = "Unsupported media type";
 
 /* ───── App Lock ───── */
 
@@ -218,3 +223,11 @@
 "onboarding.stay_connected.subtitle" = "Save articles for offline reading, bookmark your favorites, and search anything.";
 "onboarding.get_started.title" = "Ready to Explore?";
 "onboarding.get_started.subtitle" = "Your news journey starts now.";
+
+/* ==================== */
+/* MARK: - Language     */
+/* ==================== */
+
+"language.english" = "English";
+"language.portuguese" = "Portuguese";
+"language.spanish" = "Spanish";

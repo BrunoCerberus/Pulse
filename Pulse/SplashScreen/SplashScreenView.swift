@@ -91,7 +91,7 @@ struct SplashScreenView: View {
             }
             .glowEffect(color: Color.Accent.primary, radius: 16)
 
-            Text("Pulse")
+            Text(String(localized: "app.name"))
                 .font(Typography.displayMedium)
                 .foregroundStyle(.white)
         }

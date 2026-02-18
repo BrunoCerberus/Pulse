@@ -24,7 +24,7 @@ struct DiskNewsCacheStoreTests {
         defer { cleanup() }
 
         let articles = Article.mockArticles
-        let key = NewsCacheKey.topHeadlines(country: "us", page: 1)
+        let key = NewsCacheKey.topHeadlines(language: "en", country: "us", page: 1)
         let entry = CacheEntry(data: articles, timestamp: Date())
 
         sut.set(entry, for: key)
@@ -57,7 +57,7 @@ struct DiskNewsCacheStoreTests {
     func getNonexistentKey() {
         defer { cleanup() }
 
-        let key = NewsCacheKey.topHeadlines(country: "xx", page: 99)
+        let key = NewsCacheKey.topHeadlines(language: "en", country: "xx", page: 99)
         let result: CacheEntry<[Article]>? = sut.get(for: key)
 
         #expect(result == nil)
@@ -70,7 +70,7 @@ struct DiskNewsCacheStoreTests {
         defer { cleanup() }
 
         let articles = Article.mockArticles
-        let key = NewsCacheKey.breakingNews(country: "us")
+        let key = NewsCacheKey.breakingNews(language: "en", country: "us")
         let pastTimestamp = Date().addingTimeInterval(-3600)
         let entry = CacheEntry(data: articles, timestamp: pastTimestamp)
 
@@ -90,8 +90,8 @@ struct DiskNewsCacheStoreTests {
     func removeSpecificEntry() {
         defer { cleanup() }
 
-        let key1 = NewsCacheKey.topHeadlines(country: "us", page: 1)
-        let key2 = NewsCacheKey.breakingNews(country: "us")
+        let key1 = NewsCacheKey.topHeadlines(language: "en", country: "us", page: 1)
+        let key2 = NewsCacheKey.breakingNews(language: "en", country: "us")
         let entry = CacheEntry(data: Article.mockArticles, timestamp: Date())
 
         sut.set(entry, for: key1)
@@ -110,8 +110,8 @@ struct DiskNewsCacheStoreTests {
     func removeAllEntries() {
         defer { cleanup() }
 
-        let key1 = NewsCacheKey.topHeadlines(country: "us", page: 1)
-        let key2 = NewsCacheKey.breakingNews(country: "us")
+        let key1 = NewsCacheKey.topHeadlines(language: "en", country: "us", page: 1)
+        let key2 = NewsCacheKey.breakingNews(language: "en", country: "us")
         let entry = CacheEntry(data: Article.mockArticles, timestamp: Date())
 
         sut.set(entry, for: key1)
@@ -133,7 +133,7 @@ struct DiskNewsCacheStoreTests {
         defer { cleanup() }
 
         // Write garbage data to a cache file
-        let key = NewsCacheKey.topHeadlines(country: "us", page: 1)
+        let key = NewsCacheKey.topHeadlines(language: "en", country: "us", page: 1)
         let sanitized = key.stringKey.replacingOccurrences(of: "/", with: "_")
         let fileURL = testDirectory.appendingPathComponent(sanitized + ".json")
 
@@ -151,7 +151,7 @@ struct DiskNewsCacheStoreTests {
     func overwriteExistingEntry() {
         defer { cleanup() }
 
-        let key = NewsCacheKey.topHeadlines(country: "us", page: 1)
+        let key = NewsCacheKey.topHeadlines(language: "en", country: "us", page: 1)
         let firstArticles = Array(Article.mockArticles.prefix(2))
         let secondArticles = Array(Article.mockArticles.prefix(4))
 

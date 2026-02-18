@@ -175,7 +175,7 @@ struct MediaDetailView: View {
                 .foregroundStyle(.secondary)
                 .accessibilityHidden(true)
 
-            Text("Unsupported media type")
+            Text(String(localized: "media.unsupported_type"))
                 .font(Typography.bodyLarge)
                 .foregroundStyle(.secondary)
         }

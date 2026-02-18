@@ -36,27 +36,40 @@ final class CachingNewsService: NewsService {
 
     // MARK: - NewsService Implementation
 
-    func fetchTopHeadlines(country: String, page: Int) -> AnyPublisher<[Article], Error> {
-        let cacheKey = NewsCacheKey.topHeadlines(country: country, page: page)
-        return fetchWithTieredCache(key: cacheKey, label: "headlines (country: \(country), page: \(page))") {
-            self.wrapped.fetchTopHeadlines(country: country, page: page)
-        }
-    }
-
-    func fetchTopHeadlines(category: NewsCategory, country: String, page: Int) -> AnyPublisher<[Article], Error> {
-        let cacheKey = NewsCacheKey.categoryHeadlines(category: category, country: country, page: page)
+    func fetchTopHeadlines(language: String, country: String, page: Int) -> AnyPublisher<[Article], Error> {
+        let cacheKey = NewsCacheKey.topHeadlines(language: language, country: country, page: page)
         return fetchWithTieredCache(
             key: cacheKey,
-            label: "category headlines (category: \(category.rawValue), page: \(page))"
+            label: "headlines (lang: \(language), country: \(country), page: \(page))"
         ) {
-            self.wrapped.fetchTopHeadlines(category: category, country: country, page: page)
+            self.wrapped.fetchTopHeadlines(language: language, country: country, page: page)
         }
     }
 
-    func fetchBreakingNews(country: String) -> AnyPublisher<[Article], Error> {
-        let cacheKey = NewsCacheKey.breakingNews(country: country)
-        return fetchWithTieredCache(key: cacheKey, label: "breaking news (country: \(country))") {
-            self.wrapped.fetchBreakingNews(country: country)
+    func fetchTopHeadlines(
+        category: NewsCategory,
+        language: String,
+        country: String,
+        page: Int
+    ) -> AnyPublisher<[Article], Error> {
+        let cacheKey = NewsCacheKey.categoryHeadlines(
+            language: language,
+            category: category,
+            country: country,
+            page: page
+        )
+        return fetchWithTieredCache(
+            key: cacheKey,
+            label: "category headlines (lang: \(language), category: \(category.rawValue), page: \(page))"
+        ) {
+            self.wrapped.fetchTopHeadlines(category: category, language: language, country: country, page: page)
+        }
+    }
+
+    func fetchBreakingNews(language: String, country: String) -> AnyPublisher<[Article], Error> {
+        let cacheKey = NewsCacheKey.breakingNews(language: language, country: country)
+        return fetchWithTieredCache(key: cacheKey, label: "breaking news (lang: \(language), country: \(country))") {
+            self.wrapped.fetchBreakingNews(language: language, country: country)
         }
     }
 

@@ -22,7 +22,7 @@ struct LiveMediaServiceTests {
     func fetchMediaReturnsCorrectType() {
         let service = LiveMediaService()
 
-        let publisher = service.fetchMedia(type: nil, page: 1)
+        let publisher = service.fetchMedia(type: nil, language: "en", page: 1)
 
         // Verify the publisher has the expected type signature
         let typeCheck: AnyPublisher<[Article], Error> = publisher
@@ -34,7 +34,7 @@ struct LiveMediaServiceTests {
     func fetchMediaWithVideoTypeReturnsCorrectType() {
         let service = LiveMediaService()
 
-        let publisher = service.fetchMedia(type: .video, page: 1)
+        let publisher = service.fetchMedia(type: .video, language: "en", page: 1)
 
         let typeCheck: AnyPublisher<[Article], Error> = publisher
         let isCorrectType = typeCheck is AnyPublisher<[Article], Error>
@@ -45,7 +45,7 @@ struct LiveMediaServiceTests {
     func fetchMediaWithPodcastTypeReturnsCorrectType() {
         let service = LiveMediaService()
 
-        let publisher = service.fetchMedia(type: .podcast, page: 1)
+        let publisher = service.fetchMedia(type: .podcast, language: "en", page: 1)
 
         let typeCheck: AnyPublisher<[Article], Error> = publisher
         let isCorrectType = typeCheck is AnyPublisher<[Article], Error>
@@ -56,7 +56,7 @@ struct LiveMediaServiceTests {
     func fetchFeaturedMediaReturnsCorrectType() {
         let service = LiveMediaService()
 
-        let publisher = service.fetchFeaturedMedia(type: nil)
+        let publisher = service.fetchFeaturedMedia(type: nil, language: "en")
 
         let typeCheck: AnyPublisher<[Article], Error> = publisher
         let isCorrectType = typeCheck is AnyPublisher<[Article], Error>
@@ -67,7 +67,7 @@ struct LiveMediaServiceTests {
     func fetchFeaturedMediaWithVideoTypeReturnsCorrectType() {
         let service = LiveMediaService()
 
-        let publisher = service.fetchFeaturedMedia(type: .video)
+        let publisher = service.fetchFeaturedMedia(type: .video, language: "en")
 
         let typeCheck: AnyPublisher<[Article], Error> = publisher
         let isCorrectType = typeCheck is AnyPublisher<[Article], Error>
@@ -78,7 +78,7 @@ struct LiveMediaServiceTests {
     func fetchFeaturedMediaWithPodcastTypeReturnsCorrectType() {
         let service = LiveMediaService()
 
-        let publisher = service.fetchFeaturedMedia(type: .podcast)
+        let publisher = service.fetchFeaturedMedia(type: .podcast, language: "en")
 
         let typeCheck: AnyPublisher<[Article], Error> = publisher
         let isCorrectType = typeCheck is AnyPublisher<[Article], Error>
@@ -92,9 +92,9 @@ struct LiveMediaServiceTests {
         let service = LiveMediaService()
 
         // Should not throw for various page numbers
-        let page1Publisher = service.fetchMedia(type: nil, page: 1)
-        let page2Publisher = service.fetchMedia(type: nil, page: 2)
-        let page10Publisher = service.fetchMedia(type: nil, page: 10)
+        let page1Publisher = service.fetchMedia(type: nil, language: "en", page: 1)
+        let page2Publisher = service.fetchMedia(type: nil, language: "en", page: 2)
+        let page10Publisher = service.fetchMedia(type: nil, language: "en", page: 10)
 
         let isPage1Type = page1Publisher is AnyPublisher<[Article], Error>
         let isPage2Type = page2Publisher is AnyPublisher<[Article], Error>
@@ -118,7 +118,7 @@ struct MockMediaServiceTests {
         var result: [Article] = []
         var cancellables = Set<AnyCancellable>()
 
-        mockService.fetchMedia(type: nil, page: 1)
+        mockService.fetchMedia(type: nil, language: "en", page: 1)
             .sink(
                 receiveCompletion: { _ in },
                 receiveValue: { articles in
@@ -140,7 +140,7 @@ struct MockMediaServiceTests {
         var result: [Article] = []
         var cancellables = Set<AnyCancellable>()
 
-        mockService.fetchMedia(type: .video, page: 1)
+        mockService.fetchMedia(type: .video, language: "en", page: 1)
             .sink(
                 receiveCompletion: { _ in },
                 receiveValue: { articles in
@@ -162,7 +162,7 @@ struct MockMediaServiceTests {
         var result: [Article] = []
         var cancellables = Set<AnyCancellable>()
 
-        mockService.fetchMedia(type: .podcast, page: 1)
+        mockService.fetchMedia(type: .podcast, language: "en", page: 1)
             .sink(
                 receiveCompletion: { _ in },
                 receiveValue: { articles in
@@ -184,7 +184,7 @@ struct MockMediaServiceTests {
         var result: [Article] = []
         var cancellables = Set<AnyCancellable>()
 
-        mockService.fetchFeaturedMedia(type: nil)
+        mockService.fetchFeaturedMedia(type: nil, language: "en")
             .sink(
                 receiveCompletion: { _ in },
                 receiveValue: { articles in
@@ -208,7 +208,7 @@ struct MockMediaServiceTests {
         var receivedError: Error?
         var cancellables = Set<AnyCancellable>()
 
-        mockService.fetchMedia(type: nil, page: 1)
+        mockService.fetchMedia(type: nil, language: "en", page: 1)
             .sink(
                 receiveCompletion: { completion in
                     if case let .failure(error) = completion {
@@ -234,7 +234,7 @@ struct MockMediaServiceTests {
         var result: [Article] = []
         var cancellables = Set<AnyCancellable>()
 
-        mockService.fetchMedia(type: nil, page: 100)
+        mockService.fetchMedia(type: nil, language: "en", page: 100)
             .sink(
                 receiveCompletion: { _ in },
                 receiveValue: { articles in

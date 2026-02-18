@@ -52,7 +52,7 @@ Pulse/
 │   └── Configs/
 │       ├── Navigation/         # Coordinator, Page, CoordinatorView, DeeplinkRouter, AnimatedTabView
 │       ├── DesignSystem/       # ColorSystem, Typography, Components, Haptics
-│       ├── Models/             # Article, NewsCategory, UserPreferences
+│       ├── Models/             # Article, NewsCategory, UserPreferences, ContentLanguage
 │       ├── Networking/         # API keys, base URLs, SupabaseConfig, RemoteConfig, NetworkMonitorService
 │       ├── Storage/            # StorageService (SwiftData)
 │       ├── Analytics/          # AnalyticsService protocol + Live implementation
@@ -222,6 +222,7 @@ struct HomeDomainInteractorTests {
 12. **Graceful fallback for data sources** - Live services (NewsService, SearchService) use Supabase as primary and fall back to Guardian API when not configured or on error
 13. **Offline resilience** - Tiered cache (L1 memory + L2 disk) preserves content when offline; `NetworkMonitorService` tracks connectivity; failed refreshes keep existing data visible
 14. **Analytics is optional** - `try? serviceLocator.retrieve(AnalyticsService.self)` ensures missing analytics never crashes the app; every analytics event doubles as a Crashlytics breadcrumb
+15. **Language parameter threading** - All service protocols, cache keys, and interactors accept a `language` parameter (from `UserPreferences.preferredLanguage`). Supabase queries filter with `?language=eq.<lang>`. Cache keys include language prefix to prevent cross-language pollution. Interactors listen for `.userPreferencesDidChange` to reload on language switch.
 
 ## Data Source Architecture
 
@@ -250,6 +251,9 @@ The app uses a tiered cache with offline resilience:
 | `DiskNewsCacheStore` | Persistent file-based cache implementing `NewsCacheStore` protocol |
 | `NetworkMonitorService` | Protocol + Live (`NWPathMonitor`) + Mock for connectivity tracking |
 | `PulseError` | Typed error enum with `.offlineNoCache` case |
+| **Localization** | |
+| `ContentLanguage` | Enum (en/pt/es) with display names and flags for language picker |
+| `Localizable.strings` | UI strings in `en.lproj/`, `pt.lproj/`, `es.lproj/` |
 | `OfflineBannerView` | Animated banner in `CoordinatorView` shown when offline |
 | **Analytics & Crashlytics** | |
 | `AnalyticsService` | Protocol with `logEvent`, `setUserID`, `recordError`, `log` |
