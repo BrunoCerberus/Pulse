@@ -12,7 +12,7 @@ struct SharedArticleTests {
             source: "Test Source",
             imageURL: "https://example.com/image.jpg"
         )
-        #expect(article is SharedArticle)
+        #expect(article.id == "1")
     }
 
     @Test("displayTitle returns title when not empty")

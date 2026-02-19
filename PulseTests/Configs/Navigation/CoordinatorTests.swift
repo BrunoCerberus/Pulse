@@ -214,13 +214,17 @@ struct CoordinatorTests {
 
     @Test("All ViewModels are lazily initialized and non-nil after access")
     func allViewModelsAreLazilyInitialized() {
-        // Access each viewModel and verify it's not nil
-        #expect(sut.homeViewModel != nil)
-        #expect(sut.mediaViewModel != nil)
-        #expect(sut.feedViewModel != nil)
-        #expect(sut.bookmarksViewModel != nil)
-        #expect(sut.searchViewModel != nil)
-        #expect(sut.settingsViewModel != nil)
+        // Access each viewModel to trigger lazy initialization.
+        // Properties are non-optional; verify they are all distinct instances.
+        let identifiers: Set<ObjectIdentifier> = [
+            ObjectIdentifier(sut.homeViewModel),
+            ObjectIdentifier(sut.mediaViewModel),
+            ObjectIdentifier(sut.feedViewModel),
+            ObjectIdentifier(sut.bookmarksViewModel),
+            ObjectIdentifier(sut.searchViewModel),
+            ObjectIdentifier(sut.settingsViewModel)
+        ]
+        #expect(identifiers.count == 6)
     }
 
     // MARK: - AppTab Tests
