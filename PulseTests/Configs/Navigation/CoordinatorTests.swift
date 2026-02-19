@@ -222,7 +222,7 @@ struct CoordinatorTests {
             ObjectIdentifier(sut.feedViewModel),
             ObjectIdentifier(sut.bookmarksViewModel),
             ObjectIdentifier(sut.searchViewModel),
-            ObjectIdentifier(sut.settingsViewModel)
+            ObjectIdentifier(sut.settingsViewModel),
         ]
         #expect(identifiers.count == 6)
     }

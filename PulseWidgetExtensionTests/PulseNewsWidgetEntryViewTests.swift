@@ -1,6 +1,6 @@
 import SwiftUI
-import WidgetKit
 import Testing
+import WidgetKit
 
 @Suite("PulseNewsWidgetEntryView Tests")
 struct PulseNewsWidgetEntryViewTests {

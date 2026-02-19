@@ -1,6 +1,6 @@
 import Foundation
-import WidgetKit
 import Testing
+import WidgetKit
 
 @Suite("ArticleRowView Tests")
 struct WidgetArticleRowViewTests {
