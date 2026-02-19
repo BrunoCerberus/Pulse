@@ -186,8 +186,9 @@ final class LiveStoreKitService: StoreKitService {
             }
         }
 
+        let finalStatus = hasActiveSubscription
         await MainActor.run {
-            subscriptionStatusSubject.send(hasActiveSubscription)
+            subscriptionStatusSubject.send(finalStatus)
         }
     }
 }

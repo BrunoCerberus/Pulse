@@ -1,6 +1,6 @@
 import Foundation
-import WidgetKit
 import Testing
+import WidgetKit
 
 @Suite("WidgetArticle Tests")
 struct WidgetArticleTests {
@@ -12,7 +12,7 @@ struct WidgetArticleTests {
             source: "Test Source",
             imageData: nil
         )
-        #expect(article is WidgetArticle)
+        #expect(article.id == "1")
     }
 
     @Test("displayTitle returns title when not empty")

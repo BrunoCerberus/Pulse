@@ -91,7 +91,8 @@ final class LLMModelManager: @unchecked Sendable {
 
         do {
             progressHandler(0.5)
-            let runner = try await Leap.load(url: modelURL)
+            let options = LiquidInferenceEngineOptions(bundlePath: modelURL.path)
+            let runner = try Leap.load(options: options)
             progressHandler(0.8)
 
             // Only lock when setting the shared state
