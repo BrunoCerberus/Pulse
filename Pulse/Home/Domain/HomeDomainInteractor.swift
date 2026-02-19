@@ -299,8 +299,9 @@ private extension HomeDomainInteractor {
         var task: Task<Void, Never>!
         task = Task.detached { [weak self] in
             await operation()
-            await MainActor.run {
-                self?.backgroundTasks.remove(task)
+            guard let strongSelf = self else { return }
+            _ = await MainActor.run {
+                strongSelf.backgroundTasks.remove(task)
             }
         }
         backgroundTasks.insert(task)

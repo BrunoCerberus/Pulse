@@ -105,15 +105,21 @@ final class PulseAppDelegate: UIResponder, UIApplicationDelegate {
     }
 }
 
-extension PulseAppDelegate: UNUserNotificationCenterDelegate {
-    /// Using completion handler version to avoid Swift 6 async method signature mismatch
-    func userNotificationCenter(
-        _: UNUserNotificationCenter,
-        willPresent _: UNNotification
-    ) async -> UNNotificationPresentationOptions {
-        [.banner, .sound, .badge]
-    }
+// MARK: - Foreground Notification Presentation
 
+extension PulseAppDelegate {
+    @objc func userNotificationCenter(
+        _: UNUserNotificationCenter,
+        willPresent _: UNNotification,
+        withCompletionHandler completionHandler: @escaping (UNNotificationPresentationOptions) -> Void
+    ) {
+        completionHandler([.banner, .sound, .badge])
+    }
+}
+
+// MARK: - UNUserNotificationCenterDelegate
+
+extension PulseAppDelegate: UNUserNotificationCenterDelegate {
     func userNotificationCenter(
         _: UNUserNotificationCenter,
         didReceive response: UNNotificationResponse

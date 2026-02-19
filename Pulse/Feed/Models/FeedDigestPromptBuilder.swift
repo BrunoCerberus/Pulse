@@ -39,7 +39,7 @@ enum FeedDigestPromptBuilder {
         guard articles.count > maxTotal else { return articles }
 
         // Take top N from each category for balanced coverage
-        var grouped = Dictionary(grouping: articles) { $0.category ?? .world }
+        let grouped = Dictionary(grouping: articles) { $0.category ?? .world }
         var selected: [Article] = []
         for (_, categoryArticles) in grouped {
             // Articles are already sorted by recency globally;
