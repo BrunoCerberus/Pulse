@@ -145,6 +145,7 @@ final class HomeDomainInteractor: CombineInteractor {
         for task in backgroundTasks {
             task.cancel()
         }
+        backgroundTasks.removeAll()
     }
 
     // deduplicateArticles and updateState moved to HomeDomainInteractor+DataLoading.swift

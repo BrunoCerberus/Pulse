@@ -127,6 +127,8 @@ final class FeedDomainInteractor: CombineInteractor {
     deinit {
         generationTask?.cancel()
         preloadTask?.cancel()
+        generationTask = nil
+        preloadTask = nil
     }
 }
 

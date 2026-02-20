@@ -48,6 +48,12 @@ final class AudioPlayerManager: ObservableObject {
         durationObserver?.invalidate()
         rateObserver?.invalidate()
         player?.pause()
+        player = nil
+        playerItem = nil
+        timeObserver = nil
+        statusObserver = nil
+        durationObserver = nil
+        rateObserver = nil
     }
 
     // MARK: - Audio Session
