@@ -138,6 +138,10 @@
 "settings.muted_sources.add" = "Agregar fuente...";
 "settings.muted_keywords" = "Palabras Clave Silenciadas";
 "settings.muted_keywords.add" = "Agregar palabra clave...";
+"settings.muted_sources.add_action" = "Agregar fuente";
+"settings.muted_sources.remove_action" = "Eliminar fuente";
+"settings.muted_keywords.add_action" = "Agregar palabra clave";
+"settings.muted_keywords.remove_action" = "Eliminar palabra clave";
 "settings.content_language" = "Idioma del Contenido";
 "settings.content_language.label" = "Idioma";
 "settings.content_language.description" = "Elige el idioma de los artículos de noticias";
@@ -149,6 +153,8 @@
 "account.title" = "Cuenta";
 "account.sign_out" = "Cerrar Sesión";
 "account.sign_out.confirm" = "¿Estás seguro de que quieres cerrar sesión?";
+"account.profile_photo" = "Foto de perfil";
+"account.user_initial" = "Inicial del usuario";
 
 /* ==================== */
 /* MARK: - Auth         */
@@ -221,6 +227,8 @@
 "media.video_unavailable" = "URL del video no disponible";
 "media.audio_unavailable" = "URL del audio no disponible";
 "media.unsupported_type" = "Tipo de medio no compatible";
+"media.watch_on_youtube" = "Ver en YouTube";
+"media.watch_on_youtube.accessibility" = "Ver video en YouTube";
 
 /* ───── App Lock ───── */
 
@@ -266,3 +274,21 @@
 /* ==================== */
 
 "offline.banner" = "Estás sin conexión";
+
+/* ==================== */
+/* MARK: - Feed         */
+/* ==================== */
+
+"feed.title" = "Resumen Diario";
+"feed.header_title" = "Tu Resumen Diario";
+"feed.empty.title" = "Sin Lecturas Recientes";
+"feed.empty.message" = "Lee algunos artículos para obtener tu resumen diario personalizado.";
+"feed.error.title" = "Algo salió mal";
+"feed.offline.title" = "Estás Sin Conexión";
+"feed.offline.message" = "Conéctate a internet para generar tu resumen diario.";
+"feed.start_reading" = "Empezar a Leer";
+"feed.no_articles.title" = "Sin Artículos Disponibles";
+"feed.no_articles.message" = "No se pudieron obtener los últimos artículos. Verifica tu conexión e inténtalo de nuevo.";
+"feed.no_articles.retry" = "Reintentar";
+"feed.ai_processing.status" = "Creando tu resumen...";
+"feed.ai_digest" = "Resumen con IA";

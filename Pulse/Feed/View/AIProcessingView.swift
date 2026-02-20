@@ -9,7 +9,7 @@ struct AIProcessingView: View {
 
     @Environment(\.accessibilityReduceMotion) private var reduceMotion
 
-    private let statusMessage = "Crafting your digest..."
+    private let statusMessage = String(localized: "feed.ai_processing.status")
 
     var body: some View {
         VStack(spacing: Spacing.xl) {
@@ -97,7 +97,7 @@ struct AIProcessingView: View {
                         .font(.system(size: IconSize.sm))
                         .foregroundStyle(Color.Accent.gradient)
 
-                    Text("AI Digest")
+                    Text(String(localized: "feed.ai_digest"))
                         .font(Typography.labelMedium)
                         .foregroundStyle(.secondary)
                 }

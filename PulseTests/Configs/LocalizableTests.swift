@@ -637,6 +637,10 @@ struct LocalizationKeysExistenceTests {
         "settings.muted_sources.add",
         "settings.muted_keywords",
         "settings.muted_keywords.add",
+        "settings.muted_sources.add_action",
+        "settings.muted_sources.remove_action",
+        "settings.muted_keywords.add_action",
+        "settings.muted_keywords.remove_action",
         // Settings - Content Language
         "settings.content_language",
         "settings.content_language.label",
@@ -645,6 +649,26 @@ struct LocalizationKeysExistenceTests {
         "language.english",
         "language.portuguese",
         "language.spanish",
+        // Account - Accessibility
+        "account.profile_photo",
+        "account.user_initial",
+        // Feed
+        "feed.title",
+        "feed.header_title",
+        "feed.empty.title",
+        "feed.empty.message",
+        "feed.error.title",
+        "feed.offline.title",
+        "feed.offline.message",
+        "feed.start_reading",
+        "feed.no_articles.title",
+        "feed.no_articles.message",
+        "feed.no_articles.retry",
+        "feed.ai_processing.status",
+        "feed.ai_digest",
+        // Media - YouTube
+        "media.watch_on_youtube",
+        "media.watch_on_youtube.accessibility",
         // Offline
         "offline.banner",
     ]

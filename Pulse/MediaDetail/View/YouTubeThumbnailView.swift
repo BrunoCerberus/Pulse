@@ -60,7 +60,7 @@ struct YouTubeThumbnailView: View {
                     }
                     .shadow(color: .black.opacity(0.4), radius: 8)
 
-                    Text("Watch on YouTube")
+                    Text(String(localized: "media.watch_on_youtube"))
                         .font(Typography.labelMedium)
                         .fontWeight(.semibold)
                         .foregroundStyle(.white)
@@ -72,7 +72,7 @@ struct YouTubeThumbnailView: View {
             }
         }
         .buttonStyle(.plain)
-        .accessibilityLabel("Watch video on YouTube")
+        .accessibilityLabel(String(localized: "media.watch_on_youtube.accessibility"))
         .aspectRatio(16 / 9, contentMode: .fit)
         .clipShape(RoundedRectangle(cornerRadius: CornerRadius.lg))
         .padding(.horizontal, Spacing.md)

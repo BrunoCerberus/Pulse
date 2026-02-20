@@ -138,6 +138,10 @@
 "settings.muted_sources.add" = "Adicionar fonte...";
 "settings.muted_keywords" = "Palavras-chave Silenciadas";
 "settings.muted_keywords.add" = "Adicionar palavra-chave...";
+"settings.muted_sources.add_action" = "Adicionar fonte";
+"settings.muted_sources.remove_action" = "Remover fonte";
+"settings.muted_keywords.add_action" = "Adicionar palavra-chave";
+"settings.muted_keywords.remove_action" = "Remover palavra-chave";
 "settings.content_language" = "Idioma do Conteúdo";
 "settings.content_language.label" = "Idioma";
 "settings.content_language.description" = "Escolha o idioma dos artigos de notícias";
@@ -149,6 +153,8 @@
 "account.title" = "Conta";
 "account.sign_out" = "Sair";
 "account.sign_out.confirm" = "Tem certeza de que deseja sair da sua conta?";
+"account.profile_photo" = "Foto de perfil";
+"account.user_initial" = "Inicial do usuário";
 
 /* ==================== */
 /* MARK: - Auth         */
@@ -221,6 +227,8 @@
 "media.video_unavailable" = "URL do vídeo não disponível";
 "media.audio_unavailable" = "URL do áudio não disponível";
 "media.unsupported_type" = "Tipo de mídia não suportado";
+"media.watch_on_youtube" = "Assistir no YouTube";
+"media.watch_on_youtube.accessibility" = "Assistir vídeo no YouTube";
 
 /* ───── App Lock ───── */
 
@@ -266,3 +274,21 @@
 /* ==================== */
 
 "offline.banner" = "Você está offline";
+
+/* ==================== */
+/* MARK: - Feed         */
+/* ==================== */
+
+"feed.title" = "Resumo Diário";
+"feed.header_title" = "Seu Resumo Diário";
+"feed.empty.title" = "Nenhuma Leitura Recente";
+"feed.empty.message" = "Leia alguns artigos para obter seu resumo diário personalizado.";
+"feed.error.title" = "Algo deu errado";
+"feed.offline.title" = "Você Está Offline";
+"feed.offline.message" = "Conecte-se à internet para gerar seu resumo diário.";
+"feed.start_reading" = "Começar a Ler";
+"feed.no_articles.title" = "Nenhum Artigo Disponível";
+"feed.no_articles.message" = "Não foi possível buscar os últimos artigos. Verifique sua conexão e tente novamente.";
+"feed.no_articles.retry" = "Tentar Novamente";
+"feed.ai_processing.status" = "Criando seu resumo...";
+"feed.ai_digest" = "Resumo por IA";

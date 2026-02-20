@@ -89,13 +89,13 @@ struct ArticleRowView: View {
             Button {
                 onBookmark()
             } label: {
-                Label("Bookmark", systemImage: "bookmark")
+                Label(String(localized: "article.bookmark"), systemImage: "bookmark")
             }
 
             Button {
                 onShare()
             } label: {
-                Label("Share", systemImage: "square.and.arrow.up")
+                Label(String(localized: "article.share"), systemImage: "square.and.arrow.up")
             }
         }
 

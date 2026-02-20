@@ -32,7 +32,7 @@ struct SettingsMutedContentSection: View {
                 } label: {
                     Image(systemName: "plus.circle.fill")
                 }
-                .accessibilityLabel("Add source")
+                .accessibilityLabel(String(localized: "settings.muted_sources.add_action"))
                 .disabled(newMutedSource.isEmpty)
             }
 
@@ -46,7 +46,7 @@ struct SettingsMutedContentSection: View {
                         Image(systemName: "xmark.circle")
                             .foregroundStyle(.secondary)
                     }
-                    .accessibilityLabel("Remove source")
+                    .accessibilityLabel(String(localized: "settings.muted_sources.remove_action"))
                 }
             }
         }
@@ -63,7 +63,7 @@ struct SettingsMutedContentSection: View {
                 } label: {
                     Image(systemName: "plus.circle.fill")
                 }
-                .accessibilityLabel("Add keyword")
+                .accessibilityLabel(String(localized: "settings.muted_keywords.add_action"))
                 .disabled(newMutedKeyword.isEmpty)
             }
 
@@ -77,7 +77,7 @@ struct SettingsMutedContentSection: View {
                         Image(systemName: "xmark.circle")
                             .foregroundStyle(.secondary)
                     }
-                    .accessibilityLabel("Remove keyword")
+                    .accessibilityLabel(String(localized: "settings.muted_keywords.remove_action"))
                 }
             }
         }

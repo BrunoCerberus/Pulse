@@ -138,6 +138,10 @@
 "settings.muted_sources.add" = "Add source...";
 "settings.muted_keywords" = "Muted Keywords";
 "settings.muted_keywords.add" = "Add keyword...";
+"settings.muted_sources.add_action" = "Add source";
+"settings.muted_sources.remove_action" = "Remove source";
+"settings.muted_keywords.add_action" = "Add keyword";
+"settings.muted_keywords.remove_action" = "Remove keyword";
 "settings.content_language" = "Content Language";
 "settings.content_language.label" = "Language";
 "settings.content_language.description" = "Choose the language for news articles";
@@ -149,6 +153,8 @@
 "account.title" = "Account";
 "account.sign_out" = "Sign Out";
 "account.sign_out.confirm" = "Are you sure you want to sign out of your account?";
+"account.profile_photo" = "Profile photo";
+"account.user_initial" = "User initial";
 
 /* ==================== */
 /* MARK: - Auth         */
@@ -221,6 +227,8 @@
 "media.video_unavailable" = "Video URL is not available";
 "media.audio_unavailable" = "Audio URL is not available";
 "media.unsupported_type" = "Unsupported media type";
+"media.watch_on_youtube" = "Watch on YouTube";
+"media.watch_on_youtube.accessibility" = "Watch video on YouTube";
 
 /* ───── App Lock ───── */
 
@@ -266,3 +274,21 @@
 /* ==================== */
 
 "offline.banner" = "You're offline";
+
+/* ==================== */
+/* MARK: - Feed         */
+/* ==================== */
+
+"feed.title" = "Daily Digest";
+"feed.header_title" = "Your Daily Digest";
+"feed.empty.title" = "No Recent Reading";
+"feed.empty.message" = "Read some articles to get your personalized daily digest.";
+"feed.error.title" = "Something went wrong";
+"feed.offline.title" = "You're Offline";
+"feed.offline.message" = "Connect to the internet to generate your daily digest.";
+"feed.start_reading" = "Start Reading";
+"feed.no_articles.title" = "No Articles Available";
+"feed.no_articles.message" = "Unable to fetch the latest news articles. Please check your connection and try again.";
+"feed.no_articles.retry" = "Retry";
+"feed.ai_processing.status" = "Crafting your digest...";
+"feed.ai_digest" = "AI Digest";
