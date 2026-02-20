@@ -11,7 +11,7 @@ struct OfflineBannerView: View {
             Image(systemName: "wifi.slash")
                 .font(.system(size: IconSize.sm, weight: .semibold))
 
-            Text(String(localized: "offline.banner", defaultValue: "You're offline"))
+            Text(String(localized: "offline.banner"))
                 .font(Typography.labelMedium)
                 .fontWeight(.semibold)
         }

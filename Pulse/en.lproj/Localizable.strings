@@ -40,9 +40,14 @@
 
 "home.title" = "News";
 "home.breaking" = "BREAKING";
+"home.breaking_news" = "Breaking News";
+"home.top_headlines" = "Top Headlines";
+"home.category.all" = "All";
 "home.error.title" = "Unable to Load News";
 "home.empty.title" = "No News Available";
 "home.empty.message" = "Check back later for the latest headlines.";
+"home.offline.title" = "You're Offline";
+"home.offline.message" = "Connect to the internet to load the latest news.";
 "home.edit_topics.title" = "Edit Topics";
 "home.edit_topics.description" = "Select topics to filter your news feed";
 
@@ -83,6 +88,10 @@
 "search.error.title" = "Search Failed";
 "search.empty.title" = "No Results Found";
 "search.prompt" = "Search news...";
+"search.recent_searches" = "Recent Searches";
+"search.trending_topics" = "Trending Topics";
+"search.offline.title" = "You're Offline";
+"search.offline.message" = "Connect to the internet to search for articles.";
 
 /* ==================== */
 /* MARK: - Bookmarks    */
@@ -118,6 +127,17 @@
 "settings.clear_history.action" = "Clear";
 "settings.view_github" = "View on GitHub";
 "settings.subscription" = "Subscription";
+"settings.notifications" = "Notifications";
+"settings.enable_notifications" = "Enable Notifications";
+"settings.breaking_news_alerts" = "Breaking News Alerts";
+"settings.appearance" = "Appearance";
+"settings.use_system_theme" = "Use System Theme";
+"settings.dark_mode" = "Dark Mode";
+"settings.about" = "About";
+"settings.muted_sources" = "Muted Sources";
+"settings.muted_sources.add" = "Add source...";
+"settings.muted_keywords" = "Muted Keywords";
+"settings.muted_keywords.add" = "Add keyword...";
 "settings.content_language" = "Content Language";
 "settings.content_language.label" = "Language";
 "settings.content_language.description" = "Choose the language for news articles";
@@ -181,6 +201,15 @@
 /* MARK: - Media        */
 /* ==================== */
 
+"media.title" = "Media";
+"media.featured" = "Featured";
+"media.latest" = "Latest";
+"media.all_types" = "All";
+"media.error.title" = "Unable to Load Media";
+"media.empty.title" = "No Media";
+"media.empty.message" = "Check back later for new videos and podcasts.";
+"media.offline.title" = "You're Offline";
+"media.offline.message" = "Connect to the internet to browse media.";
 "media.type.videos" = "Videos";
 "media.type.podcasts" = "Podcasts";
 "media.open_in_browser" = "Open in Browser";
@@ -231,3 +260,9 @@
 "language.english" = "English";
 "language.portuguese" = "Portuguese";
 "language.spanish" = "Spanish";
+
+/* ==================== */
+/* MARK: - Offline      */
+/* ==================== */
+
+"offline.banner" = "You're offline";

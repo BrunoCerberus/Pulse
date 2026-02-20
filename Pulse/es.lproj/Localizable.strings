@@ -40,9 +40,14 @@
 
 "home.title" = "Noticias";
 "home.breaking" = "URGENTE";
+"home.breaking_news" = "Noticias de Última Hora";
+"home.top_headlines" = "Titulares Principales";
+"home.category.all" = "Todos";
 "home.error.title" = "No Se Pudieron Cargar las Noticias";
 "home.empty.title" = "Sin Noticias Disponibles";
 "home.empty.message" = "Vuelve más tarde para ver los últimos titulares.";
+"home.offline.title" = "Estás Sin Conexión";
+"home.offline.message" = "Conéctate a internet para cargar las últimas noticias.";
 "home.edit_topics.title" = "Editar Temas";
 "home.edit_topics.description" = "Selecciona temas para filtrar tu feed de noticias";
 
@@ -83,6 +88,10 @@
 "search.error.title" = "Error en la Búsqueda";
 "search.empty.title" = "Sin Resultados";
 "search.prompt" = "Buscar noticias...";
+"search.recent_searches" = "Búsquedas Recientes";
+"search.trending_topics" = "Temas Populares";
+"search.offline.title" = "Estás Sin Conexión";
+"search.offline.message" = "Conéctate a internet para buscar artículos.";
 
 /* ==================== */
 /* MARK: - Bookmarks    */
@@ -118,6 +127,17 @@
 "settings.clear_history.action" = "Borrar";
 "settings.view_github" = "Ver en GitHub";
 "settings.subscription" = "Suscripción";
+"settings.notifications" = "Notificaciones";
+"settings.enable_notifications" = "Activar Notificaciones";
+"settings.breaking_news_alerts" = "Alertas de Noticias de Última Hora";
+"settings.appearance" = "Apariencia";
+"settings.use_system_theme" = "Usar Tema del Sistema";
+"settings.dark_mode" = "Modo Oscuro";
+"settings.about" = "Acerca de";
+"settings.muted_sources" = "Fuentes Silenciadas";
+"settings.muted_sources.add" = "Agregar fuente...";
+"settings.muted_keywords" = "Palabras Clave Silenciadas";
+"settings.muted_keywords.add" = "Agregar palabra clave...";
 "settings.content_language" = "Idioma del Contenido";
 "settings.content_language.label" = "Idioma";
 "settings.content_language.description" = "Elige el idioma de los artículos de noticias";
@@ -181,6 +201,15 @@
 /* MARK: - Media        */
 /* ==================== */
 
+"media.title" = "Medios";
+"media.featured" = "Destacados";
+"media.latest" = "Recientes";
+"media.all_types" = "Todos";
+"media.error.title" = "No Se Pudieron Cargar los Medios";
+"media.empty.title" = "Sin Medios";
+"media.empty.message" = "Vuelve más tarde para nuevos videos y podcasts.";
+"media.offline.title" = "Estás Sin Conexión";
+"media.offline.message" = "Conéctate a internet para explorar medios.";
 "media.type.videos" = "Videos";
 "media.type.podcasts" = "Podcasts";
 "media.open_in_browser" = "Abrir en Navegador";
@@ -231,3 +260,9 @@
 "language.english" = "Inglés";
 "language.portuguese" = "Portugués";
 "language.spanish" = "Español";
+
+/* ==================== */
+/* MARK: - Offline      */
+/* ==================== */
+
+"offline.banner" = "Estás sin conexión";

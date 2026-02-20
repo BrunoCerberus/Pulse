@@ -11,7 +11,9 @@ enum HomeViewConstants {
     static let breaking = String(localized: "home.breaking")
     static let tryAgain = String(localized: "common.try_again")
     static let loadingMore = String(localized: "common.loading_more")
-    static let allCategory = String(localized: "home.category.all", defaultValue: "All")
+    static let allCategory = String(localized: "home.category.all")
+    static let breakingNews = String(localized: "home.breaking_news")
+    static let topHeadlines = String(localized: "home.top_headlines")
 }
 
 // MARK: - HomeView
@@ -243,7 +245,7 @@ struct HomeView<R: HomeNavigationRouter>: View {
                     Section {
                         breakingNewsCarousel
                     } header: {
-                        GlassSectionHeader("Breaking News")
+                        GlassSectionHeader(HomeViewConstants.breakingNews)
                     }
                 }
 
@@ -294,7 +296,7 @@ struct HomeView<R: HomeNavigationRouter>: View {
                         .padding(Spacing.lg)
                     }
                 } header: {
-                    GlassSectionHeader("Top Headlines")
+                    GlassSectionHeader(HomeViewConstants.topHeadlines)
                 }
             }
         }

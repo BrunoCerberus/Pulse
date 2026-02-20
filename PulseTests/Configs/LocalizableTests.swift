@@ -536,9 +536,14 @@ struct LocalizationKeysExistenceTests {
         // Home
         "home.title",
         "home.breaking",
+        "home.breaking_news",
+        "home.top_headlines",
+        "home.category.all",
         "home.error.title",
         "home.empty.title",
         "home.empty.message",
+        "home.offline.title",
+        "home.offline.message",
         // For You
         "for_you.title",
         "for_you.error.title",
@@ -602,8 +607,36 @@ struct LocalizationKeysExistenceTests {
         "paywall.full_access",
         // Search
         "search.prompt",
+        "search.recent_searches",
+        "search.trending_topics",
+        "search.offline.title",
+        "search.offline.message",
         // Media
+        "media.title",
+        "media.featured",
+        "media.latest",
+        "media.all_types",
+        "media.error.title",
+        "media.empty.title",
+        "media.empty.message",
+        "media.offline.title",
+        "media.offline.message",
         "media.unsupported_type",
+        // Settings - Notifications
+        "settings.notifications",
+        "settings.enable_notifications",
+        "settings.breaking_news_alerts",
+        // Settings - Appearance
+        "settings.appearance",
+        "settings.use_system_theme",
+        "settings.dark_mode",
+        // Settings - About
+        "settings.about",
+        // Settings - Muted Content
+        "settings.muted_sources",
+        "settings.muted_sources.add",
+        "settings.muted_keywords",
+        "settings.muted_keywords.add",
         // Settings - Content Language
         "settings.content_language",
         "settings.content_language.label",
@@ -612,6 +645,8 @@ struct LocalizationKeysExistenceTests {
         "language.english",
         "language.portuguese",
         "language.spanish",
+        // Offline
+        "offline.banner",
     ]
 
     @Test("All localization keys exist and are not empty", arguments: allKeys)

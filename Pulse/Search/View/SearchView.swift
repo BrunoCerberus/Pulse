@@ -116,7 +116,7 @@ struct SearchView<R: SearchNavigationRouter>: View {
             VStack(spacing: Spacing.lg) {
                 if !viewModel.viewState.suggestions.isEmpty {
                     VStack(alignment: .leading, spacing: Spacing.sm) {
-                        GlassSectionHeader("Recent Searches")
+                        GlassSectionHeader(String(localized: "search.recent_searches"))
 
                         ScrollView(.horizontal, showsIndicators: false) {
                             HStack(spacing: Spacing.sm) {
@@ -147,7 +147,7 @@ struct SearchView<R: SearchNavigationRouter>: View {
                 }
 
                 VStack(alignment: .leading, spacing: Spacing.sm) {
-                    GlassSectionHeader("Trending Topics")
+                    GlassSectionHeader(String(localized: "search.trending_topics"))
 
                     LazyVGrid(columns: [GridItem(.adaptive(minimum: 100))], spacing: Spacing.sm) {
                         ForEach(NewsCategory.allCases) { category in
@@ -173,16 +173,13 @@ struct SearchView<R: SearchNavigationRouter>: View {
                         .foregroundStyle(.orange)
                         .accessibilityHidden(true)
 
-                    Text(String(localized: "search.offline.title", defaultValue: "You're Offline"))
+                    Text(String(localized: "search.offline.title"))
                         .font(Typography.titleMedium)
 
-                    Text(String(
-                        localized: "search.offline.message",
-                        defaultValue: "Connect to the internet to search for articles."
-                    ))
-                    .font(Typography.bodyMedium)
-                    .foregroundStyle(.secondary)
-                    .multilineTextAlignment(.center)
+                    Text(String(localized: "search.offline.message"))
+                        .font(Typography.bodyMedium)
+                        .foregroundStyle(.secondary)
+                        .multilineTextAlignment(.center)
                 } else {
                     Image(systemName: "exclamationmark.triangle.fill")
                         .font(.largeTitle)
