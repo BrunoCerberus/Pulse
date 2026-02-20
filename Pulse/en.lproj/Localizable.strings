@@ -21,6 +21,7 @@
 "tab.for_you" = "For You";
 "tab.search" = "Search";
 "tab.bookmarks" = "Bookmarks";
+"tab.feed" = "Feed";
 
 /* ==================== */
 /* MARK: - Categories   */
@@ -112,6 +113,7 @@
 "article.read_full" = "Read Full Article";
 "article.bookmark" = "Bookmark";
 "article.share" = "Share";
+"article.remove_bookmark" = "Remove Bookmark";
 
 /* ==================== */
 /* MARK: - Settings     */
@@ -292,3 +294,84 @@
 "feed.no_articles.retry" = "Retry";
 "feed.ai_processing.status" = "Crafting your digest...";
 "feed.ai_digest" = "AI Digest";
+
+/* ==================== */
+/* MARK: - Digest       */
+/* ==================== */
+
+"digest.ai_summary" = "AI Summary";
+"digest.articles_label" = "articles";
+"digest.stats_title" = "Stats";
+"digest.topics_label" = "topics";
+"digest.time_span" = "48h span";
+"digest.source_articles" = "Source Articles";
+"digest.related_articles" = "Related Articles";
+"digest.article_count_one" = "1 article";
+"digest.article_count_other" = "%d articles";
+"digest.stats_accessibility" = "Stats: %d articles, %d topics, 48 hour span";
+
+/* ==================== */
+/* MARK: - Search (Additional) */
+/* ==================== */
+
+"search.no_results" = "No articles found for \"%@\"";
+"search.sort_by" = "Sort by";
+"search.sort.relevance" = "Relevance";
+"search.sort.date" = "Date";
+"search.sort.popularity" = "Popularity";
+"search.recent_label" = "Recent search: %@";
+"search.search_hint" = "Double tap to search";
+
+/* ==================== */
+/* MARK: - Accessibility */
+/* ==================== */
+
+"accessibility.read_article" = "Double tap to read article";
+"accessibility.opens_in_safari" = "Opens in Safari";
+"accessibility.from_source" = "From %@";
+
+"home.edit_topics.label" = "Edit Topics";
+"home.edit_topics.hint" = "Opens topic editor to customize your feed";
+"home.settings.label" = "Settings";
+"home.settings.hint" = "Opens your preferences and account settings";
+"home.filter_category.hint" = "Filter articles by %@";
+
+"breaking_news.accessibility_label" = "Breaking news: %@. From %@. %@";
+"article_row.accessibility_label" = "%@. From %@. %@";
+
+"topic_editor.follow_hint" = "Double tap to follow";
+"topic_editor.unfollow_hint" = "Double tap to unfollow";
+
+"article_detail.summarize_hint" = "Generate AI summary";
+"article_detail.premium_hint" = "Premium feature";
+"article_detail.remove_bookmark" = "Remove bookmark";
+"article_detail.add_bookmark" = "Add bookmark";
+"article_detail.save_hint" = "Save article for offline reading";
+"article_detail.share_label" = "Share article";
+"article_detail.share_hint" = "Share this article with others";
+
+"media_detail.remove_bookmark" = "Remove bookmark";
+"media_detail.add_bookmark" = "Add bookmark";
+
+"audio_player.progress_label" = "Playback progress";
+"audio_player.progress_value" = "%@ of %@";
+"audio_player.no_url_error" = "No audio URL available";
+
+"settings.premium.hint" = "Double tap to view subscription options";
+
+"auth.unknown_error" = "An unknown error occurred";
+"auth.apple_hint" = "Double tap to sign in with your Apple ID";
+"auth.google_hint" = "Double tap to sign in with your Google account";
+
+"paywall.close" = "Close";
+"splash.loading" = "Pulse is loading";
+
+"tab.switch_hint" = "Switch to %@ tab";
+"media_card.details_hint" = "Double tap to view details";
+"media.play_hint" = "Double tap to play";
+"media.filter_hint" = "Filter by %@";
+
+"source_articles.expanded" = "Expanded";
+"source_articles.collapsed" = "Collapsed";
+"source_articles.expand_hint" = "Double tap to expand";
+"source_articles.collapse_hint" = "Double tap to collapse";

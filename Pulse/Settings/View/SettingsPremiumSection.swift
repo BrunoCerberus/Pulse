@@ -35,7 +35,7 @@ struct SettingsPremiumSection: View {
             .buttonStyle(.plain)
             .disabled(isPremium)
             .accessibilityLabel(isPremium ? Localizable.paywall.premiumActive : Localizable.paywall.goPremium)
-            .accessibilityHint(isPremium ? "" : "Double tap to view subscription options")
+            .accessibilityHint(isPremium ? "" : String(localized: "settings.premium.hint"))
         } header: {
             Text(String(localized: "settings.subscription"))
                 .font(Typography.captionLarge)

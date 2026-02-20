@@ -71,7 +71,7 @@ struct MediaDetailView: View {
                         viewModel.handle(event: .onBookmarkTapped)
                     }
                     .accessibilityIdentifier(viewModel.viewState.isBookmarked ? "bookmark.fill" : "bookmark")
-                    .accessibilityLabel(viewModel.viewState.isBookmarked ? "Remove bookmark" : "Add bookmark")
+                    .accessibilityLabel(viewModel.viewState.isBookmarked ? String(localized: "media_detail.remove_bookmark") : String(localized: "media_detail.add_bookmark"))
 
                     Button("", systemImage: "square.and.arrow.up") {
                         viewModel.handle(event: .onShareTapped)
@@ -306,7 +306,7 @@ struct MediaDetailView: View {
             .clipShape(RoundedRectangle(cornerRadius: CornerRadius.md, style: .continuous))
         }
         .pressEffect()
-        .accessibilityHint("Opens in Safari")
+        .accessibilityHint(String(localized: "accessibility.opens_in_safari"))
     }
 }
 

@@ -137,8 +137,8 @@ struct SearchView<R: SearchNavigationRouter>: View {
                                         .glassBackground(style: .thin, cornerRadius: CornerRadius.pill)
                                     }
                                     .pressEffect()
-                                    .accessibilityLabel("Recent search: \(suggestion)")
-                                    .accessibilityHint("Double tap to search")
+                                    .accessibilityLabel(String(format: String(localized: "search.recent_label"), suggestion))
+                                    .accessibilityHint(String(localized: "search.search_hint"))
                                 }
                             }
                             .padding(.horizontal, Spacing.md)
@@ -224,7 +224,7 @@ struct SearchView<R: SearchNavigationRouter>: View {
                 Text(Constants.emptyTitle)
                     .font(Typography.titleMedium)
 
-                Text("No articles found for \"\(viewModel.viewState.query)\"")
+                Text(String(format: String(localized: "search.no_results"), viewModel.viewState.query))
                     .font(Typography.bodyMedium)
                     .foregroundStyle(.secondary)
                     .multilineTextAlignment(.center)
@@ -293,7 +293,7 @@ struct SearchView<R: SearchNavigationRouter>: View {
 
 private extension SearchView {
     var sortPicker: some View {
-        Picker("Sort by", selection: Binding(
+        Picker(String(localized: "search.sort_by"), selection: Binding(
             get: { viewModel.viewState.sortOption },
             set: {
                 HapticManager.shared.selectionChanged()

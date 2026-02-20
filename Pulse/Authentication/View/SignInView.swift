@@ -53,7 +53,7 @@ struct SignInView: View {
                 viewModel.handle(event: .onDismissError)
             }
         } message: {
-            Text(viewModel.viewState.errorMessage ?? "An unknown error occurred")
+            Text(viewModel.viewState.errorMessage ?? String(localized: "auth.unknown_error"))
         }
         .onChange(of: viewModel.viewState.errorMessage) { _, newValue in
             showError = newValue != nil
@@ -124,7 +124,7 @@ struct SignInView: View {
             }
             .buttonStyle(.plain)
             .accessibilityLabel(Constants.signInApple)
-            .accessibilityHint("Double tap to sign in with your Apple ID")
+            .accessibilityHint(String(localized: "auth.apple_hint"))
 
             // Sign in with Google
             Button {
@@ -150,7 +150,7 @@ struct SignInView: View {
             }
             .buttonStyle(.plain)
             .accessibilityLabel(Constants.signInGoogle)
-            .accessibilityHint("Double tap to sign in with your Google account")
+            .accessibilityHint(String(localized: "auth.google_hint"))
         }
     }
 

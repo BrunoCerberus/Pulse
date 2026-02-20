@@ -671,6 +671,81 @@ struct LocalizationKeysExistenceTests {
         "media.watch_on_youtube.accessibility",
         // Offline
         "offline.banner",
+        // Tab Bar (additional)
+        "tab.feed",
+        "tab.switch_hint",
+        // Article (additional)
+        "article.remove_bookmark",
+        // Digest
+        "digest.ai_summary",
+        "digest.articles_label",
+        "digest.stats_title",
+        "digest.topics_label",
+        "digest.time_span",
+        "digest.source_articles",
+        "digest.related_articles",
+        "digest.article_count_one",
+        "digest.article_count_other",
+        "digest.stats_accessibility",
+        // Search (additional)
+        "search.no_results",
+        "search.sort_by",
+        "search.sort.relevance",
+        "search.sort.date",
+        "search.sort.popularity",
+        "search.recent_label",
+        "search.search_hint",
+        // Accessibility
+        "accessibility.read_article",
+        "accessibility.opens_in_safari",
+        "accessibility.from_source",
+        // Home (accessibility)
+        "home.edit_topics.label",
+        "home.edit_topics.hint",
+        "home.settings.label",
+        "home.settings.hint",
+        "home.filter_category.hint",
+        // Breaking News
+        "breaking_news.accessibility_label",
+        // Article Row
+        "article_row.accessibility_label",
+        // Topic Editor
+        "topic_editor.follow_hint",
+        "topic_editor.unfollow_hint",
+        // Article Detail
+        "article_detail.summarize_hint",
+        "article_detail.premium_hint",
+        "article_detail.remove_bookmark",
+        "article_detail.add_bookmark",
+        "article_detail.save_hint",
+        "article_detail.share_label",
+        "article_detail.share_hint",
+        // Media Detail
+        "media_detail.remove_bookmark",
+        "media_detail.add_bookmark",
+        // Audio Player
+        "audio_player.progress_label",
+        "audio_player.progress_value",
+        "audio_player.no_url_error",
+        // Settings Premium
+        "settings.premium.hint",
+        // Auth (additional)
+        "auth.unknown_error",
+        "auth.apple_hint",
+        "auth.google_hint",
+        // Paywall (additional)
+        "paywall.close",
+        // Splash
+        "splash.loading",
+        // Media (additional)
+        "media_card.details_hint",
+        "media.play_hint",
+        "media.filter_hint",
+        // Source Articles
+        "source_articles.expanded",
+        "source_articles.collapsed",
+        "source_articles.expand_hint",
+        "source_articles.collapse_hint",
     ]
 
     @Test("All localization keys exist and are not empty", arguments: allKeys)

@@ -21,7 +21,7 @@ struct OfflineBannerView: View {
         .background(Color.orange)
         .transition(.move(edge: .top).combined(with: .opacity))
         .accessibilityElement(children: .combine)
-        .accessibilityLabel("You're offline")
+        .accessibilityLabel(String(localized: "offline.banner"))
         .accessibilityAddTraits(.isStaticText)
     }
 }

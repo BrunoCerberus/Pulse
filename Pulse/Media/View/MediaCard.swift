@@ -23,7 +23,7 @@ struct MediaCard: View {
             parts.append(mediaType.displayName)
         }
         parts.append(item.title)
-        parts.append("From \(item.sourceName)")
+        parts.append(String(format: String(localized: "accessibility.from_source"), item.sourceName))
         parts.append(item.formattedDate)
         if let duration = item.formattedDuration {
             parts.append(duration)
@@ -75,19 +75,19 @@ struct MediaCard: View {
         .pressEffect()
         .accessibilityElement(children: .combine)
         .accessibilityLabel(mediaAccessibilityLabel)
-        .accessibilityHint("Double tap to view details")
+        .accessibilityHint(String(localized: "media_card.details_hint"))
         .accessibilityIdentifier("mediaCard")
         .contextMenu {
             Button {
                 onPlay()
             } label: {
-                Label("Play", systemImage: "play.fill")
+                Label(String(localized: "media.play"), systemImage: "play.fill")
             }
 
             Button {
                 onShare()
             } label: {
-                Label("Share", systemImage: "square.and.arrow.up")
+                Label(String(localized: "common.share"), systemImage: "square.and.arrow.up")
             }
         }
     }

@@ -77,8 +77,8 @@ struct HomeView<R: HomeNavigationRouter>: View {
                             .font(.system(size: IconSize.md))
                             .foregroundStyle(.primary)
                     }
-                    .accessibilityLabel("Edit Topics")
-                    .accessibilityHint("Opens topic editor to customize your feed")
+                    .accessibilityLabel(String(localized: "home.edit_topics.label"))
+                    .accessibilityHint(String(localized: "home.edit_topics.hint"))
 
                     Button {
                         HapticManager.shared.tap()
@@ -88,8 +88,8 @@ struct HomeView<R: HomeNavigationRouter>: View {
                             .font(.system(size: IconSize.md))
                             .foregroundStyle(.primary)
                     }
-                    .accessibilityLabel("Settings")
-                    .accessibilityHint("Opens your preferences and account settings")
+                    .accessibilityLabel(String(localized: "home.settings.label"))
+                    .accessibilityHint(String(localized: "home.settings.hint"))
                 }
             }
         }
@@ -203,7 +203,7 @@ struct HomeView<R: HomeNavigationRouter>: View {
         .pressEffect(scale: 0.95)
         .accessibilityLabel(title)
         .accessibilityAddTraits(isSelected ? .isSelected : [])
-        .accessibilityHint("Filter articles by \(title)")
+        .accessibilityHint(String(format: String(localized: "home.filter_category.hint"), title))
     }
 
     // MARK: - Content Views

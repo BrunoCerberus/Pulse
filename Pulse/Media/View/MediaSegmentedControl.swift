@@ -90,7 +90,7 @@ private struct MediaTypeChip: View {
         .pressEffect(scale: 0.95)
         .accessibilityLabel(label)
         .accessibilityAddTraits(isSelected ? .isSelected : [])
-        .accessibilityHint("Filter by \(label)")
+        .accessibilityHint(String(format: String(localized: "media.filter_hint"), label))
     }
 }
 

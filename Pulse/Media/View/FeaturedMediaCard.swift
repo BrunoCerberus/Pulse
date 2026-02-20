@@ -24,7 +24,7 @@ struct FeaturedMediaCard: View {
             parts.append(mediaType.displayName)
         }
         parts.append(item.title)
-        parts.append("From \(item.sourceName)")
+        parts.append(String(format: String(localized: "accessibility.from_source"), item.sourceName))
         if let duration = item.formattedDuration {
             parts.append(duration)
         }
@@ -56,7 +56,7 @@ struct FeaturedMediaCard: View {
         .pressEffect()
         .accessibilityElement(children: .combine)
         .accessibilityLabel(mediaAccessibilityLabel)
-        .accessibilityHint("Double tap to play")
+        .accessibilityHint(String(localized: "media.play_hint"))
     }
 
     // MARK: - Image Background

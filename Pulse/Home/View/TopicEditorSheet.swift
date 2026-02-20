@@ -46,7 +46,7 @@ struct TopicEditorSheet: View {
                         }
                         .buttonStyle(.plain)
                         .accessibilityAddTraits(followedTopics.contains(topic) ? .isSelected : [])
-                        .accessibilityHint("Double tap to \(followedTopics.contains(topic) ? "unfollow" : "follow")")
+                        .accessibilityHint(followedTopics.contains(topic) ? String(localized: "topic_editor.unfollow_hint") : String(localized: "topic_editor.follow_hint"))
                     }
                 } footer: {
                     Text(Constants.description)
