@@ -268,7 +268,7 @@ struct FeedView<R: FeedNavigationRouter>: View {
                 }
                 .buttonStyle(.plain)
                 .pressEffect()
-                .accessibilityHint("Double tap to retry generating the digest")
+                .accessibilityHint(String(localized: "feed.retry_hint"))
             }
         }
         .padding(.horizontal, Spacing.md)

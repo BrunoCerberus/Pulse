@@ -41,7 +41,7 @@ struct AppLockOverlayView: View {
                         .foregroundStyle(.white)
                 }
                 .accessibilityLabel(Constants.unlock)
-                .accessibilityHint("Double tap to authenticate with Face ID")
+                .accessibilityHint(String(localized: "applock.unlock_hint"))
             }
         }
     }

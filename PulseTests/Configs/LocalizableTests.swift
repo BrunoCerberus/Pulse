@@ -746,6 +746,14 @@ struct LocalizationKeysExistenceTests {
         "source_articles.collapsed",
         "source_articles.expand_hint",
         "source_articles.collapse_hint",
+        // App Lock (additional)
+        "applock.unlock_hint",
+        // Feed (additional)
+        "feed.retry_hint",
+        // Premium Gate (additional)
+        "premium_gate.unlock_label",
+        // Digest (additional)
+        "digest.topics_title",
     ]
 
     @Test("All localization keys exist and are not empty", arguments: allKeys)

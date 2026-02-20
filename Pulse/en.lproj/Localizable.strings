@@ -375,3 +375,8 @@
 "source_articles.collapsed" = "Collapsed";
 "source_articles.expand_hint" = "Double tap to expand";
 "source_articles.collapse_hint" = "Double tap to collapse";
+
+"applock.unlock_hint" = "Double tap to authenticate with Face ID";
+"feed.retry_hint" = "Double tap to retry generating the digest";
+"premium_gate.unlock_label" = "Unlock %@";
+"digest.topics_title" = "Topics";

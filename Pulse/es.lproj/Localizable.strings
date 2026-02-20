@@ -375,3 +375,8 @@
 "source_articles.collapsed" = "Contraído";
 "source_articles.expand_hint" = "Toca dos veces para expandir";
 "source_articles.collapse_hint" = "Toca dos veces para contraer";
+
+"applock.unlock_hint" = "Toca dos veces para autenticar con Face ID";
+"feed.retry_hint" = "Toca dos veces para reintentar generar el resumen";
+"premium_gate.unlock_label" = "Desbloquear %@";
+"digest.topics_title" = "Temas";
