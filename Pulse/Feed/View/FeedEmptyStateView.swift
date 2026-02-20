@@ -4,12 +4,9 @@ import SwiftUI
 // MARK: - Constants
 
 private enum Constants {
-    static let title = "No Articles Available"
-    static let message = """
-    Unable to fetch the latest news articles. \
-    Please check your connection and try again.
-    """
-    static let startReading = "Retry"
+    static let title = String(localized: "feed.no_articles.title")
+    static let message = String(localized: "feed.no_articles.message")
+    static let startReading = String(localized: "feed.no_articles.retry")
 }
 
 // MARK: - FeedEmptyStateView

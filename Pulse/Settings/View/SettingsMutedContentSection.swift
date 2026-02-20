@@ -22,9 +22,9 @@ struct SettingsMutedContentSection: View {
     }
 
     private var mutedSourcesGroup: some View {
-        DisclosureGroup("Muted Sources (\(mutedSources.count))") {
+        DisclosureGroup("\(String(localized: "settings.muted_sources")) (\(mutedSources.count))") {
             HStack {
-                TextField("Add source...", text: $newMutedSource)
+                TextField(String(localized: "settings.muted_sources.add"), text: $newMutedSource)
                     .textFieldStyle(.roundedBorder)
 
                 Button {
@@ -32,7 +32,7 @@ struct SettingsMutedContentSection: View {
                 } label: {
                     Image(systemName: "plus.circle.fill")
                 }
-                .accessibilityLabel("Add source")
+                .accessibilityLabel(String(localized: "settings.muted_sources.add_action"))
                 .disabled(newMutedSource.isEmpty)
             }
 
@@ -46,16 +46,16 @@ struct SettingsMutedContentSection: View {
                         Image(systemName: "xmark.circle")
                             .foregroundStyle(.secondary)
                     }
-                    .accessibilityLabel("Remove source")
+                    .accessibilityLabel(String(localized: "settings.muted_sources.remove_action"))
                 }
             }
         }
     }
 
     private var mutedKeywordsGroup: some View {
-        DisclosureGroup("Muted Keywords (\(mutedKeywords.count))") {
+        DisclosureGroup("\(String(localized: "settings.muted_keywords")) (\(mutedKeywords.count))") {
             HStack {
-                TextField("Add keyword...", text: $newMutedKeyword)
+                TextField(String(localized: "settings.muted_keywords.add"), text: $newMutedKeyword)
                     .textFieldStyle(.roundedBorder)
 
                 Button {
@@ -63,7 +63,7 @@ struct SettingsMutedContentSection: View {
                 } label: {
                     Image(systemName: "plus.circle.fill")
                 }
-                .accessibilityLabel("Add keyword")
+                .accessibilityLabel(String(localized: "settings.muted_keywords.add_action"))
                 .disabled(newMutedKeyword.isEmpty)
             }
 
@@ -77,7 +77,7 @@ struct SettingsMutedContentSection: View {
                         Image(systemName: "xmark.circle")
                             .foregroundStyle(.secondary)
                     }
-                    .accessibilityLabel("Remove keyword")
+                    .accessibilityLabel(String(localized: "settings.muted_keywords.remove_action"))
                 }
             }
         }

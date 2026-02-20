@@ -47,7 +47,7 @@ struct SplashScreenView: View {
             logoView
         }
         .accessibilityElement(children: .ignore)
-        .accessibilityLabel("Pulse is loading")
+        .accessibilityLabel(String(localized: "splash.loading"))
         .opacity(isAnimationComplete ? 0 : 1)
         .onAppear {
             if reduceMotion {

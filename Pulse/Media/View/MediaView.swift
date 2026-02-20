@@ -4,18 +4,17 @@ import SwiftUI
 // MARK: - Constants
 
 private enum Constants {
-    static let title = String(localized: "media.title", defaultValue: "Media")
-    static let featured = String(localized: "media.featured", defaultValue: "Featured")
-    static let latest = String(localized: "media.latest", defaultValue: "Latest")
-    static let all = String(localized: "media.all_types", defaultValue: "All")
-    static let errorTitle = String(localized: "media.error.title", defaultValue: "Unable to Load Media")
-    static let emptyTitle = String(localized: "media.empty.title", defaultValue: "No Media")
-    static let emptyMessage = String(
-        localized: "media.empty.message",
-        defaultValue: "Check back later for new videos and podcasts."
-    )
-    static let tryAgain = String(localized: "common.try_again", defaultValue: "Try Again")
-    static let loadingMore = String(localized: "common.loading_more", defaultValue: "Loading more...")
+    static let title = String(localized: "media.title")
+    static let featured = String(localized: "media.featured")
+    static let latest = String(localized: "media.latest")
+    static let all = String(localized: "media.all_types")
+    static let errorTitle = String(localized: "media.error.title")
+    static let emptyTitle = String(localized: "media.empty.title")
+    static let emptyMessage = String(localized: "media.empty.message")
+    static let offlineTitle = String(localized: "media.offline.title")
+    static let offlineMessage = String(localized: "media.offline.message")
+    static let tryAgain = String(localized: "common.try_again")
+    static let loadingMore = String(localized: "common.loading_more")
 }
 
 // MARK: - MediaView
@@ -125,16 +124,13 @@ struct MediaView<R: MediaNavigationRouter>: View {
                         .foregroundStyle(.orange)
                         .accessibilityHidden(true)
 
-                    Text(String(localized: "media.offline.title", defaultValue: "You're Offline"))
+                    Text(Constants.offlineTitle)
                         .font(Typography.titleMedium)
 
-                    Text(String(
-                        localized: "media.offline.message",
-                        defaultValue: "Connect to the internet to browse media."
-                    ))
-                    .font(Typography.bodyMedium)
-                    .foregroundStyle(.secondary)
-                    .multilineTextAlignment(.center)
+                    Text(Constants.offlineMessage)
+                        .font(Typography.bodyMedium)
+                        .foregroundStyle(.secondary)
+                        .multilineTextAlignment(.center)
                 } else {
                     Image(systemName: "exclamationmark.triangle.fill")
                         .font(.system(size: IconSize.xxl))

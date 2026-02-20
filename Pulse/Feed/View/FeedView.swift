@@ -5,15 +5,15 @@ import SwiftUI
 // MARK: - Constants
 
 private enum Constants {
-    static let title = "Daily Digest"
-    static let headerTitle = "Your Daily Digest"
-    static let emptyTitle = "No Recent Reading"
-    static let emptyMessage = "Read some articles to get your personalized daily digest."
-    static let errorTitle = "Something went wrong"
-    static let tryAgain = "Try Again"
-    static let startReading = "Start Reading"
-    static let offlineTitle = "You're Offline"
-    static let offlineMessage = "Connect to the internet to generate your daily digest."
+    static let title = String(localized: "feed.title")
+    static let headerTitle = String(localized: "feed.header_title")
+    static let emptyTitle = String(localized: "feed.empty.title")
+    static let emptyMessage = String(localized: "feed.empty.message")
+    static let errorTitle = String(localized: "feed.error.title")
+    static let tryAgain = String(localized: "common.try_again")
+    static let startReading = String(localized: "feed.start_reading")
+    static let offlineTitle = String(localized: "feed.offline.title")
+    static let offlineMessage = String(localized: "feed.offline.message")
 }
 
 // MARK: - FeedView
@@ -268,7 +268,7 @@ struct FeedView<R: FeedNavigationRouter>: View {
                 }
                 .buttonStyle(.plain)
                 .pressEffect()
-                .accessibilityHint("Double tap to retry generating the digest")
+                .accessibilityHint(String(localized: "feed.retry_hint"))
             }
         }
         .padding(.horizontal, Spacing.md)

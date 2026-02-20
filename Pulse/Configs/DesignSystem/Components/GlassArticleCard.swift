@@ -92,15 +92,15 @@ struct GlassArticleCard: View {
         }
         .pressEffect()
         .accessibilityElement(children: .combine)
-        .accessibilityLabel("\(title). From \(sourceName). \(formattedDate)")
-        .accessibilityHint("Double tap to read article")
+        .accessibilityLabel(String(format: String(localized: "article_row.accessibility_label"), title, sourceName, formattedDate))
+        .accessibilityHint(String(localized: "accessibility.read_article"))
         .accessibilityIdentifier("articleCard")
         .contextMenu {
             Button {
                 onBookmark()
             } label: {
                 Label(
-                    isBookmarked ? "Remove Bookmark" : "Bookmark",
+                    isBookmarked ? String(localized: "article.remove_bookmark") : String(localized: "article.bookmark"),
                     systemImage: isBookmarked ? "bookmark.fill" : "bookmark"
                 )
             }
@@ -108,7 +108,7 @@ struct GlassArticleCard: View {
             Button {
                 onShare()
             } label: {
-                Label("Share", systemImage: "square.and.arrow.up")
+                Label(String(localized: "article.share"), systemImage: "square.and.arrow.up")
             }
         }
     }
@@ -218,8 +218,8 @@ struct GlassArticleCardCompact: View {
         }
         .pressEffect()
         .accessibilityElement(children: .combine)
-        .accessibilityLabel("\(title). From \(sourceName)")
-        .accessibilityHint("Double tap to read article")
+        .accessibilityLabel(String(format: String(localized: "article_row.accessibility_label"), title, sourceName, ""))
+        .accessibilityHint(String(localized: "accessibility.read_article"))
         .accessibilityIdentifier("articleCard")
     }
 }

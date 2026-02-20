@@ -536,9 +536,14 @@ struct LocalizationKeysExistenceTests {
         // Home
         "home.title",
         "home.breaking",
+        "home.breaking_news",
+        "home.top_headlines",
+        "home.category.all",
         "home.error.title",
         "home.empty.title",
         "home.empty.message",
+        "home.offline.title",
+        "home.offline.message",
         // For You
         "for_you.title",
         "for_you.error.title",
@@ -602,8 +607,40 @@ struct LocalizationKeysExistenceTests {
         "paywall.full_access",
         // Search
         "search.prompt",
+        "search.recent_searches",
+        "search.trending_topics",
+        "search.offline.title",
+        "search.offline.message",
         // Media
+        "media.title",
+        "media.featured",
+        "media.latest",
+        "media.all_types",
+        "media.error.title",
+        "media.empty.title",
+        "media.empty.message",
+        "media.offline.title",
+        "media.offline.message",
         "media.unsupported_type",
+        // Settings - Notifications
+        "settings.notifications",
+        "settings.enable_notifications",
+        "settings.breaking_news_alerts",
+        // Settings - Appearance
+        "settings.appearance",
+        "settings.use_system_theme",
+        "settings.dark_mode",
+        // Settings - About
+        "settings.about",
+        // Settings - Muted Content
+        "settings.muted_sources",
+        "settings.muted_sources.add",
+        "settings.muted_keywords",
+        "settings.muted_keywords.add",
+        "settings.muted_sources.add_action",
+        "settings.muted_sources.remove_action",
+        "settings.muted_keywords.add_action",
+        "settings.muted_keywords.remove_action",
         // Settings - Content Language
         "settings.content_language",
         "settings.content_language.label",
@@ -612,6 +649,111 @@ struct LocalizationKeysExistenceTests {
         "language.english",
         "language.portuguese",
         "language.spanish",
+        // Account - Accessibility
+        "account.profile_photo",
+        "account.user_initial",
+        // Feed
+        "feed.title",
+        "feed.header_title",
+        "feed.empty.title",
+        "feed.empty.message",
+        "feed.error.title",
+        "feed.offline.title",
+        "feed.offline.message",
+        "feed.start_reading",
+        "feed.no_articles.title",
+        "feed.no_articles.message",
+        "feed.no_articles.retry",
+        "feed.ai_processing.status",
+        "feed.ai_digest",
+        // Media - YouTube
+        "media.watch_on_youtube",
+        "media.watch_on_youtube.accessibility",
+        // Offline
+        "offline.banner",
+        // Tab Bar (additional)
+        "tab.feed",
+        "tab.switch_hint",
+        // Article (additional)
+        "article.remove_bookmark",
+        // Digest
+        "digest.ai_summary",
+        "digest.articles_label",
+        "digest.stats_title",
+        "digest.topics_label",
+        "digest.time_span",
+        "digest.source_articles",
+        "digest.related_articles",
+        "digest.article_count_one",
+        "digest.article_count_other",
+        "digest.stats_accessibility",
+        // Search (additional)
+        "search.no_results",
+        "search.sort_by",
+        "search.sort.relevance",
+        "search.sort.date",
+        "search.sort.popularity",
+        "search.recent_label",
+        "search.search_hint",
+        // Accessibility
+        "accessibility.read_article",
+        "accessibility.opens_in_safari",
+        "accessibility.from_source",
+        // Home (accessibility)
+        "home.edit_topics.label",
+        "home.edit_topics.hint",
+        "home.settings.label",
+        "home.settings.hint",
+        "home.filter_category.hint",
+        // Breaking News
+        "breaking_news.accessibility_label",
+        // Article Row
+        "article_row.accessibility_label",
+        // Topic Editor
+        "topic_editor.follow_hint",
+        "topic_editor.unfollow_hint",
+        // Article Detail
+        "article_detail.summarize_hint",
+        "article_detail.premium_hint",
+        "article_detail.remove_bookmark",
+        "article_detail.add_bookmark",
+        "article_detail.save_hint",
+        "article_detail.share_label",
+        "article_detail.share_hint",
+        // Media Detail
+        "media_detail.remove_bookmark",
+        "media_detail.add_bookmark",
+        // Audio Player
+        "audio_player.progress_label",
+        "audio_player.progress_value",
+        "audio_player.no_url_error",
+        // Settings Premium
+        "settings.premium.hint",
+        // Auth (additional)
+        "auth.unknown_error",
+        "auth.apple_hint",
+        "auth.google_hint",
+        // Paywall (additional)
+        "paywall.close",
+        // Splash
+        "splash.loading",
+        // Media (additional)
+        "media_card.details_hint",
+        "media.play_hint",
+        "media.filter_hint",
+        // Source Articles
+        "source_articles.expanded",
+        "source_articles.collapsed",
+        "source_articles.expand_hint",
+        "source_articles.collapse_hint",
+        // App Lock (additional)
+        "applock.unlock_hint",
+        // Feed (additional)
+        "feed.retry_hint",
+        // Premium Gate (additional)
+        "premium_gate.unlock_label",
+        // Digest (additional)
+        "digest.topics_title",
     ]
 
     @Test("All localization keys exist and are not empty", arguments: allKeys)

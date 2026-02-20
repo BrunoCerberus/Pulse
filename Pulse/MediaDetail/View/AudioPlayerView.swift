@@ -197,10 +197,10 @@ struct AudioPlayerView: View {
             }
             .frame(height: 20)
             .accessibilityElement()
-            .accessibilityLabel("Playback progress")
+            .accessibilityLabel(String(localized: "audio_player.progress_label"))
             .accessibilityValue({
                 let current = formatTime(isDragging ? playerManager.duration * dragProgress : playerManager.currentTime)
-                return "\(current) of \(formatTime(playerManager.duration))"
+                return String(format: String(localized: "audio_player.progress_value"), current, formatTime(playerManager.duration))
             }())
             .accessibilityAdjustableAction { direction in
                 switch direction {
@@ -297,7 +297,7 @@ struct AudioPlayerView: View {
         guard let mediaURLString = article.mediaURL,
               let url = URL(string: mediaURLString)
         else {
-            onError?("No audio URL available")
+            onError?(String(localized: "audio_player.no_url_error"))
             return
         }
 

@@ -4,7 +4,7 @@ import SwiftUI
 // MARK: - Constants
 
 private enum Constants {
-    static let sectionTitle = "Source Articles"
+    static let sectionTitle = String(localized: "digest.source_articles")
 }
 
 // MARK: - SourceArticlesSection
@@ -59,8 +59,8 @@ struct SourceArticlesSection: View {
         .buttonStyle(.plain)
         .pressEffect()
         .accessibilityLabel("\(Constants.sectionTitle), \(articles.count) articles")
-        .accessibilityValue(isExpanded ? "Expanded" : "Collapsed")
-        .accessibilityHint("Double tap to \(isExpanded ? "collapse" : "expand")")
+        .accessibilityValue(isExpanded ? String(localized: "source_articles.expanded") : String(localized: "source_articles.collapsed"))
+        .accessibilityHint(isExpanded ? String(localized: "source_articles.collapse_hint") : String(localized: "source_articles.expand_hint"))
     }
 
     // MARK: - Articles List
@@ -125,8 +125,8 @@ private struct SourceArticleRow: View {
         .buttonStyle(.plain)
         .pressEffect()
         .accessibilityElement(children: .combine)
-        .accessibilityLabel("\(article.title). From \(article.source)")
-        .accessibilityHint("Double tap to read article")
+        .accessibilityLabel(String(format: String(localized: "article_row.accessibility_label"), article.title, article.source, ""))
+        .accessibilityHint(String(localized: "accessibility.read_article"))
     }
 
     // MARK: - Thumbnail View

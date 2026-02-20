@@ -18,11 +18,11 @@ extension HomeView {
 
                 // Only show breaking news skeleton when on "All" tab
                 if viewModel.viewState.selectedCategory == nil {
-                    GlassSectionHeader("Breaking News")
+                    GlassSectionHeader(HomeViewConstants.breakingNews)
                     HeroCarouselSkeleton()
                 }
 
-                GlassSectionHeader("Top Headlines")
+                GlassSectionHeader(HomeViewConstants.topHeadlines)
                 ArticleListSkeleton(count: 5)
             }
         }
@@ -40,16 +40,13 @@ extension HomeView {
                         .foregroundStyle(.orange)
                         .accessibilityHidden(true)
 
-                    Text(String(localized: "home.offline.title", defaultValue: "You're Offline"))
+                    Text(String(localized: "home.offline.title"))
                         .font(Typography.titleMedium)
 
-                    Text(String(
-                        localized: "home.offline.message",
-                        defaultValue: "Connect to the internet to load the latest news."
-                    ))
-                    .font(Typography.bodyMedium)
-                    .foregroundStyle(.secondary)
-                    .multilineTextAlignment(.center)
+                    Text(String(localized: "home.offline.message"))
+                        .font(Typography.bodyMedium)
+                        .foregroundStyle(.secondary)
+                        .multilineTextAlignment(.center)
                 } else {
                     Image(systemName: "exclamationmark.triangle.fill")
                         .font(.system(size: IconSize.xxl))

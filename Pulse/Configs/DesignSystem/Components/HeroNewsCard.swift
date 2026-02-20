@@ -39,8 +39,8 @@ struct HeroNewsCard: View {
         }
         .pressEffect()
         .accessibilityElement(children: .combine)
-        .accessibilityLabel("Breaking news: \(item.title). From \(item.sourceName). \(item.formattedDate)")
-        .accessibilityHint("Double tap to read article")
+        .accessibilityLabel(String(format: String(localized: "breaking_news.accessibility_label"), item.title, item.sourceName, item.formattedDate))
+        .accessibilityHint(String(localized: "accessibility.read_article"))
         .onAppear {
             startPulseAnimation()
         }
@@ -122,7 +122,7 @@ struct HeroNewsCard: View {
                 .scaleEffect(isPulsing ? 1.2 : 1.0)
                 .opacity(isPulsing ? 0.5 : 1.0)
 
-            Text("BREAKING")
+            Text(String(localized: "home.breaking"))
                 .font(Typography.labelSmall)
                 .fontWeight(.bold)
         }
@@ -204,8 +204,8 @@ struct FeaturedArticleCard: View {
         }
         .pressEffect()
         .accessibilityElement(children: .combine)
-        .accessibilityLabel("\(item.title). From \(item.sourceName). \(item.formattedDate)")
-        .accessibilityHint("Double tap to read article")
+        .accessibilityLabel(String(format: String(localized: "article_row.accessibility_label"), item.title, item.sourceName, item.formattedDate))
+        .accessibilityHint(String(localized: "accessibility.read_article"))
     }
 
     @ViewBuilder

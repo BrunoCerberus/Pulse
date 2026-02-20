@@ -143,8 +143,8 @@ struct PremiumGateView: View {
             }
             .pressEffect()
             .padding(.horizontal, Spacing.xl)
-            .accessibilityLabel("Unlock \(feature.title)")
-            .accessibilityHint("Double tap to view subscription options")
+            .accessibilityLabel(String(format: String(localized: "premium_gate.unlock_label"), feature.title))
+            .accessibilityHint(String(localized: "settings.premium.hint"))
             .accessibilityIdentifier("unlockPremiumButton")
 
             Spacer()

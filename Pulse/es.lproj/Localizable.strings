@@ -21,6 +21,7 @@
 "tab.for_you" = "Para Ti";
 "tab.search" = "Buscar";
 "tab.bookmarks" = "Guardados";
+"tab.feed" = "Feed";
 
 /* ==================== */
 /* MARK: - Categories   */
@@ -40,9 +41,14 @@
 
 "home.title" = "Noticias";
 "home.breaking" = "URGENTE";
+"home.breaking_news" = "Noticias de Última Hora";
+"home.top_headlines" = "Titulares Principales";
+"home.category.all" = "Todos";
 "home.error.title" = "No Se Pudieron Cargar las Noticias";
 "home.empty.title" = "Sin Noticias Disponibles";
 "home.empty.message" = "Vuelve más tarde para ver los últimos titulares.";
+"home.offline.title" = "Estás Sin Conexión";
+"home.offline.message" = "Conéctate a internet para cargar las últimas noticias.";
 "home.edit_topics.title" = "Editar Temas";
 "home.edit_topics.description" = "Selecciona temas para filtrar tu feed de noticias";
 
@@ -83,6 +89,10 @@
 "search.error.title" = "Error en la Búsqueda";
 "search.empty.title" = "Sin Resultados";
 "search.prompt" = "Buscar noticias...";
+"search.recent_searches" = "Búsquedas Recientes";
+"search.trending_topics" = "Temas Populares";
+"search.offline.title" = "Estás Sin Conexión";
+"search.offline.message" = "Conéctate a internet para buscar artículos.";
 
 /* ==================== */
 /* MARK: - Bookmarks    */
@@ -103,6 +113,7 @@
 "article.read_full" = "Leer Artículo Completo";
 "article.bookmark" = "Guardar";
 "article.share" = "Compartir";
+"article.remove_bookmark" = "Eliminar Marcador";
 
 /* ==================== */
 /* MARK: - Settings     */
@@ -118,6 +129,21 @@
 "settings.clear_history.action" = "Borrar";
 "settings.view_github" = "Ver en GitHub";
 "settings.subscription" = "Suscripción";
+"settings.notifications" = "Notificaciones";
+"settings.enable_notifications" = "Activar Notificaciones";
+"settings.breaking_news_alerts" = "Alertas de Noticias de Última Hora";
+"settings.appearance" = "Apariencia";
+"settings.use_system_theme" = "Usar Tema del Sistema";
+"settings.dark_mode" = "Modo Oscuro";
+"settings.about" = "Acerca de";
+"settings.muted_sources" = "Fuentes Silenciadas";
+"settings.muted_sources.add" = "Agregar fuente...";
+"settings.muted_keywords" = "Palabras Clave Silenciadas";
+"settings.muted_keywords.add" = "Agregar palabra clave...";
+"settings.muted_sources.add_action" = "Agregar fuente";
+"settings.muted_sources.remove_action" = "Eliminar fuente";
+"settings.muted_keywords.add_action" = "Agregar palabra clave";
+"settings.muted_keywords.remove_action" = "Eliminar palabra clave";
 "settings.content_language" = "Idioma del Contenido";
 "settings.content_language.label" = "Idioma";
 "settings.content_language.description" = "Elige el idioma de los artículos de noticias";
@@ -129,6 +155,8 @@
 "account.title" = "Cuenta";
 "account.sign_out" = "Cerrar Sesión";
 "account.sign_out.confirm" = "¿Estás seguro de que quieres cerrar sesión?";
+"account.profile_photo" = "Foto de perfil";
+"account.user_initial" = "Inicial del usuario";
 
 /* ==================== */
 /* MARK: - Auth         */
@@ -181,6 +209,15 @@
 /* MARK: - Media        */
 /* ==================== */
 
+"media.title" = "Medios";
+"media.featured" = "Destacados";
+"media.latest" = "Recientes";
+"media.all_types" = "Todos";
+"media.error.title" = "No Se Pudieron Cargar los Medios";
+"media.empty.title" = "Sin Medios";
+"media.empty.message" = "Vuelve más tarde para nuevos videos y podcasts.";
+"media.offline.title" = "Estás Sin Conexión";
+"media.offline.message" = "Conéctate a internet para explorar medios.";
 "media.type.videos" = "Videos";
 "media.type.podcasts" = "Podcasts";
 "media.open_in_browser" = "Abrir en Navegador";
@@ -192,6 +229,8 @@
 "media.video_unavailable" = "URL del video no disponible";
 "media.audio_unavailable" = "URL del audio no disponible";
 "media.unsupported_type" = "Tipo de medio no compatible";
+"media.watch_on_youtube" = "Ver en YouTube";
+"media.watch_on_youtube.accessibility" = "Ver video en YouTube";
 
 /* ───── App Lock ───── */
 
@@ -231,3 +270,113 @@
 "language.english" = "Inglés";
 "language.portuguese" = "Portugués";
 "language.spanish" = "Español";
+
+/* ==================== */
+/* MARK: - Offline      */
+/* ==================== */
+
+"offline.banner" = "Estás sin conexión";
+
+/* ==================== */
+/* MARK: - Feed         */
+/* ==================== */
+
+"feed.title" = "Resumen Diario";
+"feed.header_title" = "Tu Resumen Diario";
+"feed.empty.title" = "Sin Lecturas Recientes";
+"feed.empty.message" = "Lee algunos artículos para obtener tu resumen diario personalizado.";
+"feed.error.title" = "Algo salió mal";
+"feed.offline.title" = "Estás Sin Conexión";
+"feed.offline.message" = "Conéctate a internet para generar tu resumen diario.";
+"feed.start_reading" = "Empezar a Leer";
+"feed.no_articles.title" = "Sin Artículos Disponibles";
+"feed.no_articles.message" = "No se pudieron obtener los últimos artículos. Verifica tu conexión e inténtalo de nuevo.";
+"feed.no_articles.retry" = "Reintentar";
+"feed.ai_processing.status" = "Creando tu resumen...";
+"feed.ai_digest" = "Resumen con IA";
+
+/* ==================== */
+/* MARK: - Digest       */
+/* ==================== */
+
+"digest.ai_summary" = "Resumen IA";
+"digest.articles_label" = "artículos";
+"digest.stats_title" = "Estadísticas";
+"digest.topics_label" = "temas";
+"digest.time_span" = "período de 48h";
+"digest.source_articles" = "Artículos por Fuente";
+"digest.related_articles" = "Artículos Relacionados";
+"digest.article_count_one" = "1 artículo";
+"digest.article_count_other" = "%d artículos";
+"digest.stats_accessibility" = "Estadísticas: %d artículos, %d temas, período de 48 horas";
+
+/* ==================== */
+/* MARK: - Search (Additional) */
+/* ==================== */
+
+"search.no_results" = "No se encontraron artículos para \"%@\"";
+"search.sort_by" = "Ordenar por";
+"search.sort.relevance" = "Relevancia";
+"search.sort.date" = "Fecha";
+"search.sort.popularity" = "Popularidad";
+"search.recent_label" = "Búsqueda reciente: %@";
+"search.search_hint" = "Toca dos veces para buscar";
+
+/* ==================== */
+/* MARK: - Accessibility */
+/* ==================== */
+
+"accessibility.read_article" = "Toca dos veces para leer el artículo";
+"accessibility.opens_in_safari" = "Abre en Safari";
+"accessibility.from_source" = "De %@";
+
+"home.edit_topics.label" = "Editar Temas";
+"home.edit_topics.hint" = "Abre el editor de temas para personalizar tu feed";
+"home.settings.label" = "Configuración";
+"home.settings.hint" = "Abre tus preferencias y configuración de cuenta";
+"home.filter_category.hint" = "Filtrar artículos por %@";
+
+"breaking_news.accessibility_label" = "Noticia de última hora: %@. De %@. %@";
+"article_row.accessibility_label" = "%@. De %@. %@";
+
+"topic_editor.follow_hint" = "Toca dos veces para seguir";
+"topic_editor.unfollow_hint" = "Toca dos veces para dejar de seguir";
+
+"article_detail.summarize_hint" = "Generar resumen con IA";
+"article_detail.premium_hint" = "Función Premium";
+"article_detail.remove_bookmark" = "Eliminar marcador";
+"article_detail.add_bookmark" = "Agregar marcador";
+"article_detail.save_hint" = "Guardar artículo para lectura sin conexión";
+"article_detail.share_label" = "Compartir artículo";
+"article_detail.share_hint" = "Compartir este artículo con otros";
+
+"media_detail.remove_bookmark" = "Eliminar marcador";
+"media_detail.add_bookmark" = "Agregar marcador";
+
+"audio_player.progress_label" = "Progreso de reproducción";
+"audio_player.progress_value" = "%@ de %@";
+"audio_player.no_url_error" = "No hay URL de audio disponible";
+
+"settings.premium.hint" = "Toca dos veces para ver opciones de suscripción";
+
+"auth.unknown_error" = "Ocurrió un error desconocido";
+"auth.apple_hint" = "Toca dos veces para iniciar sesión con tu Apple ID";
+"auth.google_hint" = "Toca dos veces para iniciar sesión con tu cuenta de Google";
+
+"paywall.close" = "Cerrar";
+"splash.loading" = "Pulse está cargando";
+
+"tab.switch_hint" = "Cambiar a pestaña %@";
+"media_card.details_hint" = "Toca dos veces para ver detalles";
+"media.play_hint" = "Toca dos veces para reproducir";
+"media.filter_hint" = "Filtrar por %@";
+
+"source_articles.expanded" = "Expandido";
+"source_articles.collapsed" = "Contraído";
+"source_articles.expand_hint" = "Toca dos veces para expandir";
+"source_articles.collapse_hint" = "Toca dos veces para contraer";
+
+"applock.unlock_hint" = "Toca dos veces para autenticar con Face ID";
+"feed.retry_hint" = "Toca dos veces para reintentar generar el resumen";
+"premium_gate.unlock_label" = "Desbloquear %@";
+"digest.topics_title" = "Temas";

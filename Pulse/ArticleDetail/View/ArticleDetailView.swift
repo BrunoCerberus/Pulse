@@ -78,21 +78,21 @@ struct ArticleDetailView: View {
                     }
                     .accessibilityIdentifier("summarizeButton")
                     .accessibilityLabel(Constants.summarize)
-                    .accessibilityHint(isPremium ? "Generate AI summary" : "Premium feature")
+                    .accessibilityHint(isPremium ? String(localized: "article_detail.summarize_hint") : String(localized: "article_detail.premium_hint"))
 
                     Button("", systemImage: viewModel.viewState.isBookmarked ? "bookmark.fill" : "bookmark") {
                         viewModel.handle(event: .onBookmarkTapped)
                     }
                     .accessibilityIdentifier(viewModel.viewState.isBookmarked ? "bookmark.fill" : "bookmark")
-                    .accessibilityLabel(viewModel.viewState.isBookmarked ? "Remove bookmark" : "Add bookmark")
-                    .accessibilityHint("Save article for offline reading")
+                    .accessibilityLabel(viewModel.viewState.isBookmarked ? String(localized: "article_detail.remove_bookmark") : String(localized: "article_detail.add_bookmark"))
+                    .accessibilityHint(String(localized: "article_detail.save_hint"))
 
                     Button("", systemImage: "square.and.arrow.up") {
                         viewModel.handle(event: .onShareTapped)
                     }
                     .accessibilityIdentifier("square.and.arrow.up")
-                    .accessibilityLabel("Share article")
-                    .accessibilityHint("Share this article with others")
+                    .accessibilityLabel(String(localized: "article_detail.share_label"))
+                    .accessibilityHint(String(localized: "article_detail.share_hint"))
                 }
             }
         }
@@ -262,7 +262,7 @@ struct ArticleDetailView: View {
             .clipShape(RoundedRectangle(cornerRadius: CornerRadius.md, style: .continuous))
         }
         .pressEffect()
-        .accessibilityHint("Opens in Safari")
+        .accessibilityHint(String(localized: "accessibility.opens_in_safari"))
     }
 }
 

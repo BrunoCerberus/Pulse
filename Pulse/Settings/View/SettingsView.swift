@@ -124,13 +124,13 @@ struct SettingsView: View {
     }
 
     private var notificationsSection: some View {
-        Section("Notifications") {
-            Toggle("Enable Notifications", isOn: Binding(
+        Section(String(localized: "settings.notifications")) {
+            Toggle(String(localized: "settings.enable_notifications"), isOn: Binding(
                 get: { viewModel.viewState.notificationsEnabled },
                 set: { viewModel.handle(event: .onToggleNotifications($0)) }
             ))
 
-            Toggle("Breaking News Alerts", isOn: Binding(
+            Toggle(String(localized: "settings.breaking_news_alerts"), isOn: Binding(
                 get: { viewModel.viewState.breakingNewsEnabled },
                 set: { viewModel.handle(event: .onToggleBreakingNews($0)) }
             ))
@@ -156,14 +156,14 @@ struct SettingsView: View {
     }
 
     private var appearanceSection: some View {
-        Section("Appearance") {
-            Toggle("Use System Theme", isOn: Binding(
+        Section(String(localized: "settings.appearance")) {
+            Toggle(String(localized: "settings.use_system_theme"), isOn: Binding(
                 get: { viewModel.viewState.useSystemTheme },
                 set: { viewModel.handle(event: .onToggleSystemTheme($0)) }
             ))
 
             if !viewModel.viewState.useSystemTheme {
-                Toggle("Dark Mode", isOn: Binding(
+                Toggle(String(localized: "settings.dark_mode"), isOn: Binding(
                     get: { viewModel.viewState.isDarkMode },
                     set: { viewModel.handle(event: .onToggleDarkMode($0)) }
                 ))
@@ -172,7 +172,7 @@ struct SettingsView: View {
     }
 
     private var aboutSection: some View {
-        Section("About") {
+        Section(String(localized: "settings.about")) {
             HStack {
                 Text(Constants.version)
                 Spacer()

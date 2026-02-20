@@ -116,7 +116,7 @@ struct SearchView<R: SearchNavigationRouter>: View {
             VStack(spacing: Spacing.lg) {
                 if !viewModel.viewState.suggestions.isEmpty {
                     VStack(alignment: .leading, spacing: Spacing.sm) {
-                        GlassSectionHeader("Recent Searches")
+                        GlassSectionHeader(String(localized: "search.recent_searches"))
 
                         ScrollView(.horizontal, showsIndicators: false) {
                             HStack(spacing: Spacing.sm) {
@@ -137,8 +137,8 @@ struct SearchView<R: SearchNavigationRouter>: View {
                                         .glassBackground(style: .thin, cornerRadius: CornerRadius.pill)
                                     }
                                     .pressEffect()
-                                    .accessibilityLabel("Recent search: \(suggestion)")
-                                    .accessibilityHint("Double tap to search")
+                                    .accessibilityLabel(String(format: String(localized: "search.recent_label"), suggestion))
+                                    .accessibilityHint(String(localized: "search.search_hint"))
                                 }
                             }
                             .padding(.horizontal, Spacing.md)
@@ -147,7 +147,7 @@ struct SearchView<R: SearchNavigationRouter>: View {
                 }
 
                 VStack(alignment: .leading, spacing: Spacing.sm) {
-                    GlassSectionHeader("Trending Topics")
+                    GlassSectionHeader(String(localized: "search.trending_topics"))
 
                     LazyVGrid(columns: [GridItem(.adaptive(minimum: 100))], spacing: Spacing.sm) {
                         ForEach(NewsCategory.allCases) { category in
@@ -173,16 +173,13 @@ struct SearchView<R: SearchNavigationRouter>: View {
                         .foregroundStyle(.orange)
                         .accessibilityHidden(true)
 
-                    Text(String(localized: "search.offline.title", defaultValue: "You're Offline"))
+                    Text(String(localized: "search.offline.title"))
                         .font(Typography.titleMedium)
 
-                    Text(String(
-                        localized: "search.offline.message",
-                        defaultValue: "Connect to the internet to search for articles."
-                    ))
-                    .font(Typography.bodyMedium)
-                    .foregroundStyle(.secondary)
-                    .multilineTextAlignment(.center)
+                    Text(String(localized: "search.offline.message"))
+                        .font(Typography.bodyMedium)
+                        .foregroundStyle(.secondary)
+                        .multilineTextAlignment(.center)
                 } else {
                     Image(systemName: "exclamationmark.triangle.fill")
                         .font(.largeTitle)
@@ -227,7 +224,7 @@ struct SearchView<R: SearchNavigationRouter>: View {
                 Text(Constants.emptyTitle)
                     .font(Typography.titleMedium)
 
-                Text("No articles found for \"\(viewModel.viewState.query)\"")
+                Text(String(format: String(localized: "search.no_results"), viewModel.viewState.query))
                     .font(Typography.bodyMedium)
                     .foregroundStyle(.secondary)
                     .multilineTextAlignment(.center)
@@ -296,7 +293,7 @@ struct SearchView<R: SearchNavigationRouter>: View {
 
 private extension SearchView {
     var sortPicker: some View {
-        Picker("Sort by", selection: Binding(
+        Picker(String(localized: "search.sort_by"), selection: Binding(
             get: { viewModel.viewState.sortOption },
             set: {
                 HapticManager.shared.selectionChanged()

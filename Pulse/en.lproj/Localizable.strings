@@ -21,6 +21,7 @@
 "tab.for_you" = "For You";
 "tab.search" = "Search";
 "tab.bookmarks" = "Bookmarks";
+"tab.feed" = "Feed";
 
 /* ==================== */
 /* MARK: - Categories   */
@@ -40,9 +41,14 @@
 
 "home.title" = "News";
 "home.breaking" = "BREAKING";
+"home.breaking_news" = "Breaking News";
+"home.top_headlines" = "Top Headlines";
+"home.category.all" = "All";
 "home.error.title" = "Unable to Load News";
 "home.empty.title" = "No News Available";
 "home.empty.message" = "Check back later for the latest headlines.";
+"home.offline.title" = "You're Offline";
+"home.offline.message" = "Connect to the internet to load the latest news.";
 "home.edit_topics.title" = "Edit Topics";
 "home.edit_topics.description" = "Select topics to filter your news feed";
 
@@ -83,6 +89,10 @@
 "search.error.title" = "Search Failed";
 "search.empty.title" = "No Results Found";
 "search.prompt" = "Search news...";
+"search.recent_searches" = "Recent Searches";
+"search.trending_topics" = "Trending Topics";
+"search.offline.title" = "You're Offline";
+"search.offline.message" = "Connect to the internet to search for articles.";
 
 /* ==================== */
 /* MARK: - Bookmarks    */
@@ -103,6 +113,7 @@
 "article.read_full" = "Read Full Article";
 "article.bookmark" = "Bookmark";
 "article.share" = "Share";
+"article.remove_bookmark" = "Remove Bookmark";
 
 /* ==================== */
 /* MARK: - Settings     */
@@ -118,6 +129,21 @@
 "settings.clear_history.action" = "Clear";
 "settings.view_github" = "View on GitHub";
 "settings.subscription" = "Subscription";
+"settings.notifications" = "Notifications";
+"settings.enable_notifications" = "Enable Notifications";
+"settings.breaking_news_alerts" = "Breaking News Alerts";
+"settings.appearance" = "Appearance";
+"settings.use_system_theme" = "Use System Theme";
+"settings.dark_mode" = "Dark Mode";
+"settings.about" = "About";
+"settings.muted_sources" = "Muted Sources";
+"settings.muted_sources.add" = "Add source...";
+"settings.muted_keywords" = "Muted Keywords";
+"settings.muted_keywords.add" = "Add keyword...";
+"settings.muted_sources.add_action" = "Add source";
+"settings.muted_sources.remove_action" = "Remove source";
+"settings.muted_keywords.add_action" = "Add keyword";
+"settings.muted_keywords.remove_action" = "Remove keyword";
 "settings.content_language" = "Content Language";
 "settings.content_language.label" = "Language";
 "settings.content_language.description" = "Choose the language for news articles";
@@ -129,6 +155,8 @@
 "account.title" = "Account";
 "account.sign_out" = "Sign Out";
 "account.sign_out.confirm" = "Are you sure you want to sign out of your account?";
+"account.profile_photo" = "Profile photo";
+"account.user_initial" = "User initial";
 
 /* ==================== */
 /* MARK: - Auth         */
@@ -181,6 +209,15 @@
 /* MARK: - Media        */
 /* ==================== */
 
+"media.title" = "Media";
+"media.featured" = "Featured";
+"media.latest" = "Latest";
+"media.all_types" = "All";
+"media.error.title" = "Unable to Load Media";
+"media.empty.title" = "No Media";
+"media.empty.message" = "Check back later for new videos and podcasts.";
+"media.offline.title" = "You're Offline";
+"media.offline.message" = "Connect to the internet to browse media.";
 "media.type.videos" = "Videos";
 "media.type.podcasts" = "Podcasts";
 "media.open_in_browser" = "Open in Browser";
@@ -192,6 +229,8 @@
 "media.video_unavailable" = "Video URL is not available";
 "media.audio_unavailable" = "Audio URL is not available";
 "media.unsupported_type" = "Unsupported media type";
+"media.watch_on_youtube" = "Watch on YouTube";
+"media.watch_on_youtube.accessibility" = "Watch video on YouTube";
 
 /* ───── App Lock ───── */
 
@@ -231,3 +270,113 @@
 "language.english" = "English";
 "language.portuguese" = "Portuguese";
 "language.spanish" = "Spanish";
+
+/* ==================== */
+/* MARK: - Offline      */
+/* ==================== */
+
+"offline.banner" = "You're offline";
+
+/* ==================== */
+/* MARK: - Feed         */
+/* ==================== */
+
+"feed.title" = "Daily Digest";
+"feed.header_title" = "Your Daily Digest";
+"feed.empty.title" = "No Recent Reading";
+"feed.empty.message" = "Read some articles to get your personalized daily digest.";
+"feed.error.title" = "Something went wrong";
+"feed.offline.title" = "You're Offline";
+"feed.offline.message" = "Connect to the internet to generate your daily digest.";
+"feed.start_reading" = "Start Reading";
+"feed.no_articles.title" = "No Articles Available";
+"feed.no_articles.message" = "Unable to fetch the latest news articles. Please check your connection and try again.";
+"feed.no_articles.retry" = "Retry";
+"feed.ai_processing.status" = "Crafting your digest...";
+"feed.ai_digest" = "AI Digest";
+
+/* ==================== */
+/* MARK: - Digest       */
+/* ==================== */
+
+"digest.ai_summary" = "AI Summary";
+"digest.articles_label" = "articles";
+"digest.stats_title" = "Stats";
+"digest.topics_label" = "topics";
+"digest.time_span" = "48h span";
+"digest.source_articles" = "Source Articles";
+"digest.related_articles" = "Related Articles";
+"digest.article_count_one" = "1 article";
+"digest.article_count_other" = "%d articles";
+"digest.stats_accessibility" = "Stats: %d articles, %d topics, 48 hour span";
+
+/* ==================== */
+/* MARK: - Search (Additional) */
+/* ==================== */
+
+"search.no_results" = "No articles found for \"%@\"";
+"search.sort_by" = "Sort by";
+"search.sort.relevance" = "Relevance";
+"search.sort.date" = "Date";
+"search.sort.popularity" = "Popularity";
+"search.recent_label" = "Recent search: %@";
+"search.search_hint" = "Double tap to search";
+
+/* ==================== */
+/* MARK: - Accessibility */
+/* ==================== */
+
+"accessibility.read_article" = "Double tap to read article";
+"accessibility.opens_in_safari" = "Opens in Safari";
+"accessibility.from_source" = "From %@";
+
+"home.edit_topics.label" = "Edit Topics";
+"home.edit_topics.hint" = "Opens topic editor to customize your feed";
+"home.settings.label" = "Settings";
+"home.settings.hint" = "Opens your preferences and account settings";
+"home.filter_category.hint" = "Filter articles by %@";
+
+"breaking_news.accessibility_label" = "Breaking news: %@. From %@. %@";
+"article_row.accessibility_label" = "%@. From %@. %@";
+
+"topic_editor.follow_hint" = "Double tap to follow";
+"topic_editor.unfollow_hint" = "Double tap to unfollow";
+
+"article_detail.summarize_hint" = "Generate AI summary";
+"article_detail.premium_hint" = "Premium feature";
+"article_detail.remove_bookmark" = "Remove bookmark";
+"article_detail.add_bookmark" = "Add bookmark";
+"article_detail.save_hint" = "Save article for offline reading";
+"article_detail.share_label" = "Share article";
+"article_detail.share_hint" = "Share this article with others";
+
+"media_detail.remove_bookmark" = "Remove bookmark";
+"media_detail.add_bookmark" = "Add bookmark";
+
+"audio_player.progress_label" = "Playback progress";
+"audio_player.progress_value" = "%@ of %@";
+"audio_player.no_url_error" = "No audio URL available";
+
+"settings.premium.hint" = "Double tap to view subscription options";
+
+"auth.unknown_error" = "An unknown error occurred";
+"auth.apple_hint" = "Double tap to sign in with your Apple ID";
+"auth.google_hint" = "Double tap to sign in with your Google account";
+
+"paywall.close" = "Close";
+"splash.loading" = "Pulse is loading";
+
+"tab.switch_hint" = "Switch to %@ tab";
+"media_card.details_hint" = "Double tap to view details";
+"media.play_hint" = "Double tap to play";
+"media.filter_hint" = "Filter by %@";
+
+"source_articles.expanded" = "Expanded";
+"source_articles.collapsed" = "Collapsed";
+"source_articles.expand_hint" = "Double tap to expand";
+"source_articles.collapse_hint" = "Double tap to collapse";
+
+"applock.unlock_hint" = "Double tap to authenticate with Face ID";
+"feed.retry_hint" = "Double tap to retry generating the digest";
+"premium_gate.unlock_label" = "Unlock %@";
+"digest.topics_title" = "Topics";
