@@ -92,11 +92,11 @@ struct NotificationDeeplinkParserTests {
         #expect(result == .article(id: "world/2024/jan/01/article-slug"))
     }
 
-    @Test("Parse legacy articleID - empty string")
+    @Test("Parse legacy articleID - empty string is rejected")
     func parseLegacyArticleIDEmpty() {
         let userInfo: [AnyHashable: Any] = ["articleID": ""]
         let result = NotificationDeeplinkParser.parse(from: userInfo)
-        #expect(result == .article(id: ""))
+        #expect(result == nil)
     }
 
     // MARK: - Format 3: Type-based

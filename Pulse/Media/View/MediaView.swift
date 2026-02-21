@@ -280,9 +280,11 @@ struct MediaView<R: MediaNavigationRouter>: View {
     // MARK: - Media Playback
 
     private func openMedia(_ media: Article) {
-        // Open in Safari/YouTube/Podcast app
         let urlString = media.mediaURL ?? media.url
-        guard let url = URL(string: urlString) else { return }
+        guard let url = URL(string: urlString),
+              let scheme = url.scheme?.lowercased(),
+              ["https", "http"].contains(scheme)
+        else { return }
         UIApplication.shared.open(url)
     }
 }

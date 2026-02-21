@@ -110,36 +110,36 @@ struct VideoPlayerView: UIViewRepresentable {
         """
     }
 
+    /// Valid YouTube video ID pattern: 11 characters of alphanumeric, hyphens, and underscores.
+    private static let youtubeVideoIDPattern = /^[A-Za-z0-9_-]{11}$/
+
     /// Extracts YouTube video ID from various URL formats.
+    /// Returns nil if the extracted ID doesn't match the expected format.
     private func extractYouTubeVideoID(from urlString: String) -> String? {
-        // Pattern 1: youtube.com/watch?v=VIDEO_ID
+        let rawID: String?
+
         if urlString.contains("youtube.com/watch") {
-            guard let components = URLComponents(string: urlString),
-                  let videoID = components.queryItems?.first(where: { $0.name == "v" })?.value
-            else {
-                return nil
-            }
-            return videoID
+            // Pattern 1: youtube.com/watch?v=VIDEO_ID (uses URLComponents for safe parsing)
+            guard let components = URLComponents(string: urlString) else { return nil }
+            rawID = components.queryItems?.first(where: { $0.name == "v" })?.value
+        } else if urlString.contains("youtu.be/") {
+            // Pattern 2: youtu.be/VIDEO_ID
+            guard let components = URLComponents(string: urlString) else { return nil }
+            rawID = components.path.split(separator: "/").first.map(String.init)
+        } else if urlString.contains("youtube.com/embed/") {
+            // Pattern 3: youtube.com/embed/VIDEO_ID
+            guard let components = URLComponents(string: urlString) else { return nil }
+            let pathParts = components.path.split(separator: "/")
+            rawID = pathParts.count >= 2 ? String(pathParts[1]) : nil
+        } else {
+            return nil
         }
 
-        // Pattern 2: youtu.be/VIDEO_ID
-        if urlString.contains("youtu.be/") {
-            let parts = urlString.components(separatedBy: "youtu.be/")
-            if parts.count > 1 {
-                // Remove any query parameters
-                return parts[1].components(separatedBy: "?").first
-            }
+        // Validate video ID format to prevent HTML injection
+        guard let id = rawID, id.wholeMatch(of: Self.youtubeVideoIDPattern) != nil else {
+            return nil
         }
-
-        // Pattern 3: youtube.com/embed/VIDEO_ID (already embed format)
-        if urlString.contains("youtube.com/embed/") {
-            let parts = urlString.components(separatedBy: "youtube.com/embed/")
-            if parts.count > 1 {
-                return parts[1].components(separatedBy: "?").first
-            }
-        }
-
-        return nil
+        return id
     }
 
     // MARK: - Coordinator

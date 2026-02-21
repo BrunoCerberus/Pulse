@@ -16,7 +16,10 @@ struct YouTubeThumbnailView: View {
 
         Button {
             HapticManager.shared.buttonPress()
-            if let url = URL(string: urlString) {
+            if let url = URL(string: urlString),
+               let scheme = url.scheme?.lowercased(),
+               ["https", "http"].contains(scheme)
+            {
                 UIApplication.shared.open(url)
             }
         } label: {
@@ -121,21 +124,26 @@ struct YouTubeThumbnailView: View {
             }
     }
 
+    /// Valid YouTube video ID pattern: 11 characters of alphanumeric, hyphens, and underscores.
+    private static let youtubeVideoIDPattern = /^[A-Za-z0-9_-]{11}$/
+
     private func extractYouTubeThumbnail(from urlString: String) -> String? {
-        var videoID: String?
+        let rawID: String?
 
         if urlString.contains("youtube.com/watch") {
-            if let components = URLComponents(string: urlString) {
-                videoID = components.queryItems?.first(where: { $0.name == "v" })?.value
-            }
+            guard let components = URLComponents(string: urlString) else { return nil }
+            rawID = components.queryItems?.first(where: { $0.name == "v" })?.value
         } else if urlString.contains("youtu.be/") {
-            let parts = urlString.components(separatedBy: "youtu.be/")
-            if parts.count > 1 {
-                videoID = parts[1].components(separatedBy: "?").first
-            }
+            guard let components = URLComponents(string: urlString) else { return nil }
+            rawID = components.path.split(separator: "/").first.map(String.init)
+        } else {
+            return nil
         }
 
-        guard let id = videoID else { return nil }
+        // Validate video ID format to prevent URL injection
+        guard let id = rawID, id.wholeMatch(of: Self.youtubeVideoIDPattern) != nil else {
+            return nil
+        }
         return "https://img.youtube.com/vi/\(id)/maxresdefault.jpg"
     }
 }
