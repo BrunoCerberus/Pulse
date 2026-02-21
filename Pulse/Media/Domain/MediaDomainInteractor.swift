@@ -100,18 +100,39 @@ final class MediaDomainInteractor: CombineInteractor {
 
         analyticsService?.logEvent(.screenView(screen: .media))
 
-        // Load preferred language from settings
-        loadPreferredLanguage()
-
         updateState { state in
             state.isLoading = true
             state.error = nil
         }
 
         let selectedType = currentState.selectedType
+
+        // Load preferences first to get the correct language before fetching
+        settingsService.fetchPreferences()
+            .receive(on: DispatchQueue.main)
+            .sink(
+                receiveCompletion: { [weak self] completion in
+                    if case let .failure(error) = completion {
+                        Logger.shared.service(
+                            "MediaDomainInteractor: Failed to load preferences: \(error)",
+                            level: .warning
+                        )
+                        // Still fetch media with default language on preference load failure
+                        self?.fetchInitialMedia(selectedType: selectedType)
+                    }
+                },
+                receiveValue: { [weak self] preferences in
+                    guard let self else { return }
+                    self.preferredLanguage = preferences.preferredLanguage
+                    self.fetchInitialMedia(selectedType: selectedType)
+                }
+            )
+            .store(in: &cancellables)
+    }
+
+    private func fetchInitialMedia(selectedType: MediaType?) {
         let language = preferredLanguage
 
-        // Fetch both featured media and first page of media items
         Publishers.Zip(
             mediaService.fetchFeaturedMedia(type: selectedType, language: language),
             mediaService.fetchMedia(type: selectedType, language: language, page: 1)

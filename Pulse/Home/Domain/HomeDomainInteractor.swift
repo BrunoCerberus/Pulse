@@ -154,8 +154,10 @@ final class HomeDomainInteractor: CombineInteractor {
 
 private extension HomeDomainInteractor {
     func loadInitialData() {
-        loadFollowedTopics()
-        guard !currentState.isLoading, !currentState.hasLoadedInitialData else { return }
+        guard !currentState.isLoading, !currentState.hasLoadedInitialData else {
+            loadFollowedTopics()
+            return
+        }
 
         analyticsService?.logEvent(.screenView(screen: .home))
 
@@ -164,7 +166,27 @@ private extension HomeDomainInteractor {
             state.error = nil
         }
 
-        fetchHeadlinesForCurrentCategory(page: 1)
+        // Load preferences first to get the correct language before fetching
+        settingsService.fetchPreferences()
+            .receive(on: DispatchQueue.main)
+            .sink(
+                receiveCompletion: { [weak self] completion in
+                    if case let .failure(error) = completion {
+                        Logger.shared.service("Failed to load followed topics: \(error)", level: .warning)
+                        // Still fetch headlines with default language on preference load failure
+                        self?.fetchHeadlinesForCurrentCategory(page: 1)
+                    }
+                },
+                receiveValue: { [weak self] preferences in
+                    guard let self else { return }
+                    self.preferredLanguage = preferences.preferredLanguage
+                    self.updateState { state in
+                        state.followedTopics = preferences.followedTopics
+                    }
+                    self.fetchHeadlinesForCurrentCategory(page: 1)
+                }
+            )
+            .store(in: &cancellables)
     }
 
     func loadMoreHeadlines() {
