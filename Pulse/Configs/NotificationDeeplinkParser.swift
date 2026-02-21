@@ -20,7 +20,9 @@ enum NotificationDeeplinkParser {
         }
 
         // Format 2: Legacy articleID support
-        if let articleID = userInfo["articleID"] as? String {
+        if let articleID = userInfo["articleID"] as? String,
+           Deeplink.isValidArticleID(articleID)
+        {
             return .article(id: articleID)
         }
 
@@ -52,7 +54,9 @@ enum NotificationDeeplinkParser {
             let query = components.queryItems?.first { $0.name == "q" }?.value
             return .search(query: query)
         case "article":
-            guard let id = components.queryItems?.first(where: { $0.name == "id" })?.value else {
+            guard let id = components.queryItems?.first(where: { $0.name == "id" })?.value,
+                  Deeplink.isValidArticleID(id)
+            else {
                 return nil
             }
             return .article(id: id)
@@ -77,7 +81,9 @@ enum NotificationDeeplinkParser {
             let query = userInfo["deeplinkQuery"] as? String
             return .search(query: query)
         case "article":
-            guard let id = userInfo["deeplinkId"] as? String else { return nil }
+            guard let id = userInfo["deeplinkId"] as? String,
+                  Deeplink.isValidArticleID(id)
+            else { return nil }
             return .article(id: id)
         default:
             return nil

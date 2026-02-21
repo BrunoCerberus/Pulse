@@ -224,7 +224,10 @@ final class MediaDetailDomainInteractor: CombineInteractor {
     // MARK: - Browser
 
     private func openInBrowser() {
-        guard let url = URL(string: currentState.article.url) else { return }
+        guard let url = URL(string: currentState.article.url),
+              let scheme = url.scheme?.lowercased(),
+              ["https", "http"].contains(scheme)
+        else { return }
         UIApplication.shared.open(url)
     }
 

@@ -106,9 +106,17 @@ final class DiskNewsCacheStore: NewsCacheStore {
     // MARK: - Private
 
     private func fileURL(for key: NewsCacheKey) -> URL {
-        // Sanitize key for filesystem: replace "/" with "_"
-        let sanitized = key.stringKey.replacingOccurrences(of: "/", with: "_")
-        return cacheDirectory.appendingPathComponent(sanitized + ".json")
+        // Sanitize key for filesystem: keep only safe characters
+        let allowed = CharacterSet.alphanumerics.union(CharacterSet(charactersIn: "-_"))
+        let sanitized = key.stringKey.unicodeScalars
+            .map { allowed.contains($0) ? String($0) : "_" }
+            .joined()
+        let url = cacheDirectory.appendingPathComponent(sanitized + ".json")
+        // Verify the resolved path stays within the cache directory
+        guard url.standardizedFileURL.path.hasPrefix(cacheDirectory.standardizedFileURL.path) else {
+            return cacheDirectory.appendingPathComponent("invalid_key.json")
+        }
+        return url
     }
 
     private func encodePayload(_ data: Any) -> Data? {

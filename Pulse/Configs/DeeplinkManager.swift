@@ -36,6 +36,23 @@ enum Deeplink: Equatable {
 
     /// Filter articles by category name.
     case category(name: String)
+
+    /// Maximum allowed length for article IDs.
+    private static let maxArticleIDLength = 512
+
+    /// Allowed characters for article IDs: alphanumeric, hyphens, underscores, forward slashes, dots.
+    private static let articleIDAllowedCharacters = CharacterSet.alphanumerics
+        .union(CharacterSet(charactersIn: "-_/."))
+
+    /// Validates an article ID to prevent injection and path traversal attacks.
+    static func isValidArticleID(_ id: String) -> Bool {
+        guard !id.isEmpty,
+              id.count <= maxArticleIDLength,
+              id.unicodeScalars.allSatisfy({ articleIDAllowedCharacters.contains($0) }),
+              !id.contains("..")
+        else { return false }
+        return true
+    }
 }
 
 /// Manages deeplink URL parsing and routing.
@@ -97,7 +114,9 @@ final class DeeplinkManager: ObservableObject {
         case "settings":
             deeplink = .settings
         case "article":
-            guard let articleID = components.queryItems?.first(where: { $0.name == "id" })?.value else {
+            guard let articleID = components.queryItems?.first(where: { $0.name == "id" })?.value,
+                  Deeplink.isValidArticleID(articleID)
+            else {
                 return
             }
             deeplink = .article(id: articleID)
