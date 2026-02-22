@@ -172,10 +172,15 @@ jobs:
           -onlyUsePackageVersionsFromResolvedFile
         echo "Package dependencies resolved successfully"
 
-    - name: Pre-boot simulator
+    - name: Pre-boot and warm up simulator
       run: |
-        echo "Pre-booting simulator..."
-        xcrun simctl boot "iPhone Air" || echo "Simulator already booted or unavailable"
+        SIMULATOR_NAME="iPhone Air"
+        echo "Booting simulator..."
+        xcrun simctl boot "$SIMULATOR_NAME" 2>/dev/null || true
+        echo "Waiting for boot to complete..."
+        xcrun simctl bootstatus "$SIMULATOR_NAME" -b 2>/dev/null || true
+        echo "Warming up simulator accessibility services..."
+        sleep 10
 
     - name: Build for testing (PulseDev)
       run: |
@@ -278,10 +283,15 @@ jobs:
         name: build-products
         path: ./DerivedData
 
-    - name: Pre-boot simulator
+    - name: Pre-boot and warm up simulator
       run: |
-        echo "Pre-booting simulator..."
-        xcrun simctl boot "iPhone Air" || echo "Simulator already booted or unavailable"
+        SIMULATOR_NAME="iPhone Air"
+        echo "Booting simulator..."
+        xcrun simctl boot "$SIMULATOR_NAME" 2>/dev/null || true
+        echo "Waiting for boot to complete..."
+        xcrun simctl bootstatus "$SIMULATOR_NAME" -b 2>/dev/null || true
+        echo "Warming up simulator accessibility services..."
+        sleep 10
 
     - name: Run ${{ matrix.test-name }}
       timeout-minutes: ${{ matrix.timeout }}

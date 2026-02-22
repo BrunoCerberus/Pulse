@@ -126,71 +126,12 @@ final class PremiumGatingNonPremiumUITests: BaseUITestCase {
 
 /// Tests premium feature access for premium users.
 /// These tests verify that premium features are properly unlocked.
-final class PremiumGatingPremiumUITests: XCTestCase {
-    var app: XCUIApplication!
+final class PremiumGatingPremiumUITests: BaseUITestCase {
+    // MARK: - Setup
 
-    // Use the same timeouts as BaseUITestCase
-    // CI machines are significantly slower than local, especially on shared runners
-    static let launchTimeout: TimeInterval = 60
-    static let defaultTimeout: TimeInterval = 10
-    static let shortTimeout: TimeInterval = 6
-
-    override func setUpWithError() throws {
-        continueAfterFailure = false
-        XCUIDevice.shared.orientation = .portrait
-
-        app = XCUIApplication()
-
-        // Speed optimizations
-        app.launchEnvironment["UI_TESTING"] = "1"
-        app.launchEnvironment["DISABLE_ANIMATIONS"] = "1"
-
+    override func configureLaunchEnvironment() {
         // Set premium status for these tests
         app.launchEnvironment["MOCK_PREMIUM"] = "1"
-
-        // Launch arguments to speed up tests
-        app.launchArguments += ["-UIViewAnimationDuration", "0.01"]
-        app.launchArguments += ["-CATransactionAnimationDuration", "0.01"]
-
-        // Skip onboarding flow in UI tests (sets UserDefaults via argument domain)
-        app.launchArguments += ["-pulse.hasCompletedOnboarding", "YES"]
-
-        app.launch()
-
-        _ = app.wait(for: .runningForeground, timeout: Self.launchTimeout)
-
-        // Wait for UI to stabilize
-        wait(for: 0.3)
-
-        // Wait for either tab bar or sign-in to appear
-        let tabBar = app.tabBars.firstMatch
-        let signInButton = app.buttons["Sign in with Apple"]
-
-        // CI simulators can be slow to show the initial UI, so give more time to detect loading state
-        let loadingIndicator = app.activityIndicators.firstMatch
-        if loadingIndicator.waitForExistence(timeout: 10) {
-            // Wait for loading to complete with extended timeout for CI
-            _ = waitForElementToDisappear(loadingIndicator, timeout: Self.launchTimeout * 2)
-        }
-
-        let appReady = waitForAny([tabBar, signInButton], timeout: Self.launchTimeout)
-
-        guard appReady else {
-            XCTFail("App did not reach ready state")
-            return
-        }
-
-        if tabBar.exists {
-            resetToHomeTab()
-        }
-    }
-
-    override func tearDownWithError() throws {
-        XCUIDevice.shared.orientation = .portrait
-        if app?.state != .notRunning {
-            app.terminate()
-        }
-        app = nil
     }
 
     // MARK: - Feed Tab Premium Access
@@ -265,82 +206,6 @@ final class PremiumGatingPremiumUITests: XCTestCase {
     }
 
     // MARK: - Helper Methods
-
-    func navigateToTab(_ tabName: String) {
-        let tab = app.tabBars.buttons[tabName]
-        if tab.waitForExistence(timeout: Self.shortTimeout), !tab.isSelected {
-            tab.tap()
-        }
-    }
-
-    func navigateToFeedTab() {
-        let feedTab = app.tabBars.buttons["Feed"]
-        // Use waitForExistence for CI reliability
-        if feedTab.waitForExistence(timeout: Self.shortTimeout), !feedTab.isSelected {
-            feedTab.tap()
-        } else if !feedTab.exists {
-            // Fallback: try finding the button directly
-            let feedButton = app.buttons["Feed"]
-            if feedButton.waitForExistence(timeout: 2), !feedButton.isSelected {
-                feedButton.tap()
-            }
-        }
-        _ = app.navigationBars["Daily Digest"].waitForExistence(timeout: Self.defaultTimeout)
-    }
-
-    func resetToHomeTab() {
-        let tabBar = app.tabBars.firstMatch
-
-        if !tabBar.waitForExistence(timeout: Self.shortTimeout) {
-            let backButton = app.buttons["backButton"]
-            if backButton.exists { backButton.tap() }
-            guard tabBar.waitForExistence(timeout: 1) else { return }
-        }
-
-        let homeTab = tabBar.buttons["Home"]
-        if homeTab.exists, !homeTab.isSelected {
-            homeTab.tap()
-        } else if !homeTab.exists {
-            tabBar.buttons.element(boundBy: 0).tap()
-        }
-
-        for _ in 0 ..< 3 {
-            let backButton = app.buttons["backButton"]
-            guard backButton.exists, backButton.isHittable else { break }
-            backButton.tap()
-            wait(for: 0.2)
-        }
-    }
-
-    @discardableResult
-    func wait(for duration: TimeInterval) -> Bool {
-        let expectation = XCTNSPredicateExpectation(
-            predicate: NSPredicate(value: false),
-            object: nil
-        )
-        _ = XCTWaiter.wait(for: [expectation], timeout: duration)
-        return true
-    }
-
-    func waitForAny(_ elements: [XCUIElement], timeout: TimeInterval = 10) -> Bool {
-        let predicate = NSPredicate { _, _ in elements.contains { $0.exists } }
-        let expectation = XCTNSPredicateExpectation(predicate: predicate, object: nil)
-        return XCTWaiter.wait(for: [expectation], timeout: timeout) == .completed
-    }
-
-    func waitForElementToDisappear(_ element: XCUIElement, timeout: TimeInterval = 10) -> Bool {
-        let predicate = NSPredicate { _, _ in !element.exists }
-        let expectation = XCTNSPredicateExpectation(predicate: predicate, object: nil)
-        return XCTWaiter.wait(for: [expectation], timeout: timeout) == .completed
-    }
-
-    func waitForArticleDetail(timeout: TimeInterval = 5) -> Bool {
-        let detailScrollView = app.scrollViews["articleDetailScrollView"]
-        if detailScrollView.waitForExistence(timeout: timeout) {
-            return true
-        }
-        return app.buttons["backButton"].waitForExistence(timeout: 1)
-    }
 
     @discardableResult
     private func navigateToArticleDetail() -> Bool {

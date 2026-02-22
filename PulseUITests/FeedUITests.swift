@@ -3,54 +3,10 @@ import XCTest
 final class FeedUITests: BaseUITestCase {
     // MARK: - Setup
 
-    override func setUpWithError() throws {
-        continueAfterFailure = false
-        XCUIDevice.shared.orientation = .portrait
-
-        app = XCUIApplication()
-
-        // Speed optimizations (same as parent)
-        app.launchEnvironment["UI_TESTING"] = "1"
-        app.launchEnvironment["DISABLE_ANIMATIONS"] = "1"
-
+    override func configureLaunchEnvironment() {
         // Enable premium access so tests can access the actual feed content
         // Without this, the feed tab shows PremiumGateView instead of feed content
         app.launchEnvironment["MOCK_PREMIUM"] = "1"
-
-        // Launch arguments to speed up tests
-        app.launchArguments += ["-UIViewAnimationDuration", "0.01"]
-        app.launchArguments += ["-CATransactionAnimationDuration", "0.01"]
-
-        // Skip onboarding flow in UI tests (sets UserDefaults via argument domain)
-        app.launchArguments += ["-pulse.hasCompletedOnboarding", "YES"]
-
-        app.launch()
-
-        // Launch verification
-        _ = app.wait(for: .runningForeground, timeout: Self.launchTimeout)
-        wait(for: 0.3)
-
-        // Wait for app to be ready
-        let tabBar = app.tabBars.firstMatch
-        let signInButton = app.buttons["Sign in with Apple"]
-        let loadingIndicator = app.activityIndicators.firstMatch
-
-        // CI simulators can be slow to show the initial UI, so give more time to detect loading state
-        if loadingIndicator.waitForExistence(timeout: 10) {
-            // Wait for loading to complete with extended timeout for CI
-            _ = waitForElementToDisappear(loadingIndicator, timeout: Self.launchTimeout * 2)
-        }
-
-        let appReady = waitForAny([tabBar, signInButton], timeout: Self.launchTimeout)
-
-        guard appReady else {
-            XCTFail("App did not reach ready state")
-            return
-        }
-
-        if tabBar.exists {
-            resetToHomeTab()
-        }
     }
 
     // MARK: - Helper Methods

@@ -38,52 +38,36 @@ class BaseUITestCase: XCTestCase {
         // Skip onboarding flow in UI tests (sets UserDefaults via argument domain)
         app.launchArguments += ["-pulse.hasCompletedOnboarding", "YES"]
 
+        // Force English locale for deterministic behavior across CI environments
+        app.launchArguments += ["-AppleLanguages", "(en)"]
+        app.launchArguments += ["-AppleLocale", "en_US"]
+
+        // Allow subclasses to configure launch environment (e.g., MOCK_PREMIUM)
+        configureLaunchEnvironment()
+
         app.launch()
 
         // Launch verification - uses longer timeout as app startup takes time
         _ = app.wait(for: .runningForeground, timeout: Self.launchTimeout)
 
-        // Wait for UI to stabilize after launch (fixes snapshot timing issues)
-        wait(for: 0.3)
+        // Wait for UI to stabilize after launch
+        // CI cold starts need more time for accessibility services to be ready
+        wait(for: 2.0)
 
-        // Wait for either tab bar (authenticated) or sign-in view (not authenticated)
-        // This handles both states and avoids timeout when MockAuthService is initializing
-        let tabBar = app.tabBars.firstMatch
-        _ = app.buttons["Sign in with Apple"]
-
-        // First, wait for the loading state to clear (if app shows loading spinner)
-        // The loading view has a ProgressView which we need to wait past
-        // CI simulators can be slow to show the initial UI, so give more time to detect loading state
+        // Wait for loading state to clear if present
+        // Use shorter detection timeout — don't wait long if no spinner appears
         let loadingIndicator = app.activityIndicators.firstMatch
-        if loadingIndicator.waitForExistence(timeout: 10) {
+        if loadingIndicator.waitForExistence(timeout: 5) {
             // Wait for loading to complete (app initializing auth state)
-            // Use longer timeout for CI where network/auth initialization can be slow
-            _ = waitForElementToDisappear(loadingIndicator, timeout: Self.launchTimeout * 2)
+            _ = waitForElementToDisappear(loadingIndicator, timeout: Self.launchTimeout)
         }
 
-        // Now wait for either tab bar or sign-in to appear
-        // Use multiple detection strategies for reliability across different CI environments
-        let homeTabButton = app.tabBars.buttons["Home"]
+        // Wait for either tab bar (authenticated) or sign-in view (not authenticated)
+        let tabBar = app.tabBars.firstMatch
         let signInApple = app.buttons["Sign in with Apple"]
         let signInGoogle = app.buttons["Sign in with Google"]
 
-        // Primary check: tab bar element or sign-in buttons
-        var appReady = waitForAny([tabBar, homeTabButton, signInApple, signInGoogle], timeout: Self.launchTimeout)
-        var foundTabBar = tabBar.exists || homeTabButton.exists
-
-        // Fallback: If primary check fails but buttons exist, check for tab bar buttons directly
-        // This handles CI environments where tabBars query may have timing issues
-        if !appReady {
-            let tabButtonNames = ["Home", "Feed", "Bookmarks", "Search"]
-            for name in tabButtonNames {
-                let tabButton = app.buttons[name]
-                if tabButton.waitForExistence(timeout: 2) {
-                    appReady = true
-                    foundTabBar = true
-                    break
-                }
-            }
-        }
+        let appReady = waitForAny([tabBar, signInApple, signInGoogle], timeout: Self.launchTimeout)
 
         guard appReady else {
             // Debug: log what's visible to help diagnose CI failures
@@ -91,7 +75,6 @@ class BaseUITestCase: XCTestCase {
             let hasButtons = app.buttons.count > 0
             let hasStaticTexts = app.staticTexts.count > 0
             let allButtonLabels = app.buttons.allElementsBoundByIndex.prefix(10).map { $0.label }
-            // Throw error instead of XCTFail to prevent crash with C++ exception handling
             let debugInfo = "App did not reach ready state - neither tab bar nor sign-in view appeared. " +
                 "Debug: hasActivityIndicator=\(hasActivityIndicator), buttons=\(hasButtons), " +
                 "texts=\(hasStaticTexts), buttonLabels=\(allButtonLabels)"
@@ -99,8 +82,8 @@ class BaseUITestCase: XCTestCase {
             throw XCTSkip("App not ready: \(debugInfo)")
         }
 
-        // Only reset to home tab if authenticated (tab bar was found via any detection method)
-        if foundTabBar {
+        // Only reset to home tab if authenticated (tab bar was found)
+        if tabBar.exists {
             resetToHomeTab()
         }
     }
@@ -115,6 +98,14 @@ class BaseUITestCase: XCTestCase {
             _ = application.wait(for: .notRunning, timeout: 5)
         }
         app = nil
+    }
+
+    // MARK: - Subclass Hooks
+
+    /// Override in subclasses to set additional launch environment variables before app.launch().
+    /// Called after standard environment is configured but before launch.
+    func configureLaunchEnvironment() {
+        // Default: no additional configuration
     }
 
     // MARK: - Navigation Helpers
@@ -176,7 +167,7 @@ class BaseUITestCase: XCTestCase {
         wait(for: 0.5)
 
         // Verify navigation if needed - don't assert, just return
-        _ = app.navigationBars[tabName].waitForExistence(timeout: Self.launchTimeout)
+        _ = app.navigationBars[tabName].waitForExistence(timeout: Self.defaultTimeout)
     }
 
     /// Navigate to Search tab (handles role: .search accessibility)
