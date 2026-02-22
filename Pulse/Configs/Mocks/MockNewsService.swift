@@ -11,10 +11,20 @@ final class MockNewsService: NewsService {
     var fetchedTopHeadlinesLanguages: [String] = []
     var fetchedCategoryHeadlinesLanguages: [String] = []
     var fetchedBreakingNewsLanguages: [String] = []
+    private let accessLock = NSLock()
+
+    private func withLock<T>(_ operation: () -> T) -> T {
+        accessLock.lock()
+        defer { accessLock.unlock() }
+        return operation()
+    }
 
     func fetchTopHeadlines(language: String, country _: String, page _: Int) -> AnyPublisher<[Article], Error> {
-        fetchedTopHeadlinesLanguages.append(language)
-        return topHeadlinesResult.publisher.eraseToAnyPublisher()
+        let result = withLock {
+            fetchedTopHeadlinesLanguages.append(language)
+            return topHeadlinesResult
+        }
+        return result.publisher.eraseToAnyPublisher()
     }
 
     func fetchTopHeadlines(
@@ -23,9 +33,11 @@ final class MockNewsService: NewsService {
         country _: String,
         page _: Int
     ) -> AnyPublisher<[Article], Error> {
-        fetchedCategoryHeadlinesLanguages.append(language)
         // Use categoryHeadlinesResult if set, otherwise fall back to topHeadlinesResult
-        let result = categoryHeadlinesResult ?? topHeadlinesResult
+        let result = withLock {
+            fetchedCategoryHeadlinesLanguages.append(language)
+            return categoryHeadlinesResult ?? topHeadlinesResult
+        }
         return result.publisher
             .map { articles in
                 articles.map { article in
@@ -51,8 +63,11 @@ final class MockNewsService: NewsService {
     }
 
     func fetchBreakingNews(language: String, country _: String) -> AnyPublisher<[Article], Error> {
-        fetchedBreakingNewsLanguages.append(language)
-        return breakingNewsResult.publisher.eraseToAnyPublisher()
+        let result = withLock {
+            fetchedBreakingNewsLanguages.append(language)
+            return breakingNewsResult
+        }
+        return result.publisher.eraseToAnyPublisher()
     }
 
     func fetchArticle(id: String) -> AnyPublisher<Article, Error> {

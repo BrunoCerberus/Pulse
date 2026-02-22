@@ -32,6 +32,7 @@ final class FeedDomainInteractor: CombineInteractor {
     private var cancellables = Set<AnyCancellable>()
     private var generationTask: Task<Void, Never>?
     private var preloadTask: Task<Void, Never>?
+    private var fetchArticlesTask: Task<Void, Never>?
 
     var statePublisher: AnyPublisher<FeedDomainState, Never> {
         stateSubject.eraseToAnyPublisher()
@@ -127,6 +128,7 @@ final class FeedDomainInteractor: CombineInteractor {
     deinit {
         generationTask?.cancel()
         preloadTask?.cancel()
+        fetchArticlesTask?.cancel()
     }
 }
 
@@ -183,12 +185,15 @@ private extension FeedDomainInteractor {
     }
 
     func fetchLatestNews() {
+        fetchArticlesTask?.cancel()
         updateState { $0.generationState = .loadingArticles }
 
         // Capture newsService on MainActor before entering task group
         let newsService = self.newsService
 
-        Task { @MainActor in
+        fetchArticlesTask = Task { @MainActor [weak self] in
+            guard let self else { return }
+            defer { self.fetchArticlesTask = nil }
             var allArticles: [Article] = []
 
             // Fetch 10 articles from each category in parallel
@@ -227,9 +232,12 @@ private extension FeedDomainInteractor {
                 }
 
                 for await articles in group {
+                    guard !Task.isCancelled else { return }
                     allArticles.append(contentsOf: articles)
                 }
             }
+
+            guard !Task.isCancelled else { return }
 
             // Sort by publishedAt (most recent first) - capping happens in generateDigest()
             allArticles.sort { $0.publishedAt > $1.publishedAt }
@@ -239,9 +247,9 @@ private extension FeedDomainInteractor {
                 let message = isOffline
                     ? "You're offline. Connect to the internet to generate your daily digest."
                     : "Unable to fetch news"
-                dispatch(action: .latestArticlesFailed(message, isOffline: isOffline))
+                self.dispatch(action: .latestArticlesFailed(message, isOffline: isOffline))
             } else {
-                dispatch(action: .latestArticlesLoaded(allArticles))
+                self.dispatch(action: .latestArticlesLoaded(allArticles))
             }
         }
     }

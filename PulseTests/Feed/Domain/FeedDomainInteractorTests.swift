@@ -16,6 +16,8 @@ struct FeedDomainInteractorTests {
 
     init() {
         mockFeedService = MockFeedService()
+        mockFeedService.loadDelay = 0.01
+        mockFeedService.generateDelay = 0.005
         mockNewsService = MockNewsService()
         mockNetworkMonitor = MockNetworkMonitorService()
         mockAnalyticsService = MockAnalyticsService()
