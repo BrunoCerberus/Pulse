@@ -4,8 +4,13 @@ import SwiftUI
 // MARK: - Constants
 
 private enum Constants {
-    static let title = String(localized: "applock.locked_title")
-    static let unlock = String(localized: "applock.unlock")
+    static var title: String {
+        AppLocalization.shared.localized("applock.locked_title")
+    }
+
+    static var unlock: String {
+        AppLocalization.shared.localized("applock.unlock")
+    }
 }
 
 // MARK: - AppLockOverlayView
@@ -41,7 +46,7 @@ struct AppLockOverlayView: View {
                         .foregroundStyle(.white)
                 }
                 .accessibilityLabel(Constants.unlock)
-                .accessibilityHint(String(localized: "applock.unlock_hint"))
+                .accessibilityHint(AppLocalization.shared.localized("applock.unlock_hint"))
             }
         }
     }

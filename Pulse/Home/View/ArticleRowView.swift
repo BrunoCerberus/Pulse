@@ -83,19 +83,19 @@ struct ArticleRowView: View {
         }
         .buttonStyle(.plain)
         .accessibilityElement(children: .combine)
-        .accessibilityLabel(String(format: String(localized: "article_row.accessibility_label"), item.title, item.sourceName, item.formattedDate))
-        .accessibilityHint(String(localized: "accessibility.read_article"))
+        .accessibilityLabel(String(format: AppLocalization.shared.localized("article_row.accessibility_label"), item.title, item.sourceName, item.formattedDate))
+        .accessibilityHint(AppLocalization.shared.localized("accessibility.read_article"))
         .contextMenu {
             Button {
                 onBookmark()
             } label: {
-                Label(String(localized: "article.bookmark"), systemImage: "bookmark")
+                Label(AppLocalization.shared.localized("article.bookmark"), systemImage: "bookmark")
             }
 
             Button {
                 onShare()
             } label: {
-                Label(String(localized: "article.share"), systemImage: "square.and.arrow.up")
+                Label(AppLocalization.shared.localized("article.share"), systemImage: "square.and.arrow.up")
             }
         }
 

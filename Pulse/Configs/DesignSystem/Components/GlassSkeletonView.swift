@@ -143,11 +143,11 @@ struct HeroCarouselSkeleton: View {
 
         ScrollView {
             VStack(spacing: Spacing.lg) {
-                GlassSectionHeader(String(localized: "home.breaking_news"))
+                GlassSectionHeader(AppLocalization.shared.localized("home.breaking_news"))
 
                 HeroCarouselSkeleton()
 
-                GlassSectionHeader(String(localized: "home.top_headlines"))
+                GlassSectionHeader(AppLocalization.shared.localized("home.top_headlines"))
 
                 ArticleListSkeleton(count: 3)
             }

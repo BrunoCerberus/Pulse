@@ -4,8 +4,13 @@ import SwiftUI
 // MARK: - Constants
 
 private enum Constants {
-    static let title = String(localized: "account.title")
-    static let signOut = String(localized: "account.sign_out")
+    static var title: String {
+        AppLocalization.shared.localized("account.title")
+    }
+
+    static var signOut: String {
+        AppLocalization.shared.localized("account.sign_out")
+    }
 }
 
 // MARK: - SettingsAccountSection
@@ -65,10 +70,10 @@ private struct ProfileImageView: View {
             .scaledToFill()
             .frame(width: 64, height: 64)
             .clipShape(Circle())
-            .accessibilityLabel(String(localized: "account.profile_photo"))
+            .accessibilityLabel(AppLocalization.shared.localized("account.profile_photo"))
         } else {
             InitialPlaceholderView(user: user)
-                .accessibilityLabel(String(localized: "account.user_initial"))
+                .accessibilityLabel(AppLocalization.shared.localized("account.user_initial"))
         }
     }
 }

@@ -139,6 +139,10 @@ final class SettingsDomainInteractor: CombineInteractor {
         var preferences = currentState.preferences
         preferences.preferredLanguage = language
         savePreferences(preferences)
+
+        Task { @MainActor in
+            AppLocalization.shared.updateLanguage(language)
+        }
     }
 
     private func addMutedSource(_ source: String) {

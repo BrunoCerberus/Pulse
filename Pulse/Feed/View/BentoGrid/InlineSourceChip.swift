@@ -53,8 +53,8 @@ struct InlineSourceChip: View {
         .buttonStyle(.plain)
         .pressEffect(scale: 0.95)
         .accessibilityElement(children: .combine)
-        .accessibilityLabel(String(format: String(localized: "article_row.accessibility_label"), article.title, article.source, article.formattedDate))
-        .accessibilityHint(String(localized: "accessibility.read_article"))
+        .accessibilityLabel(String(format: AppLocalization.shared.localized("article_row.accessibility_label"), article.title, article.source, article.formattedDate))
+        .accessibilityHint(AppLocalization.shared.localized("accessibility.read_article"))
     }
 
     // MARK: - Thumbnail

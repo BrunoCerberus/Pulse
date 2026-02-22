@@ -30,19 +30,19 @@ enum OnboardingPage: Int, CaseIterable, Equatable, Identifiable {
 
     var title: String {
         switch self {
-        case .welcome: String(localized: "onboarding.welcome.title")
-        case .aiPowered: String(localized: "onboarding.ai_powered.title")
-        case .stayConnected: String(localized: "onboarding.stay_connected.title")
-        case .getStarted: String(localized: "onboarding.get_started.title")
+        case .welcome: AppLocalization.shared.localized("onboarding.welcome.title")
+        case .aiPowered: AppLocalization.shared.localized("onboarding.ai_powered.title")
+        case .stayConnected: AppLocalization.shared.localized("onboarding.stay_connected.title")
+        case .getStarted: AppLocalization.shared.localized("onboarding.get_started.title")
         }
     }
 
     var subtitle: String {
         switch self {
-        case .welcome: String(localized: "onboarding.welcome.subtitle")
-        case .aiPowered: String(localized: "onboarding.ai_powered.subtitle")
-        case .stayConnected: String(localized: "onboarding.stay_connected.subtitle")
-        case .getStarted: String(localized: "onboarding.get_started.subtitle")
+        case .welcome: AppLocalization.shared.localized("onboarding.welcome.subtitle")
+        case .aiPowered: AppLocalization.shared.localized("onboarding.ai_powered.subtitle")
+        case .stayConnected: AppLocalization.shared.localized("onboarding.stay_connected.subtitle")
+        case .getStarted: AppLocalization.shared.localized("onboarding.get_started.subtitle")
         }
     }
 }

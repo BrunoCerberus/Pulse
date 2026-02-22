@@ -5,12 +5,29 @@ import SwiftUI
 // MARK: - Constants
 
 private enum Constants {
-    static let title = String(localized: "settings.title")
-    static let viewGithub = String(localized: "settings.view_github")
-    static let signOut = String(localized: "account.sign_out")
-    static let signOutConfirm = String(localized: "account.sign_out.confirm")
-    static let cancel = String(localized: "common.cancel")
-    static let version = String(localized: "common.version")
+    static var title: String {
+        AppLocalization.shared.localized("settings.title")
+    }
+
+    static var viewGithub: String {
+        AppLocalization.shared.localized("settings.view_github")
+    }
+
+    static var signOut: String {
+        AppLocalization.shared.localized("account.sign_out")
+    }
+
+    static var signOutConfirm: String {
+        AppLocalization.shared.localized("account.sign_out.confirm")
+    }
+
+    static var cancel: String {
+        AppLocalization.shared.localized("common.cancel")
+    }
+
+    static var version: String {
+        AppLocalization.shared.localized("common.version")
+    }
 }
 
 // MARK: - SettingsView
@@ -124,13 +141,13 @@ struct SettingsView: View {
     }
 
     private var notificationsSection: some View {
-        Section(String(localized: "settings.notifications")) {
-            Toggle(String(localized: "settings.enable_notifications"), isOn: Binding(
+        Section(AppLocalization.shared.localized("settings.notifications")) {
+            Toggle(AppLocalization.shared.localized("settings.enable_notifications"), isOn: Binding(
                 get: { viewModel.viewState.notificationsEnabled },
                 set: { viewModel.handle(event: .onToggleNotifications($0)) }
             ))
 
-            Toggle(String(localized: "settings.breaking_news_alerts"), isOn: Binding(
+            Toggle(AppLocalization.shared.localized("settings.breaking_news_alerts"), isOn: Binding(
                 get: { viewModel.viewState.breakingNewsEnabled },
                 set: { viewModel.handle(event: .onToggleBreakingNews($0)) }
             ))
@@ -139,9 +156,9 @@ struct SettingsView: View {
     }
 
     private var contentLanguageSection: some View {
-        Section(String(localized: "settings.content_language")) {
+        Section(AppLocalization.shared.localized("settings.content_language")) {
             Picker(
-                String(localized: "settings.content_language.label"),
+                AppLocalization.shared.localized("settings.content_language.label"),
                 selection: Binding(
                     get: { viewModel.viewState.selectedLanguage },
                     set: { viewModel.handle(event: .onLanguageChanged($0)) }
@@ -156,14 +173,14 @@ struct SettingsView: View {
     }
 
     private var appearanceSection: some View {
-        Section(String(localized: "settings.appearance")) {
-            Toggle(String(localized: "settings.use_system_theme"), isOn: Binding(
+        Section(AppLocalization.shared.localized("settings.appearance")) {
+            Toggle(AppLocalization.shared.localized("settings.use_system_theme"), isOn: Binding(
                 get: { viewModel.viewState.useSystemTheme },
                 set: { viewModel.handle(event: .onToggleSystemTheme($0)) }
             ))
 
             if !viewModel.viewState.useSystemTheme {
-                Toggle(String(localized: "settings.dark_mode"), isOn: Binding(
+                Toggle(AppLocalization.shared.localized("settings.dark_mode"), isOn: Binding(
                     get: { viewModel.viewState.isDarkMode },
                     set: { viewModel.handle(event: .onToggleDarkMode($0)) }
                 ))
@@ -172,7 +189,7 @@ struct SettingsView: View {
     }
 
     private var aboutSection: some View {
-        Section(String(localized: "settings.about")) {
+        Section(AppLocalization.shared.localized("settings.about")) {
             HStack {
                 Text(Constants.version)
                 Spacer()

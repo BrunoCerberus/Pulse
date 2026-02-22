@@ -39,7 +39,7 @@ struct PaywallView: View {
                                 .font(.system(size: IconSize.lg))
                                 .foregroundStyle(.secondary)
                         }
-                        .accessibilityLabel(String(localized: "paywall.close"))
+                        .accessibilityLabel(AppLocalization.shared.localized("paywall.close"))
                     }
                 }
         }

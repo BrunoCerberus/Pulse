@@ -5,9 +5,17 @@ import SwiftUI
 // MARK: - Constants
 
 private enum Constants {
-    static let back = String(localized: "common.back")
-    static let readFull = String(localized: "article.read_full")
-    static let summarize = String(localized: "summarization.button")
+    static var back: String {
+        AppLocalization.shared.localized("common.back")
+    }
+
+    static var readFull: String {
+        AppLocalization.shared.localized("article.read_full")
+    }
+
+    static var summarize: String {
+        AppLocalization.shared.localized("summarization.button")
+    }
 }
 
 // MARK: - ArticleDetailView
@@ -78,21 +86,25 @@ struct ArticleDetailView: View {
                     }
                     .accessibilityIdentifier("summarizeButton")
                     .accessibilityLabel(Constants.summarize)
-                    .accessibilityHint(isPremium ? String(localized: "article_detail.summarize_hint") : String(localized: "article_detail.premium_hint"))
+                    .accessibilityHint(isPremium ? AppLocalization.shared.localized("article_detail.summarize_hint") : AppLocalization.shared.localized("article_detail.premium_hint"))
 
                     Button("", systemImage: viewModel.viewState.isBookmarked ? "bookmark.fill" : "bookmark") {
                         viewModel.handle(event: .onBookmarkTapped)
                     }
                     .accessibilityIdentifier(viewModel.viewState.isBookmarked ? "bookmark.fill" : "bookmark")
-                    .accessibilityLabel(viewModel.viewState.isBookmarked ? String(localized: "article_detail.remove_bookmark") : String(localized: "article_detail.add_bookmark"))
-                    .accessibilityHint(String(localized: "article_detail.save_hint"))
+                    .accessibilityLabel(
+                        viewModel.viewState.isBookmarked
+                            ? AppLocalization.shared.localized("article_detail.remove_bookmark")
+                            : AppLocalization.shared.localized("article_detail.add_bookmark")
+                    )
+                    .accessibilityHint(AppLocalization.shared.localized("article_detail.save_hint"))
 
                     Button("", systemImage: "square.and.arrow.up") {
                         viewModel.handle(event: .onShareTapped)
                     }
                     .accessibilityIdentifier("square.and.arrow.up")
-                    .accessibilityLabel(String(localized: "article_detail.share_label"))
-                    .accessibilityHint(String(localized: "article_detail.share_hint"))
+                    .accessibilityLabel(AppLocalization.shared.localized("article_detail.share_label"))
+                    .accessibilityHint(AppLocalization.shared.localized("article_detail.share_hint"))
                 }
             }
         }
@@ -217,7 +229,7 @@ struct ArticleDetailView: View {
     private var metadataRow: some View {
         HStack(spacing: Spacing.xs) {
             if let author = viewModel.viewState.article.author {
-                Text(String(format: String(localized: "article.by_author"), author))
+                Text(String(format: AppLocalization.shared.localized("article.by_author"), author))
                     .fontWeight(.medium)
                     .lineLimit(1)
                     .truncationMode(.tail)
@@ -262,7 +274,7 @@ struct ArticleDetailView: View {
             .clipShape(RoundedRectangle(cornerRadius: CornerRadius.md, style: .continuous))
         }
         .pressEffect()
-        .accessibilityHint(String(localized: "accessibility.opens_in_safari"))
+        .accessibilityHint(AppLocalization.shared.localized("accessibility.opens_in_safari"))
     }
 }
 

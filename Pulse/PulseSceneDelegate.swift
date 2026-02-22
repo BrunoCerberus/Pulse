@@ -35,6 +35,9 @@ final class PulseSceneDelegate: UIResponder, UIWindowSceneDelegate {
         // Configure app lock manager with app lock service
         configureAppLockManager()
 
+        // Sync language preference from SwiftData to AppLocalization
+        syncLanguagePreference()
+
         // Preload LLM model in background for faster digest generation
         preloadLLMModelIfPremium()
 
@@ -244,6 +247,21 @@ final class PulseSceneDelegate: UIResponder, UIWindowSceneDelegate {
 
         // Register onboarding service
         serviceLocator.register(OnboardingService.self, instance: LiveOnboardingService())
+    }
+
+    private func syncLanguagePreference() {
+        Task { [serviceLocator] in
+            do {
+                let storageService = try serviceLocator.retrieve(StorageService.self)
+                let preferences = try await storageService.fetchUserPreferences()
+                let language = preferences?.preferredLanguage ?? (Locale.current.language.languageCode?.identifier ?? "en")
+                await MainActor.run {
+                    AppLocalization.shared.updateLanguage(language)
+                }
+            } catch {
+                Logger.shared.service("Language preference sync failed: \(error)", level: .debug)
+            }
+        }
     }
 
     private func preloadLLMModelIfPremium() {

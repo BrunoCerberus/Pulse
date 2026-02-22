@@ -10,6 +10,7 @@ import SwiftUI
 struct CoordinatorView: View {
     @StateObject private var coordinator: Coordinator
     @StateObject private var themeManager = ThemeManager.shared
+    @ObservedObject private var appLocalization = AppLocalization.shared
     @State private var isOffline = false
 
     private let networkMonitor: NetworkMonitorService?
@@ -29,7 +30,7 @@ struct CoordinatorView: View {
             }
 
             AnimatedTabView(selection: $coordinator.selectedTab) {
-                Tab("Home", systemImage: AppTab.home.symbolImage, value: .home) {
+                Tab(appLocalization.localized("tab.home"), systemImage: AppTab.home.symbolImage, value: .home) {
                     NavigationStack(path: $coordinator.homePath) {
                         HomeView(
                             router: HomeNavigationRouter(coordinator: coordinator),
@@ -41,7 +42,7 @@ struct CoordinatorView: View {
                     }
                 }
 
-                Tab("Media", systemImage: AppTab.media.symbolImage, value: .media) {
+                Tab(appLocalization.localized("tab.media"), systemImage: AppTab.media.symbolImage, value: .media) {
                     NavigationStack(path: $coordinator.mediaPath) {
                         MediaView(
                             router: MediaNavigationRouter(coordinator: coordinator),
@@ -53,7 +54,7 @@ struct CoordinatorView: View {
                     }
                 }
 
-                Tab("Feed", systemImage: AppTab.feed.symbolImage, value: .feed) {
+                Tab(appLocalization.localized("tab.feed"), systemImage: AppTab.feed.symbolImage, value: .feed) {
                     NavigationStack(path: $coordinator.feedPath) {
                         FeedView(
                             router: FeedNavigationRouter(coordinator: coordinator),
@@ -66,7 +67,7 @@ struct CoordinatorView: View {
                     }
                 }
 
-                Tab("Bookmarks", systemImage: AppTab.bookmarks.symbolImage, value: .bookmarks) {
+                Tab(appLocalization.localized("tab.bookmarks"), systemImage: AppTab.bookmarks.symbolImage, value: .bookmarks) {
                     NavigationStack(path: $coordinator.bookmarksPath) {
                         BookmarksView(
                             router: BookmarksNavigationRouter(coordinator: coordinator),
@@ -78,7 +79,7 @@ struct CoordinatorView: View {
                     }
                 }
 
-                Tab("Search", systemImage: AppTab.search.symbolImage, value: .search, role: .search) {
+                Tab(appLocalization.localized("tab.search"), systemImage: AppTab.search.symbolImage, value: .search, role: .search) {
                     NavigationStack(path: $coordinator.searchPath) {
                         SearchView(
                             router: SearchNavigationRouter(coordinator: coordinator),

@@ -4,9 +4,17 @@ import SwiftUI
 // MARK: - Constants
 
 private enum Constants {
-    static let title = String(localized: "feed.no_articles.title")
-    static let message = String(localized: "feed.no_articles.message")
-    static let startReading = String(localized: "feed.no_articles.retry")
+    static var title: String {
+        AppLocalization.shared.localized("feed.no_articles.title")
+    }
+
+    static var message: String {
+        AppLocalization.shared.localized("feed.no_articles.message")
+    }
+
+    static var startReading: String {
+        AppLocalization.shared.localized("feed.no_articles.retry")
+    }
 }
 
 // MARK: - FeedEmptyStateView

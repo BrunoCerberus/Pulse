@@ -83,9 +83,9 @@ enum SearchSortOption: String, CaseIterable, Identifiable {
     /// Human-readable display name for the sort option.
     var displayName: String {
         switch self {
-        case .relevancy: return String(localized: "search.sort.relevance")
-        case .publishedAt: return String(localized: "search.sort.date")
-        case .popularity: return String(localized: "search.sort.popularity")
+        case .relevancy: return AppLocalization.shared.localized("search.sort.relevance")
+        case .publishedAt: return AppLocalization.shared.localized("search.sort.date")
+        case .popularity: return AppLocalization.shared.localized("search.sort.popularity")
         }
     }
 }

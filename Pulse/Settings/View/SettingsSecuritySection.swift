@@ -4,10 +4,21 @@ import SwiftUI
 // MARK: - Constants
 
 private enum Constants {
-    static let header = String(localized: "applock.settings_header")
-    static let toggle = String(localized: "applock.settings_toggle")
-    static let footer = String(localized: "applock.settings_footer")
-    static let unavailable = String(localized: "applock.settings_unavailable")
+    static var header: String {
+        AppLocalization.shared.localized("applock.settings_header")
+    }
+
+    static var toggle: String {
+        AppLocalization.shared.localized("applock.settings_toggle")
+    }
+
+    static var footer: String {
+        AppLocalization.shared.localized("applock.settings_footer")
+    }
+
+    static var unavailable: String {
+        AppLocalization.shared.localized("applock.settings_unavailable")
+    }
 }
 
 // MARK: - SettingsSecuritySection
