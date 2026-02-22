@@ -9,12 +9,14 @@ struct GlassTabItem: Identifiable {
     let icon: String
     let selectedIcon: String
 
-    static let items: [GlassTabItem] = [
-        GlassTabItem(id: .home, title: String(localized: "tab.home"), icon: "newspaper", selectedIcon: "newspaper.fill"),
-        GlassTabItem(id: .feed, title: String(localized: "tab.feed"), icon: "text.document", selectedIcon: "text.document.fill"),
-        GlassTabItem(id: .bookmarks, title: String(localized: "tab.bookmarks"), icon: "bookmark", selectedIcon: "bookmark.fill"),
-        GlassTabItem(id: .search, title: String(localized: "tab.search"), icon: "magnifyingglass", selectedIcon: "magnifyingglass"),
-    ]
+    static var items: [GlassTabItem] {
+        [
+            GlassTabItem(id: .home, title: AppLocalization.shared.localized("tab.home"), icon: "newspaper", selectedIcon: "newspaper.fill"),
+            GlassTabItem(id: .feed, title: AppLocalization.shared.localized("tab.feed"), icon: "text.document", selectedIcon: "text.document.fill"),
+            GlassTabItem(id: .bookmarks, title: AppLocalization.shared.localized("tab.bookmarks"), icon: "bookmark", selectedIcon: "bookmark.fill"),
+            GlassTabItem(id: .search, title: AppLocalization.shared.localized("tab.search"), icon: "magnifyingglass", selectedIcon: "magnifyingglass"),
+        ]
+    }
 }
 
 // MARK: - Glass Tab Bar
@@ -83,7 +85,7 @@ struct GlassTabBar: View {
         }
         .buttonStyle(.plain)
         .accessibilityLabel(item.title)
-        .accessibilityHint(String(format: String(localized: "tab.switch_hint"), item.title))
+        .accessibilityHint(String(format: AppLocalization.shared.localized("tab.switch_hint"), item.title))
         .accessibilityAddTraits(isSelected ? .isSelected : [])
     }
 }

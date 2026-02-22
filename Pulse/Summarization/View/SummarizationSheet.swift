@@ -5,14 +5,37 @@ import SwiftUI
 // MARK: - Constants
 
 private enum Constants {
-    static let title = String(localized: "summarization.title")
-    static let subtitle = String(localized: "summarization.subtitle")
-    static let generateButton = String(localized: "summarization.generate")
-    static let cancelButton = String(localized: "summarization.cancel")
-    static let retryButton = String(localized: "summarization.retry")
-    static let loadingModel = String(localized: "summarization.loading_model")
-    static let generating = String(localized: "summarization.generating")
-    static let aiSummary = String(localized: "summarization.ai_summary")
+    static var title: String {
+        AppLocalization.shared.localized("summarization.title")
+    }
+
+    static var subtitle: String {
+        AppLocalization.shared.localized("summarization.subtitle")
+    }
+
+    static var generateButton: String {
+        AppLocalization.shared.localized("summarization.generate")
+    }
+
+    static var cancelButton: String {
+        AppLocalization.shared.localized("summarization.cancel")
+    }
+
+    static var retryButton: String {
+        AppLocalization.shared.localized("summarization.retry")
+    }
+
+    static var loadingModel: String {
+        AppLocalization.shared.localized("summarization.loading_model")
+    }
+
+    static var generating: String {
+        AppLocalization.shared.localized("summarization.generating")
+    }
+
+    static var aiSummary: String {
+        AppLocalization.shared.localized("summarization.ai_summary")
+    }
 }
 
 // MARK: - Animation Constants

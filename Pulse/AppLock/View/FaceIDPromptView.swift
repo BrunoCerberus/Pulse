@@ -4,10 +4,21 @@ import SwiftUI
 // MARK: - Constants
 
 private enum Constants {
-    static let title = String(localized: "applock.prompt_title")
-    static let description = String(localized: "applock.prompt_description")
-    static let enable = String(localized: "applock.prompt_enable")
-    static let notNow = String(localized: "applock.prompt_not_now")
+    static var title: String {
+        AppLocalization.shared.localized("applock.prompt_title")
+    }
+
+    static var description: String {
+        AppLocalization.shared.localized("applock.prompt_description")
+    }
+
+    static var enable: String {
+        AppLocalization.shared.localized("applock.prompt_enable")
+    }
+
+    static var notNow: String {
+        AppLocalization.shared.localized("applock.prompt_not_now")
+    }
 }
 
 // MARK: - FaceIDPromptView

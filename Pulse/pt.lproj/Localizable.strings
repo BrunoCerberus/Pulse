@@ -22,6 +22,7 @@
 "tab.search" = "Buscar";
 "tab.bookmarks" = "Salvos";
 "tab.feed" = "Feed";
+"tab.media" = "Mídia";
 
 /* ==================== */
 /* MARK: - Categories   */

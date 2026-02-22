@@ -5,12 +5,29 @@ import SwiftUI
 // MARK: - Constants
 
 private enum Constants {
-    static let back = String(localized: "common.back")
-    static let share = String(localized: "common.share")
-    static let openInBrowser = String(localized: "media.open_in_browser")
-    static let errorTitle = String(localized: "media.error_title")
-    static let videoUnavailable = String(localized: "media.video_unavailable")
-    static let audioUnavailable = String(localized: "media.audio_unavailable")
+    static var back: String {
+        AppLocalization.shared.localized("common.back")
+    }
+
+    static var share: String {
+        AppLocalization.shared.localized("common.share")
+    }
+
+    static var openInBrowser: String {
+        AppLocalization.shared.localized("media.open_in_browser")
+    }
+
+    static var errorTitle: String {
+        AppLocalization.shared.localized("media.error_title")
+    }
+
+    static var videoUnavailable: String {
+        AppLocalization.shared.localized("media.video_unavailable")
+    }
+
+    static var audioUnavailable: String {
+        AppLocalization.shared.localized("media.audio_unavailable")
+    }
 }
 
 // MARK: - MediaDetailView
@@ -71,7 +88,11 @@ struct MediaDetailView: View {
                         viewModel.handle(event: .onBookmarkTapped)
                     }
                     .accessibilityIdentifier(viewModel.viewState.isBookmarked ? "bookmark.fill" : "bookmark")
-                    .accessibilityLabel(viewModel.viewState.isBookmarked ? String(localized: "media_detail.remove_bookmark") : String(localized: "media_detail.add_bookmark"))
+                    .accessibilityLabel(
+                        viewModel.viewState.isBookmarked
+                            ? AppLocalization.shared.localized("media_detail.remove_bookmark")
+                            : AppLocalization.shared.localized("media_detail.add_bookmark")
+                    )
 
                     Button("", systemImage: "square.and.arrow.up") {
                         viewModel.handle(event: .onShareTapped)
@@ -175,7 +196,7 @@ struct MediaDetailView: View {
                 .foregroundStyle(.secondary)
                 .accessibilityHidden(true)
 
-            Text(String(localized: "media.unsupported_type"))
+            Text(AppLocalization.shared.localized("media.unsupported_type"))
                 .font(Typography.bodyLarge)
                 .foregroundStyle(.secondary)
         }
@@ -306,7 +327,7 @@ struct MediaDetailView: View {
             .clipShape(RoundedRectangle(cornerRadius: CornerRadius.md, style: .continuous))
         }
         .pressEffect()
-        .accessibilityHint(String(localized: "accessibility.opens_in_safari"))
+        .accessibilityHint(AppLocalization.shared.localized("accessibility.opens_in_safari"))
     }
 }
 

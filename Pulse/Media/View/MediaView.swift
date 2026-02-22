@@ -4,17 +4,49 @@ import SwiftUI
 // MARK: - Constants
 
 private enum Constants {
-    static let title = String(localized: "media.title")
-    static let featured = String(localized: "media.featured")
-    static let latest = String(localized: "media.latest")
-    static let all = String(localized: "media.all_types")
-    static let errorTitle = String(localized: "media.error.title")
-    static let emptyTitle = String(localized: "media.empty.title")
-    static let emptyMessage = String(localized: "media.empty.message")
-    static let offlineTitle = String(localized: "media.offline.title")
-    static let offlineMessage = String(localized: "media.offline.message")
-    static let tryAgain = String(localized: "common.try_again")
-    static let loadingMore = String(localized: "common.loading_more")
+    static var title: String {
+        AppLocalization.shared.localized("media.title")
+    }
+
+    static var featured: String {
+        AppLocalization.shared.localized("media.featured")
+    }
+
+    static var latest: String {
+        AppLocalization.shared.localized("media.latest")
+    }
+
+    static var all: String {
+        AppLocalization.shared.localized("media.all_types")
+    }
+
+    static var errorTitle: String {
+        AppLocalization.shared.localized("media.error.title")
+    }
+
+    static var emptyTitle: String {
+        AppLocalization.shared.localized("media.empty.title")
+    }
+
+    static var emptyMessage: String {
+        AppLocalization.shared.localized("media.empty.message")
+    }
+
+    static var offlineTitle: String {
+        AppLocalization.shared.localized("media.offline.title")
+    }
+
+    static var offlineMessage: String {
+        AppLocalization.shared.localized("media.offline.message")
+    }
+
+    static var tryAgain: String {
+        AppLocalization.shared.localized("common.try_again")
+    }
+
+    static var loadingMore: String {
+        AppLocalization.shared.localized("common.loading_more")
+    }
 }
 
 // MARK: - MediaView

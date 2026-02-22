@@ -4,8 +4,13 @@ import SwiftUI
 // MARK: - Constants
 
 private enum Constants {
-    static let aiSummary = String(localized: "digest.ai_summary")
-    static let articlesLabel = String(localized: "digest.articles_label")
+    static var aiSummary: String {
+        AppLocalization.shared.localized("digest.ai_summary")
+    }
+
+    static var articlesLabel: String {
+        AppLocalization.shared.localized("digest.articles_label")
+    }
 }
 
 // MARK: - DigestCard

@@ -11,6 +11,7 @@ struct RootView: View {
     @StateObject private var authManager = AuthenticationManager.shared
     @StateObject private var themeManager = ThemeManager.shared
     @StateObject private var lockManager = AppLockManager.shared
+    @StateObject private var appLocalization = AppLocalization.shared
     @AppStorage("pulse.hasCompletedOnboarding") private var hasCompletedOnboarding = false
 
     let serviceLocator: ServiceLocator
@@ -42,6 +43,7 @@ struct RootView: View {
                 AppLockOverlayView()
             }
         }
+        .environment(\.locale, appLocalization.locale)
         .preferredColorScheme(themeManager.colorScheme)
         .animation(reduceMotion ? nil : .easeInOut(duration: 0.3), value: authManager.authState)
     }
