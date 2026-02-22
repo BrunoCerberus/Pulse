@@ -303,16 +303,26 @@ class BaseUITestCase: XCTestCase {
 
     /// Wait for any of the provided elements to exist - efficient predicate-based waiting
     func waitForAny(_ elements: [XCUIElement], timeout: TimeInterval = 10) -> Bool {
-        let predicate = NSPredicate { _, _ in elements.contains { $0.exists } }
-        let expectation = XCTNSPredicateExpectation(predicate: predicate, object: nil)
-        return XCTWaiter.wait(for: [expectation], timeout: timeout) == .completed
+        let deadline = Date().addingTimeInterval(timeout)
+        while Date() < deadline {
+            if elements.contains(where: { $0.exists }) {
+                return true
+            }
+            RunLoop.current.run(until: Date().addingTimeInterval(0.1))
+        }
+        return false
     }
 
     /// Wait for any element matching query to exist
     func waitForAnyMatch(_ query: XCUIElementQuery, timeout: TimeInterval = 10) -> Bool {
-        let predicate = NSPredicate { _, _ in query.count > 0 }
-        let expectation = XCTNSPredicateExpectation(predicate: predicate, object: nil)
-        return XCTWaiter.wait(for: [expectation], timeout: timeout) == .completed
+        let deadline = Date().addingTimeInterval(timeout)
+        while Date() < deadline {
+            if query.count > 0 {
+                return true
+            }
+            RunLoop.current.run(until: Date().addingTimeInterval(0.1))
+        }
+        return false
     }
 
     /// Wait for an element to disappear
