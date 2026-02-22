@@ -77,15 +77,10 @@ jobs:
           -onlyUsePackageVersionsFromResolvedFile
         echo "Package dependencies resolved successfully"
 
-    - name: Pre-boot and warm up simulator
+    - name: Pre-boot simulator
       run: |
-        SIMULATOR_NAME="iPhone Air"
-        echo "Booting simulator..."
-        xcrun simctl boot "$SIMULATOR_NAME" 2>/dev/null || true
-        echo "Waiting for boot to complete..."
-        xcrun simctl bootstatus "$SIMULATOR_NAME" -b 2>/dev/null || true
-        echo "Warming up simulator accessibility services..."
-        sleep 10
+        echo "Pre-booting simulator..."
+        xcrun simctl boot "iPhone Air" || echo "Simulator already booted or unavailable"
 
     - name: Build for testing (PulseDev)
       run: |
@@ -186,63 +181,29 @@ jobs:
         name: scheduled-build-products
         path: ./DerivedData
 
-    - name: Pre-boot and warm up simulator
+    - name: Pre-boot simulator
       run: |
-        SIMULATOR_NAME="iPhone Air"
-        echo "Booting simulator..."
-        xcrun simctl boot "$SIMULATOR_NAME" 2>/dev/null || true
-        echo "Waiting for boot to complete..."
-        xcrun simctl bootstatus "$SIMULATOR_NAME" -b 2>/dev/null || true
-        echo "Warming up simulator accessibility services..."
-        sleep 10
+        echo "Pre-booting simulator..."
+        xcrun simctl boot "iPhone Air" || echo "Simulator already booted or unavailable"
 
     - name: Run ${{ matrix.test-name }}
       timeout-minutes: ${{ matrix.timeout }}
       run: |
         mkdir -p test-results
-        SIMULATOR_NAME="iPhone Air"
-        MAX_ATTEMPTS=3
-        TEST_EXIT_CODE=1
+        set -o pipefail
 
-        for attempt in $(seq 1 $MAX_ATTEMPTS); do
-          echo ""
-          echo "============================================"
-          echo "  Attempt $attempt of $MAX_ATTEMPTS"
-          echo "============================================"
+        xcodebuild test-without-building \
+          -project Pulse.xcodeproj \
+          -scheme ${{ matrix.scheme }} \
+          -only-testing:${{ matrix.test-target }} \
+          -destination 'platform=iOS Simulator,name=iPhone Air,OS=26.2' \
+          -derivedDataPath ./DerivedData \
+          -resultBundlePath test-results/${{ matrix.artifact-name }}.xcresult \
+          -disableAutomaticPackageResolution \
+          -retry-tests-on-failure \
+          2>&1 | tee /tmp/test_output.log
 
-          # Clean up previous result bundle (xcodebuild fails if it exists)
-          rm -rf "test-results/${{ matrix.artifact-name }}.xcresult"
-
-          set -o pipefail
-          xcodebuild test-without-building \
-            -project Pulse.xcodeproj \
-            -scheme ${{ matrix.scheme }} \
-            -only-testing:${{ matrix.test-target }} \
-            -destination "platform=iOS Simulator,name=$SIMULATOR_NAME,OS=26.2" \
-            -derivedDataPath ./DerivedData \
-            -resultBundlePath test-results/${{ matrix.artifact-name }}.xcresult \
-            -disableAutomaticPackageResolution \
-            -retry-tests-on-failure \
-            2>&1 | tee /tmp/test_output.log
-
-          TEST_EXIT_CODE=${PIPESTATUS[0]}
-
-          if [ $TEST_EXIT_CODE -eq 0 ]; then
-            echo "Tests passed on attempt $attempt"
-            break
-          fi
-
-          echo "Attempt $attempt failed (exit code: $TEST_EXIT_CODE)"
-
-          if [ $attempt -lt $MAX_ATTEMPTS ]; then
-            echo "Restarting simulator for fresh accessibility state..."
-            xcrun simctl shutdown "$SIMULATOR_NAME" 2>/dev/null || true
-            sleep 2
-            xcrun simctl boot "$SIMULATOR_NAME" 2>/dev/null || true
-            xcrun simctl bootstatus "$SIMULATOR_NAME" -b 2>/dev/null || true
-            sleep 10
-          fi
-        done
+        TEST_EXIT_CODE=${PIPESTATUS[0]}
 
         echo ""
         echo "============================================"
