@@ -4,7 +4,9 @@ import SwiftUI
 // MARK: - Constants
 
 private enum Constants {
-    static let breaking = String(localized: "home.breaking")
+    static var breaking: String {
+        AppLocalization.shared.localized("home.breaking")
+    }
 }
 
 // MARK: - BreakingNewsCard
@@ -94,8 +96,8 @@ struct BreakingNewsCard: View {
         }
         .buttonStyle(.plain)
         .accessibilityElement(children: .combine)
-        .accessibilityLabel(String(format: String(localized: "breaking_news.accessibility_label"), item.title, item.sourceName, item.formattedDate))
-        .accessibilityHint(String(localized: "accessibility.read_article"))
+        .accessibilityLabel(String(format: AppLocalization.shared.localized("breaking_news.accessibility_label"), item.title, item.sourceName, item.formattedDate))
+        .accessibilityHint(AppLocalization.shared.localized("accessibility.read_article"))
     }
 }
 

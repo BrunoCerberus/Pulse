@@ -5,15 +5,41 @@ import SwiftUI
 // MARK: - Constants
 
 private enum Constants {
-    static let title = String(localized: "feed.title")
-    static let headerTitle = String(localized: "feed.header_title")
-    static let emptyTitle = String(localized: "feed.empty.title")
-    static let emptyMessage = String(localized: "feed.empty.message")
-    static let errorTitle = String(localized: "feed.error.title")
-    static let tryAgain = String(localized: "common.try_again")
-    static let startReading = String(localized: "feed.start_reading")
-    static let offlineTitle = String(localized: "feed.offline.title")
-    static let offlineMessage = String(localized: "feed.offline.message")
+    static var title: String {
+        AppLocalization.shared.localized("feed.title")
+    }
+
+    static var headerTitle: String {
+        AppLocalization.shared.localized("feed.header_title")
+    }
+
+    static var emptyTitle: String {
+        AppLocalization.shared.localized("feed.empty.title")
+    }
+
+    static var emptyMessage: String {
+        AppLocalization.shared.localized("feed.empty.message")
+    }
+
+    static var errorTitle: String {
+        AppLocalization.shared.localized("feed.error.title")
+    }
+
+    static var tryAgain: String {
+        AppLocalization.shared.localized("common.try_again")
+    }
+
+    static var startReading: String {
+        AppLocalization.shared.localized("feed.start_reading")
+    }
+
+    static var offlineTitle: String {
+        AppLocalization.shared.localized("feed.offline.title")
+    }
+
+    static var offlineMessage: String {
+        AppLocalization.shared.localized("feed.offline.message")
+    }
 }
 
 // MARK: - FeedView
@@ -268,7 +294,7 @@ struct FeedView<R: FeedNavigationRouter>: View {
                 }
                 .buttonStyle(.plain)
                 .pressEffect()
-                .accessibilityHint(String(localized: "feed.retry_hint"))
+                .accessibilityHint(AppLocalization.shared.localized("feed.retry_hint"))
             }
         }
         .padding(.horizontal, Spacing.md)

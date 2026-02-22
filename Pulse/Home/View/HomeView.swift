@@ -4,16 +4,45 @@ import SwiftUI
 // MARK: - Constants
 
 enum HomeViewConstants {
-    static let title = String(localized: "home.title")
-    static let errorTitle = String(localized: "home.error.title")
-    static let emptyTitle = String(localized: "home.empty.title")
-    static let emptyMessage = String(localized: "home.empty.message")
-    static let breaking = String(localized: "home.breaking")
-    static let tryAgain = String(localized: "common.try_again")
-    static let loadingMore = String(localized: "common.loading_more")
-    static let allCategory = String(localized: "home.category.all")
-    static let breakingNews = String(localized: "home.breaking_news")
-    static let topHeadlines = String(localized: "home.top_headlines")
+    static var title: String {
+        AppLocalization.shared.localized("home.title")
+    }
+
+    static var errorTitle: String {
+        AppLocalization.shared.localized("home.error.title")
+    }
+
+    static var emptyTitle: String {
+        AppLocalization.shared.localized("home.empty.title")
+    }
+
+    static var emptyMessage: String {
+        AppLocalization.shared.localized("home.empty.message")
+    }
+
+    static var breaking: String {
+        AppLocalization.shared.localized("home.breaking")
+    }
+
+    static var tryAgain: String {
+        AppLocalization.shared.localized("common.try_again")
+    }
+
+    static var loadingMore: String {
+        AppLocalization.shared.localized("common.loading_more")
+    }
+
+    static var allCategory: String {
+        AppLocalization.shared.localized("home.category.all")
+    }
+
+    static var breakingNews: String {
+        AppLocalization.shared.localized("home.breaking_news")
+    }
+
+    static var topHeadlines: String {
+        AppLocalization.shared.localized("home.top_headlines")
+    }
 }
 
 // MARK: - HomeView
@@ -77,8 +106,8 @@ struct HomeView<R: HomeNavigationRouter>: View {
                             .font(.system(size: IconSize.md))
                             .foregroundStyle(.primary)
                     }
-                    .accessibilityLabel(String(localized: "home.edit_topics.label"))
-                    .accessibilityHint(String(localized: "home.edit_topics.hint"))
+                    .accessibilityLabel(AppLocalization.shared.localized("home.edit_topics.label"))
+                    .accessibilityHint(AppLocalization.shared.localized("home.edit_topics.hint"))
 
                     Button {
                         HapticManager.shared.tap()
@@ -88,8 +117,8 @@ struct HomeView<R: HomeNavigationRouter>: View {
                             .font(.system(size: IconSize.md))
                             .foregroundStyle(.primary)
                     }
-                    .accessibilityLabel(String(localized: "home.settings.label"))
-                    .accessibilityHint(String(localized: "home.settings.hint"))
+                    .accessibilityLabel(AppLocalization.shared.localized("home.settings.label"))
+                    .accessibilityHint(AppLocalization.shared.localized("home.settings.hint"))
                 }
             }
         }
@@ -203,7 +232,7 @@ struct HomeView<R: HomeNavigationRouter>: View {
         .pressEffect(scale: 0.95)
         .accessibilityLabel(title)
         .accessibilityAddTraits(isSelected ? .isSelected : [])
-        .accessibilityHint(String(format: String(localized: "home.filter_category.hint"), title))
+        .accessibilityHint(String(format: AppLocalization.shared.localized("home.filter_category.hint"), title))
     }
 
     // MARK: - Content Views

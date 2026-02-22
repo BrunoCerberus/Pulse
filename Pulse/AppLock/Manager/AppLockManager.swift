@@ -60,7 +60,7 @@ final class AppLockManager: ObservableObject {
 
         do {
             let success = try await service.authenticate(
-                reason: String(localized: "applock.auth_reason")
+                reason: AppLocalization.shared.localized("applock.auth_reason")
             )
             if success {
                 isLocked = false
@@ -88,7 +88,7 @@ final class AppLockManager: ObservableObject {
 
         do {
             let success = try await service.authenticate(
-                reason: String(localized: "applock.enable_reason")
+                reason: AppLocalization.shared.localized("applock.enable_reason")
             )
             if success {
                 service.isEnabled = true
@@ -131,7 +131,7 @@ final class AppLockManager: ObservableObject {
 
             do {
                 let success = try await service.authenticate(
-                    reason: String(localized: "applock.enable_reason")
+                    reason: AppLocalization.shared.localized("applock.enable_reason")
                 )
                 if success {
                     service.isEnabled = true

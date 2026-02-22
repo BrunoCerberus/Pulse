@@ -4,9 +4,17 @@ import SwiftUI
 // MARK: - Constants
 
 private enum Constants {
-    static let title = String(localized: "home.edit_topics.title")
-    static let description = String(localized: "home.edit_topics.description")
-    static let done = String(localized: "common.done")
+    static var title: String {
+        AppLocalization.shared.localized("home.edit_topics.title")
+    }
+
+    static var description: String {
+        AppLocalization.shared.localized("home.edit_topics.description")
+    }
+
+    static var done: String {
+        AppLocalization.shared.localized("common.done")
+    }
 }
 
 // MARK: - TopicEditorSheet
@@ -46,7 +54,11 @@ struct TopicEditorSheet: View {
                         }
                         .buttonStyle(.plain)
                         .accessibilityAddTraits(followedTopics.contains(topic) ? .isSelected : [])
-                        .accessibilityHint(followedTopics.contains(topic) ? String(localized: "topic_editor.unfollow_hint") : String(localized: "topic_editor.follow_hint"))
+                        .accessibilityHint(
+                            followedTopics.contains(topic)
+                                ? AppLocalization.shared.localized("topic_editor.unfollow_hint")
+                                : AppLocalization.shared.localized("topic_editor.follow_hint")
+                        )
                     }
                 } footer: {
                     Text(Constants.description)

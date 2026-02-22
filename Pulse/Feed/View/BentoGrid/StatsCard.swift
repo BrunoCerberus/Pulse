@@ -4,9 +4,17 @@ import SwiftUI
 // MARK: - Constants
 
 private enum Constants {
-    static let articlesLabel = String(localized: "digest.articles_label")
-    static let topicsLabel = String(localized: "digest.topics_label")
-    static let timeSpanLabel = String(localized: "digest.time_span")
+    static var articlesLabel: String {
+        AppLocalization.shared.localized("digest.articles_label")
+    }
+
+    static var topicsLabel: String {
+        AppLocalization.shared.localized("digest.topics_label")
+    }
+
+    static var timeSpanLabel: String {
+        AppLocalization.shared.localized("digest.time_span")
+    }
 }
 
 // MARK: - StatsCard
@@ -60,7 +68,7 @@ struct StatsCard: View {
         .glassBackground(style: .thin, cornerRadius: CornerRadius.lg)
         .depthShadow(.medium)
         .accessibilityElement(children: .combine)
-        .accessibilityLabel(String(format: String(localized: "digest.stats_accessibility"), articleCount, topicsCount))
+        .accessibilityLabel(String(format: AppLocalization.shared.localized("digest.stats_accessibility"), articleCount, topicsCount))
         .onAppear {
             animationTask?.cancel()
             animationTask = Task {
@@ -82,7 +90,7 @@ struct StatsCard: View {
                 .foregroundStyle(Color.Accent.gradient)
                 .accessibilityHidden(true)
 
-            Text(String(localized: "digest.stats_title"))
+            Text(AppLocalization.shared.localized("digest.stats_title"))
                 .font(Typography.labelMedium)
                 .foregroundStyle(.primary)
         }

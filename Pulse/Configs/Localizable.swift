@@ -30,52 +30,84 @@ struct Localizable {
         private init() {}
 
         /// "Loading..." loading state message
-        static let loading = String(localized: "paywall.loading")
+        static var loading: String {
+            AppLocalization.shared.localized("paywall.loading")
+        }
 
         /// "Unlock Premium" title
-        static let title = String(localized: "paywall.title")
+        static var title: String {
+            AppLocalization.shared.localized("paywall.title")
+        }
 
         /// Subtitle describing premium benefits
-        static let subtitle = String(localized: "paywall.subtitle")
+        static var subtitle: String {
+            AppLocalization.shared.localized("paywall.subtitle")
+        }
 
         /// First feature title
-        static let feature1Title = String(localized: "paywall.feature1.title")
+        static var feature1Title: String {
+            AppLocalization.shared.localized("paywall.feature1.title")
+        }
 
         /// First feature description
-        static let feature1Description = String(localized: "paywall.feature1.description")
+        static var feature1Description: String {
+            AppLocalization.shared.localized("paywall.feature1.description")
+        }
 
         /// Second feature title
-        static let feature2Title = String(localized: "paywall.feature2.title")
+        static var feature2Title: String {
+            AppLocalization.shared.localized("paywall.feature2.title")
+        }
 
         /// Second feature description
-        static let feature2Description = String(localized: "paywall.feature2.description")
+        static var feature2Description: String {
+            AppLocalization.shared.localized("paywall.feature2.description")
+        }
 
         /// Third feature title
-        static let feature3Title = String(localized: "paywall.feature3.title")
+        static var feature3Title: String {
+            AppLocalization.shared.localized("paywall.feature3.title")
+        }
 
         /// Third feature description
-        static let feature3Description = String(localized: "paywall.feature3.description")
+        static var feature3Description: String {
+            AppLocalization.shared.localized("paywall.feature3.description")
+        }
 
         /// "Error" title for error state
-        static let errorTitle = String(localized: "paywall.error.title")
+        static var errorTitle: String {
+            AppLocalization.shared.localized("paywall.error.title")
+        }
 
         /// "Retry" button text
-        static let retry = String(localized: "paywall.retry")
+        static var retry: String {
+            AppLocalization.shared.localized("paywall.retry")
+        }
 
         /// "Restore Purchases" button text
-        static let restorePurchases = String(localized: "paywall.restore_purchases")
+        static var restorePurchases: String {
+            AppLocalization.shared.localized("paywall.restore_purchases")
+        }
 
         /// "Go Premium" settings entry point title
-        static let goPremium = String(localized: "paywall.go_premium")
+        static var goPremium: String {
+            AppLocalization.shared.localized("paywall.go_premium")
+        }
 
         /// "Unlock all features" settings entry point description
-        static let unlockFeatures = String(localized: "paywall.unlock_features")
+        static var unlockFeatures: String {
+            AppLocalization.shared.localized("paywall.unlock_features")
+        }
 
         /// "Premium Active" status for subscribed users
-        static let premiumActive = String(localized: "paywall.premium_active")
+        static var premiumActive: String {
+            AppLocalization.shared.localized("paywall.premium_active")
+        }
 
         /// "You have full access" description for subscribed users
-        static let fullAccess = String(localized: "paywall.full_access")
+        static var fullAccess: String {
+            AppLocalization.shared.localized("paywall.full_access")
+        }
     }
 
     // MARK: - Convenience Access

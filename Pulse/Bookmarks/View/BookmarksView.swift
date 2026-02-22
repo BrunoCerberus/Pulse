@@ -4,12 +4,29 @@ import SwiftUI
 // MARK: - Constants
 
 private enum Constants {
-    static let title = String(localized: "bookmarks.title")
-    static let loading = String(localized: "bookmarks.loading")
-    static let errorTitle = String(localized: "bookmarks.error.title")
-    static let emptyTitle = String(localized: "bookmarks.empty.title")
-    static let emptyMessage = String(localized: "bookmarks.empty.message")
-    static let tryAgain = String(localized: "common.try_again")
+    static var title: String {
+        AppLocalization.shared.localized("bookmarks.title")
+    }
+
+    static var loading: String {
+        AppLocalization.shared.localized("bookmarks.loading")
+    }
+
+    static var errorTitle: String {
+        AppLocalization.shared.localized("bookmarks.error.title")
+    }
+
+    static var emptyTitle: String {
+        AppLocalization.shared.localized("bookmarks.empty.title")
+    }
+
+    static var emptyMessage: String {
+        AppLocalization.shared.localized("bookmarks.empty.message")
+    }
+
+    static var tryAgain: String {
+        AppLocalization.shared.localized("common.try_again")
+    }
 }
 
 // MARK: - BookmarksView
@@ -162,7 +179,7 @@ struct BookmarksView<R: BookmarksNavigationRouter>: View {
         HStack {
             Image(systemName: "bookmark.fill")
                 .foregroundStyle(Color.Accent.primary)
-            Text(String(format: String(localized: "bookmarks.saved_count"), viewModel.viewState.bookmarks.count))
+            Text(String(format: AppLocalization.shared.localized("bookmarks.saved_count"), viewModel.viewState.bookmarks.count))
                 .font(Typography.captionLarge)
                 .foregroundStyle(.secondary)
             Spacer()
