@@ -200,20 +200,49 @@ jobs:
       timeout-minutes: ${{ matrix.timeout }}
       run: |
         mkdir -p test-results
-        set -o pipefail
+        SIMULATOR_NAME="iPhone Air"
+        MAX_ATTEMPTS=3
+        TEST_EXIT_CODE=1
 
-        xcodebuild test-without-building \
-          -project Pulse.xcodeproj \
-          -scheme ${{ matrix.scheme }} \
-          -only-testing:${{ matrix.test-target }} \
-          -destination 'platform=iOS Simulator,name=iPhone Air,OS=26.2' \
-          -derivedDataPath ./DerivedData \
-          -resultBundlePath test-results/${{ matrix.artifact-name }}.xcresult \
-          -disableAutomaticPackageResolution \
-          -retry-tests-on-failure \
-          2>&1 | tee /tmp/test_output.log
+        for attempt in $(seq 1 $MAX_ATTEMPTS); do
+          echo ""
+          echo "============================================"
+          echo "  Attempt $attempt of $MAX_ATTEMPTS"
+          echo "============================================"
 
-        TEST_EXIT_CODE=${PIPESTATUS[0]}
+          # Clean up previous result bundle (xcodebuild fails if it exists)
+          rm -rf "test-results/${{ matrix.artifact-name }}.xcresult"
+
+          set -o pipefail
+          xcodebuild test-without-building \
+            -project Pulse.xcodeproj \
+            -scheme ${{ matrix.scheme }} \
+            -only-testing:${{ matrix.test-target }} \
+            -destination "platform=iOS Simulator,name=$SIMULATOR_NAME,OS=26.2" \
+            -derivedDataPath ./DerivedData \
+            -resultBundlePath test-results/${{ matrix.artifact-name }}.xcresult \
+            -disableAutomaticPackageResolution \
+            -retry-tests-on-failure \
+            2>&1 | tee /tmp/test_output.log
+
+          TEST_EXIT_CODE=${PIPESTATUS[0]}
+
+          if [ $TEST_EXIT_CODE -eq 0 ]; then
+            echo "Tests passed on attempt $attempt"
+            break
+          fi
+
+          echo "Attempt $attempt failed (exit code: $TEST_EXIT_CODE)"
+
+          if [ $attempt -lt $MAX_ATTEMPTS ]; then
+            echo "Restarting simulator for fresh accessibility state..."
+            xcrun simctl shutdown "$SIMULATOR_NAME" 2>/dev/null || true
+            sleep 2
+            xcrun simctl boot "$SIMULATOR_NAME" 2>/dev/null || true
+            xcrun simctl bootstatus "$SIMULATOR_NAME" -b 2>/dev/null || true
+            sleep 10
+          fi
+        done
 
         echo ""
         echo "============================================"
