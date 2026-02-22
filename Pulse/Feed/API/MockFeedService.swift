@@ -64,7 +64,7 @@ final class MockFeedService: FeedService {
 
     func generateDigest(from articles: [Article]) -> AsyncThrowingStream<String, Error> {
         AsyncThrowingStream { continuation in
-            Task {
+            let generationTask = Task {
                 if self.shouldFail {
                     continuation.finish(throwing: FeedServiceError.generationFailed("Mock generation failed"))
                     return
@@ -80,11 +80,19 @@ final class MockFeedService: FeedService {
                 }
 
                 for token in tokens {
+                    guard !Task.isCancelled else {
+                        continuation.finish()
+                        return
+                    }
                     try await Task.sleep(for: .milliseconds(Int(self.generateDelay * 1000)))
                     continuation.yield(token)
                 }
 
                 continuation.finish()
+            }
+
+            continuation.onTermination = { _ in
+                generationTask.cancel()
             }
         }
     }
