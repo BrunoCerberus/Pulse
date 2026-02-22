@@ -8,17 +8,22 @@ final class MockNewsService: NewsService {
     var breakingNewsResult: Result<[Article], Error> = .success(Array(Article.mockArticles.prefix(3)))
     var categoryHeadlinesResult: Result<[Article], Error>?
     var fetchArticleResult: Result<Article, Error>?
+    var fetchedTopHeadlinesLanguages: [String] = []
+    var fetchedCategoryHeadlinesLanguages: [String] = []
+    var fetchedBreakingNewsLanguages: [String] = []
 
-    func fetchTopHeadlines(language _: String, country _: String, page _: Int) -> AnyPublisher<[Article], Error> {
-        topHeadlinesResult.publisher.eraseToAnyPublisher()
+    func fetchTopHeadlines(language: String, country _: String, page _: Int) -> AnyPublisher<[Article], Error> {
+        fetchedTopHeadlinesLanguages.append(language)
+        return topHeadlinesResult.publisher.eraseToAnyPublisher()
     }
 
     func fetchTopHeadlines(
         category: NewsCategory,
-        language _: String,
+        language: String,
         country _: String,
         page _: Int
     ) -> AnyPublisher<[Article], Error> {
+        fetchedCategoryHeadlinesLanguages.append(language)
         // Use categoryHeadlinesResult if set, otherwise fall back to topHeadlinesResult
         let result = categoryHeadlinesResult ?? topHeadlinesResult
         return result.publisher
@@ -45,8 +50,9 @@ final class MockNewsService: NewsService {
             .eraseToAnyPublisher()
     }
 
-    func fetchBreakingNews(language _: String, country _: String) -> AnyPublisher<[Article], Error> {
-        breakingNewsResult.publisher.eraseToAnyPublisher()
+    func fetchBreakingNews(language: String, country _: String) -> AnyPublisher<[Article], Error> {
+        fetchedBreakingNewsLanguages.append(language)
+        return breakingNewsResult.publisher.eraseToAnyPublisher()
     }
 
     func fetchArticle(id: String) -> AnyPublisher<Article, Error> {
@@ -101,11 +107,17 @@ final class MockBookmarksService: BookmarksService {
 
 final class MockSettingsService: SettingsService {
     var preferences: UserPreferences = .default
+    var fetchPreferencesResult: Result<UserPreferences, Error>?
+    var fetchPreferencesDelay: TimeInterval = 0
 
     func fetchPreferences() -> AnyPublisher<UserPreferences, Error> {
-        Just(preferences)
-            .setFailureType(to: Error.self)
-            .eraseToAnyPublisher()
+        let publisher = (fetchPreferencesResult ?? .success(preferences)).publisher
+        if fetchPreferencesDelay > 0 {
+            return publisher
+                .delay(for: .seconds(fetchPreferencesDelay), scheduler: DispatchQueue.main)
+                .eraseToAnyPublisher()
+        }
+        return publisher.eraseToAnyPublisher()
     }
 
     func savePreferences(_ preferences: UserPreferences) -> AnyPublisher<Void, Error> {

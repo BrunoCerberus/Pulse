@@ -62,6 +62,53 @@ struct HomeDomainInteractorTests {
         #expect(finalState.error == nil)
     }
 
+    @Test("Load initial data uses persisted preferred language")
+    func loadInitialDataUsesPersistedLanguage() async throws {
+        let mockSettingsService = try #require(serviceLocator.retrieve(SettingsService.self) as? MockSettingsService)
+        let preferences = UserPreferences(
+            followedTopics: [],
+            followedSources: [],
+            mutedSources: [],
+            mutedKeywords: [],
+            preferredLanguage: "pt",
+            notificationsEnabled: true,
+            breakingNewsNotifications: true
+        )
+        mockSettingsService.preferences = preferences
+        mockNewsService.topHeadlinesResult = .success(Article.mockArticles)
+        mockNewsService.breakingNewsResult = .success(Array(Article.mockArticles.prefix(2)))
+        mockNewsService.fetchedTopHeadlinesLanguages = []
+        mockNewsService.fetchedBreakingNewsLanguages = []
+
+        sut.dispatch(action: .loadInitialData)
+
+        try await Task.sleep(nanoseconds: 500_000_000)
+
+        #expect(!mockNewsService.fetchedTopHeadlinesLanguages.isEmpty)
+        #expect(!mockNewsService.fetchedBreakingNewsLanguages.isEmpty)
+        #expect(mockNewsService.fetchedTopHeadlinesLanguages.allSatisfy { $0 == "pt" })
+        #expect(mockNewsService.fetchedBreakingNewsLanguages.allSatisfy { $0 == "pt" })
+    }
+
+    @Test("Load initial data falls back to default language on preferences failure")
+    func loadInitialDataFallsBackToDefaultLanguageOnFailure() async throws {
+        let mockSettingsService = try #require(serviceLocator.retrieve(SettingsService.self) as? MockSettingsService)
+        mockSettingsService.fetchPreferencesResult = .failure(URLError(.cannotLoadFromNetwork))
+        mockNewsService.topHeadlinesResult = .success(Article.mockArticles)
+        mockNewsService.breakingNewsResult = .success(Array(Article.mockArticles.prefix(2)))
+        mockNewsService.fetchedTopHeadlinesLanguages = []
+        mockNewsService.fetchedBreakingNewsLanguages = []
+
+        sut.dispatch(action: .loadInitialData)
+
+        try await Task.sleep(nanoseconds: 500_000_000)
+
+        #expect(!mockNewsService.fetchedTopHeadlinesLanguages.isEmpty)
+        #expect(!mockNewsService.fetchedBreakingNewsLanguages.isEmpty)
+        #expect(mockNewsService.fetchedTopHeadlinesLanguages.allSatisfy { $0 == "en" })
+        #expect(mockNewsService.fetchedBreakingNewsLanguages.allSatisfy { $0 == "en" })
+    }
+
     @Test("Error handling works correctly")
     func errorHandling() async throws {
         let testError = NSError(domain: "test", code: 1, userInfo: [NSLocalizedDescriptionKey: "Test error"])

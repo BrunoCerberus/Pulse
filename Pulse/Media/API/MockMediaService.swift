@@ -10,8 +10,11 @@ final class MockMediaService: MediaService {
 
     /// Whether to simulate an error response.
     var shouldFail = false
+    var fetchedMediaLanguages: [String] = []
+    var fetchedFeaturedMediaLanguages: [String] = []
 
-    func fetchMedia(type: MediaType?, language _: String, page: Int) -> AnyPublisher<[Article], Error> {
+    func fetchMedia(type: MediaType?, language: String, page: Int) -> AnyPublisher<[Article], Error> {
+        fetchedMediaLanguages.append(language)
         if shouldFail {
             return Fail(error: URLError(.notConnectedToInternet))
                 .delay(for: .seconds(simulatedDelay), scheduler: DispatchQueue.main)
@@ -42,7 +45,8 @@ final class MockMediaService: MediaService {
             .eraseToAnyPublisher()
     }
 
-    func fetchFeaturedMedia(type: MediaType?, language _: String) -> AnyPublisher<[Article], Error> {
+    func fetchFeaturedMedia(type: MediaType?, language: String) -> AnyPublisher<[Article], Error> {
+        fetchedFeaturedMediaLanguages.append(language)
         if shouldFail {
             return Fail(error: URLError(.notConnectedToInternet))
                 .delay(for: .seconds(simulatedDelay), scheduler: DispatchQueue.main)

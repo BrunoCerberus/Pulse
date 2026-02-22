@@ -73,6 +73,49 @@ struct MediaDomainInteractorTests {
         #expect(finalState.hasLoadedInitialData)
     }
 
+    @Test("Load initial data uses persisted preferred language")
+    func loadInitialDataUsesPersistedLanguage() async throws {
+        let mockSettingsService = try #require(serviceLocator.retrieve(SettingsService.self) as? MockSettingsService)
+        let preferences = UserPreferences(
+            followedTopics: [],
+            followedSources: [],
+            mutedSources: [],
+            mutedKeywords: [],
+            preferredLanguage: "es",
+            notificationsEnabled: true,
+            breakingNewsNotifications: true
+        )
+        mockSettingsService.preferences = preferences
+        mockMediaService.fetchedMediaLanguages = []
+        mockMediaService.fetchedFeaturedMediaLanguages = []
+
+        sut.dispatch(action: .loadInitialData)
+
+        try await Task.sleep(nanoseconds: 300_000_000)
+
+        #expect(!mockMediaService.fetchedMediaLanguages.isEmpty)
+        #expect(!mockMediaService.fetchedFeaturedMediaLanguages.isEmpty)
+        #expect(mockMediaService.fetchedMediaLanguages.allSatisfy { $0 == "es" })
+        #expect(mockMediaService.fetchedFeaturedMediaLanguages.allSatisfy { $0 == "es" })
+    }
+
+    @Test("Load initial data falls back to default language on preferences failure")
+    func loadInitialDataFallsBackToDefaultLanguageOnFailure() async throws {
+        let mockSettingsService = try #require(serviceLocator.retrieve(SettingsService.self) as? MockSettingsService)
+        mockSettingsService.fetchPreferencesResult = .failure(URLError(.cannotLoadFromNetwork))
+        mockMediaService.fetchedMediaLanguages = []
+        mockMediaService.fetchedFeaturedMediaLanguages = []
+
+        sut.dispatch(action: .loadInitialData)
+
+        try await Task.sleep(nanoseconds: 300_000_000)
+
+        #expect(!mockMediaService.fetchedMediaLanguages.isEmpty)
+        #expect(!mockMediaService.fetchedFeaturedMediaLanguages.isEmpty)
+        #expect(mockMediaService.fetchedMediaLanguages.allSatisfy { $0 == "en" })
+        #expect(mockMediaService.fetchedFeaturedMediaLanguages.allSatisfy { $0 == "en" })
+    }
+
     @Test("Load initial data is idempotent when already loaded")
     func loadInitialDataIdempotent() async throws {
         // First load
