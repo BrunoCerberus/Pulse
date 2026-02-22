@@ -89,6 +89,8 @@ final class MediaViewSnapshotTests: XCTestCase {
 
     override func setUp() {
         super.setUp()
+        // Force English locale for deterministic snapshot strings
+        AppLocalization.shared.updateLanguage("en")
         serviceLocator = ServiceLocator()
         let mockMediaService = MockMediaService()
         mockMediaService.simulatedDelay = 0
