@@ -3,6 +3,15 @@ import XCTest
 final class ReadingHistoryUITests: BaseUITestCase {
     // MARK: - Combined Flow Test
 
+    /// Settings scroll container - prefers table (List renders as UITableView)
+    private func settingsScrollContainer() -> XCUIElement {
+        let table = app.tables.firstMatch
+        if table.exists { return table }
+        let scrollView = app.scrollViews.firstMatch
+        if scrollView.exists { return scrollView }
+        return app
+    }
+
     /// Tests reading history navigation via Settings, content states, and navigation
     func testReadingHistoryFlow() {
         // --- Navigate to Settings ---
@@ -12,13 +21,12 @@ final class ReadingHistoryUITests: BaseUITestCase {
         XCTAssertTrue(settingsNav.waitForExistence(timeout: Self.defaultTimeout), "Should be on Settings")
 
         // --- Find and tap Reading History row ---
-        let readingHistoryRow = app.staticTexts["Reading History"]
+        // NavigationLink with Label renders as a button in accessibility hierarchy
+        let readingHistoryRow = app.buttons.matching(NSPredicate(format: "label CONTAINS[c] 'Reading History'")).firstMatch
 
         if !readingHistoryRow.exists {
-            let settingsScroll = app.scrollViews.firstMatch
-            if settingsScroll.exists {
-                scrollToElement(readingHistoryRow, in: settingsScroll)
-            }
+            let container = settingsScrollContainer()
+            scrollToElement(readingHistoryRow, in: container)
         }
 
         XCTAssertTrue(readingHistoryRow.waitForExistence(timeout: Self.defaultTimeout), "Reading History row should exist in Settings")
