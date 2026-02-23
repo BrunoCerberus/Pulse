@@ -70,6 +70,8 @@ struct SettingsView: View {
                 contentLanguageSection
                 appearanceSection
 
+                dataSection
+
                 SettingsMutedContentSection(
                     mutedSources: viewModel.viewState.mutedSources,
                     mutedKeywords: viewModel.viewState.mutedKeywords,
@@ -184,6 +186,14 @@ struct SettingsView: View {
                     get: { viewModel.viewState.isDarkMode },
                     set: { viewModel.handle(event: .onToggleDarkMode($0)) }
                 ))
+            }
+        }
+    }
+
+    private var dataSection: some View {
+        Section(AppLocalization.shared.localized("settings.data")) {
+            NavigationLink(value: Page.readingHistory) {
+                Label(AppLocalization.shared.localized("settings.reading_history"), systemImage: "clock.arrow.circlepath")
             }
         }
     }

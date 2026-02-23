@@ -381,3 +381,15 @@
 "feed.retry_hint" = "Toca dos veces para reintentar generar el resumen";
 "premium_gate.unlock_label" = "Desbloquear %@";
 "digest.topics_title" = "Temas";
+
+/* ==================== */
+/* MARK: - Reading History */
+/* ==================== */
+
+"settings.data" = "Datos";
+"settings.reading_history" = "Historial de Lectura";
+"reading_history.title" = "Historial";
+"reading_history.empty.title" = "Sin Historial";
+"reading_history.empty.message" = "Los artículos que leas aparecerán aquí.";
+"reading_history.clear" = "Borrar Historial";
+"reading_history.clear.confirm" = "¿Estás seguro? Esta acción no se puede deshacer.";

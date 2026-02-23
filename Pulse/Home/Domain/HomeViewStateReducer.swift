@@ -20,10 +20,10 @@ struct HomeViewStateReducer: ViewStateReducing {
     func reduce(domainState: HomeDomainState) -> HomeViewState {
         HomeViewState(
             breakingNews: domainState.breakingNews.enumerated().map { index, article in
-                ArticleViewItem(from: article, index: index)
+                ArticleViewItem(from: article, index: index, isRead: domainState.readArticleIDs.contains(article.id))
             },
             headlines: domainState.headlines.enumerated().map { index, article in
-                ArticleViewItem(from: article, index: index)
+                ArticleViewItem(from: article, index: index, isRead: domainState.readArticleIDs.contains(article.id))
             },
             isLoading: domainState.isLoading,
             isLoadingMore: domainState.isLoadingMore,

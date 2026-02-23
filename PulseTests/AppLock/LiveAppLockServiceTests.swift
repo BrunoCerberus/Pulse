@@ -1,17 +1,30 @@
-import EntropyCore
 import Foundation
 @testable import Pulse
 import Testing
 
+/// In-memory `KeychainStore` that avoids real Keychain entitlement requirements in unit tests.
+private final class InMemoryKeychainStore: KeychainStore {
+    private var store = [String: String]()
+
+    func exists(for key: String) -> Bool {
+        store[key] != nil
+    }
+
+    func save(_ value: String, for key: String) throws {
+        store[key] = value
+    }
+
+    func delete(for key: String) throws {
+        store.removeValue(forKey: key)
+    }
+}
+
 @Suite("LiveAppLockService Tests", .serialized)
 struct LiveAppLockServiceTests {
-    /// Isolated Keychain service to avoid collisions with the app host.
-    private static let testKeychainService = "com.pulse.applock.tests"
-    private let keychain = KeychainManager(service: testKeychainService)
+    private let keychain = InMemoryKeychainStore()
     private let defaults = UserDefaults(suiteName: "com.pulse.applock.tests")!
 
     init() {
-        try? keychain.delete(for: "appLockEnabled")
         defaults.removePersistentDomain(forName: "com.pulse.applock.tests")
     }
 

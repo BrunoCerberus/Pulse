@@ -54,6 +54,9 @@ struct HomeDomainState: Equatable {
     /// Whether the current error is due to being offline.
     var isOfflineError: Bool
 
+    /// IDs of articles the user has previously read.
+    var readArticleIDs: Set<String>
+
     /// Creates the default initial state.
     static var initial: HomeDomainState {
         HomeDomainState(
@@ -72,7 +75,8 @@ struct HomeDomainState: Equatable {
             followedTopics: [],
             allTopics: NewsCategory.allCases,
             isEditingTopics: false,
-            isOfflineError: false
+            isOfflineError: false,
+            readArticleIDs: []
         )
     }
 }

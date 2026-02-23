@@ -74,7 +74,7 @@ final class SearchViewModel: CombineViewModel, ObservableObject {
                 SearchViewState(
                     query: state.query,
                     results: state.results.enumerated().map { index, article in
-                        ArticleViewItem(from: article, index: index)
+                        ArticleViewItem(from: article, index: index, isRead: state.readArticleIDs.contains(article.id))
                     },
                     suggestions: state.suggestions,
                     isLoading: state.isLoading,

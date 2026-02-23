@@ -86,6 +86,18 @@ final class ArticleDetailDomainInteractor: CombineInteractor {
     private func onAppear() {
         analyticsService?.logEvent(.screenView(screen: .articleDetail))
         checkBookmarkStatus()
+        markAsRead()
+    }
+
+    // MARK: - Reading History
+
+    private func markAsRead() {
+        let article = currentState.article
+        let task = Task { [weak self] in
+            guard let self else { return }
+            try? await self.storageService.markArticleAsRead(article)
+        }
+        trackBackgroundTask(task)
     }
 
     // MARK: - Bookmark

@@ -45,6 +45,9 @@ struct SearchDomainState: Equatable {
     /// Whether the current error is due to being offline.
     var isOfflineError: Bool
 
+    /// IDs of articles the user has previously read.
+    var readArticleIDs: Set<String>
+
     /// Creates the default initial state.
     static var initial: SearchDomainState {
         SearchDomainState(
@@ -60,7 +63,8 @@ struct SearchDomainState: Equatable {
             sortBy: .relevancy,
             hasSearched: false,
             selectedArticle: nil,
-            isOfflineError: false
+            isOfflineError: false,
+            readArticleIDs: []
         )
     }
 }

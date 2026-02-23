@@ -30,6 +30,7 @@ final class SearchDomainInteractor: CombineInteractor {
     private let suggestionQuerySubject = PassthroughSubject<String, Never>()
     private var cancellables = Set<AnyCancellable>()
     private var searchCancellable: AnyCancellable?
+    private var backgroundTasks = Set<Task<Void, Never>>()
 
     var statePublisher: AnyPublisher<SearchDomainState, Never> {
         stateSubject.eraseToAnyPublisher()
@@ -57,6 +58,17 @@ final class SearchDomainInteractor: CombineInteractor {
         analyticsService = try? serviceLocator.retrieve(AnalyticsService.self)
 
         setupSuggestionDebounce()
+        loadReadArticleIDs()
+
+        // Observe reading history clear to reset read indicators
+        NotificationCenter.default.publisher(for: .readingHistoryDidClear)
+            .receive(on: DispatchQueue.main)
+            .sink { [weak self] _ in
+                self?.updateState { state in
+                    state.readArticleIDs = []
+                }
+            }
+            .store(in: &cancellables)
     }
 
     private func setupSuggestionDebounce() {
@@ -252,6 +264,7 @@ final class SearchDomainInteractor: CombineInteractor {
         analyticsService?.logEvent(.articleOpened(source: .search))
         updateState { state in
             state.selectedArticle = article
+            state.readArticleIDs.insert(article.id)
         }
     }
 
@@ -259,6 +272,21 @@ final class SearchDomainInteractor: CombineInteractor {
         updateState { state in
             state.selectedArticle = nil
         }
+    }
+
+    // MARK: - Reading History
+
+    private func loadReadArticleIDs() {
+        let task = Task { [weak self] in
+            guard let self else { return }
+            let readIDs = try? await self.storageService.fetchReadArticleIDs()
+            await MainActor.run {
+                self.updateState { state in
+                    state.readArticleIDs = readIDs ?? []
+                }
+            }
+        }
+        backgroundTasks.insert(task)
     }
 
     private func updateState(_ transform: (inout SearchDomainState) -> Void) {
