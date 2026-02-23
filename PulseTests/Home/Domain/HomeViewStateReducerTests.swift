@@ -184,4 +184,31 @@ struct HomeViewStateReducerTests {
         #expect(viewState.showCategoryTabs == true)
         #expect(viewState.followedTopics.count == allCategories.count)
     }
+
+    // MARK: - Read Article Tests
+
+    @Test("isRead flag is set correctly on ArticleViewItems")
+    func isReadFlagSetCorrectly() {
+        let articles = Article.mockArticles
+        let readIDs: Set<String> = [articles[0].id]
+        let state = makeDomainState(
+            headlines: articles,
+            readArticleIDs: readIDs
+        )
+        let viewState = sut.reduce(domainState: state)
+
+        #expect(viewState.headlines[0].isRead == true)
+        #expect(viewState.headlines[1].isRead == false)
+    }
+
+    @Test("isRead flag defaults to false when readArticleIDs is empty")
+    func isReadFlagDefaultsFalse() {
+        let state = makeDomainState(
+            headlines: Article.mockArticles,
+            readArticleIDs: []
+        )
+        let viewState = sut.reduce(domainState: state)
+
+        #expect(viewState.headlines.allSatisfy { !$0.isRead })
+    }
 }
