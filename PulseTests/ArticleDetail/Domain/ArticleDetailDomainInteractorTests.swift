@@ -57,6 +57,17 @@ struct ArticleDetailDomainInteractorTests {
         #expect(sut.currentState.isBookmarked == true)
     }
 
+    @Test("onAppear marks article as read")
+    func onAppearMarksAsRead() async throws {
+        let sut = createSUT()
+
+        sut.dispatch(action: .onAppear)
+        try await waitForStateUpdate(duration: TestWaitDuration.long)
+
+        let isRead = await mockStorageService.isRead(testArticle.id)
+        #expect(isRead == true)
+    }
+
     @Test("onAppear sets isBookmarked to false when not bookmarked")
     func onAppearNotBookmarked() async throws {
         mockStorageService.bookmarkedArticles = []

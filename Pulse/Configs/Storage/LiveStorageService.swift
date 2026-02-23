@@ -13,6 +13,7 @@ final class LiveStorageService: StorageService {
             let schema = Schema([
                 BookmarkedArticle.self,
                 UserPreferencesModel.self,
+                ReadArticle.self,
             ])
             let modelConfiguration = ModelConfiguration(schema: schema, isStoredInMemoryOnly: inMemory)
             let container = try ModelContainer(for: schema, configurations: [modelConfiguration])
@@ -76,5 +77,56 @@ final class LiveStorageService: StorageService {
         let context = modelContainer.mainContext
         let descriptor = FetchDescriptor<UserPreferencesModel>()
         return try context.fetch(descriptor).first?.toPreferences()
+    }
+
+    // MARK: - Reading History
+
+    @MainActor
+    func markArticleAsRead(_ article: Article) async throws {
+        let context = modelContainer.mainContext
+        let articleID = article.id
+        let descriptor = FetchDescriptor<ReadArticle>(
+            predicate: #Predicate { $0.articleID == articleID }
+        )
+        if let existing = try context.fetch(descriptor).first {
+            existing.readAt = Date()
+        } else {
+            context.insert(ReadArticle(from: article))
+        }
+        try context.save()
+    }
+
+    @MainActor
+    func isRead(_ articleID: String) async -> Bool {
+        let context = modelContainer.mainContext
+        let descriptor = FetchDescriptor<ReadArticle>(
+            predicate: #Predicate { $0.articleID == articleID }
+        )
+        return (try? context.fetchCount(descriptor)) ?? 0 > 0
+    }
+
+    @MainActor
+    func fetchReadArticleIDs() async throws -> Set<String> {
+        let context = modelContainer.mainContext
+        let descriptor = FetchDescriptor<ReadArticle>()
+        let readArticles = try context.fetch(descriptor)
+        return Set(readArticles.map(\.articleID))
+    }
+
+    @MainActor
+    func fetchReadArticles() async throws -> [Article] {
+        let context = modelContainer.mainContext
+        let descriptor = FetchDescriptor<ReadArticle>(
+            sortBy: [SortDescriptor(\.readAt, order: .reverse)]
+        )
+        let readArticles = try context.fetch(descriptor)
+        return readArticles.map { $0.toArticle() }
+    }
+
+    @MainActor
+    func clearReadingHistory() async throws {
+        let context = modelContainer.mainContext
+        try context.delete(model: ReadArticle.self)
+        try context.save()
     }
 }

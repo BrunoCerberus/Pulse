@@ -190,6 +190,12 @@ final class Coordinator: ObservableObject {
 
         case .settings:
             SettingsView(serviceLocator: serviceLocator)
+
+        case .readingHistory:
+            ReadingHistoryView(
+                router: ReadingHistoryNavigationRouter(coordinator: self),
+                viewModel: ReadingHistoryViewModel(serviceLocator: serviceLocator)
+            )
         }
     }
 }

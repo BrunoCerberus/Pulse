@@ -381,3 +381,15 @@
 "feed.retry_hint" = "Double tap to retry generating the digest";
 "premium_gate.unlock_label" = "Unlock %@";
 "digest.topics_title" = "Topics";
+
+/* ==================== */
+/* MARK: - Reading History */
+/* ==================== */
+
+"settings.data" = "Data";
+"settings.reading_history" = "Reading History";
+"reading_history.title" = "Reading History";
+"reading_history.empty.title" = "No Reading History";
+"reading_history.empty.message" = "Articles you read will appear here.";
+"reading_history.clear" = "Clear History";
+"reading_history.clear.confirm" = "Are you sure? This cannot be undone.";
