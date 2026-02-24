@@ -279,6 +279,36 @@ struct HomeDomainInteractorTests {
     }
 }
 
+// MARK: - Reading History Tests
+
+extension HomeDomainInteractorTests {
+    @Test("Select article optimistically marks as read")
+    func selectArticleMarksAsRead() async throws {
+        let article = Article.mockArticles[0]
+        mockNewsService.topHeadlinesResult = .success([article])
+        mockNewsService.breakingNewsResult = .success([])
+        sut.dispatch(action: .loadInitialData)
+        try await Task.sleep(nanoseconds: 500_000_000)
+
+        sut.dispatch(action: .selectArticle(articleId: article.id))
+
+        #expect(sut.currentState.readArticleIDs.contains(article.id))
+    }
+
+    @Test("Load initial data loads read article IDs")
+    func loadInitialDataLoadsReadIDs() async throws {
+        let readArticle = Article.mockArticles[0]
+        mockStorageService.readArticles = [readArticle]
+        mockNewsService.topHeadlinesResult = .success(Article.mockArticles)
+        mockNewsService.breakingNewsResult = .success([])
+
+        sut.dispatch(action: .loadInitialData)
+        try await Task.sleep(nanoseconds: 500_000_000)
+
+        #expect(sut.currentState.readArticleIDs.contains(readArticle.id))
+    }
+}
+
 // MARK: - Topic Toggle Tests
 
 extension HomeDomainInteractorTests {

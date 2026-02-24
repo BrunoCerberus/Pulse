@@ -78,6 +78,16 @@ final class HomeDomainInteractor: CombineInteractor {
                 self.loadFollowedTopicsAndCheckLanguage()
             }
             .store(in: &cancellables)
+
+        // Observe reading history clear to reset read indicators
+        NotificationCenter.default.publisher(for: .readingHistoryDidClear)
+            .receive(on: DispatchQueue.main)
+            .sink { [weak self] _ in
+                self?.updateState { state in
+                    state.readArticleIDs = []
+                }
+            }
+            .store(in: &cancellables)
     }
 
     func dispatch(action: HomeDomainAction) {
@@ -165,6 +175,8 @@ private extension HomeDomainInteractor {
             state.isLoading = true
             state.error = nil
         }
+
+        loadReadArticleIDs()
 
         // Load preferences first to get the correct language before fetching
         settingsService.fetchPreferences()
@@ -280,6 +292,7 @@ private extension HomeDomainInteractor {
         analyticsService?.logEvent(.articleOpened(source: .home))
         updateState { state in
             state.selectedArticle = article
+            state.readArticleIDs.insert(article.id)
         }
     }
 
@@ -333,6 +346,18 @@ private extension HomeDomainInteractor {
 // MARK: - Home Preferences
 
 private extension HomeDomainInteractor {
+    func loadReadArticleIDs() {
+        trackBackgroundTask { [weak self] in
+            guard let self else { return }
+            let readIDs = try? await self.storageService.fetchReadArticleIDs()
+            await MainActor.run {
+                self.updateState { state in
+                    state.readArticleIDs = readIDs ?? []
+                }
+            }
+        }
+    }
+
     func loadFollowedTopics() {
         settingsService.fetchPreferences()
             .receive(on: DispatchQueue.main)

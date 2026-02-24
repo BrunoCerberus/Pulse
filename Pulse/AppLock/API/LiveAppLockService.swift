@@ -1,6 +1,16 @@
 import EntropyCore
 import LocalAuthentication
 
+/// Abstraction for key-value secure storage used by `LiveAppLockService`.
+/// Production uses `KeychainManager`; tests use an in-memory implementation.
+protocol KeychainStore {
+    func exists(for key: String) -> Bool
+    func save(_ value: String, for key: String) throws
+    func delete(for key: String) throws
+}
+
+extension KeychainManager: KeychainStore {}
+
 /// Live implementation of `AppLockService` using LocalAuthentication framework.
 ///
 /// Stores the lock-enabled state in the Keychain (tamper-resistant on non-jailbroken devices)
@@ -14,7 +24,7 @@ final class LiveAppLockService: AppLockService {
 
     static let keychainService = "com.pulse.applock"
 
-    private let keychain: KeychainManager
+    private let keychain: KeychainStore
     private let defaults: UserDefaults
 
     var isEnabled: Bool {
@@ -33,7 +43,7 @@ final class LiveAppLockService: AppLockService {
         set { defaults.set(newValue, forKey: Keys.hasPromptedFaceID) }
     }
 
-    init(keychain: KeychainManager = KeychainManager(service: keychainService),
+    init(keychain: KeychainStore = KeychainManager(service: keychainService),
          defaults: UserDefaults = .standard)
     {
         self.keychain = keychain

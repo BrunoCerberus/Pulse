@@ -11,6 +11,7 @@ struct GlassArticleCard: View {
     let imageURL: URL?
     let category: NewsCategory?
     let isBookmarked: Bool
+    let isRead: Bool
     let onTap: () -> Void
     let onBookmark: () -> Void
     let onShare: () -> Void
@@ -26,6 +27,7 @@ struct GlassArticleCard: View {
         imageURL: URL? = nil,
         category: NewsCategory? = nil,
         isBookmarked: Bool = false,
+        isRead: Bool = false,
         onTap: @escaping () -> Void,
         onBookmark: @escaping () -> Void,
         onShare: @escaping () -> Void
@@ -37,6 +39,7 @@ struct GlassArticleCard: View {
         self.imageURL = imageURL
         self.category = category
         self.isBookmarked = isBookmarked
+        self.isRead = isRead
         self.onTap = onTap
         self.onBookmark = onBookmark
         self.onShare = onShare
@@ -58,12 +61,14 @@ struct GlassArticleCard: View {
                         .lineLimit(3)
                         .multilineTextAlignment(.leading)
                         .foregroundStyle(.primary)
+                        .opacity(isRead ? 0.55 : 1.0)
 
                     if let description {
                         Text(description)
                             .font(Typography.bodySmall)
                             .foregroundStyle(.secondary)
                             .lineLimit(2)
+                            .opacity(isRead ? 0.45 : 1.0)
                     }
 
                     HStack(spacing: Spacing.xs) {
@@ -135,6 +140,7 @@ struct GlassArticleCard: View {
                 RoundedRectangle(cornerRadius: CornerRadius.sm, style: .continuous)
                     .stroke(Color.Border.adaptive(for: colorScheme), lineWidth: 0.5)
             )
+            .opacity(isRead ? 0.7 : 1.0)
         }
     }
 
@@ -163,6 +169,7 @@ extension GlassArticleCard {
             imageURL: item.imageURL,
             category: item.category,
             isBookmarked: isBookmarked,
+            isRead: item.isRead,
             onTap: onTap,
             onBookmark: onBookmark,
             onShare: onShare

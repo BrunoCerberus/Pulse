@@ -146,12 +146,14 @@ final class MockSettingsService: SettingsService {
 final class MockStorageService: StorageService {
     var bookmarkedArticles: [Article] = []
     var userPreferences: UserPreferences?
+    var readArticles: [Article] = []
 
     // Error simulation properties
     var fetchBookmarksError: Error?
     var deleteArticleError: Error?
     var fetchPreferencesError: Error?
     var savePreferencesError: Error?
+    var clearReadingHistoryError: Error?
 
     func saveArticle(_ article: Article) async throws {
         bookmarkedArticles.append(article)
@@ -187,6 +189,35 @@ final class MockStorageService: StorageService {
             throw error
         }
         return userPreferences
+    }
+
+    // MARK: - Reading History
+
+    func markArticleAsRead(_ article: Article) async throws {
+        if let index = readArticles.firstIndex(where: { $0.id == article.id }) {
+            readArticles[index] = article
+        } else {
+            readArticles.append(article)
+        }
+    }
+
+    func isRead(_ articleID: String) async -> Bool {
+        readArticles.contains { $0.id == articleID }
+    }
+
+    func fetchReadArticleIDs() async throws -> Set<String> {
+        Set(readArticles.map(\.id))
+    }
+
+    func fetchReadArticles() async throws -> [Article] {
+        readArticles
+    }
+
+    func clearReadingHistory() async throws {
+        if let error = clearReadingHistoryError {
+            throw error
+        }
+        readArticles = []
     }
 }
 

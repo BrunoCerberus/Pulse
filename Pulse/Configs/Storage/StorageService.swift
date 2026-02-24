@@ -46,4 +46,31 @@ protocol StorageService {
     /// - Returns: The stored preferences, or `nil` if none exist.
     /// - Throws: Storage errors if the fetch operation fails.
     func fetchUserPreferences() async throws -> UserPreferences?
+
+    // MARK: - Reading History
+
+    /// Marks an article as read in the user's reading history.
+    /// If the article was already read, updates the `readAt` timestamp.
+    /// - Parameter article: The article to mark as read.
+    /// - Throws: Storage errors if the save operation fails.
+    func markArticleAsRead(_ article: Article) async throws
+
+    /// Checks if an article has been read.
+    /// - Parameter articleID: The unique identifier of the article.
+    /// - Returns: `true` if the article has been read, `false` otherwise.
+    func isRead(_ articleID: String) async -> Bool
+
+    /// Fetches the IDs of all read articles.
+    /// - Returns: A set of article IDs that have been read.
+    /// - Throws: Storage errors if the fetch operation fails.
+    func fetchReadArticleIDs() async throws -> Set<String>
+
+    /// Fetches all read articles, ordered by read date (newest first).
+    /// - Returns: An array of articles from reading history.
+    /// - Throws: Storage errors if the fetch operation fails.
+    func fetchReadArticles() async throws -> [Article]
+
+    /// Clears all reading history.
+    /// - Throws: Storage errors if the delete operation fails.
+    func clearReadingHistory() async throws
 }

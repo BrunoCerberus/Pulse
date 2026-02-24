@@ -13,4 +13,7 @@ enum Page: Hashable {
 
     /// Navigate to settings view
     case settings
+
+    /// Navigate to reading history view
+    case readingHistory
 }

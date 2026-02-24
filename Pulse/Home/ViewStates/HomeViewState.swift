@@ -104,11 +104,15 @@ struct ArticleViewItem: Identifiable, Equatable {
     /// Pre-computed index for staggered animations (avoids re-enumeration in view body).
     let animationIndex: Int
 
+    /// Whether the user has previously read this article.
+    let isRead: Bool
+
     /// Creates a view item from an Article model.
     /// - Parameters:
     ///   - article: The source article.
     ///   - index: Index for staggered animation delay calculation.
-    init(from article: Article, index: Int = 0) {
+    ///   - isRead: Whether the article has been read.
+    init(from article: Article, index: Int = 0, isRead: Bool = false) {
         id = article.id
         title = article.title
         description = article.description
@@ -118,5 +122,6 @@ struct ArticleViewItem: Identifiable, Equatable {
         formattedDate = article.formattedDate
         category = article.category
         animationIndex = index
+        self.isRead = isRead
     }
 }
