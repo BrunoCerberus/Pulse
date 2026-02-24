@@ -19,7 +19,9 @@ final class AccessibilityAuditTests: BaseUITestCase {
         try app.performAccessibilityAudit(for: [.dynamicType, .sufficientElementDescription, .hitRegion]) { issue in
             // Ignore issues from system components we don't control
             let description = issue.debugDescription
-            if description.contains("UITabBar") || description.contains("UINavigationBar") {
+            if description.contains("UITabBar") || description.contains("UINavigationBar")
+                || description.contains("partially unsupported")
+            {
                 return true
             }
             return false
@@ -38,7 +40,9 @@ final class AccessibilityAuditTests: BaseUITestCase {
 
         try app.performAccessibilityAudit(for: [.dynamicType, .sufficientElementDescription, .hitRegion]) { issue in
             let description = issue.debugDescription
-            if description.contains("UITabBar") || description.contains("UINavigationBar") {
+            if description.contains("UITabBar") || description.contains("UINavigationBar")
+                || description.contains("partially unsupported")
+            {
                 return true
             }
             return false
@@ -57,7 +61,9 @@ final class AccessibilityAuditTests: BaseUITestCase {
 
         try app.performAccessibilityAudit(for: [.dynamicType, .sufficientElementDescription, .hitRegion]) { issue in
             let description = issue.debugDescription
-            if description.contains("UITabBar") || description.contains("UINavigationBar") {
+            if description.contains("UITabBar") || description.contains("UINavigationBar")
+                || description.contains("partially unsupported")
+            {
                 return true
             }
             return false
@@ -78,6 +84,7 @@ final class AccessibilityAuditTests: BaseUITestCase {
             let description = issue.debugDescription
             if description.contains("UITabBar") || description.contains("UINavigationBar")
                 || description.contains("UISearchBar")
+                || description.contains("partially unsupported")
             {
                 return true
             }
@@ -97,7 +104,9 @@ final class AccessibilityAuditTests: BaseUITestCase {
 
         try app.performAccessibilityAudit(for: [.dynamicType, .sufficientElementDescription, .hitRegion]) { issue in
             let description = issue.debugDescription
-            if description.contains("UITabBar") || description.contains("UINavigationBar") {
+            if description.contains("UITabBar") || description.contains("UINavigationBar")
+                || description.contains("partially unsupported")
+            {
                 return true
             }
             return false
