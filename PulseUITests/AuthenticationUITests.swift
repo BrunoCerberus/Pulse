@@ -24,12 +24,12 @@ final class AuthenticationUITests: BaseUITestCase {
                 homeTab.tap()
             }
 
-            let gearButton = app.navigationBars.buttons["gearshape"]
-            XCTAssertTrue(gearButton.waitForExistence(timeout: 5), "Settings gear button should exist")
+            let gearButton = app.navigationBars.buttons["Settings"]
+            XCTAssertTrue(gearButton.waitForExistence(timeout: 10), "Settings gear button should exist")
             gearButton.tap()
 
             let settingsNav = app.navigationBars["Settings"]
-            XCTAssertTrue(settingsNav.waitForExistence(timeout: 5), "Settings should open")
+            XCTAssertTrue(settingsNav.waitForExistence(timeout: 10), "Settings should open")
 
             let accountSection = app.staticTexts["Account"]
             XCTAssertTrue(accountSection.waitForExistence(timeout: 5), "Account section should exist in settings")

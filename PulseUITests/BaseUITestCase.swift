@@ -269,7 +269,7 @@ class BaseUITestCase: XCTestCase {
     /// Navigate to Settings via gear button
     func navigateToSettings() {
         navigateToTab("Home")
-        let gearButton = app.navigationBars.buttons["gearshape"]
+        let gearButton = app.navigationBars.buttons["Settings"]
         if gearButton.waitForExistence(timeout: Self.defaultTimeout) {
             gearButton.tap()
             _ = app.navigationBars["Settings"].waitForExistence(timeout: Self.defaultTimeout)

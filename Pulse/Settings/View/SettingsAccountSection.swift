@@ -122,6 +122,7 @@ private struct InitialPlaceholderView: View {
             Text(userInitial)
                 .font(.title3)
                 .foregroundStyle(.blue)
+                .accessibilityHidden(true)
         }
     }
 
