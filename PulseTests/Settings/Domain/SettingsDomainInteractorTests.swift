@@ -116,6 +116,66 @@ struct SettingsInteractorNotifyTests {
     }
 }
 
+// MARK: - Language Tests
+
+@Suite("SettingsDomainInteractor Language Tests")
+@MainActor
+struct SettingsInteractorLanguageTests {
+    private let languageKey = "pulse.preferredLanguage"
+
+    @Test("Change language updates preferences and AppLocalization")
+    func changeLanguageUpdatesPreferencesAndLocalization() async throws {
+        let defaults = UserDefaults.standard
+        let previous = defaults.string(forKey: languageKey)
+        defer {
+            if let previous {
+                defaults.set(previous, forKey: languageKey)
+                AppLocalization.shared.updateLanguage(previous)
+            } else {
+                defaults.removeObject(forKey: languageKey)
+                AppLocalization.shared.updateLanguage("en")
+            }
+        }
+
+        let (sut, mock, _) = createSUT()
+        mock.preferences = .default
+        sut.dispatch(action: .loadPreferences)
+        try await Task.sleep(nanoseconds: 300_000_000)
+
+        sut.dispatch(action: .changeLanguage("es"))
+        try await Task.sleep(nanoseconds: 100_000_000)
+
+        #expect(sut.currentState.preferences.preferredLanguage == "es")
+        #expect(mock.preferences.preferredLanguage == "es")
+        #expect(AppLocalization.shared.language == "es")
+    }
+
+    @Test("Change language persists to UserDefaults")
+    func changeLanguagePersistsToUserDefaults() async throws {
+        let defaults = UserDefaults.standard
+        let previous = defaults.string(forKey: languageKey)
+        defer {
+            if let previous {
+                defaults.set(previous, forKey: languageKey)
+                AppLocalization.shared.updateLanguage(previous)
+            } else {
+                defaults.removeObject(forKey: languageKey)
+                AppLocalization.shared.updateLanguage("en")
+            }
+        }
+
+        let (sut, mock, _) = createSUT()
+        mock.preferences = .default
+        sut.dispatch(action: .loadPreferences)
+        try await Task.sleep(nanoseconds: 300_000_000)
+
+        sut.dispatch(action: .changeLanguage("pt"))
+        try await Task.sleep(nanoseconds: 100_000_000)
+
+        #expect(defaults.string(forKey: languageKey) == "pt")
+    }
+}
+
 // MARK: - Muted Content Tests
 
 @Suite("SettingsDomainInteractor Muted Tests")
