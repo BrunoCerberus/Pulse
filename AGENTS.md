@@ -44,15 +44,21 @@ Pulse/
 │   ├── Summarization/          # Article summarization (Premium)
 │   ├── ArticleDetail/          # Article view + summarization entry point
 │   ├── Bookmarks/              # Offline reading
+│   ├── ReadingHistory/         # Reading history tracking (SwiftData)
+│   │   ├── Domain/             # ReadingHistoryDomainInteractor, State, Action
+│   │   ├── ViewModel/          # ReadingHistoryViewModel
+│   │   ├── View/               # ReadingHistoryView
+│   │   └── Router/             # ReadingHistoryNavigationRouter
 │   ├── Search/                 # Search feature
 │   ├── Settings/               # User preferences (includes account/logout)
+│   ├── AppLock/                # Biometric/passcode app lock (Keychain-backed)
 │   ├── Onboarding/             # First-launch onboarding flow
 │   ├── Paywall/                # StoreKit paywall UI
 │   ├── SplashScreen/           # App launch animation
 │   └── Configs/
 │       ├── Navigation/         # Coordinator, Page, CoordinatorView, DeeplinkRouter, AnimatedTabView
-│       ├── DesignSystem/       # ColorSystem, Typography, Components, Haptics
-│       ├── Models/             # Article, NewsCategory, UserPreferences, ContentLanguage
+│       ├── DesignSystem/       # ColorSystem, Typography, Components, DynamicTypeHelpers, Haptics
+│       ├── Models/             # Article, NewsCategory, UserPreferences, ContentLanguage, AppLocalization
 │       ├── Networking/         # API keys, base URLs, SupabaseConfig, RemoteConfig, NetworkMonitorService
 │       ├── Storage/            # StorageService (SwiftData)
 │       ├── Analytics/          # AnalyticsService protocol + Live implementation
@@ -223,6 +229,10 @@ struct HomeDomainInteractorTests {
 13. **Offline resilience** - Tiered cache (L1 memory + L2 disk) preserves content when offline; `NetworkMonitorService` tracks connectivity; failed refreshes keep existing data visible
 14. **Analytics is optional** - `try? serviceLocator.retrieve(AnalyticsService.self)` ensures missing analytics never crashes the app; every analytics event doubles as a Crashlytics breadcrumb
 15. **Language parameter threading** - All service protocols, cache keys, and interactors accept a `language` parameter (from `UserPreferences.preferredLanguage`). Supabase queries filter with `?language=eq.<lang>`. Cache keys include language prefix to prevent cross-language pollution. Interactors listen for `.userPreferencesDidChange` to reload on language switch.
+16. **In-app localization** - Use `AppLocalization.shared.localized("key")` for all UI strings (NOT `String(localized:)`). The singleton is `@MainActor` but `localized()` is `nonisolated`. Use `static var` computed properties (not `static let`) for localized constants so they re-evaluate on language change.
+17. **Dynamic Type adaptation** - Views with horizontal layouts must use `@Environment(\.dynamicTypeSize)` and switch to vertical stacking at accessibility sizes (`.accessibility1`+) via `DynamicTypeSize.isAccessibilitySize`. Increase `lineLimit` values at accessibility sizes.
+18. **VoiceOver semantics** - Section/screen titles must have `.accessibilityAddTraits(.isHeader)`. Use `@AccessibilityFocusState` for focus management after async operations. Post `AccessibilityNotification.Announcement` for state changes (refresh complete, search results, errors).
+19. **Input validation at boundaries** - Validate YouTube video IDs with strict regex before HTML interpolation. Sanitize deeplink IDs with character allowlists and path traversal rejection. Allowlist URL schemes (https/http) before `UIApplication.shared.open()`. Sanitize disk cache filenames.
 
 ## Data Source Architecture
 
@@ -251,10 +261,20 @@ The app uses a tiered cache with offline resilience:
 | `DiskNewsCacheStore` | Persistent file-based cache implementing `NewsCacheStore` protocol |
 | `NetworkMonitorService` | Protocol + Live (`NWPathMonitor`) + Mock for connectivity tracking |
 | `PulseError` | Typed error enum with `.offlineNoCache` case |
-| **Localization** | |
-| `ContentLanguage` | Enum (en/pt/es) with display names and flags for language picker |
-| `Localizable.strings` | UI strings in `en.lproj/`, `pt.lproj/`, `es.lproj/` |
 | `OfflineBannerView` | Animated banner in `CoordinatorView` shown when offline |
+| **Localization** | |
+| `AppLocalization` | `@MainActor` singleton with `@Published language`; `nonisolated func localized(_:)` for cross-thread access; loads from `.lproj` bundles matching `ContentLanguage` |
+| `ContentLanguage` | Enum (en/pt/es) with display names and flags for language picker |
+| `Localizable.strings` | UI strings in `en.lproj/`, `pt.lproj/`, `es.lproj/` (90+ keys including accessibility announcements) |
+| **Reading History** | |
+| `ReadArticle` | SwiftData `@Model` with `@Attribute(.unique)` on `articleID`; stores title, URL, image, `readAt` timestamp |
+| `ReadingHistoryDomainInteractor` | Loads/clears history via `StorageService`, publishes `.readingHistoryDidClear` notification |
+| `ReadingHistoryView` | History list with article cards, empty state, clear confirmation dialog |
+| **Accessibility** | |
+| `DynamicTypeHelpers` | `DynamicTypeSize.isAccessibilitySize` extension (`.accessibility1`+) used across 12 components |
+| **Security** | |
+| `LiveAppLockService` | Keychain-backed app lock with `deviceOwnerAuthentication` (biometric + passcode fallback) |
+| `KeychainStore` | Protocol for Keychain access; production uses `KeychainManager`, tests use in-memory implementation |
 | **Analytics & Crashlytics** | |
 | `AnalyticsService` | Protocol with `logEvent`, `setUserID`, `recordError`, `log` |
 | `AnalyticsEvent` | Type-safe enum with 18 events (screen views, article actions, purchases, auth, onboarding, etc.) |
@@ -530,8 +550,10 @@ refactor: extract common loading state
 ### Modifying UI
 1. Update ViewState if needed
 2. Modify View
-3. Update/add snapshot tests
-4. Test on multiple screen sizes
+3. If adding horizontal layouts, add Dynamic Type adaptation (`@Environment(\.dynamicTypeSize)`)
+4. Add `.accessibilityAddTraits(.isHeader)` to section titles
+5. Update/add snapshot tests (including accessibility size configs)
+6. Test on multiple screen sizes
 
 ## API Keys
 
