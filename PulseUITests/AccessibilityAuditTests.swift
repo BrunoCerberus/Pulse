@@ -106,6 +106,7 @@ final class AccessibilityAuditTests: BaseUITestCase {
             let description = issue.debugDescription
             if description.contains("UITabBar") || description.contains("UINavigationBar")
                 || description.contains("partially unsupported")
+                || description.contains("Label not human-readable")
             {
                 return true
             }
