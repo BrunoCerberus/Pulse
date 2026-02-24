@@ -105,7 +105,13 @@ struct CoordinatorView: View {
         .onReceive(
             networkMonitor?.isConnectedPublisher ?? Just(true).eraseToAnyPublisher()
         ) { connected in
+            let wasOffline = isOffline
             isOffline = !connected
+            if !connected, !wasOffline {
+                AccessibilityNotification.Announcement(AppLocalization.shared.localized("accessibility.offline")).post()
+            } else if connected, wasOffline {
+                AccessibilityNotification.Announcement(AppLocalization.shared.localized("accessibility.online")).post()
+            }
         }
     }
 

@@ -27,6 +27,7 @@ struct FeedEmptyStateView: View {
 
                 Text(Constants.title)
                     .font(Typography.titleMedium)
+                    .accessibilityAddTraits(.isHeader)
 
                 Text(Constants.message)
                     .font(Typography.bodyMedium)

@@ -105,9 +105,10 @@ extension HomeView {
 
     // MARK: - Breaking News Carousel
 
+    @ViewBuilder
     var breakingNewsCarousel: some View {
-        ScrollView(.horizontal, showsIndicators: false) {
-            LazyHStack(spacing: Spacing.md) {
+        if dynamicTypeSize.isAccessibilitySize {
+            VStack(spacing: Spacing.md) {
                 ForEach(viewModel.viewState.breakingNews) { item in
                     HeroNewsCard(item: item) {
                         viewModel.handle(event: .onArticleTapped(articleId: item.id))
@@ -117,6 +118,19 @@ extension HomeView {
             }
             .padding(.horizontal, Spacing.md)
             .padding(.vertical, Spacing.sm)
+        } else {
+            ScrollView(.horizontal, showsIndicators: false) {
+                LazyHStack(spacing: Spacing.md) {
+                    ForEach(viewModel.viewState.breakingNews) { item in
+                        HeroNewsCard(item: item) {
+                            viewModel.handle(event: .onArticleTapped(articleId: item.id))
+                        }
+                        .fadeIn(delay: Double(item.animationIndex) * 0.1)
+                    }
+                }
+                .padding(.horizontal, Spacing.md)
+                .padding(.vertical, Spacing.sm)
+            }
         }
     }
 

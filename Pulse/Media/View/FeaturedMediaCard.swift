@@ -14,9 +14,18 @@ struct FeaturedMediaCard: View {
     let onTap: () -> Void
 
     @Environment(\.colorScheme) private var colorScheme
+    @Environment(\.dynamicTypeSize) private var dynamicTypeSize
 
     private let cardWidth: CGFloat = 280
     private let cardHeight: CGFloat = 180
+
+    private var effectiveCardWidth: CGFloat {
+        dynamicTypeSize.isAccessibilitySize ? UIScreen.main.bounds.width - Spacing.lg * 2 : cardWidth
+    }
+
+    private var effectiveCardHeight: CGFloat {
+        dynamicTypeSize.isAccessibilitySize ? 220 : cardHeight
+    }
 
     private var mediaAccessibilityLabel: String {
         var parts = [String]()
@@ -45,7 +54,7 @@ struct FeaturedMediaCard: View {
 
                 contentOverlay
             }
-            .frame(width: cardWidth, height: cardHeight)
+            .frame(width: effectiveCardWidth, height: effectiveCardHeight)
             .clipShape(RoundedRectangle(cornerRadius: CornerRadius.lg, style: .continuous))
             .overlay(
                 RoundedRectangle(cornerRadius: CornerRadius.lg, style: .continuous)
@@ -68,7 +77,7 @@ struct FeaturedMediaCard: View {
                 image
                     .resizable()
                     .aspectRatio(contentMode: .fill)
-                    .frame(width: cardWidth, height: cardHeight)
+                    .frame(width: effectiveCardWidth, height: effectiveCardHeight)
                     .clipped()
             } placeholder: {
                 placeholderBackground
@@ -128,7 +137,7 @@ struct FeaturedMediaCard: View {
                 .font(Typography.headlineLarge)
                 .fontWeight(.bold)
                 .foregroundStyle(.white)
-                .lineLimit(2)
+                .lineLimit(dynamicTypeSize.isAccessibilitySize ? 4 : 2)
                 .multilineTextAlignment(.leading)
 
             metadataRow

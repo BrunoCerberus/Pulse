@@ -24,6 +24,32 @@ enum SnapshotConfig {
         traits: UITraitCollection(userInterfaceStyle: .dark)
     )
 
+    /// iPhone Air with accessibility extra-large content size category (dark mode).
+    static let iPhoneAirAccessibility: ViewImageConfig = {
+        let traits = UITraitCollection(traitsFrom: [
+            UITraitCollection(userInterfaceStyle: .dark),
+            UITraitCollection(preferredContentSizeCategory: .accessibilityExtraLarge),
+        ])
+        return ViewImageConfig(
+            safeArea: UIEdgeInsets(top: 59, left: 0, bottom: 34, right: 0),
+            size: CGSize(width: 393, height: 852),
+            traits: traits
+        )
+    }()
+
+    /// iPhone Air with extra-extra-large content size category (dark mode).
+    static let iPhoneAirExtraExtraLarge: ViewImageConfig = {
+        let traits = UITraitCollection(traitsFrom: [
+            UITraitCollection(userInterfaceStyle: .dark),
+            UITraitCollection(preferredContentSizeCategory: .extraExtraLarge),
+        ])
+        return ViewImageConfig(
+            safeArea: UIEdgeInsets(top: 59, left: 0, bottom: 34, right: 0),
+            size: CGSize(width: 393, height: 852),
+            traits: traits
+        )
+    }()
+
     /// Standard precision for snapshot comparisons (99%).
     static let standardPrecision: Float = 0.99
 

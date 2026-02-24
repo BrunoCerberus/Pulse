@@ -63,6 +63,7 @@ struct FeedView<R: FeedNavigationRouter>: View {
 
     @ObservedObject var viewModel: FeedViewModel
     @State private var isPremium = false
+    @AccessibilityFocusState private var isDigestFocused: Bool
 
     init(router: R, viewModel: FeedViewModel, serviceLocator: ServiceLocator) {
         self.router = router
@@ -115,6 +116,12 @@ struct FeedView<R: FeedNavigationRouter>: View {
             if let article {
                 router.route(navigationEvent: .articleDetail(article))
                 viewModel.handle(event: .onArticleNavigated)
+            }
+        }
+        .onChange(of: viewModel.viewState.displayState) { _, newState in
+            if case .completed = newState {
+                isDigestFocused = true
+                AccessibilityNotification.Announcement(AppLocalization.shared.localized("accessibility.digest_ready")).post()
             }
         }
     }
@@ -186,6 +193,7 @@ struct FeedView<R: FeedNavigationRouter>: View {
         ScrollView {
             LazyVStack(spacing: Spacing.lg) {
                 dateHeader
+                    .accessibilityFocused($isDigestFocused)
                     .opacity(viewModel.viewState.digest != nil ? 1 : 0)
                     .offset(y: viewModel.viewState.digest != nil ? 0 : 10)
 
@@ -307,6 +315,7 @@ struct FeedView<R: FeedNavigationRouter>: View {
             VStack(alignment: .leading, spacing: Spacing.xxs) {
                 Text(Constants.headerTitle)
                     .font(Typography.titleLarge)
+                    .accessibilityAddTraits(.isHeader)
                 Text(viewModel.viewState.headerDate)
                     .font(Typography.captionLarge)
                     .foregroundStyle(.secondary)

@@ -17,6 +17,7 @@ struct GlassArticleCard: View {
     let onShare: () -> Void
 
     @Environment(\.colorScheme) private var colorScheme
+    @Environment(\.dynamicTypeSize) private var dynamicTypeSize
     @ScaledMetric(relativeTo: .body) private var imageSize: CGFloat = 100
 
     init(
@@ -50,50 +51,10 @@ struct GlassArticleCard: View {
             HapticManager.shared.tap()
             onTap()
         } label: {
-            HStack(alignment: .top, spacing: Spacing.sm) {
-                VStack(alignment: .leading, spacing: Spacing.xs) {
-                    if let category {
-                        GlassCategoryChip(category: category, style: .small)
-                    }
-
-                    Text(title)
-                        .font(Typography.headlineMedium)
-                        .lineLimit(3)
-                        .multilineTextAlignment(.leading)
-                        .foregroundStyle(.primary)
-                        .opacity(isRead ? 0.55 : 1.0)
-
-                    if let description {
-                        Text(description)
-                            .font(Typography.bodySmall)
-                            .foregroundStyle(.secondary)
-                            .lineLimit(2)
-                            .opacity(isRead ? 0.45 : 1.0)
-                    }
-
-                    HStack(spacing: Spacing.xs) {
-                        Text(sourceName)
-                            .font(Typography.captionLarge)
-                            .fontWeight(.medium)
-
-                        Circle()
-                            .fill(.secondary)
-                            .frame(width: 3, height: 3)
-                            .accessibilityHidden(true)
-
-                        Text(formattedDate)
-                            .font(Typography.captionLarge)
-                    }
-                    .foregroundStyle(.secondary)
-                }
-
-                Spacer(minLength: Spacing.xs)
-
-                articleImage
-            }
-            .padding(Spacing.md)
-            .glassBackground(style: .solid, cornerRadius: CornerRadius.lg)
-            .depthShadow(.subtle)
+            cardContent
+                .padding(Spacing.md)
+                .glassBackground(style: .solid, cornerRadius: CornerRadius.lg)
+                .depthShadow(.subtle)
         }
         .pressEffect()
         .accessibilityElement(children: .combine)
@@ -119,28 +80,108 @@ struct GlassArticleCard: View {
     }
 
     @ViewBuilder
+    private var cardContent: some View {
+        if dynamicTypeSize.isAccessibilitySize {
+            VStack(alignment: .leading, spacing: Spacing.sm) {
+                articleImage
+                textContent
+            }
+        } else {
+            HStack(alignment: .top, spacing: Spacing.sm) {
+                textContent
+                Spacer(minLength: Spacing.xs)
+                articleImage
+            }
+        }
+    }
+
+    private var textContent: some View {
+        VStack(alignment: .leading, spacing: Spacing.xs) {
+            if let category {
+                GlassCategoryChip(category: category, style: .small)
+            }
+
+            Text(title)
+                .font(Typography.headlineMedium)
+                .lineLimit(dynamicTypeSize.isAccessibilitySize ? 5 : 3)
+                .multilineTextAlignment(.leading)
+                .foregroundStyle(.primary)
+                .opacity(isRead ? 0.55 : 1.0)
+
+            if let description {
+                Text(description)
+                    .font(Typography.bodySmall)
+                    .foregroundStyle(.secondary)
+                    .lineLimit(2)
+                    .opacity(isRead ? 0.45 : 1.0)
+            }
+
+            HStack(spacing: Spacing.xs) {
+                Text(sourceName)
+                    .font(Typography.captionLarge)
+                    .fontWeight(.medium)
+
+                Circle()
+                    .fill(.secondary)
+                    .frame(width: 3, height: 3)
+                    .accessibilityHidden(true)
+
+                Text(formattedDate)
+                    .font(Typography.captionLarge)
+            }
+            .foregroundStyle(.secondary)
+        }
+    }
+
+    @ViewBuilder
     private var articleImage: some View {
         if let imageURL {
-            CachedAsyncImage(url: imageURL, accessibilityLabel: title) { image in
-                image
-                    .resizable()
-                    .aspectRatio(contentMode: .fill)
-                    .frame(width: imageSize, height: imageSize)
-                    .clipped()
-            } placeholder: {
-                imagePlaceholder
-                    .overlay {
-                        ProgressView()
-                            .tint(.secondary)
-                    }
+            if dynamicTypeSize.isAccessibilitySize {
+                CachedAsyncImage(url: imageURL, accessibilityLabel: title) { image in
+                    image
+                        .resizable()
+                        .aspectRatio(contentMode: .fill)
+                        .frame(maxWidth: .infinity)
+                        .frame(height: 150)
+                        .clipped()
+                } placeholder: {
+                    RoundedRectangle(cornerRadius: CornerRadius.sm, style: .continuous)
+                        .fill(Color.primary.opacity(0.05))
+                        .frame(maxWidth: .infinity)
+                        .frame(height: 150)
+                        .overlay {
+                            ProgressView()
+                                .tint(.secondary)
+                        }
+                }
+                .clipShape(RoundedRectangle(cornerRadius: CornerRadius.sm, style: .continuous))
+                .overlay(
+                    RoundedRectangle(cornerRadius: CornerRadius.sm, style: .continuous)
+                        .stroke(Color.Border.adaptive(for: colorScheme), lineWidth: 0.5)
+                )
+                .opacity(isRead ? 0.7 : 1.0)
+            } else {
+                CachedAsyncImage(url: imageURL, accessibilityLabel: title) { image in
+                    image
+                        .resizable()
+                        .aspectRatio(contentMode: .fill)
+                        .frame(width: imageSize, height: imageSize)
+                        .clipped()
+                } placeholder: {
+                    imagePlaceholder
+                        .overlay {
+                            ProgressView()
+                                .tint(.secondary)
+                        }
+                }
+                .frame(width: imageSize, height: imageSize)
+                .clipShape(RoundedRectangle(cornerRadius: CornerRadius.sm, style: .continuous))
+                .overlay(
+                    RoundedRectangle(cornerRadius: CornerRadius.sm, style: .continuous)
+                        .stroke(Color.Border.adaptive(for: colorScheme), lineWidth: 0.5)
+                )
+                .opacity(isRead ? 0.7 : 1.0)
             }
-            .frame(width: imageSize, height: imageSize)
-            .clipShape(RoundedRectangle(cornerRadius: CornerRadius.sm, style: .continuous))
-            .overlay(
-                RoundedRectangle(cornerRadius: CornerRadius.sm, style: .continuous)
-                    .stroke(Color.Border.adaptive(for: colorScheme), lineWidth: 0.5)
-            )
-            .opacity(isRead ? 0.7 : 1.0)
         }
     }
 
@@ -186,6 +227,7 @@ struct GlassArticleCardCompact: View {
     let onTap: () -> Void
 
     @Environment(\.colorScheme) private var colorScheme
+    @Environment(\.dynamicTypeSize) private var dynamicTypeSize
     @ScaledMetric(relativeTo: .body) private var imageSize: CGFloat = 60
 
     var body: some View {
@@ -209,7 +251,7 @@ struct GlassArticleCardCompact: View {
                 VStack(alignment: .leading, spacing: Spacing.xxs) {
                     Text(title)
                         .font(Typography.headlineSmall)
-                        .lineLimit(2)
+                        .lineLimit(dynamicTypeSize.isAccessibilitySize ? 4 : 2)
                         .multilineTextAlignment(.leading)
                         .foregroundStyle(.primary)
 

@@ -19,29 +19,13 @@ struct SettingsAccountSection: View {
     let currentUser: AuthUser?
     let onSignOutTapped: () -> Void
 
+    @Environment(\.dynamicTypeSize) private var dynamicTypeSize
+
     var body: some View {
         Section {
             if let user = currentUser {
-                HStack(spacing: Spacing.md) {
-                    ProfileImageView(user: user)
-
-                    VStack(alignment: .leading, spacing: Spacing.xxs) {
-                        if let displayName = user.displayName {
-                            Text(displayName)
-                                .font(Typography.headlineMedium)
-                                .foregroundStyle(.primary)
-                        }
-
-                        if let email = user.email {
-                            Text(email)
-                                .font(Typography.captionLarge)
-                                .foregroundStyle(.secondary)
-                        }
-                    }
-
-                    Spacer()
-                }
-                .padding(.vertical, Spacing.xs)
+                profileRow(user: user)
+                    .padding(.vertical, Spacing.xs)
 
                 Button(role: .destructive) {
                     HapticManager.shared.buttonPress()
@@ -53,6 +37,54 @@ struct SettingsAccountSection: View {
         } header: {
             Text(Constants.title)
                 .font(Typography.captionLarge)
+        }
+    }
+}
+
+// MARK: - Profile Row
+
+private extension SettingsAccountSection {
+    @ViewBuilder
+    func profileRow(user: AuthUser) -> some View {
+        if dynamicTypeSize.isAccessibilitySize {
+            VStack(spacing: Spacing.sm) {
+                ProfileImageView(user: user)
+
+                VStack(spacing: Spacing.xxs) {
+                    if let displayName = user.displayName {
+                        Text(displayName)
+                            .font(Typography.headlineMedium)
+                            .foregroundStyle(.primary)
+                    }
+
+                    if let email = user.email {
+                        Text(email)
+                            .font(Typography.captionLarge)
+                            .foregroundStyle(.secondary)
+                    }
+                }
+            }
+            .frame(maxWidth: .infinity)
+        } else {
+            HStack(spacing: Spacing.md) {
+                ProfileImageView(user: user)
+
+                VStack(alignment: .leading, spacing: Spacing.xxs) {
+                    if let displayName = user.displayName {
+                        Text(displayName)
+                            .font(Typography.headlineMedium)
+                            .foregroundStyle(.primary)
+                    }
+
+                    if let email = user.email {
+                        Text(email)
+                            .font(Typography.captionLarge)
+                            .foregroundStyle(.secondary)
+                    }
+                }
+
+                Spacer()
+            }
         }
     }
 }

@@ -41,6 +41,7 @@ struct BentoDigestGrid: View {
     @State private var cardRowHeight: CGFloat = 0
 
     @Environment(\.accessibilityReduceMotion) private var reduceMotion
+    @Environment(\.dynamicTypeSize) private var dynamicTypeSize
 
     private var sections: [DigestSection] {
         digest.parseSections(with: sourceArticles)
@@ -74,32 +75,45 @@ struct BentoDigestGrid: View {
 
     // MARK: - Stats and Topics Row
 
+    @ViewBuilder
     private var statsAndTopicsRow: some View {
-        HStack(alignment: .top, spacing: Constants.gridSpacing) {
-            StatsCard(
-                articleCount: digest.articleCount,
-                topicsCount: topicsBreakdown.count,
-                minHeight: cardRowHeight > 0 ? cardRowHeight : nil
-            )
-            .measureHeight()
-            .opacity(showStats ? 1 : 0)
-            .offset(y: showStats ? 0 : 20)
-            .animation(reduceMotion ? nil : .spring(response: 0.5, dampingFraction: 0.8), value: showStats)
+        let statsCard = StatsCard(
+            articleCount: digest.articleCount,
+            topicsCount: topicsBreakdown.count,
+            minHeight: dynamicTypeSize.isAccessibilitySize ? nil : (cardRowHeight > 0 ? cardRowHeight : nil)
+        )
+        .measureHeight()
+        .opacity(showStats ? 1 : 0)
+        .offset(y: showStats ? 0 : 20)
+        .animation(reduceMotion ? nil : .spring(response: 0.5, dampingFraction: 0.8), value: showStats)
 
-            if !topicsBreakdown.isEmpty {
-                TopicsBreakdownCard(
-                    breakdown: topicsBreakdown,
-                    minHeight: cardRowHeight > 0 ? cardRowHeight : nil
-                )
-                .measureHeight()
-                .opacity(showTopics ? 1 : 0)
-                .offset(y: showTopics ? 0 : 20)
-                .animation(reduceMotion ? nil : .spring(response: 0.5, dampingFraction: 0.8), value: showTopics)
+        let topicsCard = TopicsBreakdownCard(
+            breakdown: topicsBreakdown,
+            minHeight: dynamicTypeSize.isAccessibilitySize ? nil : (cardRowHeight > 0 ? cardRowHeight : nil)
+        )
+        .measureHeight()
+        .opacity(showTopics ? 1 : 0)
+        .offset(y: showTopics ? 0 : 20)
+        .animation(reduceMotion ? nil : .spring(response: 0.5, dampingFraction: 0.8), value: showTopics)
+
+        if dynamicTypeSize.isAccessibilitySize {
+            VStack(spacing: Constants.gridSpacing) {
+                statsCard
+                if !topicsBreakdown.isEmpty {
+                    topicsCard
+                }
             }
-        }
-        .onPreferenceChange(CardHeightPreferenceKey.self) { height in
-            if height > cardRowHeight {
-                cardRowHeight = height
+        } else {
+            HStack(alignment: .top, spacing: Constants.gridSpacing) {
+                statsCard
+                if !topicsBreakdown.isEmpty {
+                    topicsCard
+                }
+            }
+            .onPreferenceChange(CardHeightPreferenceKey.self) { height in
+                if height > cardRowHeight {
+                    cardRowHeight = height
+                }
             }
         }
     }

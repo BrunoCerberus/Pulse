@@ -187,6 +187,7 @@ struct BookmarksView<R: BookmarksNavigationRouter>: View {
         .padding(.horizontal, Spacing.xs)
         .padding(.bottom, Spacing.xs)
         .accessibilityElement(children: .combine)
+        .accessibilityAddTraits(.isHeader)
     }
 }
 

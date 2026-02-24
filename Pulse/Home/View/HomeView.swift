@@ -76,6 +76,8 @@ struct HomeView<R: HomeNavigationRouter>: View {
     /// Namespace for matched geometry animation in category tabs
     @Namespace private var categoryAnimation
 
+    @Environment(\.dynamicTypeSize) var dynamicTypeSize
+
     /// Creates the view with a router and ViewModel.
     /// - Parameters:
     ///   - router: Navigation router for routing actions
@@ -154,6 +156,11 @@ struct HomeView<R: HomeNavigationRouter>: View {
             if let article = newValue {
                 router.route(navigationEvent: .articleDetail(article))
                 viewModel.handle(event: .onArticleNavigated)
+            }
+        }
+        .onChange(of: viewModel.viewState.isRefreshing) { oldValue, newValue in
+            if oldValue && !newValue {
+                AccessibilityNotification.Announcement(AppLocalization.shared.localized("accessibility.refresh_complete")).post()
             }
         }
     }

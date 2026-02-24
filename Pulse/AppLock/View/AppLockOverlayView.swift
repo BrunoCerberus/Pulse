@@ -18,6 +18,7 @@ private enum Constants {
 /// Full-screen lock overlay displayed when the app is locked.
 struct AppLockOverlayView: View {
     @ObservedObject private var lockManager = AppLockManager.shared
+    @AccessibilityFocusState private var isUnlockFocused: Bool
 
     var body: some View {
         ZStack {
@@ -47,7 +48,11 @@ struct AppLockOverlayView: View {
                 }
                 .accessibilityLabel(Constants.unlock)
                 .accessibilityHint(AppLocalization.shared.localized("applock.unlock_hint"))
+                .accessibilityFocused($isUnlockFocused)
             }
+        }
+        .onAppear {
+            isUnlockFocused = true
         }
     }
 }
