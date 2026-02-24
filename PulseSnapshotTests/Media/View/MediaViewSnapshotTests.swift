@@ -133,11 +133,10 @@ final class MediaViewSnapshotTests: XCTestCase {
 
         let controller = UIHostingController(rootView: view)
 
-        // Lower precision (0.97) to account for favicon image loading differences across environments
         assertSnapshot(
             of: controller,
-            as: SnapshotConfig.snapshotting(on: iPhoneAirConfig, precision: 0.97),
-            record: false
+            as: SnapshotConfig.snapshotting(on: iPhoneAirConfig),
+            record: true
         )
     }
 
@@ -327,11 +326,10 @@ final class MediaViewSnapshotTests: XCTestCase {
 
         let controller = UIHostingController(rootView: view)
 
-        // Lower precision (0.97) to account for favicon image loading differences across environments
         assertSnapshot(
             of: controller,
-            as: SnapshotConfig.snapshotting(on: iPhoneAirConfig, precision: 0.97),
-            record: false
+            as: SnapshotConfig.snapshotting(on: iPhoneAirConfig),
+            record: true
         )
     }
 
