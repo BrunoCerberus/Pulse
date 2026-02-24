@@ -320,6 +320,48 @@ struct SearchDomainInteractorTests {
         #expect(state.results.isEmpty)
     }
 
+    // MARK: - Reading History Tests
+
+    @Test("Initial load pulls read article IDs")
+    func initialLoadPullsReadArticleIDs() async throws {
+        let mockSearchService = MockSearchService()
+        let mockStorageService = MockStorageService()
+        let mockAnalyticsService = MockAnalyticsService()
+        let locator = ServiceLocator()
+        let readArticle = Article.mockArticles[0]
+
+        mockStorageService.readArticles = [readArticle]
+
+        locator.register(SearchService.self, instance: mockSearchService)
+        locator.register(StorageService.self, instance: mockStorageService)
+        locator.register(AnalyticsService.self, instance: mockAnalyticsService)
+
+        let interactor = SearchDomainInteractor(serviceLocator: locator)
+
+        try await Task.sleep(nanoseconds: 100_000_000)
+
+        #expect(interactor.currentState.readArticleIDs.contains(readArticle.id))
+    }
+
+    @Test("Reading history clear notification resets read IDs")
+    func readingHistoryClearNotificationResetsReadIDs() async throws {
+        let article = Article.mockArticles[0]
+
+        mockSearchService.searchResult = .success([article])
+        sut.dispatch(action: .updateQuery("test"))
+        sut.dispatch(action: .search)
+        try await Task.sleep(nanoseconds: 500_000_000)
+
+        sut.dispatch(action: .selectArticle(articleId: article.id))
+        try await Task.sleep(nanoseconds: 100_000_000)
+        #expect(sut.currentState.readArticleIDs.contains(article.id))
+
+        NotificationCenter.default.post(name: .readingHistoryDidClear, object: nil)
+        try await Task.sleep(nanoseconds: 100_000_000)
+
+        #expect(sut.currentState.readArticleIDs.isEmpty)
+    }
+
     // MARK: - Select Article Tests
 
     @Test("Select article dispatches action")
