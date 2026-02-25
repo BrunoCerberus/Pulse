@@ -152,7 +152,7 @@ final class AudioPlayerViewSnapshotTests: XCTestCase {
 
         assertSnapshot(
             of: controller,
-            as: SnapshotConfig.snapshotting(on: iPhoneAirConfig, precision: 0.97),
+            as: SnapshotConfig.snapshotting(on: iPhoneAirConfig),
             record: false
         )
     }

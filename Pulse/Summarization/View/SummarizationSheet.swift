@@ -58,6 +58,7 @@ struct SummarizationSheet: View {
     @Environment(\.accessibilityReduceMotion) private var reduceMotion
     @State private var headerAppeared = false
     @State private var contentAppeared = false
+    @AccessibilityFocusState private var isSummaryFocused: Bool
 
     init(viewModel: SummarizationViewModel) {
         _viewModel = StateObject(wrappedValue: viewModel)
@@ -94,6 +95,17 @@ struct SummarizationSheet: View {
         .onDisappear {
             headerAppeared = false
             contentAppeared = false
+        }
+        .onChange(of: viewModel.viewState.summarizationState) { _, newState in
+            switch newState {
+            case .completed:
+                isSummaryFocused = true
+                AccessibilityNotification.Announcement(AppLocalization.shared.localized("accessibility.summarization_complete")).post()
+            case .error:
+                isSummaryFocused = true
+            default:
+                break
+            }
         }
     }
 
@@ -282,6 +294,7 @@ struct SummarizationSheet: View {
                 Text(Constants.aiSummary)
                     .font(Typography.labelMedium)
                     .foregroundStyle(Color.Accent.primary)
+                    .accessibilityAddTraits(.isHeader)
 
                 Spacer()
 
@@ -303,6 +316,7 @@ struct SummarizationSheet: View {
                 .stroke(Color.Accent.primary.opacity(0.2), lineWidth: 1)
         )
         .glassBackground(style: .thin, cornerRadius: CornerRadius.lg)
+        .accessibilityFocused($isSummaryFocused)
     }
 
     // MARK: - Error State
@@ -347,6 +361,7 @@ struct SummarizationSheet: View {
         .frame(maxWidth: .infinity)
         .padding(Spacing.lg)
         .glassBackground(style: .regular, cornerRadius: CornerRadius.lg)
+        .accessibilityFocused($isSummaryFocused)
     }
 }
 

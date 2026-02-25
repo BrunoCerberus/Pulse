@@ -38,10 +38,9 @@ final class StreamingTextViewSnapshotTests: XCTestCase {
 
         let controller = UIHostingController(rootView: view)
 
-        // Use lower precision since cursor may blink
         assertSnapshot(
             of: controller,
-            as: SnapshotConfig.snapshotting(on: iPhoneAirConfig, precision: 0.95),
+            as: SnapshotConfig.snapshotting(on: iPhoneAirConfig),
             record: false
         )
     }
@@ -57,7 +56,7 @@ final class StreamingTextViewSnapshotTests: XCTestCase {
 
         assertSnapshot(
             of: controller,
-            as: SnapshotConfig.snapshotting(on: iPhoneAirConfig, precision: 0.95),
+            as: SnapshotConfig.snapshotting(on: iPhoneAirConfig),
             record: false
         )
     }

@@ -330,6 +330,17 @@
 "accessibility.read_article" = "Toque duas vezes para ler o artigo";
 "accessibility.opens_in_safari" = "Abre no Safari";
 "accessibility.from_source" = "De %@";
+"accessibility.refresh_complete" = "Conteúdo atualizado";
+"accessibility.search_results_count" = "%d resultados encontrados";
+"accessibility.search_no_results" = "Nenhum resultado encontrado";
+"accessibility.digest_ready" = "Seu resumo diário está pronto";
+"accessibility.summarization_complete" = "Resumo gerado";
+"accessibility.error_occurred" = "Ocorreu um erro";
+"accessibility.offline" = "Você está offline";
+"accessibility.online" = "De volta online";
+"accessibility.bookmark_added" = "Salvo adicionado";
+"accessibility.bookmark_removed" = "Salvo removido";
+"accessibility.summarization_loading" = "Carregando modelo de IA";
 
 "home.edit_topics.label" = "Editar Tópicos";
 "home.edit_topics.hint" = "Abre o editor de tópicos para personalizar seu feed";

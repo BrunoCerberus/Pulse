@@ -212,6 +212,7 @@ struct MediaDetailView: View {
             Text(viewModel.viewState.article.title)
                 .font(Typography.titleLarge)
                 .fontWeight(.bold)
+                .accessibilityAddTraits(.isHeader)
 
             // Source and date
             HStack(spacing: Spacing.xs) {

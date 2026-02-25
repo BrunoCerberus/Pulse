@@ -99,6 +99,7 @@ struct GlassCategoryButton: View {
     let action: () -> Void
 
     @Environment(\.colorScheme) private var colorScheme
+    @Environment(\.dynamicTypeSize) private var dynamicTypeSize
 
     init(
         category: NewsCategory,
@@ -133,7 +134,7 @@ struct GlassCategoryButton: View {
                     .lineLimit(1)
                     .minimumScaleFactor(0.8)
             }
-            .frame(width: 90)
+            .frame(minWidth: dynamicTypeSize.isAccessibilitySize ? nil : 90)
             .padding(Spacing.sm)
             .glassBackground(
                 style: isSelected ? .regular : .ultraThin,

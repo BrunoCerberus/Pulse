@@ -96,7 +96,7 @@ final class MediaDetailViewSnapshotTests: XCTestCase {
 
         assertSnapshot(
             of: controller,
-            as: SnapshotConfig.snapshotting(on: iPhoneAirConfig, precision: 0.97),
+            as: SnapshotConfig.snapshotting(on: iPhoneAirConfig),
             record: false
         )
     }
@@ -109,7 +109,7 @@ final class MediaDetailViewSnapshotTests: XCTestCase {
 
         assertSnapshot(
             of: controller,
-            as: SnapshotConfig.snapshotting(on: iPhoneAirLightConfig, precision: 0.97),
+            as: SnapshotConfig.snapshotting(on: iPhoneAirLightConfig),
             record: false
         )
     }
@@ -122,7 +122,7 @@ final class MediaDetailViewSnapshotTests: XCTestCase {
 
         assertSnapshot(
             of: controller,
-            as: SnapshotConfig.snapshotting(on: iPhoneAirConfig, precision: 0.97),
+            as: SnapshotConfig.snapshotting(on: iPhoneAirConfig),
             record: false
         )
     }
@@ -135,7 +135,7 @@ final class MediaDetailViewSnapshotTests: XCTestCase {
 
         assertSnapshot(
             of: controller,
-            as: SnapshotConfig.snapshotting(on: iPhoneAirConfig, precision: 0.97),
+            as: SnapshotConfig.snapshotting(on: iPhoneAirConfig),
             record: false
         )
     }
@@ -185,7 +185,7 @@ final class MediaDetailViewSnapshotTests: XCTestCase {
 
         assertSnapshot(
             of: controller,
-            as: SnapshotConfig.snapshotting(on: iPhoneAirConfig, precision: 0.97),
+            as: SnapshotConfig.snapshotting(on: iPhoneAirConfig),
             record: false
         )
     }

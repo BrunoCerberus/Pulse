@@ -16,6 +16,7 @@ struct MediaCard: View {
     let onShare: () -> Void
 
     @Environment(\.colorScheme) private var colorScheme
+    @Environment(\.dynamicTypeSize) private var dynamicTypeSize
 
     private var mediaAccessibilityLabel: String {
         var parts = [String]()
@@ -36,41 +37,10 @@ struct MediaCard: View {
             HapticManager.shared.tap()
             onTap()
         } label: {
-            HStack(alignment: .top, spacing: Spacing.sm) {
-                thumbnailView
-
-                VStack(alignment: .leading, spacing: Spacing.xs) {
-                    if let mediaType = item.mediaType {
-                        mediaTypeBadge(mediaType)
-                    }
-
-                    Text(item.title)
-                        .font(Typography.headlineMedium)
-                        .lineLimit(2)
-                        .multilineTextAlignment(.leading)
-                        .foregroundStyle(.primary)
-
-                    HStack(spacing: Spacing.xs) {
-                        Text(item.sourceName)
-                            .font(Typography.captionLarge)
-                            .fontWeight(.medium)
-
-                        Circle()
-                            .fill(.secondary)
-                            .frame(width: 3, height: 3)
-                            .accessibilityHidden(true)
-
-                        Text(item.formattedDate)
-                            .font(Typography.captionLarge)
-                    }
-                    .foregroundStyle(.secondary)
-                }
-
-                Spacer(minLength: Spacing.xs)
-            }
-            .padding(Spacing.md)
-            .glassBackground(style: .solid, cornerRadius: CornerRadius.lg)
-            .depthShadow(.subtle)
+            mediaCardContent
+                .padding(Spacing.md)
+                .glassBackground(style: .solid, cornerRadius: CornerRadius.lg)
+                .depthShadow(.subtle)
         }
         .pressEffect()
         .accessibilityElement(children: .combine)
@@ -89,6 +59,55 @@ struct MediaCard: View {
             } label: {
                 Label(AppLocalization.shared.localized("common.share"), systemImage: "square.and.arrow.up")
             }
+        }
+    }
+
+    // MARK: - Card Content
+
+    @ViewBuilder
+    private var mediaCardContent: some View {
+        if dynamicTypeSize.isAccessibilitySize {
+            VStack(alignment: .leading, spacing: Spacing.sm) {
+                thumbnailView
+                    .frame(maxWidth: .infinity)
+                    .frame(height: 120)
+                mediaTextContent
+            }
+        } else {
+            HStack(alignment: .top, spacing: Spacing.sm) {
+                thumbnailView
+                mediaTextContent
+                Spacer(minLength: Spacing.xs)
+            }
+        }
+    }
+
+    private var mediaTextContent: some View {
+        VStack(alignment: .leading, spacing: Spacing.xs) {
+            if let mediaType = item.mediaType {
+                mediaTypeBadge(mediaType)
+            }
+
+            Text(item.title)
+                .font(Typography.headlineMedium)
+                .lineLimit(dynamicTypeSize.isAccessibilitySize ? 4 : 2)
+                .multilineTextAlignment(.leading)
+                .foregroundStyle(.primary)
+
+            HStack(spacing: Spacing.xs) {
+                Text(item.sourceName)
+                    .font(Typography.captionLarge)
+                    .fontWeight(.medium)
+
+                Circle()
+                    .fill(.secondary)
+                    .frame(width: 3, height: 3)
+                    .accessibilityHidden(true)
+
+                Text(item.formattedDate)
+                    .font(Typography.captionLarge)
+            }
+            .foregroundStyle(.secondary)
         }
     }
 

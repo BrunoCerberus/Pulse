@@ -63,6 +63,7 @@ struct PremiumGateView: View {
 
     @State private var isPaywallPresented = false
     @StateObject private var paywallViewModel: PaywallViewModel
+    @Environment(\.dynamicTypeSize) private var dynamicTypeSize
 
     init(
         feature: PremiumFeature,
@@ -83,14 +84,14 @@ struct PremiumGateView: View {
             ZStack {
                 Circle()
                     .fill(feature.iconColor.opacity(0.15))
-                    .frame(width: 120, height: 120)
+                    .frame(width: dynamicTypeSize.isAccessibilitySize ? 80 : 120, height: dynamicTypeSize.isAccessibilitySize ? 80 : 120)
 
                 Circle()
                     .fill(feature.iconColor.gradient)
-                    .frame(width: 100, height: 100)
+                    .frame(width: dynamicTypeSize.isAccessibilitySize ? 64 : 100, height: dynamicTypeSize.isAccessibilitySize ? 64 : 100)
 
                 Image(systemName: feature.icon)
-                    .font(.system(size: IconSize.xxl))
+                    .font(.system(size: dynamicTypeSize.isAccessibilitySize ? IconSize.xl : IconSize.xxl))
                     .foregroundStyle(.white)
             }
             .glowEffect(color: feature.iconColor, radius: 20)
@@ -115,6 +116,7 @@ struct PremiumGateView: View {
                 Text(feature.title)
                     .font(Typography.displaySmall)
                     .multilineTextAlignment(.center)
+                    .accessibilityAddTraits(.isHeader)
 
                 Text(feature.description)
                     .font(Typography.bodyMedium)

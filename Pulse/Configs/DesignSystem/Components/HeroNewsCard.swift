@@ -12,9 +12,14 @@ struct HeroNewsCard: View {
     @State private var hasStartedPulsing = false
     @Environment(\.colorScheme) private var colorScheme
     @Environment(\.accessibilityReduceMotion) private var reduceMotion
+    @Environment(\.dynamicTypeSize) private var dynamicTypeSize
+
+    private var effectiveCardWidth: CGFloat {
+        dynamicTypeSize.isAccessibilitySize ? UIScreen.main.bounds.width - Spacing.lg * 2 : cardWidth
+    }
 
     private var cardHeight: CGFloat {
-        cardWidth * (200.0 / 300.0)
+        effectiveCardWidth * (200.0 / 300.0)
     }
 
     var body: some View {
@@ -29,7 +34,7 @@ struct HeroNewsCard: View {
 
                 contentOverlay
             }
-            .frame(width: cardWidth, height: cardHeight)
+            .frame(width: effectiveCardWidth, height: cardHeight)
             .clipShape(RoundedRectangle(cornerRadius: CornerRadius.lg, style: .continuous))
             .overlay(
                 RoundedRectangle(cornerRadius: CornerRadius.lg, style: .continuous)
@@ -57,7 +62,7 @@ struct HeroNewsCard: View {
                 image
                     .resizable()
                     .aspectRatio(contentMode: .fill)
-                    .frame(width: cardWidth, height: cardHeight)
+                    .frame(width: effectiveCardWidth, height: cardHeight)
                     .clipped()
             } placeholder: {
                 placeholderBackground
@@ -97,7 +102,7 @@ struct HeroNewsCard: View {
                 .font(Typography.headlineLarge)
                 .fontWeight(.bold)
                 .foregroundStyle(.white)
-                .lineLimit(3)
+                .lineLimit(dynamicTypeSize.isAccessibilitySize ? 5 : 3)
                 .multilineTextAlignment(.leading)
 
             metadataRow

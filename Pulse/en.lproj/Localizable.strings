@@ -330,6 +330,17 @@
 "accessibility.read_article" = "Double tap to read article";
 "accessibility.opens_in_safari" = "Opens in Safari";
 "accessibility.from_source" = "From %@";
+"accessibility.refresh_complete" = "Content refreshed";
+"accessibility.search_results_count" = "%d results found";
+"accessibility.search_no_results" = "No results found";
+"accessibility.digest_ready" = "Your daily digest is ready";
+"accessibility.summarization_complete" = "Summary generated";
+"accessibility.error_occurred" = "An error occurred";
+"accessibility.offline" = "You are now offline";
+"accessibility.online" = "Back online";
+"accessibility.bookmark_added" = "Bookmark added";
+"accessibility.bookmark_removed" = "Bookmark removed";
+"accessibility.summarization_loading" = "Loading AI model";
 
 "home.edit_topics.label" = "Edit Topics";
 "home.edit_topics.hint" = "Opens topic editor to customize your feed";

@@ -46,6 +46,10 @@ struct SearchView<R: SearchNavigationRouter>: View {
     /// Backing ViewModel managing data and actions
     @ObservedObject var viewModel: SearchViewModel
 
+    @Environment(\.dynamicTypeSize) private var dynamicTypeSize
+
+    @AccessibilityFocusState private var isFirstResultFocused: Bool
+
     /// Creates the view with a router and ViewModel.
     /// - Parameters:
     ///   - router: Navigation router for routing actions
@@ -81,6 +85,18 @@ struct SearchView<R: SearchNavigationRouter>: View {
             if let article = newValue {
                 router.route(navigationEvent: .articleDetail(article))
                 viewModel.handle(event: .onArticleNavigated)
+            }
+        }
+        .onChange(of: viewModel.viewState.results) { _, newResults in
+            if !newResults.isEmpty {
+                isFirstResultFocused = true
+                let announcement = String(format: AppLocalization.shared.localized("accessibility.search_results_count"), newResults.count)
+                AccessibilityNotification.Announcement(announcement).post()
+            }
+        }
+        .onChange(of: viewModel.viewState.showNoResults) { _, showNoResults in
+            if showNoResults {
+                AccessibilityNotification.Announcement(AppLocalization.shared.localized("accessibility.search_no_results")).post()
             }
         }
     }
@@ -141,30 +157,22 @@ struct SearchView<R: SearchNavigationRouter>: View {
                     VStack(alignment: .leading, spacing: Spacing.sm) {
                         GlassSectionHeader(AppLocalization.shared.localized("search.recent_searches"))
 
-                        ScrollView(.horizontal, showsIndicators: false) {
-                            HStack(spacing: Spacing.sm) {
+                        if dynamicTypeSize.isAccessibilitySize {
+                            VStack(alignment: .leading, spacing: Spacing.sm) {
                                 ForEach(viewModel.viewState.suggestions, id: \.self) { suggestion in
-                                    Button {
-                                        HapticManager.shared.tap()
-                                        viewModel.handle(event: .onSuggestionTapped(suggestion))
-                                    } label: {
-                                        HStack(spacing: Spacing.xs) {
-                                            Image(systemName: "clock")
-                                                .font(.body)
-                                            Text(suggestion)
-                                                .font(Typography.labelMedium)
-                                        }
-                                        .foregroundStyle(.primary)
-                                        .padding(.horizontal, Spacing.md)
-                                        .padding(.vertical, Spacing.xs)
-                                        .glassBackground(style: .thin, cornerRadius: CornerRadius.pill)
-                                    }
-                                    .pressEffect()
-                                    .accessibilityLabel(String(format: AppLocalization.shared.localized("search.recent_label"), suggestion))
-                                    .accessibilityHint(AppLocalization.shared.localized("search.search_hint"))
+                                    suggestionChip(suggestion)
                                 }
                             }
                             .padding(.horizontal, Spacing.md)
+                        } else {
+                            ScrollView(.horizontal, showsIndicators: false) {
+                                HStack(spacing: Spacing.sm) {
+                                    ForEach(viewModel.viewState.suggestions, id: \.self) { suggestion in
+                                        suggestionChip(suggestion)
+                                    }
+                                }
+                                .padding(.horizontal, Spacing.md)
+                            }
                         }
                     }
                 }
@@ -172,7 +180,7 @@ struct SearchView<R: SearchNavigationRouter>: View {
                 VStack(alignment: .leading, spacing: Spacing.sm) {
                     GlassSectionHeader(AppLocalization.shared.localized("search.trending_topics"))
 
-                    LazyVGrid(columns: [GridItem(.adaptive(minimum: 100))], spacing: Spacing.sm) {
+                    LazyVGrid(columns: [GridItem(.adaptive(minimum: dynamicTypeSize.isAccessibilitySize ? 150 : 100))], spacing: Spacing.sm) {
                         ForEach(NewsCategory.allCases) { category in
                             GlassCategoryButton(category: category, isSelected: false) {
                                 viewModel.handle(event: .onQueryChanged(category.displayName))
@@ -185,6 +193,27 @@ struct SearchView<R: SearchNavigationRouter>: View {
             }
             .padding(.top, Spacing.md)
         }
+    }
+
+    private func suggestionChip(_ suggestion: String) -> some View {
+        Button {
+            HapticManager.shared.tap()
+            viewModel.handle(event: .onSuggestionTapped(suggestion))
+        } label: {
+            HStack(spacing: Spacing.xs) {
+                Image(systemName: "clock")
+                    .font(.body)
+                Text(suggestion)
+                    .font(Typography.labelMedium)
+            }
+            .foregroundStyle(.primary)
+            .padding(.horizontal, Spacing.md)
+            .padding(.vertical, Spacing.xs)
+            .glassBackground(style: .thin, cornerRadius: CornerRadius.pill)
+        }
+        .pressEffect()
+        .accessibilityLabel(String(format: AppLocalization.shared.localized("search.recent_label"), suggestion))
+        .accessibilityHint(AppLocalization.shared.localized("search.search_hint"))
     }
 
     private func errorView(_ message: String) -> some View {
@@ -286,6 +315,7 @@ struct SearchView<R: SearchNavigationRouter>: View {
                     }
                 }
                 .padding(.horizontal, Spacing.md)
+                .accessibilityFocused($isFirstResultFocused)
                 .allowsHitTesting(!viewModel.viewState.isSorting)
                 .overlay {
                     if viewModel.viewState.isSorting {

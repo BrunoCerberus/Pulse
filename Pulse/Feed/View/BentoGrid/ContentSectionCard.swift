@@ -95,6 +95,7 @@ struct ContentSectionCard: View {
             Text(section.title)
                 .font(Typography.labelMedium)
                 .foregroundStyle(.primary)
+                .accessibilityAddTraits(.isHeader)
 
             Spacer()
 

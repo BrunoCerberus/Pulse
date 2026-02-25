@@ -11,9 +11,12 @@ A modern iOS news aggregation app built with Clean Architecture, SwiftUI, and Co
 - **Article Summarization**: On-device AI article summarization via sparkles button (**Premium**)
 - **Offline Experience**: Tiered cache (in-memory L1 + persistent disk L2), network monitoring via NWPathMonitor, offline banner, and graceful degradation preserving cached content
 - **Bookmarks**: Save articles for offline reading with SwiftData persistence
+- **Reading History**: Automatic tracking of read articles with SwiftData persistence, visual indicators on cards, and a dedicated history view accessible from Settings
 - **Search**: Full-text search with 300ms debounce, suggestions, recent searches, and sort options
-- **Localization**: Full multi-language support (English, Portuguese, Spanish) with translated UI strings and content language filtering via Supabase backend
+- **Localization**: Full multi-language support (English, Portuguese, Spanish) — both UI labels and content filtering follow the in-app language preference (via `AppLocalization` singleton), no app restart required
 - **Settings**: Customize topics, notifications, theme, content language, content filters, and account/logout (accessed from Home navigation bar)
+- **Accessibility**: Dynamic Type layout adaptation (HStack-to-VStack at accessibility sizes), VoiceOver heading hierarchy, focus management, and live announcements for async state changes
+- **Security**: Input validation across WebView, deeplinks, URL handling, and Keychain-based app lock with biometric + passcode fallback
 - **Onboarding**: 4-page first-launch experience shown once after sign-in, highlighting key features before entering the app
 - **Analytics & Crash Reporting**: Firebase Analytics (18 type-safe events) and Crashlytics for crash/non-fatal error tracking
 - **Widget**: Home screen widget showing recent headlines (WidgetKit extension)
@@ -382,15 +385,17 @@ Pulse/
 │   ├── Summarization/      # Article summarization (Premium)
 │   ├── Search/             # Search functionality
 │   ├── Bookmarks/          # Saved articles
+│   ├── ReadingHistory/     # Reading history tracking (SwiftData)
 │   ├── Settings/           # User preferences + account/logout
 │   ├── ArticleDetail/      # Article view
+│   ├── AppLock/            # Biometric/passcode app lock
 │   ├── Onboarding/         # First-launch onboarding flow
 │   ├── Paywall/            # StoreKit paywall UI
 │   ├── SplashScreen/       # Launch animation
 │   └── Configs/
 │       ├── Navigation/     # Coordinator, Page, CoordinatorView, DeeplinkRouter, AnimatedTabView
-│       ├── DesignSystem/   # ColorSystem, Typography, Components, HapticManager
-│       ├── Models/         # Article, NewsCategory, UserPreferences
+│       ├── DesignSystem/   # ColorSystem, Typography, Components, DynamicTypeHelpers, HapticManager
+│       ├── Models/         # Article, NewsCategory, UserPreferences, AppLocalization
 │       ├── Networking/     # APIKeysProvider, BaseURLs, SupabaseConfig, RemoteConfig, NetworkMonitorService
 │       ├── Storage/        # StorageService (SwiftData)
 │       ├── Analytics/      # AnalyticsService protocol + LiveAnalyticsService
@@ -453,10 +458,10 @@ GitHub Actions workflows:
 Tests for ViewModels, Interactors, and business logic using Swift Testing framework.
 
 ### UI Tests
-End-to-end tests for navigation and user flows using XCTest.
+End-to-end tests for navigation and user flows using XCTest, plus iOS 17+ accessibility audits (`performAccessibilityAudit()`) on all main screens.
 
 ### Snapshot Tests
-Visual regression tests for UI components using SnapshotTesting.
+Visual regression tests for UI components using SnapshotTesting, including Dynamic Type accessibility snapshot tests validating layout adaptation at large text sizes.
 
 ## Contributing
 

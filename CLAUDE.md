@@ -176,15 +176,17 @@ Pulse/
 │   ├── Summarization/          # Article summarization (Premium)
 │   ├── ArticleDetail/          # Article view + summarization entry point
 │   ├── Bookmarks/              # Offline reading
+│   ├── ReadingHistory/         # Reading history tracking (SwiftData)
 │   ├── Search/                 # Search feature
 │   ├── Settings/               # User preferences (includes account/logout)
+│   ├── AppLock/                # Biometric/passcode app lock (Keychain-backed)
 │   ├── Onboarding/             # First-launch onboarding flow
 │   ├── Paywall/                # StoreKit paywall UI
 │   ├── SplashScreen/           # App launch animation
 │   └── Configs/
 │       ├── Navigation/         # Coordinator, Page, CoordinatorView, DeeplinkRouter, AnimatedTabView
-│       ├── DesignSystem/       # ColorSystem, Typography, Components
-│       ├── Models/             # Article, NewsCategory, UserPreferences, ContentLanguage
+│       ├── DesignSystem/       # ColorSystem, Typography, Components, DynamicTypeHelpers
+│       ├── Models/             # Article, NewsCategory, UserPreferences, ContentLanguage, AppLocalization
 │       ├── Networking/         # API keys, base URLs, SupabaseConfig, RemoteConfig, NetworkMonitorService
 │       ├── Storage/            # StorageService (SwiftData)
 │       ├── Analytics/          # AnalyticsService protocol + Live implementation
@@ -209,8 +211,11 @@ Pulse/
 | **Search** | Full-text search with 300ms debounce, suggestions, and sort options (last tab with liquid glass style) |
 | **Offline Experience** | Tiered cache (L1 memory + L2 disk), NWPathMonitor network monitoring, offline banner, graceful degradation |
 | **Bookmarks** | Save articles for offline reading (SwiftData) |
-| **Localization** | Multi-language support (English, Portuguese, Spanish) — translated UI strings (system language) + content language filtering (in-app preference via Settings) |
-| **Settings** | Topics, notifications, theme, content language, muted content, account/logout (accessed from Home navigation bar) |
+| **Reading History** | Automatic tracking of read articles (SwiftData `ReadArticle` model), visual indicators on cards (reduced opacity), dedicated history view from Settings |
+| **Localization** | Multi-language support (English, Portuguese, Spanish) — both UI labels and content filtering follow in-app language preference via `AppLocalization` singleton (no app restart required) |
+| **Accessibility** | Dynamic Type layout adaptation (HStack-to-VStack at accessibility sizes), VoiceOver heading hierarchy, `@AccessibilityFocusState` management, live announcements for async state changes |
+| **Security** | YouTube video ID regex validation, deeplink ID sanitization (character allowlist + path traversal rejection), URL scheme allowlisting, disk cache filename sanitization, Keychain-based app lock with biometric + passcode fallback |
+| **Settings** | Topics, notifications, theme, content language, muted content, reading history, account/logout (accessed from Home navigation bar) |
 | **Onboarding** | 4-page first-launch experience (welcome, AI features, offline/bookmarks, get started) shown once after sign-in |
 | **Analytics & Crashlytics** | Firebase Analytics (18 type-safe events) and Crashlytics for crash/non-fatal error tracking at DomainInteractor level |
 | **Widget** | Home screen widget showing recent headlines (WidgetKit extension) |
@@ -435,11 +440,13 @@ if let cachingService = newsService as? CachingNewsService {
 - Navigation flows
 - Tab bar interactions
 - Search functionality
+- iOS 17+ accessibility audits (`performAccessibilityAudit()`) on all main screens
 
 ### Snapshot Tests (SnapshotTesting)
 - View components
 - Loading states
 - Empty states
+- Dynamic Type accessibility snapshots (`iPhoneAirAccessibility`, `iPhoneAirExtraExtraLarge` configs)
 
 ## Key Files
 
@@ -483,10 +490,20 @@ if let cachingService = newsService as? CachingNewsService {
 | `PulseError.swift` | Typed error enum distinguishing offline from server errors |
 | `OfflineBannerView.swift` | Animated offline banner shown at top of app when disconnected |
 | **Localization** | |
+| `AppLocalization.swift` | `@MainActor` singleton managing in-app language; `nonisolated func localized(_:)` for cross-thread access |
 | `ContentLanguage.swift` | Enum (en/pt/es) with display names and flag emojis for language picker |
-| `en.lproj/Localizable.strings` | English UI strings (80+ keys) |
+| `en.lproj/Localizable.strings` | English UI strings (90+ keys including accessibility announcements) |
 | `pt.lproj/Localizable.strings` | Portuguese UI translations |
 | `es.lproj/Localizable.strings` | Spanish UI translations |
+| **Reading History** | |
+| `ReadArticle.swift` | SwiftData `@Model` with `@Attribute(.unique)` on `articleID`, stores read timestamp |
+| `ReadingHistoryDomainInteractor.swift` | Loads/clears history via `StorageService`, publishes `.readingHistoryDidClear` notification |
+| `ReadingHistoryView.swift` | History list with article cards, empty state, clear confirmation dialog |
+| **Accessibility** | |
+| `DynamicTypeHelpers.swift` | `DynamicTypeSize.isAccessibilitySize` extension (`.accessibility1`+) |
+| **Security** | |
+| `LiveAppLockService.swift` | Keychain-backed app lock with `deviceOwnerAuthentication` policy (biometric + passcode) |
+| `KeychainStore.swift` | Protocol for Keychain access (testable with in-memory implementation) |
 | **Widget** | |
 | `WidgetDataManager.swift` | Persists shared widget articles and triggers WidgetKit reloads |
 | **Media Playback** | |
@@ -508,7 +525,6 @@ if let cachingService = newsService as? CachingNewsService {
 | `PremiumGateView.swift` | Reusable premium upsell component |
 | `PremiumFeature.swift` | Enum defining gated features |
 | `PaywallView.swift` | Native StoreKit subscription UI |
-| **Analytics & Crashlytics** | |
 | **Onboarding** | |
 | `OnboardingService.swift` | Protocol with `hasCompletedOnboarding: Bool` |
 | `LiveOnboardingService.swift` | UserDefaults-backed implementation (key: `pulse.hasCompletedOnboarding`) |

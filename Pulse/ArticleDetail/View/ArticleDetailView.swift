@@ -25,6 +25,7 @@ struct ArticleDetailView: View {
     @StateObject private var paywallViewModel: PaywallViewModel
     @Environment(\.dismiss) private var dismiss
     @Environment(\.colorScheme) private var colorScheme
+    @Environment(\.dynamicTypeSize) private var dynamicTypeSize
     private let heroBaseHeight: CGFloat = 280
     private let serviceLocator: ServiceLocator
 
@@ -139,6 +140,12 @@ struct ArticleDetailView: View {
             onDismiss: { checkPremiumStatus() },
             content: { PaywallView(viewModel: paywallViewModel) }
         )
+        .onChange(of: viewModel.viewState.isBookmarked) { _, isBookmarked in
+            let announcement = isBookmarked
+                ? AppLocalization.shared.localized("accessibility.bookmark_added")
+                : AppLocalization.shared.localized("accessibility.bookmark_removed")
+            AccessibilityNotification.Announcement(announcement).post()
+        }
         .enableSwipeBack()
     }
 
@@ -180,6 +187,7 @@ struct ArticleDetailView: View {
             Text(viewModel.viewState.article.title)
                 .font(Typography.titleLarge)
                 .fontWeight(.bold)
+                .accessibilityAddTraits(.isHeader)
 
             metadataRow
 
@@ -226,35 +234,51 @@ struct ArticleDetailView: View {
         .offset(y: -Spacing.lg)
     }
 
+    @ViewBuilder
     private var metadataRow: some View {
-        HStack(spacing: Spacing.xs) {
-            if let author = viewModel.viewState.article.author {
-                Text(String(format: AppLocalization.shared.localized("article.by_author"), author))
-                    .fontWeight(.medium)
+        if dynamicTypeSize.isAccessibilitySize {
+            VStack(alignment: .leading, spacing: Spacing.xxs) {
+                if let author = viewModel.viewState.article.author {
+                    Text(String(format: AppLocalization.shared.localized("article.by_author"), author))
+                        .fontWeight(.medium)
+                }
+
+                Text(viewModel.viewState.article.source.name)
+
+                Text(viewModel.viewState.article.formattedDate)
+            }
+            .font(Typography.captionLarge)
+            .foregroundStyle(.secondary)
+        } else {
+            HStack(spacing: Spacing.xs) {
+                if let author = viewModel.viewState.article.author {
+                    Text(String(format: AppLocalization.shared.localized("article.by_author"), author))
+                        .fontWeight(.medium)
+                        .lineLimit(1)
+                        .truncationMode(.tail)
+                        .layoutPriority(-1)
+
+                    Circle()
+                        .fill(.secondary)
+                        .frame(width: 3, height: 3)
+                        .accessibilityHidden(true)
+                }
+
+                Text(viewModel.viewState.article.source.name)
                     .lineLimit(1)
-                    .truncationMode(.tail)
-                    .layoutPriority(-1)
 
                 Circle()
                     .fill(.secondary)
                     .frame(width: 3, height: 3)
                     .accessibilityHidden(true)
+
+                Text(viewModel.viewState.article.formattedDate)
+                    .lineLimit(1)
+                    .layoutPriority(1)
             }
-
-            Text(viewModel.viewState.article.source.name)
-                .lineLimit(1)
-
-            Circle()
-                .fill(.secondary)
-                .frame(width: 3, height: 3)
-                .accessibilityHidden(true)
-
-            Text(viewModel.viewState.article.formattedDate)
-                .lineLimit(1)
-                .layoutPriority(1)
+            .font(Typography.captionLarge)
+            .foregroundStyle(.secondary)
         }
-        .font(Typography.captionLarge)
-        .foregroundStyle(.secondary)
     }
 
     private var readFullArticleButton: some View {
