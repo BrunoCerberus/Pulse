@@ -97,7 +97,7 @@ final class MediaDetailViewSnapshotTests: XCTestCase {
         assertSnapshot(
             of: controller,
             as: SnapshotConfig.snapshotting(on: iPhoneAirConfig),
-            record: true
+            record: false
         )
     }
 
@@ -110,7 +110,7 @@ final class MediaDetailViewSnapshotTests: XCTestCase {
         assertSnapshot(
             of: controller,
             as: SnapshotConfig.snapshotting(on: iPhoneAirLightConfig),
-            record: true
+            record: false
         )
     }
 
@@ -123,7 +123,7 @@ final class MediaDetailViewSnapshotTests: XCTestCase {
         assertSnapshot(
             of: controller,
             as: SnapshotConfig.snapshotting(on: iPhoneAirConfig),
-            record: true
+            record: false
         )
     }
 
@@ -136,7 +136,7 @@ final class MediaDetailViewSnapshotTests: XCTestCase {
         assertSnapshot(
             of: controller,
             as: SnapshotConfig.snapshotting(on: iPhoneAirConfig),
-            record: true
+            record: false
         )
     }
 
@@ -186,7 +186,7 @@ final class MediaDetailViewSnapshotTests: XCTestCase {
         assertSnapshot(
             of: controller,
             as: SnapshotConfig.snapshotting(on: iPhoneAirConfig),
-            record: true
+            record: false
         )
     }
 
