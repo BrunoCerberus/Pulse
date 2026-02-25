@@ -699,6 +699,17 @@ struct LocalizationKeysExistenceTests {
         "accessibility.read_article",
         "accessibility.opens_in_safari",
         "accessibility.from_source",
+        "accessibility.refresh_complete",
+        "accessibility.search_results_count",
+        "accessibility.search_no_results",
+        "accessibility.digest_ready",
+        "accessibility.summarization_complete",
+        "accessibility.error_occurred",
+        "accessibility.offline",
+        "accessibility.online",
+        "accessibility.bookmark_added",
+        "accessibility.bookmark_removed",
+        "accessibility.summarization_loading",
         // Home (accessibility)
         "home.edit_topics.label",
         "home.edit_topics.hint",
@@ -762,5 +773,79 @@ struct LocalizationKeysExistenceTests {
         #expect(!value.isEmpty, "Key '\(key)' should have a non-empty value")
         // Check that value is not the same as the key (which would indicate missing translation)
         #expect(value != key, "Key '\(key)' appears to be missing a translation")
+    }
+}
+
+@Suite("Accessibility Announcement Localization Tests")
+struct AccessibilityLocalizationTests {
+    private let accessibilityAnnouncementKeys = [
+        "accessibility.refresh_complete",
+        "accessibility.search_results_count",
+        "accessibility.search_no_results",
+        "accessibility.digest_ready",
+        "accessibility.summarization_complete",
+        "accessibility.error_occurred",
+        "accessibility.offline",
+        "accessibility.online",
+        "accessibility.bookmark_added",
+        "accessibility.bookmark_removed",
+        "accessibility.summarization_loading",
+    ]
+    private let supportedLanguageCodes = ["en", "pt", "es"]
+
+    @Test("Accessibility announcement keys exist in all supported language files")
+    func accessibilityAnnouncementKeysExistInAllSupportedLanguages() throws {
+        for languageCode in supportedLanguageCodes {
+            let table = try loadStringsTable(languageCode: languageCode)
+
+            for key in accessibilityAnnouncementKeys {
+                let value = table[key] as? String
+                #expect(value != nil, "Missing key '\(key)' in \(languageCode).lproj/Localizable.strings")
+                #expect(
+                    !(value?.isEmpty ?? true),
+                    "Empty value for key '\(key)' in \(languageCode).lproj/Localizable.strings"
+                )
+            }
+        }
+    }
+
+    @Test("Search results accessibility string keeps numeric placeholder in all languages")
+    func searchResultsAccessibilityStringRetainsNumericPlaceholder() throws {
+        for languageCode in supportedLanguageCodes {
+            let table = try loadStringsTable(languageCode: languageCode)
+            let value = table["accessibility.search_results_count"] as? String
+
+            #expect(
+                value != nil,
+                "Missing key 'accessibility.search_results_count' in \(languageCode).lproj/Localizable.strings"
+            )
+            #expect(
+                value?.contains("%d") == true,
+                "Expected '%d' placeholder in \(languageCode).lproj/Localizable.strings for accessibility.search_results_count"
+            )
+        }
+    }
+
+    private func loadStringsTable(languageCode: String) throws -> [String: Any] {
+        let testsConfigDirectory = URL(fileURLWithPath: #filePath).deletingLastPathComponent()
+        let projectRoot = testsConfigDirectory.deletingLastPathComponent().deletingLastPathComponent()
+        let stringsFileURL = projectRoot
+            .appendingPathComponent("Pulse")
+            .appendingPathComponent("\(languageCode).lproj")
+            .appendingPathComponent("Localizable.strings")
+
+        guard
+            let dictionary = NSDictionary(contentsOf: stringsFileURL) as? [String: Any]
+        else {
+            throw NSError(
+                domain: "LocalizationTests",
+                code: 1,
+                userInfo: [
+                    NSLocalizedDescriptionKey: "Unable to load Localizable.strings at \(stringsFileURL.path)",
+                ]
+            )
+        }
+
+        return dictionary
     }
 }
