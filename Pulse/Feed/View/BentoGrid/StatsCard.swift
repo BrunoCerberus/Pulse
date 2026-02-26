@@ -68,7 +68,10 @@ struct StatsCard: View {
         .glassBackground(style: .thin, cornerRadius: CornerRadius.lg)
         .depthShadow(.medium)
         .accessibilityElement(children: .combine)
-        .accessibilityLabel(String(format: AppLocalization.shared.localized("digest.stats_accessibility"), articleCount, topicsCount))
+        .accessibilityLabel({
+            let format = AppLocalization.shared.localized("digest.stats_accessibility")
+            return String(format: format, articleCount, topicsCount)
+        }())
         .onAppear {
             animationTask?.cancel()
             animationTask = Task {

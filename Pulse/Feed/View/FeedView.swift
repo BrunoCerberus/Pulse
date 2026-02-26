@@ -121,7 +121,8 @@ struct FeedView<R: FeedNavigationRouter>: View {
         .onChange(of: viewModel.viewState.displayState) { _, newState in
             if case .completed = newState {
                 isDigestFocused = true
-                AccessibilityNotification.Announcement(AppLocalization.shared.localized("accessibility.digest_ready")).post()
+                let message = AppLocalization.shared.localized("accessibility.digest_ready")
+                AccessibilityNotification.Announcement(message).post()
             }
         }
     }

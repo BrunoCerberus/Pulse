@@ -390,12 +390,7 @@ private struct Particle: Identifiable {
     var color: Color
 }
 
-#Preview("Generating") {
-    AIProcessingView(phase: .generating, streamingText: "")
-        .preferredColorScheme(.dark)
-}
-
-#Preview("With Text") {
+#Preview {
     AIProcessingView(phase: .generating, streamingText: "AI digest content streaming...")
         .preferredColorScheme(.dark)
 }

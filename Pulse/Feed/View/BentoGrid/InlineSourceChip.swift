@@ -53,7 +53,10 @@ struct InlineSourceChip: View {
         .buttonStyle(.plain)
         .pressEffect(scale: 0.95)
         .accessibilityElement(children: .combine)
-        .accessibilityLabel(String(format: AppLocalization.shared.localized("article_row.accessibility_label"), article.title, article.source, article.formattedDate))
+        .accessibilityLabel({
+            let format = AppLocalization.shared.localized("article_row.accessibility_label")
+            return String(format: format, article.title, article.source, article.formattedDate)
+        }())
         .accessibilityHint(AppLocalization.shared.localized("accessibility.read_article"))
     }
 
