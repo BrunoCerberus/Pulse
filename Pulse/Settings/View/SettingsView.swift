@@ -144,10 +144,13 @@ struct SettingsView: View {
 
     private var notificationsSection: some View {
         Section(AppLocalization.shared.localized("settings.notifications")) {
-            Toggle(AppLocalization.shared.localized("settings.enable_notifications"), isOn: Binding(
-                get: { viewModel.viewState.notificationsEnabled },
-                set: { viewModel.handle(event: .onToggleNotifications($0)) }
-            ))
+            Toggle(
+                AppLocalization.shared.localized("settings.enable_notifications"),
+                isOn: Binding(
+                    get: { viewModel.viewState.notificationsEnabled },
+                    set: { viewModel.handle(event: .onToggleNotifications($0)) }
+                )
+            )
 
             Toggle(AppLocalization.shared.localized("settings.breaking_news_alerts"), isOn: Binding(
                 get: { viewModel.viewState.breakingNewsEnabled },
@@ -193,7 +196,10 @@ struct SettingsView: View {
     private var dataSection: some View {
         Section(AppLocalization.shared.localized("settings.data")) {
             NavigationLink(value: Page.readingHistory) {
-                Label(AppLocalization.shared.localized("settings.reading_history"), systemImage: "clock.arrow.circlepath")
+                Label(
+                    AppLocalization.shared.localized("settings.reading_history"),
+                    systemImage: "clock.arrow.circlepath"
+                )
             }
         }
     }

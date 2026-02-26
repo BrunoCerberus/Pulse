@@ -96,7 +96,14 @@ struct BreakingNewsCard: View {
         }
         .buttonStyle(.plain)
         .accessibilityElement(children: .combine)
-        .accessibilityLabel(String(format: AppLocalization.shared.localized("breaking_news.accessibility_label"), item.title, item.sourceName, item.formattedDate))
+        .accessibilityLabel(
+            String(
+                format: AppLocalization.shared.localized("breaking_news.accessibility_label"),
+                item.title,
+                item.sourceName,
+                item.formattedDate
+            )
+        )
         .accessibilityHint(AppLocalization.shared.localized("accessibility.read_article"))
     }
 }
