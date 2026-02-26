@@ -404,3 +404,20 @@
 "reading_history.empty.message" = "Artigos que você ler aparecerão aqui.";
 "reading_history.clear" = "Limpar Histórico";
 "reading_history.clear.confirm" = "Tem certeza? Esta ação não pode ser desfeita.";
+
+/* ==================== */
+/* MARK: - Text-to-Speech */
+/* ==================== */
+
+"tts.button" = "Ouvir";
+"tts.button_hint" = "Ler artigo em voz alta";
+"tts.listening" = "Ouvindo";
+"tts.play" = "Reproduzir";
+"tts.pause" = "Pausar";
+"tts.stop" = "Parar";
+"tts.speed_label" = "Velocidade: %@";
+"tts.speed_hint" = "Alterar velocidade da fala";
+"tts.progress" = "Progresso da fala";
+"tts.progress_value" = "%d por cento";
+"accessibility.tts_started" = "Lendo em voz alta";
+"accessibility.tts_paused" = "Leitura pausada";

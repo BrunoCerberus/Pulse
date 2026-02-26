@@ -16,6 +16,10 @@ struct ArticleDetailViewStateTests {
         #expect(!state.isBookmarked)
         #expect(!state.showShareSheet)
         #expect(!state.showSummarizationSheet)
+        #expect(state.ttsPlaybackState == .idle)
+        #expect(state.ttsProgress == 0.0)
+        #expect(state.ttsSpeedPreset == .normal)
+        #expect(!state.isTTSPlayerVisible)
     }
 
     @Test("Initial state preserves article")
