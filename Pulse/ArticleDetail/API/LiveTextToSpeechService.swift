@@ -91,7 +91,11 @@ final class LiveTextToSpeechService: NSObject, TextToSpeechService {
 // MARK: - AVSpeechSynthesizerDelegate
 
 extension LiveTextToSpeechService: AVSpeechSynthesizerDelegate {
-    func speechSynthesizer(_: AVSpeechSynthesizer, willSpeakRangeOfSpeechString characterRange: NSRange, utterance _: AVSpeechUtterance) {
+    func speechSynthesizer(
+        _: AVSpeechSynthesizer,
+        willSpeakRangeOfSpeechString characterRange: NSRange,
+        utterance _: AVSpeechUtterance
+    ) {
         guard totalTextLength > 0 else { return }
         let progress = Double(characterRange.location + characterRange.length) / Double(totalTextLength)
         progressSubject.send(min(progress, 1.0))

@@ -18,6 +18,30 @@ final class SpeechPlayerBarViewSnapshotTests: XCTestCase {
         traits: UITraitCollection(userInterfaceStyle: .light)
     )
 
+    private let compactAccessibilityConfig: ViewImageConfig = {
+        let traits = UITraitCollection(traitsFrom: [
+            UITraitCollection(userInterfaceStyle: .dark),
+            UITraitCollection(preferredContentSizeCategory: .accessibilityExtraLarge),
+        ])
+        return ViewImageConfig(
+            safeArea: UIEdgeInsets(top: 0, left: 0, bottom: 0, right: 0),
+            size: CGSize(width: 393, height: 160),
+            traits: traits
+        )
+    }()
+
+    private let compactExtraExtraLargeConfig: ViewImageConfig = {
+        let traits = UITraitCollection(traitsFrom: [
+            UITraitCollection(userInterfaceStyle: .dark),
+            UITraitCollection(preferredContentSizeCategory: .extraExtraLarge),
+        ])
+        return ViewImageConfig(
+            safeArea: UIEdgeInsets(top: 0, left: 0, bottom: 0, right: 0),
+            size: CGSize(width: 393, height: 140),
+            traits: traits
+        )
+    }()
+
     private func makeView(
         title: String = "SwiftUI 6.0 Brings Revolutionary New Features",
         playbackState: TTSPlaybackState = .playing,
@@ -103,6 +127,43 @@ final class SpeechPlayerBarViewSnapshotTests: XCTestCase {
         assertSnapshot(
             of: vc,
             as: SnapshotConfig.snapshotting(on: compactConfig),
+            record: false
+        )
+    }
+
+    // MARK: - Missing Speed Preset (Gap 10)
+
+    func test_faster_speed() {
+        let view = makeView(progress: 0.5, speedPreset: .faster)
+        let vc = UIHostingController(rootView: view)
+
+        assertSnapshot(
+            of: vc,
+            as: SnapshotConfig.snapshotting(on: compactConfig),
+            record: false
+        )
+    }
+
+    // MARK: - Accessibility Sizes (Gap 11)
+
+    func test_playing_accessibility_size() {
+        let view = makeView()
+        let vc = UIHostingController(rootView: view)
+
+        assertSnapshot(
+            of: vc,
+            as: SnapshotConfig.snapshotting(on: compactAccessibilityConfig),
+            record: false
+        )
+    }
+
+    func test_playing_extra_extra_large_size() {
+        let view = makeView()
+        let vc = UIHostingController(rootView: view)
+
+        assertSnapshot(
+            of: vc,
+            as: SnapshotConfig.snapshotting(on: compactExtraExtraLargeConfig),
             record: false
         )
     }

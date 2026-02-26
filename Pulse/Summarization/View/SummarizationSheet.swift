@@ -100,7 +100,9 @@ struct SummarizationSheet: View {
             switch newState {
             case .completed:
                 isSummaryFocused = true
-                AccessibilityNotification.Announcement(AppLocalization.shared.localized("accessibility.summarization_complete")).post()
+                AccessibilityNotification.Announcement(
+                    AppLocalization.shared.localized("accessibility.summarization_complete")
+                ).post()
             case .error:
                 isSummaryFocused = true
             default:

@@ -31,7 +31,7 @@ final class HomeDomainInteractor: CombineInteractor {
     var cancellables = Set<AnyCancellable>()
     private var backgroundTasks = Set<Task<Void, Never>>()
     var isLocalPreferenceChange = false
-    private(set) var preferredLanguage: String = "en"
+    internal(set) var preferredLanguage: String = "en"
 
     var statePublisher: AnyPublisher<HomeDomainState, Never> {
         stateSubject.eraseToAnyPublisher()
@@ -262,6 +262,19 @@ private extension HomeDomainInteractor {
         fetchHeadlinesForCurrentCategory(page: 1, isRefreshing: true)
     }
 
+    func handleSelectCategory(_ category: NewsCategory?) {
+        guard category != currentState.selectedCategory else { return }
+        if let category {
+            analyticsService?.logEvent(.categorySelected(category: category.rawValue))
+        }
+        resetStateForCategoryChange(to: category)
+        fetchHeadlinesForCurrentCategory(page: 1)
+    }
+}
+
+// MARK: - Headlines Fetching
+
+extension HomeDomainInteractor {
     func fetchHeadlinesForCurrentCategory(page: Int, isRefreshing: Bool = false) {
         let country = "us"
         if let category = currentState.selectedCategory {
@@ -273,15 +286,6 @@ private extension HomeDomainInteractor {
                 .sink { _ in }
                 .store(in: &cancellables)
         }
-    }
-
-    func handleSelectCategory(_ category: NewsCategory?) {
-        guard category != currentState.selectedCategory else { return }
-        if let category {
-            analyticsService?.logEvent(.categorySelected(category: category.rawValue))
-        }
-        resetStateForCategoryChange(to: category)
-        fetchHeadlinesForCurrentCategory(page: 1)
     }
 }
 
@@ -356,82 +360,5 @@ private extension HomeDomainInteractor {
                 }
             }
         }
-    }
-
-    func loadFollowedTopics() {
-        settingsService.fetchPreferences()
-            .receive(on: DispatchQueue.main)
-            .sink(
-                receiveCompletion: { completion in
-                    if case let .failure(error) = completion {
-                        Logger.shared.service("Failed to load followed topics: \(error)", level: .warning)
-                    }
-                },
-                receiveValue: { [weak self] preferences in
-                    guard let self else { return }
-                    self.preferredLanguage = preferences.preferredLanguage
-                    self.updateState { state in
-                        state.followedTopics = preferences.followedTopics
-                    }
-                }
-            )
-            .store(in: &cancellables)
-    }
-
-    /// Loads followed topics and checks if language changed, triggering a full reload if so.
-    func loadFollowedTopicsAndCheckLanguage() {
-        let previousLanguage = preferredLanguage
-        settingsService.fetchPreferences()
-            .receive(on: DispatchQueue.main)
-            .sink(
-                receiveCompletion: { completion in
-                    if case let .failure(error) = completion {
-                        Logger.shared.service("Failed to load preferences: \(error)", level: .warning)
-                    }
-                },
-                receiveValue: { [weak self] preferences in
-                    guard let self else { return }
-                    self.preferredLanguage = preferences.preferredLanguage
-                    self.updateState { state in
-                        state.followedTopics = preferences.followedTopics
-                    }
-                    // If language changed, invalidate cache and do a full reload
-                    if previousLanguage != self.preferredLanguage {
-                        if let cachingService = self.newsService as? CachingNewsService {
-                            cachingService.invalidateCache()
-                        }
-                        self.resetStateForCategoryChange(to: self.currentState.selectedCategory)
-                        self.fetchHeadlinesForCurrentCategory(page: 1)
-                    }
-                }
-            )
-            .store(in: &cancellables)
-    }
-
-    func toggleTopic(_ topic: NewsCategory) {
-        settingsService.fetchPreferences()
-            .receive(on: DispatchQueue.main)
-            .sink(
-                receiveCompletion: { completion in
-                    if case let .failure(error) = completion {
-                        Logger.shared.service("Failed to fetch preferences for toggle: \(error)", level: .warning)
-                    }
-                },
-                receiveValue: { [weak self] preferences in
-                    guard let self else { return }
-                    var updatedPreferences = preferences
-                    if updatedPreferences.followedTopics.contains(topic) {
-                        updatedPreferences.followedTopics.removeAll { $0 == topic }
-                    } else {
-                        updatedPreferences.followedTopics.append(topic)
-                    }
-                    // Update local state immediately to avoid redundant re-fetch
-                    self.updateState { state in
-                        state.followedTopics = updatedPreferences.followedTopics
-                    }
-                    self.savePreferences(updatedPreferences)
-                }
-            )
-            .store(in: &cancellables)
     }
 }

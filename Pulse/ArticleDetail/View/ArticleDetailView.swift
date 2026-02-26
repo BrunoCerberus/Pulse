@@ -117,7 +117,11 @@ struct ArticleDetailView: View {
                     }
                     .accessibilityIdentifier("summarizeButton")
                     .accessibilityLabel(Constants.summarize)
-                    .accessibilityHint(isPremium ? AppLocalization.shared.localized("article_detail.summarize_hint") : AppLocalization.shared.localized("article_detail.premium_hint"))
+                    .accessibilityHint(
+                        isPremium
+                            ? AppLocalization.shared.localized("article_detail.summarize_hint")
+                            : AppLocalization.shared.localized("article_detail.premium_hint")
+                    )
 
                     Button("", systemImage: viewModel.viewState.isBookmarked ? "bookmark.fill" : "bookmark") {
                         viewModel.handle(event: .onBookmarkTapped)

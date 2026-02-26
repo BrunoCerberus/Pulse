@@ -174,7 +174,7 @@ Pulse/
 │   ├── Feed/                   # AI-powered Daily Digest (Premium)
 │   ├── Digest/                 # On-device LLM infra (LLMService, LLMModelManager, prompts)
 │   ├── Summarization/          # Article summarization (Premium)
-│   ├── ArticleDetail/          # Article view + summarization entry point
+│   ├── ArticleDetail/          # Article view + summarization + text-to-speech
 │   ├── Bookmarks/              # Offline reading
 │   ├── ReadingHistory/         # Reading history tracking (SwiftData)
 │   ├── Search/                 # Search feature
@@ -208,6 +208,7 @@ Pulse/
 | **Media** | Browse and play Videos and Podcasts with in-app playback (YouTube videos open in YouTube app, podcasts use native AVPlayer) |
 | **Feed** | AI-powered Daily Digest summarizing latest news articles from the API using on-device LLM (Llama 3.2-1B) (**Premium**) |
 | **Article Summarization** | On-device AI article summarization via sparkles button (**Premium**) |
+| **Text-to-Speech** | Listen to articles read aloud using native `AVSpeechSynthesizer` with play/pause, speed presets (1x/1.25x/1.5x/2x), language-aware voices, and floating mini-player bar |
 | **Search** | Full-text search with 300ms debounce, suggestions, and sort options (last tab with liquid glass style) |
 | **Offline Experience** | Tiered cache (L1 memory + L2 disk), NWPathMonitor network monitoring, offline banner, graceful degradation |
 | **Bookmarks** | Save articles for offline reading (SwiftData) |
@@ -217,7 +218,7 @@ Pulse/
 | **Security** | YouTube video ID regex validation, deeplink ID sanitization (character allowlist + path traversal rejection), URL scheme allowlisting, disk cache filename sanitization, Keychain-based app lock with biometric + passcode fallback |
 | **Settings** | Topics, notifications, theme, content language, muted content, reading history, account/logout (accessed from Home navigation bar) |
 | **Onboarding** | 4-page first-launch experience (welcome, AI features, offline/bookmarks, get started) shown once after sign-in |
-| **Analytics & Crashlytics** | Firebase Analytics (18 type-safe events) and Crashlytics for crash/non-fatal error tracking at DomainInteractor level |
+| **Analytics & Crashlytics** | Firebase Analytics (21 type-safe events) and Crashlytics for crash/non-fatal error tracking at DomainInteractor level |
 | **Widget** | Home screen widget showing recent headlines (WidgetKit extension) |
 
 ## Premium Features
@@ -525,6 +526,11 @@ if let cachingService = newsService as? CachingNewsService {
 | `PremiumGateView.swift` | Reusable premium upsell component |
 | `PremiumFeature.swift` | Enum defining gated features |
 | `PaywallView.swift` | Native StoreKit subscription UI |
+| **Text-to-Speech** | |
+| `TextToSpeechService.swift` | Protocol + `TTSPlaybackState` enum + `TTSSpeedPreset` enum (1x/1.25x/1.5x/2x) |
+| `LiveTextToSpeechService.swift` | `AVSpeechSynthesizer` wrapper with delegate-based progress tracking and language-aware voices |
+| `MockTextToSpeechService.swift` | Mock with call tracking (`speakCallCount`, `lastSpokenText`, etc.) and test helpers (`simulateProgress`, `simulateFinished`) |
+| `SpeechPlayerBarView.swift` | Floating mini-player bar with progress, play/pause, speed preset, and close buttons |
 | **Onboarding** | |
 | `OnboardingService.swift` | Protocol with `hasCompletedOnboarding: Bool` |
 | `LiveOnboardingService.swift` | UserDefaults-backed implementation (key: `pulse.hasCompletedOnboarding`) |
@@ -532,7 +538,7 @@ if let cachingService = newsService as? CachingNewsService {
 | `OnboardingDomainInteractor.swift` | Page navigation, completion persistence, analytics logging |
 | `OnboardingView.swift` | Main view with TabView(.page), custom dots, Skip/Next buttons |
 | **Analytics & Crashlytics** | |
-| `AnalyticsService.swift` | Protocol + `AnalyticsEvent` enum (18 events) + `AnalyticsScreen`/`AnalyticsSource` enums |
+| `AnalyticsService.swift` | Protocol + `AnalyticsEvent` enum (21 events) + `AnalyticsScreen`/`AnalyticsSource` enums |
 | `LiveAnalyticsService.swift` | Firebase Analytics + Crashlytics implementation (events + breadcrumbs) |
 | `MockAnalyticsService.swift` | Test implementation recording all events/errors for assertions |
 

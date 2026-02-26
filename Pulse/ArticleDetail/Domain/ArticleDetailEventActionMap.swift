@@ -20,8 +20,6 @@ struct ArticleDetailEventActionMap: DomainEventActionMap {
         switch event {
         case .onAppear:
             return .onAppear
-        case .onDisappear:
-            return .stopTTS
         case .onBookmarkTapped:
             return .toggleBookmark
         case .onShareTapped:
@@ -30,18 +28,27 @@ struct ArticleDetailEventActionMap: DomainEventActionMap {
             return .showSummarizationSheet
         case .onReadFullTapped:
             return .openInBrowser
-        case .onShareSheetDismissed:
-            return .dismissShareSheet
-        case .onSummarizationSheetDismissed:
-            return .dismissSummarizationSheet
         case .onListenTapped:
             return .startTTS
         case .onTTSPlayPauseTapped:
             return .toggleTTSPlayback
-        case .onTTSStopTapped:
+        default:
+            return mapTTSEvent(event)
+        }
+    }
+
+    private func mapTTSEvent(_ event: ArticleDetailViewEvent) -> ArticleDetailDomainAction? {
+        switch event {
+        case .onDisappear, .onTTSStopTapped:
             return .stopTTS
+        case .onShareSheetDismissed:
+            return .dismissShareSheet
+        case .onSummarizationSheetDismissed:
+            return .dismissSummarizationSheet
         case .onTTSSpeedTapped:
             return .cycleTTSSpeed
+        default:
+            return nil
         }
     }
 }
