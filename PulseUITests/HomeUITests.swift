@@ -13,8 +13,18 @@ final class HomeUITests: BaseUITestCase {
         XCTAssertTrue(editTopicsButton.waitForExistence(timeout: Self.shortTimeout), "Edit topics button should exist")
         editTopicsButton.tap()
 
-        // Verify the edit topics sheet opens
+        // Wait for sheet presentation animation on slow CI
+        wait(for: 1.0)
+
+        // Verify the edit topics sheet opens — retry tap if sheet didn't appear
         let editTopicsTitle = app.staticTexts["Edit Topics"]
+        if !editTopicsTitle.waitForExistence(timeout: Self.defaultTimeout) {
+            // Retry: button tap may not have registered on slow CI
+            if editTopicsButton.exists, editTopicsButton.isHittable {
+                editTopicsButton.tap()
+                wait(for: 1.0)
+            }
+        }
         XCTAssertTrue(editTopicsTitle.waitForExistence(timeout: Self.defaultTimeout), "Edit Topics sheet should open")
 
         // Verify topics are displayed

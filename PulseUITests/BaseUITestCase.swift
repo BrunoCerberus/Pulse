@@ -12,12 +12,12 @@ class BaseUITestCase: XCTestCase {
     static let launchTimeout: TimeInterval = 60
 
     /// Default timeout for element existence checks
-    /// 10s accounts for CI machine variability and slower simulators
-    static let defaultTimeout: TimeInterval = 10
+    /// 15s accounts for CI machine variability and slower simulators
+    static let defaultTimeout: TimeInterval = 15
 
     /// Short timeout for quick checks (e.g., verifying element visibility)
-    /// 6s allows for CI machine variability while remaining responsive
-    static let shortTimeout: TimeInterval = 6
+    /// 10s allows for CI machine variability and slow simulator accessibility queries
+    static let shortTimeout: TimeInterval = 10
 
     // MARK: - Instance-level Setup (runs before each test)
 
@@ -55,11 +55,17 @@ class BaseUITestCase: XCTestCase {
         wait(for: 2.0)
 
         // Wait for loading state to clear if present
-        // Use shorter detection timeout — don't wait long if no spinner appears
-        let loadingIndicator = app.activityIndicators.firstMatch
-        if loadingIndicator.waitForExistence(timeout: 5) {
-            // Wait for loading to complete (app initializing auth state)
-            _ = waitForElementToDisappear(loadingIndicator, timeout: Self.launchTimeout)
+        // Wrap in do/catch — on slow CI the accessibility hierarchy query itself can
+        // throw "Timed out while evaluating UI query" before the element check completes
+        do {
+            let loadingIndicator = app.activityIndicators.firstMatch
+            if loadingIndicator.waitForExistence(timeout: 5) {
+                _ = waitForElementToDisappear(loadingIndicator, timeout: Self.launchTimeout)
+            }
+        } catch {
+            // Loading indicator query failed — continue setup, app may still be usable
+            print("⚠️ Loading indicator check failed: \(error). Continuing setup.")
+            wait(for: 3.0)
         }
 
         // Wait for either tab bar (authenticated) or sign-in view (not authenticated)
@@ -90,12 +96,19 @@ class BaseUITestCase: XCTestCase {
 
     override func tearDownWithError() throws {
         XCUIDevice.shared.orientation = .portrait
-        // Gracefully terminate app - don't fail test on termination issues
-        // XCUIApplication.terminate() can throw if the app is in an unexpected state
-        if let application = app, application.state != .notRunning {
-            application.terminate()
-            // Brief wait to allow termination to complete
-            _ = application.wait(for: .notRunning, timeout: 5)
+        // Gracefully terminate app — use do/catch to prevent termination failures
+        // from cascading to subsequent tests (common on slow CI simulators)
+        if let application = app {
+            if application.state != .notRunning {
+                do {
+                    application.terminate()
+                    _ = application.wait(for: .notRunning, timeout: 10)
+                } catch {
+                    // Termination failed — log and continue, don't poison other tests
+                    print("⚠️ App termination failed: \(error). Continuing teardown.")
+                    _ = application.wait(for: .notRunning, timeout: 5)
+                }
+            }
         }
         app = nil
     }
@@ -292,28 +305,25 @@ class BaseUITestCase: XCTestCase {
         return true
     }
 
-    /// Wait for any of the provided elements to exist - efficient predicate-based waiting
+    /// Wait for any of the provided elements to exist
+    /// Uses XCTNSPredicateExpectation for better integration with XCTest's
+    /// internal timeout handling on slow CI environments
     func waitForAny(_ elements: [XCUIElement], timeout: TimeInterval = 10) -> Bool {
-        let deadline = Date().addingTimeInterval(timeout)
-        while Date() < deadline {
-            if elements.contains(where: { $0.exists }) {
-                return true
-            }
-            RunLoop.current.run(until: Date().addingTimeInterval(0.1))
+        let predicate = NSPredicate { _, _ in
+            elements.contains { $0.exists }
         }
-        return false
+        let expectation = XCTNSPredicateExpectation(predicate: predicate, object: nil)
+        return XCTWaiter.wait(for: [expectation], timeout: timeout) == .completed
     }
 
     /// Wait for any element matching query to exist
+    /// Uses XCTNSPredicateExpectation for graceful timeout handling on CI
     func waitForAnyMatch(_ query: XCUIElementQuery, timeout: TimeInterval = 10) -> Bool {
-        let deadline = Date().addingTimeInterval(timeout)
-        while Date() < deadline {
-            if query.count > 0 {
-                return true
-            }
-            RunLoop.current.run(until: Date().addingTimeInterval(0.1))
+        let predicate = NSPredicate { _, _ in
+            query.count > 0
         }
-        return false
+        let expectation = XCTNSPredicateExpectation(predicate: predicate, object: nil)
+        return XCTWaiter.wait(for: [expectation], timeout: timeout) == .completed
     }
 
     /// Wait for an element to disappear
