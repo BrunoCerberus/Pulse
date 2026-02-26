@@ -194,53 +194,10 @@ private extension FeedDomainInteractor {
         fetchArticlesTask = Task { @MainActor [weak self] in
             guard let self else { return }
             defer { self.fetchArticlesTask = nil }
-            var allArticles: [Article] = []
 
-            // Fetch 10 articles from each category in parallel
-            await withTaskGroup(of: [Article].self) { group in
-                for category in NewsCategory.allCases {
-                    group.addTask {
-                        do {
-                            // Convert Combine publisher to async
-                            let articles = try await withCheckedThrowingContinuation { continuation in
-                                var cancellable: AnyCancellable?
-                                cancellable = newsService
-                                    .fetchTopHeadlines(category: category, language: "en", country: "us", page: 1)
-                                    .first()
-                                    .sink(
-                                        receiveCompletion: { completion in
-                                            if case let .failure(error) = completion {
-                                                continuation.resume(throwing: error)
-                                            }
-                                            cancellable?.cancel()
-                                        },
-                                        receiveValue: { articles in
-                                            continuation.resume(returning: articles)
-                                        }
-                                    )
-                            }
-                            // Take first 10 articles from this category
-                            return Array(articles.prefix(10))
-                        } catch {
-                            Logger.shared.warning(
-                                "Failed to fetch \(category.displayName): \(error)",
-                                category: "FeedDomainInteractor"
-                            )
-                            return [] // Continue with other categories
-                        }
-                    }
-                }
-
-                for await articles in group {
-                    guard !Task.isCancelled else { return }
-                    allArticles.append(contentsOf: articles)
-                }
-            }
+            let allArticles = await self.fetchArticlesFromAllCategories(newsService: newsService)
 
             guard !Task.isCancelled else { return }
-
-            // Sort by publishedAt (most recent first) - capping happens in generateDigest()
-            allArticles.sort { $0.publishedAt > $1.publishedAt }
 
             if allArticles.isEmpty {
                 let isOffline = self.networkMonitor?.isConnected == false

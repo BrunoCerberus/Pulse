@@ -82,13 +82,16 @@ struct PremiumGateView: View {
 
             // Premium Icon
             ZStack {
+                let outerSize: CGFloat = dynamicTypeSize.isAccessibilitySize ? 80 : 120
+                let innerSize: CGFloat = dynamicTypeSize.isAccessibilitySize ? 64 : 100
+
                 Circle()
                     .fill(feature.iconColor.opacity(0.15))
-                    .frame(width: dynamicTypeSize.isAccessibilitySize ? 80 : 120, height: dynamicTypeSize.isAccessibilitySize ? 80 : 120)
+                    .frame(width: outerSize, height: outerSize)
 
                 Circle()
                     .fill(feature.iconColor.gradient)
-                    .frame(width: dynamicTypeSize.isAccessibilitySize ? 64 : 100, height: dynamicTypeSize.isAccessibilitySize ? 64 : 100)
+                    .frame(width: innerSize, height: innerSize)
 
                 Image(systemName: feature.icon)
                     .font(.system(size: dynamicTypeSize.isAccessibilitySize ? IconSize.xl : IconSize.xxl))
@@ -145,7 +148,10 @@ struct PremiumGateView: View {
             }
             .pressEffect()
             .padding(.horizontal, Spacing.xl)
-            .accessibilityLabel(String(format: AppLocalization.shared.localized("premium_gate.unlock_label"), feature.title))
+            .accessibilityLabel({
+                let format = AppLocalization.shared.localized("premium_gate.unlock_label")
+                return String(format: format, feature.title)
+            }())
             .accessibilityHint(AppLocalization.shared.localized("settings.premium.hint"))
             .accessibilityIdentifier("unlockPremiumButton")
 

@@ -44,7 +44,10 @@ struct HeroNewsCard: View {
         }
         .pressEffect()
         .accessibilityElement(children: .combine)
-        .accessibilityLabel(String(format: AppLocalization.shared.localized("breaking_news.accessibility_label"), item.title, item.sourceName, item.formattedDate))
+        .accessibilityLabel({
+            let format = AppLocalization.shared.localized("breaking_news.accessibility_label")
+            return String(format: format, item.title, item.sourceName, item.formattedDate)
+        }())
         .accessibilityHint(AppLocalization.shared.localized("accessibility.read_article"))
         .onAppear {
             startPulseAnimation()
@@ -209,7 +212,10 @@ struct FeaturedArticleCard: View {
         }
         .pressEffect()
         .accessibilityElement(children: .combine)
-        .accessibilityLabel(String(format: AppLocalization.shared.localized("article_row.accessibility_label"), item.title, item.sourceName, item.formattedDate))
+        .accessibilityLabel({
+            let format = AppLocalization.shared.localized("article_row.accessibility_label")
+            return String(format: format, item.title, item.sourceName, item.formattedDate)
+        }())
         .accessibilityHint(AppLocalization.shared.localized("accessibility.read_article"))
     }
 

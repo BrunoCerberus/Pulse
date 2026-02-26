@@ -1,4 +1,57 @@
+import Combine
+import EntropyCore
 import Foundation
+
+// MARK: - Article Fetching
+
+extension FeedDomainInteractor {
+    func fetchArticlesFromAllCategories(newsService: NewsService) async -> [Article] {
+        var allArticles: [Article] = []
+
+        await withTaskGroup(of: [Article].self) { group in
+            for category in NewsCategory.allCases {
+                group.addTask {
+                    do {
+                        let articles = try await withCheckedThrowingContinuation { continuation in
+                            var cancellable: AnyCancellable?
+                            cancellable = newsService
+                                .fetchTopHeadlines(category: category, language: "en", country: "us", page: 1)
+                                .first()
+                                .sink(
+                                    receiveCompletion: { completion in
+                                        if case let .failure(error) = completion {
+                                            continuation.resume(throwing: error)
+                                        }
+                                        cancellable?.cancel()
+                                    },
+                                    receiveValue: { articles in
+                                        continuation.resume(returning: articles)
+                                    }
+                                )
+                        }
+                        return Array(articles.prefix(10))
+                    } catch {
+                        Logger.shared.warning(
+                            "Failed to fetch \(category.displayName): \(error)",
+                            category: "FeedDomainInteractor"
+                        )
+                        return []
+                    }
+                }
+            }
+
+            for await articles in group {
+                guard !Task.isCancelled else { return }
+                allArticles.append(contentsOf: articles)
+            }
+        }
+
+        allArticles.sort { $0.publishedAt > $1.publishedAt }
+        return allArticles
+    }
+}
+
+// MARK: - LLM Output Cleaning
 
 extension FeedDomainInteractor {
     nonisolated func cleanLLMOutput(_ text: String) -> String {

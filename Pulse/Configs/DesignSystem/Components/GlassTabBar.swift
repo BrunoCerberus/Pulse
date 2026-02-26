@@ -10,11 +10,24 @@ struct GlassTabItem: Identifiable {
     let selectedIcon: String
 
     static var items: [GlassTabItem] {
-        [
-            GlassTabItem(id: .home, title: AppLocalization.shared.localized("tab.home"), icon: "newspaper", selectedIcon: "newspaper.fill"),
-            GlassTabItem(id: .feed, title: AppLocalization.shared.localized("tab.feed"), icon: "text.document", selectedIcon: "text.document.fill"),
-            GlassTabItem(id: .bookmarks, title: AppLocalization.shared.localized("tab.bookmarks"), icon: "bookmark", selectedIcon: "bookmark.fill"),
-            GlassTabItem(id: .search, title: AppLocalization.shared.localized("tab.search"), icon: "magnifyingglass", selectedIcon: "magnifyingglass"),
+        let loc = AppLocalization.shared
+        return [
+            GlassTabItem(
+                id: .home, title: loc.localized("tab.home"),
+                icon: "newspaper", selectedIcon: "newspaper.fill"
+            ),
+            GlassTabItem(
+                id: .feed, title: loc.localized("tab.feed"),
+                icon: "text.document", selectedIcon: "text.document.fill"
+            ),
+            GlassTabItem(
+                id: .bookmarks, title: loc.localized("tab.bookmarks"),
+                icon: "bookmark", selectedIcon: "bookmark.fill"
+            ),
+            GlassTabItem(
+                id: .search, title: loc.localized("tab.search"),
+                icon: "magnifyingglass", selectedIcon: "magnifyingglass"
+            ),
         ]
     }
 }
