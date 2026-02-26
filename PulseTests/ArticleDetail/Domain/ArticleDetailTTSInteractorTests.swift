@@ -228,6 +228,32 @@ struct ArticleDetailTTSInteractorTests {
         #expect(sut.currentState.ttsProgress == 1.0)
     }
 
+    @Test("TTS player auto-hides when playback finishes")
+    func ttsPlayerAutoHidesWhenFinished() {
+        let sut = createSUT()
+
+        sut.dispatch(action: .startTTS)
+        #expect(sut.currentState.isTTSPlayerVisible == true)
+
+        sut.dispatch(action: .ttsProgressUpdated(1.0))
+        sut.dispatch(action: .ttsPlaybackStateChanged(.idle))
+
+        #expect(sut.currentState.isTTSPlayerVisible == false)
+    }
+
+    @Test("TTS player stays visible when playback is idle before completion")
+    func ttsPlayerRemainsVisibleWhenIdleBeforeCompletion() {
+        let sut = createSUT()
+
+        sut.dispatch(action: .startTTS)
+        #expect(sut.currentState.isTTSPlayerVisible == true)
+
+        sut.dispatch(action: .ttsProgressUpdated(0.4))
+        sut.dispatch(action: .ttsPlaybackStateChanged(.idle))
+
+        #expect(sut.currentState.isTTSPlayerVisible == true)
+    }
+
     // MARK: - Speech Text Building
 
     @Test("startTTS builds speech text with author")
