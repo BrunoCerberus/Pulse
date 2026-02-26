@@ -9,6 +9,7 @@ A modern iOS news aggregation app built with Clean Architecture, SwiftUI, and Co
 - **Media**: Browse and play Videos and Podcasts with in-app playback (YouTube videos open in YouTube app, podcasts use native AVPlayer)
 - **Feed**: AI-powered Daily Digest summarizing latest news articles from the API using on-device LLM (Llama 3.2-1B) (**Premium**)
 - **Article Summarization**: On-device AI article summarization via sparkles button (**Premium**)
+- **Text-to-Speech**: Listen to articles read aloud using native `AVSpeechSynthesizer` with play/pause controls, speed presets (1x/1.25x/1.5x/2x), language-aware voices, and a floating mini-player bar
 - **Offline Experience**: Tiered cache (in-memory L1 + persistent disk L2), network monitoring via NWPathMonitor, offline banner, and graceful degradation preserving cached content
 - **Bookmarks**: Save articles for offline reading with SwiftData persistence
 - **Reading History**: Automatic tracking of read articles with SwiftData persistence, visual indicators on cards, and a dedicated history view accessible from Settings
@@ -18,7 +19,7 @@ A modern iOS news aggregation app built with Clean Architecture, SwiftUI, and Co
 - **Accessibility**: Dynamic Type layout adaptation (HStack-to-VStack at accessibility sizes), VoiceOver heading hierarchy, focus management, and live announcements for async state changes
 - **Security**: Input validation across WebView, deeplinks, URL handling, and Keychain-based app lock with biometric + passcode fallback
 - **Onboarding**: 4-page first-launch experience shown once after sign-in, highlighting key features before entering the app
-- **Analytics & Crash Reporting**: Firebase Analytics (18 type-safe events) and Crashlytics for crash/non-fatal error tracking
+- **Analytics & Crash Reporting**: Firebase Analytics (21 type-safe events) and Crashlytics for crash/non-fatal error tracking
 - **Widget**: Home screen widget showing recent headlines (WidgetKit extension)
 
 The app uses iOS 26's liquid glass TabView style with tabs: Home, Media, Feed, Bookmarks, and Search. Users must sign in with Google or Apple before accessing the main app. A 4-page onboarding flow is shown once after first sign-in.
@@ -387,7 +388,7 @@ Pulse/
 │   ├── Bookmarks/          # Saved articles
 │   ├── ReadingHistory/     # Reading history tracking (SwiftData)
 │   ├── Settings/           # User preferences + account/logout
-│   ├── ArticleDetail/      # Article view
+│   ├── ArticleDetail/      # Article view + TTS (AVSpeechSynthesizer)
 │   ├── AppLock/            # Biometric/passcode app lock
 │   ├── Onboarding/         # First-launch onboarding flow
 │   ├── Paywall/            # StoreKit paywall UI

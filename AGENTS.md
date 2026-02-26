@@ -42,7 +42,12 @@ Pulse/
 │   │   ├── AI/                 # LLMService, LLMModelManager (llama.cpp via LocalLlama)
 │   │   └── Models/             # Prompt builders and LLM helpers
 │   ├── Summarization/          # Article summarization (Premium)
-│   ├── ArticleDetail/          # Article view + summarization entry point
+│   ├── ArticleDetail/          # Article view + summarization + text-to-speech
+│   │   ├── API/                # TextToSpeechService protocol + Live/Mock implementations
+│   │   ├── Domain/             # ArticleDetailDomainInteractor, State, Action, Reducer, EventActionMap
+│   │   ├── ViewModel/          # ArticleDetailViewModel
+│   │   ├── View/               # ArticleDetailView, SpeechPlayerBarView
+│   │   └── ViewStates/         # ArticleDetailViewState
 │   ├── Bookmarks/              # Offline reading
 │   ├── ReadingHistory/         # Reading history tracking (SwiftData)
 │   │   ├── Domain/             # ReadingHistoryDomainInteractor, State, Action
@@ -277,9 +282,16 @@ The app uses a tiered cache with offline resilience:
 | `KeychainStore` | Protocol for Keychain access; production uses `KeychainManager`, tests use in-memory implementation |
 | **Analytics & Crashlytics** | |
 | `AnalyticsService` | Protocol with `logEvent`, `setUserID`, `recordError`, `log` |
-| `AnalyticsEvent` | Type-safe enum with 18 events (screen views, article actions, purchases, auth, onboarding, etc.) |
+| `AnalyticsEvent` | Type-safe enum with 21 events (screen views, article actions, TTS, purchases, auth, onboarding, etc.) |
 | `LiveAnalyticsService` | Firebase Analytics + Crashlytics (events + breadcrumbs, disabled in DEBUG) |
 | `MockAnalyticsService` | Records all events/errors in arrays for test assertions |
+| **Text-to-Speech** | |
+| `TextToSpeechService` | Protocol with `speak(text:language:rate:)`, `pause()`, `resume()`, `stop()` + Combine publishers for playback state and progress |
+| `LiveTextToSpeechService` | `AVSpeechSynthesizer` wrapper with delegate-based progress, `.playback`/`.spokenAudio` audio session, language mapping (en→en-US, pt→pt-BR, es→es-ES) |
+| `MockTextToSpeechService` | Call tracking + test helpers (`simulateProgress()`, `simulateFinished()`) |
+| `SpeechPlayerBarView` | Floating mini-player bar with progress, play/pause, speed preset cycling (1x/1.25x/1.5x/2x), close button |
+| `TTSPlaybackState` | Enum: `.idle`, `.playing`, `.paused` |
+| `TTSSpeedPreset` | Enum: `.normal`, `.fast`, `.faster`, `.fastest` with `rate` and `next()` cycling |
 
 ### Offline Behavior
 - **Stale data served when offline**: L1 or L2 cache returned even if expired
