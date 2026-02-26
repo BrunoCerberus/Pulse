@@ -404,3 +404,20 @@
 "reading_history.empty.message" = "Articles you read will appear here.";
 "reading_history.clear" = "Clear History";
 "reading_history.clear.confirm" = "Are you sure? This cannot be undone.";
+
+/* ==================== */
+/* MARK: - Text-to-Speech */
+/* ==================== */
+
+"tts.button" = "Listen";
+"tts.button_hint" = "Read article aloud";
+"tts.listening" = "Listening";
+"tts.play" = "Play";
+"tts.pause" = "Pause";
+"tts.stop" = "Stop";
+"tts.speed_label" = "Speed: %@";
+"tts.speed_hint" = "Cycle speech speed";
+"tts.progress" = "Speech progress";
+"tts.progress_value" = "%d percent";
+"accessibility.tts_started" = "Reading aloud";
+"accessibility.tts_paused" = "Reading paused";

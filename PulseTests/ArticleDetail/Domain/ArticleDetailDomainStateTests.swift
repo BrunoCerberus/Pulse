@@ -34,6 +34,10 @@ struct ArticleDetailDomainStateTests {
         #expect(state.isBookmarked == false)
         #expect(state.showShareSheet == false)
         #expect(state.showSummarizationSheet == false)
+        #expect(state.ttsPlaybackState == .idle)
+        #expect(state.ttsProgress == 0.0)
+        #expect(state.ttsSpeedPreset == .normal)
+        #expect(state.isTTSPlayerVisible == false)
     }
 
     @Test("Initial state uses provided article")

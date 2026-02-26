@@ -20,6 +20,8 @@ struct ArticleDetailEventActionMap: DomainEventActionMap {
         switch event {
         case .onAppear:
             return .onAppear
+        case .onDisappear:
+            return .stopTTS
         case .onBookmarkTapped:
             return .toggleBookmark
         case .onShareTapped:
@@ -32,6 +34,14 @@ struct ArticleDetailEventActionMap: DomainEventActionMap {
             return .dismissShareSheet
         case .onSummarizationSheetDismissed:
             return .dismissSummarizationSheet
+        case .onListenTapped:
+            return .startTTS
+        case .onTTSPlayPauseTapped:
+            return .toggleTTSPlayback
+        case .onTTSStopTapped:
+            return .stopTTS
+        case .onTTSSpeedTapped:
+            return .cycleTTSSpeed
         }
     }
 }

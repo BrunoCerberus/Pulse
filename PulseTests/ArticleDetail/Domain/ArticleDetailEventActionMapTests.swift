@@ -49,16 +49,53 @@ struct ArticleDetailEventActionMapTests {
         #expect(action == .dismissSummarizationSheet)
     }
 
+    // MARK: - TTS Event Mappings
+
+    @Test("onDisappear event maps to stopTTS action")
+    func onDisappearMapping() {
+        let action = sut.map(event: .onDisappear)
+        #expect(action == .stopTTS)
+    }
+
+    @Test("onListenTapped event maps to startTTS action")
+    func onListenTappedMapping() {
+        let action = sut.map(event: .onListenTapped)
+        #expect(action == .startTTS)
+    }
+
+    @Test("onTTSPlayPauseTapped event maps to toggleTTSPlayback action")
+    func onTTSPlayPauseTappedMapping() {
+        let action = sut.map(event: .onTTSPlayPauseTapped)
+        #expect(action == .toggleTTSPlayback)
+    }
+
+    @Test("onTTSStopTapped event maps to stopTTS action")
+    func onTTSStopTappedMapping() {
+        let action = sut.map(event: .onTTSStopTapped)
+        #expect(action == .stopTTS)
+    }
+
+    @Test("onTTSSpeedTapped event maps to cycleTTSSpeed action")
+    func onTTSSpeedTappedMapping() {
+        let action = sut.map(event: .onTTSSpeedTapped)
+        #expect(action == .cycleTTSSpeed)
+    }
+
     @Test("All events produce non-nil actions")
     func allEventsProduceActions() {
         let events: [ArticleDetailViewEvent] = [
             .onAppear,
+            .onDisappear,
             .onBookmarkTapped,
             .onShareTapped,
             .onSummarizeTapped,
             .onReadFullTapped,
             .onShareSheetDismissed,
             .onSummarizationSheetDismissed,
+            .onListenTapped,
+            .onTTSPlayPauseTapped,
+            .onTTSStopTapped,
+            .onTTSSpeedTapped,
         ]
 
         for event in events {

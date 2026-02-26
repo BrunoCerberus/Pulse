@@ -24,6 +24,7 @@ final class ArticleDetailDomainInteractor: CombineInteractor {
     typealias DomainAction = ArticleDetailDomainAction
 
     private let storageService: StorageService
+    private let ttsService: TextToSpeechService?
     private let analyticsService: AnalyticsService?
     private let stateSubject: CurrentValueSubject<ArticleDetailDomainState, Never>
     private var cancellables = Set<AnyCancellable>()
@@ -47,7 +48,10 @@ final class ArticleDetailDomainInteractor: CombineInteractor {
             storageService = LiveStorageService()
         }
 
+        ttsService = try? serviceLocator.retrieve(TextToSpeechService.self)
         analyticsService = try? serviceLocator.retrieve(AnalyticsService.self)
+
+        setupTTSBindings()
 
         // Start content processing immediately on init
         startContentProcessing()
@@ -78,6 +82,20 @@ final class ArticleDetailDomainInteractor: CombineInteractor {
             updateState { $0.showSummarizationSheet = true }
         case .dismissSummarizationSheet:
             updateState { $0.showSummarizationSheet = false }
+
+        // MARK: - TTS Actions
+        case .startTTS:
+            startTTS()
+        case .toggleTTSPlayback:
+            toggleTTSPlayback()
+        case .stopTTS:
+            stopTTS()
+        case .cycleTTSSpeed:
+            cycleTTSSpeed()
+        case let .ttsPlaybackStateChanged(state):
+            handleTTSPlaybackStateChanged(state)
+        case let .ttsProgressUpdated(progress):
+            updateState { $0.ttsProgress = progress }
         }
     }
 
@@ -259,6 +277,116 @@ final class ArticleDetailDomainInteractor: CombineInteractor {
     private nonisolated func stripTruncationMarker(from content: String) -> String {
         let pattern = #"\s*\[\+\d+ chars\]"#
         return content.replacingOccurrences(of: pattern, with: "", options: .regularExpression)
+    }
+
+    // MARK: - Text-to-Speech
+
+    private func setupTTSBindings() {
+        guard let ttsService else { return }
+
+        ttsService.playbackStatePublisher
+            .removeDuplicates()
+            .receive(on: DispatchQueue.main)
+            .sink { [weak self] state in
+                self?.dispatch(action: .ttsPlaybackStateChanged(state))
+            }
+            .store(in: &cancellables)
+
+        ttsService.progressPublisher
+            .receive(on: DispatchQueue.main)
+            .sink { [weak self] progress in
+                self?.dispatch(action: .ttsProgressUpdated(progress))
+            }
+            .store(in: &cancellables)
+    }
+
+    private func startTTS() {
+        guard let ttsService else { return }
+
+        let article = currentState.article
+        let text = buildSpeechText(from: article)
+        guard !text.isEmpty else { return }
+
+        let language = AppLocalization.shared.language
+        let rate = currentState.ttsSpeedPreset.rate
+
+        ttsService.speak(text: text, language: language, rate: rate)
+        updateState { $0.isTTSPlayerVisible = true }
+        analyticsService?.logEvent(.ttsStarted)
+    }
+
+    private func toggleTTSPlayback() {
+        guard let ttsService else { return }
+
+        switch currentState.ttsPlaybackState {
+        case .playing:
+            ttsService.pause()
+        case .paused:
+            ttsService.resume()
+        case .idle:
+            startTTS()
+        }
+    }
+
+    private func stopTTS() {
+        ttsService?.stop()
+        updateState { state in
+            state.isTTSPlayerVisible = false
+            state.ttsProgress = 0.0
+        }
+        analyticsService?.logEvent(.ttsStopped)
+    }
+
+    private func cycleTTSSpeed() {
+        let nextPreset = currentState.ttsSpeedPreset.next()
+        updateState { $0.ttsSpeedPreset = nextPreset }
+
+        // Restart speech with new rate if currently playing
+        if currentState.ttsPlaybackState == .playing || currentState.ttsPlaybackState == .paused {
+            guard let ttsService else { return }
+            let article = currentState.article
+            let text = buildSpeechText(from: article)
+            guard !text.isEmpty else { return }
+
+            let language = AppLocalization.shared.language
+            ttsService.speak(text: text, language: language, rate: nextPreset.rate)
+        }
+
+        analyticsService?.logEvent(.ttsSpeedChanged(speed: nextPreset.label))
+    }
+
+    private func handleTTSPlaybackStateChanged(_ state: TTSPlaybackState) {
+        updateState { $0.ttsPlaybackState = state }
+
+        // Auto-hide player when speech finishes naturally
+        if state == .idle, currentState.isTTSPlayerVisible, currentState.ttsProgress >= 1.0 {
+            updateState { $0.isTTSPlayerVisible = false }
+        }
+    }
+
+    private nonisolated func buildSpeechText(from article: Article) -> String {
+        var parts: [String] = [article.title]
+
+        if let author = article.author, !author.isEmpty {
+            parts.append("By \(author)")
+        }
+
+        if let description = article.description {
+            let clean = stripHTML(from: description).trimmingCharacters(in: .whitespacesAndNewlines)
+            if !clean.isEmpty {
+                parts.append(clean)
+            }
+        }
+
+        if let content = article.content {
+            let clean = stripHTML(from: stripTruncationMarker(from: content))
+                .trimmingCharacters(in: .whitespacesAndNewlines)
+            if !clean.isEmpty {
+                parts.append(clean)
+            }
+        }
+
+        return parts.joined(separator: ". ")
     }
 
     // MARK: - Background Task Management
