@@ -83,7 +83,14 @@ struct ArticleRowView: View {
         }
         .buttonStyle(.plain)
         .accessibilityElement(children: .combine)
-        .accessibilityLabel(String(format: AppLocalization.shared.localized("article_row.accessibility_label"), item.title, item.sourceName, item.formattedDate))
+        .accessibilityLabel(
+            String(
+                format: AppLocalization.shared.localized("article_row.accessibility_label"),
+                item.title,
+                item.sourceName,
+                item.formattedDate
+            )
+        )
         .accessibilityHint(AppLocalization.shared.localized("accessibility.read_article"))
         .contextMenu {
             Button {

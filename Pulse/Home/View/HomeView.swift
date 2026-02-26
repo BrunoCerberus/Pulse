@@ -160,7 +160,9 @@ struct HomeView<R: HomeNavigationRouter>: View {
         }
         .onChange(of: viewModel.viewState.isRefreshing) { oldValue, newValue in
             if oldValue && !newValue {
-                AccessibilityNotification.Announcement(AppLocalization.shared.localized("accessibility.refresh_complete")).post()
+                AccessibilityNotification.Announcement(
+                    AppLocalization.shared.localized("accessibility.refresh_complete")
+                ).post()
             }
         }
     }

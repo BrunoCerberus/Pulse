@@ -15,7 +15,9 @@ struct SpeechPlayerBarView: View {
             ProgressView(value: progress)
                 .tint(Color.Accent.gradient)
                 .accessibilityLabel(AppLocalization.shared.localized("tts.progress"))
-                .accessibilityValue(String(format: AppLocalization.shared.localized("tts.progress_value"), Int(progress * 100)))
+                .accessibilityValue(
+                    String(format: AppLocalization.shared.localized("tts.progress_value"), Int(progress * 100))
+                )
 
             HStack(spacing: Spacing.md) {
                 Button(action: onPlayPause) {

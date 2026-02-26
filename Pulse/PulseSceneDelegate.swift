@@ -258,7 +258,8 @@ final class PulseSceneDelegate: UIResponder, UIWindowSceneDelegate {
             do {
                 let storageService = try serviceLocator.retrieve(StorageService.self)
                 let preferences = try await storageService.fetchUserPreferences()
-                let language = preferences?.preferredLanguage ?? (Locale.current.language.languageCode?.identifier ?? "en")
+                let language = preferences?.preferredLanguage
+                    ?? (Locale.current.language.languageCode?.identifier ?? "en")
                 await MainActor.run {
                     AppLocalization.shared.updateLanguage(language)
                 }

@@ -297,4 +297,189 @@ struct ArticleDetailTTSInteractorTests {
         let text = mockTTSService.lastSpokenText ?? ""
         #expect(text.contains("Only Title"))
     }
+
+    // MARK: - Auto-hide on Natural Finish (Gap 1)
+
+    @Test("Auto-hides player when speech finishes naturally at full progress")
+    func autoHidesPlayerOnNaturalFinish() async throws {
+        let sut = createSUT()
+
+        sut.dispatch(action: .startTTS)
+        try await waitForStateUpdate(duration: TestWaitDuration.short)
+        #expect(sut.currentState.isTTSPlayerVisible == true)
+
+        sut.dispatch(action: .ttsProgressUpdated(1.0))
+        sut.dispatch(action: .ttsPlaybackStateChanged(.idle))
+
+        #expect(sut.currentState.isTTSPlayerVisible == false)
+    }
+
+    @Test("Does NOT auto-hide player when progress is below 1.0")
+    func doesNotAutoHideWhenProgressBelowOne() async throws {
+        let sut = createSUT()
+
+        sut.dispatch(action: .startTTS)
+        try await waitForStateUpdate(duration: TestWaitDuration.short)
+
+        sut.dispatch(action: .ttsProgressUpdated(0.5))
+        sut.dispatch(action: .ttsPlaybackStateChanged(.idle))
+
+        #expect(sut.currentState.isTTSPlayerVisible == true)
+    }
+
+    // MARK: - Speed Change Edge Cases (Gap 2)
+
+    @Test("cycleTTSSpeed restarts speech when paused")
+    func cycleTTSSpeedRestartsSpeechWhenPaused() async throws {
+        let sut = createSUT()
+
+        sut.dispatch(action: .startTTS)
+        try await waitForStateUpdate(duration: TestWaitDuration.short)
+
+        mockTTSService.pause()
+        try await waitForStateUpdate(duration: TestWaitDuration.short)
+        #expect(sut.currentState.ttsPlaybackState == .paused)
+
+        let speakCountBeforeCycle = mockTTSService.speakCallCount
+
+        sut.dispatch(action: .cycleTTSSpeed)
+        try await waitForStateUpdate(duration: TestWaitDuration.short)
+
+        #expect(mockTTSService.speakCallCount > speakCountBeforeCycle)
+        #expect(mockTTSService.lastRate == TTSSpeedPreset.fast.rate)
+    }
+
+    @Test("cycleTTSSpeed does NOT restart speech when idle")
+    func cycleTTSSpeedDoesNotRestartWhenIdle() {
+        let sut = createSUT()
+
+        sut.dispatch(action: .cycleTTSSpeed)
+
+        #expect(mockTTSService.speakCallCount == 0)
+        #expect(sut.currentState.ttsSpeedPreset == .fast)
+    }
+
+    // MARK: - Combine Bindings Integration (Gap 6)
+
+    @Test("Service progress publisher updates domain state")
+    func serviceProgressPublisherUpdatesDomainState() async throws {
+        let sut = createSUT()
+
+        mockTTSService.simulateProgress(0.42)
+        try await waitForStateUpdate(duration: TestWaitDuration.short)
+
+        #expect(sut.currentState.ttsProgress == 0.42)
+    }
+
+    @Test("Service finished publisher updates domain state")
+    func serviceFinishedPublisherUpdatesDomainState() async throws {
+        let sut = createSUT()
+
+        sut.dispatch(action: .startTTS)
+        try await waitForStateUpdate(duration: TestWaitDuration.short)
+
+        mockTTSService.simulateFinished()
+        try await waitForStateUpdate(duration: TestWaitDuration.short)
+
+        #expect(sut.currentState.ttsPlaybackState == .idle)
+        #expect(sut.currentState.ttsProgress == 1.0)
+    }
+
+    // MARK: - Graceful Degradation (Gap 3)
+
+    @Test("startTTS no-ops gracefully without TTS service registered")
+    func startTTSNoOpsWithoutService() async throws {
+        let minimalLocator = ServiceLocator()
+        minimalLocator.register(StorageService.self, instance: MockStorageService())
+
+        let sut = ArticleDetailDomainInteractor(
+            article: testArticle,
+            serviceLocator: minimalLocator
+        )
+
+        sut.dispatch(action: .startTTS)
+        try await waitForStateUpdate(duration: TestWaitDuration.short)
+
+        #expect(sut.currentState.isTTSPlayerVisible == false)
+        #expect(sut.currentState.ttsPlaybackState == .idle)
+    }
+
+    // MARK: - Empty Speech Text Guard (Gap 4)
+
+    @Test("startTTS no-ops with empty speech text")
+    func startTTSNoOpsWithEmptySpeechText() async throws {
+        let article = Article(
+            id: "test-empty",
+            title: "",
+            source: ArticleSource(id: nil, name: "Source"),
+            url: "https://example.com",
+            publishedAt: Date()
+        )
+
+        let sut = createSUT(article: article)
+        sut.dispatch(action: .startTTS)
+        try await waitForStateUpdate(duration: TestWaitDuration.short)
+
+        #expect(mockTTSService.speakCallCount == 0)
+        #expect(sut.currentState.isTTSPlayerVisible == false)
+    }
+
+    // MARK: - HTML Stripping (Gap 5)
+
+    @Test("startTTS strips HTML tags from content")
+    func startTTSStripsHTMLFromContent() async throws {
+        let article = Article(
+            id: "test-html",
+            title: "Clean Title",
+            description: "<p>A <b>bold</b> desc</p>",
+            content: "<div>Content with <a href='#'>link</a></div>",
+            source: ArticleSource(id: nil, name: "Source"),
+            url: "https://example.com",
+            publishedAt: Date()
+        )
+
+        let sut = createSUT(article: article)
+        sut.dispatch(action: .startTTS)
+        try await waitForStateUpdate(duration: TestWaitDuration.short)
+
+        let text = mockTTSService.lastSpokenText ?? ""
+        #expect(!text.contains("<"))
+        #expect(!text.contains(">"))
+        #expect(text.contains("bold"))
+        #expect(text.contains("Content"))
+    }
+
+    // MARK: - Language Parameter (Gap 7 partial)
+
+    @Test("startTTS passes language from AppLocalization")
+    func startTTSPassesLanguage() async throws {
+        let sut = createSUT()
+
+        sut.dispatch(action: .startTTS)
+        try await waitForStateUpdate(duration: TestWaitDuration.short)
+
+        #expect(mockTTSService.lastLanguage != nil)
+        #expect(mockTTSService.lastLanguage == AppLocalization.shared.language)
+    }
+
+    // MARK: - Analytics Speed Params (Gap 15)
+
+    @Test("cycleTTSSpeed analytics params cycle through all preset labels")
+    func cycleTTSSpeedAnalyticsParamsForAllPresets() async throws {
+        let sut = createSUT()
+
+        let expectedLabels = ["1.25x", "1.5x", "2x", "1x"]
+
+        for expectedLabel in expectedLabels {
+            sut.dispatch(action: .cycleTTSSpeed)
+            try await waitForStateUpdate(duration: TestWaitDuration.short)
+
+            let speedEvents = mockAnalyticsService.loggedEvents.filter { $0.name == "tts_speed_changed" }
+            let lastEvent = speedEvents.last
+            #expect(lastEvent?.parameters?["speed"] as? String == expectedLabel)
+        }
+
+        let speedEvents = mockAnalyticsService.loggedEvents.filter { $0.name == "tts_speed_changed" }
+        #expect(speedEvents.count == 4)
+    }
 }
