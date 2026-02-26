@@ -90,13 +90,15 @@ struct SearchView<R: SearchNavigationRouter>: View {
         .onChange(of: viewModel.viewState.results) { _, newResults in
             if !newResults.isEmpty {
                 isFirstResultFocused = true
-                let announcement = String(format: AppLocalization.shared.localized("accessibility.search_results_count"), newResults.count)
+                let format = AppLocalization.shared.localized("accessibility.search_results_count")
+                let announcement = String(format: format, newResults.count)
                 AccessibilityNotification.Announcement(announcement).post()
             }
         }
         .onChange(of: viewModel.viewState.showNoResults) { _, showNoResults in
             if showNoResults {
-                AccessibilityNotification.Announcement(AppLocalization.shared.localized("accessibility.search_no_results")).post()
+                let message = AppLocalization.shared.localized("accessibility.search_no_results")
+                AccessibilityNotification.Announcement(message).post()
             }
         }
     }
@@ -180,7 +182,8 @@ struct SearchView<R: SearchNavigationRouter>: View {
                 VStack(alignment: .leading, spacing: Spacing.sm) {
                     GlassSectionHeader(AppLocalization.shared.localized("search.trending_topics"))
 
-                    LazyVGrid(columns: [GridItem(.adaptive(minimum: dynamicTypeSize.isAccessibilitySize ? 150 : 100))], spacing: Spacing.sm) {
+                    let minWidth: CGFloat = dynamicTypeSize.isAccessibilitySize ? 150 : 100
+                    LazyVGrid(columns: [GridItem(.adaptive(minimum: minWidth))], spacing: Spacing.sm) {
                         ForEach(NewsCategory.allCases) { category in
                             GlassCategoryButton(category: category, isSelected: false) {
                                 viewModel.handle(event: .onQueryChanged(category.displayName))
@@ -215,8 +218,12 @@ struct SearchView<R: SearchNavigationRouter>: View {
         .accessibilityLabel(String(format: AppLocalization.shared.localized("search.recent_label"), suggestion))
         .accessibilityHint(AppLocalization.shared.localized("search.search_hint"))
     }
+}
 
-    private func errorView(_ message: String) -> some View {
+// MARK: - Results & Error Views
+
+private extension SearchView {
+    func errorView(_ message: String) -> some View {
         GlassCard(style: .thin, shadowStyle: .medium, padding: Spacing.xl) {
             VStack(spacing: Spacing.md) {
                 if viewModel.viewState.isOfflineError {
@@ -265,7 +272,7 @@ struct SearchView<R: SearchNavigationRouter>: View {
         .padding(Spacing.lg)
     }
 
-    private var noResultsView: some View {
+    var noResultsView: some View {
         GlassCard(style: .thin, shadowStyle: .medium, padding: Spacing.xl) {
             VStack(spacing: Spacing.md) {
                 Image(systemName: "doc.text.magnifyingglass")
@@ -285,7 +292,7 @@ struct SearchView<R: SearchNavigationRouter>: View {
         .padding(Spacing.lg)
     }
 
-    private var resultsList: some View {
+    var resultsList: some View {
         let results = viewModel.viewState.results
         let lastItemId = results.last?.id
 
@@ -307,7 +314,6 @@ struct SearchView<R: SearchNavigationRouter>: View {
                         )
                         .fadeIn(delay: Double(item.animationIndex) * 0.03)
                         .onAppear {
-                            // Pre-computed lastItemId avoids recalculating .last on every appear
                             if item.id == lastItemId {
                                 viewModel.handle(event: .onLoadMore)
                             }

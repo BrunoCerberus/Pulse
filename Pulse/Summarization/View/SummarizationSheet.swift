@@ -320,10 +320,12 @@ struct SummarizationSheet: View {
         .glassBackground(style: .thin, cornerRadius: CornerRadius.lg)
         .accessibilityFocused($isSummaryFocused)
     }
+}
 
-    // MARK: - Error State
+// MARK: - Error State
 
-    private func errorContent(message: String) -> some View {
+extension SummarizationSheet {
+    func errorContent(message: String) -> some View {
         VStack(spacing: Spacing.md) {
             ZStack {
                 Circle()

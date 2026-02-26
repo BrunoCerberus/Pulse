@@ -52,8 +52,6 @@ final class ArticleDetailDomainInteractor: CombineInteractor {
         analyticsService = try? serviceLocator.retrieve(AnalyticsService.self)
 
         setupTTSBindings()
-
-        // Start content processing immediately on init
         startContentProcessing()
     }
 
@@ -82,20 +80,9 @@ final class ArticleDetailDomainInteractor: CombineInteractor {
             updateState { $0.showSummarizationSheet = true }
         case .dismissSummarizationSheet:
             updateState { $0.showSummarizationSheet = false }
-
-        // MARK: - TTS Actions
-        case .startTTS:
-            startTTS()
-        case .toggleTTSPlayback:
-            toggleTTSPlayback()
-        case .stopTTS:
-            stopTTS()
-        case .cycleTTSSpeed:
-            cycleTTSSpeed()
-        case let .ttsPlaybackStateChanged(state):
-            handleTTSPlaybackStateChanged(state)
-        case let .ttsProgressUpdated(progress):
-            updateState { $0.ttsProgress = progress }
+        case .startTTS, .toggleTTSPlayback, .stopTTS,
+             .cycleTTSSpeed, .ttsPlaybackStateChanged, .ttsProgressUpdated:
+            dispatchTTSAction(action)
         }
     }
 
@@ -124,7 +111,6 @@ final class ArticleDetailDomainInteractor: CombineInteractor {
         let article = currentState.article
         let wasBookmarked = currentState.isBookmarked
 
-        // Optimistic update
         updateState { $0.isBookmarked = !wasBookmarked }
         analyticsService?.logEvent(wasBookmarked ? .articleUnbookmarked : .articleBookmarked)
 
@@ -137,7 +123,6 @@ final class ArticleDetailDomainInteractor: CombineInteractor {
                     try await storageService.saveArticle(article)
                 }
             } catch {
-                // Revert on error
                 await MainActor.run { [weak self] in
                     self?.updateState { $0.isBookmarked = wasBookmarked }
                 }
@@ -177,11 +162,11 @@ final class ArticleDetailDomainInteractor: CombineInteractor {
             guard let self else { return }
 
             let content = await Task.detached(priority: .userInitiated) {
-                self.createProcessedContent(from: article.content)
+                ArticleDetailTextProcessor.createProcessedContent(from: article.content)
             }.value
 
             let description = await Task.detached(priority: .userInitiated) {
-                self.createProcessedDescription(from: article.description)
+                ArticleDetailTextProcessor.createProcessedDescription(from: article.description)
             }.value
 
             guard !Task.isCancelled else { return }
@@ -193,93 +178,51 @@ final class ArticleDetailDomainInteractor: CombineInteractor {
         trackBackgroundTask(task)
     }
 
-    private nonisolated func createProcessedContent(from content: String?) -> AttributedString? {
-        guard let content else { return nil }
+    // MARK: - Background Task Management
 
-        let strippedContent = stripTruncationMarker(from: content)
-        let plainContent = stripHTML(from: strippedContent)
-            .trimmingCharacters(in: .whitespacesAndNewlines)
+    private func trackBackgroundTask(_ taskToTrack: Task<Void, Never>) {
+        backgroundTasks.insert(taskToTrack)
 
-        guard !plainContent.isEmpty else { return nil }
-
-        let formattedText = formatIntoParagraphs(plainContent)
-        var attributedString = AttributedString(formattedText)
-        attributedString.font = .system(.body, design: .serif)
-
-        return attributedString
-    }
-
-    private nonisolated func createProcessedDescription(from description: String?) -> AttributedString? {
-        guard let description else { return nil }
-
-        let cleanText = stripHTML(from: description)
-            .trimmingCharacters(in: .whitespacesAndNewlines)
-
-        guard !cleanText.isEmpty else { return nil }
-
-        let formattedText = formatIntoParagraphs(cleanText)
-
-        var attributedString = AttributedString(formattedText)
-        attributedString.font = .system(.body, design: .serif, weight: .medium)
-
-        if let firstSentenceEnd = formattedText.firstIndex(where: { $0 == "." || $0 == "!" || $0 == "?" }) {
-            let firstSentenceRange = formattedText.startIndex ... firstSentenceEnd
-            if let attributedRange = Range(firstSentenceRange, in: attributedString) {
-                attributedString[attributedRange].font = .system(.title3, design: .serif, weight: .semibold)
-            }
+        Task { @MainActor [weak self] in
+            _ = await taskToTrack.result
+            self?.backgroundTasks.remove(taskToTrack)
         }
-
-        return attributedString
     }
 
-    private nonisolated func formatIntoParagraphs(_ text: String) -> String {
-        let pattern = #"(?<=[.!?])\s+"#
-        guard let regex = try? NSRegularExpression(pattern: pattern) else { return text }
-
-        let range = NSRange(text.startIndex..., in: text)
-        let modifiedText = regex.stringByReplacingMatches(in: text, range: range, withTemplate: "|||")
-        let sentences = modifiedText.components(separatedBy: "|||")
-            .map { $0.trimmingCharacters(in: .whitespaces) }
-            .filter { !$0.isEmpty }
-
-        guard sentences.count > 1 else { return text }
-
-        var paragraphs: [String] = []
-        var currentParagraph: [String] = []
-        let sentencesPerParagraph = 3
-
-        for sentence in sentences {
-            currentParagraph.append(sentence)
-            if currentParagraph.count >= sentencesPerParagraph {
-                paragraphs.append(currentParagraph.joined(separator: " "))
-                currentParagraph = []
-            }
+    deinit {
+        for task in backgroundTasks {
+            task.cancel()
         }
+    }
 
-        if !currentParagraph.isEmpty {
-            paragraphs.append(currentParagraph.joined(separator: " "))
+    private func updateState(_ transform: (inout ArticleDetailDomainState) -> Void) {
+        var state = stateSubject.value
+        transform(&state)
+        stateSubject.send(state)
+    }
+}
+
+// MARK: - Text-to-Speech
+
+extension ArticleDetailDomainInteractor {
+    private func dispatchTTSAction(_ action: ArticleDetailDomainAction) {
+        switch action {
+        case .startTTS:
+            startTTS()
+        case .toggleTTSPlayback:
+            toggleTTSPlayback()
+        case .stopTTS:
+            stopTTS()
+        case .cycleTTSSpeed:
+            cycleTTSSpeed()
+        case let .ttsPlaybackStateChanged(state):
+            handleTTSPlaybackStateChanged(state)
+        case let .ttsProgressUpdated(progress):
+            updateState { $0.ttsProgress = progress }
+        default:
+            break
         }
-
-        return paragraphs.joined(separator: "\n\n")
     }
-
-    private nonisolated func stripHTML(from html: String) -> String {
-        html.replacingOccurrences(of: #"<[^>]+>"#, with: " ", options: .regularExpression)
-            .replacingOccurrences(of: "&nbsp;", with: " ")
-            .replacingOccurrences(of: "&amp;", with: "&")
-            .replacingOccurrences(of: "&lt;", with: "<")
-            .replacingOccurrences(of: "&gt;", with: ">")
-            .replacingOccurrences(of: "&quot;", with: "\"")
-            .replacingOccurrences(of: "&#39;", with: "'")
-            .replacingOccurrences(of: #"\s+"#, with: " ", options: .regularExpression)
-    }
-
-    private nonisolated func stripTruncationMarker(from content: String) -> String {
-        let pattern = #"\s*\[\+\d+ chars\]"#
-        return content.replacingOccurrences(of: pattern, with: "", options: .regularExpression)
-    }
-
-    // MARK: - Text-to-Speech
 
     private func setupTTSBindings() {
         guard let ttsService else { return }
@@ -304,7 +247,7 @@ final class ArticleDetailDomainInteractor: CombineInteractor {
         guard let ttsService else { return }
 
         let article = currentState.article
-        let text = buildSpeechText(from: article)
+        let text = ArticleDetailTextProcessor.buildSpeechText(from: article)
         guard !text.isEmpty else { return }
 
         let language = AppLocalization.shared.language
@@ -341,11 +284,10 @@ final class ArticleDetailDomainInteractor: CombineInteractor {
         let nextPreset = currentState.ttsSpeedPreset.next()
         updateState { $0.ttsSpeedPreset = nextPreset }
 
-        // Restart speech with new rate if currently playing
         if currentState.ttsPlaybackState == .playing || currentState.ttsPlaybackState == .paused {
             guard let ttsService else { return }
             let article = currentState.article
-            let text = buildSpeechText(from: article)
+            let text = ArticleDetailTextProcessor.buildSpeechText(from: article)
             guard !text.isEmpty else { return }
 
             let language = AppLocalization.shared.language
@@ -358,60 +300,8 @@ final class ArticleDetailDomainInteractor: CombineInteractor {
     private func handleTTSPlaybackStateChanged(_ state: TTSPlaybackState) {
         updateState { $0.ttsPlaybackState = state }
 
-        // Auto-hide player when speech finishes naturally
         if state == .idle, currentState.isTTSPlayerVisible, currentState.ttsProgress >= 1.0 {
             updateState { $0.isTTSPlayerVisible = false }
         }
-    }
-
-    private nonisolated func buildSpeechText(from article: Article) -> String {
-        var parts: [String] = [article.title]
-
-        if let author = article.author, !author.isEmpty {
-            parts.append("By \(author)")
-        }
-
-        if let description = article.description {
-            let clean = stripHTML(from: description).trimmingCharacters(in: .whitespacesAndNewlines)
-            if !clean.isEmpty {
-                parts.append(clean)
-            }
-        }
-
-        if let content = article.content {
-            let clean = stripHTML(from: stripTruncationMarker(from: content))
-                .trimmingCharacters(in: .whitespacesAndNewlines)
-            if !clean.isEmpty {
-                parts.append(clean)
-            }
-        }
-
-        return parts.joined(separator: ". ")
-    }
-
-    // MARK: - Background Task Management
-
-    /// Safely tracks and auto-removes background tasks with proper cleanup on deinit.
-    /// Uses a single MainActor Task to ensure atomic insertion and removal (no race condition).
-    private func trackBackgroundTask(_ taskToTrack: Task<Void, Never>) {
-        backgroundTasks.insert(taskToTrack)
-
-        Task { @MainActor [weak self] in
-            _ = await taskToTrack.result
-            self?.backgroundTasks.remove(taskToTrack)
-        }
-    }
-
-    deinit {
-        // Cancel all pending tasks on deallocation
-        for task in backgroundTasks {
-            task.cancel()
-        }
-    }
-
-    private func updateState(_ transform: (inout ArticleDetailDomainState) -> Void) {
-        var state = stateSubject.value
-        transform(&state)
-        stateSubject.send(state)
     }
 }

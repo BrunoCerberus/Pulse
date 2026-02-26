@@ -210,8 +210,11 @@ struct AudioPlayerView: View {
             .accessibilityElement()
             .accessibilityLabel(AppLocalization.shared.localized("audio_player.progress_label"))
             .accessibilityValue({
-                let current = formatTime(isDragging ? playerManager.duration * dragProgress : playerManager.currentTime)
-                return String(format: AppLocalization.shared.localized("audio_player.progress_value"), current, formatTime(playerManager.duration))
+                let time = isDragging ? playerManager.duration * dragProgress : playerManager.currentTime
+                let current = formatTime(time)
+                let total = formatTime(playerManager.duration)
+                let format = AppLocalization.shared.localized("audio_player.progress_value")
+                return String(format: format, current, total)
             }())
             .accessibilityAdjustableAction { direction in
                 switch direction {

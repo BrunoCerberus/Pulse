@@ -310,8 +310,12 @@ struct MediaDetailView: View {
         .background(Color.orange.opacity(0.1))
         .clipShape(RoundedRectangle(cornerRadius: CornerRadius.sm))
     }
+}
 
-    private var openInBrowserButton: some View {
+// MARK: - Player Content & Helpers
+
+private extension MediaDetailView {
+    var openInBrowserButton: some View {
         Button {
             HapticManager.shared.buttonPress()
             viewModel.handle(event: .onOpenInBrowserTapped)
@@ -330,11 +334,7 @@ struct MediaDetailView: View {
         .pressEffect()
         .accessibilityHint(AppLocalization.shared.localized("accessibility.opens_in_safari"))
     }
-}
 
-// MARK: - Player Content
-
-private extension MediaDetailView {
     @ViewBuilder
     var playerContent: some View {
         switch viewModel.viewState.article.mediaType {

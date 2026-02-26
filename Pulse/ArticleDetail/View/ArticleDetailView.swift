@@ -198,8 +198,12 @@ struct ArticleDetailView: View {
         }
         .enableSwipeBack()
     }
+}
 
-    private func checkPremiumStatus() {
+// MARK: - Subscription Helpers
+
+extension ArticleDetailView {
+    func checkPremiumStatus() {
         do {
             let storeKitService = try serviceLocator.retrieve(StoreKitService.self)
             isPremium = storeKitService.isPremium
@@ -208,7 +212,7 @@ struct ArticleDetailView: View {
         }
     }
 
-    private var subscriptionStatusPublisher: AnyPublisher<Bool, Never> {
+    var subscriptionStatusPublisher: AnyPublisher<Bool, Never> {
         guard let storeKitService = try? serviceLocator.retrieve(StoreKitService.self) else {
             return Empty().eraseToAnyPublisher()
         }
@@ -217,7 +221,7 @@ struct ArticleDetailView: View {
             .eraseToAnyPublisher()
     }
 
-    private func initializeSubscriptionStatus() {
+    func initializeSubscriptionStatus() {
         do {
             let storeKitService = try serviceLocator.retrieve(StoreKitService.self)
             isPremium = storeKitService.isPremium
@@ -226,8 +230,12 @@ struct ArticleDetailView: View {
             isPremium = false
         }
     }
+}
 
-    private var contentCard: some View {
+// MARK: - Content Sections
+
+extension ArticleDetailView {
+    var contentCard: some View {
         VStack(alignment: .leading, spacing: Spacing.md) {
             if let category = viewModel.viewState.article.category {
                 GlassCategoryChip(category: category, style: .medium, showIcon: true)
@@ -285,7 +293,7 @@ struct ArticleDetailView: View {
     }
 
     @ViewBuilder
-    private var metadataRow: some View {
+    var metadataRow: some View {
         if dynamicTypeSize.isAccessibilitySize {
             VStack(alignment: .leading, spacing: Spacing.xxs) {
                 if let author = viewModel.viewState.article.author {
@@ -331,7 +339,7 @@ struct ArticleDetailView: View {
         }
     }
 
-    private var readFullArticleButton: some View {
+    var readFullArticleButton: some View {
         Button {
             HapticManager.shared.buttonPress()
             viewModel.handle(event: .onReadFullTapped)
