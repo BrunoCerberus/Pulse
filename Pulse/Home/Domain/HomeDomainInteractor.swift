@@ -31,7 +31,7 @@ final class HomeDomainInteractor: CombineInteractor {
     var cancellables = Set<AnyCancellable>()
     private var backgroundTasks = Set<Task<Void, Never>>()
     var isLocalPreferenceChange = false
-    private(set) var preferredLanguage: String = "en"
+    internal(set) var preferredLanguage: String = "en"
 
     var statePublisher: AnyPublisher<HomeDomainState, Never> {
         stateSubject.eraseToAnyPublisher()
@@ -262,6 +262,19 @@ private extension HomeDomainInteractor {
         fetchHeadlinesForCurrentCategory(page: 1, isRefreshing: true)
     }
 
+    func handleSelectCategory(_ category: NewsCategory?) {
+        guard category != currentState.selectedCategory else { return }
+        if let category {
+            analyticsService?.logEvent(.categorySelected(category: category.rawValue))
+        }
+        resetStateForCategoryChange(to: category)
+        fetchHeadlinesForCurrentCategory(page: 1)
+    }
+}
+
+// MARK: - Headlines Fetching
+
+extension HomeDomainInteractor {
     func fetchHeadlinesForCurrentCategory(page: Int, isRefreshing: Bool = false) {
         let country = "us"
         if let category = currentState.selectedCategory {
@@ -273,15 +286,6 @@ private extension HomeDomainInteractor {
                 .sink { _ in }
                 .store(in: &cancellables)
         }
-    }
-
-    func handleSelectCategory(_ category: NewsCategory?) {
-        guard category != currentState.selectedCategory else { return }
-        if let category {
-            analyticsService?.logEvent(.categorySelected(category: category.rawValue))
-        }
-        resetStateForCategoryChange(to: category)
-        fetchHeadlinesForCurrentCategory(page: 1)
     }
 }
 
