@@ -48,4 +48,24 @@ enum ArticleDetailDomainAction: Equatable {
 
     /// Dismiss the summarization sheet.
     case dismissSummarizationSheet
+
+    // MARK: - Text-to-Speech
+
+    /// Start reading the article aloud.
+    case startTTS
+
+    /// Toggle between playing and paused TTS.
+    case toggleTTSPlayback
+
+    /// Stop TTS and dismiss the player bar.
+    case stopTTS
+
+    /// Cycle to the next TTS speed preset.
+    case cycleTTSSpeed
+
+    /// TTS playback state changed (from service publisher).
+    case ttsPlaybackStateChanged(TTSPlaybackState)
+
+    /// TTS progress updated (from service publisher).
+    case ttsProgressUpdated(Double)
 }

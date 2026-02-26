@@ -23,7 +23,11 @@ struct ArticleDetailViewStateReducer: ViewStateReducing {
             processedDescription: domainState.processedDescription,
             isBookmarked: domainState.isBookmarked,
             showShareSheet: domainState.showShareSheet,
-            showSummarizationSheet: domainState.showSummarizationSheet
+            showSummarizationSheet: domainState.showSummarizationSheet,
+            ttsPlaybackState: domainState.ttsPlaybackState,
+            ttsProgress: domainState.ttsProgress,
+            ttsSpeedPreset: domainState.ttsSpeedPreset,
+            isTTSPlayerVisible: domainState.isTTSPlayerVisible
         )
     }
 }

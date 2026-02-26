@@ -80,6 +80,7 @@ enum TestServiceLocatorFactory {
         serviceLocator.register(SummarizationService.self, instance: MockSummarizationService())
         serviceLocator.register(FeedService.self, instance: MockFeedService())
         serviceLocator.register(OnboardingService.self, instance: MockOnboardingService())
+        serviceLocator.register(TextToSpeechService.self, instance: MockTextToSpeechService())
 
         return serviceLocator
     }
@@ -101,6 +102,7 @@ enum TestServiceLocatorFactory {
         serviceLocator.register(SummarizationService.self, instance: MockSummarizationService())
         serviceLocator.register(FeedService.self, instance: MockFeedService())
         serviceLocator.register(OnboardingService.self, instance: MockOnboardingService())
+        serviceLocator.register(TextToSpeechService.self, instance: MockTextToSpeechService())
 
         return TestMockServices(
             serviceLocator: serviceLocator,

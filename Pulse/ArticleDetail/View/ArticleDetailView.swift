@@ -16,6 +16,10 @@ private enum Constants {
     static var summarize: String {
         AppLocalization.shared.localized("summarization.button")
     }
+
+    static var listen: String {
+        AppLocalization.shared.localized("tts.button")
+    }
 }
 
 // MARK: - ArticleDetailView
@@ -42,25 +46,44 @@ struct ArticleDetailView: View {
     }
 
     var body: some View {
-        ZStack(alignment: .top) {
-            LinearGradient.subtleBackground
-                .ignoresSafeArea()
+        ZStack(alignment: .bottom) {
+            ZStack(alignment: .top) {
+                LinearGradient.subtleBackground
+                    .ignoresSafeArea()
 
-            ScrollView {
-                VStack(alignment: .leading, spacing: 0) {
-                    if let imageURL = viewModel.viewState.article.heroImageURL, let url = URL(string: imageURL) {
-                        StretchyAsyncImage(
-                            url: url,
-                            baseHeight: heroBaseHeight,
-                            accessibilityLabel: viewModel.viewState.article.title
-                        )
+                ScrollView {
+                    VStack(alignment: .leading, spacing: 0) {
+                        if let imageURL = viewModel.viewState.article.heroImageURL, let url = URL(string: imageURL) {
+                            StretchyAsyncImage(
+                                url: url,
+                                baseHeight: heroBaseHeight,
+                                accessibilityLabel: viewModel.viewState.article.title
+                            )
+                        }
+
+                        contentCard
                     }
-
-                    contentCard
                 }
+                .accessibilityIdentifier("articleDetailScrollView")
             }
-            .accessibilityIdentifier("articleDetailScrollView")
+
+            if viewModel.viewState.isTTSPlayerVisible {
+                SpeechPlayerBarView(
+                    title: viewModel.viewState.article.title,
+                    playbackState: viewModel.viewState.ttsPlaybackState,
+                    progress: viewModel.viewState.ttsProgress,
+                    speedPreset: viewModel.viewState.ttsSpeedPreset,
+                    onPlayPause: { viewModel.handle(event: .onTTSPlayPauseTapped) },
+                    onStop: { viewModel.handle(event: .onTTSStopTapped) },
+                    onSpeedTap: { viewModel.handle(event: .onTTSSpeedTapped) }
+                )
+                .padding(.horizontal, Spacing.sm)
+                .padding(.bottom, Spacing.sm)
+                .transition(.move(edge: .bottom).combined(with: .opacity))
+                .accessibilityIdentifier("speechPlayerBar")
+            }
         }
+        .animation(.easeInOut(duration: 0.3), value: viewModel.viewState.isTTSPlayerVisible)
         .navigationBarBackButtonHidden(true)
         .toolbarBackground(.hidden, for: .navigationBar)
         .toolbar {
@@ -77,6 +100,13 @@ struct ArticleDetailView: View {
 
             ToolbarItem(placement: .topBarTrailing) {
                 HStack(spacing: Spacing.sm) {
+                    Button("", systemImage: "speaker.wave.2") {
+                        viewModel.handle(event: .onListenTapped)
+                    }
+                    .accessibilityIdentifier("listenButton")
+                    .accessibilityLabel(Constants.listen)
+                    .accessibilityHint(AppLocalization.shared.localized("tts.button_hint"))
+
                     Button("", systemImage: "sparkles") {
                         if isPremium {
                             viewModel.handle(event: .onSummarizeTapped)
@@ -132,6 +162,9 @@ struct ArticleDetailView: View {
             viewModel.handle(event: .onAppear)
             initializeSubscriptionStatus()
         }
+        .onDisappear {
+            viewModel.handle(event: .onDisappear)
+        }
         .onReceive(subscriptionStatusPublisher) { newStatus in
             isPremium = newStatus
         }
@@ -145,6 +178,19 @@ struct ArticleDetailView: View {
                 ? AppLocalization.shared.localized("accessibility.bookmark_added")
                 : AppLocalization.shared.localized("accessibility.bookmark_removed")
             AccessibilityNotification.Announcement(announcement).post()
+        }
+        .onChange(of: viewModel.viewState.ttsPlaybackState) { _, newState in
+            let announcement: String? = switch newState {
+            case .playing:
+                AppLocalization.shared.localized("accessibility.tts_started")
+            case .paused:
+                AppLocalization.shared.localized("accessibility.tts_paused")
+            case .idle:
+                nil
+            }
+            if let announcement {
+                AccessibilityNotification.Announcement(announcement).post()
+            }
         }
         .enableSwipeBack()
     }

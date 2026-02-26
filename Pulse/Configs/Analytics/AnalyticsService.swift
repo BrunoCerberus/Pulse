@@ -44,6 +44,9 @@ enum AnalyticsEvent {
     case signOut
     case onboardingCompleted(page: Int)
     case onboardingSkipped(page: Int)
+    case ttsStarted
+    case ttsStopped
+    case ttsSpeedChanged(speed: String)
 
     var name: String {
         switch self {
@@ -65,6 +68,9 @@ enum AnalyticsEvent {
         case .signOut: "sign_out"
         case .onboardingCompleted: "onboarding_completed"
         case .onboardingSkipped: "onboarding_skipped"
+        case .ttsStarted: "tts_started"
+        case .ttsStopped: "tts_stopped"
+        case .ttsSpeedChanged: "tts_speed_changed"
         }
     }
 
@@ -74,7 +80,7 @@ enum AnalyticsEvent {
             ["screen_name": screen.rawValue]
         case let .articleOpened(source):
             ["source": source.rawValue]
-        case .articleBookmarked, .articleUnbookmarked, .articleShared, .signOut:
+        case .articleBookmarked, .articleUnbookmarked, .articleShared, .signOut, .ttsStarted, .ttsStopped:
             nil
         case let .searchPerformed(queryLength, resultCount):
             ["query_length": queryLength, "result_count": resultCount]
@@ -100,6 +106,8 @@ enum AnalyticsEvent {
             ["page": page]
         case let .onboardingSkipped(page):
             ["page": page]
+        case let .ttsSpeedChanged(speed):
+            ["speed": speed]
         }
     }
 }

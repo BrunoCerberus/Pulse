@@ -116,7 +116,11 @@ struct ArticleDetailViewStateReducerTests {
             processedDescription: testDescription,
             isBookmarked: true,
             showShareSheet: true,
-            showSummarizationSheet: false
+            showSummarizationSheet: false,
+            ttsPlaybackState: .playing,
+            ttsProgress: 0.5,
+            ttsSpeedPreset: .fast,
+            isTTSPlayerVisible: true
         )
 
         let viewState = sut.reduce(domainState: domainState)
@@ -128,5 +132,51 @@ struct ArticleDetailViewStateReducerTests {
         #expect(viewState.isBookmarked == true)
         #expect(viewState.showShareSheet == true)
         #expect(viewState.showSummarizationSheet == false)
+        #expect(viewState.ttsPlaybackState == .playing)
+        #expect(viewState.ttsProgress == 0.5)
+        #expect(viewState.ttsSpeedPreset == .fast)
+        #expect(viewState.isTTSPlayerVisible == true)
+    }
+
+    // MARK: - TTS State Mapping
+
+    @Test("Reducer maps TTS playback state correctly")
+    func mapsTTSPlaybackState() {
+        var domainState = ArticleDetailDomainState.initial(article: testArticle)
+
+        domainState.ttsPlaybackState = .playing
+        var viewState = sut.reduce(domainState: domainState)
+        #expect(viewState.ttsPlaybackState == .playing)
+
+        domainState.ttsPlaybackState = .paused
+        viewState = sut.reduce(domainState: domainState)
+        #expect(viewState.ttsPlaybackState == .paused)
+    }
+
+    @Test("Reducer maps TTS progress correctly")
+    func mapsTTSProgress() {
+        var domainState = ArticleDetailDomainState.initial(article: testArticle)
+        domainState.ttsProgress = 0.75
+
+        let viewState = sut.reduce(domainState: domainState)
+        #expect(viewState.ttsProgress == 0.75)
+    }
+
+    @Test("Reducer maps TTS speed preset correctly")
+    func mapsTTSSpeedPreset() {
+        var domainState = ArticleDetailDomainState.initial(article: testArticle)
+        domainState.ttsSpeedPreset = .faster
+
+        let viewState = sut.reduce(domainState: domainState)
+        #expect(viewState.ttsSpeedPreset == .faster)
+    }
+
+    @Test("Reducer maps isTTSPlayerVisible correctly")
+    func mapsIsTTSPlayerVisible() {
+        var domainState = ArticleDetailDomainState.initial(article: testArticle)
+        domainState.isTTSPlayerVisible = true
+
+        let viewState = sut.reduce(domainState: domainState)
+        #expect(viewState.isTTSPlayerVisible == true)
     }
 }
