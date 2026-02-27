@@ -5,11 +5,11 @@ import SwiftUI
 
 private enum Constants {
     static var aiSummary: String {
-        AppLocalization.shared.localized("digest.ai_summary")
+        AppLocalization.localized("digest.ai_summary")
     }
 
     static var articlesLabel: String {
-        AppLocalization.shared.localized("digest.articles_label")
+        AppLocalization.localized("digest.articles_label")
     }
 }
 

@@ -31,7 +31,7 @@ final class HomeDomainInteractor: CombineInteractor {
     var cancellables = Set<AnyCancellable>()
     private var backgroundTasks = Set<Task<Void, Never>>()
     var isLocalPreferenceChange = false
-    internal(set) var preferredLanguage: String = "en"
+    var preferredLanguage: String = "en"
 
     var statePublisher: AnyPublisher<HomeDomainState, Never> {
         stateSubject.eraseToAnyPublisher()

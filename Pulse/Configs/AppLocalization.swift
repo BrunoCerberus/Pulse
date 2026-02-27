@@ -11,11 +11,15 @@ import Foundation
 /// Usage:
 /// ```swift
 /// // Instead of String(localized: "home.title")
-/// AppLocalization.shared.localized("home.title")
+/// AppLocalization.localized("home.title")
 /// ```
 @MainActor
 final class AppLocalization: ObservableObject {
     static let shared = AppLocalization()
+
+    /// Backing storage for the `nonisolated static func localized(_:)` shorthand.
+    /// Safe because `_instance` is set once in `init()` and never reassigned.
+    private nonisolated(unsafe) static var _instance: AppLocalization?
 
     /// The current language code (e.g. "en", "pt", "es").
     /// Drives SwiftUI reactivity via `@Published`.
@@ -36,6 +40,7 @@ final class AppLocalization: ObservableObject {
         let initial = saved ?? (Locale.current.language.languageCode?.identifier ?? "en")
         language = initial
         _languageStorage = initial
+        Self._instance = self
     }
 
     /// Updates the current language and persists it to UserDefaults.
@@ -47,6 +52,19 @@ final class AppLocalization: ObservableObject {
         guard language != code else { return }
         language = code
         UserDefaults.standard.set(code, forKey: "pulse.preferredLanguage")
+    }
+
+    /// Convenience shorthand that avoids referencing the actor-isolated `shared` property.
+    ///
+    /// Call sites can write `AppLocalization.localized("key")` instead of
+    /// `AppLocalization.shared.localized("key")`, which eliminates the Swift 6
+    /// warning about accessing a `@MainActor`-isolated static from a nonisolated context.
+    nonisolated static func localized(_ key: String) -> String {
+        guard let instance = _instance else {
+            // Before shared is initialized (e.g. in tests), fall back to base bundle
+            return Bundle.main.localizedString(forKey: key, value: nil, table: nil)
+        }
+        return instance.localized(key)
     }
 
     /// Returns the localized string for `key` from the current language bundle.

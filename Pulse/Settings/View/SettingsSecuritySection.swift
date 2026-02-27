@@ -5,19 +5,19 @@ import SwiftUI
 
 private enum Constants {
     static var header: String {
-        AppLocalization.shared.localized("applock.settings_header")
+        AppLocalization.localized("applock.settings_header")
     }
 
     static var toggle: String {
-        AppLocalization.shared.localized("applock.settings_toggle")
+        AppLocalization.localized("applock.settings_toggle")
     }
 
     static var footer: String {
-        AppLocalization.shared.localized("applock.settings_footer")
+        AppLocalization.localized("applock.settings_footer")
     }
 
     static var unavailable: String {
-        AppLocalization.shared.localized("applock.settings_unavailable")
+        AppLocalization.localized("applock.settings_unavailable")
     }
 }
 

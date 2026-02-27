@@ -40,21 +40,21 @@ enum LLMError: Error, LocalizedError, Equatable {
     var errorDescription: String? {
         switch self {
         case .modelNotLoaded:
-            return AppLocalization.shared.localized("llm.error.model_not_loaded")
+            return AppLocalization.localized("llm.error.model_not_loaded")
         case let .modelLoadFailed(reason):
-            return AppLocalization.shared.localized("llm.error.model_load_failed") + " " + reason
+            return AppLocalization.localized("llm.error.model_load_failed") + " " + reason
         case .inferenceTimeout:
-            return AppLocalization.shared.localized("llm.error.inference_timeout")
+            return AppLocalization.localized("llm.error.inference_timeout")
         case .memoryPressure:
-            return AppLocalization.shared.localized("llm.error.memory_pressure")
+            return AppLocalization.localized("llm.error.memory_pressure")
         case .generationCancelled:
-            return AppLocalization.shared.localized("llm.error.generation_cancelled")
+            return AppLocalization.localized("llm.error.generation_cancelled")
         case .serviceUnavailable:
-            return AppLocalization.shared.localized("llm.error.service_unavailable")
+            return AppLocalization.localized("llm.error.service_unavailable")
         case .tokenizationFailed:
-            return AppLocalization.shared.localized("llm.error.tokenization_failed")
+            return AppLocalization.localized("llm.error.tokenization_failed")
         case let .generationFailed(reason):
-            return AppLocalization.shared.localized("llm.error.generation_failed") + " " + reason
+            return AppLocalization.localized("llm.error.generation_failed") + " " + reason
         }
     }
 }

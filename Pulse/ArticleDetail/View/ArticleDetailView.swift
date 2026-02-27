@@ -6,19 +6,19 @@ import SwiftUI
 
 private enum Constants {
     static var back: String {
-        AppLocalization.shared.localized("common.back")
+        AppLocalization.localized("common.back")
     }
 
     static var readFull: String {
-        AppLocalization.shared.localized("article.read_full")
+        AppLocalization.localized("article.read_full")
     }
 
     static var summarize: String {
-        AppLocalization.shared.localized("summarization.button")
+        AppLocalization.localized("summarization.button")
     }
 
     static var listen: String {
-        AppLocalization.shared.localized("tts.button")
+        AppLocalization.localized("tts.button")
     }
 }
 
@@ -105,7 +105,7 @@ struct ArticleDetailView: View {
                     }
                     .accessibilityIdentifier("listenButton")
                     .accessibilityLabel(Constants.listen)
-                    .accessibilityHint(AppLocalization.shared.localized("tts.button_hint"))
+                    .accessibilityHint(AppLocalization.localized("tts.button_hint"))
 
                     Button("", systemImage: "sparkles") {
                         if isPremium {
@@ -119,8 +119,8 @@ struct ArticleDetailView: View {
                     .accessibilityLabel(Constants.summarize)
                     .accessibilityHint(
                         isPremium
-                            ? AppLocalization.shared.localized("article_detail.summarize_hint")
-                            : AppLocalization.shared.localized("article_detail.premium_hint")
+                            ? AppLocalization.localized("article_detail.summarize_hint")
+                            : AppLocalization.localized("article_detail.premium_hint")
                     )
 
                     Button("", systemImage: viewModel.viewState.isBookmarked ? "bookmark.fill" : "bookmark") {
@@ -129,17 +129,17 @@ struct ArticleDetailView: View {
                     .accessibilityIdentifier(viewModel.viewState.isBookmarked ? "bookmark.fill" : "bookmark")
                     .accessibilityLabel(
                         viewModel.viewState.isBookmarked
-                            ? AppLocalization.shared.localized("article_detail.remove_bookmark")
-                            : AppLocalization.shared.localized("article_detail.add_bookmark")
+                            ? AppLocalization.localized("article_detail.remove_bookmark")
+                            : AppLocalization.localized("article_detail.add_bookmark")
                     )
-                    .accessibilityHint(AppLocalization.shared.localized("article_detail.save_hint"))
+                    .accessibilityHint(AppLocalization.localized("article_detail.save_hint"))
 
                     Button("", systemImage: "square.and.arrow.up") {
                         viewModel.handle(event: .onShareTapped)
                     }
                     .accessibilityIdentifier("square.and.arrow.up")
-                    .accessibilityLabel(AppLocalization.shared.localized("article_detail.share_label"))
-                    .accessibilityHint(AppLocalization.shared.localized("article_detail.share_hint"))
+                    .accessibilityLabel(AppLocalization.localized("article_detail.share_label"))
+                    .accessibilityHint(AppLocalization.localized("article_detail.share_hint"))
                 }
             }
         }
@@ -179,16 +179,16 @@ struct ArticleDetailView: View {
         )
         .onChange(of: viewModel.viewState.isBookmarked) { _, isBookmarked in
             let announcement = isBookmarked
-                ? AppLocalization.shared.localized("accessibility.bookmark_added")
-                : AppLocalization.shared.localized("accessibility.bookmark_removed")
+                ? AppLocalization.localized("accessibility.bookmark_added")
+                : AppLocalization.localized("accessibility.bookmark_removed")
             AccessibilityNotification.Announcement(announcement).post()
         }
         .onChange(of: viewModel.viewState.ttsPlaybackState) { _, newState in
             let announcement: String? = switch newState {
             case .playing:
-                AppLocalization.shared.localized("accessibility.tts_started")
+                AppLocalization.localized("accessibility.tts_started")
             case .paused:
-                AppLocalization.shared.localized("accessibility.tts_paused")
+                AppLocalization.localized("accessibility.tts_paused")
             case .idle:
                 nil
             }
@@ -289,7 +289,7 @@ struct ArticleDetailView: View {
         if dynamicTypeSize.isAccessibilitySize {
             VStack(alignment: .leading, spacing: Spacing.xxs) {
                 if let author = viewModel.viewState.article.author {
-                    Text(String(format: AppLocalization.shared.localized("article.by_author"), author))
+                    Text(String(format: AppLocalization.localized("article.by_author"), author))
                         .fontWeight(.medium)
                 }
 
@@ -302,7 +302,7 @@ struct ArticleDetailView: View {
         } else {
             HStack(spacing: Spacing.xs) {
                 if let author = viewModel.viewState.article.author {
-                    Text(String(format: AppLocalization.shared.localized("article.by_author"), author))
+                    Text(String(format: AppLocalization.localized("article.by_author"), author))
                         .fontWeight(.medium)
                         .lineLimit(1)
                         .truncationMode(.tail)
@@ -348,7 +348,7 @@ struct ArticleDetailView: View {
             .clipShape(RoundedRectangle(cornerRadius: CornerRadius.md, style: .continuous))
         }
         .pressEffect()
-        .accessibilityHint(AppLocalization.shared.localized("accessibility.opens_in_safari"))
+        .accessibilityHint(AppLocalization.localized("accessibility.opens_in_safari"))
     }
 }
 

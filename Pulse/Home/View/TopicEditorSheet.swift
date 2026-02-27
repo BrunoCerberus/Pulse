@@ -5,15 +5,15 @@ import SwiftUI
 
 private enum Constants {
     static var title: String {
-        AppLocalization.shared.localized("home.edit_topics.title")
+        AppLocalization.localized("home.edit_topics.title")
     }
 
     static var description: String {
-        AppLocalization.shared.localized("home.edit_topics.description")
+        AppLocalization.localized("home.edit_topics.description")
     }
 
     static var done: String {
-        AppLocalization.shared.localized("common.done")
+        AppLocalization.localized("common.done")
     }
 }
 
@@ -56,8 +56,8 @@ struct TopicEditorSheet: View {
                         .accessibilityAddTraits(followedTopics.contains(topic) ? .isSelected : [])
                         .accessibilityHint(
                             followedTopics.contains(topic)
-                                ? AppLocalization.shared.localized("topic_editor.unfollow_hint")
-                                : AppLocalization.shared.localized("topic_editor.follow_hint")
+                                ? AppLocalization.localized("topic_editor.unfollow_hint")
+                                : AppLocalization.localized("topic_editor.follow_hint")
                         )
                     }
                 } footer: {

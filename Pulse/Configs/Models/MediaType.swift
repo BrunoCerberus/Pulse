@@ -17,9 +17,9 @@ enum MediaType: String, Codable, CaseIterable, Identifiable, Equatable, Hashable
     var displayName: String {
         switch self {
         case .video:
-            return AppLocalization.shared.localized("media.type.videos")
+            return AppLocalization.localized("media.type.videos")
         case .podcast:
-            return AppLocalization.shared.localized("media.type.podcasts")
+            return AppLocalization.localized("media.type.podcasts")
         }
     }
 

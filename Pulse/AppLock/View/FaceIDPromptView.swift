@@ -5,19 +5,19 @@ import SwiftUI
 
 private enum Constants {
     static var title: String {
-        AppLocalization.shared.localized("applock.prompt_title")
+        AppLocalization.localized("applock.prompt_title")
     }
 
     static var description: String {
-        AppLocalization.shared.localized("applock.prompt_description")
+        AppLocalization.localized("applock.prompt_description")
     }
 
     static var enable: String {
-        AppLocalization.shared.localized("applock.prompt_enable")
+        AppLocalization.localized("applock.prompt_enable")
     }
 
     static var notNow: String {
-        AppLocalization.shared.localized("applock.prompt_not_now")
+        AppLocalization.localized("applock.prompt_not_now")
     }
 }
 

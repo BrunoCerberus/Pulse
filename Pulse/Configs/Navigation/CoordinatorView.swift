@@ -108,9 +108,9 @@ struct CoordinatorView: View {
             let wasOffline = isOffline
             isOffline = !connected
             if !connected, !wasOffline {
-                AccessibilityNotification.Announcement(AppLocalization.shared.localized("accessibility.offline")).post()
+                AccessibilityNotification.Announcement(AppLocalization.localized("accessibility.offline")).post()
             } else if connected, wasOffline {
-                AccessibilityNotification.Announcement(AppLocalization.shared.localized("accessibility.online")).post()
+                AccessibilityNotification.Announcement(AppLocalization.localized("accessibility.online")).post()
             }
         }
     }

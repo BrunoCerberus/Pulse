@@ -5,47 +5,47 @@ import SwiftUI
 
 private enum Constants {
     static var title: String {
-        AppLocalization.shared.localized("media.title")
+        AppLocalization.localized("media.title")
     }
 
     static var featured: String {
-        AppLocalization.shared.localized("media.featured")
+        AppLocalization.localized("media.featured")
     }
 
     static var latest: String {
-        AppLocalization.shared.localized("media.latest")
+        AppLocalization.localized("media.latest")
     }
 
     static var all: String {
-        AppLocalization.shared.localized("media.all_types")
+        AppLocalization.localized("media.all_types")
     }
 
     static var errorTitle: String {
-        AppLocalization.shared.localized("media.error.title")
+        AppLocalization.localized("media.error.title")
     }
 
     static var emptyTitle: String {
-        AppLocalization.shared.localized("media.empty.title")
+        AppLocalization.localized("media.empty.title")
     }
 
     static var emptyMessage: String {
-        AppLocalization.shared.localized("media.empty.message")
+        AppLocalization.localized("media.empty.message")
     }
 
     static var offlineTitle: String {
-        AppLocalization.shared.localized("media.offline.title")
+        AppLocalization.localized("media.offline.title")
     }
 
     static var offlineMessage: String {
-        AppLocalization.shared.localized("media.offline.message")
+        AppLocalization.localized("media.offline.message")
     }
 
     static var tryAgain: String {
-        AppLocalization.shared.localized("common.try_again")
+        AppLocalization.localized("common.try_again")
     }
 
     static var loadingMore: String {
-        AppLocalization.shared.localized("common.loading_more")
+        AppLocalization.localized("common.loading_more")
     }
 }
 

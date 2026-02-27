@@ -35,9 +35,9 @@ struct SettingsPremiumSection: View {
             .buttonStyle(.plain)
             .disabled(isPremium)
             .accessibilityLabel(isPremium ? Localizable.paywall.premiumActive : Localizable.paywall.goPremium)
-            .accessibilityHint(isPremium ? "" : AppLocalization.shared.localized("settings.premium.hint"))
+            .accessibilityHint(isPremium ? "" : AppLocalization.localized("settings.premium.hint"))
         } header: {
-            Text(AppLocalization.shared.localized("settings.subscription"))
+            Text(AppLocalization.localized("settings.subscription"))
                 .font(Typography.captionLarge)
         }
     }

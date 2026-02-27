@@ -4,7 +4,7 @@ import Foundation
 
 /// Live implementation of `TextToSpeechService` using `AVSpeechSynthesizer`.
 final class LiveTextToSpeechService: NSObject, TextToSpeechService {
-    private let synthesizer = AVSpeechSynthesizer()
+    private nonisolated(unsafe) let synthesizer = AVSpeechSynthesizer()
     private let playbackStateSubject = CurrentValueSubject<TTSPlaybackState, Never>(.idle)
     private let progressSubject = CurrentValueSubject<Double, Never>(0.0)
     private var totalTextLength: Int = 0

@@ -5,43 +5,43 @@ import SwiftUI
 
 enum HomeViewConstants {
     static var title: String {
-        AppLocalization.shared.localized("home.title")
+        AppLocalization.localized("home.title")
     }
 
     static var errorTitle: String {
-        AppLocalization.shared.localized("home.error.title")
+        AppLocalization.localized("home.error.title")
     }
 
     static var emptyTitle: String {
-        AppLocalization.shared.localized("home.empty.title")
+        AppLocalization.localized("home.empty.title")
     }
 
     static var emptyMessage: String {
-        AppLocalization.shared.localized("home.empty.message")
+        AppLocalization.localized("home.empty.message")
     }
 
     static var breaking: String {
-        AppLocalization.shared.localized("home.breaking")
+        AppLocalization.localized("home.breaking")
     }
 
     static var tryAgain: String {
-        AppLocalization.shared.localized("common.try_again")
+        AppLocalization.localized("common.try_again")
     }
 
     static var loadingMore: String {
-        AppLocalization.shared.localized("common.loading_more")
+        AppLocalization.localized("common.loading_more")
     }
 
     static var allCategory: String {
-        AppLocalization.shared.localized("home.category.all")
+        AppLocalization.localized("home.category.all")
     }
 
     static var breakingNews: String {
-        AppLocalization.shared.localized("home.breaking_news")
+        AppLocalization.localized("home.breaking_news")
     }
 
     static var topHeadlines: String {
-        AppLocalization.shared.localized("home.top_headlines")
+        AppLocalization.localized("home.top_headlines")
     }
 }
 
@@ -108,8 +108,8 @@ struct HomeView<R: HomeNavigationRouter>: View {
                             .font(.system(size: IconSize.md))
                             .foregroundStyle(.primary)
                     }
-                    .accessibilityLabel(AppLocalization.shared.localized("home.edit_topics.label"))
-                    .accessibilityHint(AppLocalization.shared.localized("home.edit_topics.hint"))
+                    .accessibilityLabel(AppLocalization.localized("home.edit_topics.label"))
+                    .accessibilityHint(AppLocalization.localized("home.edit_topics.hint"))
 
                     Button {
                         HapticManager.shared.tap()
@@ -119,8 +119,8 @@ struct HomeView<R: HomeNavigationRouter>: View {
                             .font(.system(size: IconSize.md))
                             .foregroundStyle(.primary)
                     }
-                    .accessibilityLabel(AppLocalization.shared.localized("home.settings.label"))
-                    .accessibilityHint(AppLocalization.shared.localized("home.settings.hint"))
+                    .accessibilityLabel(AppLocalization.localized("home.settings.label"))
+                    .accessibilityHint(AppLocalization.localized("home.settings.hint"))
                 }
             }
         }
@@ -161,7 +161,7 @@ struct HomeView<R: HomeNavigationRouter>: View {
         .onChange(of: viewModel.viewState.isRefreshing) { oldValue, newValue in
             if oldValue && !newValue {
                 AccessibilityNotification.Announcement(
-                    AppLocalization.shared.localized("accessibility.refresh_complete")
+                    AppLocalization.localized("accessibility.refresh_complete")
                 ).post()
             }
         }
@@ -241,7 +241,7 @@ struct HomeView<R: HomeNavigationRouter>: View {
         .pressEffect(scale: 0.95)
         .accessibilityLabel(title)
         .accessibilityAddTraits(isSelected ? .isSelected : [])
-        .accessibilityHint(String(format: AppLocalization.shared.localized("home.filter_category.hint"), title))
+        .accessibilityHint(String(format: AppLocalization.localized("home.filter_category.hint"), title))
     }
 
     // MARK: - Content Views

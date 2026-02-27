@@ -20,7 +20,10 @@ struct FeaturedMediaCard: View {
     private let cardHeight: CGFloat = 180
 
     private var effectiveCardWidth: CGFloat {
-        dynamicTypeSize.isAccessibilitySize ? UIScreen.main.bounds.width - Spacing.lg * 2 : cardWidth
+        let screenWidth = UIApplication.shared.connectedScenes
+            .compactMap { $0 as? UIWindowScene }
+            .first?.screen.bounds.width ?? cardWidth
+        return dynamicTypeSize.isAccessibilitySize ? screenWidth - Spacing.lg * 2 : cardWidth
     }
 
     private var effectiveCardHeight: CGFloat {
@@ -33,7 +36,7 @@ struct FeaturedMediaCard: View {
             parts.append(mediaType.displayName)
         }
         parts.append(item.title)
-        parts.append(String(format: AppLocalization.shared.localized("accessibility.from_source"), item.sourceName))
+        parts.append(String(format: AppLocalization.localized("accessibility.from_source"), item.sourceName))
         if let duration = item.formattedDuration {
             parts.append(duration)
         }
@@ -65,7 +68,7 @@ struct FeaturedMediaCard: View {
         .pressEffect()
         .accessibilityElement(children: .combine)
         .accessibilityLabel(mediaAccessibilityLabel)
-        .accessibilityHint(AppLocalization.shared.localized("media.play_hint"))
+        .accessibilityHint(AppLocalization.localized("media.play_hint"))
     }
 
     // MARK: - Image Background

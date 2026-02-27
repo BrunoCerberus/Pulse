@@ -5,11 +5,11 @@ import SwiftUI
 
 private enum Constants {
     static var title: String {
-        AppLocalization.shared.localized("account.title")
+        AppLocalization.localized("account.title")
     }
 
     static var signOut: String {
-        AppLocalization.shared.localized("account.sign_out")
+        AppLocalization.localized("account.sign_out")
     }
 }
 
@@ -102,10 +102,10 @@ private struct ProfileImageView: View {
             .scaledToFill()
             .frame(width: 64, height: 64)
             .clipShape(Circle())
-            .accessibilityLabel(AppLocalization.shared.localized("account.profile_photo"))
+            .accessibilityLabel(AppLocalization.localized("account.profile_photo"))
         } else {
             InitialPlaceholderView(user: user)
-                .accessibilityLabel(AppLocalization.shared.localized("account.user_initial"))
+                .accessibilityLabel(AppLocalization.localized("account.user_initial"))
         }
     }
 }

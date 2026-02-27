@@ -37,18 +37,18 @@ enum PremiumFeature {
     var title: String {
         switch self {
         case .dailyDigest:
-            return AppLocalization.shared.localized("premium_gate.daily_digest.title")
+            return AppLocalization.localized("premium_gate.daily_digest.title")
         case .articleSummarization:
-            return AppLocalization.shared.localized("premium_gate.summarization.title")
+            return AppLocalization.localized("premium_gate.summarization.title")
         }
     }
 
     var description: String {
         switch self {
         case .dailyDigest:
-            return AppLocalization.shared.localized("premium_gate.daily_digest.description")
+            return AppLocalization.localized("premium_gate.daily_digest.description")
         case .articleSummarization:
-            return AppLocalization.shared.localized("premium_gate.summarization.description")
+            return AppLocalization.localized("premium_gate.summarization.description")
         }
     }
 }
@@ -103,7 +103,7 @@ struct PremiumGateView: View {
                 HStack(spacing: Spacing.xs) {
                     Image(systemName: "crown.fill")
                         .font(.system(size: IconSize.sm))
-                    Text(AppLocalization.shared.localized("premium_gate.badge"))
+                    Text(AppLocalization.localized("premium_gate.badge"))
                         .font(Typography.labelMedium)
                 }
                 .foregroundStyle(Color.Accent.warmGradient)
@@ -133,7 +133,7 @@ struct PremiumGateView: View {
             } label: {
                 HStack(spacing: Spacing.sm) {
                     Image(systemName: "lock.open.fill")
-                    Text(AppLocalization.shared.localized("premium_gate.unlock_button"))
+                    Text(AppLocalization.localized("premium_gate.unlock_button"))
                 }
                 .font(Typography.labelLarge)
                 .foregroundStyle(.white)
@@ -145,8 +145,8 @@ struct PremiumGateView: View {
             }
             .pressEffect()
             .padding(.horizontal, Spacing.xl)
-            .accessibilityLabel(String(format: AppLocalization.shared.localized("premium_gate.unlock_label"), feature.title))
-            .accessibilityHint(AppLocalization.shared.localized("settings.premium.hint"))
+            .accessibilityLabel(String(format: AppLocalization.localized("premium_gate.unlock_label"), feature.title))
+            .accessibilityHint(AppLocalization.localized("settings.premium.hint"))
             .accessibilityIdentifier("unlockPremiumButton")
 
             Spacer()

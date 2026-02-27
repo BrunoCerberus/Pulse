@@ -15,16 +15,16 @@ struct SettingsMutedContentSection: View {
             mutedSourcesGroup
             mutedKeywordsGroup
         } header: {
-            Text(AppLocalization.shared.localized("settings.content_filters"))
+            Text(AppLocalization.localized("settings.content_filters"))
         } footer: {
-            Text(AppLocalization.shared.localized("settings.content_filters.description"))
+            Text(AppLocalization.localized("settings.content_filters.description"))
         }
     }
 
     private var mutedSourcesGroup: some View {
-        DisclosureGroup("\(AppLocalization.shared.localized("settings.muted_sources")) (\(mutedSources.count))") {
+        DisclosureGroup("\(AppLocalization.localized("settings.muted_sources")) (\(mutedSources.count))") {
             HStack {
-                TextField(AppLocalization.shared.localized("settings.muted_sources.add"), text: $newMutedSource)
+                TextField(AppLocalization.localized("settings.muted_sources.add"), text: $newMutedSource)
                     .textFieldStyle(.roundedBorder)
 
                 Button {
@@ -32,7 +32,7 @@ struct SettingsMutedContentSection: View {
                 } label: {
                     Image(systemName: "plus.circle.fill")
                 }
-                .accessibilityLabel(AppLocalization.shared.localized("settings.muted_sources.add_action"))
+                .accessibilityLabel(AppLocalization.localized("settings.muted_sources.add_action"))
                 .disabled(newMutedSource.isEmpty)
             }
 
@@ -46,16 +46,16 @@ struct SettingsMutedContentSection: View {
                         Image(systemName: "xmark.circle")
                             .foregroundStyle(.secondary)
                     }
-                    .accessibilityLabel(AppLocalization.shared.localized("settings.muted_sources.remove_action"))
+                    .accessibilityLabel(AppLocalization.localized("settings.muted_sources.remove_action"))
                 }
             }
         }
     }
 
     private var mutedKeywordsGroup: some View {
-        DisclosureGroup("\(AppLocalization.shared.localized("settings.muted_keywords")) (\(mutedKeywords.count))") {
+        DisclosureGroup("\(AppLocalization.localized("settings.muted_keywords")) (\(mutedKeywords.count))") {
             HStack {
-                TextField(AppLocalization.shared.localized("settings.muted_keywords.add"), text: $newMutedKeyword)
+                TextField(AppLocalization.localized("settings.muted_keywords.add"), text: $newMutedKeyword)
                     .textFieldStyle(.roundedBorder)
 
                 Button {
@@ -63,7 +63,7 @@ struct SettingsMutedContentSection: View {
                 } label: {
                     Image(systemName: "plus.circle.fill")
                 }
-                .accessibilityLabel(AppLocalization.shared.localized("settings.muted_keywords.add_action"))
+                .accessibilityLabel(AppLocalization.localized("settings.muted_keywords.add_action"))
                 .disabled(newMutedKeyword.isEmpty)
             }
 
@@ -77,7 +77,7 @@ struct SettingsMutedContentSection: View {
                         Image(systemName: "xmark.circle")
                             .foregroundStyle(.secondary)
                     }
-                    .accessibilityLabel(AppLocalization.shared.localized("settings.muted_keywords.remove_action"))
+                    .accessibilityLabel(AppLocalization.localized("settings.muted_keywords.remove_action"))
                 }
             }
         }

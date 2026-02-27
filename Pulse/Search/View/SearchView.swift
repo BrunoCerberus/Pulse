@@ -5,35 +5,35 @@ import SwiftUI
 
 private enum Constants {
     static var title: String {
-        AppLocalization.shared.localized("search.title")
+        AppLocalization.localized("search.title")
     }
 
     static var searching: String {
-        AppLocalization.shared.localized("search.searching")
+        AppLocalization.localized("search.searching")
     }
 
     static var placeholderTitle: String {
-        AppLocalization.shared.localized("search.placeholder.title")
+        AppLocalization.localized("search.placeholder.title")
     }
 
     static var placeholderMessage: String {
-        AppLocalization.shared.localized("search.placeholder.message")
+        AppLocalization.localized("search.placeholder.message")
     }
 
     static var errorTitle: String {
-        AppLocalization.shared.localized("search.error.title")
+        AppLocalization.localized("search.error.title")
     }
 
     static var emptyTitle: String {
-        AppLocalization.shared.localized("search.empty.title")
+        AppLocalization.localized("search.empty.title")
     }
 
     static var tryAgain: String {
-        AppLocalization.shared.localized("common.try_again")
+        AppLocalization.localized("common.try_again")
     }
 
     static var loadingMore: String {
-        AppLocalization.shared.localized("common.loading_more")
+        AppLocalization.localized("common.loading_more")
     }
 }
 
@@ -75,7 +75,7 @@ struct SearchView<R: SearchNavigationRouter>: View {
                 set: { viewModel.handle(event: .onQueryChanged($0)) }
             ),
             placement: .navigationBarDrawer(displayMode: .always),
-            prompt: AppLocalization.shared.localized("search.prompt")
+            prompt: AppLocalization.localized("search.prompt")
         )
         .onSubmit(of: .search) {
             HapticManager.shared.tap()
@@ -90,13 +90,13 @@ struct SearchView<R: SearchNavigationRouter>: View {
         .onChange(of: viewModel.viewState.results) { _, newResults in
             if !newResults.isEmpty {
                 isFirstResultFocused = true
-                let announcement = String(format: AppLocalization.shared.localized("accessibility.search_results_count"), newResults.count)
+                let announcement = String(format: AppLocalization.localized("accessibility.search_results_count"), newResults.count)
                 AccessibilityNotification.Announcement(announcement).post()
             }
         }
         .onChange(of: viewModel.viewState.showNoResults) { _, showNoResults in
             if showNoResults {
-                AccessibilityNotification.Announcement(AppLocalization.shared.localized("accessibility.search_no_results")).post()
+                AccessibilityNotification.Announcement(AppLocalization.localized("accessibility.search_no_results")).post()
             }
         }
     }
@@ -155,7 +155,7 @@ struct SearchView<R: SearchNavigationRouter>: View {
             VStack(spacing: Spacing.lg) {
                 if !viewModel.viewState.suggestions.isEmpty {
                     VStack(alignment: .leading, spacing: Spacing.sm) {
-                        GlassSectionHeader(AppLocalization.shared.localized("search.recent_searches"))
+                        GlassSectionHeader(AppLocalization.localized("search.recent_searches"))
 
                         if dynamicTypeSize.isAccessibilitySize {
                             VStack(alignment: .leading, spacing: Spacing.sm) {
@@ -178,7 +178,7 @@ struct SearchView<R: SearchNavigationRouter>: View {
                 }
 
                 VStack(alignment: .leading, spacing: Spacing.sm) {
-                    GlassSectionHeader(AppLocalization.shared.localized("search.trending_topics"))
+                    GlassSectionHeader(AppLocalization.localized("search.trending_topics"))
 
                     LazyVGrid(columns: [GridItem(.adaptive(minimum: dynamicTypeSize.isAccessibilitySize ? 150 : 100))], spacing: Spacing.sm) {
                         ForEach(NewsCategory.allCases) { category in
@@ -212,8 +212,8 @@ struct SearchView<R: SearchNavigationRouter>: View {
             .glassBackground(style: .thin, cornerRadius: CornerRadius.pill)
         }
         .pressEffect()
-        .accessibilityLabel(String(format: AppLocalization.shared.localized("search.recent_label"), suggestion))
-        .accessibilityHint(AppLocalization.shared.localized("search.search_hint"))
+        .accessibilityLabel(String(format: AppLocalization.localized("search.recent_label"), suggestion))
+        .accessibilityHint(AppLocalization.localized("search.search_hint"))
     }
 
     private func errorView(_ message: String) -> some View {
@@ -225,10 +225,10 @@ struct SearchView<R: SearchNavigationRouter>: View {
                         .foregroundStyle(.orange)
                         .accessibilityHidden(true)
 
-                    Text(AppLocalization.shared.localized("search.offline.title"))
+                    Text(AppLocalization.localized("search.offline.title"))
                         .font(Typography.titleMedium)
 
-                    Text(AppLocalization.shared.localized("search.offline.message"))
+                    Text(AppLocalization.localized("search.offline.message"))
                         .font(Typography.bodyMedium)
                         .foregroundStyle(.secondary)
                         .multilineTextAlignment(.center)
@@ -276,7 +276,7 @@ struct SearchView<R: SearchNavigationRouter>: View {
                 Text(Constants.emptyTitle)
                     .font(Typography.titleMedium)
 
-                Text(String(format: AppLocalization.shared.localized("search.no_results"), viewModel.viewState.query))
+                Text(String(format: AppLocalization.localized("search.no_results"), viewModel.viewState.query))
                     .font(Typography.bodyMedium)
                     .foregroundStyle(.secondary)
                     .multilineTextAlignment(.center)
@@ -346,7 +346,7 @@ struct SearchView<R: SearchNavigationRouter>: View {
 
 private extension SearchView {
     var sortPicker: some View {
-        Picker(AppLocalization.shared.localized("search.sort_by"), selection: Binding(
+        Picker(AppLocalization.localized("search.sort_by"), selection: Binding(
             get: { viewModel.viewState.sortOption },
             set: {
                 HapticManager.shared.selectionChanged()

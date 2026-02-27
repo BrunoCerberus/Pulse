@@ -15,13 +15,13 @@ enum NewsCategory: String, CaseIterable, Codable, Identifiable {
 
     var displayName: String {
         switch self {
-        case .world: return AppLocalization.shared.localized("category.world")
-        case .business: return AppLocalization.shared.localized("category.business")
-        case .technology: return AppLocalization.shared.localized("category.technology")
-        case .science: return AppLocalization.shared.localized("category.science")
-        case .health: return AppLocalization.shared.localized("category.health")
-        case .sports: return AppLocalization.shared.localized("category.sports")
-        case .entertainment: return AppLocalization.shared.localized("category.entertainment")
+        case .world: return AppLocalization.localized("category.world")
+        case .business: return AppLocalization.localized("category.business")
+        case .technology: return AppLocalization.localized("category.technology")
+        case .science: return AppLocalization.localized("category.science")
+        case .health: return AppLocalization.localized("category.health")
+        case .sports: return AppLocalization.localized("category.sports")
+        case .entertainment: return AppLocalization.localized("category.entertainment")
         }
     }
 

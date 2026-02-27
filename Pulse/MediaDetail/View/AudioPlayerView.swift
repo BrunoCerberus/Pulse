@@ -5,19 +5,19 @@ import SwiftUI
 
 private enum Constants {
     static var skipBackward: String {
-        AppLocalization.shared.localized("media.skip_backward")
+        AppLocalization.localized("media.skip_backward")
     }
 
     static var skipForward: String {
-        AppLocalization.shared.localized("media.skip_forward")
+        AppLocalization.localized("media.skip_forward")
     }
 
     static var play: String {
-        AppLocalization.shared.localized("media.play")
+        AppLocalization.localized("media.play")
     }
 
     static var pause: String {
-        AppLocalization.shared.localized("media.pause")
+        AppLocalization.localized("media.pause")
     }
 }
 
@@ -208,10 +208,10 @@ struct AudioPlayerView: View {
             }
             .frame(height: 20)
             .accessibilityElement()
-            .accessibilityLabel(AppLocalization.shared.localized("audio_player.progress_label"))
+            .accessibilityLabel(AppLocalization.localized("audio_player.progress_label"))
             .accessibilityValue({
                 let current = formatTime(isDragging ? playerManager.duration * dragProgress : playerManager.currentTime)
-                return String(format: AppLocalization.shared.localized("audio_player.progress_value"), current, formatTime(playerManager.duration))
+                return String(format: AppLocalization.localized("audio_player.progress_value"), current, formatTime(playerManager.duration))
             }())
             .accessibilityAdjustableAction { direction in
                 switch direction {
@@ -308,7 +308,7 @@ struct AudioPlayerView: View {
         guard let mediaURLString = article.mediaURL,
               let url = URL(string: mediaURLString)
         else {
-            onError?(AppLocalization.shared.localized("audio_player.no_url_error"))
+            onError?(AppLocalization.localized("audio_player.no_url_error"))
             return
         }
 
