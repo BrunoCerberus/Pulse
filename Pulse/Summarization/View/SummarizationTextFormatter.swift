@@ -48,7 +48,7 @@ enum SummarizationTextFormatter {
                     isHeading: false,
                     isBullet: true
                 )
-            } else if component.hasPrefix("**"), component.hasSuffix("**") {
+            } else if component.hasPrefix("**"), component.hasSuffix("**"), component.count > 4 {
                 return FormattedParagraph(
                     text: String(component.dropFirst(2).dropLast(2)),
                     isHeading: true,
