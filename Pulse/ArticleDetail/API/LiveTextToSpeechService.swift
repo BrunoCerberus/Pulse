@@ -9,11 +9,6 @@ final class LiveTextToSpeechService: NSObject, TextToSpeechService {
     private let progressSubject = CurrentValueSubject<Double, Never>(0.0)
     private var totalTextLength: Int = 0
 
-    /// Tracks whether `speak()` is restarting speech (stop + start).
-    /// When `true`, the `didCancel` delegate callback for the old utterance is suppressed
-    /// to prevent a stale `.idle` state from overriding the new `.playing` state.
-    private nonisolated(unsafe) var isRestarting = false
-
     var playbackStatePublisher: AnyPublisher<TTSPlaybackState, Never> {
         playbackStateSubject.eraseToAnyPublisher()
     }
@@ -28,10 +23,7 @@ final class LiveTextToSpeechService: NSObject, TextToSpeechService {
     }
 
     func speak(text: String, language: String, rate: Float) {
-        if synthesizer.isSpeaking || synthesizer.isPaused {
-            isRestarting = true
-            synthesizer.stopSpeaking(at: .immediate)
-        }
+        stop()
 
         let utterance = AVSpeechUtterance(string: text)
         utterance.rate = rate
@@ -116,10 +108,6 @@ extension LiveTextToSpeechService: AVSpeechSynthesizerDelegate {
     }
 
     func speechSynthesizer(_: AVSpeechSynthesizer, didCancel _: AVSpeechUtterance) {
-        if isRestarting {
-            isRestarting = false
-            return
-        }
         progressSubject.send(0.0)
         playbackStateSubject.send(.idle)
         deactivateAudioSession()

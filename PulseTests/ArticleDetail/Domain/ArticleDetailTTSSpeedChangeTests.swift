@@ -42,7 +42,7 @@ struct ArticleDetailTTSSpeedChangeTests {
         mockTTSService.simulateProgress(0.5)
         try await waitForStateUpdate(duration: TestWaitDuration.short)
 
-        // Cycle speed — this restarts speech
+        // Cycle speed — this restarts speech via stop() + speak()
         sut.dispatch(action: .cycleTTSSpeed)
         try await waitForStateUpdate(duration: TestWaitDuration.short)
 
@@ -73,25 +73,51 @@ struct ArticleDetailTTSSpeedChangeTests {
         #expect(sut.currentState.isTTSPlayerVisible == true)
     }
 
-    @Test("cycleTTSSpeed keeps player visible even when progress was at 1.0")
-    func keepPlayerVisibleAtFullProgress() async throws {
+    @Test("cycleTTSSpeed suppresses idle from stop then allows playing through")
+    func suppressesIdleThenAllowsPlaying() async throws {
         let sut = createSUT()
 
-        // Start TTS and set progress to 1.0 (last word being spoken)
         sut.dispatch(action: .startTTS)
         try await waitForStateUpdate(duration: TestWaitDuration.short)
 
         mockTTSService.simulateProgress(1.0)
         try await waitForStateUpdate(duration: TestWaitDuration.short)
 
-        // Cycle speed — should reset progress and keep player visible
+        // Cycle speed — sets isRestartingForSpeedChange flag
         sut.dispatch(action: .cycleTTSSpeed)
         try await waitForStateUpdate(duration: TestWaitDuration.short)
 
-        // Even if idle is dispatched, player should stay visible (progress was reset)
+        // Simulate the full restart sequence: .idle (from stop), .playing (from speak), .idle (from didCancel)
+        sut.dispatch(action: .ttsPlaybackStateChanged(.idle))
+        #expect(sut.currentState.isTTSPlayerVisible == true, "First .idle (from stop) should be suppressed")
+
+        sut.dispatch(action: .ttsPlaybackStateChanged(.playing))
+        #expect(sut.currentState.isTTSPlayerVisible == true, ".playing should clear the flag")
+
+        sut.dispatch(action: .ttsPlaybackStateChanged(.idle))
+        #expect(sut.currentState.isTTSPlayerVisible == true, "Second .idle (from didCancel) should not auto-hide since progress was reset")
+    }
+
+    @Test("cycleTTSSpeed player auto-hides normally after speed change completes")
+    func autoHidesAfterSpeedChangeCompletes() async throws {
+        let sut = createSUT()
+
+        sut.dispatch(action: .startTTS)
+        try await waitForStateUpdate(duration: TestWaitDuration.short)
+
+        // Cycle speed — restarts speech
+        sut.dispatch(action: .cycleTTSSpeed)
+        try await waitForStateUpdate(duration: TestWaitDuration.short)
+
+        // Simulate restart completing: .idle suppressed, .playing clears flag
+        sut.dispatch(action: .ttsPlaybackStateChanged(.idle))
+        sut.dispatch(action: .ttsPlaybackStateChanged(.playing))
+
+        // Now speech plays to completion naturally
+        sut.dispatch(action: .ttsProgressUpdated(1.0))
         sut.dispatch(action: .ttsPlaybackStateChanged(.idle))
 
-        #expect(sut.currentState.isTTSPlayerVisible == true)
-        #expect(sut.currentState.ttsProgress == 0.0)
+        // Player should auto-hide normally after natural finish
+        #expect(sut.currentState.isTTSPlayerVisible == false)
     }
 }
