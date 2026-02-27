@@ -100,16 +100,21 @@ final class BookmarksUITests: BaseUITestCase {
         if topHeadlinesHeader.waitForExistence(timeout: 10) {
             let homeArticleCards = articleCards()
             if homeArticleCards.count > 0 {
-                homeArticleCards.firstMatch.tap()
+                let firstCard = homeArticleCards.firstMatch
+                // Check isHittable before tapping to avoid "Timed out while evaluating UI query"
+                // when the app is slow to respond on CI
+                if firstCard.exists, firstCard.isHittable {
+                    firstCard.tap()
 
-                let backButton = app.buttons["backButton"]
-                if backButton.waitForExistence(timeout: 5) {
-                    let bookmarkButton = app.navigationBars.buttons["bookmark"]
-                    if bookmarkButton.exists {
-                        bookmarkButton.tap()
+                    let backButton = app.buttons["backButton"]
+                    if backButton.waitForExistence(timeout: 5) {
+                        let bookmarkButton = app.navigationBars.buttons["bookmark"]
+                        if bookmarkButton.exists {
+                            bookmarkButton.tap()
+                        }
+
+                        backButton.tap()
                     }
-
-                    backButton.tap()
                 }
             }
         } else {

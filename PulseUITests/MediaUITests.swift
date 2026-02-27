@@ -5,8 +5,10 @@ final class MediaUITests: BaseUITestCase {
 
     func testMediaTabExists() {
         let mediaTab = app.tabBars.buttons["Media"]
+        // Use waitForAny (RunLoop-based) instead of waitForExistence to avoid triggering
+        // XCTest's internal accessibility retry mechanism on slow CI machines
         XCTAssertTrue(
-            mediaTab.waitForExistence(timeout: Self.shortTimeout),
+            waitForAny([mediaTab], timeout: Self.shortTimeout),
             "Media tab should exist in tab bar"
         )
     }

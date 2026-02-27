@@ -55,9 +55,12 @@ class BaseUITestCase: XCTestCase {
         wait(for: 2.0)
 
         // Wait for loading state to clear if present
-        // Use shorter detection timeout — don't wait long if no spinner appears
+        // Use RunLoop-based polling (via waitForAny) instead of waitForExistence to avoid
+        // triggering XCTest's internal accessibility tree retry mechanism, which can produce
+        // "Failed to get matching snapshots: Timed out while evaluating UI query" (~90s overhead)
+        // when the app is slow to respond on CI.
         let loadingIndicator = app.activityIndicators.firstMatch
-        if loadingIndicator.waitForExistence(timeout: 5) {
+        if waitForAny([loadingIndicator], timeout: 8) {
             // Wait for loading to complete (app initializing auth state)
             _ = waitForElementToDisappear(loadingIndicator, timeout: Self.launchTimeout)
         }
@@ -220,8 +223,9 @@ class BaseUITestCase: XCTestCase {
     func navigateToMediaTab() {
         let mediaTab = app.tabBars.buttons["Media"]
 
-        // First attempt
-        if mediaTab.waitForExistence(timeout: Self.shortTimeout), !mediaTab.isSelected {
+        // First attempt — use waitForAny instead of waitForExistence to avoid triggering
+        // XCTest's internal accessibility retry mechanism on slow CI
+        if waitForAny([mediaTab], timeout: Self.shortTimeout), !mediaTab.isSelected {
             mediaTab.tap()
         } else if !mediaTab.exists {
             // Fallback: try finding the button directly
