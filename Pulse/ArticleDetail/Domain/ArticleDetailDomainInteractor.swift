@@ -339,7 +339,10 @@ final class ArticleDetailDomainInteractor: CombineInteractor {
 
     private func cycleTTSSpeed() {
         let nextPreset = currentState.ttsSpeedPreset.next()
-        updateState { $0.ttsSpeedPreset = nextPreset }
+        updateState { state in
+            state.ttsSpeedPreset = nextPreset
+            state.ttsProgress = 0.0
+        }
 
         // Restart speech with new rate if currently playing
         if currentState.ttsPlaybackState == .playing || currentState.ttsPlaybackState == .paused {

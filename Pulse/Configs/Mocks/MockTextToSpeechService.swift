@@ -60,6 +60,13 @@ final class MockTextToSpeechService: TextToSpeechService {
         playbackStateSubject.send(.idle)
     }
 
+    /// Simulates the stale `didCancel` callback that AVSpeechSynthesizer fires
+    /// asynchronously when speech is restarted (e.g., during a speed change).
+    func simulateStaleCancelCallback() {
+        progressSubject.send(0.0)
+        playbackStateSubject.send(.idle)
+    }
+
     func reset() {
         speakCallCount = 0
         lastSpokenText = nil
