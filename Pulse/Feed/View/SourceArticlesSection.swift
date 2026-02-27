@@ -5,7 +5,7 @@ import SwiftUI
 
 private enum Constants {
     static var sectionTitle: String {
-        AppLocalization.shared.localized("digest.source_articles")
+        AppLocalization.localized("digest.source_articles")
     }
 }
 
@@ -61,8 +61,8 @@ struct SourceArticlesSection: View {
         .buttonStyle(.plain)
         .pressEffect()
         .accessibilityLabel("\(Constants.sectionTitle), \(articles.count) articles")
-        .accessibilityValue(isExpanded ? AppLocalization.shared.localized("source_articles.expanded") : AppLocalization.shared.localized("source_articles.collapsed"))
-        .accessibilityHint(isExpanded ? AppLocalization.shared.localized("source_articles.collapse_hint") : AppLocalization.shared.localized("source_articles.expand_hint"))
+        .accessibilityValue(isExpanded ? AppLocalization.localized("source_articles.expanded") : AppLocalization.localized("source_articles.collapsed"))
+        .accessibilityHint(isExpanded ? AppLocalization.localized("source_articles.collapse_hint") : AppLocalization.localized("source_articles.expand_hint"))
     }
 
     // MARK: - Articles List
@@ -127,8 +127,8 @@ private struct SourceArticleRow: View {
         .buttonStyle(.plain)
         .pressEffect()
         .accessibilityElement(children: .combine)
-        .accessibilityLabel(String(format: AppLocalization.shared.localized("article_row.accessibility_label"), article.title, article.source, ""))
-        .accessibilityHint(AppLocalization.shared.localized("accessibility.read_article"))
+        .accessibilityLabel(String(format: AppLocalization.localized("article_row.accessibility_label"), article.title, article.source, ""))
+        .accessibilityHint(AppLocalization.localized("accessibility.read_article"))
     }
 
     // MARK: - Thumbnail View

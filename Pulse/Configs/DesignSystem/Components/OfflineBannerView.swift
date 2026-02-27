@@ -11,7 +11,7 @@ struct OfflineBannerView: View {
             Image(systemName: "wifi.slash")
                 .font(.system(size: IconSize.sm, weight: .semibold))
 
-            Text(AppLocalization.shared.localized("offline.banner"))
+            Text(AppLocalization.localized("offline.banner"))
                 .font(Typography.labelMedium)
                 .fontWeight(.semibold)
         }
@@ -21,7 +21,7 @@ struct OfflineBannerView: View {
         .background(Color.orange)
         .transition(.move(edge: .top).combined(with: .opacity))
         .accessibilityElement(children: .combine)
-        .accessibilityLabel(AppLocalization.shared.localized("offline.banner"))
+        .accessibilityLabel(AppLocalization.localized("offline.banner"))
         .accessibilityAddTraits(.isStaticText)
     }
 }

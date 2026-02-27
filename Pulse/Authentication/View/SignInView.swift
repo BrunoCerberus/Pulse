@@ -6,35 +6,35 @@ import SwiftUI
 
 private enum Constants {
     static var appName: String {
-        AppLocalization.shared.localized("app.name")
+        AppLocalization.localized("app.name")
     }
 
     static var tagline: String {
-        AppLocalization.shared.localized("auth.tagline")
+        AppLocalization.localized("auth.tagline")
     }
 
     static var signInApple: String {
-        AppLocalization.shared.localized("auth.sign_in_apple")
+        AppLocalization.localized("auth.sign_in_apple")
     }
 
     static var signInGoogle: String {
-        AppLocalization.shared.localized("auth.sign_in_google")
+        AppLocalization.localized("auth.sign_in_google")
     }
 
     static var terms: String {
-        AppLocalization.shared.localized("auth.terms")
+        AppLocalization.localized("auth.terms")
     }
 
     static var signingIn: String {
-        AppLocalization.shared.localized("auth.signing_in")
+        AppLocalization.localized("auth.signing_in")
     }
 
     static var error: String {
-        AppLocalization.shared.localized("common.error")
+        AppLocalization.localized("common.error")
     }
 
     static var okButton: String {
-        AppLocalization.shared.localized("common.ok")
+        AppLocalization.localized("common.ok")
     }
 }
 
@@ -76,7 +76,7 @@ struct SignInView: View {
                 viewModel.handle(event: .onDismissError)
             }
         } message: {
-            Text(viewModel.viewState.errorMessage ?? AppLocalization.shared.localized("auth.unknown_error"))
+            Text(viewModel.viewState.errorMessage ?? AppLocalization.localized("auth.unknown_error"))
         }
         .onChange(of: viewModel.viewState.errorMessage) { _, newValue in
             showError = newValue != nil
@@ -147,7 +147,7 @@ struct SignInView: View {
             }
             .buttonStyle(.plain)
             .accessibilityLabel(Constants.signInApple)
-            .accessibilityHint(AppLocalization.shared.localized("auth.apple_hint"))
+            .accessibilityHint(AppLocalization.localized("auth.apple_hint"))
 
             // Sign in with Google
             Button {
@@ -173,7 +173,7 @@ struct SignInView: View {
             }
             .buttonStyle(.plain)
             .accessibilityLabel(Constants.signInGoogle)
-            .accessibilityHint(AppLocalization.shared.localized("auth.google_hint"))
+            .accessibilityHint(AppLocalization.localized("auth.google_hint"))
         }
     }
 

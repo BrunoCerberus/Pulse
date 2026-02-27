@@ -50,7 +50,7 @@ struct OnboardingView: View {
                     HapticManager.shared.tap()
                     viewModel.handle(event: .onSkipTapped)
                 } label: {
-                    Text(AppLocalization.shared.localized("onboarding.skip"))
+                    Text(AppLocalization.localized("onboarding.skip"))
                         .font(Typography.labelMedium)
                         .foregroundStyle(.white.opacity(0.7))
                         .padding(.horizontal, Spacing.lg)
@@ -95,8 +95,8 @@ struct OnboardingView: View {
         } label: {
             HStack(spacing: Spacing.sm) {
                 Text(viewModel.viewState.isLastPage
-                    ? AppLocalization.shared.localized("onboarding.get_started")
-                    : AppLocalization.shared.localized("onboarding.next"))
+                    ? AppLocalization.localized("onboarding.get_started")
+                    : AppLocalization.localized("onboarding.next"))
                     .font(Typography.labelLarge)
 
                 if !viewModel.viewState.isLastPage {

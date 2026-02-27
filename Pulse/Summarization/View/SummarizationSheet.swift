@@ -6,35 +6,35 @@ import SwiftUI
 
 private enum Constants {
     static var title: String {
-        AppLocalization.shared.localized("summarization.title")
+        AppLocalization.localized("summarization.title")
     }
 
     static var subtitle: String {
-        AppLocalization.shared.localized("summarization.subtitle")
+        AppLocalization.localized("summarization.subtitle")
     }
 
     static var generateButton: String {
-        AppLocalization.shared.localized("summarization.generate")
+        AppLocalization.localized("summarization.generate")
     }
 
     static var cancelButton: String {
-        AppLocalization.shared.localized("summarization.cancel")
+        AppLocalization.localized("summarization.cancel")
     }
 
     static var retryButton: String {
-        AppLocalization.shared.localized("summarization.retry")
+        AppLocalization.localized("summarization.retry")
     }
 
     static var loadingModel: String {
-        AppLocalization.shared.localized("summarization.loading_model")
+        AppLocalization.localized("summarization.loading_model")
     }
 
     static var generating: String {
-        AppLocalization.shared.localized("summarization.generating")
+        AppLocalization.localized("summarization.generating")
     }
 
     static var aiSummary: String {
-        AppLocalization.shared.localized("summarization.ai_summary")
+        AppLocalization.localized("summarization.ai_summary")
     }
 }
 
@@ -101,7 +101,7 @@ struct SummarizationSheet: View {
             case .completed:
                 isSummaryFocused = true
                 AccessibilityNotification.Announcement(
-                    AppLocalization.shared.localized("accessibility.summarization_complete")
+                    AppLocalization.localized("accessibility.summarization_complete")
                 ).post()
             case .error:
                 isSummaryFocused = true

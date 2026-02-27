@@ -108,7 +108,7 @@ struct ContentSectionCard: View {
 
     private var articleCountBadge: some View {
         let count = section.relatedArticles.count
-        let text = count == 1 ? AppLocalization.shared.localized("digest.article_count_one") : String(format: AppLocalization.shared.localized("digest.article_count_other"), count)
+        let text = count == 1 ? AppLocalization.localized("digest.article_count_one") : String(format: AppLocalization.localized("digest.article_count_other"), count)
 
         return Text(text)
             .font(Typography.captionSmall)
@@ -180,8 +180,8 @@ struct ContentSectionCard: View {
         .buttonStyle(.plain)
         .pressEffect(scale: 0.98)
         .accessibilityElement(children: .combine)
-        .accessibilityLabel(String(format: AppLocalization.shared.localized("article_row.accessibility_label"), article.title, article.source, article.formattedDate))
-        .accessibilityHint(AppLocalization.shared.localized("accessibility.read_article"))
+        .accessibilityLabel(String(format: AppLocalization.localized("article_row.accessibility_label"), article.title, article.source, article.formattedDate))
+        .accessibilityHint(AppLocalization.localized("accessibility.read_article"))
     }
 
     @ViewBuilder
@@ -226,7 +226,7 @@ struct ContentSectionCard: View {
 
     private var sourcesRow: some View {
         VStack(alignment: .leading, spacing: Spacing.xs) {
-            Text(AppLocalization.shared.localized("digest.related_articles"))
+            Text(AppLocalization.localized("digest.related_articles"))
                 .font(Typography.captionSmall)
                 .foregroundStyle(.secondary)
 

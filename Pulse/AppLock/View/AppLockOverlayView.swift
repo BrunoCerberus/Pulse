@@ -5,11 +5,11 @@ import SwiftUI
 
 private enum Constants {
     static var title: String {
-        AppLocalization.shared.localized("applock.locked_title")
+        AppLocalization.localized("applock.locked_title")
     }
 
     static var unlock: String {
-        AppLocalization.shared.localized("applock.unlock")
+        AppLocalization.localized("applock.unlock")
     }
 }
 
@@ -47,7 +47,7 @@ struct AppLockOverlayView: View {
                         .foregroundStyle(.white)
                 }
                 .accessibilityLabel(Constants.unlock)
-                .accessibilityHint(AppLocalization.shared.localized("applock.unlock_hint"))
+                .accessibilityHint(AppLocalization.localized("applock.unlock_hint"))
                 .accessibilityFocused($isUnlockFocused)
             }
         }

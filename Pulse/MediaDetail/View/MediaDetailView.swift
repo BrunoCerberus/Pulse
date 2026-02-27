@@ -6,27 +6,27 @@ import SwiftUI
 
 private enum Constants {
     static var back: String {
-        AppLocalization.shared.localized("common.back")
+        AppLocalization.localized("common.back")
     }
 
     static var share: String {
-        AppLocalization.shared.localized("common.share")
+        AppLocalization.localized("common.share")
     }
 
     static var openInBrowser: String {
-        AppLocalization.shared.localized("media.open_in_browser")
+        AppLocalization.localized("media.open_in_browser")
     }
 
     static var errorTitle: String {
-        AppLocalization.shared.localized("media.error_title")
+        AppLocalization.localized("media.error_title")
     }
 
     static var videoUnavailable: String {
-        AppLocalization.shared.localized("media.video_unavailable")
+        AppLocalization.localized("media.video_unavailable")
     }
 
     static var audioUnavailable: String {
-        AppLocalization.shared.localized("media.audio_unavailable")
+        AppLocalization.localized("media.audio_unavailable")
     }
 }
 
@@ -90,8 +90,8 @@ struct MediaDetailView: View {
                     .accessibilityIdentifier(viewModel.viewState.isBookmarked ? "bookmark.fill" : "bookmark")
                     .accessibilityLabel(
                         viewModel.viewState.isBookmarked
-                            ? AppLocalization.shared.localized("media_detail.remove_bookmark")
-                            : AppLocalization.shared.localized("media_detail.add_bookmark")
+                            ? AppLocalization.localized("media_detail.remove_bookmark")
+                            : AppLocalization.localized("media_detail.add_bookmark")
                     )
 
                     Button("", systemImage: "square.and.arrow.up") {
@@ -196,7 +196,7 @@ struct MediaDetailView: View {
                 .foregroundStyle(.secondary)
                 .accessibilityHidden(true)
 
-            Text(AppLocalization.shared.localized("media.unsupported_type"))
+            Text(AppLocalization.localized("media.unsupported_type"))
                 .font(Typography.bodyLarge)
                 .foregroundStyle(.secondary)
         }
@@ -328,7 +328,7 @@ struct MediaDetailView: View {
             .clipShape(RoundedRectangle(cornerRadius: CornerRadius.md, style: .continuous))
         }
         .pressEffect()
-        .accessibilityHint(AppLocalization.shared.localized("accessibility.opens_in_safari"))
+        .accessibilityHint(AppLocalization.localized("accessibility.opens_in_safari"))
     }
 }
 

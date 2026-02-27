@@ -15,7 +15,10 @@ struct HeroNewsCard: View {
     @Environment(\.dynamicTypeSize) private var dynamicTypeSize
 
     private var effectiveCardWidth: CGFloat {
-        dynamicTypeSize.isAccessibilitySize ? UIScreen.main.bounds.width - Spacing.lg * 2 : cardWidth
+        let screenWidth = UIApplication.shared.connectedScenes
+            .compactMap { $0 as? UIWindowScene }
+            .first?.screen.bounds.width ?? cardWidth
+        return dynamicTypeSize.isAccessibilitySize ? screenWidth - Spacing.lg * 2 : cardWidth
     }
 
     private var cardHeight: CGFloat {
@@ -44,8 +47,8 @@ struct HeroNewsCard: View {
         }
         .pressEffect()
         .accessibilityElement(children: .combine)
-        .accessibilityLabel(String(format: AppLocalization.shared.localized("breaking_news.accessibility_label"), item.title, item.sourceName, item.formattedDate))
-        .accessibilityHint(AppLocalization.shared.localized("accessibility.read_article"))
+        .accessibilityLabel(String(format: AppLocalization.localized("breaking_news.accessibility_label"), item.title, item.sourceName, item.formattedDate))
+        .accessibilityHint(AppLocalization.localized("accessibility.read_article"))
         .onAppear {
             startPulseAnimation()
         }
@@ -127,7 +130,7 @@ struct HeroNewsCard: View {
                 .scaleEffect(isPulsing ? 1.2 : 1.0)
                 .opacity(isPulsing ? 0.5 : 1.0)
 
-            Text(AppLocalization.shared.localized("home.breaking"))
+            Text(AppLocalization.localized("home.breaking"))
                 .font(Typography.labelSmall)
                 .fontWeight(.bold)
         }
@@ -209,8 +212,8 @@ struct FeaturedArticleCard: View {
         }
         .pressEffect()
         .accessibilityElement(children: .combine)
-        .accessibilityLabel(String(format: AppLocalization.shared.localized("article_row.accessibility_label"), item.title, item.sourceName, item.formattedDate))
-        .accessibilityHint(AppLocalization.shared.localized("accessibility.read_article"))
+        .accessibilityLabel(String(format: AppLocalization.localized("article_row.accessibility_label"), item.title, item.sourceName, item.formattedDate))
+        .accessibilityHint(AppLocalization.localized("accessibility.read_article"))
     }
 
     @ViewBuilder

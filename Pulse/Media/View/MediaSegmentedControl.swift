@@ -51,7 +51,7 @@ private struct MediaTypeChip: View {
     }
 
     private var label: String {
-        type?.displayName ?? AppLocalization.shared.localized("media.all_types")
+        type?.displayName ?? AppLocalization.localized("media.all_types")
     }
 
     var body: some View {
@@ -90,7 +90,7 @@ private struct MediaTypeChip: View {
         .pressEffect(scale: 0.95)
         .accessibilityLabel(label)
         .accessibilityAddTraits(isSelected ? .isSelected : [])
-        .accessibilityHint(String(format: AppLocalization.shared.localized("media.filter_hint"), label))
+        .accessibilityHint(String(format: AppLocalization.localized("media.filter_hint"), label))
     }
 }
 

@@ -5,7 +5,7 @@ import SwiftUI
 
 private enum Constants {
     static var breaking: String {
-        AppLocalization.shared.localized("home.breaking")
+        AppLocalization.localized("home.breaking")
     }
 }
 
@@ -98,13 +98,13 @@ struct BreakingNewsCard: View {
         .accessibilityElement(children: .combine)
         .accessibilityLabel(
             String(
-                format: AppLocalization.shared.localized("breaking_news.accessibility_label"),
+                format: AppLocalization.localized("breaking_news.accessibility_label"),
                 item.title,
                 item.sourceName,
                 item.formattedDate
             )
         )
-        .accessibilityHint(AppLocalization.shared.localized("accessibility.read_article"))
+        .accessibilityHint(AppLocalization.localized("accessibility.read_article"))
     }
 }
 

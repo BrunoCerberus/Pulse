@@ -14,9 +14,9 @@ struct SpeechPlayerBarView: View {
         VStack(spacing: 0) {
             ProgressView(value: progress)
                 .tint(Color.Accent.gradient)
-                .accessibilityLabel(AppLocalization.shared.localized("tts.progress"))
+                .accessibilityLabel(AppLocalization.localized("tts.progress"))
                 .accessibilityValue(
-                    String(format: AppLocalization.shared.localized("tts.progress_value"), Int(progress * 100))
+                    String(format: AppLocalization.localized("tts.progress_value"), Int(progress * 100))
                 )
 
             HStack(spacing: Spacing.md) {
@@ -28,12 +28,12 @@ struct SpeechPlayerBarView: View {
                 .accessibilityIdentifier("ttsPlayPauseButton")
                 .accessibilityLabel(
                     playbackState == .playing
-                        ? AppLocalization.shared.localized("tts.pause")
-                        : AppLocalization.shared.localized("tts.play")
+                        ? AppLocalization.localized("tts.pause")
+                        : AppLocalization.localized("tts.play")
                 )
 
                 VStack(alignment: .leading, spacing: 2) {
-                    Text(AppLocalization.shared.localized("tts.listening"))
+                    Text(AppLocalization.localized("tts.listening"))
                         .font(Typography.captionLarge)
                         .foregroundStyle(.secondary)
                         .lineLimit(1)
@@ -57,9 +57,9 @@ struct SpeechPlayerBarView: View {
                 }
                 .accessibilityIdentifier("ttsSpeedButton")
                 .accessibilityLabel(
-                    String(format: AppLocalization.shared.localized("tts.speed_label"), speedPreset.label)
+                    String(format: AppLocalization.localized("tts.speed_label"), speedPreset.label)
                 )
-                .accessibilityHint(AppLocalization.shared.localized("tts.speed_hint"))
+                .accessibilityHint(AppLocalization.localized("tts.speed_hint"))
 
                 Button(action: onStop) {
                     Image(systemName: "xmark")
@@ -69,7 +69,7 @@ struct SpeechPlayerBarView: View {
                         .clipShape(Circle())
                 }
                 .accessibilityIdentifier("ttsStopButton")
-                .accessibilityLabel(AppLocalization.shared.localized("tts.stop"))
+                .accessibilityLabel(AppLocalization.localized("tts.stop"))
             }
             .padding(.horizontal, Spacing.md)
             .padding(.vertical, Spacing.sm)

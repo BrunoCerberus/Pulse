@@ -5,31 +5,31 @@ import SwiftUI
 
 private enum Constants {
     static var title: String {
-        AppLocalization.shared.localized("reading_history.title")
+        AppLocalization.localized("reading_history.title")
     }
 
     static var emptyTitle: String {
-        AppLocalization.shared.localized("reading_history.empty.title")
+        AppLocalization.localized("reading_history.empty.title")
     }
 
     static var emptyMessage: String {
-        AppLocalization.shared.localized("reading_history.empty.message")
+        AppLocalization.localized("reading_history.empty.message")
     }
 
     static var clearHistory: String {
-        AppLocalization.shared.localized("reading_history.clear")
+        AppLocalization.localized("reading_history.clear")
     }
 
     static var clearConfirm: String {
-        AppLocalization.shared.localized("reading_history.clear.confirm")
+        AppLocalization.localized("reading_history.clear.confirm")
     }
 
     static var errorTitle: String {
-        AppLocalization.shared.localized("bookmarks.error.title")
+        AppLocalization.localized("bookmarks.error.title")
     }
 
     static var tryAgain: String {
-        AppLocalization.shared.localized("common.try_again")
+        AppLocalization.localized("common.try_again")
     }
 }
 
@@ -69,7 +69,7 @@ struct ReadingHistoryView<R: ReadingHistoryNavigationRouter>: View {
             }
         }
         .alert(Constants.clearHistory, isPresented: $showClearConfirmation) {
-            Button(AppLocalization.shared.localized("common.cancel"), role: .cancel) {}
+            Button(AppLocalization.localized("common.cancel"), role: .cancel) {}
             Button(Constants.clearHistory, role: .destructive) {
                 HapticManager.shared.notification(.warning)
                 viewModel.handle(event: .onClearHistoryTapped)

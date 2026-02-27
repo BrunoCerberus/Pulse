@@ -47,7 +47,7 @@ struct SplashScreenView: View {
             logoView
         }
         .accessibilityElement(children: .ignore)
-        .accessibilityLabel(AppLocalization.shared.localized("splash.loading"))
+        .accessibilityLabel(AppLocalization.localized("splash.loading"))
         .opacity(isAnimationComplete ? 0 : 1)
         .onAppear {
             if reduceMotion {
@@ -91,7 +91,7 @@ struct SplashScreenView: View {
             }
             .glowEffect(color: Color.Accent.primary, radius: 16)
 
-            Text(AppLocalization.shared.localized("app.name"))
+            Text(AppLocalization.localized("app.name"))
                 .font(Typography.displayMedium)
                 .foregroundStyle(.white)
         }

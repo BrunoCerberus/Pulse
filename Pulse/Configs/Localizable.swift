@@ -31,82 +31,82 @@ struct Localizable {
 
         /// "Loading..." loading state message
         static var loading: String {
-            AppLocalization.shared.localized("paywall.loading")
+            AppLocalization.localized("paywall.loading")
         }
 
         /// "Unlock Premium" title
         static var title: String {
-            AppLocalization.shared.localized("paywall.title")
+            AppLocalization.localized("paywall.title")
         }
 
         /// Subtitle describing premium benefits
         static var subtitle: String {
-            AppLocalization.shared.localized("paywall.subtitle")
+            AppLocalization.localized("paywall.subtitle")
         }
 
         /// First feature title
         static var feature1Title: String {
-            AppLocalization.shared.localized("paywall.feature1.title")
+            AppLocalization.localized("paywall.feature1.title")
         }
 
         /// First feature description
         static var feature1Description: String {
-            AppLocalization.shared.localized("paywall.feature1.description")
+            AppLocalization.localized("paywall.feature1.description")
         }
 
         /// Second feature title
         static var feature2Title: String {
-            AppLocalization.shared.localized("paywall.feature2.title")
+            AppLocalization.localized("paywall.feature2.title")
         }
 
         /// Second feature description
         static var feature2Description: String {
-            AppLocalization.shared.localized("paywall.feature2.description")
+            AppLocalization.localized("paywall.feature2.description")
         }
 
         /// Third feature title
         static var feature3Title: String {
-            AppLocalization.shared.localized("paywall.feature3.title")
+            AppLocalization.localized("paywall.feature3.title")
         }
 
         /// Third feature description
         static var feature3Description: String {
-            AppLocalization.shared.localized("paywall.feature3.description")
+            AppLocalization.localized("paywall.feature3.description")
         }
 
         /// "Error" title for error state
         static var errorTitle: String {
-            AppLocalization.shared.localized("paywall.error.title")
+            AppLocalization.localized("paywall.error.title")
         }
 
         /// "Retry" button text
         static var retry: String {
-            AppLocalization.shared.localized("paywall.retry")
+            AppLocalization.localized("paywall.retry")
         }
 
         /// "Restore Purchases" button text
         static var restorePurchases: String {
-            AppLocalization.shared.localized("paywall.restore_purchases")
+            AppLocalization.localized("paywall.restore_purchases")
         }
 
         /// "Go Premium" settings entry point title
         static var goPremium: String {
-            AppLocalization.shared.localized("paywall.go_premium")
+            AppLocalization.localized("paywall.go_premium")
         }
 
         /// "Unlock all features" settings entry point description
         static var unlockFeatures: String {
-            AppLocalization.shared.localized("paywall.unlock_features")
+            AppLocalization.localized("paywall.unlock_features")
         }
 
         /// "Premium Active" status for subscribed users
         static var premiumActive: String {
-            AppLocalization.shared.localized("paywall.premium_active")
+            AppLocalization.localized("paywall.premium_active")
         }
 
         /// "You have full access" description for subscribed users
         static var fullAccess: String {
-            AppLocalization.shared.localized("paywall.full_access")
+            AppLocalization.localized("paywall.full_access")
         }
     }
 

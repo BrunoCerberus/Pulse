@@ -10,7 +10,7 @@ struct AIProcessingView: View {
     @Environment(\.accessibilityReduceMotion) private var reduceMotion
 
     private var statusMessage: String {
-        AppLocalization.shared.localized("feed.ai_processing.status")
+        AppLocalization.localized("feed.ai_processing.status")
     }
 
     var body: some View {
@@ -99,7 +99,7 @@ struct AIProcessingView: View {
                         .font(.system(size: IconSize.sm))
                         .foregroundStyle(Color.Accent.gradient)
 
-                    Text(AppLocalization.shared.localized("feed.ai_digest"))
+                    Text(AppLocalization.localized("feed.ai_digest"))
                         .font(Typography.labelMedium)
                         .foregroundStyle(.secondary)
                 }

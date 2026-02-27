@@ -5,27 +5,27 @@ import SwiftUI
 
 private enum Constants {
     static var title: String {
-        AppLocalization.shared.localized("bookmarks.title")
+        AppLocalization.localized("bookmarks.title")
     }
 
     static var loading: String {
-        AppLocalization.shared.localized("bookmarks.loading")
+        AppLocalization.localized("bookmarks.loading")
     }
 
     static var errorTitle: String {
-        AppLocalization.shared.localized("bookmarks.error.title")
+        AppLocalization.localized("bookmarks.error.title")
     }
 
     static var emptyTitle: String {
-        AppLocalization.shared.localized("bookmarks.empty.title")
+        AppLocalization.localized("bookmarks.empty.title")
     }
 
     static var emptyMessage: String {
-        AppLocalization.shared.localized("bookmarks.empty.message")
+        AppLocalization.localized("bookmarks.empty.message")
     }
 
     static var tryAgain: String {
-        AppLocalization.shared.localized("common.try_again")
+        AppLocalization.localized("common.try_again")
     }
 }
 
@@ -179,7 +179,7 @@ struct BookmarksView<R: BookmarksNavigationRouter>: View {
         HStack {
             Image(systemName: "bookmark.fill")
                 .foregroundStyle(Color.Accent.primary)
-            Text(String(format: AppLocalization.shared.localized("bookmarks.saved_count"), viewModel.viewState.bookmarks.count))
+            Text(String(format: AppLocalization.localized("bookmarks.saved_count"), viewModel.viewState.bookmarks.count))
                 .font(Typography.captionLarge)
                 .foregroundStyle(.secondary)
             Spacer()

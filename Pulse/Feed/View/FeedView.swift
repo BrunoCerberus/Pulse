@@ -6,39 +6,39 @@ import SwiftUI
 
 private enum Constants {
     static var title: String {
-        AppLocalization.shared.localized("feed.title")
+        AppLocalization.localized("feed.title")
     }
 
     static var headerTitle: String {
-        AppLocalization.shared.localized("feed.header_title")
+        AppLocalization.localized("feed.header_title")
     }
 
     static var emptyTitle: String {
-        AppLocalization.shared.localized("feed.empty.title")
+        AppLocalization.localized("feed.empty.title")
     }
 
     static var emptyMessage: String {
-        AppLocalization.shared.localized("feed.empty.message")
+        AppLocalization.localized("feed.empty.message")
     }
 
     static var errorTitle: String {
-        AppLocalization.shared.localized("feed.error.title")
+        AppLocalization.localized("feed.error.title")
     }
 
     static var tryAgain: String {
-        AppLocalization.shared.localized("common.try_again")
+        AppLocalization.localized("common.try_again")
     }
 
     static var startReading: String {
-        AppLocalization.shared.localized("feed.start_reading")
+        AppLocalization.localized("feed.start_reading")
     }
 
     static var offlineTitle: String {
-        AppLocalization.shared.localized("feed.offline.title")
+        AppLocalization.localized("feed.offline.title")
     }
 
     static var offlineMessage: String {
-        AppLocalization.shared.localized("feed.offline.message")
+        AppLocalization.localized("feed.offline.message")
     }
 }
 
@@ -121,7 +121,7 @@ struct FeedView<R: FeedNavigationRouter>: View {
         .onChange(of: viewModel.viewState.displayState) { _, newState in
             if case .completed = newState {
                 isDigestFocused = true
-                AccessibilityNotification.Announcement(AppLocalization.shared.localized("accessibility.digest_ready")).post()
+                AccessibilityNotification.Announcement(AppLocalization.localized("accessibility.digest_ready")).post()
             }
         }
     }
@@ -302,7 +302,7 @@ struct FeedView<R: FeedNavigationRouter>: View {
                 }
                 .buttonStyle(.plain)
                 .pressEffect()
-                .accessibilityHint(AppLocalization.shared.localized("feed.retry_hint"))
+                .accessibilityHint(AppLocalization.localized("feed.retry_hint"))
             }
         }
         .padding(.horizontal, Spacing.md)

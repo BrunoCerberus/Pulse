@@ -5,15 +5,15 @@ import SwiftUI
 
 private enum Constants {
     static var title: String {
-        AppLocalization.shared.localized("feed.no_articles.title")
+        AppLocalization.localized("feed.no_articles.title")
     }
 
     static var message: String {
-        AppLocalization.shared.localized("feed.no_articles.message")
+        AppLocalization.localized("feed.no_articles.message")
     }
 
     static var startReading: String {
-        AppLocalization.shared.localized("feed.no_articles.retry")
+        AppLocalization.localized("feed.no_articles.retry")
     }
 }
 

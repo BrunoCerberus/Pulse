@@ -62,7 +62,7 @@ struct TopicsBreakdownCard: View {
                 .foregroundStyle(Color.Accent.gradient)
                 .accessibilityHidden(true)
 
-            Text(AppLocalization.shared.localized("digest.topics_title"))
+            Text(AppLocalization.localized("digest.topics_title"))
                 .font(Typography.labelMedium)
                 .foregroundStyle(.primary)
         }
