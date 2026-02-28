@@ -31,6 +31,10 @@ private enum Constants {
     static var tryAgain: String {
         AppLocalization.localized("common.try_again")
     }
+
+    static var cancel: String {
+        AppLocalization.localized("common.cancel")
+    }
 }
 
 // MARK: - ReadingHistoryView
@@ -69,7 +73,7 @@ struct ReadingHistoryView<R: ReadingHistoryNavigationRouter>: View {
             }
         }
         .alert(Constants.clearHistory, isPresented: $showClearConfirmation) {
-            Button(AppLocalization.localized("common.cancel"), role: .cancel) {}
+            Button(Constants.cancel, role: .cancel) {}
             Button(Constants.clearHistory, role: .destructive) {
                 HapticManager.shared.notification(.warning)
                 viewModel.handle(event: .onClearHistoryTapped)

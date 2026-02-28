@@ -7,6 +7,30 @@ private enum Constants {
     static var sectionTitle: String {
         AppLocalization.localized("digest.source_articles")
     }
+
+    static var expanded: String {
+        AppLocalization.localized("source_articles.expanded")
+    }
+
+    static var collapsed: String {
+        AppLocalization.localized("source_articles.collapsed")
+    }
+
+    static var collapseHint: String {
+        AppLocalization.localized("source_articles.collapse_hint")
+    }
+
+    static var expandHint: String {
+        AppLocalization.localized("source_articles.expand_hint")
+    }
+
+    static var articleAccessibilityLabel: String {
+        AppLocalization.localized("article_row.accessibility_label")
+    }
+
+    static var readArticleHint: String {
+        AppLocalization.localized("accessibility.read_article")
+    }
 }
 
 // MARK: - SourceArticlesSection
@@ -61,8 +85,8 @@ struct SourceArticlesSection: View {
         .buttonStyle(.plain)
         .pressEffect()
         .accessibilityLabel("\(Constants.sectionTitle), \(articles.count) articles")
-        .accessibilityValue(isExpanded ? AppLocalization.localized("source_articles.expanded") : AppLocalization.localized("source_articles.collapsed"))
-        .accessibilityHint(isExpanded ? AppLocalization.localized("source_articles.collapse_hint") : AppLocalization.localized("source_articles.expand_hint"))
+        .accessibilityValue(isExpanded ? Constants.expanded : Constants.collapsed)
+        .accessibilityHint(isExpanded ? Constants.collapseHint : Constants.expandHint)
     }
 
     // MARK: - Articles List
@@ -127,8 +151,8 @@ private struct SourceArticleRow: View {
         .buttonStyle(.plain)
         .pressEffect()
         .accessibilityElement(children: .combine)
-        .accessibilityLabel(String(format: AppLocalization.localized("article_row.accessibility_label"), article.title, article.source, ""))
-        .accessibilityHint(AppLocalization.localized("accessibility.read_article"))
+        .accessibilityLabel(String(format: Constants.articleAccessibilityLabel, article.title, article.source, ""))
+        .accessibilityHint(Constants.readArticleHint)
     }
 
     // MARK: - Thumbnail View

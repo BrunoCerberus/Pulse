@@ -57,6 +57,24 @@ enum PremiumFeature {
 
 /// A view that gates premium content and shows an upsell when the user is not premium.
 struct PremiumGateView: View {
+    private enum Constants {
+        static var badge: String {
+            AppLocalization.localized("premium_gate.badge")
+        }
+
+        static var unlockButton: String {
+            AppLocalization.localized("premium_gate.unlock_button")
+        }
+
+        static var unlockLabel: String {
+            AppLocalization.localized("premium_gate.unlock_label")
+        }
+
+        static var premiumHint: String {
+            AppLocalization.localized("settings.premium.hint")
+        }
+    }
+
     let feature: PremiumFeature
     let serviceLocator: ServiceLocator
     var onUnlockTapped: (() -> Void)?
@@ -103,7 +121,7 @@ struct PremiumGateView: View {
                 HStack(spacing: Spacing.xs) {
                     Image(systemName: "crown.fill")
                         .font(.system(size: IconSize.sm))
-                    Text(AppLocalization.localized("premium_gate.badge"))
+                    Text(Constants.badge)
                         .font(Typography.labelMedium)
                 }
                 .foregroundStyle(Color.Accent.warmGradient)
@@ -133,7 +151,7 @@ struct PremiumGateView: View {
             } label: {
                 HStack(spacing: Spacing.sm) {
                     Image(systemName: "lock.open.fill")
-                    Text(AppLocalization.localized("premium_gate.unlock_button"))
+                    Text(Constants.unlockButton)
                 }
                 .font(Typography.labelLarge)
                 .foregroundStyle(.white)
@@ -145,8 +163,8 @@ struct PremiumGateView: View {
             }
             .pressEffect()
             .padding(.horizontal, Spacing.xl)
-            .accessibilityLabel(String(format: AppLocalization.localized("premium_gate.unlock_label"), feature.title))
-            .accessibilityHint(AppLocalization.localized("settings.premium.hint"))
+            .accessibilityLabel(String(format: Constants.unlockLabel, feature.title))
+            .accessibilityHint(Constants.premiumHint)
             .accessibilityIdentifier("unlockPremiumButton")
 
             Spacer()

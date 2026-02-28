@@ -27,6 +27,10 @@ private enum Constants {
     static var tryAgain: String {
         AppLocalization.localized("common.try_again")
     }
+
+    static var savedCount: String {
+        AppLocalization.localized("bookmarks.saved_count")
+    }
 }
 
 // MARK: - BookmarksView
@@ -187,7 +191,7 @@ struct BookmarksView<R: BookmarksNavigationRouter>: View {
         HStack {
             Image(systemName: "bookmark.fill")
                 .foregroundStyle(Color.Accent.primary)
-            Text(String(format: AppLocalization.localized("bookmarks.saved_count"), viewModel.viewState.bookmarks.count))
+            Text(String(format: Constants.savedCount, viewModel.viewState.bookmarks.count))
                 .font(Typography.captionLarge)
                 .foregroundStyle(.secondary)
             Spacer()

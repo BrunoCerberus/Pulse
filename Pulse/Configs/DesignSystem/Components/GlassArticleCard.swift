@@ -4,6 +4,28 @@ import SwiftUI
 // MARK: - Glass Article Card
 
 struct GlassArticleCard: View {
+    private enum Constants {
+        static var accessibilityLabelFormat: String {
+            AppLocalization.localized("article_row.accessibility_label")
+        }
+
+        static var accessibilityHint: String {
+            AppLocalization.localized("accessibility.read_article")
+        }
+
+        static var removeBookmark: String {
+            AppLocalization.localized("article.remove_bookmark")
+        }
+
+        static var bookmark: String {
+            AppLocalization.localized("article.bookmark")
+        }
+
+        static var share: String {
+            AppLocalization.localized("article.share")
+        }
+    }
+
     let title: String
     let description: String?
     let sourceName: String
@@ -58,15 +80,15 @@ struct GlassArticleCard: View {
         }
         .pressEffect()
         .accessibilityElement(children: .combine)
-        .accessibilityLabel(String(format: AppLocalization.localized("article_row.accessibility_label"), title, sourceName, formattedDate))
-        .accessibilityHint(AppLocalization.localized("accessibility.read_article"))
+        .accessibilityLabel(String(format: Constants.accessibilityLabelFormat, title, sourceName, formattedDate))
+        .accessibilityHint(Constants.accessibilityHint)
         .accessibilityIdentifier("articleCard")
         .contextMenu {
             Button {
                 onBookmark()
             } label: {
                 Label(
-                    isBookmarked ? AppLocalization.localized("article.remove_bookmark") : AppLocalization.localized("article.bookmark"),
+                    isBookmarked ? Constants.removeBookmark : Constants.bookmark,
                     systemImage: isBookmarked ? "bookmark.fill" : "bookmark"
                 )
             }
@@ -74,7 +96,7 @@ struct GlassArticleCard: View {
             Button {
                 onShare()
             } label: {
-                Label(AppLocalization.localized("article.share"), systemImage: "square.and.arrow.up")
+                Label(Constants.share, systemImage: "square.and.arrow.up")
             }
         }
     }
@@ -221,6 +243,16 @@ extension GlassArticleCard {
 // MARK: - Compact Variant
 
 struct GlassArticleCardCompact: View {
+    private enum Constants {
+        static var accessibilityLabelFormat: String {
+            AppLocalization.localized("article_row.accessibility_label")
+        }
+
+        static var accessibilityHint: String {
+            AppLocalization.localized("accessibility.read_article")
+        }
+    }
+
     let title: String
     let sourceName: String
     let imageURL: URL?
@@ -267,8 +299,8 @@ struct GlassArticleCardCompact: View {
         }
         .pressEffect()
         .accessibilityElement(children: .combine)
-        .accessibilityLabel(String(format: AppLocalization.localized("article_row.accessibility_label"), title, sourceName, ""))
-        .accessibilityHint(AppLocalization.localized("accessibility.read_article"))
+        .accessibilityLabel(String(format: Constants.accessibilityLabelFormat, title, sourceName, ""))
+        .accessibilityHint(Constants.accessibilityHint)
         .accessibilityIdentifier("articleCard")
     }
 }

@@ -1,6 +1,26 @@
 import EntropyCore
 import SwiftUI
 
+// MARK: - Constants
+
+private enum Constants {
+    static var fromSourceFormat: String {
+        AppLocalization.localized("accessibility.from_source")
+    }
+
+    static var detailsHint: String {
+        AppLocalization.localized("media_card.details_hint")
+    }
+
+    static var play: String {
+        AppLocalization.localized("media.play")
+    }
+
+    static var share: String {
+        AppLocalization.localized("common.share")
+    }
+}
+
 /// Card component for displaying a media item (video or podcast) in a list.
 ///
 /// Features:
@@ -24,7 +44,7 @@ struct MediaCard: View {
             parts.append(mediaType.displayName)
         }
         parts.append(item.title)
-        parts.append(String(format: AppLocalization.localized("accessibility.from_source"), item.sourceName))
+        parts.append(String(format: Constants.fromSourceFormat, item.sourceName))
         parts.append(item.formattedDate)
         if let duration = item.formattedDuration {
             parts.append(duration)
@@ -45,19 +65,19 @@ struct MediaCard: View {
         .pressEffect()
         .accessibilityElement(children: .combine)
         .accessibilityLabel(mediaAccessibilityLabel)
-        .accessibilityHint(AppLocalization.localized("media_card.details_hint"))
+        .accessibilityHint(Constants.detailsHint)
         .accessibilityIdentifier("mediaCard")
         .contextMenu {
             Button {
                 onPlay()
             } label: {
-                Label(AppLocalization.localized("media.play"), systemImage: "play.fill")
+                Label(Constants.play, systemImage: "play.fill")
             }
 
             Button {
                 onShare()
             } label: {
-                Label(AppLocalization.localized("common.share"), systemImage: "square.and.arrow.up")
+                Label(Constants.share, systemImage: "square.and.arrow.up")
             }
         }
     }

@@ -14,6 +14,12 @@ import SwiftUI
 /// This view uses the native SwiftUI `SubscriptionStoreView` for iOS 17+
 /// which provides a native paywall experience with Apple's design guidelines.
 struct PaywallView: View {
+    private enum Constants {
+        static var close: String {
+            AppLocalization.localized("paywall.close")
+        }
+    }
+
     @StateObject var viewModel: PaywallViewModel
     @Environment(\.dismiss) private var dismiss
 
@@ -39,7 +45,7 @@ struct PaywallView: View {
                                 .font(.system(size: IconSize.lg))
                                 .foregroundStyle(.secondary)
                         }
-                        .accessibilityLabel(AppLocalization.localized("paywall.close"))
+                        .accessibilityLabel(Constants.close)
                     }
                 }
         }

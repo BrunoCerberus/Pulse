@@ -4,6 +4,20 @@ import SwiftUI
 // MARK: - Hero News Card
 
 struct HeroNewsCard: View {
+    private enum Constants {
+        static var breakingNewsAccessibilityLabelFormat: String {
+            AppLocalization.localized("breaking_news.accessibility_label")
+        }
+
+        static var accessibilityHint: String {
+            AppLocalization.localized("accessibility.read_article")
+        }
+
+        static var breakingLabel: String {
+            AppLocalization.localized("home.breaking")
+        }
+    }
+
     let item: ArticleViewItem
     var cardWidth: CGFloat = 300
     let onTap: () -> Void
@@ -47,8 +61,8 @@ struct HeroNewsCard: View {
         }
         .pressEffect()
         .accessibilityElement(children: .combine)
-        .accessibilityLabel(String(format: AppLocalization.localized("breaking_news.accessibility_label"), item.title, item.sourceName, item.formattedDate))
-        .accessibilityHint(AppLocalization.localized("accessibility.read_article"))
+        .accessibilityLabel(String(format: Constants.breakingNewsAccessibilityLabelFormat, item.title, item.sourceName, item.formattedDate))
+        .accessibilityHint(Constants.accessibilityHint)
         .onAppear {
             startPulseAnimation()
         }
@@ -130,7 +144,7 @@ struct HeroNewsCard: View {
                 .scaleEffect(isPulsing ? 1.2 : 1.0)
                 .opacity(isPulsing ? 0.5 : 1.0)
 
-            Text(AppLocalization.localized("home.breaking"))
+            Text(Constants.breakingLabel)
                 .font(Typography.labelSmall)
                 .fontWeight(.bold)
         }
@@ -191,6 +205,16 @@ struct HeroNewsCard: View {
 // MARK: - Featured Article Card (Larger variant)
 
 struct FeaturedArticleCard: View {
+    private enum Constants {
+        static var accessibilityLabelFormat: String {
+            AppLocalization.localized("article_row.accessibility_label")
+        }
+
+        static var accessibilityHint: String {
+            AppLocalization.localized("accessibility.read_article")
+        }
+    }
+
     let item: ArticleViewItem
     let onTap: () -> Void
 
@@ -212,8 +236,8 @@ struct FeaturedArticleCard: View {
         }
         .pressEffect()
         .accessibilityElement(children: .combine)
-        .accessibilityLabel(String(format: AppLocalization.localized("article_row.accessibility_label"), item.title, item.sourceName, item.formattedDate))
-        .accessibilityHint(AppLocalization.localized("accessibility.read_article"))
+        .accessibilityLabel(String(format: Constants.accessibilityLabelFormat, item.title, item.sourceName, item.formattedDate))
+        .accessibilityHint(Constants.accessibilityHint)
     }
 
     @ViewBuilder

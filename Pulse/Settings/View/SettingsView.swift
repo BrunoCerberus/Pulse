@@ -28,6 +28,50 @@ private enum Constants {
     static var version: String {
         AppLocalization.localized("common.version")
     }
+
+    static var notifications: String {
+        AppLocalization.localized("settings.notifications")
+    }
+
+    static var enableNotifications: String {
+        AppLocalization.localized("settings.enable_notifications")
+    }
+
+    static var breakingNewsAlerts: String {
+        AppLocalization.localized("settings.breaking_news_alerts")
+    }
+
+    static var contentLanguage: String {
+        AppLocalization.localized("settings.content_language")
+    }
+
+    static var contentLanguageLabel: String {
+        AppLocalization.localized("settings.content_language.label")
+    }
+
+    static var appearance: String {
+        AppLocalization.localized("settings.appearance")
+    }
+
+    static var useSystemTheme: String {
+        AppLocalization.localized("settings.use_system_theme")
+    }
+
+    static var darkMode: String {
+        AppLocalization.localized("settings.dark_mode")
+    }
+
+    static var data: String {
+        AppLocalization.localized("settings.data")
+    }
+
+    static var readingHistory: String {
+        AppLocalization.localized("settings.reading_history")
+    }
+
+    static var about: String {
+        AppLocalization.localized("settings.about")
+    }
 }
 
 // MARK: - SettingsView
@@ -143,16 +187,16 @@ struct SettingsView: View {
     }
 
     private var notificationsSection: some View {
-        Section(AppLocalization.localized("settings.notifications")) {
+        Section(Constants.notifications) {
             Toggle(
-                AppLocalization.localized("settings.enable_notifications"),
+                Constants.enableNotifications,
                 isOn: Binding(
                     get: { viewModel.viewState.notificationsEnabled },
                     set: { viewModel.handle(event: .onToggleNotifications($0)) }
                 )
             )
 
-            Toggle(AppLocalization.localized("settings.breaking_news_alerts"), isOn: Binding(
+            Toggle(Constants.breakingNewsAlerts, isOn: Binding(
                 get: { viewModel.viewState.breakingNewsEnabled },
                 set: { viewModel.handle(event: .onToggleBreakingNews($0)) }
             ))
@@ -161,9 +205,9 @@ struct SettingsView: View {
     }
 
     private var contentLanguageSection: some View {
-        Section(AppLocalization.localized("settings.content_language")) {
+        Section(Constants.contentLanguage) {
             Picker(
-                AppLocalization.localized("settings.content_language.label"),
+                Constants.contentLanguageLabel,
                 selection: Binding(
                     get: { viewModel.viewState.selectedLanguage },
                     set: { viewModel.handle(event: .onLanguageChanged($0)) }
@@ -178,14 +222,14 @@ struct SettingsView: View {
     }
 
     private var appearanceSection: some View {
-        Section(AppLocalization.localized("settings.appearance")) {
-            Toggle(AppLocalization.localized("settings.use_system_theme"), isOn: Binding(
+        Section(Constants.appearance) {
+            Toggle(Constants.useSystemTheme, isOn: Binding(
                 get: { viewModel.viewState.useSystemTheme },
                 set: { viewModel.handle(event: .onToggleSystemTheme($0)) }
             ))
 
             if !viewModel.viewState.useSystemTheme {
-                Toggle(AppLocalization.localized("settings.dark_mode"), isOn: Binding(
+                Toggle(Constants.darkMode, isOn: Binding(
                     get: { viewModel.viewState.isDarkMode },
                     set: { viewModel.handle(event: .onToggleDarkMode($0)) }
                 ))
@@ -194,10 +238,10 @@ struct SettingsView: View {
     }
 
     private var dataSection: some View {
-        Section(AppLocalization.localized("settings.data")) {
+        Section(Constants.data) {
             NavigationLink(value: Page.readingHistory) {
                 Label(
-                    AppLocalization.localized("settings.reading_history"),
+                    Constants.readingHistory,
                     systemImage: "clock.arrow.circlepath"
                 )
             }
@@ -205,7 +249,7 @@ struct SettingsView: View {
     }
 
     private var aboutSection: some View {
-        Section(AppLocalization.localized("settings.about")) {
+        Section(Constants.about) {
             HStack {
                 Text(Constants.version)
                 Spacer()

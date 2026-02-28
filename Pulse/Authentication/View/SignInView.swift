@@ -36,6 +36,18 @@ private enum Constants {
     static var okButton: String {
         AppLocalization.localized("common.ok")
     }
+
+    static var unknownError: String {
+        AppLocalization.localized("auth.unknown_error")
+    }
+
+    static var appleHint: String {
+        AppLocalization.localized("auth.apple_hint")
+    }
+
+    static var googleHint: String {
+        AppLocalization.localized("auth.google_hint")
+    }
 }
 
 // MARK: - SignInView
@@ -76,7 +88,7 @@ struct SignInView: View {
                 viewModel.handle(event: .onDismissError)
             }
         } message: {
-            Text(viewModel.viewState.errorMessage ?? AppLocalization.localized("auth.unknown_error"))
+            Text(viewModel.viewState.errorMessage ?? Constants.unknownError)
         }
         .onChange(of: viewModel.viewState.errorMessage) { _, newValue in
             showError = newValue != nil
@@ -147,7 +159,7 @@ struct SignInView: View {
             }
             .buttonStyle(.plain)
             .accessibilityLabel(Constants.signInApple)
-            .accessibilityHint(AppLocalization.localized("auth.apple_hint"))
+            .accessibilityHint(Constants.appleHint)
 
             // Sign in with Google
             Button {
@@ -173,7 +185,7 @@ struct SignInView: View {
             }
             .buttonStyle(.plain)
             .accessibilityLabel(Constants.signInGoogle)
-            .accessibilityHint(AppLocalization.localized("auth.google_hint"))
+            .accessibilityHint(Constants.googleHint)
         }
     }
 

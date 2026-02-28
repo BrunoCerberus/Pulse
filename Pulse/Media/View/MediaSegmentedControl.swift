@@ -1,6 +1,18 @@
 import EntropyCore
 import SwiftUI
 
+// MARK: - Constants
+
+private enum Constants {
+    static var allTypes: String {
+        AppLocalization.localized("media.all_types")
+    }
+
+    static var filterHintFormat: String {
+        AppLocalization.localized("media.filter_hint")
+    }
+}
+
 /// Segmented control for filtering media by type (All/Videos/Podcasts).
 ///
 /// Features:
@@ -51,7 +63,7 @@ private struct MediaTypeChip: View {
     }
 
     private var label: String {
-        type?.displayName ?? AppLocalization.localized("media.all_types")
+        type?.displayName ?? Constants.allTypes
     }
 
     var body: some View {
@@ -90,7 +102,7 @@ private struct MediaTypeChip: View {
         .pressEffect(scale: 0.95)
         .accessibilityLabel(label)
         .accessibilityAddTraits(isSelected ? .isSelected : [])
-        .accessibilityHint(String(format: AppLocalization.localized("media.filter_hint"), label))
+        .accessibilityHint(String(format: Constants.filterHintFormat, label))
     }
 }
 

@@ -28,6 +28,22 @@ private enum Constants {
     static var audioUnavailable: String {
         AppLocalization.localized("media.audio_unavailable")
     }
+
+    static var removeBookmark: String {
+        AppLocalization.localized("media_detail.remove_bookmark")
+    }
+
+    static var addBookmark: String {
+        AppLocalization.localized("media_detail.add_bookmark")
+    }
+
+    static var unsupportedType: String {
+        AppLocalization.localized("media.unsupported_type")
+    }
+
+    static var opensInSafari: String {
+        AppLocalization.localized("accessibility.opens_in_safari")
+    }
 }
 
 // MARK: - MediaDetailView
@@ -90,8 +106,8 @@ struct MediaDetailView: View {
                     .accessibilityIdentifier(viewModel.viewState.isBookmarked ? "bookmark.fill" : "bookmark")
                     .accessibilityLabel(
                         viewModel.viewState.isBookmarked
-                            ? AppLocalization.localized("media_detail.remove_bookmark")
-                            : AppLocalization.localized("media_detail.add_bookmark")
+                            ? Constants.removeBookmark
+                            : Constants.addBookmark
                     )
 
                     Button("", systemImage: "square.and.arrow.up") {
@@ -196,7 +212,7 @@ struct MediaDetailView: View {
                 .foregroundStyle(.secondary)
                 .accessibilityHidden(true)
 
-            Text(AppLocalization.localized("media.unsupported_type"))
+            Text(Constants.unsupportedType)
                 .font(Typography.bodyLarge)
                 .foregroundStyle(.secondary)
         }
@@ -328,7 +344,7 @@ struct MediaDetailView: View {
             .clipShape(RoundedRectangle(cornerRadius: CornerRadius.md, style: .continuous))
         }
         .pressEffect()
-        .accessibilityHint(AppLocalization.localized("accessibility.opens_in_safari"))
+        .accessibilityHint(Constants.opensInSafari)
     }
 }
 

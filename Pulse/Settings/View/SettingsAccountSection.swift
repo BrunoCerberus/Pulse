@@ -11,6 +11,14 @@ private enum Constants {
     static var signOut: String {
         AppLocalization.localized("account.sign_out")
     }
+
+    static var profilePhoto: String {
+        AppLocalization.localized("account.profile_photo")
+    }
+
+    static var userInitial: String {
+        AppLocalization.localized("account.user_initial")
+    }
 }
 
 // MARK: - SettingsAccountSection
@@ -102,10 +110,10 @@ private struct ProfileImageView: View {
             .scaledToFill()
             .frame(width: 64, height: 64)
             .clipShape(Circle())
-            .accessibilityLabel(AppLocalization.localized("account.profile_photo"))
+            .accessibilityLabel(Constants.profilePhoto)
         } else {
             InitialPlaceholderView(user: user)
-                .accessibilityLabel(AppLocalization.localized("account.user_initial"))
+                .accessibilityLabel(Constants.userInitial)
         }
     }
 }

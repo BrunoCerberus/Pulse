@@ -15,6 +15,14 @@ private enum Constants {
     static var done: String {
         AppLocalization.localized("common.done")
     }
+
+    static var unfollowHint: String {
+        AppLocalization.localized("topic_editor.unfollow_hint")
+    }
+
+    static var followHint: String {
+        AppLocalization.localized("topic_editor.follow_hint")
+    }
 }
 
 // MARK: - TopicEditorSheet
@@ -56,8 +64,8 @@ struct TopicEditorSheet: View {
                         .accessibilityAddTraits(followedTopics.contains(topic) ? .isSelected : [])
                         .accessibilityHint(
                             followedTopics.contains(topic)
-                                ? AppLocalization.localized("topic_editor.unfollow_hint")
-                                : AppLocalization.localized("topic_editor.follow_hint")
+                                ? Constants.unfollowHint
+                                : Constants.followHint
                         )
                     }
                 } footer: {

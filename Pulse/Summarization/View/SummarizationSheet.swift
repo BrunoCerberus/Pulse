@@ -36,6 +36,10 @@ private enum Constants {
     static var aiSummary: String {
         AppLocalization.localized("summarization.ai_summary")
     }
+
+    static var summarizationComplete: String {
+        AppLocalization.localized("accessibility.summarization_complete")
+    }
 }
 
 // MARK: - Animation Constants
@@ -101,7 +105,7 @@ struct SummarizationSheet: View {
             case .completed:
                 isSummaryFocused = true
                 AccessibilityNotification.Announcement(
-                    AppLocalization.localized("accessibility.summarization_complete")
+                    Constants.summarizationComplete
                 ).post()
             case .error:
                 isSummaryFocused = true
