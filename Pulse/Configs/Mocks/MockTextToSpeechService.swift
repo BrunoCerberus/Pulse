@@ -30,6 +30,7 @@ final class MockTextToSpeechService: TextToSpeechService {
         lastSpokenText = text
         lastLanguage = language
         lastRate = rate
+        progressSubject.send(0.0)
         playbackStateSubject.send(.playing)
     }
 
@@ -57,6 +58,13 @@ final class MockTextToSpeechService: TextToSpeechService {
 
     func simulateFinished() {
         progressSubject.send(1.0)
+        playbackStateSubject.send(.idle)
+    }
+
+    /// Simulates the stale `didCancel` callback that AVSpeechSynthesizer fires
+    /// asynchronously when speech is restarted (e.g., during a speed change).
+    func simulateStaleCancelCallback() {
+        progressSubject.send(0.0)
         playbackStateSubject.send(.idle)
     }
 

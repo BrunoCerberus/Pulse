@@ -28,7 +28,12 @@ final class ArticleDetailDomainInteractor: CombineInteractor {
     private let analyticsService: AnalyticsService?
     private let stateSubject: CurrentValueSubject<ArticleDetailDomainState, Never>
     private var cancellables = Set<AnyCancellable>()
+    private var ttsCancellables = Set<AnyCancellable>()
     private var backgroundTasks = Set<Task<Void, Never>>()
+
+    /// Monotonically increasing counter that invalidates stale TTS callbacks.
+    /// Incremented on every speed-change restart; callbacks from previous generations are discarded.
+    private var ttsGeneration = 0
 
     var statePublisher: AnyPublisher<ArticleDetailDomainState, Never> {
         stateSubject.eraseToAnyPublisher()
@@ -284,20 +289,25 @@ final class ArticleDetailDomainInteractor: CombineInteractor {
     private func setupTTSBindings() {
         guard let ttsService else { return }
 
+        ttsCancellables.removeAll()
+        let generation = ttsGeneration
+
         ttsService.playbackStatePublisher
             .removeDuplicates()
             .receive(on: DispatchQueue.main)
             .sink { [weak self] state in
-                self?.dispatch(action: .ttsPlaybackStateChanged(state))
+                guard let self, self.ttsGeneration == generation else { return }
+                self.dispatch(action: .ttsPlaybackStateChanged(state))
             }
-            .store(in: &cancellables)
+            .store(in: &ttsCancellables)
 
         ttsService.progressPublisher
             .receive(on: DispatchQueue.main)
             .sink { [weak self] progress in
-                self?.dispatch(action: .ttsProgressUpdated(progress))
+                guard let self, self.ttsGeneration == generation else { return }
+                self.dispatch(action: .ttsProgressUpdated(progress))
             }
-            .store(in: &cancellables)
+            .store(in: &ttsCancellables)
     }
 
     private func startTTS() {
@@ -339,7 +349,10 @@ final class ArticleDetailDomainInteractor: CombineInteractor {
 
     private func cycleTTSSpeed() {
         let nextPreset = currentState.ttsSpeedPreset.next()
-        updateState { $0.ttsSpeedPreset = nextPreset }
+        updateState { state in
+            state.ttsSpeedPreset = nextPreset
+            state.ttsProgress = 0.0
+        }
 
         // Restart speech with new rate if currently playing
         if currentState.ttsPlaybackState == .playing || currentState.ttsPlaybackState == .paused {
@@ -350,6 +363,12 @@ final class ArticleDetailDomainInteractor: CombineInteractor {
 
             let language = AppLocalization.shared.language
             ttsService.speak(text: text, language: language, rate: nextPreset.rate)
+
+            // Increment generation and re-subscribe so stale callbacks from the
+            // old utterance's didCancel are discarded. Re-subscribing to the
+            // CurrentValueSubject picks up the current .playing state as baseline.
+            ttsGeneration += 1
+            setupTTSBindings()
         }
 
         analyticsService?.logEvent(.ttsSpeedChanged(speed: nextPreset.label))
