@@ -215,7 +215,7 @@ Pulse/
 | **Reading History** | Automatic tracking of read articles (SwiftData `ReadArticle` model), visual indicators on cards (reduced opacity), dedicated history view from Settings |
 | **Localization** | Multi-language support (English, Portuguese, Spanish) — both UI labels and content filtering follow in-app language preference via `AppLocalization` singleton (no app restart required) |
 | **Accessibility** | Dynamic Type layout adaptation (HStack-to-VStack at accessibility sizes), VoiceOver heading hierarchy, `@AccessibilityFocusState` management, live announcements for async state changes |
-| **Security** | YouTube video ID regex validation, deeplink ID sanitization (character allowlist + path traversal rejection), URL scheme allowlisting, disk cache filename sanitization, Keychain-based app lock with biometric + passcode fallback |
+| **Security** | YouTube video ID regex validation, HTTPS-only URL allowlisting, deeplink ID sanitization (character allowlist + path traversal rejection), disk cache filename sanitization + file protection, search query length limit (256 chars), sign-out data cleanup (clears all caches, bookmarks, preferences, keychain, widget data), privacy manifest (`PrivacyInfo.xcprivacy`), Keychain-based app lock with biometric + passcode fallback |
 | **Settings** | Topics, notifications, theme, content language, muted content, reading history, account/logout (accessed from Home navigation bar) |
 | **Onboarding** | 4-page first-launch experience (welcome, AI features, offline/bookmarks, get started) shown once after sign-in |
 | **Analytics & Crashlytics** | Firebase Analytics (21 type-safe events) and Crashlytics for crash/non-fatal error tracking at DomainInteractor level |
@@ -505,6 +505,7 @@ if let cachingService = newsService as? CachingNewsService {
 | **Security** | |
 | `LiveAppLockService.swift` | Keychain-backed app lock with `deviceOwnerAuthentication` policy (biometric + passcode) |
 | `KeychainStore.swift` | Protocol for Keychain access (testable with in-memory implementation) |
+| `PrivacyInfo.xcprivacy` | Privacy manifest declaring API usage (UserDefaults, file timestamps) and collected data types |
 | **Widget** | |
 | `WidgetDataManager.swift` | Persists shared widget articles and triggers WidgetKit reloads |
 | **Media Playback** | |
@@ -563,12 +564,12 @@ make test-debug  # Verbose output
 
 API keys are managed via **Firebase Remote Config** (primary) with fallbacks:
 
-1. **Remote Config** - Primary source, fetched on app launch
-2. **Environment variables** - Fallback for CI/CD
+1. **Remote Config** - Primary source, fetched on app launch (validated for min 10 chars)
+2. **Environment variables** - **DEBUG builds only** (gated behind `#if DEBUG`)
 3. **Keychain** - Runtime storage for user-provided keys
 
 ```bash
-# For CI/CD or local development without Remote Config
+# For local development without Remote Config (DEBUG builds only)
 export GUARDIAN_API_KEY="your_key"
 export NEWS_API_KEY="your_key"
 export GNEWS_API_KEY="your_key"
@@ -578,7 +579,7 @@ export SUPABASE_URL="https://your-project.supabase.co"
 export SUPABASE_ANON_KEY="your_anon_key"
 ```
 
-See `APIKeysProvider.swift` and `SupabaseConfig.swift` for implementation details. If Supabase is not configured, the app automatically falls back to the Guardian API.
+See `APIKeysProvider.swift` and `SupabaseConfig.swift` for implementation details. Environment variable fallbacks are unavailable in release builds. If Supabase is not configured, the app automatically falls back to the Guardian API.
 
 ## Deeplinks
 

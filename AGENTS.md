@@ -237,7 +237,9 @@ struct HomeDomainInteractorTests {
 16. **In-app localization** - Use `AppLocalization.shared.localized("key")` for all UI strings (NOT `String(localized:)`). The singleton is `@MainActor` but `localized()` is `nonisolated`. Use `static var` computed properties (not `static let`) for localized constants so they re-evaluate on language change.
 17. **Dynamic Type adaptation** - Views with horizontal layouts must use `@Environment(\.dynamicTypeSize)` and switch to vertical stacking at accessibility sizes (`.accessibility1`+) via `DynamicTypeSize.isAccessibilitySize`. Increase `lineLimit` values at accessibility sizes.
 18. **VoiceOver semantics** - Section/screen titles must have `.accessibilityAddTraits(.isHeader)`. Use `@AccessibilityFocusState` for focus management after async operations. Post `AccessibilityNotification.Announcement` for state changes (refresh complete, search results, errors).
-19. **Input validation at boundaries** - Validate YouTube video IDs with strict regex before HTML interpolation. Sanitize deeplink IDs with character allowlists and path traversal rejection. Allowlist URL schemes (https/http) before `UIApplication.shared.open()`. Sanitize disk cache filenames.
+19. **Input validation at boundaries** - Validate YouTube video IDs with strict regex before HTML interpolation. Sanitize deeplink IDs with character allowlists and path traversal rejection. Allowlist URL schemes (HTTPS only) before `UIApplication.shared.open()`. Sanitize disk cache filenames. Limit search queries to 256 characters.
+20. **Sign-out clears all user data** - On sign-out, `SettingsViewModel.clearUserDataOnSignOut()` wipes SwiftData (bookmarks, preferences, reading history), L1+L2 caches, app lock keychain, recent searches, UserDefaults, ThemeManager, and widget shared data. Never leave stale user data after sign-out.
+21. **Environment variable fallbacks are DEBUG-only** - API key fallbacks via `ProcessInfo.processInfo.environment` are wrapped in `#if DEBUG`. Release builds only use Remote Config and Keychain. Remote Config values are validated for minimum length (10+ chars).
 
 ## Data Source Architecture
 
@@ -573,12 +575,12 @@ API keys are managed via **Firebase Remote Config** (primary) with fallbacks:
 
 | Priority | Source | Purpose |
 |----------|--------|---------|
-| 1 | Remote Config | Primary source, fetched on app launch |
-| 2 | Environment variables | CI/CD and local development |
+| 1 | Remote Config | Primary source, fetched on app launch (validated for min 10 chars) |
+| 2 | Environment variables | **DEBUG builds only** — local development |
 | 3 | Keychain | Runtime storage for user-provided keys |
 
 ```bash
-# Environment variable fallback for CI/CD
+# Environment variable fallback (DEBUG builds only)
 GUARDIAN_API_KEY      # Guardian API key (fallback data source)
 NEWS_API_KEY          # NewsAPI.org key (wired in APIKeysProvider)
 GNEWS_API_KEY         # GNews API key (wired in APIKeysProvider)
@@ -586,7 +588,7 @@ SUPABASE_URL          # Supabase project URL (primary data source)
 SUPABASE_ANON_KEY     # Supabase anonymous key
 ```
 
-See `Configs/Networking/APIKeysProvider.swift` and `SupabaseConfig.swift` for implementation. If Supabase is not configured, the app automatically falls back to the Guardian API.
+See `Configs/Networking/APIKeysProvider.swift` and `SupabaseConfig.swift` for implementation. Environment variable fallbacks are gated behind `#if DEBUG`. If Supabase is not configured, the app automatically falls back to the Guardian API.
 
 ## Troubleshooting
 
