@@ -14,4 +14,13 @@ enum ReadingHistoryDomainAction: Equatable {
 
     /// Clear the selected article after navigation completes.
     case clearSelectedArticle
+
+    /// Bookmark or unbookmark an article.
+    case bookmarkArticle(articleId: String)
+
+    /// Share an article via the system share sheet.
+    case shareArticle(articleId: String)
+
+    /// Clear the article to share after the share sheet is dismissed.
+    case clearArticleToShare
 }

@@ -29,6 +29,12 @@ final class ReadingHistoryViewModel: CombineViewModel, ObservableObject {
             interactor.dispatch(action: .selectArticle(articleId: articleId))
         case .onArticleNavigated:
             interactor.dispatch(action: .clearSelectedArticle)
+        case let .onBookmarkTapped(articleId):
+            interactor.dispatch(action: .bookmarkArticle(articleId: articleId))
+        case let .onShareTapped(articleId):
+            interactor.dispatch(action: .shareArticle(articleId: articleId))
+        case .onShareDismissed:
+            interactor.dispatch(action: .clearArticleToShare)
         }
     }
 
@@ -42,7 +48,8 @@ final class ReadingHistoryViewModel: CombineViewModel, ObservableObject {
                     isLoading: state.isLoading,
                     errorMessage: state.error,
                     showEmptyState: !state.isLoading && state.articles.isEmpty,
-                    selectedArticle: state.selectedArticle
+                    selectedArticle: state.selectedArticle,
+                    articleToShare: state.articleToShare
                 )
             }
             .removeDuplicates()

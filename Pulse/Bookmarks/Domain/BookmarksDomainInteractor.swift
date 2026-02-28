@@ -62,6 +62,12 @@ final class BookmarksDomainInteractor: CombineInteractor {
             }
         case .clearSelectedArticle:
             clearSelectedArticle()
+        case let .shareArticle(articleId):
+            if let article = findArticle(by: articleId) {
+                shareArticle(article)
+            }
+        case .clearArticleToShare:
+            clearArticleToShare()
         }
     }
 
@@ -80,6 +86,7 @@ final class BookmarksDomainInteractor: CombineInteractor {
         bookmarksService.fetchBookmarks()
             .sink { [weak self] completion in
                 if case let .failure(error) = completion {
+                    self?.analyticsService?.recordError(error)
                     self?.updateState { state in
                         state.isLoading = false
                         state.error = error.localizedDescription
@@ -104,6 +111,7 @@ final class BookmarksDomainInteractor: CombineInteractor {
         bookmarksService.fetchBookmarks()
             .sink { [weak self] completion in
                 if case let .failure(error) = completion {
+                    self?.analyticsService?.recordError(error)
                     self?.updateState { state in
                         state.isRefreshing = false
                         state.error = error.localizedDescription
@@ -138,6 +146,19 @@ final class BookmarksDomainInteractor: CombineInteractor {
     private func clearSelectedArticle() {
         updateState { state in
             state.selectedArticle = nil
+        }
+    }
+
+    private func shareArticle(_ article: Article) {
+        analyticsService?.logEvent(.articleShared)
+        updateState { state in
+            state.articleToShare = article
+        }
+    }
+
+    private func clearArticleToShare() {
+        updateState { state in
+            state.articleToShare = nil
         }
     }
 

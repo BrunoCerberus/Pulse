@@ -48,6 +48,9 @@ struct SearchDomainState: Equatable {
     /// IDs of articles the user has previously read.
     var readArticleIDs: Set<String>
 
+    /// Article selected for sharing via the system share sheet.
+    var articleToShare: Article?
+
     /// Creates the default initial state.
     static var initial: SearchDomainState {
         SearchDomainState(
@@ -64,7 +67,8 @@ struct SearchDomainState: Equatable {
             hasSearched: false,
             selectedArticle: nil,
             isOfflineError: false,
-            readArticleIDs: []
+            readArticleIDs: [],
+            articleToShare: nil
         )
     }
 }

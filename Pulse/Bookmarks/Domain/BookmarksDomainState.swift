@@ -20,6 +20,9 @@ struct BookmarksDomainState: Equatable {
     /// Article selected for navigation to detail view.
     var selectedArticle: Article?
 
+    /// Article selected for sharing via the system share sheet.
+    var articleToShare: Article?
+
     /// Creates the default initial state.
     static var initial: BookmarksDomainState {
         BookmarksDomainState(
@@ -27,7 +30,8 @@ struct BookmarksDomainState: Equatable {
             isLoading: false,
             isRefreshing: false,
             error: nil,
-            selectedArticle: nil
+            selectedArticle: nil,
+            articleToShare: nil
         )
     }
 }

@@ -36,6 +36,7 @@ extension HomeDomainInteractor {
                 },
                 receiveCompletion: { [weak self] completion in
                     if case let .failure(error) = completion {
+                        self?.analyticsService?.recordError(error)
                         self?.updateState { state in
                             state.isLoading = false
                             state.isRefreshing = false
@@ -84,6 +85,7 @@ extension HomeDomainInteractor {
             },
             receiveCompletion: { [weak self] completion in
                 if case let .failure(error) = completion {
+                    self?.analyticsService?.recordError(error)
                     self?.updateState { state in
                         state.isLoading = false
                         state.isRefreshing = false

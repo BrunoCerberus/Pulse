@@ -109,6 +109,7 @@ final class SettingsDomainInteractor: CombineInteractor {
         settingsService.fetchPreferences()
             .sink { [weak self] completion in
                 if case let .failure(error) = completion {
+                    self?.analyticsService?.recordError(error)
                     self?.updateState { state in
                         state.isLoading = false
                         state.error = error.localizedDescription
@@ -190,6 +191,7 @@ final class SettingsDomainInteractor: CombineInteractor {
         settingsService.savePreferences(preferences)
             .sink { [weak self] completion in
                 if case let .failure(error) = completion {
+                    self?.analyticsService?.recordError(error)
                     self?.updateState { state in
                         state.isSaving = false
                         state.error = error.localizedDescription

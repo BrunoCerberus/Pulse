@@ -14,6 +14,7 @@ final class ReadingHistoryDomainInteractor: CombineInteractor {
     typealias DomainAction = ReadingHistoryDomainAction
 
     private let storageService: StorageService
+    private let analyticsService: AnalyticsService?
     private let stateSubject = CurrentValueSubject<ReadingHistoryDomainState, Never>(.initial)
     private var backgroundTasks = Set<Task<Void, Never>>()
 
@@ -32,6 +33,8 @@ final class ReadingHistoryDomainInteractor: CombineInteractor {
             Logger.shared.service("Failed to retrieve StorageService: \(error)", level: .warning)
             storageService = LiveStorageService()
         }
+
+        analyticsService = try? serviceLocator.retrieve(AnalyticsService.self)
     }
 
     func dispatch(action: ReadingHistoryDomainAction) {
@@ -46,6 +49,16 @@ final class ReadingHistoryDomainInteractor: CombineInteractor {
             }
         case .clearSelectedArticle:
             clearSelectedArticle()
+        case let .bookmarkArticle(articleId):
+            if let article = findArticle(by: articleId) {
+                toggleBookmark(article)
+            }
+        case let .shareArticle(articleId):
+            if let article = findArticle(by: articleId) {
+                shareArticle(article)
+            }
+        case .clearArticleToShare:
+            clearArticleToShare()
         }
     }
 
@@ -112,6 +125,34 @@ final class ReadingHistoryDomainInteractor: CombineInteractor {
         updateState { state in
             state.selectedArticle = nil
         }
+    }
+
+    private func shareArticle(_ article: Article) {
+        analyticsService?.logEvent(.articleShared)
+        updateState { state in
+            state.articleToShare = article
+        }
+    }
+
+    private func clearArticleToShare() {
+        updateState { state in
+            state.articleToShare = nil
+        }
+    }
+
+    private func toggleBookmark(_ article: Article) {
+        let task = Task { [weak self] in
+            guard let self else { return }
+            let isBookmarked = await storageService.isBookmarked(article.id)
+            if isBookmarked {
+                try? await storageService.deleteArticle(article)
+                await MainActor.run { self.analyticsService?.logEvent(.articleUnbookmarked) }
+            } else {
+                try? await storageService.saveArticle(article)
+                await MainActor.run { self.analyticsService?.logEvent(.articleBookmarked) }
+            }
+        }
+        trackBackgroundTask(task)
     }
 
     private func updateState(_ transform: (inout ReadingHistoryDomainState) -> Void) {

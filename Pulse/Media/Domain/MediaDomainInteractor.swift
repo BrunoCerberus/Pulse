@@ -25,7 +25,7 @@ final class MediaDomainInteractor: CombineInteractor {
 
     let mediaService: MediaService
     let settingsService: SettingsService
-    private let analyticsService: AnalyticsService?
+    let analyticsService: AnalyticsService?
     let stateSubject = CurrentValueSubject<MediaDomainState, Never>(.initial)
     var cancellables = Set<AnyCancellable>()
     var preferredLanguage: String = "en"
@@ -139,6 +139,7 @@ final class MediaDomainInteractor: CombineInteractor {
         )
         .sink { [weak self] completion in
             if case let .failure(error) = completion {
+                self?.analyticsService?.recordError(error)
                 self?.updateState { state in
                     state.isLoading = false
                     state.error = error.localizedDescription
@@ -172,7 +173,8 @@ final class MediaDomainInteractor: CombineInteractor {
 
         mediaService.fetchMedia(type: selectedType, language: language, page: nextPage)
             .sink { [weak self] completion in
-                if case .failure = completion {
+                if case let .failure(error) = completion {
+                    self?.analyticsService?.recordError(error)
                     self?.updateState { state in
                         state.isLoadingMore = false
                     }
@@ -214,6 +216,7 @@ final class MediaDomainInteractor: CombineInteractor {
         )
         .sink { [weak self] completion in
             if case let .failure(error) = completion {
+                self?.analyticsService?.recordError(error)
                 self?.updateState { state in
                     state.isRefreshing = false
                     state.error = error.localizedDescription
@@ -257,6 +260,7 @@ final class MediaDomainInteractor: CombineInteractor {
         )
         .sink { [weak self] completion in
             if case let .failure(error) = completion {
+                self?.analyticsService?.recordError(error)
                 self?.updateState { state in
                     state.isLoading = false
                     state.error = error.localizedDescription

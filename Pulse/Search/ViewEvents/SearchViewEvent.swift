@@ -9,4 +9,7 @@ enum SearchViewEvent: Equatable {
     case onArticleTapped(articleId: String)
     case onArticleNavigated
     case onSuggestionTapped(String)
+    case onBookmarkTapped(articleId: String)
+    case onShareTapped(articleId: String)
+    case onShareDismissed
 }

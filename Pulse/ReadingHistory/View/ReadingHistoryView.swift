@@ -80,6 +80,12 @@ struct ReadingHistoryView<R: ReadingHistoryNavigationRouter>: View {
         .onAppear {
             viewModel.handle(event: .onAppear)
         }
+        .sheet(item: Binding(
+            get: { viewModel.viewState.articleToShare },
+            set: { _ in viewModel.handle(event: .onShareDismissed) }
+        )) { article in
+            ShareSheet(activityItems: [URL(string: article.url) ?? article.title])
+        }
         .onChange(of: viewModel.viewState.selectedArticle) { _, newValue in
             if let article = newValue {
                 router.route(navigationEvent: .articleDetail(article))
@@ -166,8 +172,13 @@ struct ReadingHistoryView<R: ReadingHistoryNavigationRouter>: View {
                         onTap: {
                             viewModel.handle(event: .onArticleTapped(articleId: item.id))
                         },
-                        onBookmark: {},
-                        onShare: {}
+                        onBookmark: {
+                            HapticManager.shared.notification(.success)
+                            viewModel.handle(event: .onBookmarkTapped(articleId: item.id))
+                        },
+                        onShare: {
+                            viewModel.handle(event: .onShareTapped(articleId: item.id))
+                        }
                     )
                     .fadeIn(delay: Double(item.animationIndex) * 0.03)
                 }

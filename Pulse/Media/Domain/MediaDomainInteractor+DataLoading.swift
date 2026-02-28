@@ -75,6 +75,7 @@ extension MediaDomainInteractor {
         )
         .sink { [weak self] completion in
             if case let .failure(error) = completion {
+                self?.analyticsService?.recordError(error)
                 self?.updateState { state in
                     state.isLoading = false
                     state.error = error.localizedDescription

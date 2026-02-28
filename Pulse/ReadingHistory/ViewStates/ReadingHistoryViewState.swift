@@ -17,6 +17,9 @@ struct ReadingHistoryViewState: Equatable {
     /// Article selected for navigation to detail view.
     var selectedArticle: Article?
 
+    /// Article selected for sharing via the system share sheet.
+    var articleToShare: Article?
+
     /// Creates the default initial state.
     static var initial: ReadingHistoryViewState {
         ReadingHistoryViewState(
@@ -24,7 +27,8 @@ struct ReadingHistoryViewState: Equatable {
             isLoading: false,
             errorMessage: nil,
             showEmptyState: false,
-            selectedArticle: nil
+            selectedArticle: nil,
+            articleToShare: nil
         )
     }
 }

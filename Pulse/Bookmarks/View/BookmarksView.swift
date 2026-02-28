@@ -64,6 +64,12 @@ struct BookmarksView<R: BookmarksNavigationRouter>: View {
         .onAppear {
             viewModel.handle(event: .onAppear)
         }
+        .sheet(item: Binding(
+            get: { viewModel.viewState.articleToShare },
+            set: { _ in viewModel.handle(event: .onShareDismissed) }
+        )) { article in
+            ShareSheet(activityItems: [URL(string: article.url) ?? article.title])
+        }
         .onChange(of: viewModel.viewState.selectedArticle) { _, newValue in
             if let article = newValue {
                 router.route(navigationEvent: .articleDetail(article))
@@ -165,7 +171,9 @@ struct BookmarksView<R: BookmarksNavigationRouter>: View {
                             HapticManager.shared.notification(.warning)
                             viewModel.handle(event: .onRemoveBookmark(articleId: item.id))
                         },
-                        onShare: {}
+                        onShare: {
+                            viewModel.handle(event: .onShareTapped(articleId: item.id))
+                        }
                     )
                     .fadeIn(delay: Double(item.animationIndex) * 0.03)
                 }
