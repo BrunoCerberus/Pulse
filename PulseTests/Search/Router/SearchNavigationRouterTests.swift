@@ -20,14 +20,12 @@ struct SearchNavigationRouterTests {
 
     @Test("Router can be initialized with coordinator")
     func routerCanBeInitializedWithCoordinator() {
-        let router = SearchNavigationRouter(coordinator: coordinator)
-        #expect(router != nil)
+        _ = SearchNavigationRouter(coordinator: coordinator)
     }
 
     @Test("Router can be initialized without coordinator")
     func routerCanBeInitializedWithoutCoordinator() {
-        let router = SearchNavigationRouter(coordinator: nil)
-        #expect(router != nil)
+        _ = SearchNavigationRouter(coordinator: nil)
     }
 
     // MARK: - Article Detail Navigation Tests

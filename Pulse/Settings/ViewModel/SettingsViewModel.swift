@@ -140,9 +140,55 @@ final class SettingsViewModel: CombineViewModel, ObservableObject {
                         Logger.shared.service("Sign out failed: \(error.localizedDescription)", level: .error)
                     }
                 },
-                receiveValue: { _ in }
+                receiveValue: { [weak self] _ in
+                    self?.clearUserDataOnSignOut()
+                }
             )
             .store(in: &cancellables)
+    }
+
+    private func clearUserDataOnSignOut() {
+        // 1. Clear SwiftData (bookmarks, preferences, reading history)
+        if let storageService = try? serviceLocator.retrieve(StorageService.self) {
+            Task {
+                try? await storageService.clearAllUserData()
+            }
+        }
+
+        // 2. Clear news and media caches (L1 + L2)
+        if let newsService = try? serviceLocator.retrieve(NewsService.self) {
+            (newsService as? CachingNewsService)?.invalidateAllCaches()
+        }
+        if let mediaService = try? serviceLocator.retrieve(MediaService.self) {
+            (mediaService as? CachingMediaService)?.invalidateAllCaches()
+        }
+
+        // 3. Clear app lock settings
+        if let appLockService = try? serviceLocator.retrieve(AppLockService.self) {
+            appLockService.isEnabled = false
+            appLockService.hasPromptedFaceID = false
+        }
+
+        // 4. Clear recent searches
+        if let searchService = try? serviceLocator.retrieve(SearchService.self) {
+            searchService.clearRecentSearches()
+        }
+
+        // 5. Clear UserDefaults preferences
+        let defaults = UserDefaults.standard
+        defaults.removeObject(forKey: "pulse.hasCompletedOnboarding")
+        defaults.removeObject(forKey: "pulse.isDarkMode")
+        defaults.removeObject(forKey: "pulse.useSystemTheme")
+        defaults.removeObject(forKey: "pulse.preferredLanguage")
+
+        // 6. Reset ThemeManager to system defaults
+        themeManager.useSystemTheme = true
+        themeManager.isDarkMode = false
+
+        // 7. Clear widget shared data
+        UserDefaults(suiteName: "group.com.bruno.Pulse-News")?.removeObject(forKey: "shared_articles")
+
+        Logger.shared.service("User data cleared on sign-out", level: .info)
     }
 
     private func setupBindings() {

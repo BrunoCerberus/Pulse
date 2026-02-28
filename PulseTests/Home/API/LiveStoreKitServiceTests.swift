@@ -10,7 +10,7 @@ struct LiveStoreKitServiceTests {
     @Test("LiveStoreKitService can be instantiated")
     func canBeInstantiated() {
         let service = LiveStoreKitService()
-        #expect(service is StoreKitService)
+        let _: any StoreKitService = service
     }
 
     @Test("isPremium returns false initially")
@@ -23,31 +23,27 @@ struct LiveStoreKitServiceTests {
     func subscriptionStatusPublisherReturnsCorrectType() {
         let service = LiveStoreKitService()
         let publisher = service.subscriptionStatusPublisher
-        let typeCheck: AnyPublisher<Bool, Never> = publisher
-        #expect(typeCheck is AnyPublisher<Bool, Never>)
+        let _: AnyPublisher<Bool, Never> = publisher
     }
 
     @Test("fetchProducts returns correct publisher type")
     func fetchProductsReturnsCorrectType() {
         let service = LiveStoreKitService()
         let publisher = service.fetchProducts()
-        let typeCheck: AnyPublisher<[Product], Error> = publisher
-        #expect(typeCheck is AnyPublisher<[Product], Error>)
+        let _: AnyPublisher<[Product], Error> = publisher
     }
 
     @Test("restorePurchases returns correct publisher type")
     func restorePurchasesReturnsCorrectType() {
         let service = LiveStoreKitService()
         let publisher = service.restorePurchases()
-        let typeCheck: AnyPublisher<Bool, Error> = publisher
-        #expect(typeCheck is AnyPublisher<Bool, Error>)
+        let _: AnyPublisher<Bool, Error> = publisher
     }
 
     @Test("checkSubscriptionStatus returns correct publisher type")
     func checkSubscriptionStatusReturnsCorrectType() {
         let service = LiveStoreKitService()
         let publisher = service.checkSubscriptionStatus()
-        let typeCheck: AnyPublisher<Bool, Never> = publisher
-        #expect(typeCheck is AnyPublisher<Bool, Never>)
+        let _: AnyPublisher<Bool, Never> = publisher
     }
 }

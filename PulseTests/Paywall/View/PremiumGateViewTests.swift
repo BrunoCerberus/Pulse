@@ -9,7 +9,7 @@ struct PremiumGateViewTests {
     func canBeInstantiated() {
         let serviceLocator = ServiceLocator()
         let view = PremiumGateView(feature: .dailyDigest, serviceLocator: serviceLocator)
-        #expect(view is PremiumGateView)
+        #expect(view.feature == .dailyDigest)
     }
 
     @Test("init sets feature")
@@ -29,11 +29,10 @@ struct PremiumGateViewTests {
     @Test("init sets onUnlockTapped callback")
     func initSetsOnUnlockTapped() {
         let serviceLocator = ServiceLocator()
-        var callbackCalled = false
         let view = PremiumGateView(
             feature: .dailyDigest,
             serviceLocator: serviceLocator,
-            onUnlockTapped: { callbackCalled = true }
+            onUnlockTapped: {}
         )
         #expect(view.onUnlockTapped != nil)
     }

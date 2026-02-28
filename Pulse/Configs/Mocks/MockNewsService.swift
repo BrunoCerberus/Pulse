@@ -92,6 +92,7 @@ final class MockNewsService: NewsService {
 final class MockSearchService: SearchService {
     var searchResult: Result<[Article], Error> = .success(Article.mockArticles)
     var suggestionsResult: [String] = ["Swift", "iOS", "Apple", "Technology"]
+    var clearRecentSearchesCallCount = 0
 
     func search(query _: String, page _: Int, sortBy _: String) -> AnyPublisher<[Article], Error> {
         searchResult.publisher.eraseToAnyPublisher()
@@ -100,6 +101,10 @@ final class MockSearchService: SearchService {
     func getSuggestions(for query: String) -> AnyPublisher<[String], Never> {
         Just(suggestionsResult.filter { $0.lowercased().contains(query.lowercased()) })
             .eraseToAnyPublisher()
+    }
+
+    func clearRecentSearches() {
+        clearRecentSearchesCallCount += 1
     }
 }
 
@@ -218,6 +223,20 @@ final class MockStorageService: StorageService {
             throw error
         }
         readArticles = []
+    }
+
+    func clearBookmarks() async throws {
+        bookmarkedArticles = []
+    }
+
+    func clearUserPreferences() async throws {
+        userPreferences = nil
+    }
+
+    func clearAllUserData() async throws {
+        try await clearBookmarks()
+        try await clearUserPreferences()
+        try await clearReadingHistory()
     }
 }
 

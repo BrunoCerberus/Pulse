@@ -21,4 +21,7 @@ protocol SearchService {
     /// - Parameter query: The partial query to get suggestions for.
     /// - Returns: Publisher emitting an array of suggested search terms.
     func getSuggestions(for query: String) -> AnyPublisher<[String], Never>
+
+    /// Clears all recent search history.
+    func clearRecentSearches()
 }

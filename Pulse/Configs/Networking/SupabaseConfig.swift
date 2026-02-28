@@ -50,10 +50,12 @@ enum SupabaseConfig {
             return url
         }
 
-        // 2. Fallback to environment variable (for CI/CD)
-        if let url = ProcessInfo.processInfo.environment["SUPABASE_URL"], !url.isEmpty {
-            return url
-        }
+        // 2. Fallback to environment variable (for CI/CD and debugging only)
+        #if DEBUG
+            if let url = ProcessInfo.processInfo.environment["SUPABASE_URL"], !url.isEmpty {
+                return url
+            }
+        #endif
 
         // 3. Log warning and return empty (will cause initialization to fail gracefully)
         Logger.shared.service("SUPABASE_URL not configured in Remote Config or environment", level: .warning)

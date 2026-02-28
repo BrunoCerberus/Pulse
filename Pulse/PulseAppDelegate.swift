@@ -139,8 +139,10 @@ extension PulseAppDelegate: UNUserNotificationCenterDelegate {
         _: UIApplication,
         didRegisterForRemoteNotificationsWithDeviceToken deviceToken: Data
     ) {
-        let token = deviceToken.map { String(format: "%02.2hhx", $0) }.joined()
-        Logger.shared.network("Device Token: \(token)", level: .info)
+        #if DEBUG
+            let token = deviceToken.map { String(format: "%02.2hhx", $0) }.joined()
+            Logger.shared.network("Device Token: \(token)", level: .debug)
+        #endif
     }
 
     func application(

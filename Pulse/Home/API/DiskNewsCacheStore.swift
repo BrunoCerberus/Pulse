@@ -41,6 +41,12 @@ final class DiskNewsCacheStore: NewsCacheStore {
         if !fileManager.fileExists(atPath: cacheDirectory.path) {
             try? fileManager.createDirectory(at: cacheDirectory, withIntermediateDirectories: true)
         }
+
+        // Set file protection so cache is encrypted at rest until first unlock
+        try? fileManager.setAttributes(
+            [.protectionKey: FileProtectionType.completeUntilFirstUserAuthentication],
+            ofItemAtPath: cacheDirectory.path
+        )
     }
 
     func get<T>(for key: NewsCacheKey) -> CacheEntry<T>? {

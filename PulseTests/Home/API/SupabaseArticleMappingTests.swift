@@ -92,7 +92,7 @@ struct SupabaseArticleMappingTests {
 
         let calendar = Calendar(identifier: .gregorian)
         let timeZone = try #require(TimeZone(identifier: "UTC"))
-        let components = try calendar.dateComponents(in: timeZone, from: mapped.publishedAt)
+        let components = calendar.dateComponents(in: timeZone, from: mapped.publishedAt)
 
         #expect(components.year == 2024)
         #expect(components.month == 1)
@@ -111,7 +111,7 @@ struct SupabaseArticleMappingTests {
 
         let calendar = Calendar(identifier: .gregorian)
         let timeZone = try #require(TimeZone(identifier: "UTC"))
-        let components = try calendar.dateComponents(in: timeZone, from: mapped.publishedAt)
+        let components = calendar.dateComponents(in: timeZone, from: mapped.publishedAt)
 
         #expect(components.year == 2024)
         #expect(components.month == 6)

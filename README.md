@@ -17,7 +17,7 @@ A modern iOS news aggregation app built with Clean Architecture, SwiftUI, and Co
 - **Localization**: Full multi-language support (English, Portuguese, Spanish) — both UI labels and content filtering follow the in-app language preference (via `AppLocalization` singleton), no app restart required
 - **Settings**: Customize topics, notifications, theme, content language, content filters, and account/logout (accessed from Home navigation bar)
 - **Accessibility**: Dynamic Type layout adaptation (HStack-to-VStack at accessibility sizes), VoiceOver heading hierarchy, focus management, and live announcements for async state changes
-- **Security**: Input validation across WebView, deeplinks, URL handling, and Keychain-based app lock with biometric + passcode fallback
+- **Security**: Input validation (deeplink sanitization, YouTube URL allowlisting, search query length limit), sign-out data cleanup (clears all caches, bookmarks, preferences, keychain, widget data), file-protected disk cache, privacy manifest (`PrivacyInfo.xcprivacy`), and Keychain-based app lock with biometric + passcode fallback
 - **Onboarding**: 4-page first-launch experience shown once after sign-in, highlighting key features before entering the app
 - **Analytics & Crash Reporting**: Firebase Analytics (21 type-safe events) and Crashlytics for crash/non-fatal error tracking
 - **Widget**: Home screen widget showing recent headlines (WidgetKit extension)
@@ -323,10 +323,10 @@ open Pulse.xcodeproj
 
 ### 4. API Keys
 
-API keys are managed via **Firebase Remote Config** (primary) with environment variable fallback for CI/CD:
+API keys are managed via **Firebase Remote Config** (primary) with environment variable fallback for **DEBUG builds only**:
 
 ```bash
-# For CI/CD or local development without Remote Config
+# For local development without Remote Config (DEBUG builds only)
 export GUARDIAN_API_KEY="your_guardian_key"
 export NEWS_API_KEY="your_newsapi_key"
 export GNEWS_API_KEY="your_gnews_key"
@@ -336,7 +336,7 @@ export SUPABASE_URL="https://your-project.supabase.co"
 export SUPABASE_ANON_KEY="your_anon_key"
 ```
 
-The app fetches keys from Remote Config on launch. Environment variables are used as fallback when Remote Config is unavailable. If Supabase is not configured, the app automatically falls back to the Guardian API. `APIKeysProvider` also supports `NEWS_API_KEY` and `GNEWS_API_KEY` (wired for future providers).
+The app fetches keys from Remote Config on launch. Environment variable fallbacks are gated behind `#if DEBUG` and unavailable in release builds. Remote Config keys are validated for minimum length (10+ characters). If Supabase is not configured, the app automatically falls back to the Guardian API.
 
 ## Commands
 

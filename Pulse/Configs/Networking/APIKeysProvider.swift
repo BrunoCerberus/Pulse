@@ -71,14 +71,16 @@ enum APIKeysProvider {
      */
     static var newsAPIKey: String {
         // 1. Try Remote Config (primary source)
-        if let apiKey = remoteConfigService?.newsAPIKey, !apiKey.isEmpty {
+        if let apiKey = remoteConfigService?.newsAPIKey, apiKey.count >= 10 {
             return apiKey
         }
 
-        // 2. Fallback to environment variable (for CI/CD and debugging)
-        if let apiKey = ProcessInfo.processInfo.environment["NEWS_API_KEY"], !apiKey.isEmpty {
-            return apiKey
-        }
+        // 2. Fallback to environment variable (for CI/CD and debugging only)
+        #if DEBUG
+            if let apiKey = ProcessInfo.processInfo.environment["NEWS_API_KEY"], !apiKey.isEmpty {
+                return apiKey
+            }
+        #endif
 
         // 3. Fallback to keychain if environment variable is not set
         do {
@@ -97,14 +99,16 @@ enum APIKeysProvider {
      */
     static var guardianAPIKey: String {
         // 1. Try Remote Config (primary source)
-        if let apiKey = remoteConfigService?.guardianAPIKey, !apiKey.isEmpty {
+        if let apiKey = remoteConfigService?.guardianAPIKey, apiKey.count >= 10 {
             return apiKey
         }
 
-        // 2. Fallback to environment variable
-        if let apiKey = ProcessInfo.processInfo.environment["GUARDIAN_API_KEY"], !apiKey.isEmpty {
-            return apiKey
-        }
+        // 2. Fallback to environment variable (for CI/CD and debugging only)
+        #if DEBUG
+            if let apiKey = ProcessInfo.processInfo.environment["GUARDIAN_API_KEY"], !apiKey.isEmpty {
+                return apiKey
+            }
+        #endif
 
         // 3. Fallback to keychain
         do {
@@ -122,14 +126,16 @@ enum APIKeysProvider {
      */
     static var gnewsAPIKey: String {
         // 1. Try Remote Config (primary source)
-        if let apiKey = remoteConfigService?.gnewsAPIKey, !apiKey.isEmpty {
+        if let apiKey = remoteConfigService?.gnewsAPIKey, apiKey.count >= 10 {
             return apiKey
         }
 
-        // 2. Fallback to environment variable
-        if let apiKey = ProcessInfo.processInfo.environment["GNEWS_API_KEY"], !apiKey.isEmpty {
-            return apiKey
-        }
+        // 2. Fallback to environment variable (for CI/CD and debugging only)
+        #if DEBUG
+            if let apiKey = ProcessInfo.processInfo.environment["GNEWS_API_KEY"], !apiKey.isEmpty {
+                return apiKey
+            }
+        #endif
 
         // 3. Fallback to keychain
         do {

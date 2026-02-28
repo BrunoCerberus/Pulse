@@ -73,4 +73,18 @@ protocol StorageService {
     /// Clears all reading history.
     /// - Throws: Storage errors if the delete operation fails.
     func clearReadingHistory() async throws
+
+    // MARK: - Data Cleanup
+
+    /// Clears all bookmarked articles.
+    /// - Throws: Storage errors if the delete operation fails.
+    func clearBookmarks() async throws
+
+    /// Clears all user preferences.
+    /// - Throws: Storage errors if the delete operation fails.
+    func clearUserPreferences() async throws
+
+    /// Clears all user data (bookmarks, preferences, reading history).
+    /// - Throws: Storage errors if any delete operation fails.
+    func clearAllUserData() async throws
 }

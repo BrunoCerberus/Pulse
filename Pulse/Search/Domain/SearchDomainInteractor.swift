@@ -117,21 +117,25 @@ final class SearchDomainInteractor: CombineInteractor {
         currentState.results.first { $0.id == id }
     }
 
+    private static let maxQueryLength = 256
+
     private func updateQuery(_ query: String) {
+        let trimmedQuery = String(query.prefix(Self.maxQueryLength))
+
         updateState { state in
-            state.query = query
+            state.query = trimmedQuery
         }
 
         searchCancellable?.cancel()
 
-        guard !query.isEmpty else {
+        guard !trimmedQuery.isEmpty else {
             updateState { state in
                 state.suggestions = []
             }
             return
         }
 
-        suggestionQuerySubject.send(query)
+        suggestionQuerySubject.send(trimmedQuery)
     }
 
     private func performSearch() {

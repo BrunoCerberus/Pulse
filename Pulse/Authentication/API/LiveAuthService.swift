@@ -142,8 +142,7 @@ final class LiveAuthService: NSObject, AuthService {
         if errorCode != errSecSuccess {
             fatalError("Unable to generate nonce")
         }
-        let charset: [Character] = Array("0123456789ABCDEFGHIJKLMNOPQRSTUVXYZabcdefghijklmnopqrstuvwxyz-._")
-        return String(randomBytes.map { charset[Int($0) % charset.count] })
+        return Data(randomBytes).base64EncodedString()
     }
 
     private func sha256(_ input: String) -> String {
