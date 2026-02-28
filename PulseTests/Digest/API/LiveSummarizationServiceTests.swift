@@ -20,10 +20,8 @@ struct LiveSummarizationServiceTests {
     func initializationWithDefaultLLMService() {
         let service = LiveSummarizationService()
 
-        // Should have a non-nil LLM service (LiveLLMService by default)
-        // We can't directly test the internal service, but we can verify
-        // the service is functional through its public interface
-        #expect(service.modelStatusPublisher != nil)
+        // Verify the service provides a model status publisher
+        let _: AnyPublisher<LLMModelStatus, Never> = service.modelStatusPublisher
     }
 
     @Test("Initialization with custom LLMService")
@@ -122,9 +120,8 @@ struct LiveSummarizationServiceTests {
     func summarizeReturnsAsyncThrowingStream() {
         let article = Article.mockArticles[0]
 
-        let stream = sut.summarize(article: article)
-
-        #expect(stream != nil)
+        // Type annotation verifies return type at compile time
+        let _: AsyncThrowingStream<String, Error> = sut.summarize(article: article)
     }
 
     @Test("summarize stream yields tokens from LLMService")

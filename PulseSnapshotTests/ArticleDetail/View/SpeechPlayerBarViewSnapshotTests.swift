@@ -19,10 +19,10 @@ final class SpeechPlayerBarViewSnapshotTests: XCTestCase {
     )
 
     private let compactAccessibilityConfig: ViewImageConfig = {
-        let traits = UITraitCollection(traitsFrom: [
-            UITraitCollection(userInterfaceStyle: .dark),
-            UITraitCollection(preferredContentSizeCategory: .accessibilityExtraLarge),
-        ])
+        let traits = UITraitCollection { mutableTraits in
+            mutableTraits.userInterfaceStyle = .dark
+            mutableTraits.preferredContentSizeCategory = .accessibilityExtraLarge
+        }
         return ViewImageConfig(
             safeArea: UIEdgeInsets(top: 0, left: 0, bottom: 0, right: 0),
             size: CGSize(width: 393, height: 160),
@@ -31,10 +31,10 @@ final class SpeechPlayerBarViewSnapshotTests: XCTestCase {
     }()
 
     private let compactExtraExtraLargeConfig: ViewImageConfig = {
-        let traits = UITraitCollection(traitsFrom: [
-            UITraitCollection(userInterfaceStyle: .dark),
-            UITraitCollection(preferredContentSizeCategory: .extraExtraLarge),
-        ])
+        let traits = UITraitCollection { mutableTraits in
+            mutableTraits.userInterfaceStyle = .dark
+            mutableTraits.preferredContentSizeCategory = .extraExtraLarge
+        }
         return ViewImageConfig(
             safeArea: UIEdgeInsets(top: 0, left: 0, bottom: 0, right: 0),
             size: CGSize(width: 393, height: 140),

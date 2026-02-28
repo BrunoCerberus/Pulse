@@ -192,9 +192,8 @@ struct KeychainManagerTests {
         ]
 
         for error in errors {
-            #expect(error.errorDescription != nil)
-            let isEmpty = try #require(error.errorDescription?.isEmpty)
-            #expect(!isEmpty)
+            let description = try #require(error.errorDescription)
+            #expect(!description.isEmpty)
         }
     }
 }

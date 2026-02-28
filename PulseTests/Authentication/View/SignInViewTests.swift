@@ -9,7 +9,7 @@ struct SignInViewTests {
     @Test("SignInView can be instantiated")
     func canBeInstantiated() {
         let serviceLocator = ServiceLocator()
-        let view = SignInView(serviceLocator: serviceLocator)
-        #expect(view is SignInView)
+        // Instantiation succeeding without crash is the assertion
+        _ = SignInView(serviceLocator: serviceLocator)
     }
 }

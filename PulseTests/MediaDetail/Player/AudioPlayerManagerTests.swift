@@ -24,9 +24,8 @@ struct AudioPlayerManagerTests {
     @Test("AudioPlayerManager conforms to ObservableObject")
     func conformsToObservableObject() {
         let manager = AudioPlayerManager()
-        let isObservable = manager is ObservableObject
-
-        #expect(isObservable == true)
+        // Compile-time protocol conformance check
+        let _: any ObservableObject = manager
     }
 
     // MARK: - Published Properties Tests
@@ -328,7 +327,8 @@ struct AudioPlayerManagerTests {
         try await Task.sleep(nanoseconds: 100_000_000)
 
         // Note: In tests, the manager may not be deallocated immediately
-        // due to test framework retention
+        // due to test framework retention, so we just verify the weak ref is accessible
+        _ = weakManager
     }
 
     // MARK: - Observer Tests

@@ -14,8 +14,8 @@ struct ThemeManagerTests {
 
     @Test("Shared instance is accessible")
     func sharedInstanceAccessible() {
-        let manager = ThemeManager.shared
-        #expect(manager != nil)
+        // Accessing shared singleton succeeds without crash
+        _ = ThemeManager.shared
     }
 
     // MARK: - ColorScheme Tests

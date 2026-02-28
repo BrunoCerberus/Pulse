@@ -27,7 +27,7 @@ struct LiveBookmarksServiceTests {
         var receivedArticles: [Article]?
         var receivedError: Error?
 
-        let expectation = await withCheckedContinuation { continuation in
+        await withCheckedContinuation { continuation in
             sut.fetchBookmarks()
                 .sink(
                     receiveCompletion: { completion in

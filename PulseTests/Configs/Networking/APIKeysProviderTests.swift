@@ -86,19 +86,18 @@ struct APIKeysProviderTests {
         let key = APIKeysProvider.guardianAPIKey
 
         // Verify the code executes without crash (empty is expected in test env)
-        let isString = key is String
-        #expect(isString == true)
+        _ = key
     }
 
     @Test("Non-empty Remote Config takes priority over fallbacks")
     func nonEmptyRemoteConfigTakesPriority() {
-        let mock = createMockRemoteConfig(guardianKey: "valid-key")
+        let mock = createMockRemoteConfig(guardianKey: "valid-key-test")
         APIKeysProvider.configure(with: mock)
 
         let key = APIKeysProvider.guardianAPIKey
 
         // Non-empty Remote Config value should be used directly
-        #expect(key == "valid-key")
+        #expect(key == "valid-key-test")
     }
 
     // MARK: - Nil Handling Tests
@@ -109,8 +108,7 @@ struct APIKeysProviderTests {
         APIKeysProvider.configure(with: mock)
 
         // Should not crash and should fall through to other sources
-        let key = APIKeysProvider.guardianAPIKey
-        #expect(key is String)
+        _ = APIKeysProvider.guardianAPIKey
     }
 
     @Test("News API key handles nil Remote Config")
@@ -118,8 +116,7 @@ struct APIKeysProviderTests {
         let mock = createMockRemoteConfig(newsKey: nil)
         APIKeysProvider.configure(with: mock)
 
-        let key = APIKeysProvider.newsAPIKey
-        #expect(key is String)
+        _ = APIKeysProvider.newsAPIKey
     }
 
     @Test("GNews API key handles nil Remote Config")
@@ -127,8 +124,7 @@ struct APIKeysProviderTests {
         let mock = createMockRemoteConfig(gnewsKey: nil)
         APIKeysProvider.configure(with: mock)
 
-        let key = APIKeysProvider.gnewsAPIKey
-        #expect(key is String)
+        _ = APIKeysProvider.gnewsAPIKey
     }
 
     // MARK: - getCurrentNewsAPIKey Tests
@@ -185,14 +181,14 @@ struct APIKeysProviderTests {
     @Test("All API keys available from Remote Config")
     func allAPIKeysAvailableFromRemoteConfig() {
         let mock = MockRemoteConfigService()
-        mock.guardianAPIKeyValue = "guardian-test"
-        mock.newsAPIKeyValue = "news-test"
-        mock.gnewsAPIKeyValue = "gnews-test"
+        mock.guardianAPIKeyValue = "guardian-test-key"
+        mock.newsAPIKeyValue = "news-test-key"
+        mock.gnewsAPIKeyValue = "gnews-test-key"
         APIKeysProvider.configure(with: mock)
 
-        #expect(APIKeysProvider.guardianAPIKey == "guardian-test")
-        #expect(APIKeysProvider.newsAPIKey == "news-test")
-        #expect(APIKeysProvider.gnewsAPIKey == "gnews-test")
+        #expect(APIKeysProvider.guardianAPIKey == "guardian-test-key")
+        #expect(APIKeysProvider.newsAPIKey == "news-test-key")
+        #expect(APIKeysProvider.gnewsAPIKey == "gnews-test-key")
     }
 }
 

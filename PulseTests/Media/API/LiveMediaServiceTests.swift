@@ -11,9 +11,7 @@ struct LiveMediaServiceTests {
     @Test("LiveMediaService can be instantiated")
     func canBeInstantiated() {
         let service = LiveMediaService()
-        let isMediaService = service is MediaService
-
-        #expect(isMediaService == true)
+        let _: any MediaService = service
     }
 
     // MARK: - Protocol Conformance Tests
@@ -21,68 +19,43 @@ struct LiveMediaServiceTests {
     @Test("fetchMedia returns correct publisher type")
     func fetchMediaReturnsCorrectType() {
         let service = LiveMediaService()
-
         let publisher = service.fetchMedia(type: nil, language: "en", page: 1)
-
-        // Verify the publisher has the expected type signature
-        let typeCheck: AnyPublisher<[Article], Error> = publisher
-        let isCorrectType = typeCheck is AnyPublisher<[Article], Error>
-        #expect(isCorrectType == true)
+        let _: AnyPublisher<[Article], Error> = publisher
     }
 
     @Test("fetchMedia with video type returns correct publisher type")
     func fetchMediaWithVideoTypeReturnsCorrectType() {
         let service = LiveMediaService()
-
         let publisher = service.fetchMedia(type: .video, language: "en", page: 1)
-
-        let typeCheck: AnyPublisher<[Article], Error> = publisher
-        let isCorrectType = typeCheck is AnyPublisher<[Article], Error>
-        #expect(isCorrectType == true)
+        let _: AnyPublisher<[Article], Error> = publisher
     }
 
     @Test("fetchMedia with podcast type returns correct publisher type")
     func fetchMediaWithPodcastTypeReturnsCorrectType() {
         let service = LiveMediaService()
-
         let publisher = service.fetchMedia(type: .podcast, language: "en", page: 1)
-
-        let typeCheck: AnyPublisher<[Article], Error> = publisher
-        let isCorrectType = typeCheck is AnyPublisher<[Article], Error>
-        #expect(isCorrectType == true)
+        let _: AnyPublisher<[Article], Error> = publisher
     }
 
     @Test("fetchFeaturedMedia returns correct publisher type")
     func fetchFeaturedMediaReturnsCorrectType() {
         let service = LiveMediaService()
-
         let publisher = service.fetchFeaturedMedia(type: nil, language: "en")
-
-        let typeCheck: AnyPublisher<[Article], Error> = publisher
-        let isCorrectType = typeCheck is AnyPublisher<[Article], Error>
-        #expect(isCorrectType == true)
+        let _: AnyPublisher<[Article], Error> = publisher
     }
 
     @Test("fetchFeaturedMedia with video type returns correct publisher type")
     func fetchFeaturedMediaWithVideoTypeReturnsCorrectType() {
         let service = LiveMediaService()
-
         let publisher = service.fetchFeaturedMedia(type: .video, language: "en")
-
-        let typeCheck: AnyPublisher<[Article], Error> = publisher
-        let isCorrectType = typeCheck is AnyPublisher<[Article], Error>
-        #expect(isCorrectType == true)
+        let _: AnyPublisher<[Article], Error> = publisher
     }
 
     @Test("fetchFeaturedMedia with podcast type returns correct publisher type")
     func fetchFeaturedMediaWithPodcastTypeReturnsCorrectType() {
         let service = LiveMediaService()
-
         let publisher = service.fetchFeaturedMedia(type: .podcast, language: "en")
-
-        let typeCheck: AnyPublisher<[Article], Error> = publisher
-        let isCorrectType = typeCheck is AnyPublisher<[Article], Error>
-        #expect(isCorrectType == true)
+        let _: AnyPublisher<[Article], Error> = publisher
     }
 
     // MARK: - Pagination Tests
@@ -91,18 +64,10 @@ struct LiveMediaServiceTests {
     func fetchMediaAcceptsDifferentPageNumbers() {
         let service = LiveMediaService()
 
-        // Should not throw for various page numbers
-        let page1Publisher = service.fetchMedia(type: nil, language: "en", page: 1)
-        let page2Publisher = service.fetchMedia(type: nil, language: "en", page: 2)
-        let page10Publisher = service.fetchMedia(type: nil, language: "en", page: 10)
-
-        let isPage1Type = page1Publisher is AnyPublisher<[Article], Error>
-        let isPage2Type = page2Publisher is AnyPublisher<[Article], Error>
-        let isPage10Type = page10Publisher is AnyPublisher<[Article], Error>
-
-        #expect(isPage1Type == true)
-        #expect(isPage2Type == true)
-        #expect(isPage10Type == true)
+        // Type annotations verify publisher types at compile time
+        let _: AnyPublisher<[Article], Error> = service.fetchMedia(type: nil, language: "en", page: 1)
+        let _: AnyPublisher<[Article], Error> = service.fetchMedia(type: nil, language: "en", page: 2)
+        let _: AnyPublisher<[Article], Error> = service.fetchMedia(type: nil, language: "en", page: 10)
     }
 }
 
@@ -266,7 +231,7 @@ struct MockMediaServiceTests {
         for article in MockMediaService.sampleMedia {
             #expect(!article.id.isEmpty)
             #expect(!article.title.isEmpty)
-            #expect(article.url != nil)
+            #expect(!article.url.isEmpty)
             #expect(article.mediaType != nil)
             #expect(article.mediaURL != nil)
         }

@@ -10,7 +10,7 @@ struct RootViewTests {
     func canBeInstantiated() {
         let serviceLocator = ServiceLocator()
         let view = RootView(serviceLocator: serviceLocator)
-        #expect(view is RootView)
+        #expect(view.serviceLocator === serviceLocator)
     }
 
     @Test("init sets serviceLocator")

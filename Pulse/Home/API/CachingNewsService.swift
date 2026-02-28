@@ -98,6 +98,14 @@ final class CachingNewsService: NewsService {
         Logger.shared.service("L1 cache invalidated", level: .debug)
     }
 
+    /// Invalidates both L1 (memory) and L2 (disk) caches.
+    /// Used during sign-out to remove all cached user data.
+    func invalidateAllCaches() {
+        memoryCacheStore.removeAll()
+        diskCacheStore?.removeAll()
+        Logger.shared.service("All caches invalidated (L1 + L2)", level: .debug)
+    }
+
     // MARK: - Tiered Cache Logic
 
     /// Generic tiered cache fetch:

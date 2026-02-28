@@ -26,10 +26,10 @@ enum SnapshotConfig {
 
     /// iPhone Air with accessibility extra-large content size category (dark mode).
     static let iPhoneAirAccessibility: ViewImageConfig = {
-        let traits = UITraitCollection(traitsFrom: [
-            UITraitCollection(userInterfaceStyle: .dark),
-            UITraitCollection(preferredContentSizeCategory: .accessibilityExtraLarge),
-        ])
+        let traits = UITraitCollection { mutableTraits in
+            mutableTraits.userInterfaceStyle = .dark
+            mutableTraits.preferredContentSizeCategory = .accessibilityExtraLarge
+        }
         return ViewImageConfig(
             safeArea: UIEdgeInsets(top: 59, left: 0, bottom: 34, right: 0),
             size: CGSize(width: 393, height: 852),
@@ -39,10 +39,10 @@ enum SnapshotConfig {
 
     /// iPhone Air with extra-extra-large content size category (dark mode).
     static let iPhoneAirExtraExtraLarge: ViewImageConfig = {
-        let traits = UITraitCollection(traitsFrom: [
-            UITraitCollection(userInterfaceStyle: .dark),
-            UITraitCollection(preferredContentSizeCategory: .extraExtraLarge),
-        ])
+        let traits = UITraitCollection { mutableTraits in
+            mutableTraits.userInterfaceStyle = .dark
+            mutableTraits.preferredContentSizeCategory = .extraExtraLarge
+        }
         return ViewImageConfig(
             safeArea: UIEdgeInsets(top: 59, left: 0, bottom: 34, right: 0),
             size: CGSize(width: 393, height: 852),

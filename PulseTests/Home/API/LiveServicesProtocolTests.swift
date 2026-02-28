@@ -10,28 +10,26 @@ struct LiveServicesProtocolTests {
     @Test("LiveNewsService conforms to NewsService protocol")
     func liveNewsServiceConformance() {
         let service = LiveNewsService()
-        #expect(service is NewsService)
+        let _: any NewsService = service
     }
 
     @Test("LiveSearchService conforms to SearchService protocol")
     func liveSearchServiceConformance() {
         let service = LiveSearchService()
-        #expect(service is SearchService)
+        let _: any SearchService = service
     }
 
     @Test("LiveNewsService fetchTopHeadlines returns correct publisher type")
     func newsServiceFetchTopHeadlinesType() {
         let service = LiveNewsService()
         let publisher = service.fetchTopHeadlines(language: "en", country: "us", page: 1)
-        let typeCheck: AnyPublisher<[Article], Error> = publisher
-        #expect(typeCheck is AnyPublisher<[Article], Error>)
+        let _: AnyPublisher<[Article], Error> = publisher
     }
 
     @Test("LiveSearchService search returns correct publisher type")
     func searchServiceSearchType() {
         let service = LiveSearchService()
         let publisher = service.search(query: "test", page: 1, sortBy: "relevance")
-        let typeCheck: AnyPublisher<[Article], Error> = publisher
-        #expect(typeCheck is AnyPublisher<[Article], Error>)
+        let _: AnyPublisher<[Article], Error> = publisher
     }
 }

@@ -9,15 +9,16 @@ struct LiveLLMServiceTests {
     @Test("LiveLLMService can be instantiated")
     func canBeInstantiated() {
         let service = LiveLLMService()
-        #expect(service is LLMService)
+        // Compile-time protocol conformance check
+        let _: any LLMService = service
     }
 
     @Test("modelStatusPublisher returns correct publisher type")
     func modelStatusPublisherReturnsCorrectType() {
         let service = LiveLLMService()
         let publisher = service.modelStatusPublisher
-        let typeCheck: AnyPublisher<LLMModelStatus, Never> = publisher
-        #expect(typeCheck is AnyPublisher<LLMModelStatus, Never>)
+        // Type annotation verifies publisher type at compile time
+        let _: AnyPublisher<LLMModelStatus, Never> = publisher
     }
 
     @Test("isModelLoaded returns false initially")
@@ -30,15 +31,16 @@ struct LiveLLMServiceTests {
     func generateReturnsCorrectType() {
         let service = LiveLLMService()
         let publisher = service.generate(prompt: "test", systemPrompt: nil, config: .default)
-        let typeCheck: AnyPublisher<String, Error> = publisher
-        #expect(typeCheck is AnyPublisher<String, Error>)
+        // Type annotation verifies publisher type at compile time
+        let _: AnyPublisher<String, Error> = publisher
     }
 
     @Test("generateStream returns correct type")
     func generateStreamReturnsCorrectType() {
         let service = LiveLLMService()
         let stream = service.generateStream(prompt: "test", systemPrompt: nil, config: .default)
-        #expect(stream is AsyncThrowingStream<String, Error>)
+        // Type annotation verifies stream type at compile time
+        let _: AsyncThrowingStream<String, Error> = stream
     }
 
     @Test("cancelGeneration can be called safely")

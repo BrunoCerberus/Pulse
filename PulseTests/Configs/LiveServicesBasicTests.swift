@@ -28,8 +28,8 @@ struct LiveServicesBasicTests {
 
     @Test("LiveNewsService can be instantiated")
     func liveNewsServiceInstantiation() {
-        let sut = LiveNewsService()
-        #expect(sut != nil)
+        // Instantiation succeeding without crash is the assertion
+        _ = LiveNewsService()
     }
 
     @Test("LiveNewsService fetchTopHeadlines returns publisher")
@@ -94,8 +94,7 @@ struct LiveServicesBasicTests {
     @MainActor
     func liveBookmarksServiceInstantiation() {
         let mockStorageService = MockStorageService()
-        let sut = LiveBookmarksService(storageService: mockStorageService)
-        #expect(sut != nil)
+        _ = LiveBookmarksService(storageService: mockStorageService)
     }
 
     @Test("LiveBookmarksService fetchBookmarks returns publisher")
@@ -123,8 +122,7 @@ struct LiveServicesBasicTests {
     @Test("LiveSettingsService can be instantiated")
     func liveSettingsServiceInstantiation() {
         let mockStorageService = MockStorageService()
-        let sut = LiveSettingsService(storageService: mockStorageService)
-        #expect(sut != nil)
+        _ = LiveSettingsService(storageService: mockStorageService)
     }
 
     @Test("LiveSettingsService fetchPreferences returns publisher")
@@ -173,8 +171,7 @@ struct LiveServicesBasicTests {
     func liveStorageServiceInstantiation() {
         // Note: This creates a real ModelContainer. In production tests,
         // consider using in-memory configuration for isolation.
-        let sut = LiveStorageService()
-        #expect(sut != nil)
+        _ = LiveStorageService()
     }
 
     // MARK: - LiveAuthService Tests
