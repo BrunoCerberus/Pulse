@@ -86,8 +86,7 @@ struct APIKeysProviderTests {
         let key = APIKeysProvider.guardianAPIKey
 
         // Verify the code executes without crash (empty is expected in test env)
-        let isString = key is String
-        #expect(isString == true)
+        _ = key
     }
 
     @Test("Non-empty Remote Config takes priority over fallbacks")
@@ -109,8 +108,7 @@ struct APIKeysProviderTests {
         APIKeysProvider.configure(with: mock)
 
         // Should not crash and should fall through to other sources
-        let key = APIKeysProvider.guardianAPIKey
-        #expect(key is String)
+        _ = APIKeysProvider.guardianAPIKey
     }
 
     @Test("News API key handles nil Remote Config")
@@ -118,8 +116,7 @@ struct APIKeysProviderTests {
         let mock = createMockRemoteConfig(newsKey: nil)
         APIKeysProvider.configure(with: mock)
 
-        let key = APIKeysProvider.newsAPIKey
-        #expect(key is String)
+        _ = APIKeysProvider.newsAPIKey
     }
 
     @Test("GNews API key handles nil Remote Config")
@@ -127,8 +124,7 @@ struct APIKeysProviderTests {
         let mock = createMockRemoteConfig(gnewsKey: nil)
         APIKeysProvider.configure(with: mock)
 
-        let key = APIKeysProvider.gnewsAPIKey
-        #expect(key is String)
+        _ = APIKeysProvider.gnewsAPIKey
     }
 
     // MARK: - getCurrentNewsAPIKey Tests

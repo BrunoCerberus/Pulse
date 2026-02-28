@@ -12,8 +12,7 @@ struct PaywallViewTests {
     func canBeInstantiated() {
         let serviceLocator = ServiceLocator()
         let viewModel = PaywallViewModel(serviceLocator: serviceLocator)
-        let view = PaywallView(viewModel: viewModel)
-        #expect(view is PaywallView)
+        _ = PaywallView(viewModel: viewModel)
     }
 
     @Test("init sets viewModel")
@@ -21,6 +20,6 @@ struct PaywallViewTests {
         let serviceLocator = ServiceLocator()
         let viewModel = PaywallViewModel(serviceLocator: serviceLocator)
         let view = PaywallView(viewModel: viewModel)
-        #expect(view.viewModel is PaywallViewModel)
+        #expect(view.viewModel === viewModel)
     }
 }

@@ -20,14 +20,12 @@ struct HomeNavigationRouterTests {
 
     @Test("Router can be initialized with coordinator")
     func routerCanBeInitializedWithCoordinator() {
-        let router = HomeNavigationRouter(coordinator: coordinator)
-        #expect(router != nil)
+        _ = HomeNavigationRouter(coordinator: coordinator)
     }
 
     @Test("Router can be initialized without coordinator")
     func routerCanBeInitializedWithoutCoordinator() {
-        let router = HomeNavigationRouter(coordinator: nil)
-        #expect(router != nil)
+        _ = HomeNavigationRouter(coordinator: nil)
     }
 
     // MARK: - Article Detail Navigation Tests
