@@ -1,6 +1,7 @@
 import AVFoundation
 import Combine
 import Foundation
+import os
 
 /// Live implementation of `TextToSpeechService` using `AVSpeechSynthesizer`.
 final class LiveTextToSpeechService: NSObject, TextToSpeechService {
@@ -8,6 +9,10 @@ final class LiveTextToSpeechService: NSObject, TextToSpeechService {
     private let playbackStateSubject = CurrentValueSubject<TTSPlaybackState, Never>(.idle)
     private let progressSubject = CurrentValueSubject<Double, Never>(0.0)
     private var totalTextLength: Int = 0
+
+    /// Thread-safe reference to the utterance currently being spoken.
+    /// Delegate callbacks for any other utterance are silently discarded.
+    private let activeUtterance = OSAllocatedUnfairLock<AVSpeechUtterance?>(initialState: nil)
 
     var playbackStatePublisher: AnyPublisher<TTSPlaybackState, Never> {
         playbackStateSubject.eraseToAnyPublisher()
@@ -32,6 +37,7 @@ final class LiveTextToSpeechService: NSObject, TextToSpeechService {
         utterance.preUtteranceDelay = 0.1
 
         totalTextLength = text.count
+        activeUtterance.withLock { $0 = utterance }
         progressSubject.send(0.0)
 
         configureAudioSession()
@@ -53,6 +59,7 @@ final class LiveTextToSpeechService: NSObject, TextToSpeechService {
 
     func stop() {
         guard synthesizer.isSpeaking || synthesizer.isPaused else { return }
+        activeUtterance.withLock { $0 = nil }
         synthesizer.stopSpeaking(at: .immediate)
         playbackStateSubject.send(.idle)
         progressSubject.send(0.0)
@@ -94,20 +101,24 @@ extension LiveTextToSpeechService: AVSpeechSynthesizerDelegate {
     func speechSynthesizer(
         _: AVSpeechSynthesizer,
         willSpeakRangeOfSpeechString characterRange: NSRange,
-        utterance _: AVSpeechUtterance
+        utterance: AVSpeechUtterance
     ) {
-        guard totalTextLength > 0 else { return }
+        guard activeUtterance.withLock({ $0 === utterance }), totalTextLength > 0 else { return }
         let progress = Double(characterRange.location + characterRange.length) / Double(totalTextLength)
         progressSubject.send(min(progress, 1.0))
     }
 
-    func speechSynthesizer(_: AVSpeechSynthesizer, didFinish _: AVSpeechUtterance) {
+    func speechSynthesizer(_: AVSpeechSynthesizer, didFinish utterance: AVSpeechUtterance) {
+        guard activeUtterance.withLock({ $0 === utterance }) else { return }
+        activeUtterance.withLock { $0 = nil }
         progressSubject.send(1.0)
         playbackStateSubject.send(.idle)
         deactivateAudioSession()
     }
 
-    func speechSynthesizer(_: AVSpeechSynthesizer, didCancel _: AVSpeechUtterance) {
+    func speechSynthesizer(_: AVSpeechSynthesizer, didCancel utterance: AVSpeechUtterance) {
+        guard activeUtterance.withLock({ $0 === utterance }) else { return }
+        activeUtterance.withLock { $0 = nil }
         progressSubject.send(0.0)
         playbackStateSubject.send(.idle)
         deactivateAudioSession()

@@ -30,6 +30,7 @@ final class MockTextToSpeechService: TextToSpeechService {
         lastSpokenText = text
         lastLanguage = language
         lastRate = rate
+        progressSubject.send(0.0)
         playbackStateSubject.send(.playing)
     }
 

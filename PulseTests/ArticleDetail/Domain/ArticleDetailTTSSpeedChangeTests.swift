@@ -42,11 +42,13 @@ struct ArticleDetailTTSSpeedChangeTests {
         mockTTSService.simulateProgress(0.5)
         try await waitForStateUpdate(duration: TestWaitDuration.short)
 
-        // Cycle speed — this restarts speech via stop() + speak()
+        // Cycle speed — this restarts speech via stop() + speak(),
+        // increments generation and re-subscribes
         sut.dispatch(action: .cycleTTSSpeed)
         try await waitForStateUpdate(duration: TestWaitDuration.short)
 
-        // Simulate the stale didCancel from the old utterance
+        // Simulate the stale didCancel from the old utterance —
+        // generation counter causes these to be discarded
         mockTTSService.simulateStaleCancelCallback()
         try await waitForStateUpdate(duration: TestWaitDuration.short)
 
@@ -73,29 +75,26 @@ struct ArticleDetailTTSSpeedChangeTests {
         #expect(sut.currentState.isTTSPlayerVisible == true)
     }
 
-    @Test("cycleTTSSpeed suppresses idle from stop then allows playing through")
-    func suppressesIdleThenAllowsPlaying() async throws {
+    @Test("Stale progress callbacks after speed change are ignored")
+    func staleProgressIgnoredAfterSpeedChange() async throws {
         let sut = createSUT()
 
         sut.dispatch(action: .startTTS)
         try await waitForStateUpdate(duration: TestWaitDuration.short)
 
-        mockTTSService.simulateProgress(1.0)
+        mockTTSService.simulateProgress(0.5)
         try await waitForStateUpdate(duration: TestWaitDuration.short)
+        #expect(sut.currentState.ttsProgress == 0.5)
 
-        // Cycle speed — sets isRestartingForSpeedChange flag
+        // Cycle speed — increments generation
         sut.dispatch(action: .cycleTTSSpeed)
         try await waitForStateUpdate(duration: TestWaitDuration.short)
 
-        // Simulate the full restart sequence: .idle (from stop), .playing (from speak), .idle (from didCancel)
-        sut.dispatch(action: .ttsPlaybackStateChanged(.idle))
-        #expect(sut.currentState.isTTSPlayerVisible == true, "First .idle (from stop) should be suppressed")
-
-        sut.dispatch(action: .ttsPlaybackStateChanged(.playing))
-        #expect(sut.currentState.isTTSPlayerVisible == true, ".playing should clear the flag")
-
-        sut.dispatch(action: .ttsPlaybackStateChanged(.idle))
-        #expect(sut.currentState.isTTSPlayerVisible == true, "Second .idle (from didCancel) should not auto-hide since progress was reset")
+        // Progress is reset to 0.0 by cycleTTSSpeed, then re-subscription
+        // picks up the current .playing state. Stale callbacks from old
+        // generation are discarded, so progress stays at 0.0.
+        #expect(sut.currentState.ttsProgress == 0.0)
+        #expect(sut.currentState.ttsPlaybackState == .playing)
     }
 
     @Test("cycleTTSSpeed player auto-hides normally after speed change completes")
@@ -105,17 +104,16 @@ struct ArticleDetailTTSSpeedChangeTests {
         sut.dispatch(action: .startTTS)
         try await waitForStateUpdate(duration: TestWaitDuration.short)
 
-        // Cycle speed — restarts speech
+        // Cycle speed — restarts speech with new generation
         sut.dispatch(action: .cycleTTSSpeed)
         try await waitForStateUpdate(duration: TestWaitDuration.short)
 
-        // Simulate restart completing: .idle suppressed, .playing clears flag
-        sut.dispatch(action: .ttsPlaybackStateChanged(.idle))
-        sut.dispatch(action: .ttsPlaybackStateChanged(.playing))
-
         // Now speech plays to completion naturally
-        sut.dispatch(action: .ttsProgressUpdated(1.0))
-        sut.dispatch(action: .ttsPlaybackStateChanged(.idle))
+        mockTTSService.simulateProgress(1.0)
+        try await waitForStateUpdate(duration: TestWaitDuration.short)
+
+        mockTTSService.simulateFinished()
+        try await waitForStateUpdate(duration: TestWaitDuration.short)
 
         // Player should auto-hide normally after natural finish
         #expect(sut.currentState.isTTSPlayerVisible == false)
