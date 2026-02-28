@@ -18,7 +18,7 @@ struct YouTubeThumbnailView: View {
             HapticManager.shared.buttonPress()
             if let url = URL(string: urlString),
                let scheme = url.scheme?.lowercased(),
-               ["https", "http"].contains(scheme)
+               ["https"].contains(scheme)
             {
                 UIApplication.shared.open(url)
             }

@@ -116,4 +116,8 @@ final class LiveSearchService: APIRequest, SearchService {
     private func getRecentSearches() -> [String] {
         UserDefaults.standard.stringArray(forKey: recentSearchesKey) ?? []
     }
+
+    func clearRecentSearches() {
+        UserDefaults.standard.removeObject(forKey: recentSearchesKey)
+    }
 }

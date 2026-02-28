@@ -92,13 +92,13 @@ struct APIKeysProviderTests {
 
     @Test("Non-empty Remote Config takes priority over fallbacks")
     func nonEmptyRemoteConfigTakesPriority() {
-        let mock = createMockRemoteConfig(guardianKey: "valid-key")
+        let mock = createMockRemoteConfig(guardianKey: "valid-key-test")
         APIKeysProvider.configure(with: mock)
 
         let key = APIKeysProvider.guardianAPIKey
 
         // Non-empty Remote Config value should be used directly
-        #expect(key == "valid-key")
+        #expect(key == "valid-key-test")
     }
 
     // MARK: - Nil Handling Tests
@@ -185,14 +185,14 @@ struct APIKeysProviderTests {
     @Test("All API keys available from Remote Config")
     func allAPIKeysAvailableFromRemoteConfig() {
         let mock = MockRemoteConfigService()
-        mock.guardianAPIKeyValue = "guardian-test"
-        mock.newsAPIKeyValue = "news-test"
-        mock.gnewsAPIKeyValue = "gnews-test"
+        mock.guardianAPIKeyValue = "guardian-test-key"
+        mock.newsAPIKeyValue = "news-test-key"
+        mock.gnewsAPIKeyValue = "gnews-test-key"
         APIKeysProvider.configure(with: mock)
 
-        #expect(APIKeysProvider.guardianAPIKey == "guardian-test")
-        #expect(APIKeysProvider.newsAPIKey == "news-test")
-        #expect(APIKeysProvider.gnewsAPIKey == "gnews-test")
+        #expect(APIKeysProvider.guardianAPIKey == "guardian-test-key")
+        #expect(APIKeysProvider.newsAPIKey == "news-test-key")
+        #expect(APIKeysProvider.gnewsAPIKey == "gnews-test-key")
     }
 }
 

@@ -129,4 +129,27 @@ final class LiveStorageService: StorageService {
         try context.delete(model: ReadArticle.self)
         try context.save()
     }
+
+    // MARK: - Data Cleanup
+
+    @MainActor
+    func clearBookmarks() async throws {
+        let context = modelContainer.mainContext
+        try context.delete(model: BookmarkedArticle.self)
+        try context.save()
+    }
+
+    @MainActor
+    func clearUserPreferences() async throws {
+        let context = modelContainer.mainContext
+        try context.delete(model: UserPreferencesModel.self)
+        try context.save()
+    }
+
+    @MainActor
+    func clearAllUserData() async throws {
+        try await clearBookmarks()
+        try await clearUserPreferences()
+        try await clearReadingHistory()
+    }
 }
