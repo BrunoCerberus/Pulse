@@ -171,6 +171,7 @@ private extension HomeDomainInteractor {
     func loadInitialData() {
         guard !currentState.isLoading, !currentState.hasLoadedInitialData else {
             loadFollowedTopics()
+            loadRecentlyRead()
             return
         }
 

@@ -410,25 +410,39 @@ struct ArticleDetailView: View {
                 .fontWeight(.bold)
                 .accessibilityAddTraits(.isHeader)
 
-            ScrollView(.horizontal, showsIndicators: false) {
-                LazyHStack(spacing: Spacing.sm) {
+            if dynamicTypeSize.isAccessibilitySize {
+                VStack(spacing: Spacing.md) {
                     ForEach(viewModel.viewState.relatedArticles) { item in
-                        GlassArticleCardCompact(
-                            title: item.title,
-                            sourceName: item.sourceName,
-                            imageURL: item.imageURL,
-                            onTap: {
-                                if let article = viewModel.viewState.relatedArticleModels.first(where: { $0.id == item.id }) {
-                                    onRelatedArticleTapped?(article)
-                                }
-                            }
-                        )
-                        .frame(width: 260)
+                        relatedArticleCard(for: item)
+                    }
+                }
+            } else {
+                ScrollView(.horizontal, showsIndicators: false) {
+                    LazyHStack(spacing: Spacing.sm) {
+                        ForEach(viewModel.viewState.relatedArticles) { item in
+                            relatedArticleCard(for: item)
+                                .frame(width: 260)
+                        }
                     }
                 }
             }
         }
         .padding(.top, Spacing.sm)
+    }
+
+    private func relatedArticleCard(for item: ArticleViewItem) -> some View {
+        GlassArticleCardCompact(
+            title: item.title,
+            sourceName: item.sourceName,
+            imageURL: item.imageURL,
+            onTap: {
+                if let article = viewModel.viewState.relatedArticleModels
+                    .first(where: { $0.id == item.id })
+                {
+                    onRelatedArticleTapped?(article)
+                }
+            }
+        )
     }
 
     private var readFullArticleButton: some View {
