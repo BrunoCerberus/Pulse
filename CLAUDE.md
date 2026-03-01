@@ -204,7 +204,7 @@ Pulse/
 | Feature | Description |
 |---------|-------------|
 | **Authentication** | Firebase Auth with Google and Apple Sign-In (required before accessing app) |
-| **Home** | Breaking news carousel, top headlines with infinite scroll, category tabs for filtering by followed topics, settings access via gear icon |
+| **Home** | Breaking news carousel, recently read section, top headlines with infinite scroll, category tabs for filtering by followed topics, settings access via gear icon |
 | **Media** | Browse and play Videos and Podcasts with in-app playback (YouTube videos open in YouTube app, podcasts use native AVPlayer) |
 | **Feed** | AI-powered Daily Digest summarizing latest news articles from the API using on-device LLM (Llama 3.2-1B) (**Premium**) |
 | **Article Summarization** | On-device AI article summarization via sparkles button (**Premium**) |
@@ -213,6 +213,8 @@ Pulse/
 | **Offline Experience** | Tiered cache (L1 memory + L2 disk), NWPathMonitor network monitoring, offline banner, graceful degradation |
 | **Bookmarks** | Save articles for offline reading (SwiftData) |
 | **Reading History** | Automatic tracking of read articles (SwiftData `ReadArticle` model), visual indicators on cards (reduced opacity), dedicated history view from Settings |
+| **Related Articles** | Related articles from the same category displayed in a horizontal carousel below article content in ArticleDetail |
+| **Enhanced Sharing** | Rich share content with article title and source name alongside URL via `ShareItemsBuilder` |
 | **Localization** | Multi-language support (English, Portuguese, Spanish) — both UI labels and content filtering follow in-app language preference via `AppLocalization` singleton (no app restart required) |
 | **Accessibility** | Dynamic Type layout adaptation (HStack-to-VStack at accessibility sizes), VoiceOver heading hierarchy, `@AccessibilityFocusState` management, live announcements for async state changes |
 | **Security** | YouTube video ID regex validation, HTTPS-only URL allowlisting, deeplink ID sanitization (character allowlist + path traversal rejection), disk cache filename sanitization + file protection, search query length limit (256 chars), sign-out data cleanup (clears all caches, bookmarks, preferences, keychain, widget data), privacy manifest (`PrivacyInfo.xcprivacy`), Keychain-based app lock with biometric + passcode fallback |
@@ -505,6 +507,7 @@ if let cachingService = newsService as? CachingNewsService {
 | **Security** | |
 | `LiveAppLockService.swift` | Keychain-backed app lock with `deviceOwnerAuthentication` policy (biometric + passcode) |
 | `KeychainStore.swift` | Protocol for Keychain access (testable with in-memory implementation) |
+| `ShareItemsBuilder.swift` | Utility formatting share content as `[title — source, URL]` for richer social previews |
 | `PrivacyInfo.xcprivacy` | Privacy manifest declaring API usage (UserDefaults, file timestamps) and collected data types |
 | **Widget** | |
 | `WidgetDataManager.swift` | Persists shared widget articles and triggers WidgetKit reloads |

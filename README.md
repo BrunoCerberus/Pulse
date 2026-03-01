@@ -5,7 +5,7 @@ A modern iOS news aggregation app built with Clean Architecture, SwiftUI, and Co
 ## Features
 
 - **Authentication**: Firebase Auth with Google and Apple Sign-In (required before accessing app)
-- **Home Feed**: Breaking news carousel, top headlines with infinite scrolling, and category tabs for filtering by followed topics (settings accessible via gear icon)
+- **Home Feed**: Breaking news carousel, recently read section for quick access to previous articles, top headlines with infinite scrolling, and category tabs for filtering by followed topics (settings accessible via gear icon)
 - **Media**: Browse and play Videos and Podcasts with in-app playback (YouTube videos open in YouTube app, podcasts use native AVPlayer)
 - **Feed**: AI-powered Daily Digest summarizing latest news articles from the API using on-device LLM (Llama 3.2-1B) (**Premium**)
 - **Article Summarization**: On-device AI article summarization via sparkles button (**Premium**)
@@ -13,6 +13,8 @@ A modern iOS news aggregation app built with Clean Architecture, SwiftUI, and Co
 - **Offline Experience**: Tiered cache (in-memory L1 + persistent disk L2), network monitoring via NWPathMonitor, offline banner, and graceful degradation preserving cached content
 - **Bookmarks**: Save articles for offline reading with SwiftData persistence
 - **Reading History**: Automatic tracking of read articles with SwiftData persistence, visual indicators on cards, and a dedicated history view accessible from Settings
+- **Related Articles**: After reading an article, discover related articles from the same category displayed in a horizontal carousel below the content
+- **Enhanced Sharing**: Share articles with rich context — shared content includes the article title and source name alongside the URL for better social previews
 - **Search**: Full-text search with 300ms debounce, suggestions, recent searches, and sort options
 - **Localization**: Full multi-language support (English, Portuguese, Spanish) — both UI labels and content filtering follow the in-app language preference (via `AppLocalization` singleton), no app restart required
 - **Settings**: Customize topics, notifications, theme, content language, content filters, and account/logout (accessed from Home navigation bar)
