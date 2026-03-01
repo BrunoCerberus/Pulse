@@ -75,6 +75,10 @@ enum HomeViewConstants {
     static var offlineMessage: String {
         AppLocalization.localized("home.offline.message")
     }
+
+    static var recentlyRead: String {
+        AppLocalization.localized("home.recently_read")
+    }
 }
 
 // MARK: - HomeView
@@ -164,7 +168,7 @@ struct HomeView<R: HomeNavigationRouter>: View {
             get: { viewModel.viewState.articleToShare },
             set: { _ in viewModel.handle(event: .onShareDismissed) }
         )) { article in
-            ShareSheet(activityItems: [URL(string: article.url) ?? article.title])
+            ShareSheet(activityItems: ShareItemsBuilder.activityItems(for: article))
         }
         .sheet(isPresented: Binding(
             get: { viewModel.viewState.isEditingTopics },
@@ -316,6 +320,16 @@ struct HomeView<R: HomeNavigationRouter>: View {
                         breakingNewsCarousel
                     } header: {
                         GlassSectionHeader(HomeViewConstants.breakingNews)
+                    }
+                }
+
+                if viewModel.viewState.selectedCategory == nil
+                    && !viewModel.viewState.recentlyRead.isEmpty
+                {
+                    Section {
+                        recentlyReadCarousel
+                    } header: {
+                        GlassSectionHeader(HomeViewConstants.recentlyRead)
                     }
                 }
 

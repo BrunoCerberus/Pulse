@@ -85,6 +85,7 @@ final class HomeDomainInteractor: CombineInteractor {
             .sink { [weak self] _ in
                 self?.updateState { state in
                     state.readArticleIDs = []
+                    state.recentlyRead = []
                 }
             }
             .store(in: &cancellables)
@@ -128,6 +129,10 @@ final class HomeDomainInteractor: CombineInteractor {
             findArticle(by: articleId).map { shareArticle($0) }
         case .clearArticleToShare:
             clearArticleToShare()
+        case let .selectRecentlyRead(articleId):
+            if let article = currentState.recentlyRead.first(where: { $0.id == articleId }) {
+                selectArticle(article)
+            }
         default:
             return false
         }
@@ -177,6 +182,7 @@ private extension HomeDomainInteractor {
         }
 
         loadReadArticleIDs()
+        loadRecentlyRead()
 
         // Load preferences first to get the correct language before fetching
         settingsService.fetchPreferences()
@@ -260,6 +266,7 @@ private extension HomeDomainInteractor {
     func refresh() {
         resetStateForRefresh()
         loadFollowedTopics()
+        loadRecentlyRead()
         fetchHeadlinesForCurrentCategory(page: 1, isRefreshing: true)
     }
 
@@ -358,6 +365,19 @@ private extension HomeDomainInteractor {
             await MainActor.run {
                 self.updateState { state in
                     state.readArticleIDs = readIDs ?? []
+                }
+            }
+        }
+    }
+
+    func loadRecentlyRead() {
+        trackBackgroundTask { [weak self] in
+            guard let self else { return }
+            let articles = (try? await self.storageService.fetchReadArticles()) ?? []
+            let recent = Array(articles.filter { !$0.isMedia }.prefix(10))
+            await MainActor.run {
+                self.updateState { state in
+                    state.recentlyRead = recent
                 }
             }
         }

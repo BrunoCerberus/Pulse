@@ -68,4 +68,9 @@ enum ArticleDetailDomainAction: Equatable {
 
     /// TTS progress updated (from service publisher).
     case ttsProgressUpdated(Double)
+
+    // MARK: - Related Articles
+
+    /// Related articles loaded successfully.
+    case relatedArticlesLoaded([Article])
 }

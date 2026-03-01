@@ -76,6 +76,10 @@ private enum Constants {
     static var opensInSafari: String {
         AppLocalization.localized("accessibility.opens_in_safari")
     }
+
+    static var relatedArticles: String {
+        AppLocalization.localized("article_detail.related_articles")
+    }
 }
 
 // MARK: - ArticleDetailView
@@ -88,12 +92,18 @@ struct ArticleDetailView: View {
     @Environment(\.dynamicTypeSize) private var dynamicTypeSize
     private let heroBaseHeight: CGFloat = 280
     private let serviceLocator: ServiceLocator
+    private let onRelatedArticleTapped: ((Article) -> Void)?
 
     @State private var isPremium = false
     @State private var isPaywallPresented = false
 
-    init(article: Article, serviceLocator: ServiceLocator) {
+    init(
+        article: Article,
+        serviceLocator: ServiceLocator,
+        onRelatedArticleTapped: ((Article) -> Void)? = nil
+    ) {
         self.serviceLocator = serviceLocator
+        self.onRelatedArticleTapped = onRelatedArticleTapped
         _viewModel = StateObject(wrappedValue: ArticleDetailViewModel(
             article: article,
             serviceLocator: serviceLocator
@@ -203,9 +213,7 @@ struct ArticleDetailView: View {
             get: { viewModel.viewState.showShareSheet },
             set: { if !$0 { viewModel.handle(event: .onShareSheetDismissed) } }
         )) {
-            if let url = URL(string: viewModel.viewState.article.url) {
-                ShareSheet(activityItems: [url])
-            }
+            ShareSheet(activityItems: ShareItemsBuilder.activityItems(for: viewModel.viewState.article))
         }
         .sheet(isPresented: Binding(
             get: { viewModel.viewState.showSummarizationSheet },
@@ -326,6 +334,10 @@ struct ArticleDetailView: View {
                 .frame(height: 0.5)
 
             readFullArticleButton
+
+            if !viewModel.viewState.relatedArticles.isEmpty {
+                relatedArticlesSection
+            }
         }
         .padding(Spacing.lg)
         .background(.regularMaterial)
@@ -385,6 +397,38 @@ struct ArticleDetailView: View {
             .font(Typography.captionLarge)
             .foregroundStyle(.secondary)
         }
+    }
+
+    private var relatedArticlesSection: some View {
+        VStack(alignment: .leading, spacing: Spacing.sm) {
+            Rectangle()
+                .fill(Color.Border.adaptive(for: colorScheme))
+                .frame(height: 0.5)
+
+            Text(Constants.relatedArticles)
+                .font(Typography.titleMedium)
+                .fontWeight(.bold)
+                .accessibilityAddTraits(.isHeader)
+
+            ScrollView(.horizontal, showsIndicators: false) {
+                LazyHStack(spacing: Spacing.sm) {
+                    ForEach(viewModel.viewState.relatedArticles) { item in
+                        GlassArticleCardCompact(
+                            title: item.title,
+                            sourceName: item.sourceName,
+                            imageURL: item.imageURL,
+                            onTap: {
+                                if let article = viewModel.viewState.relatedArticleModels.first(where: { $0.id == item.id }) {
+                                    onRelatedArticleTapped?(article)
+                                }
+                            }
+                        )
+                        .frame(width: 260)
+                    }
+                }
+            }
+        }
+        .padding(.top, Spacing.sm)
     }
 
     private var readFullArticleButton: some View {

@@ -45,6 +45,14 @@ struct ArticleDetailDomainState: Equatable {
     /// Whether the TTS player bar is visible.
     var isTTSPlayerVisible: Bool
 
+    // MARK: - Related Articles
+
+    /// Related articles from the same category.
+    var relatedArticles: [Article]
+
+    /// Whether related articles are currently loading.
+    var isLoadingRelatedArticles: Bool
+
     /// Creates the initial state for a given article.
     /// - Parameter article: The article to display.
     /// - Returns: Initial state with content processing in progress.
@@ -60,7 +68,9 @@ struct ArticleDetailDomainState: Equatable {
             ttsPlaybackState: .idle,
             ttsProgress: 0.0,
             ttsSpeedPreset: .normal,
-            isTTSPlayerVisible: false
+            isTTSPlayerVisible: false,
+            relatedArticles: [],
+            isLoadingRelatedArticles: false
         )
     }
 }

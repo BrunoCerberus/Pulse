@@ -55,4 +55,10 @@ enum HomeDomainAction: Equatable {
     /// Enter or exit topic editing mode.
     /// - Parameter editing: `true` to enter editing mode, `false` to exit.
     case setEditingTopics(Bool)
+
+    // MARK: - Recently Read
+
+    /// Select a recently read article to navigate to the detail view.
+    /// - Parameter articleId: The unique identifier of the selected article.
+    case selectRecentlyRead(articleId: String)
 }

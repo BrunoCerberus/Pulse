@@ -44,6 +44,7 @@
 "home.breaking" = "URGENTE";
 "home.breaking_news" = "Noticias de Última Hora";
 "home.top_headlines" = "Titulares Principales";
+"home.recently_read" = "Leídos Recientemente";
 "home.category.all" = "Todos";
 "home.error.title" = "No Se Pudieron Cargar las Noticias";
 "home.empty.title" = "Sin Noticias Disponibles";
@@ -361,6 +362,7 @@
 "article_detail.save_hint" = "Guardar artículo para lectura sin conexión";
 "article_detail.share_label" = "Compartir artículo";
 "article_detail.share_hint" = "Compartir este artículo con otros";
+"article_detail.related_articles" = "Artículos Relacionados";
 
 "media_detail.remove_bookmark" = "Eliminar marcador";
 "media_detail.add_bookmark" = "Agregar marcador";

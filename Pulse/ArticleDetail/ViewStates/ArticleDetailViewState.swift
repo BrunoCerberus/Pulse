@@ -44,6 +44,14 @@ struct ArticleDetailViewState: Equatable {
     /// Whether the TTS player bar is visible.
     var isTTSPlayerVisible: Bool
 
+    // MARK: - Related Articles
+
+    /// Related articles to display at the bottom of the detail view.
+    var relatedArticles: [ArticleViewItem]
+
+    /// Raw Article models for related articles (used for navigation).
+    var relatedArticleModels: [Article]
+
     /// Creates the initial state for a given article.
     /// - Parameter article: The article to display.
     /// - Returns: Initial view state with content processing enabled.
@@ -59,7 +67,9 @@ struct ArticleDetailViewState: Equatable {
             ttsPlaybackState: .idle,
             ttsProgress: 0.0,
             ttsSpeedPreset: .normal,
-            isTTSPlayerVisible: false
+            isTTSPlayerVisible: false,
+            relatedArticles: [],
+            relatedArticleModels: []
         )
     }
 }
