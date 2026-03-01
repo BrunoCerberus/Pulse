@@ -103,6 +103,34 @@ struct SearchDomainInteractorTests {
         #expect(state.suggestions.isEmpty)
     }
 
+    @Test("Update query truncates to max length")
+    func updateQueryTruncatesToMaxLength() async throws {
+        let oversizedQuery = String(repeating: "a", count: 300)
+
+        sut.dispatch(action: .updateQuery(oversizedQuery))
+
+        try await Task.sleep(nanoseconds: 100_000_000)
+
+        let state = sut.currentState
+        #expect(state.query.count == 256)
+        #expect(state.query == String(oversizedQuery.prefix(256)))
+    }
+
+    @Test("Search uses truncated query length in analytics")
+    func searchUsesTruncatedQueryLengthInAnalytics() async throws {
+        let oversizedQuery = String(repeating: "b", count: 400)
+        mockSearchService.searchResult = .success(Article.mockArticles)
+
+        sut.dispatch(action: .updateQuery(oversizedQuery))
+        sut.dispatch(action: .search)
+
+        try await Task.sleep(nanoseconds: 500_000_000)
+
+        let searchEvents = mockAnalyticsService.loggedEvents.filter { $0.name == "search_performed" }
+        #expect(searchEvents.count == 1)
+        #expect(searchEvents.first?.parameters?["query_length"] as? Int == 256)
+    }
+
     // MARK: - Search Tests
 
     @Test("Search action loads results")
