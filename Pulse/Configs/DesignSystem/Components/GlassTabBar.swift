@@ -4,6 +4,24 @@ import SwiftUI
 // MARK: - Glass Tab Item
 
 struct GlassTabItem: Identifiable {
+    private enum Constants {
+        static var tabHome: String {
+            AppLocalization.localized("tab.home")
+        }
+
+        static var tabFeed: String {
+            AppLocalization.localized("tab.feed")
+        }
+
+        static var tabBookmarks: String {
+            AppLocalization.localized("tab.bookmarks")
+        }
+
+        static var tabSearch: String {
+            AppLocalization.localized("tab.search")
+        }
+    }
+
     let id: AppTab
     let title: String
     let icon: String
@@ -11,10 +29,10 @@ struct GlassTabItem: Identifiable {
 
     static var items: [GlassTabItem] {
         [
-            GlassTabItem(id: .home, title: AppLocalization.localized("tab.home"), icon: "newspaper", selectedIcon: "newspaper.fill"),
-            GlassTabItem(id: .feed, title: AppLocalization.localized("tab.feed"), icon: "text.document", selectedIcon: "text.document.fill"),
-            GlassTabItem(id: .bookmarks, title: AppLocalization.localized("tab.bookmarks"), icon: "bookmark", selectedIcon: "bookmark.fill"),
-            GlassTabItem(id: .search, title: AppLocalization.localized("tab.search"), icon: "magnifyingglass", selectedIcon: "magnifyingglass"),
+            GlassTabItem(id: .home, title: Constants.tabHome, icon: "newspaper", selectedIcon: "newspaper.fill"),
+            GlassTabItem(id: .feed, title: Constants.tabFeed, icon: "text.document", selectedIcon: "text.document.fill"),
+            GlassTabItem(id: .bookmarks, title: Constants.tabBookmarks, icon: "bookmark", selectedIcon: "bookmark.fill"),
+            GlassTabItem(id: .search, title: Constants.tabSearch, icon: "magnifyingglass", selectedIcon: "magnifyingglass"),
         ]
     }
 }
@@ -22,6 +40,12 @@ struct GlassTabItem: Identifiable {
 // MARK: - Glass Tab Bar
 
 struct GlassTabBar: View {
+    private enum Constants {
+        static var switchHintFormat: String {
+            AppLocalization.localized("tab.switch_hint")
+        }
+    }
+
     @Binding var selectedTab: AppTab
     var items: [GlassTabItem] = GlassTabItem.items
 
@@ -85,7 +109,7 @@ struct GlassTabBar: View {
         }
         .buttonStyle(.plain)
         .accessibilityLabel(item.title)
-        .accessibilityHint(String(format: AppLocalization.localized("tab.switch_hint"), item.title))
+        .accessibilityHint(String(format: Constants.switchHintFormat, item.title))
         .accessibilityAddTraits(isSelected ? .isSelected : [])
     }
 }

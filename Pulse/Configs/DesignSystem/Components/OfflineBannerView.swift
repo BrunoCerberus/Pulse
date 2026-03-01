@@ -6,12 +6,18 @@ import SwiftUI
 /// Displays a `wifi.slash` icon and "You're offline" text with a warning-style background.
 /// Designed to be placed at the top of the screen in a VStack above the main content.
 struct OfflineBannerView: View {
+    private enum Constants {
+        static var banner: String {
+            AppLocalization.localized("offline.banner")
+        }
+    }
+
     var body: some View {
         HStack(spacing: Spacing.xs) {
             Image(systemName: "wifi.slash")
                 .font(.system(size: IconSize.sm, weight: .semibold))
 
-            Text(AppLocalization.localized("offline.banner"))
+            Text(Constants.banner)
                 .font(Typography.labelMedium)
                 .fontWeight(.semibold)
         }
@@ -21,7 +27,7 @@ struct OfflineBannerView: View {
         .background(Color.orange)
         .transition(.move(edge: .top).combined(with: .opacity))
         .accessibilityElement(children: .combine)
-        .accessibilityLabel(AppLocalization.localized("offline.banner"))
+        .accessibilityLabel(Constants.banner)
         .accessibilityAddTraits(.isStaticText)
     }
 }

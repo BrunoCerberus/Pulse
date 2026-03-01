@@ -3,26 +3,36 @@ import UIKit
 import WidgetKit
 
 struct PulseNewsWidget: Widget {
+    private enum Constants {
+        static let configurationName = String(localized: "widget.configuration.name")
+        static let configurationDescription = String(localized: "widget.configuration.description")
+    }
+
     let kind: String = "PulseNewsWidget"
 
     var body: some WidgetConfiguration {
         StaticConfiguration(kind: kind, provider: NewsTimelineProvider()) { entry in
             PulseNewsWidgetEntryView(entry: entry)
         }
-        .configurationDisplayName("Top Headlines")
-        .description("Stay updated with the latest news headlines.")
+        .configurationDisplayName(Constants.configurationName)
+        .description(Constants.configurationDescription)
         .supportedFamilies([.systemSmall, .systemMedium, .systemLarge])
     }
 }
 
 struct PulseNewsWidgetEntryView: View {
+    private enum Constants {
+        static let title = String(localized: "widget.title")
+        static let noHeadlines = String(localized: "widget.no_headlines")
+    }
+
     let entry: NewsTimelineEntry
 
     var body: some View {
         VStack(alignment: .leading, spacing: headerSpacing) {
             // Header
             HStack(spacing: 4) {
-                Text("Pulse")
+                Text(Constants.title)
                     .font(entry.family == .systemSmall ? .caption2 : .caption)
                     .fontWeight(.semibold)
                     .foregroundColor(.secondary)
@@ -34,7 +44,9 @@ struct PulseNewsWidgetEntryView: View {
             if let articles = entry.articles, !articles.isEmpty {
                 VStack(spacing: contentSpacing) {
                     ForEach(Array(articles.prefix(articleLimit(for: entry.family)).enumerated()), id: \.offset) { _, article in
-                        ArticleRowView(article: article, family: entry.family)
+                        Link(destination: deeplinkURL(for: article)) {
+                            ArticleRowView(article: article, family: entry.family)
+                        }
                     }
                 }
             } else {
@@ -46,7 +58,7 @@ struct PulseNewsWidgetEntryView: View {
                             Image(systemName: "newspaper")
                                 .font(.title2)
                                 .foregroundColor(.secondary)
-                            Text("No headlines available")
+                            Text(Constants.noHeadlines)
                                 .font(.caption)
                                 .foregroundColor(.secondary)
                         }
@@ -58,9 +70,26 @@ struct PulseNewsWidgetEntryView: View {
 
             Spacer(minLength: 0)
         }
+        .widgetURL(smallWidgetURL)
         .containerBackground(for: .widget) {
             Color(uiColor: .systemBackground)
         }
+    }
+
+    /// For `.systemSmall` (single tap target), deeplink to the first article.
+    private var smallWidgetURL: URL? {
+        guard entry.family == .systemSmall,
+              let firstArticle = entry.articles?.first
+        else { return nil }
+        return deeplinkURL(for: firstArticle)
+    }
+
+    private func deeplinkURL(for article: WidgetArticle) -> URL {
+        var components = URLComponents()
+        components.scheme = "pulse"
+        components.host = "article"
+        components.queryItems = [URLQueryItem(name: "id", value: article.id)]
+        return components.url ?? URL(string: "pulse://home")!
     }
 
     var headerSpacing: CGFloat {

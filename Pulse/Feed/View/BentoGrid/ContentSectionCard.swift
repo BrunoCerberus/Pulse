@@ -6,6 +6,26 @@ import SwiftUI
 private enum Constants {
     static let featuredImageHeight: CGFloat = 140
     static let featuredImageCornerRadius: CGFloat = 12
+
+    static var articleCountOne: String {
+        AppLocalization.localized("digest.article_count_one")
+    }
+
+    static var articleCountOther: String {
+        AppLocalization.localized("digest.article_count_other")
+    }
+
+    static var articleAccessibilityLabel: String {
+        AppLocalization.localized("article_row.accessibility_label")
+    }
+
+    static var readArticleHint: String {
+        AppLocalization.localized("accessibility.read_article")
+    }
+
+    static var relatedArticles: String {
+        AppLocalization.localized("digest.related_articles")
+    }
 }
 
 // MARK: - ContentSectionCard
@@ -108,7 +128,7 @@ struct ContentSectionCard: View {
 
     private var articleCountBadge: some View {
         let count = section.relatedArticles.count
-        let text = count == 1 ? AppLocalization.localized("digest.article_count_one") : String(format: AppLocalization.localized("digest.article_count_other"), count)
+        let text = count == 1 ? Constants.articleCountOne : String(format: Constants.articleCountOther, count)
 
         return Text(text)
             .font(Typography.captionSmall)
@@ -180,8 +200,8 @@ struct ContentSectionCard: View {
         .buttonStyle(.plain)
         .pressEffect(scale: 0.98)
         .accessibilityElement(children: .combine)
-        .accessibilityLabel(String(format: AppLocalization.localized("article_row.accessibility_label"), article.title, article.source, article.formattedDate))
-        .accessibilityHint(AppLocalization.localized("accessibility.read_article"))
+        .accessibilityLabel(String(format: Constants.articleAccessibilityLabel, article.title, article.source, article.formattedDate))
+        .accessibilityHint(Constants.readArticleHint)
     }
 
     @ViewBuilder
@@ -226,7 +246,7 @@ struct ContentSectionCard: View {
 
     private var sourcesRow: some View {
         VStack(alignment: .leading, spacing: Spacing.xs) {
-            Text(AppLocalization.localized("digest.related_articles"))
+            Text(Constants.relatedArticles)
                 .font(Typography.captionSmall)
                 .foregroundStyle(.secondary)
 

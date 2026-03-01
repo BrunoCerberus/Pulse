@@ -9,6 +9,16 @@ import SwiftUI
  * stars and streamers, then transitions to the main app content.
  */
 struct SplashScreenView: View {
+    private enum Constants {
+        static var loading: String {
+            AppLocalization.localized("splash.loading")
+        }
+
+        static var appName: String {
+            AppLocalization.localized("app.name")
+        }
+    }
+
     /// Callback invoked when the splash animation completes
     var onComplete: () -> Void
 
@@ -47,7 +57,7 @@ struct SplashScreenView: View {
             logoView
         }
         .accessibilityElement(children: .ignore)
-        .accessibilityLabel(AppLocalization.localized("splash.loading"))
+        .accessibilityLabel(Constants.loading)
         .opacity(isAnimationComplete ? 0 : 1)
         .onAppear {
             if reduceMotion {
@@ -91,7 +101,7 @@ struct SplashScreenView: View {
             }
             .glowEffect(color: Color.Accent.primary, radius: 16)
 
-            Text(AppLocalization.localized("app.name"))
+            Text(Constants.appName)
                 .font(Typography.displayMedium)
                 .foregroundStyle(.white)
         }

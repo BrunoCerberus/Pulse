@@ -19,6 +19,18 @@ private enum Constants {
     static var pause: String {
         AppLocalization.localized("media.pause")
     }
+
+    static var progressLabel: String {
+        AppLocalization.localized("audio_player.progress_label")
+    }
+
+    static var progressValue: String {
+        AppLocalization.localized("audio_player.progress_value")
+    }
+
+    static var noURLError: String {
+        AppLocalization.localized("audio_player.no_url_error")
+    }
 }
 
 /// Audio player UI for podcast playback.
@@ -208,10 +220,10 @@ struct AudioPlayerView: View {
             }
             .frame(height: 20)
             .accessibilityElement()
-            .accessibilityLabel(AppLocalization.localized("audio_player.progress_label"))
+            .accessibilityLabel(Constants.progressLabel)
             .accessibilityValue({
                 let current = formatTime(isDragging ? playerManager.duration * dragProgress : playerManager.currentTime)
-                return String(format: AppLocalization.localized("audio_player.progress_value"), current, formatTime(playerManager.duration))
+                return String(format: Constants.progressValue, current, formatTime(playerManager.duration))
             }())
             .accessibilityAdjustableAction { direction in
                 switch direction {
@@ -308,7 +320,7 @@ struct AudioPlayerView: View {
         guard let mediaURLString = article.mediaURL,
               let url = URL(string: mediaURLString)
         else {
-            onError?(AppLocalization.localized("audio_player.no_url_error"))
+            onError?(Constants.noURLError)
             return
         }
 

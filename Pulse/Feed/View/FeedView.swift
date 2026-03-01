@@ -40,6 +40,14 @@ private enum Constants {
     static var offlineMessage: String {
         AppLocalization.localized("feed.offline.message")
     }
+
+    static var digestReady: String {
+        AppLocalization.localized("accessibility.digest_ready")
+    }
+
+    static var retryHint: String {
+        AppLocalization.localized("feed.retry_hint")
+    }
 }
 
 // MARK: - FeedView
@@ -121,7 +129,7 @@ struct FeedView<R: FeedNavigationRouter>: View {
         .onChange(of: viewModel.viewState.displayState) { _, newState in
             if case .completed = newState {
                 isDigestFocused = true
-                AccessibilityNotification.Announcement(AppLocalization.localized("accessibility.digest_ready")).post()
+                AccessibilityNotification.Announcement(Constants.digestReady).post()
             }
         }
     }
@@ -302,7 +310,7 @@ struct FeedView<R: FeedNavigationRouter>: View {
                 }
                 .buttonStyle(.plain)
                 .pressEffect()
-                .accessibilityHint(AppLocalization.localized("feed.retry_hint"))
+                .accessibilityHint(Constants.retryHint)
             }
         }
         .padding(.horizontal, Spacing.md)

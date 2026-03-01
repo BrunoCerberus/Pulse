@@ -15,6 +15,14 @@ private enum Constants {
     static var timeSpanLabel: String {
         AppLocalization.localized("digest.time_span")
     }
+
+    static var statsAccessibility: String {
+        AppLocalization.localized("digest.stats_accessibility")
+    }
+
+    static var statsTitle: String {
+        AppLocalization.localized("digest.stats_title")
+    }
 }
 
 // MARK: - StatsCard
@@ -68,7 +76,7 @@ struct StatsCard: View {
         .glassBackground(style: .thin, cornerRadius: CornerRadius.lg)
         .depthShadow(.medium)
         .accessibilityElement(children: .combine)
-        .accessibilityLabel(String(format: AppLocalization.localized("digest.stats_accessibility"), articleCount, topicsCount))
+        .accessibilityLabel(String(format: Constants.statsAccessibility, articleCount, topicsCount))
         .onAppear {
             animationTask?.cancel()
             animationTask = Task {
@@ -90,7 +98,7 @@ struct StatsCard: View {
                 .foregroundStyle(Color.Accent.gradient)
                 .accessibilityHidden(true)
 
-            Text(AppLocalization.localized("digest.stats_title"))
+            Text(Constants.statsTitle)
                 .font(Typography.labelMedium)
                 .foregroundStyle(.primary)
         }

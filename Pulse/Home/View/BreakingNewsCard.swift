@@ -7,6 +7,14 @@ private enum Constants {
     static var breaking: String {
         AppLocalization.localized("home.breaking")
     }
+
+    static var accessibilityLabel: String {
+        AppLocalization.localized("breaking_news.accessibility_label")
+    }
+
+    static var readArticle: String {
+        AppLocalization.localized("accessibility.read_article")
+    }
 }
 
 // MARK: - BreakingNewsCard
@@ -98,13 +106,13 @@ struct BreakingNewsCard: View {
         .accessibilityElement(children: .combine)
         .accessibilityLabel(
             String(
-                format: AppLocalization.localized("breaking_news.accessibility_label"),
+                format: Constants.accessibilityLabel,
                 item.title,
                 item.sourceName,
                 item.formattedDate
             )
         )
-        .accessibilityHint(AppLocalization.localized("accessibility.read_article"))
+        .accessibilityHint(Constants.readArticle)
     }
 }
 

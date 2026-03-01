@@ -110,6 +110,16 @@ final class SearchDomainInteractor: CombineInteractor {
             }
         case .clearSelectedArticle:
             clearSelectedArticle()
+        case let .bookmarkArticle(articleId):
+            if let article = findArticle(by: articleId) {
+                toggleBookmark(article)
+            }
+        case let .shareArticle(articleId):
+            if let article = findArticle(by: articleId) {
+                shareArticle(article)
+            }
+        case .clearArticleToShare:
+            clearArticleToShare()
         }
     }
 
@@ -276,6 +286,36 @@ final class SearchDomainInteractor: CombineInteractor {
         updateState { state in
             state.selectedArticle = nil
         }
+    }
+
+    // MARK: - Article Actions
+
+    private func shareArticle(_ article: Article) {
+        analyticsService?.logEvent(.articleShared)
+        updateState { state in
+            state.articleToShare = article
+        }
+    }
+
+    private func clearArticleToShare() {
+        updateState { state in
+            state.articleToShare = nil
+        }
+    }
+
+    private func toggleBookmark(_ article: Article) {
+        let task = Task { [weak self] in
+            guard let self else { return }
+            let isBookmarked = await storageService.isBookmarked(article.id)
+            if isBookmarked {
+                try? await storageService.deleteArticle(article)
+                await MainActor.run { self.analyticsService?.logEvent(.articleUnbookmarked) }
+            } else {
+                try? await storageService.saveArticle(article)
+                await MainActor.run { self.analyticsService?.logEvent(.articleBookmarked) }
+            }
+        }
+        backgroundTasks.insert(task)
     }
 
     // MARK: - Reading History

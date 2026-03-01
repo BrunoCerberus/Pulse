@@ -37,6 +37,10 @@ final class BookmarksViewModel: CombineViewModel, ObservableObject {
             interactor.dispatch(action: .clearSelectedArticle)
         case let .onRemoveBookmark(articleId):
             interactor.dispatch(action: .removeBookmark(articleId: articleId))
+        case let .onShareTapped(articleId):
+            interactor.dispatch(action: .shareArticle(articleId: articleId))
+        case .onShareDismissed:
+            interactor.dispatch(action: .clearArticleToShare)
         }
     }
 
@@ -51,7 +55,8 @@ final class BookmarksViewModel: CombineViewModel, ObservableObject {
                     isRefreshing: state.isRefreshing,
                     errorMessage: state.error,
                     showEmptyState: !state.isLoading && !state.isRefreshing && state.bookmarks.isEmpty,
-                    selectedArticle: state.selectedArticle
+                    selectedArticle: state.selectedArticle,
+                    articleToShare: state.articleToShare
                 )
             }
             .removeDuplicates()
@@ -83,6 +88,9 @@ struct BookmarksViewState: Equatable {
     /// Article selected for navigation to detail view.
     var selectedArticle: Article?
 
+    /// Article selected for sharing via the system share sheet.
+    var articleToShare: Article?
+
     /// Creates the default initial state with empty bookmarks.
     static var initial: BookmarksViewState {
         BookmarksViewState(
@@ -91,7 +99,8 @@ struct BookmarksViewState: Equatable {
             isRefreshing: false,
             errorMessage: nil,
             showEmptyState: false,
-            selectedArticle: nil
+            selectedArticle: nil,
+            articleToShare: nil
         )
     }
 }
@@ -117,4 +126,10 @@ enum BookmarksViewEvent: Equatable {
     /// User requested to remove a bookmark (swipe action).
     /// - Parameter articleId: The unique identifier of the article to unbookmark.
     case onRemoveBookmark(articleId: String)
+
+    /// User tapped share on a bookmarked article.
+    case onShareTapped(articleId: String)
+
+    /// Share sheet was dismissed.
+    case onShareDismissed
 }

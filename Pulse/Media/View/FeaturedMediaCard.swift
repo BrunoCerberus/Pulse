@@ -1,6 +1,18 @@
 import EntropyCore
 import SwiftUI
 
+// MARK: - Constants
+
+private enum Constants {
+    static var fromSourceFormat: String {
+        AppLocalization.localized("accessibility.from_source")
+    }
+
+    static var playHint: String {
+        AppLocalization.localized("media.play_hint")
+    }
+}
+
 /// Large hero card for displaying featured media in the carousel.
 ///
 /// Features:
@@ -36,7 +48,7 @@ struct FeaturedMediaCard: View {
             parts.append(mediaType.displayName)
         }
         parts.append(item.title)
-        parts.append(String(format: AppLocalization.localized("accessibility.from_source"), item.sourceName))
+        parts.append(String(format: Constants.fromSourceFormat, item.sourceName))
         if let duration = item.formattedDuration {
             parts.append(duration)
         }
@@ -68,7 +80,7 @@ struct FeaturedMediaCard: View {
         .pressEffect()
         .accessibilityElement(children: .combine)
         .accessibilityLabel(mediaAccessibilityLabel)
-        .accessibilityHint(AppLocalization.localized("media.play_hint"))
+        .accessibilityHint(Constants.playHint)
     }
 
     // MARK: - Image Background

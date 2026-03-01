@@ -55,6 +55,12 @@ final class SearchViewModel: CombineViewModel, ObservableObject {
         case let .onSuggestionTapped(suggestion):
             interactor.dispatch(action: .updateQuery(suggestion))
             interactor.dispatch(action: .search)
+        case let .onBookmarkTapped(articleId):
+            interactor.dispatch(action: .bookmarkArticle(articleId: articleId))
+        case let .onShareTapped(articleId):
+            interactor.dispatch(action: .shareArticle(articleId: articleId))
+        case .onShareDismissed:
+            interactor.dispatch(action: .clearArticleToShare)
         }
     }
 
@@ -85,7 +91,8 @@ final class SearchViewModel: CombineViewModel, ObservableObject {
                     hasSearched: state.hasSearched,
                     sortOption: state.sortBy,
                     selectedArticle: state.selectedArticle,
-                    isOfflineError: state.isOfflineError
+                    isOfflineError: state.isOfflineError,
+                    articleToShare: state.articleToShare
                 )
             }
             .removeDuplicates()

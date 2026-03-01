@@ -1,6 +1,25 @@
+import EntropyCore
 import SwiftUI
 
 struct ArticleRowView: View {
+    private enum Constants {
+        static var accessibilityLabel: String {
+            AppLocalization.localized("article_row.accessibility_label")
+        }
+
+        static var readArticle: String {
+            AppLocalization.localized("accessibility.read_article")
+        }
+
+        static var bookmark: String {
+            AppLocalization.localized("article.bookmark")
+        }
+
+        static var share: String {
+            AppLocalization.localized("article.share")
+        }
+    }
+
     let item: ArticleViewItem
     let onTap: () -> Void
     let onBookmark: () -> Void
@@ -85,24 +104,24 @@ struct ArticleRowView: View {
         .accessibilityElement(children: .combine)
         .accessibilityLabel(
             String(
-                format: AppLocalization.localized("article_row.accessibility_label"),
+                format: Constants.accessibilityLabel,
                 item.title,
                 item.sourceName,
                 item.formattedDate
             )
         )
-        .accessibilityHint(AppLocalization.localized("accessibility.read_article"))
+        .accessibilityHint(Constants.readArticle)
         .contextMenu {
             Button {
                 onBookmark()
             } label: {
-                Label(AppLocalization.localized("article.bookmark"), systemImage: "bookmark")
+                Label(Constants.bookmark, systemImage: "bookmark")
             }
 
             Button {
                 onShare()
             } label: {
-                Label(AppLocalization.localized("article.share"), systemImage: "square.and.arrow.up")
+                Label(Constants.share, systemImage: "square.and.arrow.up")
             }
         }
 

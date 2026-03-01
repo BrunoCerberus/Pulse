@@ -11,6 +11,10 @@ private enum Constants {
     static var unlock: String {
         AppLocalization.localized("applock.unlock")
     }
+
+    static var unlockHint: String {
+        AppLocalization.localized("applock.unlock_hint")
+    }
 }
 
 // MARK: - AppLockOverlayView
@@ -47,7 +51,7 @@ struct AppLockOverlayView: View {
                         .foregroundStyle(.white)
                 }
                 .accessibilityLabel(Constants.unlock)
-                .accessibilityHint(AppLocalization.localized("applock.unlock_hint"))
+                .accessibilityHint(Constants.unlockHint)
                 .accessibilityFocused($isUnlockFocused)
             }
         }

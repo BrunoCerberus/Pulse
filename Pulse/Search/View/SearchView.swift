@@ -35,6 +35,50 @@ private enum Constants {
     static var loadingMore: String {
         AppLocalization.localized("common.loading_more")
     }
+
+    static var prompt: String {
+        AppLocalization.localized("search.prompt")
+    }
+
+    static var searchResultsCount: String {
+        AppLocalization.localized("accessibility.search_results_count")
+    }
+
+    static var searchNoResults: String {
+        AppLocalization.localized("accessibility.search_no_results")
+    }
+
+    static var recentSearches: String {
+        AppLocalization.localized("search.recent_searches")
+    }
+
+    static var trendingTopics: String {
+        AppLocalization.localized("search.trending_topics")
+    }
+
+    static var recentLabel: String {
+        AppLocalization.localized("search.recent_label")
+    }
+
+    static var searchHint: String {
+        AppLocalization.localized("search.search_hint")
+    }
+
+    static var offlineTitle: String {
+        AppLocalization.localized("search.offline.title")
+    }
+
+    static var offlineMessage: String {
+        AppLocalization.localized("search.offline.message")
+    }
+
+    static var noResults: String {
+        AppLocalization.localized("search.no_results")
+    }
+
+    static var sortBy: String {
+        AppLocalization.localized("search.sort_by")
+    }
 }
 
 // MARK: - SearchView
@@ -75,11 +119,17 @@ struct SearchView<R: SearchNavigationRouter>: View {
                 set: { viewModel.handle(event: .onQueryChanged($0)) }
             ),
             placement: .navigationBarDrawer(displayMode: .always),
-            prompt: AppLocalization.localized("search.prompt")
+            prompt: Constants.prompt
         )
         .onSubmit(of: .search) {
             HapticManager.shared.tap()
             viewModel.handle(event: .onSearch)
+        }
+        .sheet(item: Binding(
+            get: { viewModel.viewState.articleToShare },
+            set: { _ in viewModel.handle(event: .onShareDismissed) }
+        )) { article in
+            ShareSheet(activityItems: [URL(string: article.url) ?? article.title])
         }
         .onChange(of: viewModel.viewState.selectedArticle) { _, newValue in
             if let article = newValue {
@@ -90,13 +140,13 @@ struct SearchView<R: SearchNavigationRouter>: View {
         .onChange(of: viewModel.viewState.results) { _, newResults in
             if !newResults.isEmpty {
                 isFirstResultFocused = true
-                let announcement = String(format: AppLocalization.localized("accessibility.search_results_count"), newResults.count)
+                let announcement = String(format: Constants.searchResultsCount, newResults.count)
                 AccessibilityNotification.Announcement(announcement).post()
             }
         }
         .onChange(of: viewModel.viewState.showNoResults) { _, showNoResults in
             if showNoResults {
-                AccessibilityNotification.Announcement(AppLocalization.localized("accessibility.search_no_results")).post()
+                AccessibilityNotification.Announcement(Constants.searchNoResults).post()
             }
         }
     }
@@ -155,7 +205,7 @@ struct SearchView<R: SearchNavigationRouter>: View {
             VStack(spacing: Spacing.lg) {
                 if !viewModel.viewState.suggestions.isEmpty {
                     VStack(alignment: .leading, spacing: Spacing.sm) {
-                        GlassSectionHeader(AppLocalization.localized("search.recent_searches"))
+                        GlassSectionHeader(Constants.recentSearches)
 
                         if dynamicTypeSize.isAccessibilitySize {
                             VStack(alignment: .leading, spacing: Spacing.sm) {
@@ -178,7 +228,7 @@ struct SearchView<R: SearchNavigationRouter>: View {
                 }
 
                 VStack(alignment: .leading, spacing: Spacing.sm) {
-                    GlassSectionHeader(AppLocalization.localized("search.trending_topics"))
+                    GlassSectionHeader(Constants.trendingTopics)
 
                     LazyVGrid(columns: [GridItem(.adaptive(minimum: dynamicTypeSize.isAccessibilitySize ? 150 : 100))], spacing: Spacing.sm) {
                         ForEach(NewsCategory.allCases) { category in
@@ -212,8 +262,8 @@ struct SearchView<R: SearchNavigationRouter>: View {
             .glassBackground(style: .thin, cornerRadius: CornerRadius.pill)
         }
         .pressEffect()
-        .accessibilityLabel(String(format: AppLocalization.localized("search.recent_label"), suggestion))
-        .accessibilityHint(AppLocalization.localized("search.search_hint"))
+        .accessibilityLabel(String(format: Constants.recentLabel, suggestion))
+        .accessibilityHint(Constants.searchHint)
     }
 
     private func errorView(_ message: String) -> some View {
@@ -225,10 +275,10 @@ struct SearchView<R: SearchNavigationRouter>: View {
                         .foregroundStyle(.orange)
                         .accessibilityHidden(true)
 
-                    Text(AppLocalization.localized("search.offline.title"))
+                    Text(Constants.offlineTitle)
                         .font(Typography.titleMedium)
 
-                    Text(AppLocalization.localized("search.offline.message"))
+                    Text(Constants.offlineMessage)
                         .font(Typography.bodyMedium)
                         .foregroundStyle(.secondary)
                         .multilineTextAlignment(.center)
@@ -276,7 +326,7 @@ struct SearchView<R: SearchNavigationRouter>: View {
                 Text(Constants.emptyTitle)
                     .font(Typography.titleMedium)
 
-                Text(String(format: AppLocalization.localized("search.no_results"), viewModel.viewState.query))
+                Text(String(format: Constants.noResults, viewModel.viewState.query))
                     .font(Typography.bodyMedium)
                     .foregroundStyle(.secondary)
                     .multilineTextAlignment(.center)
@@ -302,8 +352,13 @@ struct SearchView<R: SearchNavigationRouter>: View {
                             onTap: {
                                 viewModel.handle(event: .onArticleTapped(articleId: item.id))
                             },
-                            onBookmark: {},
-                            onShare: {}
+                            onBookmark: {
+                                HapticManager.shared.notification(.success)
+                                viewModel.handle(event: .onBookmarkTapped(articleId: item.id))
+                            },
+                            onShare: {
+                                viewModel.handle(event: .onShareTapped(articleId: item.id))
+                            }
                         )
                         .fadeIn(delay: Double(item.animationIndex) * 0.03)
                         .onAppear {
@@ -346,7 +401,7 @@ struct SearchView<R: SearchNavigationRouter>: View {
 
 private extension SearchView {
     var sortPicker: some View {
-        Picker(AppLocalization.localized("search.sort_by"), selection: Binding(
+        Picker(Constants.sortBy, selection: Binding(
             get: { viewModel.viewState.sortOption },
             set: {
                 HapticManager.shared.selectionChanged()

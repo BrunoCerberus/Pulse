@@ -26,7 +26,7 @@ final class HomeDomainInteractor: CombineInteractor {
     let newsService: NewsService
     private let storageService: StorageService
     let settingsService: SettingsService
-    private let analyticsService: AnalyticsService?
+    let analyticsService: AnalyticsService?
     let stateSubject = CurrentValueSubject<HomeDomainState, Never>(.initial)
     var cancellables = Set<AnyCancellable>()
     private var backgroundTasks = Set<Task<Void, Never>>()
@@ -228,7 +228,8 @@ private extension HomeDomainInteractor {
 
         headlinesPublisher
             .sink { [weak self] completion in
-                if case .failure = completion {
+                if case let .failure(error) = completion {
+                    self?.analyticsService?.recordError(error)
                     self?.updateState { state in
                         state.isLoadingMore = false
                     }

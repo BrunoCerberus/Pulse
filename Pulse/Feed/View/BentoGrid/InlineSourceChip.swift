@@ -6,6 +6,14 @@ import SwiftUI
 private enum Constants {
     static let chipWidth: CGFloat = 180
     static let thumbnailSize: CGFloat = 48
+
+    static var articleAccessibilityLabel: String {
+        AppLocalization.localized("article_row.accessibility_label")
+    }
+
+    static var readArticleHint: String {
+        AppLocalization.localized("accessibility.read_article")
+    }
 }
 
 // MARK: - InlineSourceChip
@@ -53,8 +61,8 @@ struct InlineSourceChip: View {
         .buttonStyle(.plain)
         .pressEffect(scale: 0.95)
         .accessibilityElement(children: .combine)
-        .accessibilityLabel(String(format: AppLocalization.localized("article_row.accessibility_label"), article.title, article.source, article.formattedDate))
-        .accessibilityHint(AppLocalization.localized("accessibility.read_article"))
+        .accessibilityLabel(String(format: Constants.articleAccessibilityLabel, article.title, article.source, article.formattedDate))
+        .accessibilityHint(Constants.readArticleHint)
     }
 
     // MARK: - Thumbnail

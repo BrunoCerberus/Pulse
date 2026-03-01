@@ -2,6 +2,20 @@ import EntropyCore
 import SwiftUI
 
 struct OnboardingView: View {
+    private enum Constants {
+        static var skip: String {
+            AppLocalization.localized("onboarding.skip")
+        }
+
+        static var getStarted: String {
+            AppLocalization.localized("onboarding.get_started")
+        }
+
+        static var next: String {
+            AppLocalization.localized("onboarding.next")
+        }
+    }
+
     @ObservedObject var viewModel: OnboardingViewModel
     @Environment(\.accessibilityReduceMotion) private var reduceMotion
 
@@ -50,7 +64,7 @@ struct OnboardingView: View {
                     HapticManager.shared.tap()
                     viewModel.handle(event: .onSkipTapped)
                 } label: {
-                    Text(AppLocalization.localized("onboarding.skip"))
+                    Text(Constants.skip)
                         .font(Typography.labelMedium)
                         .foregroundStyle(.white.opacity(0.7))
                         .padding(.horizontal, Spacing.lg)
@@ -95,8 +109,8 @@ struct OnboardingView: View {
         } label: {
             HStack(spacing: Spacing.sm) {
                 Text(viewModel.viewState.isLastPage
-                    ? AppLocalization.localized("onboarding.get_started")
-                    : AppLocalization.localized("onboarding.next"))
+                    ? Constants.getStarted
+                    : Constants.next)
                     .font(Typography.labelLarge)
 
                 if !viewModel.viewState.isLastPage {

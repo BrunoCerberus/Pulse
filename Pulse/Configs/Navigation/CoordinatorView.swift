@@ -8,6 +8,16 @@ import SwiftUI
 /// bound to the coordinator's per-tab NavigationPath. This ensures navigation
 /// isolation between tabs while maintaining centralized navigation control.
 struct CoordinatorView: View {
+    private enum Constants {
+        static var offline: String {
+            AppLocalization.localized("accessibility.offline")
+        }
+
+        static var online: String {
+            AppLocalization.localized("accessibility.online")
+        }
+    }
+
     @StateObject private var coordinator: Coordinator
     @StateObject private var themeManager = ThemeManager.shared
     @ObservedObject private var appLocalization = AppLocalization.shared
@@ -108,9 +118,9 @@ struct CoordinatorView: View {
             let wasOffline = isOffline
             isOffline = !connected
             if !connected, !wasOffline {
-                AccessibilityNotification.Announcement(AppLocalization.localized("accessibility.offline")).post()
+                AccessibilityNotification.Announcement(Constants.offline).post()
             } else if connected, wasOffline {
-                AccessibilityNotification.Announcement(AppLocalization.localized("accessibility.online")).post()
+                AccessibilityNotification.Announcement(Constants.online).post()
             }
         }
     }

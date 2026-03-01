@@ -40,10 +40,10 @@ extension HomeView {
                         .foregroundStyle(.orange)
                         .accessibilityHidden(true)
 
-                    Text(AppLocalization.localized("home.offline.title"))
+                    Text(HomeViewConstants.offlineTitle)
                         .font(Typography.titleMedium)
 
-                    Text(AppLocalization.localized("home.offline.message"))
+                    Text(HomeViewConstants.offlineMessage)
                         .font(Typography.bodyMedium)
                         .foregroundStyle(.secondary)
                         .multilineTextAlignment(.center)

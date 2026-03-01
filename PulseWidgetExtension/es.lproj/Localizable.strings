@@ -1,0 +1,6 @@
+/* Widget Extension - Spanish */
+
+"widget.title" = "Pulse";
+"widget.configuration.name" = "Titulares Principales";
+"widget.configuration.description" = "Mantente al día con los últimos titulares.";
+"widget.no_headlines" = "No hay titulares disponibles";

@@ -14,4 +14,13 @@ enum ReadingHistoryViewEvent: Equatable {
 
     /// Navigation to article detail completed.
     case onArticleNavigated
+
+    /// User tapped bookmark on an article.
+    case onBookmarkTapped(articleId: String)
+
+    /// User tapped share on an article.
+    case onShareTapped(articleId: String)
+
+    /// Share sheet was dismissed.
+    case onShareDismissed
 }

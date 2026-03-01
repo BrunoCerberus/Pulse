@@ -421,3 +421,16 @@
 "tts.progress_value" = "%d por cento";
 "accessibility.tts_started" = "Lendo em voz alta";
 "accessibility.tts_paused" = "Leitura pausada";
+
+/* ==================== */
+/* MARK: - Paywall      */
+/* ==================== */
+
+"paywall.period.day" = "por dia";
+"paywall.period.days" = "a cada %d dias";
+"paywall.period.week" = "por semana";
+"paywall.period.weeks" = "a cada %d semanas";
+"paywall.period.month" = "por mês";
+"paywall.period.months" = "a cada %d meses";
+"paywall.period.year" = "por ano";
+"paywall.period.years" = "a cada %d anos";

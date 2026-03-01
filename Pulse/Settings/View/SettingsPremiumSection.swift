@@ -2,6 +2,16 @@ import EntropyCore
 import SwiftUI
 
 struct SettingsPremiumSection: View {
+    private enum Constants {
+        static var premiumHint: String {
+            AppLocalization.localized("settings.premium.hint")
+        }
+
+        static var subscription: String {
+            AppLocalization.localized("settings.subscription")
+        }
+    }
+
     let isPremium: Bool
     let onUpgradeTapped: () -> Void
 
@@ -35,9 +45,9 @@ struct SettingsPremiumSection: View {
             .buttonStyle(.plain)
             .disabled(isPremium)
             .accessibilityLabel(isPremium ? Localizable.paywall.premiumActive : Localizable.paywall.goPremium)
-            .accessibilityHint(isPremium ? "" : AppLocalization.localized("settings.premium.hint"))
+            .accessibilityHint(isPremium ? "" : Constants.premiumHint)
         } header: {
-            Text(AppLocalization.localized("settings.subscription"))
+            Text(Constants.subscription)
                 .font(Typography.captionLarge)
         }
     }

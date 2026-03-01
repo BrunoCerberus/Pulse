@@ -14,6 +14,12 @@ import SwiftUI
 /// This view uses the native SwiftUI `SubscriptionStoreView` for iOS 17+
 /// which provides a native paywall experience with Apple's design guidelines.
 struct PaywallView: View {
+    private enum Constants {
+        static var close: String {
+            AppLocalization.localized("paywall.close")
+        }
+    }
+
     @StateObject var viewModel: PaywallViewModel
     @Environment(\.dismiss) private var dismiss
 
@@ -39,7 +45,7 @@ struct PaywallView: View {
                                 .font(.system(size: IconSize.lg))
                                 .foregroundStyle(.secondary)
                         }
-                        .accessibilityLabel(AppLocalization.localized("paywall.close"))
+                        .accessibilityLabel(Constants.close)
                     }
                 }
         }
@@ -329,7 +335,7 @@ private struct ProductButton: View {
                         .foregroundStyle(Color.Accent.primary)
 
                     if let subscription = product.subscription {
-                        Text(subscription.subscriptionPeriod.debugDescription)
+                        Text(subscription.subscriptionPeriod.localizedPeriodLabel)
                             .font(Typography.captionSmall)
                             .foregroundStyle(.secondary)
                     }
@@ -348,6 +354,33 @@ private struct ProductButton: View {
             .depthShadow(isSelected ? .medium : .subtle)
         }
         .pressEffect()
+    }
+}
+
+// MARK: - Subscription Period Label
+
+private extension Product.SubscriptionPeriod {
+    var localizedPeriodLabel: String {
+        switch unit {
+        case .day:
+            return value == 1
+                ? AppLocalization.localized("paywall.period.day")
+                : String(format: AppLocalization.localized("paywall.period.days"), value)
+        case .week:
+            return value == 1
+                ? AppLocalization.localized("paywall.period.week")
+                : String(format: AppLocalization.localized("paywall.period.weeks"), value)
+        case .month:
+            return value == 1
+                ? AppLocalization.localized("paywall.period.month")
+                : String(format: AppLocalization.localized("paywall.period.months"), value)
+        case .year:
+            return value == 1
+                ? AppLocalization.localized("paywall.period.year")
+                : String(format: AppLocalization.localized("paywall.period.years"), value)
+        @unknown default:
+            return ""
+        }
     }
 }
 

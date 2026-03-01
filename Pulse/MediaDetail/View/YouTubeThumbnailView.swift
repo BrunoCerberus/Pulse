@@ -4,6 +4,16 @@ import SwiftUI
 /// A view that shows a YouTube video thumbnail with a play button overlay.
 /// Tapping opens the video in YouTube app or Safari.
 struct YouTubeThumbnailView: View {
+    private enum Constants {
+        static var watchOnYouTube: String {
+            AppLocalization.localized("media.watch_on_youtube")
+        }
+
+        static var watchOnYouTubeAccessibility: String {
+            AppLocalization.localized("media.watch_on_youtube.accessibility")
+        }
+    }
+
     let urlString: String
     let articleImageURL: String?
 
@@ -63,7 +73,7 @@ struct YouTubeThumbnailView: View {
                     }
                     .shadow(color: .black.opacity(0.4), radius: 8)
 
-                    Text(AppLocalization.localized("media.watch_on_youtube"))
+                    Text(Constants.watchOnYouTube)
                         .font(Typography.labelMedium)
                         .fontWeight(.semibold)
                         .foregroundStyle(.white)
@@ -75,7 +85,7 @@ struct YouTubeThumbnailView: View {
             }
         }
         .buttonStyle(.plain)
-        .accessibilityLabel(AppLocalization.localized("media.watch_on_youtube.accessibility"))
+        .accessibilityLabel(Constants.watchOnYouTubeAccessibility)
         .aspectRatio(16 / 9, contentMode: .fit)
         .clipShape(RoundedRectangle(cornerRadius: CornerRadius.lg))
         .padding(.horizontal, Spacing.md)

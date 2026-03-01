@@ -41,6 +41,9 @@ struct SearchViewState: Equatable {
     /// Whether the current error is due to being offline.
     var isOfflineError: Bool
 
+    /// Article selected for sharing via the system share sheet.
+    var articleToShare: Article?
+
     /// Creates the default initial state with empty query and results.
     static var initial: SearchViewState {
         SearchViewState(
@@ -55,7 +58,8 @@ struct SearchViewState: Equatable {
             hasSearched: false,
             sortOption: .relevancy,
             selectedArticle: nil,
-            isOfflineError: false
+            isOfflineError: false,
+            articleToShare: nil
         )
     }
 }

@@ -6,6 +6,10 @@ import SwiftUI
 private enum Constants {
     static let maxBarWidth: CGFloat = 60
     static let barHeight: CGFloat = 6
+
+    static var topicsTitle: String {
+        AppLocalization.localized("digest.topics_title")
+    }
 }
 
 // MARK: - TopicsBreakdownCard
@@ -62,7 +66,7 @@ struct TopicsBreakdownCard: View {
                 .foregroundStyle(Color.Accent.gradient)
                 .accessibilityHidden(true)
 
-            Text(AppLocalization.localized("digest.topics_title"))
+            Text(Constants.topicsTitle)
                 .font(Typography.labelMedium)
                 .foregroundStyle(.primary)
         }

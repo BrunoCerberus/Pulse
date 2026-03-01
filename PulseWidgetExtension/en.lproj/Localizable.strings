@@ -1,0 +1,6 @@
+/* Widget Extension - English */
+
+"widget.title" = "Pulse";
+"widget.configuration.name" = "Top Headlines";
+"widget.configuration.description" = "Stay updated with the latest news headlines.";
+"widget.no_headlines" = "No headlines available";

@@ -4,14 +4,20 @@ import SwiftUI
 // MARK: - AI Processing View
 
 struct AIProcessingView: View {
+    private enum Constants {
+        static var statusMessage: String {
+            AppLocalization.localized("feed.ai_processing.status")
+        }
+
+        static var aiDigest: String {
+            AppLocalization.localized("feed.ai_digest")
+        }
+    }
+
     let phase: AIProcessingPhase
     let streamingText: String
 
     @Environment(\.accessibilityReduceMotion) private var reduceMotion
-
-    private var statusMessage: String {
-        AppLocalization.localized("feed.ai_processing.status")
-    }
 
     var body: some View {
         VStack(spacing: Spacing.xl) {
@@ -84,7 +90,7 @@ struct AIProcessingView: View {
     // MARK: - Status Section
 
     private var statusSection: some View {
-        Text(statusMessage)
+        Text(Constants.statusMessage)
             .font(Typography.titleSmall)
             .foregroundStyle(.primary)
     }
@@ -99,7 +105,7 @@ struct AIProcessingView: View {
                         .font(.system(size: IconSize.sm))
                         .foregroundStyle(Color.Accent.gradient)
 
-                    Text(AppLocalization.localized("feed.ai_digest"))
+                    Text(Constants.aiDigest)
                         .font(Typography.labelMedium)
                         .foregroundStyle(.secondary)
                 }

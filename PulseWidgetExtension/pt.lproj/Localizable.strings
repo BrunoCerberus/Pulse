@@ -1,0 +1,6 @@
+/* Widget Extension - Portuguese */
+
+"widget.title" = "Pulse";
+"widget.configuration.name" = "Principais Manchetes";
+"widget.configuration.description" = "Fique atualizado com as últimas manchetes.";
+"widget.no_headlines" = "Nenhuma manchete disponível";
