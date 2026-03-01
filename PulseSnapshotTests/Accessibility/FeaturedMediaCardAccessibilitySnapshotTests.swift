@@ -57,7 +57,7 @@ final class FeaturedMediaCardAccessibilitySnapshotTests: XCTestCase {
         assertSnapshot(
             of: controller,
             as: SnapshotConfig.snapshotting(on: SnapshotConfig.iPhoneAirExtraExtraLarge),
-            record: true
+            record: false
         )
     }
 }
