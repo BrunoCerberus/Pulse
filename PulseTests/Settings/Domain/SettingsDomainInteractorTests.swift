@@ -177,6 +177,7 @@ struct SettingsInteractorNotifyTests {
         try await Task.sleep(nanoseconds: 300_000_000)
 
         #expect(mockNotificationService.requestAuthorizationCallCount == 1)
+        #expect(mockNotificationService.registerCallCount == 0)
         #expect(!sut.currentState.preferences.notificationsEnabled)
         #expect(sut.currentState.error == nil)
     }
