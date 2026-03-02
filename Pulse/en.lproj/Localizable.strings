@@ -44,6 +44,7 @@
 "home.breaking" = "BREAKING";
 "home.breaking_news" = "Breaking News";
 "home.top_headlines" = "Top Headlines";
+"home.recently_read" = "Recently Read";
 "home.category.all" = "All";
 "home.error.title" = "Unable to Load News";
 "home.empty.title" = "No News Available";
@@ -361,6 +362,7 @@
 "article_detail.save_hint" = "Save article for offline reading";
 "article_detail.share_label" = "Share article";
 "article_detail.share_hint" = "Share this article with others";
+"article_detail.related_articles" = "Related Articles";
 
 "media_detail.remove_bookmark" = "Remove bookmark";
 "media_detail.add_bookmark" = "Add bookmark";

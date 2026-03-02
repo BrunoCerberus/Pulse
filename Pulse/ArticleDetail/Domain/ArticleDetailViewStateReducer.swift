@@ -27,7 +27,11 @@ struct ArticleDetailViewStateReducer: ViewStateReducing {
             ttsPlaybackState: domainState.ttsPlaybackState,
             ttsProgress: domainState.ttsProgress,
             ttsSpeedPreset: domainState.ttsSpeedPreset,
-            isTTSPlayerVisible: domainState.isTTSPlayerVisible
+            isTTSPlayerVisible: domainState.isTTSPlayerVisible,
+            relatedArticles: domainState.relatedArticles.enumerated().map { index, article in
+                ArticleViewItem(from: article, index: index)
+            },
+            relatedArticleModels: domainState.relatedArticles
         )
     }
 }

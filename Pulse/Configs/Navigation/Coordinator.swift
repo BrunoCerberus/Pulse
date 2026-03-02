@@ -183,7 +183,13 @@ final class Coordinator: ObservableObject {
     func build(page: Page) -> some View {
         switch page {
         case let .articleDetail(article):
-            ArticleDetailView(article: article, serviceLocator: serviceLocator)
+            ArticleDetailView(
+                article: article,
+                serviceLocator: serviceLocator,
+                onRelatedArticleTapped: { [weak self] relatedArticle in
+                    self?.push(page: .articleDetail(relatedArticle))
+                }
+            )
 
         case let .mediaDetail(article):
             MediaDetailView(article: article, serviceLocator: serviceLocator)

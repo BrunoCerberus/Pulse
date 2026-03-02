@@ -120,7 +120,9 @@ struct ArticleDetailViewStateReducerTests {
             ttsPlaybackState: .playing,
             ttsProgress: 0.5,
             ttsSpeedPreset: .fast,
-            isTTSPlayerVisible: true
+            isTTSPlayerVisible: true,
+            relatedArticles: [],
+            isLoadingRelatedArticles: false
         )
 
         let viewState = sut.reduce(domainState: domainState)

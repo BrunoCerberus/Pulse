@@ -57,6 +57,9 @@ struct HomeDomainState: Equatable {
     /// IDs of articles the user has previously read.
     var readArticleIDs: Set<String>
 
+    /// Recently read articles for the "Recently Read" section.
+    var recentlyRead: [Article]
+
     /// Creates the default initial state.
     static var initial: HomeDomainState {
         HomeDomainState(
@@ -76,7 +79,8 @@ struct HomeDomainState: Equatable {
             allTopics: NewsCategory.allCases,
             isEditingTopics: false,
             isOfflineError: false,
-            readArticleIDs: []
+            readArticleIDs: [],
+            recentlyRead: []
         )
     }
 }

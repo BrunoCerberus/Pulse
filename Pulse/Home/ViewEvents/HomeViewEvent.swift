@@ -13,4 +13,5 @@ enum HomeViewEvent: Equatable {
     case onToggleTopic(NewsCategory)
     case onEditTopicsTapped
     case onEditTopicsDismissed
+    case onRecentlyReadTapped(articleId: String)
 }

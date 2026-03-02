@@ -72,7 +72,7 @@ struct BookmarksView<R: BookmarksNavigationRouter>: View {
             get: { viewModel.viewState.articleToShare },
             set: { _ in viewModel.handle(event: .onShareDismissed) }
         )) { article in
-            ShareSheet(activityItems: [URL(string: article.url) ?? article.title])
+            ShareSheet(activityItems: ShareItemsBuilder.activityItems(for: article))
         }
         .onChange(of: viewModel.viewState.selectedArticle) { _, newValue in
             if let article = newValue {

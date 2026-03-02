@@ -60,6 +60,8 @@ struct HomeEventActionMap: DomainEventActionMap {
             return .selectCategory(category)
         case let .onToggleTopic(topic):
             return .toggleTopic(topic)
+        case let .onRecentlyReadTapped(articleId):
+            return .selectRecentlyRead(articleId: articleId)
         default:
             return nil
         }

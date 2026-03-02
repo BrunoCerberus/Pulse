@@ -24,6 +24,7 @@ final class ArticleDetailDomainInteractor: CombineInteractor {
     typealias DomainAction = ArticleDetailDomainAction
 
     private let storageService: StorageService
+    private let newsService: NewsService?
     private let ttsService: TextToSpeechService?
     private let analyticsService: AnalyticsService?
     private let stateSubject: CurrentValueSubject<ArticleDetailDomainState, Never>
@@ -53,6 +54,7 @@ final class ArticleDetailDomainInteractor: CombineInteractor {
             storageService = LiveStorageService()
         }
 
+        newsService = try? serviceLocator.retrieve(NewsService.self)
         ttsService = try? serviceLocator.retrieve(TextToSpeechService.self)
         analyticsService = try? serviceLocator.retrieve(AnalyticsService.self)
 
@@ -101,6 +103,13 @@ final class ArticleDetailDomainInteractor: CombineInteractor {
             handleTTSPlaybackStateChanged(state)
         case let .ttsProgressUpdated(progress):
             updateState { $0.ttsProgress = progress }
+
+        // MARK: - Related Articles Actions
+        case let .relatedArticlesLoaded(articles):
+            updateState { state in
+                state.relatedArticles = articles
+                state.isLoadingRelatedArticles = false
+            }
         }
     }
 
@@ -110,6 +119,7 @@ final class ArticleDetailDomainInteractor: CombineInteractor {
         analyticsService?.logEvent(.screenView(screen: .articleDetail))
         checkBookmarkStatus()
         markAsRead()
+        loadRelatedArticles()
     }
 
     // MARK: - Reading History
@@ -161,6 +171,36 @@ final class ArticleDetailDomainInteractor: CombineInteractor {
             }
         }
         trackBackgroundTask(task)
+    }
+
+    // MARK: - Related Articles
+
+    private func loadRelatedArticles() {
+        guard let newsService, let category = currentState.article.category else { return }
+
+        updateState { $0.isLoadingRelatedArticles = true }
+
+        let currentArticleId = currentState.article.id
+        let language = AppLocalization.shared.language
+
+        newsService.fetchTopHeadlines(category: category, language: language, country: "us", page: 1)
+            .receive(on: DispatchQueue.main)
+            .sink(
+                receiveCompletion: { [weak self] completion in
+                    if case .failure = completion {
+                        self?.updateState { $0.isLoadingRelatedArticles = false }
+                    }
+                },
+                receiveValue: { [weak self] articles in
+                    let related = Array(
+                        articles
+                            .filter { $0.id != currentArticleId && !$0.isMedia }
+                            .prefix(5)
+                    )
+                    self?.dispatch(action: .relatedArticlesLoaded(related))
+                }
+            )
+            .store(in: &cancellables)
     }
 
     // MARK: - Browser

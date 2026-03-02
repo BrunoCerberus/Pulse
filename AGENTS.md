@@ -15,7 +15,7 @@ Pulse/
 │   │   ├── ViewModel/          # SignInViewModel
 │   │   ├── View/               # SignInView
 │   │   └── Manager/            # AuthenticationManager (global state)
-│   ├── Home/                   # Home feed with category filtering
+│   ├── Home/                   # Home feed with category filtering + recently read
 │   ├── Media/                  # Videos and Podcasts browsing
 │   │   ├── API/                # CachingMediaService (tiered cache decorator for LiveMediaService)
 │   │   ├── Domain/             # MediaDomainInteractor, State, Action, Reducer, EventActionMap
@@ -42,7 +42,7 @@ Pulse/
 │   │   ├── AI/                 # LLMService, LLMModelManager (llama.cpp via LocalLlama)
 │   │   └── Models/             # Prompt builders and LLM helpers
 │   ├── Summarization/          # Article summarization (Premium)
-│   ├── ArticleDetail/          # Article view + summarization + text-to-speech
+│   ├── ArticleDetail/          # Article view + summarization + text-to-speech + related articles
 │   │   ├── API/                # TextToSpeechService protocol + Live/Mock implementations
 │   │   ├── Domain/             # ArticleDetailDomainInteractor, State, Action, Reducer, EventActionMap
 │   │   ├── ViewModel/          # ArticleDetailViewModel
@@ -276,6 +276,8 @@ The app uses a tiered cache with offline resilience:
 | **Reading History** | |
 | `ReadArticle` | SwiftData `@Model` with `@Attribute(.unique)` on `articleID`; stores title, URL, image, `readAt` timestamp |
 | `ReadingHistoryDomainInteractor` | Loads/clears history via `StorageService`, publishes `.readingHistoryDidClear` notification |
+| **Engagement** | |
+| `ShareItemsBuilder` | Utility formatting share content as `[title — source, URL]` for richer social previews |
 | `ReadingHistoryView` | History list with article cards, empty state, clear confirmation dialog |
 | **Accessibility** | |
 | `DynamicTypeHelpers` | `DynamicTypeSize.isAccessibilitySize` extension (`.accessibility1`+) used across 12 components |

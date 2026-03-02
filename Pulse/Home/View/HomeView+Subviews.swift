@@ -134,6 +134,48 @@ extension HomeView {
         }
     }
 
+    // MARK: - Recently Read Carousel
+
+    @ViewBuilder
+    var recentlyReadCarousel: some View {
+        if dynamicTypeSize.isAccessibilitySize {
+            VStack(spacing: Spacing.md) {
+                ForEach(viewModel.viewState.recentlyRead) { item in
+                    GlassArticleCardCompact(
+                        title: item.title,
+                        sourceName: item.sourceName,
+                        imageURL: item.imageURL,
+                        onTap: {
+                            viewModel.handle(event: .onRecentlyReadTapped(articleId: item.id))
+                        }
+                    )
+                    .fadeIn(delay: Double(item.animationIndex) * 0.05)
+                }
+            }
+            .padding(.horizontal, Spacing.md)
+            .padding(.vertical, Spacing.sm)
+        } else {
+            ScrollView(.horizontal, showsIndicators: false) {
+                LazyHStack(spacing: Spacing.sm) {
+                    ForEach(viewModel.viewState.recentlyRead) { item in
+                        GlassArticleCardCompact(
+                            title: item.title,
+                            sourceName: item.sourceName,
+                            imageURL: item.imageURL,
+                            onTap: {
+                                viewModel.handle(event: .onRecentlyReadTapped(articleId: item.id))
+                            }
+                        )
+                        .frame(width: 260)
+                        .fadeIn(delay: Double(item.animationIndex) * 0.05)
+                    }
+                }
+                .padding(.horizontal, Spacing.md)
+                .padding(.vertical, Spacing.sm)
+            }
+        }
+    }
+
     // MARK: - Image Prefetching
 
     /// Prefetches images for upcoming articles to reduce visible loading delays during scrolling.

@@ -38,7 +38,10 @@ struct HomeViewStateReducer: ViewStateReducing {
             showCategoryTabs: !domainState.followedTopics.isEmpty,
             allTopics: domainState.allTopics,
             isEditingTopics: domainState.isEditingTopics,
-            isOfflineError: domainState.isOfflineError
+            isOfflineError: domainState.isOfflineError,
+            recentlyRead: domainState.recentlyRead.enumerated().map { index, article in
+                ArticleViewItem(from: article, index: index, isRead: true)
+            }
         )
     }
 }

@@ -50,6 +50,9 @@ struct HomeViewState: Equatable {
     /// Whether the current error is due to being offline.
     var isOfflineError: Bool
 
+    /// Recently read articles for the horizontal scroll section.
+    var recentlyRead: [ArticleViewItem]
+
     /// Creates the default initial state with empty data and loading flags disabled.
     static var initial: HomeViewState {
         HomeViewState(
@@ -67,7 +70,8 @@ struct HomeViewState: Equatable {
             showCategoryTabs: false,
             allTopics: NewsCategory.allCases,
             isEditingTopics: false,
-            isOfflineError: false
+            isOfflineError: false,
+            recentlyRead: []
         )
     }
 }
