@@ -7,15 +7,24 @@ import Testing
 
 // MARK: - Test Helpers
 
+// swiftlint:disable large_tuple
 @MainActor
-// swiftlint:disable:next large_tuple
-private func createSUT() -> (SettingsDomainInteractor, MockSettingsService, MockAnalyticsService) {
+private func createSUT(
+    notificationStatus: NotificationAuthorizationStatus = .authorized
+) -> (SettingsDomainInteractor, MockSettingsService, MockAnalyticsService, MockNotificationService) {
+    // swiftlint:enable large_tuple
     let mockSettingsService = MockSettingsService()
     let mockAnalyticsService = MockAnalyticsService()
+    let mockNotificationService = MockNotificationService()
+    mockNotificationService.authorizationStatusResult = notificationStatus
     let serviceLocator = ServiceLocator()
     serviceLocator.register(SettingsService.self, instance: mockSettingsService)
     serviceLocator.register(AnalyticsService.self, instance: mockAnalyticsService)
-    return (SettingsDomainInteractor(serviceLocator: serviceLocator), mockSettingsService, mockAnalyticsService)
+    serviceLocator.register(NotificationService.self, instance: mockNotificationService)
+    return (
+        SettingsDomainInteractor(serviceLocator: serviceLocator),
+        mockSettingsService, mockAnalyticsService, mockNotificationService
+    )
 }
 
 // MARK: - Initial State & Load Tests
@@ -25,7 +34,7 @@ private func createSUT() -> (SettingsDomainInteractor, MockSettingsService, Mock
 struct SettingsInteractorStateTests {
     @Test("Initial state is correct")
     func initialState() {
-        let (sut, _, _) = createSUT()
+        let (sut, _, _, _) = createSUT()
         let state = sut.currentState
         #expect(state.preferences == .default)
         #expect(!state.isLoading)
@@ -35,10 +44,9 @@ struct SettingsInteractorStateTests {
 
     @Test("Load preferences populates state")
     func loadPreferencesPopulatesState() async throws {
-        let (sut, mock, _) = createSUT()
+        let (sut, mock, _, _) = createSUT()
         mock.preferences = UserPreferences(
-            followedTopics: [.technology, .science], followedSources: ["TechCrunch"],
-            mutedSources: ["Spam"], mutedKeywords: ["clickbait"],
+            followedTopics: [.technology, .science], mutedSources: ["Spam"], mutedKeywords: ["clickbait"],
             preferredLanguage: "en", notificationsEnabled: true, breakingNewsNotifications: false
         )
         sut.dispatch(action: .loadPreferences)
@@ -49,7 +57,7 @@ struct SettingsInteractorStateTests {
 
     @Test("Load preferences sets loading state")
     func loadPreferencesSetsLoadingState() async throws {
-        let (sut, _, _) = createSUT()
+        let (sut, _, _, _) = createSUT()
         var cancellables = Set<AnyCancellable>()
         var loadingStates: [Bool] = []
         sut.statePublisher.map(\.isLoading).sink { loadingStates.append($0) }.store(in: &cancellables)
@@ -67,9 +75,9 @@ struct SettingsInteractorStateTests {
 struct SettingsInteractorNotifyTests {
     @Test("Toggle notifications enables when disabled")
     func toggleNotificationsEnables() async throws {
-        let (sut, mock, _) = createSUT()
+        let (sut, mock, _, _) = createSUT()
         mock.preferences = UserPreferences(
-            followedTopics: [], followedSources: [], mutedSources: [], mutedKeywords: [],
+            followedTopics: [], mutedSources: [], mutedKeywords: [],
             preferredLanguage: "en", notificationsEnabled: false, breakingNewsNotifications: true
         )
         sut.dispatch(action: .loadPreferences)
@@ -81,7 +89,7 @@ struct SettingsInteractorNotifyTests {
 
     @Test("Toggle notifications disables when enabled")
     func toggleNotificationsDisables() async throws {
-        let (sut, mock, _) = createSUT()
+        let (sut, mock, _, _) = createSUT()
         mock.preferences = .default
         sut.dispatch(action: .loadPreferences)
         try await Task.sleep(nanoseconds: 300_000_000)
@@ -92,9 +100,9 @@ struct SettingsInteractorNotifyTests {
 
     @Test("Toggle breaking news enables when disabled")
     func toggleBreakingNewsEnables() async throws {
-        let (sut, mock, _) = createSUT()
+        let (sut, mock, _, _) = createSUT()
         mock.preferences = UserPreferences(
-            followedTopics: [], followedSources: [], mutedSources: [], mutedKeywords: [],
+            followedTopics: [], mutedSources: [], mutedKeywords: [],
             preferredLanguage: "en", notificationsEnabled: true, breakingNewsNotifications: false
         )
         sut.dispatch(action: .loadPreferences)
@@ -106,7 +114,7 @@ struct SettingsInteractorNotifyTests {
 
     @Test("Toggle breaking news disables when enabled")
     func toggleBreakingNewsDisables() async throws {
-        let (sut, mock, _) = createSUT()
+        let (sut, mock, _, _) = createSUT()
         mock.preferences = .default
         sut.dispatch(action: .loadPreferences)
         try await Task.sleep(nanoseconds: 300_000_000)
@@ -137,7 +145,7 @@ struct SettingsInteractorLanguageTests {
             }
         }
 
-        let (sut, mock, _) = createSUT()
+        let (sut, mock, _, _) = createSUT()
         mock.preferences = .default
         sut.dispatch(action: .loadPreferences)
         try await Task.sleep(nanoseconds: 300_000_000)
@@ -164,7 +172,7 @@ struct SettingsInteractorLanguageTests {
             }
         }
 
-        let (sut, mock, _) = createSUT()
+        let (sut, mock, _, _) = createSUT()
         mock.preferences = .default
         sut.dispatch(action: .loadPreferences)
         try await Task.sleep(nanoseconds: 300_000_000)
@@ -183,7 +191,7 @@ struct SettingsInteractorLanguageTests {
 struct SettingsInteractorMutedTests {
     @Test("Add muted source appends to list")
     func addMutedSourceAppends() async throws {
-        let (sut, mock, _) = createSUT()
+        let (sut, mock, _, _) = createSUT()
         mock.preferences = .default
         sut.dispatch(action: .loadPreferences)
         try await Task.sleep(nanoseconds: 300_000_000)
@@ -194,9 +202,9 @@ struct SettingsInteractorMutedTests {
 
     @Test("Add muted source prevents duplicates")
     func addMutedSourcePreventsDuplicates() async throws {
-        let (sut, mock, _) = createSUT()
+        let (sut, mock, _, _) = createSUT()
         mock.preferences = UserPreferences(
-            followedTopics: [], followedSources: [], mutedSources: ["Existing"],
+            followedTopics: [], mutedSources: ["Existing"],
             mutedKeywords: [], preferredLanguage: "en", notificationsEnabled: true, breakingNewsNotifications: true
         )
         sut.dispatch(action: .loadPreferences)
@@ -209,9 +217,9 @@ struct SettingsInteractorMutedTests {
 
     @Test("Remove muted source removes from list")
     func removeMutedSourceRemoves() async throws {
-        let (sut, mock, _) = createSUT()
+        let (sut, mock, _, _) = createSUT()
         mock.preferences = UserPreferences(
-            followedTopics: [], followedSources: [], mutedSources: ["Source 1", "Source 2"],
+            followedTopics: [], mutedSources: ["Source 1", "Source 2"],
             mutedKeywords: [], preferredLanguage: "en", notificationsEnabled: true, breakingNewsNotifications: true
         )
         sut.dispatch(action: .loadPreferences)
@@ -224,7 +232,7 @@ struct SettingsInteractorMutedTests {
 
     @Test("Add muted keyword appends to list")
     func addMutedKeywordAppends() async throws {
-        let (sut, mock, _) = createSUT()
+        let (sut, mock, _, _) = createSUT()
         mock.preferences = .default
         sut.dispatch(action: .loadPreferences)
         try await Task.sleep(nanoseconds: 300_000_000)
@@ -235,9 +243,9 @@ struct SettingsInteractorMutedTests {
 
     @Test("Add muted keyword prevents duplicates")
     func addMutedKeywordPreventsDuplicates() async throws {
-        let (sut, mock, _) = createSUT()
+        let (sut, mock, _, _) = createSUT()
         mock.preferences = UserPreferences(
-            followedTopics: [], followedSources: [], mutedSources: [], mutedKeywords: ["existing"],
+            followedTopics: [], mutedSources: [], mutedKeywords: ["existing"],
             preferredLanguage: "en", notificationsEnabled: true, breakingNewsNotifications: true
         )
         sut.dispatch(action: .loadPreferences)
@@ -250,9 +258,9 @@ struct SettingsInteractorMutedTests {
 
     @Test("Remove muted keyword removes from list")
     func removeMutedKeywordRemoves() async throws {
-        let (sut, mock, _) = createSUT()
+        let (sut, mock, _, _) = createSUT()
         mock.preferences = UserPreferences(
-            followedTopics: [], followedSources: [], mutedSources: [], mutedKeywords: ["keyword1", "keyword2"],
+            followedTopics: [], mutedSources: [], mutedKeywords: ["keyword1", "keyword2"],
             preferredLanguage: "en", notificationsEnabled: true, breakingNewsNotifications: true
         )
         sut.dispatch(action: .loadPreferences)
@@ -265,7 +273,7 @@ struct SettingsInteractorMutedTests {
 
     @Test("Multiple muted sources can be added")
     func multipleMutedSourcesCanBeAdded() async throws {
-        let (sut, mock, _) = createSUT()
+        let (sut, mock, _, _) = createSUT()
         mock.preferences = .default
         sut.dispatch(action: .loadPreferences)
         try await Task.sleep(nanoseconds: 300_000_000)
@@ -285,7 +293,7 @@ struct SettingsInteractorMutedTests {
 struct SettingsInteractorSavingTests {
     @Test("Save operation sets saving state")
     func saveOperationSetsSavingState() async throws {
-        let (sut, mock, _) = createSUT()
+        let (sut, mock, _, _) = createSUT()
         mock.preferences = .default
         sut.dispatch(action: .loadPreferences)
         try await Task.sleep(nanoseconds: 300_000_000)
@@ -305,7 +313,7 @@ struct SettingsInteractorSavingTests {
 struct SettingsInteractorUIStateTests {
     @Test("Set show sign out confirmation")
     func setShowSignOutConfirmation() async throws {
-        let (sut, _, _) = createSUT()
+        let (sut, _, _, _) = createSUT()
 
         sut.dispatch(action: .setShowSignOutConfirmation(true))
         try await Task.sleep(nanoseconds: 100_000_000)
@@ -315,7 +323,7 @@ struct SettingsInteractorUIStateTests {
 
     @Test("Set show sign out confirmation back to false")
     func setShowSignOutConfirmationFalse() async throws {
-        let (sut, _, _) = createSUT()
+        let (sut, _, _, _) = createSUT()
 
         sut.dispatch(action: .setShowSignOutConfirmation(true))
         try await Task.sleep(nanoseconds: 100_000_000)
@@ -328,7 +336,7 @@ struct SettingsInteractorUIStateTests {
 
     @Test("Set new muted source text")
     func setNewMutedSource() async throws {
-        let (sut, _, _) = createSUT()
+        let (sut, _, _, _) = createSUT()
 
         sut.dispatch(action: .setNewMutedSource("CNN"))
         try await Task.sleep(nanoseconds: 100_000_000)
@@ -338,7 +346,7 @@ struct SettingsInteractorUIStateTests {
 
     @Test("Set new muted keyword text")
     func setNewMutedKeyword() async throws {
-        let (sut, _, _) = createSUT()
+        let (sut, _, _, _) = createSUT()
 
         sut.dispatch(action: .setNewMutedKeyword("politics"))
         try await Task.sleep(nanoseconds: 100_000_000)
@@ -348,7 +356,7 @@ struct SettingsInteractorUIStateTests {
 
     @Test("Add muted source clears new muted source text")
     func addMutedSourceClearsText() async throws {
-        let (sut, mock, _) = createSUT()
+        let (sut, mock, _, _) = createSUT()
         mock.preferences = .default
         sut.dispatch(action: .loadPreferences)
         try await Task.sleep(nanoseconds: 300_000_000)
@@ -365,7 +373,7 @@ struct SettingsInteractorUIStateTests {
 
     @Test("Add empty muted source does not add")
     func addEmptyMutedSourceDoesNothing() async throws {
-        let (sut, mock, _) = createSUT()
+        let (sut, mock, _, _) = createSUT()
         mock.preferences = .default
         sut.dispatch(action: .loadPreferences)
         try await Task.sleep(nanoseconds: 300_000_000)
@@ -380,7 +388,7 @@ struct SettingsInteractorUIStateTests {
 
     @Test("Add muted keyword clears new muted keyword text")
     func addMutedKeywordClearsText() async throws {
-        let (sut, mock, _) = createSUT()
+        let (sut, mock, _, _) = createSUT()
         mock.preferences = .default
         sut.dispatch(action: .loadPreferences)
         try await Task.sleep(nanoseconds: 300_000_000)
@@ -397,7 +405,7 @@ struct SettingsInteractorUIStateTests {
 
     @Test("Add empty muted keyword does not add")
     func addEmptyMutedKeywordDoesNothing() async throws {
-        let (sut, mock, _) = createSUT()
+        let (sut, mock, _, _) = createSUT()
         mock.preferences = .default
         sut.dispatch(action: .loadPreferences)
         try await Task.sleep(nanoseconds: 300_000_000)
@@ -418,7 +426,7 @@ struct SettingsInteractorUIStateTests {
 struct SettingsInteractorPublisherTests {
     @Test("State publisher emits initial state")
     func statePublisherEmitsInitialState() async throws {
-        let (sut, _, _) = createSUT()
+        let (sut, _, _, _) = createSUT()
         var cancellables = Set<AnyCancellable>()
         var states: [SettingsDomainState] = []
 
@@ -434,7 +442,7 @@ struct SettingsInteractorPublisherTests {
 
     @Test("Notification posted on preferences change")
     func notificationPosted() async throws {
-        let (sut, mock, _) = createSUT()
+        let (sut, mock, _, _) = createSUT()
         mock.preferences = .default
         sut.dispatch(action: .loadPreferences)
         try await Task.sleep(nanoseconds: 300_000_000)
@@ -461,7 +469,7 @@ struct SettingsInteractorPublisherTests {
 struct SettingsInteractorAnalyticsTests {
     @Test("Logs screen_view on loadPreferences")
     func logsScreenViewOnLoad() async throws {
-        let (sut, _, mockAnalytics) = createSUT()
+        let (sut, _, mockAnalytics, _) = createSUT()
         sut.dispatch(action: .loadPreferences)
         try await Task.sleep(nanoseconds: 300_000_000)
 

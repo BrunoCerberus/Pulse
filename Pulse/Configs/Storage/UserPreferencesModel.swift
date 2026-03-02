@@ -10,8 +10,6 @@ import SwiftData
 final class UserPreferencesModel {
     /// News categories the user follows (stored as raw string values).
     var followedTopics: [String]
-    /// News source identifiers the user explicitly follows.
-    var followedSources: [String]
     /// News source identifiers the user has muted (hidden from feeds).
     var mutedSources: [String]
     /// Keywords to filter out from article titles and content.
@@ -27,7 +25,6 @@ final class UserPreferencesModel {
     /// - Parameter preferences: The domain preferences to persist.
     init(from preferences: UserPreferences) {
         followedTopics = preferences.followedTopics.map { $0.rawValue }
-        followedSources = preferences.followedSources
         mutedSources = preferences.mutedSources
         mutedKeywords = preferences.mutedKeywords
         preferredLanguage = preferences.preferredLanguage
@@ -40,7 +37,6 @@ final class UserPreferencesModel {
     func toPreferences() -> UserPreferences {
         UserPreferences(
             followedTopics: followedTopics.compactMap { NewsCategory(rawValue: $0) },
-            followedSources: followedSources,
             mutedSources: mutedSources,
             mutedKeywords: mutedKeywords,
             preferredLanguage: preferredLanguage,

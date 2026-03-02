@@ -459,7 +459,7 @@ final class MockRemoteConfigService: RemoteConfigService {
 }
 
 extension ServiceLocator {
-    static var preview: ServiceLocator {
+    @MainActor static var preview: ServiceLocator {
         let locator = ServiceLocator()
         locator.register(NetworkMonitorService.self, instance: MockNetworkMonitorService())
         locator.register(NewsService.self, instance: MockNewsService())
@@ -475,6 +475,7 @@ extension ServiceLocator {
         locator.register(AppLockService.self, instance: MockAppLockService())
         locator.register(AnalyticsService.self, instance: MockAnalyticsService())
         locator.register(TextToSpeechService.self, instance: MockTextToSpeechService())
+        locator.register(NotificationService.self, instance: MockNotificationService())
         locator.register(OnboardingService.self, instance: MockOnboardingService(hasCompletedOnboarding: true))
 
         // Auth service with mock signed-in user
@@ -485,7 +486,7 @@ extension ServiceLocator {
         return locator
     }
 
-    static var previewUnauthenticated: ServiceLocator {
+    @MainActor static var previewUnauthenticated: ServiceLocator {
         let locator = ServiceLocator()
         locator.register(NetworkMonitorService.self, instance: MockNetworkMonitorService())
         locator.register(NewsService.self, instance: MockNewsService())
@@ -502,6 +503,7 @@ extension ServiceLocator {
         locator.register(AppLockService.self, instance: MockAppLockService())
         locator.register(AnalyticsService.self, instance: MockAnalyticsService())
         locator.register(TextToSpeechService.self, instance: MockTextToSpeechService())
+        locator.register(NotificationService.self, instance: MockNotificationService())
         locator.register(OnboardingService.self, instance: MockOnboardingService(hasCompletedOnboarding: true))
         return locator
     }

@@ -78,7 +78,7 @@ struct MediaDomainInteractorTests {
         let mockSettingsService = try #require(serviceLocator.retrieve(SettingsService.self) as? MockSettingsService)
         let preferences = UserPreferences(
             followedTopics: [],
-            followedSources: [],
+
             mutedSources: [],
             mutedKeywords: [],
             preferredLanguage: "es",

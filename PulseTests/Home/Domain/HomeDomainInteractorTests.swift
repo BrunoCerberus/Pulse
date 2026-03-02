@@ -67,7 +67,7 @@ struct HomeDomainInteractorTests {
         let mockSettingsService = try #require(serviceLocator.retrieve(SettingsService.self) as? MockSettingsService)
         let preferences = UserPreferences(
             followedTopics: [],
-            followedSources: [],
+
             mutedSources: [],
             mutedKeywords: [],
             preferredLanguage: "pt",
@@ -329,7 +329,7 @@ extension HomeDomainInteractorTests {
         let mockSettingsService = try #require(serviceLocator.retrieve(SettingsService.self) as? MockSettingsService)
         mockSettingsService.preferences = UserPreferences(
             followedTopics: [.technology],
-            followedSources: [],
+
             mutedSources: [],
             mutedKeywords: [],
             preferredLanguage: "en",

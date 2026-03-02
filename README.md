@@ -390,6 +390,7 @@ Pulse/
 │   ├── Bookmarks/          # Saved articles
 │   ├── ReadingHistory/     # Reading history tracking (SwiftData)
 │   ├── Settings/           # User preferences + account/logout
+│   ├── Notifications/      # Push notification permission and registration
 │   ├── ArticleDetail/      # Article view + TTS (AVSpeechSynthesizer)
 │   ├── AppLock/            # Biometric/passcode app lock
 │   ├── Onboarding/         # First-launch onboarding flow

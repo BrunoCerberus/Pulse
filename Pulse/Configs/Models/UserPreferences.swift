@@ -2,7 +2,6 @@ import Foundation
 
 struct UserPreferences: Equatable, Codable {
     var followedTopics: [NewsCategory]
-    var followedSources: [String]
     var mutedSources: [String]
     var mutedKeywords: [String]
     var preferredLanguage: String
@@ -12,7 +11,6 @@ struct UserPreferences: Equatable, Codable {
     static var `default`: UserPreferences {
         UserPreferences(
             followedTopics: [],
-            followedSources: [],
             mutedSources: [],
             mutedKeywords: [],
             preferredLanguage: Locale.current.language.languageCode?.identifier ?? "en",
