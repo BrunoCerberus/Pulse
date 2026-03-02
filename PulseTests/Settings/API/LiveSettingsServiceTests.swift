@@ -22,7 +22,7 @@ struct LiveSettingsServiceTests {
     func fetchPreferencesSuccess() async {
         let testPreferences = UserPreferences(
             followedTopics: [.technology, .science],
-            followedSources: [],
+
             mutedSources: ["Source1"],
             mutedKeywords: ["keyword1"],
             preferredLanguage: "en",
@@ -118,7 +118,7 @@ struct LiveSettingsServiceTests {
         let sut = createSUT()
         let preferencesToSave = UserPreferences(
             followedTopics: [.business],
-            followedSources: [],
+
             mutedSources: [],
             mutedKeywords: [],
             preferredLanguage: "en",

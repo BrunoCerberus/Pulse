@@ -67,6 +67,10 @@ final class SettingsViewModel: CombineViewModel, ObservableObject {
             handleSignOut()
         case .onCancelSignOut:
             interactor.dispatch(action: .setShowSignOutConfirmation(false))
+        case .onDismissError:
+            interactor.dispatch(action: .dismissError)
+        case .onDismissNotificationsDeniedAlert:
+            interactor.dispatch(action: .dismissNotificationsDeniedAlert)
         default:
             return false
         }
@@ -180,6 +184,8 @@ final class SettingsViewModel: CombineViewModel, ObservableObject {
         defaults.removeObject(forKey: "pulse.isDarkMode")
         defaults.removeObject(forKey: "pulse.useSystemTheme")
         defaults.removeObject(forKey: "pulse.preferredLanguage")
+        defaults.removeObject(forKey: "pulse.notificationsEnabled")
+        defaults.removeObject(forKey: "pulse.deviceToken")
 
         // 6. Reset ThemeManager to system defaults
         themeManager.useSystemTheme = true
@@ -219,6 +225,7 @@ final class SettingsViewModel: CombineViewModel, ObservableObject {
                 showSignOutConfirmation: state.showSignOutConfirmation,
                 currentUser: currentUser,
                 errorMessage: state.error,
+                showNotificationsDeniedAlert: state.showNotificationsDeniedAlert,
                 newMutedSource: state.newMutedSource,
                 newMutedKeyword: state.newMutedKeyword,
                 selectedLanguage: state.preferences.preferredLanguage
@@ -241,6 +248,7 @@ struct SettingsViewState: Equatable {
     var showSignOutConfirmation: Bool
     var currentUser: AuthUser?
     var errorMessage: String?
+    var showNotificationsDeniedAlert: Bool
     var newMutedSource: String
     var newMutedKeyword: String
     var selectedLanguage: String
@@ -257,6 +265,7 @@ struct SettingsViewState: Equatable {
             showSignOutConfirmation: false,
             currentUser: nil,
             errorMessage: nil,
+            showNotificationsDeniedAlert: false,
             newMutedSource: "",
             newMutedKeyword: "",
             selectedLanguage: "en"
@@ -280,4 +289,6 @@ enum SettingsViewEvent: Equatable {
     case onSignOutTapped
     case onConfirmSignOut
     case onCancelSignOut
+    case onDismissError
+    case onDismissNotificationsDeniedAlert
 }

@@ -32,7 +32,7 @@ struct SettingsViewModelTests {
     func loadPreferences() async throws {
         mockSettingsService.preferences = UserPreferences(
             followedTopics: [.technology, .science],
-            followedSources: [],
+
             mutedSources: ["source1"],
             mutedKeywords: ["keyword1"],
             preferredLanguage: "en",
@@ -124,7 +124,7 @@ struct SettingsViewModelTests {
     func removeMutedSource() async throws {
         mockSettingsService.preferences = UserPreferences(
             followedTopics: [],
-            followedSources: [],
+
             mutedSources: ["source1", "source2"],
             mutedKeywords: [],
             preferredLanguage: "en",
@@ -146,7 +146,7 @@ struct SettingsViewModelTests {
     func removeMutedKeyword() async throws {
         mockSettingsService.preferences = UserPreferences(
             followedTopics: [],
-            followedSources: [],
+
             mutedSources: [],
             mutedKeywords: ["keyword1", "keyword2"],
             preferredLanguage: "en",

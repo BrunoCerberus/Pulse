@@ -23,11 +23,13 @@ extension Notification.Name {
 ///
 /// ## Dependencies
 /// - `SettingsService`: Manages preference persistence
+/// - `NotificationService`: Manages OS notification permissions and registration
 final class SettingsDomainInteractor: CombineInteractor {
     typealias DomainState = SettingsDomainState
     typealias DomainAction = SettingsDomainAction
 
     private let settingsService: SettingsService
+    private let notificationService: NotificationService
     private let analyticsService: AnalyticsService?
     private let stateSubject = CurrentValueSubject<SettingsDomainState, Never>(.initial)
     private var cancellables = Set<AnyCancellable>()
@@ -48,6 +50,8 @@ final class SettingsDomainInteractor: CombineInteractor {
             settingsService = LiveSettingsService(storageService: LiveStorageService())
         }
 
+        notificationService = (try? serviceLocator.retrieve(NotificationService.self))
+            ?? LiveNotificationService.shared
         analyticsService = try? serviceLocator.retrieve(AnalyticsService.self)
     }
 
@@ -56,7 +60,7 @@ final class SettingsDomainInteractor: CombineInteractor {
         case .loadPreferences:
             loadPreferences()
         case let .toggleNotifications(enabled):
-            toggleNotifications(enabled)
+            Task { @MainActor in await toggleNotifications(enabled) }
         case let .toggleBreakingNews(enabled):
             toggleBreakingNews(enabled)
         case let .changeLanguage(language):
@@ -65,6 +69,12 @@ final class SettingsDomainInteractor: CombineInteractor {
             handleMutedContentAction(action)
         case .setShowSignOutConfirmation, .setNewMutedSource, .setNewMutedKeyword:
             handleUIStateAction(action)
+        case .dismissError:
+            updateState { state in state.error = nil }
+        case .dismissNotificationsDeniedAlert:
+            updateState { state in state.showNotificationsDeniedAlert = false }
+        case .syncNotificationStatus:
+            Task { @MainActor in await syncNotificationStatus() }
         }
     }
 
@@ -120,14 +130,55 @@ final class SettingsDomainInteractor: CombineInteractor {
                     state.preferences = preferences
                     state.isLoading = false
                 }
+                // Sync notification toggle with actual OS permission status
+                self?.dispatch(action: .syncNotificationStatus)
             }
             .store(in: &cancellables)
     }
 
-    private func toggleNotifications(_ enabled: Bool) {
-        var preferences = currentState.preferences
-        preferences.notificationsEnabled = enabled
-        savePreferences(preferences)
+    private func toggleNotifications(_ enabled: Bool) async {
+        if enabled {
+            let status = await notificationService.authorizationStatus()
+            switch status {
+            case .notDetermined:
+                do {
+                    let granted = try await notificationService.requestAuthorization()
+                    var preferences = currentState.preferences
+                    preferences.notificationsEnabled = granted
+                    savePreferences(preferences)
+                } catch {
+                    updateState { state in
+                        state.preferences.notificationsEnabled = false
+                        state.error = error.localizedDescription
+                    }
+                }
+            case .authorized, .provisional:
+                await notificationService.registerForRemoteNotifications()
+                var preferences = currentState.preferences
+                preferences.notificationsEnabled = true
+                savePreferences(preferences)
+            case .denied:
+                updateState { state in
+                    state.preferences.notificationsEnabled = false
+                    state.showNotificationsDeniedAlert = true
+                }
+            }
+        } else {
+            await notificationService.unregisterForRemoteNotifications()
+            var preferences = currentState.preferences
+            preferences.notificationsEnabled = false
+            savePreferences(preferences)
+        }
+    }
+
+    private func syncNotificationStatus() async {
+        let status = await notificationService.authorizationStatus()
+        let isOSAuthorized = status == .authorized || status == .provisional
+        if currentState.preferences.notificationsEnabled, !isOSAuthorized {
+            var preferences = currentState.preferences
+            preferences.notificationsEnabled = false
+            savePreferences(preferences)
+        }
     }
 
     private func toggleBreakingNews(_ enabled: Bool) {
@@ -226,4 +277,7 @@ enum SettingsDomainAction: Equatable {
     case setShowSignOutConfirmation(Bool)
     case setNewMutedSource(String)
     case setNewMutedKeyword(String)
+    case dismissError
+    case dismissNotificationsDeniedAlert
+    case syncNotificationStatus
 }

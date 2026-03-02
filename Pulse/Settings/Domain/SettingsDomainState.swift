@@ -27,6 +27,9 @@ struct SettingsDomainState: Equatable {
     /// Text field content for adding a new muted keyword.
     var newMutedKeyword: String
 
+    /// Whether to show the notification permission denied alert.
+    var showNotificationsDeniedAlert: Bool
+
     /// Creates the default initial state.
     static var initial: SettingsDomainState {
         SettingsDomainState(
@@ -36,7 +39,8 @@ struct SettingsDomainState: Equatable {
             error: nil,
             showSignOutConfirmation: false,
             newMutedSource: "",
-            newMutedKeyword: ""
+            newMutedKeyword: "",
+            showNotificationsDeniedAlert: false
         )
     }
 }

@@ -154,6 +154,38 @@ struct SettingsView: View {
         } message: {
             Text(Constants.signOutConfirm)
         }
+        .alert(
+            AppLocalization.localized("common.error"),
+            isPresented: Binding(
+                get: { viewModel.viewState.errorMessage != nil },
+                set: { if !$0 { viewModel.handle(event: .onDismissError) } }
+            )
+        ) {
+            Button(AppLocalization.localized("common.ok"), role: .cancel) {
+                viewModel.handle(event: .onDismissError)
+            }
+        } message: {
+            Text(viewModel.viewState.errorMessage ?? "")
+        }
+        .alert(
+            AppLocalization.localized("settings.notifications_denied.title"),
+            isPresented: Binding(
+                get: { viewModel.viewState.showNotificationsDeniedAlert },
+                set: { if !$0 { viewModel.handle(event: .onDismissNotificationsDeniedAlert) } }
+            )
+        ) {
+            Button(AppLocalization.localized("common.cancel"), role: .cancel) {
+                viewModel.handle(event: .onDismissNotificationsDeniedAlert)
+            }
+            Button(AppLocalization.localized("settings.notifications_denied.open_settings")) {
+                if let url = URL(string: UIApplication.openSettingsURLString) {
+                    UIApplication.shared.open(url)
+                }
+                viewModel.handle(event: .onDismissNotificationsDeniedAlert)
+            }
+        } message: {
+            Text(AppLocalization.localized("settings.notifications_denied.message"))
+        }
         .onAppear {
             viewModel.handle(event: .onAppear)
             checkPremiumStatus()

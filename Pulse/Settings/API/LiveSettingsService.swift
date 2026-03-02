@@ -28,6 +28,9 @@ final class LiveSettingsService: SettingsService {
             Task.detached {
                 do {
                     try await storageService.saveUserPreferences(preferences)
+                    // Mirror notification preference to UserDefaults for PulseAppDelegate
+                    // to check in willPresent without needing SwiftData access
+                    UserDefaults.standard.set(preferences.notificationsEnabled, forKey: "pulse.notificationsEnabled")
                     promise(.success(()))
                 } catch {
                     promise(.failure(error))

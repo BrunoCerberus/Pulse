@@ -149,6 +149,9 @@
 "settings.content_language" = "Idioma do Conteúdo";
 "settings.content_language.label" = "Idioma";
 "settings.content_language.description" = "Escolha o idioma dos artigos de notícias";
+"settings.notifications_denied.title" = "Notificações Desativadas";
+"settings.notifications_denied.message" = "As notificações estão desativadas nas Configurações do Sistema. Toque em Abrir Configurações para ativá-las.";
+"settings.notifications_denied.open_settings" = "Abrir Configurações";
 
 /* ==================== */
 /* MARK: - Account      */

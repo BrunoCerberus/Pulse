@@ -149,6 +149,9 @@
 "settings.content_language" = "Content Language";
 "settings.content_language.label" = "Language";
 "settings.content_language.description" = "Choose the language for news articles";
+"settings.notifications_denied.title" = "Notifications Disabled";
+"settings.notifications_denied.message" = "Notifications are disabled in System Settings. Tap Open Settings to enable them.";
+"settings.notifications_denied.open_settings" = "Open Settings";
 
 /* ==================== */
 /* MARK: - Account      */

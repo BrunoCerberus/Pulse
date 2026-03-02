@@ -179,6 +179,8 @@ Pulse/
 │   ├── ReadingHistory/         # Reading history tracking (SwiftData)
 │   ├── Search/                 # Search feature
 │   ├── Settings/               # User preferences (includes account/logout)
+│   ├── Notifications/          # Push notification permission and registration
+│   │   └── API/                # NotificationService protocol + Live/Mock implementations
 │   ├── AppLock/                # Biometric/passcode app lock (Keychain-backed)
 │   ├── Onboarding/             # First-launch onboarding flow
 │   ├── Paywall/                # StoreKit paywall UI
@@ -530,6 +532,10 @@ if let cachingService = newsService as? CachingNewsService {
 | `PremiumGateView.swift` | Reusable premium upsell component |
 | `PremiumFeature.swift` | Enum defining gated features |
 | `PaywallView.swift` | Native StoreKit subscription UI |
+| **Notifications** | |
+| `NotificationService.swift` | Protocol + `NotificationAuthorizationStatus` enum for push notification management |
+| `LiveNotificationService.swift` | `UNUserNotificationCenter` wrapper with `static let shared` for AppDelegate access; stores device token in UserDefaults |
+| `MockNotificationService.swift` | Configurable mock with call counters for test assertions |
 | **Text-to-Speech** | |
 | `TextToSpeechService.swift` | Protocol + `TTSPlaybackState` enum + `TTSSpeedPreset` enum (1x/1.25x/1.5x/2x) |
 | `LiveTextToSpeechService.swift` | `AVSpeechSynthesizer` wrapper with delegate-based progress tracking and language-aware voices |
