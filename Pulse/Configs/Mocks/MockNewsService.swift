@@ -459,7 +459,7 @@ final class MockRemoteConfigService: RemoteConfigService {
 }
 
 extension ServiceLocator {
-    static var preview: ServiceLocator {
+    @MainActor static var preview: ServiceLocator {
         let locator = ServiceLocator()
         locator.register(NetworkMonitorService.self, instance: MockNetworkMonitorService())
         locator.register(NewsService.self, instance: MockNewsService())
@@ -486,7 +486,7 @@ extension ServiceLocator {
         return locator
     }
 
-    static var previewUnauthenticated: ServiceLocator {
+    @MainActor static var previewUnauthenticated: ServiceLocator {
         let locator = ServiceLocator()
         locator.register(NetworkMonitorService.self, instance: MockNetworkMonitorService())
         locator.register(NewsService.self, instance: MockNewsService())

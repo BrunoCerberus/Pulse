@@ -14,7 +14,7 @@ final class LiveNotificationService: NotificationService {
         static let deviceToken = "pulse.deviceToken"
     }
 
-    init(defaults: UserDefaults = .standard) {
+    private init(defaults: UserDefaults = .standard) {
         self.defaults = defaults
     }
 

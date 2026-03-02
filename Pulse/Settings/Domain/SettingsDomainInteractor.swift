@@ -149,7 +149,7 @@ final class SettingsDomainInteractor: CombineInteractor {
                 } catch {
                     updateState { state in
                         state.preferences.notificationsEnabled = false
-                        state.showNotificationsDeniedAlert = true
+                        state.error = error.localizedDescription
                     }
                 }
             case .authorized, .provisional:

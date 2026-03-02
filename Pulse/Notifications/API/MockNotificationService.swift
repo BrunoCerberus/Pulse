@@ -1,7 +1,8 @@
 import Foundation
 
 /// Mock implementation of `NotificationService` for testing and Xcode Previews.
-final class MockNotificationService: NotificationService, @unchecked Sendable {
+@MainActor
+final class MockNotificationService: NotificationService {
     var authorizationStatusResult: NotificationAuthorizationStatus = .notDetermined
     var requestAuthorizationResult: Result<Bool, Error> = .success(true)
     var requestAuthorizationCallCount = 0
