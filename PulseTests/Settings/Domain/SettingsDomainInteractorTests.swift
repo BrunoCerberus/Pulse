@@ -157,7 +157,27 @@ struct SettingsInteractorNotifyTests {
         try await Task.sleep(nanoseconds: 300_000_000)
 
         #expect(mockNotificationService.requestAuthorizationCallCount == 1)
+        #expect(mockNotificationService.registerCallCount == 0)
         #expect(sut.currentState.preferences.notificationsEnabled)
+        #expect(sut.currentState.error == nil)
+    }
+
+    @Test("Toggle notifications stays disabled when user denies permission request")
+    func toggleNotificationsNotDeterminedDeniedByUser() async throws {
+        let (sut, mock, _, mockNotificationService) = createSUT(notificationStatus: .notDetermined)
+        mockNotificationService.requestAuthorizationResult = .success(false)
+        mock.preferences = UserPreferences(
+            followedTopics: [], mutedSources: [], mutedKeywords: [],
+            preferredLanguage: "en", notificationsEnabled: false, breakingNewsNotifications: true
+        )
+        sut.dispatch(action: .loadPreferences)
+        try await Task.sleep(nanoseconds: 300_000_000)
+
+        sut.dispatch(action: .toggleNotifications(true))
+        try await Task.sleep(nanoseconds: 300_000_000)
+
+        #expect(mockNotificationService.requestAuthorizationCallCount == 1)
+        #expect(!sut.currentState.preferences.notificationsEnabled)
         #expect(sut.currentState.error == nil)
     }
 
@@ -190,6 +210,21 @@ struct SettingsInteractorNotifyTests {
             preferredLanguage: "en", notificationsEnabled: true, breakingNewsNotifications: true
         )
         sut.dispatch(action: .loadPreferences)
+        // 400ms allows for both fetchPreferences and the chained syncNotificationStatus to complete
+        try await Task.sleep(nanoseconds: 400_000_000)
+
+        #expect(!sut.currentState.preferences.notificationsEnabled)
+    }
+
+    @Test("Load preferences syncs notifications with notDetermined OS status")
+    func loadPreferencesSyncsNotificationsWithNotDeterminedStatus() async throws {
+        let (sut, mock, _, _) = createSUT(notificationStatus: .notDetermined)
+        mock.preferences = UserPreferences(
+            followedTopics: [], mutedSources: [], mutedKeywords: [],
+            preferredLanguage: "en", notificationsEnabled: true, breakingNewsNotifications: true
+        )
+        sut.dispatch(action: .loadPreferences)
+        // 400ms allows for both fetchPreferences and the chained syncNotificationStatus to complete
         try await Task.sleep(nanoseconds: 400_000_000)
 
         #expect(!sut.currentState.preferences.notificationsEnabled)
