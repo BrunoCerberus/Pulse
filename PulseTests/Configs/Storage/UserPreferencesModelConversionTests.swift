@@ -10,7 +10,7 @@ struct UserPreferencesModelConversionTests {
     func toPreferencesReconstructsFollowedTopics() {
         let preferences = UserPreferences(
             followedTopics: [.technology, .health],
-            followedSources: [],
+
             mutedSources: [],
             mutedKeywords: [],
             preferredLanguage: "en",
@@ -24,29 +24,11 @@ struct UserPreferencesModelConversionTests {
         #expect(reconstructed.followedTopics == [.technology, .health])
     }
 
-    @Test("toPreferences reconstructs followed sources")
-    func toPreferencesReconstructsFollowedSources() {
-        let preferences = UserPreferences(
-            followedTopics: [],
-            followedSources: ["Source1", "Source2"],
-            mutedSources: [],
-            mutedKeywords: [],
-            preferredLanguage: "en",
-            notificationsEnabled: true,
-            breakingNewsNotifications: true
-        )
-        let sut = UserPreferencesModel(from: preferences)
-
-        let reconstructed = sut.toPreferences()
-
-        #expect(reconstructed.followedSources == ["Source1", "Source2"])
-    }
-
     @Test("toPreferences reconstructs muted sources")
     func toPreferencesReconstructsMutedSources() {
         let preferences = UserPreferences(
             followedTopics: [],
-            followedSources: [],
+
             mutedSources: ["Muted1"],
             mutedKeywords: [],
             preferredLanguage: "en",
@@ -64,7 +46,7 @@ struct UserPreferencesModelConversionTests {
     func toPreferencesReconstructsMutedKeywords() {
         let preferences = UserPreferences(
             followedTopics: [],
-            followedSources: [],
+
             mutedSources: [],
             mutedKeywords: ["keyword1", "keyword2"],
             preferredLanguage: "en",
@@ -82,7 +64,7 @@ struct UserPreferencesModelConversionTests {
     func toPreferencesReconstructsPreferredLanguage() {
         let preferences = UserPreferences(
             followedTopics: [],
-            followedSources: [],
+
             mutedSources: [],
             mutedKeywords: [],
             preferredLanguage: "fr",
@@ -100,7 +82,7 @@ struct UserPreferencesModelConversionTests {
     func toPreferencesReconstructsNotificationsEnabled() {
         let preferences = UserPreferences(
             followedTopics: [],
-            followedSources: [],
+
             mutedSources: [],
             mutedKeywords: [],
             preferredLanguage: "en",
@@ -118,7 +100,7 @@ struct UserPreferencesModelConversionTests {
     func toPreferencesReconstructsBreakingNewsNotifications() {
         let preferences = UserPreferences(
             followedTopics: [],
-            followedSources: [],
+
             mutedSources: [],
             mutedKeywords: [],
             preferredLanguage: "en",
@@ -138,7 +120,6 @@ struct UserPreferencesModelConversionTests {
     func fullRoundtripPreservesAllData() {
         let original = UserPreferences(
             followedTopics: [.technology, .science, .sports],
-            followedSources: ["BBC", "CNN"],
             mutedSources: ["Spam"],
             mutedKeywords: ["clickbait", "sponsored"],
             preferredLanguage: "es",
@@ -150,7 +131,6 @@ struct UserPreferencesModelConversionTests {
         let reconstructed = model.toPreferences()
 
         #expect(reconstructed.followedTopics == original.followedTopics)
-        #expect(reconstructed.followedSources == original.followedSources)
         #expect(reconstructed.mutedSources == original.mutedSources)
         #expect(reconstructed.mutedKeywords == original.mutedKeywords)
         #expect(reconstructed.preferredLanguage == original.preferredLanguage)
@@ -164,7 +144,7 @@ struct UserPreferencesModelConversionTests {
     func toPreferencesFiltersInvalidTopicStrings() {
         let preferences = UserPreferences(
             followedTopics: [.technology],
-            followedSources: [],
+
             mutedSources: [],
             mutedKeywords: [],
             preferredLanguage: "en",

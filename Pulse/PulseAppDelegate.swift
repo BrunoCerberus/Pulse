@@ -97,11 +97,11 @@ final class PulseAppDelegate: UIResponder, UIApplicationDelegate {
         UISceneConfiguration(name: "Default Configuration", sessionRole: connectingSceneSession.role)
     }
 
-    private func configureNotifications(_ application: UIApplication) {
+    private func configureNotifications(_: UIApplication) {
+        // Set delegate for foreground presentation and deeplink routing.
+        // Actual permission request is deferred until the user explicitly enables
+        // notifications in Settings (handled by NotificationService).
         UNUserNotificationCenter.current().delegate = self
-        let authOptions: UNAuthorizationOptions = [.alert, .badge, .sound]
-        UNUserNotificationCenter.current().requestAuthorization(options: authOptions) { _, _ in }
-        application.registerForRemoteNotifications()
     }
 }
 
@@ -113,7 +113,13 @@ extension PulseAppDelegate {
         willPresent _: UNNotification,
         withCompletionHandler completionHandler: @escaping (UNNotificationPresentationOptions) -> Void
     ) {
-        completionHandler([.banner, .sound, .badge])
+        // Respect the in-app notification preference (mirrored to UserDefaults by LiveSettingsService)
+        let notificationsEnabled = UserDefaults.standard.object(forKey: "pulse.notificationsEnabled") as? Bool ?? true
+        if notificationsEnabled {
+            completionHandler([.banner, .sound, .badge])
+        } else {
+            completionHandler([])
+        }
     }
 }
 
@@ -139,10 +145,10 @@ extension PulseAppDelegate: UNUserNotificationCenterDelegate {
         _: UIApplication,
         didRegisterForRemoteNotificationsWithDeviceToken deviceToken: Data
     ) {
-        #if DEBUG
-            let token = deviceToken.map { String(format: "%02.2hhx", $0) }.joined()
-            Logger.shared.network("Device Token: \(token)", level: .debug)
-        #endif
+        // Store token for future backend integration (FCM or custom push server).
+        MainActor.assumeIsolated {
+            LiveNotificationService.shared.storeDeviceToken(deviceToken)
+        }
     }
 
     func application(

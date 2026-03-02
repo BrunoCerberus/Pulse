@@ -9,7 +9,6 @@ struct UserPreferencesTests {
         let prefs = UserPreferences.default
 
         #expect(prefs.followedTopics.isEmpty)
-        #expect(prefs.followedSources.isEmpty)
         #expect(prefs.mutedSources.isEmpty)
         #expect(prefs.mutedKeywords.isEmpty)
         #expect(prefs.notificationsEnabled == true)
@@ -21,7 +20,6 @@ struct UserPreferencesTests {
     func customPreferences() {
         let prefs = UserPreferences(
             followedTopics: [.technology, .business],
-            followedSources: ["TechCrunch"],
             mutedSources: ["Source A"],
             mutedKeywords: ["spam"],
             preferredLanguage: "en",
@@ -30,7 +28,6 @@ struct UserPreferencesTests {
         )
 
         #expect(prefs.followedTopics.count == 2)
-        #expect(prefs.followedSources.count == 1)
         #expect(prefs.mutedSources.count == 1)
         #expect(prefs.mutedKeywords.count == 1)
         #expect(prefs.preferredLanguage == "en")
@@ -71,16 +68,6 @@ struct UserPreferencesTests {
     func differentMutedSources() {
         var prefs1 = UserPreferences.default
         prefs1.mutedSources = ["Source A"]
-
-        let prefs2 = UserPreferences.default
-
-        #expect(prefs1 != prefs2)
-    }
-
-    @Test("Different followedSources are not equal")
-    func differentFollowedSources() {
-        var prefs1 = UserPreferences.default
-        prefs1.followedSources = ["TechCrunch"]
 
         let prefs2 = UserPreferences.default
 

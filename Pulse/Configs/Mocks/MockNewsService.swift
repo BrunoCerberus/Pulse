@@ -475,6 +475,7 @@ extension ServiceLocator {
         locator.register(AppLockService.self, instance: MockAppLockService())
         locator.register(AnalyticsService.self, instance: MockAnalyticsService())
         locator.register(TextToSpeechService.self, instance: MockTextToSpeechService())
+        locator.register(NotificationService.self, instance: MockNotificationService())
         locator.register(OnboardingService.self, instance: MockOnboardingService(hasCompletedOnboarding: true))
 
         // Auth service with mock signed-in user
@@ -502,6 +503,7 @@ extension ServiceLocator {
         locator.register(AppLockService.self, instance: MockAppLockService())
         locator.register(AnalyticsService.self, instance: MockAnalyticsService())
         locator.register(TextToSpeechService.self, instance: MockTextToSpeechService())
+        locator.register(NotificationService.self, instance: MockNotificationService())
         locator.register(OnboardingService.self, instance: MockOnboardingService(hasCompletedOnboarding: true))
         return locator
     }

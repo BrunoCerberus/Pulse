@@ -18,6 +18,7 @@ struct SettingsViewStateTests {
         #expect(!state.showSignOutConfirmation)
         #expect(state.currentUser == nil)
         #expect(state.errorMessage == nil)
+        #expect(!state.showNotificationsDeniedAlert)
         #expect(state.newMutedSource == "")
         #expect(state.newMutedKeyword == "")
     }
