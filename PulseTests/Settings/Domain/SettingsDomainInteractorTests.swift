@@ -122,6 +122,78 @@ struct SettingsInteractorNotifyTests {
         try await Task.sleep(nanoseconds: 300_000_000)
         #expect(!sut.currentState.preferences.breakingNewsNotifications)
     }
+
+    @Test("Toggle notifications shows denied alert when OS permission is denied")
+    func toggleNotificationsDeniedShowsAlert() async throws {
+        let (sut, mock, _, mockNotificationService) = createSUT(notificationStatus: .denied)
+        mock.preferences = UserPreferences(
+            followedTopics: [], mutedSources: [], mutedKeywords: [],
+            preferredLanguage: "en", notificationsEnabled: false, breakingNewsNotifications: true
+        )
+        sut.dispatch(action: .loadPreferences)
+        try await Task.sleep(nanoseconds: 300_000_000)
+
+        sut.dispatch(action: .toggleNotifications(true))
+        try await Task.sleep(nanoseconds: 300_000_000)
+
+        #expect(!sut.currentState.preferences.notificationsEnabled)
+        #expect(sut.currentState.showNotificationsDeniedAlert)
+        #expect(mockNotificationService.requestAuthorizationCallCount == 0)
+        #expect(mockNotificationService.registerCallCount == 0)
+    }
+
+    @Test("Toggle notifications requests permission when status is not determined")
+    func toggleNotificationsNotDeterminedRequestsPermission() async throws {
+        let (sut, mock, _, mockNotificationService) = createSUT(notificationStatus: .notDetermined)
+        mockNotificationService.requestAuthorizationResult = .success(true)
+        mock.preferences = UserPreferences(
+            followedTopics: [], mutedSources: [], mutedKeywords: [],
+            preferredLanguage: "en", notificationsEnabled: false, breakingNewsNotifications: true
+        )
+        sut.dispatch(action: .loadPreferences)
+        try await Task.sleep(nanoseconds: 300_000_000)
+
+        sut.dispatch(action: .toggleNotifications(true))
+        try await Task.sleep(nanoseconds: 300_000_000)
+
+        #expect(mockNotificationService.requestAuthorizationCallCount == 1)
+        #expect(sut.currentState.preferences.notificationsEnabled)
+        #expect(sut.currentState.error == nil)
+    }
+
+    @Test("Toggle notifications surfaces error when permission request fails")
+    func toggleNotificationsRequestFailureSetsError() async throws {
+        let (sut, mock, _, mockNotificationService) = createSUT(notificationStatus: .notDetermined)
+        mockNotificationService.requestAuthorizationResult = .failure(
+            NSError(domain: "SettingsTests", code: 42, userInfo: [NSLocalizedDescriptionKey: "request failed"])
+        )
+        mock.preferences = UserPreferences(
+            followedTopics: [], mutedSources: [], mutedKeywords: [],
+            preferredLanguage: "en", notificationsEnabled: false, breakingNewsNotifications: true
+        )
+        sut.dispatch(action: .loadPreferences)
+        try await Task.sleep(nanoseconds: 300_000_000)
+
+        sut.dispatch(action: .toggleNotifications(true))
+        try await Task.sleep(nanoseconds: 300_000_000)
+
+        #expect(mockNotificationService.requestAuthorizationCallCount == 1)
+        #expect(!sut.currentState.preferences.notificationsEnabled)
+        #expect(sut.currentState.error == "request failed")
+    }
+
+    @Test("Load preferences syncs notifications with denied OS status")
+    func loadPreferencesSyncsNotificationsWithDeniedStatus() async throws {
+        let (sut, mock, _, _) = createSUT(notificationStatus: .denied)
+        mock.preferences = UserPreferences(
+            followedTopics: [], mutedSources: [], mutedKeywords: [],
+            preferredLanguage: "en", notificationsEnabled: true, breakingNewsNotifications: true
+        )
+        sut.dispatch(action: .loadPreferences)
+        try await Task.sleep(nanoseconds: 400_000_000)
+
+        #expect(!sut.currentState.preferences.notificationsEnabled)
+    }
 }
 
 // MARK: - Language Tests
@@ -416,6 +488,41 @@ struct SettingsInteractorUIStateTests {
         try await Task.sleep(nanoseconds: 200_000_000)
 
         #expect(sut.currentState.preferences.mutedKeywords.count == initialCount)
+    }
+
+    @Test("Dismiss error clears error state")
+    func dismissErrorClearsErrorState() async throws {
+        let (sut, mock, _, mockNotificationService) = createSUT(notificationStatus: .notDetermined)
+        mockNotificationService.requestAuthorizationResult = .failure(
+            NSError(domain: "SettingsTests", code: 43, userInfo: [NSLocalizedDescriptionKey: "permission error"])
+        )
+        mock.preferences = .default
+        sut.dispatch(action: .loadPreferences)
+        try await Task.sleep(nanoseconds: 300_000_000)
+        sut.dispatch(action: .toggleNotifications(true))
+        try await Task.sleep(nanoseconds: 300_000_000)
+        #expect(sut.currentState.error == "permission error")
+
+        sut.dispatch(action: .dismissError)
+        try await Task.sleep(nanoseconds: 100_000_000)
+
+        #expect(sut.currentState.error == nil)
+    }
+
+    @Test("Dismiss denied alert hides denied alert state")
+    func dismissDeniedAlertHidesDeniedAlertState() async throws {
+        let (sut, mock, _, _) = createSUT(notificationStatus: .denied)
+        mock.preferences = .default
+        sut.dispatch(action: .loadPreferences)
+        try await Task.sleep(nanoseconds: 300_000_000)
+        sut.dispatch(action: .toggleNotifications(true))
+        try await Task.sleep(nanoseconds: 300_000_000)
+        #expect(sut.currentState.showNotificationsDeniedAlert)
+
+        sut.dispatch(action: .dismissNotificationsDeniedAlert)
+        try await Task.sleep(nanoseconds: 100_000_000)
+
+        #expect(!sut.currentState.showNotificationsDeniedAlert)
     }
 }
 
