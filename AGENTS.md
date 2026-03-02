@@ -56,6 +56,8 @@ Pulse/
 │   │   └── Router/             # ReadingHistoryNavigationRouter
 │   ├── Search/                 # Search feature
 │   ├── Settings/               # User preferences (includes account/logout)
+│   ├── Notifications/          # Push notification permission and registration
+│   │   └── API/                # NotificationService protocol + Live/Mock implementations
 │   ├── AppLock/                # Biometric/passcode app lock (Keychain-backed)
 │   ├── Onboarding/             # First-launch onboarding flow
 │   ├── Paywall/                # StoreKit paywall UI
@@ -289,6 +291,10 @@ The app uses a tiered cache with offline resilience:
 | `AnalyticsEvent` | Type-safe enum with 21 events (screen views, article actions, TTS, purchases, auth, onboarding, etc.) |
 | `LiveAnalyticsService` | Firebase Analytics + Crashlytics (events + breadcrumbs, disabled in DEBUG) |
 | `MockAnalyticsService` | Records all events/errors in arrays for test assertions |
+| **Notifications** | |
+| `NotificationService` | Protocol + `NotificationAuthorizationStatus` enum for push notification permission and registration |
+| `LiveNotificationService` | `UNUserNotificationCenter` wrapper with `static let shared`; stores device token in UserDefaults (`pulse.deviceToken`) |
+| `MockNotificationService` | Configurable mock with call counters (`requestAuthorizationCallCount`, `registerCallCount`, etc.) |
 | **Text-to-Speech** | |
 | `TextToSpeechService` | Protocol with `speak(text:language:rate:)`, `pause()`, `resume()`, `stop()` + Combine publishers for playback state and progress |
 | `LiveTextToSpeechService` | `AVSpeechSynthesizer` wrapper with delegate-based progress, `.playback`/`.spokenAudio` audio session, language mapping (en→en-US, pt→pt-BR, es→es-ES) |
