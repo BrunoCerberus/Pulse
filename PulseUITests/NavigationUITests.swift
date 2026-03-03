@@ -18,20 +18,24 @@ final class NavigationUITests: BaseUITestCase {
         }
 
         // --- Navigate to Each Tab and Verify (except Search - tested in PulseSearchUITests) ---
+        // Use helper methods for safe tab navigation — iOS 26+ Liquid Glass tab bar
+        // exposes symbol sub-elements that cause XCTest crashes when tapped directly
+        // without an isHittable check.
+
         // Home
-        tabBar.buttons["Home"].tap()
+        navigateToTab("Home")
         XCTAssertTrue(app.navigationBars["News"].waitForExistence(timeout: Self.defaultTimeout), "Home tab should display News navigation bar")
 
         // Feed (Daily Digest)
-        tabBar.buttons["Feed"].tap()
+        navigateToFeedTab()
         XCTAssertTrue(app.navigationBars["Daily Digest"].waitForExistence(timeout: Self.defaultTimeout), "Feed tab should display Daily Digest navigation bar")
 
         // Bookmarks
-        tabBar.buttons["Bookmarks"].tap()
+        navigateToBookmarksTab()
         XCTAssertTrue(app.navigationBars["Bookmarks"].waitForExistence(timeout: Self.defaultTimeout), "Bookmarks tab should display Bookmarks navigation bar")
 
         // Return to Home for Settings test
-        tabBar.buttons["Home"].tap()
+        navigateToTab("Home")
         XCTAssertTrue(app.navigationBars["News"].waitForExistence(timeout: Self.defaultTimeout), "Should return to Home tab")
 
         // --- Settings Navigation ---
