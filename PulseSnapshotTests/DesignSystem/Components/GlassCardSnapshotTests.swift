@@ -71,14 +71,17 @@ final class GlassCardSnapshotTests: XCTestCase {
     // MARK: - GlassCardButton Tests
 
     func testGlassCardButton() {
-        let view = GlassCardButton(action: {}) {
-            HStack {
-                Image(systemName: "star.fill")
-                Text("Tap Me")
-                    .font(Typography.labelLarge)
+        let view = GlassCardButton(
+            action: {},
+            content: {
+                HStack {
+                    Image(systemName: "star.fill")
+                    Text("Tap Me")
+                        .font(Typography.labelLarge)
+                }
+                .frame(maxWidth: .infinity)
             }
-            .frame(maxWidth: .infinity)
-        }
+        )
         .frame(width: 375)
         .padding()
         .background(LinearGradient.meshFallback)

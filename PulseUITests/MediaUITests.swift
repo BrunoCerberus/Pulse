@@ -254,7 +254,10 @@ final class MediaUITests: BaseUITestCase {
 
         // Switch back to Media
         navigateToMediaTab()
-        XCTAssertTrue(app.navigationBars["Media"].waitForExistence(timeout: Self.defaultTimeout), "Media tab should be visible")
+        XCTAssertTrue(
+            app.navigationBars["Media"].waitForExistence(timeout: Self.defaultTimeout),
+            "Media tab should be visible"
+        )
 
         // Switch to Bookmarks
         navigateToTab("Bookmarks")

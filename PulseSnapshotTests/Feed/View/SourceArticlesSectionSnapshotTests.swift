@@ -121,7 +121,9 @@ final class SourceArticlesSectionSnapshotTests: XCTestCase {
         let longTitleArticles = [
             FeedSourceArticle(from: Article(
                 id: "long-1",
-                title: "This Is An Extremely Long Article Title That Should Test How The UI Handles Text Truncation And Line Limits In The Source Article Row",
+                title: "This Is An Extremely Long Article Title That Should Test "
+                    + "How The UI Handles Text Truncation And Line Limits "
+                    + "In The Source Article Row",
                 description: "Long description here",
                 content: "Full content...",
                 author: "John Appleseed",
@@ -165,18 +167,18 @@ final class SourceArticlesSectionSnapshotTests: XCTestCase {
 
     func testSourceArticlesSectionManyArticles() {
         var manyArticles: [FeedSourceArticle] = []
-        for i in 0 ..< 10 {
+        for index in 0 ..< 10 {
             manyArticles.append(FeedSourceArticle(from: Article(
-                id: "many-\(i)",
-                title: "Article \(i + 1): Sample News Headline",
-                description: "Description for article \(i + 1)",
+                id: "many-\(index)",
+                title: "Article \(index + 1): Sample News Headline",
+                description: "Description for article \(index + 1)",
                 content: "Full content...",
-                author: "Author \(i)",
-                source: ArticleSource(id: "source-\(i)", name: "Source \(i)"),
-                url: "https://example.com/\(i)",
+                author: "Author \(index)",
+                source: ArticleSource(id: "source-\(index)", name: "Source \(index)"),
+                url: "https://example.com/\(index)",
                 imageURL: nil,
-                publishedAt: Date(timeIntervalSince1970: 1_672_531_200 + Double(i * 3600)),
-                category: NewsCategory.allCases[i % NewsCategory.allCases.count]
+                publishedAt: Date(timeIntervalSince1970: 1_672_531_200 + Double(index * 3600)),
+                category: NewsCategory.allCases[index % NewsCategory.allCases.count]
             )))
         }
 

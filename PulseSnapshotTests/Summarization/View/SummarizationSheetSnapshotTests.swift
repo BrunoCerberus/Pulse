@@ -1,3 +1,4 @@
+// swiftlint:disable file_length
 import EntropyCore
 @testable import Pulse
 import SnapshotTesting
@@ -6,10 +7,6 @@ import XCTest
 
 @MainActor
 final class SummarizationSheetSnapshotTests: XCTestCase {
-    override func setUp() {
-        super.setUp()
-    }
-
     // MARK: - Idle State
 
     func testSummarizationSheetIdleState() {
@@ -243,7 +240,8 @@ private struct SummarizationLoadingPreview: View {
 }
 
 private struct SummarizationGeneratingPreview: View {
-    private let generatedText = "This article discusses the latest updates to SwiftUI, including new animation APIs and improved performance."
+    private let generatedText = "This article discusses the latest updates to SwiftUI, "
+        + "including new animation APIs and improved performance."
 
     var body: some View {
         NavigationStack {
@@ -402,7 +400,11 @@ private struct SummarizationCompletedPreview: View {
                     .foregroundStyle(.primary)
                     .padding(.top, Spacing.sm)
 
-                ForEach(["New animation system with spring physics", "Improved performance for complex views", "Better accessibility support"], id: \.self) { item in
+                ForEach([
+                    "New animation system with spring physics",
+                    "Improved performance for complex views",
+                    "Better accessibility support",
+                ], id: \.self) { item in
                     HStack(alignment: .top, spacing: Spacing.sm) {
                         Circle()
                             .fill(Color.Accent.primary)

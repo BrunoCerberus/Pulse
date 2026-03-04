@@ -9,10 +9,6 @@ final class LiveAnalyticsService: AnalyticsService {
         Crashlytics.crashlytics().log("Event: \(event.name)")
     }
 
-    func setUserProperty(_ value: String?, forName name: String) {
-        Analytics.setUserProperty(value, forName: name)
-    }
-
     func setUserID(_ userID: String?) {
         Analytics.setUserID(userID)
         Crashlytics.crashlytics().setUserID(userID ?? "")
@@ -24,9 +20,5 @@ final class LiveAnalyticsService: AnalyticsService {
         enrichedInfo["domain"] = nsError.domain
         enrichedInfo["code"] = nsError.code
         Crashlytics.crashlytics().record(error: error, userInfo: enrichedInfo)
-    }
-
-    func log(_ message: String) {
-        Crashlytics.crashlytics().log(message)
     }
 }

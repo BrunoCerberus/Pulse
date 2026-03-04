@@ -200,7 +200,10 @@ struct ContentSectionCard: View {
         .buttonStyle(.plain)
         .pressEffect(scale: 0.98)
         .accessibilityElement(children: .combine)
-        .accessibilityLabel(String(format: Constants.articleAccessibilityLabel, article.title, article.source, article.formattedDate))
+        .accessibilityLabel(String(
+            format: Constants.articleAccessibilityLabel,
+            article.title, article.source, article.formattedDate
+        ))
         .accessibilityHint(Constants.readArticleHint)
     }
 

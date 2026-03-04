@@ -29,10 +29,22 @@ struct GlassTabItem: Identifiable {
 
     static var items: [GlassTabItem] {
         [
-            GlassTabItem(id: .home, title: Constants.tabHome, icon: "newspaper", selectedIcon: "newspaper.fill"),
-            GlassTabItem(id: .feed, title: Constants.tabFeed, icon: "text.document", selectedIcon: "text.document.fill"),
-            GlassTabItem(id: .bookmarks, title: Constants.tabBookmarks, icon: "bookmark", selectedIcon: "bookmark.fill"),
-            GlassTabItem(id: .search, title: Constants.tabSearch, icon: "magnifyingglass", selectedIcon: "magnifyingglass"),
+            GlassTabItem(
+                id: .home, title: Constants.tabHome,
+                icon: "newspaper", selectedIcon: "newspaper.fill"
+            ),
+            GlassTabItem(
+                id: .feed, title: Constants.tabFeed,
+                icon: "text.document", selectedIcon: "text.document.fill"
+            ),
+            GlassTabItem(
+                id: .bookmarks, title: Constants.tabBookmarks,
+                icon: "bookmark", selectedIcon: "bookmark.fill"
+            ),
+            GlassTabItem(
+                id: .search, title: Constants.tabSearch,
+                icon: "magnifyingglass", selectedIcon: "magnifyingglass"
+            ),
         ]
     }
 }

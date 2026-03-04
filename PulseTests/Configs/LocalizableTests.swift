@@ -821,7 +821,7 @@ struct AccessibilityLocalizationTests {
             )
             #expect(
                 value?.contains("%d") == true,
-                "Expected '%d' placeholder in \(languageCode).lproj/Localizable.strings for accessibility.search_results_count"
+                "Expected '%d' placeholder in \(languageCode).lproj for accessibility.search_results_count"
             )
         }
     }

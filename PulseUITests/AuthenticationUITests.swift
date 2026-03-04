@@ -57,7 +57,11 @@ final class AuthenticationUITests: BaseUITestCase {
             XCTAssertTrue(termsText.exists, "Terms text should exist")
 
             XCTAssertLessThan(pulseTitle.frame.maxY, subtitle.frame.minY + 50, "Title should be above subtitle")
-            XCTAssertLessThan(signInWithGoogleButton.frame.maxY, termsText.frame.minY + 50, "Buttons should be above terms")
+            XCTAssertLessThan(
+                signInWithGoogleButton.frame.maxY,
+                termsText.frame.minY + 50,
+                "Buttons should be above terms"
+            )
 
             XCTAssertTrue(signInWithAppleButton.isEnabled, "Sign in with Apple button should be enabled")
             XCTAssertTrue(signInWithAppleButton.isHittable, "Sign in with Apple button should be hittable")

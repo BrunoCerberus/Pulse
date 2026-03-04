@@ -43,7 +43,8 @@ struct PulseNewsWidgetEntryView: View {
             // Content
             if let articles = entry.articles, !articles.isEmpty {
                 VStack(spacing: contentSpacing) {
-                    ForEach(Array(articles.prefix(articleLimit(for: entry.family)).enumerated()), id: \.offset) { _, article in
+                    let limited = Array(articles.prefix(articleLimit(for: entry.family)).enumerated())
+                    ForEach(limited, id: \.offset) { _, article in
                         Link(destination: deeplinkURL(for: article)) {
                             ArticleRowView(article: article, family: entry.family)
                         }

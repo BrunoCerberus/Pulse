@@ -7,12 +7,15 @@ import XCTest
 /// Snapshot tests verifying BentoDigestGrid layout at accessibility text sizes.
 /// Validates the VStack transition for stats and topics sections at accessibility sizes.
 @MainActor
+// swiftlint:disable:next type_name
 final class BentoDigestGridAccessibilitySnapshotTests: XCTestCase {
     private var snapshotDigest: DigestViewItem {
         DigestViewItem(
             from: DailyDigest(
                 id: "a11y-digest",
-                summary: "**Tech** Apple announces new M4 chips. **Business** Markets rally on strong earnings. **Health** New study on sleep quality.",
+                summary: "**Tech** Apple announces new M4 chips. "
+                    + "**Business** Markets rally on strong earnings. "
+                    + "**Health** New study on sleep quality.",
                 sourceArticles: Article.mockArticles,
                 generatedAt: Date(timeIntervalSince1970: 1_672_531_200)
             )

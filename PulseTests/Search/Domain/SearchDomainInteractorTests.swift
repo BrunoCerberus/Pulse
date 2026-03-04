@@ -7,6 +7,7 @@ import Testing
 
 @Suite("SearchDomainInteractor Tests")
 @MainActor
+// swiftlint:disable:next type_body_length
 struct SearchDomainInteractorTests {
     let mockSearchService: MockSearchService
     let mockStorageService: MockStorageService

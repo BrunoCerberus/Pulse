@@ -57,6 +57,7 @@ private enum AnimationConstants {
 
 // MARK: - SummarizationSheet
 
+// swiftlint:disable:next type_body_length
 struct SummarizationSheet: View {
     @StateObject var viewModel: SummarizationViewModel
     @Environment(\.accessibilityReduceMotion) private var reduceMotion

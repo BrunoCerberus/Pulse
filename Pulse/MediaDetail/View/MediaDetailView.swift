@@ -1,3 +1,4 @@
+// swiftlint:disable file_length
 import Combine
 import EntropyCore
 import SwiftUI
@@ -52,7 +53,7 @@ private enum Constants {
 ///
 /// - Videos are displayed using an embedded WKWebView (YouTube, etc.)
 /// - Podcasts are played using AVPlayer with custom controls
-struct MediaDetailView: View {
+struct MediaDetailView: View { // swiftlint:disable:this type_body_length
     @StateObject private var viewModel: MediaDetailViewModel
     @Environment(\.dismiss) private var dismiss
     @Environment(\.colorScheme) private var colorScheme

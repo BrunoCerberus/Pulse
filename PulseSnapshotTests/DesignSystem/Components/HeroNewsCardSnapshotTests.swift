@@ -50,7 +50,8 @@ final class HeroNewsCardSnapshotTests: XCTestCase {
         ArticleViewItem(
             from: Article(
                 id: "hero-3",
-                title: "Scientists Make Unprecedented Discovery in Deep Ocean That Could Change Our Understanding of Marine Ecosystems Forever",
+                title: "Scientists Make Unprecedented Discovery in Deep Ocean "
+                    + "That Could Change Our Understanding of Marine Ecosystems Forever",
                 description: "New species found at record depths",
                 source: ArticleSource(id: "nature", name: "Nature"),
                 url: "https://example.com",

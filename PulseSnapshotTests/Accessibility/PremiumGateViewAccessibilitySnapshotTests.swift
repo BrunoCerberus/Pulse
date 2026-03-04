@@ -7,6 +7,7 @@ import XCTest
 /// Snapshot tests verifying PremiumGateView layout at accessibility text sizes.
 /// Validates icon sizing and layout adaptation at accessibility Dynamic Type sizes.
 @MainActor
+// swiftlint:disable:next type_name
 final class PremiumGateViewAccessibilitySnapshotTests: XCTestCase {
     func testPremiumGateViewAccessibilitySize() {
         let view = PremiumGateView(

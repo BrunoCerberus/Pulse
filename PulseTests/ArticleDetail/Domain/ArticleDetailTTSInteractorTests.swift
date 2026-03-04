@@ -1,3 +1,4 @@
+// swiftlint:disable file_length
 import Combine
 import EntropyCore
 import Foundation
@@ -6,6 +7,7 @@ import Testing
 
 @Suite("ArticleDetailDomainInteractor TTS Tests")
 @MainActor
+// swiftlint:disable:next type_body_length
 struct ArticleDetailTTSInteractorTests {
     let mockStorageService: MockStorageService
     let mockTTSService: MockTextToSpeechService

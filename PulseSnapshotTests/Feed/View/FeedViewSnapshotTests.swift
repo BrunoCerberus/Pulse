@@ -106,7 +106,8 @@ final class FeedViewSnapshotTests: XCTestCase {
         let summary = """
         Today's reading focused on technology and business topics. You explored developments in AI and market trends.
 
-        The technology sector saw significant movement with new product launches and strategic partnerships being announced.
+        The technology sector saw significant movement with new product launches and strategic partnerships \
+        being announced.
 
         Business markets responded positively, with stock prices reflecting investor optimism about AI-driven products.
         """
@@ -141,7 +142,8 @@ final class FeedViewSnapshotTests: XCTestCase {
         // Single paragraph - shows only Key Insight + Stats/Topics
         let digest = DailyDigest(
             id: "test-single",
-            summary: "Today's reading focused on technology and business topics. You explored developments in AI and market trends.",
+            summary: "Today's reading focused on technology and business topics. "
+                + "You explored developments in AI and market trends.",
             sourceArticles: snapshotArticles,
             generatedAt: Date(timeIntervalSince1970: 1_672_531_200)
         )

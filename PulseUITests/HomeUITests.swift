@@ -18,8 +18,13 @@ final class HomeUITests: BaseUITestCase {
         XCTAssertTrue(editTopicsTitle.waitForExistence(timeout: Self.defaultTimeout), "Edit Topics sheet should open")
 
         // Verify topics are displayed
-        let technologyTopic = app.buttons.matching(NSPredicate(format: "label CONTAINS[c] 'Technology'")).firstMatch
-        XCTAssertTrue(technologyTopic.waitForExistence(timeout: Self.shortTimeout), "Technology topic should be visible")
+        let technologyTopic = app.buttons.matching(
+            NSPredicate(format: "label CONTAINS[c] 'Technology'")
+        ).firstMatch
+        XCTAssertTrue(
+            technologyTopic.waitForExistence(timeout: Self.shortTimeout),
+            "Technology topic should be visible"
+        )
 
         // Toggle a topic
         technologyTopic.tap()
@@ -30,7 +35,10 @@ final class HomeUITests: BaseUITestCase {
         doneButton.tap()
 
         // Verify sheet is dismissed and we're back on Home
-        XCTAssertTrue(app.navigationBars["News"].waitForExistence(timeout: Self.shortTimeout), "Should return to Home after dismissing sheet")
+        XCTAssertTrue(
+            app.navigationBars["News"].waitForExistence(timeout: Self.shortTimeout),
+            "Should return to Home after dismissing sheet"
+        )
     }
 
     // MARK: - Category Tabs Tests
@@ -144,14 +152,21 @@ final class HomeUITests: BaseUITestCase {
 
     // MARK: - Navigation and Content Tests
 
-    /// Tests navigation bar, content loading, interactions, and settings navigation
+    // Tests navigation bar, content loading, interactions, and settings navigation
+    // swiftlint:disable:next function_body_length cyclomatic_complexity
     func testHomeContentInteractionsAndSettingsFlow() {
         // Verify navigation title
-        XCTAssertTrue(app.navigationBars["News"].waitForExistence(timeout: Self.shortTimeout), "Navigation title 'News' should exist")
+        XCTAssertTrue(
+            app.navigationBars["News"].waitForExistence(timeout: Self.shortTimeout),
+            "Navigation title 'News' should exist"
+        )
 
         // Verify gear button
         let gearButton = app.navigationBars.buttons["gearshape"]
-        XCTAssertTrue(gearButton.waitForExistence(timeout: Self.shortTimeout), "Gear button should exist in navigation bar")
+        XCTAssertTrue(
+            gearButton.waitForExistence(timeout: Self.shortTimeout),
+            "Gear button should exist in navigation bar"
+        )
 
         // Verify content loads (use longer timeout for CI environments)
         // Note: In CI, mock data may not be available, so we test what we can
@@ -212,7 +227,10 @@ final class HomeUITests: BaseUITestCase {
 
                     // Navigate back
                     navigateBack()
-                    XCTAssertTrue(app.navigationBars["News"].waitForExistence(timeout: Self.shortTimeout), "Should return to Home")
+                    XCTAssertTrue(
+                        app.navigationBars["News"].waitForExistence(timeout: Self.shortTimeout),
+                        "Should return to Home"
+                    )
                 }
 
                 // --- Scroll Interactions ---
@@ -225,7 +243,10 @@ final class HomeUITests: BaseUITestCase {
 
                 // Vertical scroll
                 scrollView.swipeUp()
-                XCTAssertTrue(app.navigationBars["News"].waitForExistence(timeout: Self.shortTimeout), "App should remain responsive after scrolling")
+                XCTAssertTrue(
+                    app.navigationBars["News"].waitForExistence(timeout: Self.shortTimeout),
+                    "App should remain responsive after scrolling"
+                )
 
                 // Horizontal carousel scroll (if Breaking News exists)
                 if app.staticTexts["Breaking News"].exists {
