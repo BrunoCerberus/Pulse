@@ -24,7 +24,8 @@ final class AudioPlayerViewSnapshotTests: XCTestCase {
         Article(
             id: "snapshot-podcast-1",
             title: "The Future of AI in Software Development",
-            description: "A deep dive into how AI is transforming the way we write code and what it means for developers.",
+            description: "A deep dive into how AI is transforming the way we write code "
+                + "and what it means for developers.",
             content: nil,
             author: "Tech Talk Daily",
             source: ArticleSource(id: "tech", name: "Tech Talk Daily"),
@@ -42,7 +43,9 @@ final class AudioPlayerViewSnapshotTests: XCTestCase {
     private var longTitlePodcast: Article {
         Article(
             id: "snapshot-podcast-long",
-            title: "This Is An Extremely Long Podcast Title That Should Test How The UI Handles Text Truncation And Line Limits In The Audio Player View Component",
+            title: "This Is An Extremely Long Podcast Title That Should Test "
+                + "How The UI Handles Text Truncation And Line Limits "
+                + "In The Audio Player View Component",
             description: "A brief description that accompanies this podcast.",
             content: nil,
             author: "Long Form Podcast",

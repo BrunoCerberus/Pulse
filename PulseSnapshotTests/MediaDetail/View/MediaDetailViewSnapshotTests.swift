@@ -26,7 +26,8 @@ final class MediaDetailViewSnapshotTests: XCTestCase {
         Article(
             id: "snapshot-video-1",
             title: "SwiftUI 6.0: What's New for Developers",
-            description: "A comprehensive look at the new features in SwiftUI 6.0 including the new navigation APIs and enhanced animations.",
+            description: "A comprehensive look at the new features in SwiftUI 6.0 "
+                + "including the new navigation APIs and enhanced animations.",
             content: nil,
             author: "WWDC",
             source: ArticleSource(id: "apple", name: "Apple Developer"),
@@ -45,7 +46,8 @@ final class MediaDetailViewSnapshotTests: XCTestCase {
         Article(
             id: "snapshot-podcast-1",
             title: "The Daily: Tech News Roundup",
-            description: "Today's top technology stories and what they mean for you in this comprehensive podcast episode.",
+            description: "Today's top technology stories and what they mean "
+                + "for you in this comprehensive podcast episode.",
             content: nil,
             author: "Michael Barbaro",
             source: ArticleSource(id: "nyt", name: "The New York Times"),
@@ -63,8 +65,11 @@ final class MediaDetailViewSnapshotTests: XCTestCase {
     private var longTitleArticle: Article {
         Article(
             id: "snapshot-long",
-            title: "This Is An Extremely Long Video Title That Should Test How The UI Handles Text Truncation And Line Limits In The Media Detail View Component",
-            description: "A brief description that accompanies this video with the very long title to see how both elements render together.",
+            title: "This Is An Extremely Long Video Title That Should Test "
+                + "How The UI Handles Text Truncation And Line Limits "
+                + "In The Media Detail View Component",
+            description: "A brief description that accompanies this video "
+                + "with the very long title to see how both elements render together.",
             content: nil,
             author: "Long Form Creator",
             source: ArticleSource(id: "vimeo", name: "Vimeo"),

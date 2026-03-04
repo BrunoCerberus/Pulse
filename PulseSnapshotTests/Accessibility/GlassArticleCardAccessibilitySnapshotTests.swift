@@ -7,6 +7,7 @@ import XCTest
 /// Snapshot tests verifying GlassArticleCard layout at accessibility text sizes.
 /// Validates the HStack-to-VStack transition from Phase 1 Dynamic Type adaptation.
 @MainActor
+// swiftlint:disable:next type_name
 final class GlassArticleCardAccessibilitySnapshotTests: XCTestCase {
     private var snapshotArticle: Article {
         Article(

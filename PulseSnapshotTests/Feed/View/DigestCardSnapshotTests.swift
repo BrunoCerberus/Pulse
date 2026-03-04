@@ -24,7 +24,8 @@ final class DigestCardSnapshotTests: XCTestCase {
         let digest = DigestViewItem(
             from: DailyDigest(
                 id: "1",
-                summary: "Today's reading focused on technology and business. You explored developments in AI, market trends, and startup news.",
+                summary: "Today's reading focused on technology and business. "
+                    + "You explored developments in AI, market trends, and startup news.",
                 sourceArticles: [],
                 generatedAt: Date(timeIntervalSince1970: 1_672_531_200)
             )
@@ -103,7 +104,8 @@ final class DigestCardSnapshotTests: XCTestCase {
         let digest = DigestViewItem(
             from: DailyDigest(
                 id: "4",
-                summary: "Today's reading focused on technology and business. You explored developments in AI, market trends, and startup news.",
+                summary: "Today's reading focused on technology and business. "
+                    + "You explored developments in AI, market trends, and startup news.",
                 sourceArticles: [],
                 generatedAt: Date(timeIntervalSince1970: 1_672_531_200)
             )
@@ -153,6 +155,7 @@ final class DigestCardSnapshotTests: XCTestCase {
 
     // MARK: - Article Count Variants
 
+    // swiftlint:disable:next function_body_length
     func testDigestCardWithArticleCount() {
         let articles = [
             Article(

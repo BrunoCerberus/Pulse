@@ -3,8 +3,9 @@ import XCTest
 final class NavigationUITests: BaseUITestCase {
     // MARK: - Combined Flow Test
 
-    /// Tests tab bar existence, tab navigation, settings flow, and article detail navigation
-    /// Note: Search tab navigation is tested separately in PulseSearchUITests
+    // Tests tab bar existence, tab navigation, settings flow, and article detail navigation
+    // Note: Search tab navigation is tested separately in PulseSearchUITests
+    // swiftlint:disable:next function_body_length
     func testNavigationFlow() {
         // --- Tab Bar Exists ---
         let tabBar = app.tabBars.firstMatch
@@ -14,32 +15,53 @@ final class NavigationUITests: BaseUITestCase {
         let expectedTabs = ["Home", "Feed", "Bookmarks", "Search"]
         for tabName in expectedTabs {
             let tab = tabBar.buttons[tabName]
-            XCTAssertTrue(tab.waitForExistence(timeout: Self.defaultTimeout), "Tab '\(tabName)' should exist in tab bar")
+            XCTAssertTrue(
+                tab.waitForExistence(timeout: Self.defaultTimeout),
+                "Tab '\(tabName)' should exist in tab bar"
+            )
         }
 
         // --- Navigate to Each Tab and Verify (except Search - tested in PulseSearchUITests) ---
         // Home
         tabBar.buttons["Home"].tap()
-        XCTAssertTrue(app.navigationBars["News"].waitForExistence(timeout: Self.defaultTimeout), "Home tab should display News navigation bar")
+        XCTAssertTrue(
+            app.navigationBars["News"].waitForExistence(timeout: Self.defaultTimeout),
+            "Home tab should display News navigation bar"
+        )
 
         // Feed (Daily Digest)
         tabBar.buttons["Feed"].tap()
-        XCTAssertTrue(app.navigationBars["Daily Digest"].waitForExistence(timeout: Self.defaultTimeout), "Feed tab should display Daily Digest navigation bar")
+        XCTAssertTrue(
+            app.navigationBars["Daily Digest"].waitForExistence(timeout: Self.defaultTimeout),
+            "Feed tab should display Daily Digest navigation bar"
+        )
 
         // Bookmarks
         tabBar.buttons["Bookmarks"].tap()
-        XCTAssertTrue(app.navigationBars["Bookmarks"].waitForExistence(timeout: Self.defaultTimeout), "Bookmarks tab should display Bookmarks navigation bar")
+        XCTAssertTrue(
+            app.navigationBars["Bookmarks"].waitForExistence(timeout: Self.defaultTimeout),
+            "Bookmarks tab should display Bookmarks navigation bar"
+        )
 
         // Return to Home for Settings test
         tabBar.buttons["Home"].tap()
-        XCTAssertTrue(app.navigationBars["News"].waitForExistence(timeout: Self.defaultTimeout), "Should return to Home tab")
+        XCTAssertTrue(
+            app.navigationBars["News"].waitForExistence(timeout: Self.defaultTimeout),
+            "Should return to Home tab"
+        )
 
         // --- Settings Navigation ---
         navigateToSettings()
-        XCTAssertTrue(app.navigationBars["Settings"].waitForExistence(timeout: Self.defaultTimeout), "Settings should be accessible from Home")
+        XCTAssertTrue(
+            app.navigationBars["Settings"].waitForExistence(timeout: Self.defaultTimeout),
+            "Settings should be accessible from Home"
+        )
 
         navigateBack()
-        XCTAssertTrue(app.navigationBars["News"].waitForExistence(timeout: Self.defaultTimeout), "Should return to Home after navigating back from Settings")
+        XCTAssertTrue(
+            app.navigationBars["News"].waitForExistence(timeout: Self.defaultTimeout),
+            "Should return to Home after navigating back from Settings"
+        )
 
         // --- Article Detail Navigation ---
         // Use longer timeout for CI environments where content loading can be slow
@@ -62,7 +84,10 @@ final class NavigationUITests: BaseUITestCase {
                     XCTAssertTrue(waitForArticleDetail(), "Should navigate to article detail")
 
                     navigateBack()
-                    XCTAssertTrue(app.navigationBars["News"].waitForExistence(timeout: Self.defaultTimeout), "Should return to Home after navigating back from article")
+                    XCTAssertTrue(
+                        app.navigationBars["News"].waitForExistence(timeout: Self.defaultTimeout),
+                        "Should return to Home after navigating back from article"
+                    )
                 }
             }
             // Note: Not failing if no articles - CI may have mock data issues

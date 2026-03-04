@@ -1,3 +1,4 @@
+// swiftlint:disable file_length
 import Combine
 import EntropyCore
 import Foundation
@@ -19,6 +20,7 @@ import UIKit
 /// ## Dependencies
 /// - `StorageService`: Manages bookmarks and reading history
 @MainActor
+// swiftlint:disable:next type_body_length
 final class ArticleDetailDomainInteractor: CombineInteractor {
     typealias DomainState = ArticleDetailDomainState
     typealias DomainAction = ArticleDetailDomainAction
@@ -64,6 +66,7 @@ final class ArticleDetailDomainInteractor: CombineInteractor {
         startContentProcessing()
     }
 
+    // swiftlint:disable:next cyclomatic_complexity
     func dispatch(action: ArticleDetailDomainAction) {
         switch action {
         case .onAppear:

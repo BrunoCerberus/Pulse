@@ -102,11 +102,17 @@ struct PremiumGateView: View {
             ZStack {
                 Circle()
                     .fill(feature.iconColor.opacity(0.15))
-                    .frame(width: dynamicTypeSize.isAccessibilitySize ? 80 : 120, height: dynamicTypeSize.isAccessibilitySize ? 80 : 120)
+                    .frame(
+                        width: dynamicTypeSize.isAccessibilitySize ? 80 : 120,
+                        height: dynamicTypeSize.isAccessibilitySize ? 80 : 120
+                    )
 
                 Circle()
                     .fill(feature.iconColor.gradient)
-                    .frame(width: dynamicTypeSize.isAccessibilitySize ? 64 : 100, height: dynamicTypeSize.isAccessibilitySize ? 64 : 100)
+                    .frame(
+                        width: dynamicTypeSize.isAccessibilitySize ? 64 : 100,
+                        height: dynamicTypeSize.isAccessibilitySize ? 64 : 100
+                    )
 
                 Image(systemName: feature.icon)
                     .font(.system(size: dynamicTypeSize.isAccessibilitySize ? IconSize.xl : IconSize.xxl))

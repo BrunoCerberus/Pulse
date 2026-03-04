@@ -7,6 +7,7 @@ import XCTest
 /// Snapshot tests verifying FeaturedMediaCard layout at accessibility text sizes.
 /// Validates the height and layout adaptation for accessibility Dynamic Type sizes.
 @MainActor
+// swiftlint:disable:next type_name
 final class FeaturedMediaCardAccessibilitySnapshotTests: XCTestCase {
     private var snapshotMediaItem: MediaViewItem {
         MediaViewItem(

@@ -61,7 +61,10 @@ struct HeroNewsCard: View {
         }
         .pressEffect()
         .accessibilityElement(children: .combine)
-        .accessibilityLabel(String(format: Constants.breakingNewsAccessibilityLabelFormat, item.title, item.sourceName, item.formattedDate))
+        .accessibilityLabel(String(
+            format: Constants.breakingNewsAccessibilityLabelFormat,
+            item.title, item.sourceName, item.formattedDate
+        ))
         .accessibilityHint(Constants.accessibilityHint)
         .onAppear {
             startPulseAnimation()
@@ -236,7 +239,10 @@ struct FeaturedArticleCard: View {
         }
         .pressEffect()
         .accessibilityElement(children: .combine)
-        .accessibilityLabel(String(format: Constants.accessibilityLabelFormat, item.title, item.sourceName, item.formattedDate))
+        .accessibilityLabel(String(
+            format: Constants.accessibilityLabelFormat,
+            item.title, item.sourceName, item.formattedDate
+        ))
         .accessibilityHint(Constants.accessibilityHint)
     }
 

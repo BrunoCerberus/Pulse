@@ -116,10 +116,8 @@ enum AnalyticsEvent {
 
 protocol AnalyticsService {
     func logEvent(_ event: AnalyticsEvent)
-    func setUserProperty(_ value: String?, forName name: String)
     func setUserID(_ userID: String?)
     func recordError(_ error: Error, userInfo: [String: Any]?)
-    func log(_ message: String)
 }
 
 extension AnalyticsService {

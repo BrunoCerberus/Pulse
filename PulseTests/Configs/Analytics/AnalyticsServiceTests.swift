@@ -145,38 +145,17 @@ struct MockAnalyticsServiceTests {
         #expect(mock.currentUserID == nil)
     }
 
-    @Test("Records user properties")
-    func recordsUserProperties() {
-        let mock = MockAnalyticsService()
-        mock.setUserProperty("premium", forName: "subscription_type")
-
-        #expect(mock.userProperties["subscription_type"] as? String == "premium")
-    }
-
-    @Test("Records log messages")
-    func recordsLogMessages() {
-        let mock = MockAnalyticsService()
-        mock.log("Test message")
-
-        #expect(mock.loggedMessages.count == 1)
-        #expect(mock.loggedMessages[0] == "Test message")
-    }
-
     @Test("Reset clears all state")
     func resetClearsState() {
         let mock = MockAnalyticsService()
         mock.logEvent(.articleBookmarked)
         mock.recordError(NSError(domain: "test", code: 1), userInfo: nil)
-        mock.log("message")
         mock.setUserID("user")
-        mock.setUserProperty("val", forName: "prop")
 
         mock.reset()
 
         #expect(mock.loggedEvents.isEmpty)
         #expect(mock.recordedErrors.isEmpty)
-        #expect(mock.loggedMessages.isEmpty)
         #expect(mock.currentUserID == nil)
-        #expect(mock.userProperties.isEmpty)
     }
 }
