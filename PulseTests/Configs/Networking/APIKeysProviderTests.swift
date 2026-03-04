@@ -3,20 +3,16 @@ import Foundation
 @testable import Pulse
 import Testing
 
-@Suite("APIKeysProvider Tests", .serialized)
+@Suite(.serialized)
 struct APIKeysProviderTests {
     // MARK: - Setup
 
     /// Creates a fresh mock remote config for testing
     private func createMockRemoteConfig(
-        guardianKey: String? = nil,
-        newsKey: String? = nil,
-        gnewsKey: String? = nil
+        guardianKey: String? = nil
     ) -> MockRemoteConfigService {
         let mock = MockRemoteConfigService()
         mock.guardianAPIKeyValue = guardianKey
-        mock.newsAPIKeyValue = newsKey
-        mock.gnewsAPIKeyValue = gnewsKey
         return mock
     }
 
@@ -24,22 +20,7 @@ struct APIKeysProviderTests {
 
     @Test("APIKeyType keychainKey returns correct values")
     func apiKeyTypeKeychainKeyReturnsCorrectValues() {
-        #expect(APIKeyType.newsAPI.keychainKey == "NewsAPIKey")
         #expect(APIKeyType.guardianAPI.keychainKey == "GuardianAPIKey")
-        #expect(APIKeyType.gnewsAPI.keychainKey == "GNewsAPIKey")
-    }
-
-    @Test("APIKeyType covers all expected cases")
-    func apiKeyTypeCoversAllCases() {
-        // Verify all API key types have unique keychain keys
-        let keys = [
-            APIKeyType.newsAPI.keychainKey,
-            APIKeyType.guardianAPI.keychainKey,
-            APIKeyType.gnewsAPI.keychainKey,
-        ]
-
-        let uniqueKeys = Set(keys)
-        #expect(uniqueKeys.count == keys.count)
     }
 
     // MARK: - Remote Config Priority Tests
@@ -52,26 +33,6 @@ struct APIKeysProviderTests {
         let key = APIKeysProvider.guardianAPIKey
 
         #expect(key == "remote-guardian-key")
-    }
-
-    @Test("News API key uses Remote Config when available")
-    func newsAPIKeyUsesRemoteConfig() {
-        let mock = createMockRemoteConfig(newsKey: "remote-news-key")
-        APIKeysProvider.configure(with: mock)
-
-        let key = APIKeysProvider.newsAPIKey
-
-        #expect(key == "remote-news-key")
-    }
-
-    @Test("GNews API key uses Remote Config when available")
-    func gnewsAPIKeyUsesRemoteConfig() {
-        let mock = createMockRemoteConfig(gnewsKey: "remote-gnews-key")
-        APIKeysProvider.configure(with: mock)
-
-        let key = APIKeysProvider.gnewsAPIKey
-
-        #expect(key == "remote-gnews-key")
     }
 
     // MARK: - Empty String Handling Tests
@@ -111,49 +72,6 @@ struct APIKeysProviderTests {
         _ = APIKeysProvider.guardianAPIKey
     }
 
-    @Test("News API key handles nil Remote Config")
-    func newsAPIKeyHandlesNilRemoteConfig() {
-        let mock = createMockRemoteConfig(newsKey: nil)
-        APIKeysProvider.configure(with: mock)
-
-        _ = APIKeysProvider.newsAPIKey
-    }
-
-    @Test("GNews API key handles nil Remote Config")
-    func gnewsAPIKeyHandlesNilRemoteConfig() {
-        let mock = createMockRemoteConfig(gnewsKey: nil)
-        APIKeysProvider.configure(with: mock)
-
-        _ = APIKeysProvider.gnewsAPIKey
-    }
-
-    // MARK: - getCurrentNewsAPIKey Tests
-
-    @Test("getCurrentNewsAPIKey returns computed value")
-    func getCurrentNewsAPIKeyReturnsComputedValue() {
-        let mock = createMockRemoteConfig(newsKey: "test-news-key")
-        APIKeysProvider.configure(with: mock)
-
-        let key = APIKeysProvider.getCurrentNewsAPIKey()
-
-        #expect(key == "test-news-key")
-    }
-
-    @Test("getCurrentNewsAPIKey reflects Remote Config changes")
-    func getCurrentNewsAPIKeyReflectsChanges() {
-        let mock = createMockRemoteConfig(newsKey: "initial-key")
-        APIKeysProvider.configure(with: mock)
-
-        let initialKey = APIKeysProvider.getCurrentNewsAPIKey()
-        #expect(initialKey == "initial-key")
-
-        // Update the mock
-        mock.newsAPIKeyValue = "updated-key"
-
-        let updatedKey = APIKeysProvider.getCurrentNewsAPIKey()
-        #expect(updatedKey == "updated-key")
-    }
-
     // MARK: - Configuration Tests
 
     @Test("Configure accepts RemoteConfigService")
@@ -178,27 +96,20 @@ struct APIKeysProviderTests {
 
     // MARK: - All Keys Available Tests
 
-    @Test("All API keys available from Remote Config")
-    func allAPIKeysAvailableFromRemoteConfig() {
+    @Test("Guardian API key available from Remote Config")
+    func guardianAPIKeyAvailableFromRemoteConfig() {
         let mock = MockRemoteConfigService()
         mock.guardianAPIKeyValue = "guardian-test-key"
-        mock.newsAPIKeyValue = "news-test-key"
-        mock.gnewsAPIKeyValue = "gnews-test-key"
         APIKeysProvider.configure(with: mock)
 
         #expect(APIKeysProvider.guardianAPIKey == "guardian-test-key")
-        #expect(APIKeysProvider.newsAPIKey == "news-test-key")
-        #expect(APIKeysProvider.gnewsAPIKey == "gnews-test-key")
     }
 }
 
-@Suite("RemoteConfigKey Tests")
 struct RemoteConfigKeyTests {
     @Test("RemoteConfigKey raw values are correct")
     func rawValuesAreCorrect() {
         #expect(RemoteConfigKey.guardianAPIKey.rawValue == "guardian_api_key")
-        #expect(RemoteConfigKey.newsAPIKey.rawValue == "news_api_key")
-        #expect(RemoteConfigKey.gnewsAPIKey.rawValue == "gnews_api_key")
         #expect(RemoteConfigKey.supabaseURL.rawValue == "supabase_url")
         #expect(RemoteConfigKey.supabaseAnonKey.rawValue == "supabase_anon_key")
     }
@@ -208,13 +119,11 @@ struct RemoteConfigKeyTests {
         // Verify we have keys for all API credentials
         let allKeys: [RemoteConfigKey] = [
             .guardianAPIKey,
-            .newsAPIKey,
-            .gnewsAPIKey,
             .supabaseURL,
             .supabaseAnonKey,
         ]
 
-        #expect(allKeys.count == 5)
+        #expect(allKeys.count == 3)
 
         // All raw values should be unique
         let uniqueValues = Set(allKeys.map(\.rawValue))
@@ -222,7 +131,6 @@ struct RemoteConfigKeyTests {
     }
 }
 
-@Suite("RemoteConfigError Tests")
 struct RemoteConfigErrorTests {
     @Test("RemoteConfigError fetchFailed has description")
     func fetchFailedHasDescription() throws {
@@ -240,20 +148,15 @@ struct RemoteConfigErrorTests {
     }
 }
 
-@Suite("MockRemoteConfigService Tests")
 struct MockRemoteConfigServiceTests {
     @Test("MockRemoteConfigService provides configured values")
     func providesConfiguredValues() {
         let mock = MockRemoteConfigService()
         mock.guardianAPIKeyValue = "guardian-test"
-        mock.newsAPIKeyValue = "news-test"
-        mock.gnewsAPIKeyValue = "gnews-test"
         mock.supabaseURLValue = "https://test.supabase.co"
         mock.supabaseAnonKeyValue = "anon-key-test"
 
         #expect(mock.guardianAPIKey == "guardian-test")
-        #expect(mock.newsAPIKey == "news-test")
-        #expect(mock.gnewsAPIKey == "gnews-test")
         #expect(mock.supabaseURL == "https://test.supabase.co")
         #expect(mock.supabaseAnonKey == "anon-key-test")
     }
@@ -264,7 +167,6 @@ struct MockRemoteConfigServiceTests {
         mock.guardianAPIKeyValue = "guardian-value"
 
         #expect(mock.getStringOrNil(forKey: .guardianAPIKey) == "guardian-value")
-        #expect(mock.getStringOrNil(forKey: .newsAPIKey) == nil)
     }
 
     @Test("MockRemoteConfigService fetchAndActivate succeeds by default")
@@ -293,8 +195,6 @@ struct MockRemoteConfigServiceTests {
         let mock = MockRemoteConfigService()
 
         #expect(mock.guardianAPIKey == nil)
-        #expect(mock.newsAPIKey == nil)
-        #expect(mock.gnewsAPIKey == nil)
         #expect(mock.supabaseURL == nil)
         #expect(mock.supabaseAnonKey == nil)
     }

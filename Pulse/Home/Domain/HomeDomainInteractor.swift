@@ -215,7 +215,7 @@ private extension HomeDomainInteractor {
             state.isLoadingMore = true
         }
 
-        // NewsAPI free tier has best coverage for US
+        // Supabase and Guardian API have best coverage for US
         let country = "us"
         let language = preferredLanguage
         let nextPage = currentState.currentPage + 1

@@ -415,8 +415,6 @@ final class MockNewsCacheStore: NewsCacheStore {
 
 final class MockRemoteConfigService: RemoteConfigService {
     var guardianAPIKeyValue: String?
-    var newsAPIKeyValue: String?
-    var gnewsAPIKeyValue: String?
     var supabaseURLValue: String?
     var supabaseAnonKeyValue: String?
     var shouldThrowOnFetch = false
@@ -430,8 +428,6 @@ final class MockRemoteConfigService: RemoteConfigService {
     func getStringOrNil(forKey key: RemoteConfigKey) -> String? {
         switch key {
         case .guardianAPIKey: guardianAPIKeyValue
-        case .newsAPIKey: newsAPIKeyValue
-        case .gnewsAPIKey: gnewsAPIKeyValue
         case .supabaseURL: supabaseURLValue
         case .supabaseAnonKey: supabaseAnonKeyValue
         }
@@ -439,14 +435,6 @@ final class MockRemoteConfigService: RemoteConfigService {
 
     var guardianAPIKey: String? {
         guardianAPIKeyValue
-    }
-
-    var newsAPIKey: String? {
-        newsAPIKeyValue
-    }
-
-    var gnewsAPIKey: String? {
-        gnewsAPIKeyValue
     }
 
     var supabaseURL: String? {

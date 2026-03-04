@@ -34,9 +34,7 @@ enum APIKeysProvider {
     private static let keychainService: String = "com.bruno.Pulse.APIKeys"
 
     /// Key identifiers for keychain storage
-    private static let newsAPIKeyKey: String = "NewsAPIKey"
     private static let guardianAPIKeyKey: String = "GuardianAPIKey"
-    private static let gnewsAPIKeyKey: String = "GNewsAPIKey"
 
     // MARK: - Dependencies
 
@@ -64,34 +62,6 @@ enum APIKeysProvider {
     // MARK: - API Keys
 
     /**
-     * NewsAPI.org API key.
-     *
-     * The key is read from Remote Config first, then falls back to
-     * environment variables and keychain.
-     */
-    static var newsAPIKey: String {
-        // 1. Try Remote Config (primary source)
-        if let apiKey = remoteConfigService?.newsAPIKey, apiKey.count >= 10 {
-            return apiKey
-        }
-
-        // 2. Fallback to environment variable (for CI/CD and debugging only)
-        #if DEBUG
-            if let apiKey = ProcessInfo.processInfo.environment["NEWS_API_KEY"], !apiKey.isEmpty {
-                return apiKey
-            }
-        #endif
-
-        // 3. Fallback to keychain if environment variable is not set
-        do {
-            return try keychainManager.retrieve(for: newsAPIKeyKey)
-        } catch {
-            logAPIKeyError(keyName: "NEWS_API_KEY")
-            return ""
-        }
-    }
-
-    /**
      * Guardian API key.
      *
      * The key is read from Remote Config first, then falls back to
@@ -113,33 +83,6 @@ enum APIKeysProvider {
         // 3. Fallback to keychain
         do {
             return try keychainManager.retrieve(for: guardianAPIKeyKey)
-        } catch {
-            return ""
-        }
-    }
-
-    /**
-     * GNews API key.
-     *
-     * The key is read from Remote Config first, then falls back to
-     * environment variables and keychain.
-     */
-    static var gnewsAPIKey: String {
-        // 1. Try Remote Config (primary source)
-        if let apiKey = remoteConfigService?.gnewsAPIKey, apiKey.count >= 10 {
-            return apiKey
-        }
-
-        // 2. Fallback to environment variable (for CI/CD and debugging only)
-        #if DEBUG
-            if let apiKey = ProcessInfo.processInfo.environment["GNEWS_API_KEY"], !apiKey.isEmpty {
-                return apiKey
-            }
-        #endif
-
-        // 3. Fallback to keychain
-        do {
-            return try keychainManager.retrieve(for: gnewsAPIKeyKey)
         } catch {
             return ""
         }
@@ -210,35 +153,16 @@ enum APIKeysProvider {
         Current environment: \(ProcessInfo.processInfo.environment.keys.filter { $0.contains("API") })
         """, level: .error)
     }
-
-    // MARK: - Testing Support
-
-    /**
-     * Get the NewsAPI key with fresh evaluation (for testing).
-     *
-     * This method re-evaluates the fallback hierarchy each time it's called,
-     * making it suitable for testing different scenarios.
-     *
-     * - Returns: The API key from the current fallback hierarchy
-     */
-    static func getCurrentNewsAPIKey() -> String {
-        // Since newsAPIKey is now a computed property, just return it
-        newsAPIKey
-    }
 }
 
 // MARK: - API Key Type
 
 enum APIKeyType {
-    case newsAPI
     case guardianAPI
-    case gnewsAPI
 
     var keychainKey: String {
         switch self {
-        case .newsAPI: "NewsAPIKey"
         case .guardianAPI: "GuardianAPIKey"
-        case .gnewsAPI: "GNewsAPIKey"
         }
     }
 }

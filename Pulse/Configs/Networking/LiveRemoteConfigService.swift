@@ -6,8 +6,6 @@ import Foundation
 ///
 /// Remote Config Keys (set in Firebase Console):
 /// - `guardian_api_key`: Guardian API key
-/// - `news_api_key`: NewsAPI.org key
-/// - `gnews_api_key`: GNews API key
 final class LiveRemoteConfigService: RemoteConfigService {
     // MARK: - Properties
 
@@ -39,8 +37,6 @@ final class LiveRemoteConfigService: RemoteConfigService {
         // Set empty defaults - actual keys come from Firebase Console
         remoteConfig.setDefaults([
             RemoteConfigKey.guardianAPIKey.rawValue: "" as NSString,
-            RemoteConfigKey.newsAPIKey.rawValue: "" as NSString,
-            RemoteConfigKey.gnewsAPIKey.rawValue: "" as NSString,
             RemoteConfigKey.supabaseURL.rawValue: "" as NSString,
             RemoteConfigKey.supabaseAnonKey.rawValue: "" as NSString,
         ])
@@ -71,14 +67,6 @@ final class LiveRemoteConfigService: RemoteConfigService {
 
     var guardianAPIKey: String? {
         getStringOrNil(forKey: .guardianAPIKey)
-    }
-
-    var newsAPIKey: String? {
-        getStringOrNil(forKey: .newsAPIKey)
-    }
-
-    var gnewsAPIKey: String? {
-        getStringOrNil(forKey: .gnewsAPIKey)
     }
 
     var supabaseURL: String? {

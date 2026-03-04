@@ -3,8 +3,6 @@ import Foundation
 /// Remote Config keys for API credentials.
 enum RemoteConfigKey: String {
     case guardianAPIKey = "guardian_api_key"
-    case newsAPIKey = "news_api_key"
-    case gnewsAPIKey = "gnews_api_key"
     case supabaseURL = "supabase_url"
     case supabaseAnonKey = "supabase_anon_key"
 }
@@ -19,12 +17,6 @@ protocol RemoteConfigService {
 
     /// Gets the Guardian API key from remote config.
     var guardianAPIKey: String? { get }
-
-    /// Gets the NewsAPI key from remote config.
-    var newsAPIKey: String? { get }
-
-    /// Gets the GNews API key from remote config.
-    var gnewsAPIKey: String? { get }
 
     /// Gets the Supabase project URL from remote config.
     var supabaseURL: String? { get }
