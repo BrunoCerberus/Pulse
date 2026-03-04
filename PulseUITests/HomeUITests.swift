@@ -123,12 +123,10 @@ final class HomeUITests: BaseUITestCase {
         let allTabButton = app.buttons["All"]
 
         if allTabButton.waitForExistence(timeout: Self.shortTimeout) {
-            // Try to scroll horizontally in the category tabs area
-            // The scroll view containing tabs should be near the top
-            let scrollViews = app.scrollViews
-            if scrollViews.count > 0 {
-                let tabsScrollView = scrollViews.firstMatch
+            // Target the category tabs scroll view specifically by its accessibility identifier
+            let tabsScrollView = app.scrollViews["categoryTabsScrollView"]
 
+            if tabsScrollView.waitForExistence(timeout: Self.shortTimeout) {
                 // Perform horizontal swipe
                 tabsScrollView.swipeLeft()
                 _ = wait(for: 0.5)

@@ -146,7 +146,8 @@ extension PulseAppDelegate: UNUserNotificationCenterDelegate {
         didRegisterForRemoteNotificationsWithDeviceToken deviceToken: Data
     ) {
         // Store token for future backend integration (FCM or custom push server).
-        MainActor.assumeIsolated {
+        // LiveNotificationService is @MainActor, so hop to main actor explicitly.
+        Task { @MainActor in
             LiveNotificationService.shared.storeDeviceToken(deviceToken)
         }
     }
