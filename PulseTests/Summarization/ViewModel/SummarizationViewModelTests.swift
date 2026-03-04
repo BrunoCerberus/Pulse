@@ -4,7 +4,7 @@ import Foundation
 @testable import Pulse
 import Testing
 
-@Suite("SummarizationViewModel Tests")
+@Suite
 @MainActor
 struct SummarizationViewModelTests {
     let mockSummarizationService: MockSummarizationService

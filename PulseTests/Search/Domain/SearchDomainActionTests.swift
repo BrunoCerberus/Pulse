@@ -2,7 +2,7 @@ import Foundation
 @testable import Pulse
 import Testing
 
-@Suite("SearchDomainAction Tests")
+@Suite
 struct SearchDomainActionTests {
     @Test("updateQuery action with string")
     func updateQuery() {

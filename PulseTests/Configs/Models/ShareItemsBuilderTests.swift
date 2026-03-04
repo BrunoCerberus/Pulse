@@ -2,7 +2,7 @@ import Foundation
 @testable import Pulse
 import Testing
 
-@Suite("ShareItemsBuilder Tests")
+@Suite
 struct ShareItemsBuilderTests {
     let testArticle = Article.mockArticles[0]
 

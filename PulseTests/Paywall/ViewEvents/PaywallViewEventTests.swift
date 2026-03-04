@@ -3,7 +3,7 @@ import Foundation
 import StoreKit
 import Testing
 
-@Suite("PaywallViewEvent Tests")
+@Suite
 struct PaywallViewEventTests {
     @Test("viewDidAppear event") func viewDidAppear() {
         #expect(PaywallViewEvent.viewDidAppear == .viewDidAppear)

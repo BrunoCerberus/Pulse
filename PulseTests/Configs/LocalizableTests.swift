@@ -5,7 +5,7 @@ import Testing
 
 // MARK: - Common Strings Tests
 
-@Suite("Common Localization Tests")
+@Suite
 struct CommonLocalizableTests {
     @Test("App name is not empty")
     func appNameIsNotEmpty() {
@@ -66,7 +66,7 @@ struct CommonLocalizableTests {
 
 // MARK: - Tab Bar Tests
 
-@Suite("Tab Bar Localization Tests")
+@Suite
 struct TabBarLocalizableTests {
     @Test("Home tab is not empty")
     func homeTabIsNotEmpty() {
@@ -92,7 +92,7 @@ struct TabBarLocalizableTests {
 
 // MARK: - Category Names Tests
 
-@Suite("Category Names Localization Tests")
+@Suite
 struct CategoryNamesLocalizableTests {
     @Test("World category is not empty")
     func worldCategoryIsNotEmpty() {
@@ -146,7 +146,7 @@ struct CategoryNamesLocalizableTests {
 
 // MARK: - Home Screen Tests
 
-@Suite("Home Screen Localization Tests")
+@Suite
 struct HomeLocalizableTests {
     @Test("Home title is not empty")
     func homeTitleIsNotEmpty() {
@@ -185,7 +185,7 @@ struct HomeLocalizableTests {
 
 // MARK: - Search Screen Tests
 
-@Suite("Search Screen Localization Tests")
+@Suite
 struct SearchLocalizableTests {
     @Test("Search title is not empty")
     func searchTitleIsNotEmpty() {
@@ -231,7 +231,7 @@ struct SearchLocalizableTests {
 
 // MARK: - Bookmarks Screen Tests
 
-@Suite("Bookmarks Screen Localization Tests")
+@Suite
 struct BookmarksLocalizableTests {
     @Test("Bookmarks title is not empty")
     func bookmarksTitleIsNotEmpty() {
@@ -269,7 +269,7 @@ struct BookmarksLocalizableTests {
 
 // MARK: - Article Screen Tests
 
-@Suite("Article Screen Localization Tests")
+@Suite
 struct ArticleLocalizableTests {
     @Test("Read full article button is not empty")
     func readFullArticleButtonIsNotEmpty() {
@@ -295,7 +295,7 @@ struct ArticleLocalizableTests {
 
 // MARK: - Settings Screen Tests
 
-@Suite("Settings Screen Localization Tests")
+@Suite
 struct SettingsLocalizableTests {
     @Test("Settings title is not empty")
     func settingsTitleIsNotEmpty() {
@@ -347,7 +347,7 @@ struct SettingsLocalizableTests {
 
 // MARK: - Account Tests
 
-@Suite("Account Localization Tests")
+@Suite
 struct AccountLocalizableTests {
     @Test("Account title is not empty")
     func accountTitleIsNotEmpty() {
@@ -372,7 +372,7 @@ struct AccountLocalizableTests {
 
 // MARK: - Auth Screen Tests
 
-@Suite("Auth Screen Localization Tests")
+@Suite
 struct AuthLocalizableTests {
     @Test("Auth tagline is not empty")
     func authTaglineIsNotEmpty() {
@@ -411,7 +411,7 @@ struct AuthLocalizableTests {
 
 // MARK: - Paywall Tests
 
-@Suite("Paywall Localization Tests")
+@Suite
 struct PaywallLocalizableTests {
     @Test("Loading string is not empty")
     func loadingStringIsNotEmpty() {
@@ -506,7 +506,7 @@ struct PaywallLocalizableTests {
 
 // MARK: - All Keys Existence Tests
 
-@Suite("Localization Keys Existence Tests")
+@Suite
 struct LocalizationKeysExistenceTests {
     /// All localization keys that should exist in Localizable.strings
     private static let allKeys: [String] = [
@@ -776,7 +776,7 @@ struct LocalizationKeysExistenceTests {
     }
 }
 
-@Suite("Accessibility Announcement Localization Tests")
+@Suite
 struct AccessibilityLocalizationTests {
     private let accessibilityAnnouncementKeys = [
         "accessibility.refresh_complete",

@@ -2,7 +2,7 @@ import Foundation
 @testable import Pulse
 import Testing
 
-@Suite("MediaType Tests")
+@Suite
 struct MediaTypeTests {
     // MARK: - Raw Value Tests
 

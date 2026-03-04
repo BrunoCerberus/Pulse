@@ -2,7 +2,7 @@ import Foundation
 @testable import Pulse
 import Testing
 
-@Suite("ArticleSummaryPromptBuilder Tests")
+@Suite
 struct ArticleSummaryPromptBuilderTests {
     // MARK: - buildPrompt Tests
 

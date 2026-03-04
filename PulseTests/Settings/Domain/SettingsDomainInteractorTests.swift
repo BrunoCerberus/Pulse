@@ -29,7 +29,7 @@ private func createSUT(
 
 // MARK: - Initial State & Load Tests
 
-@Suite("SettingsDomainInteractor State Tests")
+@Suite
 @MainActor
 struct SettingsInteractorStateTests {
     @Test("Initial state is correct")
@@ -70,7 +70,7 @@ struct SettingsInteractorStateTests {
 
 // MARK: - Notification Tests
 
-@Suite("SettingsDomainInteractor Notification Tests")
+@Suite
 @MainActor
 struct SettingsInteractorNotifyTests {
     @Test("Toggle notifications enables when disabled")
@@ -126,7 +126,7 @@ struct SettingsInteractorNotifyTests {
 
 // MARK: - Language Tests
 
-@Suite("SettingsDomainInteractor Language Tests")
+@Suite
 @MainActor
 struct SettingsInteractorLanguageTests {
     private let languageKey = "pulse.preferredLanguage"
@@ -186,7 +186,7 @@ struct SettingsInteractorLanguageTests {
 
 // MARK: - Muted Content Tests
 
-@Suite("SettingsDomainInteractor Muted Tests")
+@Suite
 @MainActor
 struct SettingsInteractorMutedTests {
     @Test("Add muted source appends to list")
@@ -288,7 +288,7 @@ struct SettingsInteractorMutedTests {
 
 // MARK: - Saving Tests
 
-@Suite("SettingsDomainInteractor Saving Tests")
+@Suite
 @MainActor
 struct SettingsInteractorSavingTests {
     @Test("Save operation sets saving state")
@@ -308,7 +308,7 @@ struct SettingsInteractorSavingTests {
 
 // MARK: - UI State Action Tests
 
-@Suite("SettingsDomainInteractor UI State Tests")
+@Suite
 @MainActor
 struct SettingsInteractorUIStateTests {
     @Test("Set show sign out confirmation")
@@ -421,7 +421,7 @@ struct SettingsInteractorUIStateTests {
 
 // MARK: - State Publisher Tests
 
-@Suite("SettingsDomainInteractor Publisher Tests")
+@Suite
 @MainActor
 struct SettingsInteractorPublisherTests {
     @Test("State publisher emits initial state")
@@ -464,7 +464,7 @@ struct SettingsInteractorPublisherTests {
 
 // MARK: - Analytics Tests
 
-@Suite("SettingsDomainInteractor Analytics Tests")
+@Suite
 @MainActor
 struct SettingsInteractorAnalyticsTests {
     @Test("Logs screen_view on loadPreferences")

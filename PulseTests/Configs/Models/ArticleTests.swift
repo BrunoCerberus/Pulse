@@ -2,7 +2,7 @@ import Foundation
 @testable import Pulse
 import Testing
 
-@Suite("Article Model Tests")
+@Suite
 struct ArticleTests {
     // MARK: - Test Data
 
@@ -245,7 +245,7 @@ struct ArticleTests {
 
 // MARK: - Article Image URL Tests
 
-@Suite("Article Image URL Tests")
+@Suite
 struct ArticleImageURLTests {
     private var fixedDate: Date {
         Date(timeIntervalSince1970: 1_672_531_200)

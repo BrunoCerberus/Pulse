@@ -3,7 +3,7 @@ import Foundation
 import StoreKit
 import Testing
 
-@Suite("PaywallViewStateReducer Tests")
+@Suite
 struct PaywallViewStateReducerTests {
     let sut = PaywallViewStateReducer()
 
@@ -184,7 +184,7 @@ struct PaywallViewStateReducerTests {
 
 // MARK: - PaywallDomainState Initial Tests
 
-@Suite("PaywallDomainState Initial Tests")
+@Suite
 struct PaywallDomainStateInitialTests {
     @Test("Initial state has correct default values")
     func initialState() {

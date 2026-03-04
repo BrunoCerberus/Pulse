@@ -2,7 +2,7 @@ import Foundation
 @testable import Pulse
 import Testing
 
-@Suite("AnalyticsEvent Tests")
+@Suite
 struct AnalyticsEventTests {
     @Test("All event names are snake_case")
     func eventNamesAreSnakeCase() {
@@ -109,7 +109,7 @@ struct AnalyticsEventTests {
     }
 }
 
-@Suite("MockAnalyticsService Tests")
+@Suite
 struct MockAnalyticsServiceTests {
     @Test("Records logged events")
     func recordsEvents() {

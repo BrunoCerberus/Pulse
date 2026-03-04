@@ -2,7 +2,7 @@ import Foundation
 @testable import Pulse
 import Testing
 
-@Suite("MediaDetailViewState Tests")
+@Suite
 struct MediaDetailViewStateTests {
     @Test("Initial state has correct defaults")
     func initialState() {

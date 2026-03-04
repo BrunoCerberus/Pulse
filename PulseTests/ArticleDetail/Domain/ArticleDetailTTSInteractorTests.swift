@@ -4,7 +4,7 @@ import Foundation
 @testable import Pulse
 import Testing
 
-@Suite("ArticleDetailDomainInteractor TTS Tests")
+@Suite
 @MainActor
 struct ArticleDetailTTSInteractorTests {
     let mockStorageService: MockStorageService

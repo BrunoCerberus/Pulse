@@ -2,7 +2,7 @@ import Foundation
 @testable import Pulse
 import Testing
 
-@Suite("UserPreferences Tests")
+@Suite
 struct UserPreferencesTests {
     @Test("Default preferences have correct values")
     func defaultPreferences() {

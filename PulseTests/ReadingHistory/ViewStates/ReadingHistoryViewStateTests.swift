@@ -2,7 +2,7 @@ import Foundation
 @testable import Pulse
 import Testing
 
-@Suite("ReadingHistoryViewState Tests")
+@Suite
 struct ReadingHistoryViewStateTests {
     @Test("Initial state has correct defaults")
     func initialState() {
@@ -32,7 +32,7 @@ struct ReadingHistoryViewStateTests {
     }
 }
 
-@Suite("ReadingHistoryViewEvent Tests")
+@Suite
 struct ReadingHistoryViewEventTests {
     @Test("ReadingHistoryViewEvent cases are Equatable")
     func equatable() {

@@ -2,7 +2,7 @@ import Foundation
 @testable import Pulse
 import Testing
 
-@Suite("MediaDomainAction Tests")
+@Suite
 struct MediaDomainActionTests {
     @Test("loadInitialData action exists")
     func loadInitialDataAction() {

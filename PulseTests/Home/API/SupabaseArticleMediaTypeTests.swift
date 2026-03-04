@@ -2,7 +2,7 @@ import Foundation
 @testable import Pulse
 import Testing
 
-@Suite("SupabaseArticle Media Type Tests")
+@Suite
 struct SupabaseArticleMediaTypeTests {
     @Test("toArticle derives podcast media type from mediaType field")
     func derivesPodcastMediaType() {

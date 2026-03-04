@@ -4,7 +4,7 @@ import Foundation
 @testable import Pulse
 import Testing
 
-@Suite("FeedDomainInteractor Tests", .serialized)
+@Suite(.serialized)
 @MainActor
 struct FeedDomainInteractorTests {
     let mockFeedService: MockFeedService

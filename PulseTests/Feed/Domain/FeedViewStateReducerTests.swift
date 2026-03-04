@@ -4,7 +4,7 @@ import Foundation
 @testable import Pulse
 import Testing
 
-@Suite("FeedViewStateReducer Tests")
+@Suite
 struct FeedViewStateReducerTests {
     let sut = FeedViewStateReducer()
 
@@ -199,7 +199,7 @@ struct FeedViewStateReducerTests {
 
 // MARK: - DigestViewItem Parsing Tests
 
-@Suite("DigestViewItem Parsing Tests")
+@Suite
 // swiftlint:disable:next type_body_length
 struct DigestViewItemParsingTests {
     @Test("parseSections extracts unique content per category")
@@ -770,7 +770,7 @@ struct DigestViewItemParsingTests {
 
 // MARK: - Null Character Removal Tests
 
-@Suite("LLM Output Cleaning Tests")
+@Suite
 struct LLMOutputCleaningTests {
     @Test("cleanLLMOutput removes null characters between tokens")
     func cleanLLMOutputRemovesNullChars() {

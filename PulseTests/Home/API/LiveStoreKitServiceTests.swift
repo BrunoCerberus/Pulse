@@ -5,7 +5,7 @@ import Foundation
 import StoreKit
 import Testing
 
-@Suite("LiveStoreKitService Tests")
+@Suite
 struct LiveStoreKitServiceTests {
     @Test("LiveStoreKitService can be instantiated")
     func canBeInstantiated() {

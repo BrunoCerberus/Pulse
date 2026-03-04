@@ -3,7 +3,7 @@ import Foundation
 @testable import Pulse
 import Testing
 
-@Suite("ArticleDetailViewStateReducer Tests")
+@Suite
 struct ArticleDetailViewStateReducerTests {
     let sut = ArticleDetailViewStateReducer()
     let testArticle = Article.mockArticles[0]

@@ -2,7 +2,7 @@ import Foundation
 @testable import Pulse
 import Testing
 
-@Suite("FeedViewEvent Tests")
+@Suite
 struct FeedViewEventTests {
     @Test("onAppear event") func onAppear() {
         #expect(FeedViewEvent.onAppear == .onAppear)

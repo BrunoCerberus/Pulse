@@ -2,7 +2,7 @@ import Foundation
 @testable import Pulse
 import Testing
 
-@Suite("PaywallDomainEventActionMap Tests")
+@Suite
 @MainActor
 struct PaywallDomainEventActionMapTests {
     @Test("viewDidAppear maps to loadProducts")

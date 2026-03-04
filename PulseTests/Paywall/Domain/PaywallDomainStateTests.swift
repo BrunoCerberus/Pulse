@@ -3,7 +3,7 @@ import Foundation
 import StoreKit
 import Testing
 
-@Suite("PaywallDomainState Tests")
+@Suite
 struct PaywallDomainStateTests {
     @Test("Initial state has correct default values")
     func initialState() {

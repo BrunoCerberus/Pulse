@@ -3,7 +3,7 @@ import Foundation
 @testable import Pulse
 import Testing
 
-@Suite("MediaViewStateReducer Tests")
+@Suite
 struct MediaViewStateReducerTests {
     let sut = MediaViewStateReducer()
 

@@ -2,7 +2,7 @@ import Foundation
 @testable import Pulse
 import Testing
 
-@Suite("OnboardingViewEvent Tests")
+@Suite
 struct OnboardingViewEventTests {
     @Test("onNextTapped event exists")
     func onNextTapped() {

@@ -2,7 +2,7 @@ import Foundation
 @testable import Pulse
 import Testing
 
-@Suite("PaywallViewState Tests")
+@Suite
 struct PaywallViewStateTests {
     @Test("Loading state is Equatable")
     func loadingEquatable() {

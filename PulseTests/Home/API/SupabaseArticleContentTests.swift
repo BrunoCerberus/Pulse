@@ -2,7 +2,7 @@ import Foundation
 @testable import Pulse
 import Testing
 
-@Suite("SupabaseArticle Content Tests")
+@Suite
 struct SupabaseArticleContentTests {
     @Test("toArticle uses content for description and content when both exist")
     func descriptionAndContentMapping() {

@@ -3,7 +3,7 @@ import Foundation
 import SwiftUI
 import Testing
 
-@Suite("NewsCategory Tests")
+@Suite
 struct NewsCategoryTests {
     // MARK: - All Categories Tests
 

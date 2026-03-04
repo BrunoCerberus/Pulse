@@ -4,7 +4,7 @@ import Foundation
 @testable import Pulse
 import Testing
 
-@Suite("SupabaseAPI Tests")
+@Suite
 struct SupabaseAPITests {
     @Test("SupabaseAPI articles uses Edge Functions endpoint")
     func articlesUsesEdgeFunctionsEndpoint() {

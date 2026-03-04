@@ -14,7 +14,7 @@ import Testing
 /// NOTE: Tests use shared singleton with resetForTesting() for isolation.
 /// The resetForTesting() method ensures clean state between tests.
 /// Tests are serialized to prevent race conditions on the singleton.
-@Suite("AuthenticationManager Tests", .serialized)
+@Suite(.serialized)
 @MainActor
 struct AuthenticationManagerTests {
     let mockAuthService: MockAuthService

@@ -2,7 +2,7 @@ import Foundation
 @testable import Pulse
 import Testing
 
-@Suite("BookmarkedArticle Tests")
+@Suite
 @MainActor
 struct BookmarkedArticleTests {
     let testArticle: Article

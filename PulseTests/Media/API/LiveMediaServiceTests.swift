@@ -4,7 +4,7 @@ import Foundation
 @testable import Pulse
 import Testing
 
-@Suite("LiveMediaService Tests")
+@Suite
 struct LiveMediaServiceTests {
     // MARK: - Instantiation Tests
 
@@ -71,7 +71,7 @@ struct LiveMediaServiceTests {
     }
 }
 
-@Suite("MockMediaService Tests")
+@Suite
 struct MockMediaServiceTests {
     // MARK: - Basic Functionality Tests
 

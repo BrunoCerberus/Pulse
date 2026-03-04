@@ -2,7 +2,7 @@ import Foundation
 @testable import Pulse
 import Testing
 
-@Suite("StorageService Protocol Tests")
+@Suite
 struct StorageServiceProtocolTests {
     @Test("MockStorageService conforms to StorageService")
     func mockConformsToProtocol() {

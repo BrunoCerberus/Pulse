@@ -4,7 +4,7 @@ import Testing
 
 // MARK: - HomeViewState Tests
 
-@Suite("HomeViewState Tests")
+@Suite
 struct HomeViewStateTests {
     @Test("Initial state has correct defaults")
     func initialState() {
@@ -50,7 +50,7 @@ struct HomeViewStateTests {
 
 // MARK: - ArticleViewItem Tests
 
-@Suite("ArticleViewItem Tests")
+@Suite
 struct ArticleViewItemTests {
     @Test("ArticleViewItem initializes from Article")
     func initFromArticle() {

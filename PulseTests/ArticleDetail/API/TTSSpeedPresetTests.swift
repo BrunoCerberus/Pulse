@@ -2,7 +2,7 @@ import Foundation
 @testable import Pulse
 import Testing
 
-@Suite("TTSSpeedPreset Tests")
+@Suite
 struct TTSSpeedPresetTests {
     @Test("All presets have correct labels")
     func labels() {
@@ -40,7 +40,7 @@ struct TTSSpeedPresetTests {
     }
 }
 
-@Suite("TTSPlaybackState Tests")
+@Suite
 struct TTSPlaybackStateTests {
     @Test("States are Equatable")
     func equatable() {

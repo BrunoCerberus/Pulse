@@ -2,7 +2,7 @@ import Foundation
 @testable import Pulse
 import Testing
 
-@Suite("SupabaseSearchResult Tests")
+@Suite
 struct SupabaseSearchResultTests {
     @Test("toArticle maps search result fields correctly")
     func toArticleMapsFields() {

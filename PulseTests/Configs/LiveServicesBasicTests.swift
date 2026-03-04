@@ -22,7 +22,7 @@ import Testing
 /// **Placeholder Tests**: Some tests use `#expect(true)` because actual
 /// instantiation requires external configuration that may not be available
 /// in CI environments. These serve as documentation of the test intention.
-@Suite("Live Services Basic Tests")
+@Suite
 struct LiveServicesBasicTests {
     // MARK: - LiveNewsService Tests
 

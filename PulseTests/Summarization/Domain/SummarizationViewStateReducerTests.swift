@@ -2,7 +2,7 @@ import Foundation
 @testable import Pulse
 import Testing
 
-@Suite("SummarizationViewStateReducer Tests")
+@Suite
 struct SummarizationViewStateReducerTests {
     let sut = SummarizationViewStateReducer()
 

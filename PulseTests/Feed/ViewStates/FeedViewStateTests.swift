@@ -4,7 +4,7 @@ import Testing
 
 // MARK: - FeedViewState Tests
 
-@Suite("FeedViewState Tests")
+@Suite
 struct FeedViewStateTests {
     @Test("Initial state has correct defaults")
     func initialState() {
@@ -30,7 +30,7 @@ struct FeedViewStateTests {
 
 // MARK: - AIProcessingPhase Tests
 
-@Suite("AIProcessingPhase Tests")
+@Suite
 struct AIProcessingPhaseTests {
     @Test("Generating phase progress is 1.0")
     func generatingProgress() {
@@ -52,7 +52,7 @@ struct AIProcessingPhaseTests {
 
 // MARK: - FeedDisplayState Tests
 
-@Suite("FeedDisplayState Tests")
+@Suite
 struct FeedDisplayStateTests {
     @Test("All display states are distinct")
     func allStatesDistinct() {
@@ -84,7 +84,7 @@ struct FeedDisplayStateTests {
 
 // MARK: - DigestViewItem Tests
 
-@Suite("DigestViewItem Tests")
+@Suite
 struct DigestViewItemTests {
     @Test("DigestViewItem initializes from DailyDigest")
     func initFromDailyDigest() {
@@ -118,7 +118,7 @@ struct DigestViewItemTests {
 
 // MARK: - FeedSourceArticle Tests
 
-@Suite("FeedSourceArticle Tests")
+@Suite
 struct FeedSourceArticleTests {
     @Test("FeedSourceArticle initializes from Article")
     func initFromArticle() {
@@ -162,7 +162,7 @@ struct FeedSourceArticleTests {
 
 // MARK: - DigestSection Tests
 
-@Suite("DigestSection Tests")
+@Suite
 struct DigestSectionTests {
     @Test("DigestSection default values")
     func defaultValues() {

@@ -4,7 +4,7 @@ import Testing
 
 // MARK: - Basic Formatting Tests
 
-@Suite("SummarizationTextFormatter Basic Formatting")
+@Suite
 struct SummarizationTextFormatterBasicTests {
     @Test("Empty text returns empty array")
     func emptyTextReturnsEmpty() {
@@ -49,7 +49,7 @@ struct SummarizationTextFormatterBasicTests {
 
 // MARK: - Bullet Point Tests
 
-@Suite("SummarizationTextFormatter Bullet Points")
+@Suite
 struct SummarizationTextFormatterBulletTests {
     @Test("Bullet points with bullet character are parsed")
     func bulletCharacter() {
@@ -83,7 +83,7 @@ struct SummarizationTextFormatterBulletTests {
 
 // MARK: - Heading Tests
 
-@Suite("SummarizationTextFormatter Headings")
+@Suite
 struct SummarizationTextFormatterHeadingTests {
     @Test("Markdown bold headings are parsed")
     func markdownBoldHeading() {
@@ -139,7 +139,7 @@ struct SummarizationTextFormatterHeadingTests {
 
 // MARK: - Edge Case Tests
 
-@Suite("SummarizationTextFormatter Edge Cases")
+@Suite
 struct SummarizationTextFormatterEdgeCaseTests {
     @Test("Abbreviations are preserved")
     func abbreviationsPreserved() {

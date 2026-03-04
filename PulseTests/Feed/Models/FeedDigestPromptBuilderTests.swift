@@ -2,7 +2,7 @@ import Foundation
 @testable import Pulse
 import Testing
 
-@Suite("FeedDigestPromptBuilder Tests")
+@Suite
 struct FeedDigestPromptBuilderTests {
     // MARK: - Article Capping Tests
 

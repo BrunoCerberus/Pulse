@@ -4,7 +4,7 @@ import Foundation
 @testable import Pulse
 import Testing
 
-@Suite("MediaDetailViewModel Tests")
+@Suite
 @MainActor
 struct MediaDetailViewModelTests {
     private var testVideoArticle: Article {

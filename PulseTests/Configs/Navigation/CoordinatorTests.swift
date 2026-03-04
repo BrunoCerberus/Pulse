@@ -4,7 +4,7 @@ import Foundation
 import SwiftUI
 import Testing
 
-@Suite("Coordinator Tests")
+@Suite
 @MainActor
 struct CoordinatorTests {
     let serviceLocator: ServiceLocator

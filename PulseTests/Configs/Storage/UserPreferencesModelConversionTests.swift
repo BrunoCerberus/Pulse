@@ -2,7 +2,7 @@ import Foundation
 @testable import Pulse
 import Testing
 
-@Suite("UserPreferencesModel Conversion Tests")
+@Suite
 struct UserPreferencesModelConversionTests {
     // MARK: - toPreferences() Conversion Tests
 

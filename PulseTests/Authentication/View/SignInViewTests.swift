@@ -4,7 +4,7 @@ import EntropyCore
 import SwiftUI
 import Testing
 
-@Suite("SignInView Tests")
+@Suite
 struct SignInViewTests {
     @Test("SignInView can be instantiated")
     func canBeInstantiated() {

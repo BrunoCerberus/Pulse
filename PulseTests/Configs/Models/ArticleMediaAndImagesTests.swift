@@ -2,7 +2,7 @@ import Foundation
 @testable import Pulse
 import Testing
 
-@Suite("Article Media + Image URL Tests")
+@Suite
 struct ArticleMediaAndImagesTests {
     private let fixedDate = Date(timeIntervalSince1970: 1_672_531_200) // Jan 1, 2023
     private let testSource = ArticleSource(id: "test-source", name: "Test News")

@@ -3,7 +3,7 @@ import Foundation
 import SwiftUI
 import Testing
 
-@Suite("NewsCategory UI Tests")
+@Suite
 struct NewsCategoryUITests {
     @Test("Display name for business is not empty")
     func businessDisplayName() {

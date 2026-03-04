@@ -2,7 +2,7 @@ import Foundation
 @testable import Pulse
 import Testing
 
-@Suite("OnboardingViewState Tests")
+@Suite
 struct OnboardingViewStateTests {
     @Test("Initial state has correct default values")
     func initialState() {

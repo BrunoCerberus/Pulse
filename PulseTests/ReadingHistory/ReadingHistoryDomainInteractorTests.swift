@@ -4,7 +4,7 @@ import Foundation
 @testable import Pulse
 import Testing
 
-@Suite("ReadingHistoryDomainInteractor Tests")
+@Suite
 @MainActor
 struct ReadingHistoryDomainInteractorTests {
     let mockStorageService: MockStorageService

@@ -2,7 +2,7 @@ import Foundation
 @testable import Pulse
 import Testing
 
-@Suite("ArticleDetailDomainAction Tests")
+@Suite
 struct ArticleDetailDomainActionTests {
     private var testArticle: Article {
         Article(

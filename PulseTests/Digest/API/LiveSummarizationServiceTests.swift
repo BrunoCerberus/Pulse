@@ -3,7 +3,7 @@ import Foundation
 @testable import Pulse
 import Testing
 
-@Suite("LiveSummarizationService Tests")
+@Suite
 @MainActor
 struct LiveSummarizationServiceTests {
     var mockLLMService: MockLLMService!
@@ -229,7 +229,7 @@ struct LiveSummarizationServiceTests {
 
 // MARK: - LLMInferenceConfig Tests
 
-@Suite("LLMInferenceConfig Summarization Tests")
+@Suite
 struct LLMInferenceConfigSummarizationTests {
     @Test("Summarization config has correct maxTokens")
     func summarizationConfigMaxTokens() {

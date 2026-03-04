@@ -4,7 +4,7 @@ import Foundation
 @testable import Pulse
 import Testing
 
-@Suite("ArticleDetailDomainInteractor Tests")
+@Suite
 @MainActor
 struct ArticleDetailDomainInteractorTests {
     let mockStorageService: MockStorageService
@@ -258,7 +258,7 @@ struct ArticleDetailDomainInteractorTests {
 
 // MARK: - Text Processing Tests
 
-@Suite("ArticleDetailDomainInteractor Text Processing Tests")
+@Suite
 struct ArticleDetailTextProcessingTests {
     // Test the text processing utilities by testing behavior through actions
 

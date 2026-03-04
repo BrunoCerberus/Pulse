@@ -2,7 +2,7 @@ import Foundation
 @testable import Pulse
 import Testing
 
-@Suite("SummarizationEventActionMap Tests")
+@Suite
 struct SummarizationEventActionMapTests {
     let sut = SummarizationEventActionMap()
 

@@ -4,7 +4,7 @@ import EntropyCore
 import SwiftUI
 import Testing
 
-@Suite("AppTab Tests")
+@Suite
 struct AppTabTests {
     @Test("all cases have symbolImage")
     func allCasesHaveSymbolImage() {

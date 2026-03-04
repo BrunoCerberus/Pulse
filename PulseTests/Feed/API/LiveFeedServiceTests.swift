@@ -4,7 +4,7 @@ import Foundation
 @testable import Pulse
 import Testing
 
-@Suite("LiveFeedService Tests")
+@Suite
 struct LiveFeedServiceTests {
     let mockLLMService: MockLLMService
 
@@ -190,7 +190,7 @@ struct LiveFeedServiceTests {
 
 // MARK: - LLMInferenceConfig Tests
 
-@Suite("LLMInferenceConfig DailyDigest Tests")
+@Suite
 struct LLMInferenceConfigDailyDigestTests {
     @Test("dailyDigest config has correct values")
     func dailyDigestConfig() {

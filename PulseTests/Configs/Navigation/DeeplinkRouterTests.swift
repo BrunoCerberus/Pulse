@@ -10,7 +10,7 @@ import Testing
 /// - Deeplink queuing when coordinator unavailable
 /// - Integration with DeeplinkManager publisher
 /// - Deeplink clearing after routing
-@Suite("DeeplinkRouter Tests", .serialized)
+@Suite(.serialized)
 @MainActor
 struct DeeplinkRouterTests {
     let serviceLocator: ServiceLocator

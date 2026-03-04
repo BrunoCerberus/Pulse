@@ -4,7 +4,7 @@ import Foundation
 @testable import Pulse
 import Testing
 
-@Suite("HomeViewModel Tests")
+@Suite
 @MainActor
 struct HomeViewModelTests {
     let mockNewsService: MockNewsService

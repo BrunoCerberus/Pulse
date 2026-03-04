@@ -19,7 +19,7 @@ private final class InMemoryKeychainStore: KeychainStore {
     }
 }
 
-@Suite("LiveAppLockService Tests", .serialized)
+@Suite(.serialized)
 struct LiveAppLockServiceTests {
     private let keychain = InMemoryKeychainStore()
     private let defaults = UserDefaults(suiteName: "com.pulse.applock.tests")!

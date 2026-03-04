@@ -2,7 +2,7 @@ import Foundation
 @testable import Pulse
 import Testing
 
-@Suite("AppLockManager Tests")
+@Suite
 @MainActor
 struct AppLockManagerTests {
     let sut = AppLockManager.shared

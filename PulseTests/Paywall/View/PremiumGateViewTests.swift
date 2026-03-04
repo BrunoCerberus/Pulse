@@ -3,7 +3,7 @@ import EntropyCore
 import SwiftUI
 import Testing
 
-@Suite("PremiumGateView Tests")
+@Suite
 struct PremiumGateViewTests {
     @Test("PremiumGateView can be instantiated")
     func canBeInstantiated() {

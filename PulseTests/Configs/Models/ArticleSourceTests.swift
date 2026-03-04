@@ -2,7 +2,7 @@ import Foundation
 @testable import Pulse
 import Testing
 
-@Suite("ArticleSource Model Tests")
+@Suite
 struct ArticleSourceTests {
     @Test("ArticleSource initializes correctly")
     func initializesCorrectly() {

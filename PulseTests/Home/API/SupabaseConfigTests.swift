@@ -3,7 +3,7 @@ import Foundation
 @testable import Pulse
 import Testing
 
-@Suite("SupabaseConfig Tests")
+@Suite
 struct SupabaseConfigTests {
     @Test("url returns empty when not configured")
     func urlReturnsEmptyWhenNotConfigured() {

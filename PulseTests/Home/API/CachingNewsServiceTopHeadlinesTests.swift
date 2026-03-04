@@ -3,7 +3,7 @@ import Foundation
 @testable import Pulse
 import Testing
 
-@Suite("CachingNewsService Top Headlines Tests")
+@Suite
 struct CachingNewsServiceTopHeadlinesTests {
     let mockNewsService: MockNewsService
     let mockCacheStore: MockNewsCacheStore

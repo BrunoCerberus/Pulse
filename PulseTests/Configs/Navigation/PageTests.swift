@@ -4,7 +4,7 @@ import EntropyCore
 import SwiftUI
 import Testing
 
-@Suite("Page Tests")
+@Suite
 struct PageTests {
     @Test("all cases are hashable")
     func allCasesAreHashable() throws {

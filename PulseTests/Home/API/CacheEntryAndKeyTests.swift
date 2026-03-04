@@ -5,7 +5,7 @@ import Testing
 
 // MARK: - Cache Entry Tests
 
-@Suite("CacheEntry Tests")
+@Suite
 struct CacheEntryTests {
     @Test("CacheEntry isExpired returns false when within TTL")
     func cacheEntryNotExpired() {
@@ -30,7 +30,7 @@ struct CacheEntryTests {
 
 // MARK: - Cache Key Tests
 
-@Suite("NewsCacheKey Tests")
+@Suite
 struct NewsCacheKeyTests {
     @Test("Cache keys generate unique string keys")
     func uniqueStringKeys() {

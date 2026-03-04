@@ -2,7 +2,7 @@ import Foundation
 @testable import Pulse
 import Testing
 
-@Suite("SearchViewEvent Tests")
+@Suite
 struct SearchViewEventTests {
     @Test("SearchViewEvent cases are Equatable")
     func equatable() {

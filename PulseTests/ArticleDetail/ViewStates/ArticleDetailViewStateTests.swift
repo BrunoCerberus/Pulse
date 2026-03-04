@@ -2,7 +2,7 @@ import Foundation
 @testable import Pulse
 import Testing
 
-@Suite("ArticleDetailViewState Tests")
+@Suite
 struct ArticleDetailViewStateTests {
     @Test("Initial state has correct defaults")
     func initialState() {

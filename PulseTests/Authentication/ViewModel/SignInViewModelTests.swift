@@ -5,7 +5,7 @@ import Foundation
 import Testing
 import UIKit
 
-@Suite("SignInViewModel Tests")
+@Suite
 @MainActor
 struct SignInViewModelTests {
     let mockAuthService: MockAuthService

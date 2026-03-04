@@ -2,7 +2,7 @@ import Foundation
 @testable import Pulse
 import Testing
 
-@Suite("SettingsViewState Tests")
+@Suite
 struct SettingsViewStateTests {
     @Test("Initial state has correct defaults")
     func initialState() {
@@ -40,7 +40,7 @@ struct SettingsViewStateTests {
     }
 }
 
-@Suite("SettingsViewEvent Tests")
+@Suite
 struct SettingsViewEventTests {
     @Test("SettingsViewEvent cases are Equatable")
     func equatable() {

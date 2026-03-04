@@ -4,7 +4,7 @@ import Testing
 
 // MARK: - MediaViewState Tests
 
-@Suite("MediaViewState Tests")
+@Suite
 struct MediaViewStateTests {
     @Test("Initial state has correct defaults")
     func initialState() {
@@ -45,7 +45,7 @@ struct MediaViewStateTests {
 
 // MARK: - MediaViewItem Tests
 
-@Suite("MediaViewItem Tests")
+@Suite
 struct MediaViewItemTests {
     @Test("MediaViewItem initializes from Article")
     func initFromArticle() {

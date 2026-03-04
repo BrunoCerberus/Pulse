@@ -5,7 +5,7 @@ import Foundation
 @testable import Pulse
 import Testing
 
-@Suite("SearchDomainInteractor Tests")
+@Suite
 @MainActor
 struct SearchDomainInteractorTests {
     let mockSearchService: MockSearchService

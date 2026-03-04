@@ -4,7 +4,7 @@ import Foundation
 @testable import Pulse
 import Testing
 
-@Suite("OnboardingViewModel Tests")
+@Suite
 @MainActor
 struct OnboardingViewModelTests {
     let sut: OnboardingViewModel

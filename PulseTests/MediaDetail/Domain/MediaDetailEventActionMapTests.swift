@@ -3,7 +3,7 @@ import Foundation
 @testable import Pulse
 import Testing
 
-@Suite("MediaDetailEventActionMap Tests")
+@Suite
 struct MediaDetailEventActionMapTests {
     let sut = MediaDetailEventActionMap()
 

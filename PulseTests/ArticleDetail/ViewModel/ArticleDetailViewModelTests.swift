@@ -53,7 +53,7 @@ private func waitForContentProcessing(_ viewModel: ArticleDetailViewModel) async
 
 // MARK: - Initial State Tests
 
-@Suite("ArticleDetailViewModel Initial State")
+@Suite
 @MainActor
 struct ArticleDetailVMInitialTests {
     @Test("Initial state has processed content")
@@ -81,7 +81,7 @@ struct ArticleDetailVMInitialTests {
 
 // MARK: - HTML Processing Tests
 
-@Suite("ArticleDetailViewModel HTML Processing")
+@Suite
 @MainActor
 struct ArticleDetailVMHTMLTests {
     @Test("HTML tags are stripped from content")
@@ -151,7 +151,7 @@ struct ArticleDetailVMHTMLTests {
 
 // MARK: - Content Processing Tests
 
-@Suite("ArticleDetailViewModel Content Processing")
+@Suite
 @MainActor
 struct ArticleDetailVMContentTests {
     @Test("Truncation marker is removed from content")
@@ -232,7 +232,7 @@ struct ArticleDetailVMContentTests {
 
 // MARK: - Bookmark & History Tests
 
-@Suite("ArticleDetailViewModel Bookmark & History")
+@Suite
 @MainActor
 struct ArticleDetailVMBookmarkTests {
     @Test("Toggle bookmark adds article to bookmarks")

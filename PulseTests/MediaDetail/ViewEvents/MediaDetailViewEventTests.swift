@@ -2,7 +2,7 @@ import Foundation
 @testable import Pulse
 import Testing
 
-@Suite("MediaDetailViewEvent Tests")
+@Suite
 struct MediaDetailViewEventTests {
     @Test("onAppear event") func onAppear() {
         #expect(MediaDetailViewEvent.onAppear == .onAppear)

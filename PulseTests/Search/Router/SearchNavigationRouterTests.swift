@@ -3,7 +3,7 @@ import Foundation
 @testable import Pulse
 import Testing
 
-@Suite("SearchNavigationRouter Tests")
+@Suite
 @MainActor
 struct SearchNavigationRouterTests {
     let serviceLocator: ServiceLocator

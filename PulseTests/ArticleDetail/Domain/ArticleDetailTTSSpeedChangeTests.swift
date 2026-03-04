@@ -4,7 +4,7 @@ import Foundation
 @testable import Pulse
 import Testing
 
-@Suite("ArticleDetail TTS Speed Change Player Visibility Tests")
+@Suite
 @MainActor
 struct ArticleDetailTTSSpeedChangeTests {
     let mockStorageService: MockStorageService

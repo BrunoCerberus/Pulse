@@ -5,7 +5,7 @@ import Foundation
 import Testing
 import UIKit
 
-@Suite("PremiumFeature Tests")
+@Suite
 struct PremiumFeatureTests {
     // MARK: - Feature Properties
 
@@ -91,7 +91,7 @@ struct PremiumFeatureTests {
     }
 }
 
-@Suite("MockStoreKitService Premium Status Tests")
+@Suite
 struct MockStoreKitServicePremiumTests {
     // MARK: - Premium Status
 
@@ -142,7 +142,7 @@ struct MockStoreKitServicePremiumTests {
     }
 }
 
-@Suite("Premium Gating Integration Tests")
+@Suite
 @MainActor
 struct PremiumGatingIntegrationTests {
     // MARK: - Service Locator with Premium Status

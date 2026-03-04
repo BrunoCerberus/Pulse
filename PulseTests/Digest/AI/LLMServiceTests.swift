@@ -4,7 +4,7 @@ import Testing
 
 // MARK: - LLMInferenceConfig Tests
 
-@Suite("LLMInferenceConfig Tests")
+@Suite
 struct LLMInferenceConfigTests {
     @Test("LLMInferenceConfig initializes with all properties")
     func initializesWithAllProperties() {
@@ -107,7 +107,7 @@ struct LLMInferenceConfigTests {
 
 // MARK: - LLMModelStatus Tests
 
-@Suite("LLMModelStatus Tests")
+@Suite
 struct LLMModelStatusTests {
     @Test("LLMModelStatus has all cases")
     func hasAllCases() {
@@ -188,7 +188,7 @@ struct LLMModelStatusTests {
 
 // MARK: - LLMError Tests
 
-@Suite("LLMError Tests")
+@Suite
 struct LLMErrorTests {
     @Test("LLMError has all cases")
     func hasAllCases() {

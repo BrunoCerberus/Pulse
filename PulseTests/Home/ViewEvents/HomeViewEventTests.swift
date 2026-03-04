@@ -2,7 +2,7 @@ import Foundation
 @testable import Pulse
 import Testing
 
-@Suite("HomeViewEvent Tests")
+@Suite
 struct HomeViewEventTests {
     @Test("onAppear event exists") func onAppear() {
         #expect(HomeViewEvent.onAppear == .onAppear)

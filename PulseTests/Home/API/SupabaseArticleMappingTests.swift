@@ -4,7 +4,7 @@ import Foundation
 @testable import Pulse
 import Testing
 
-@Suite("SupabaseArticle Mapping Tests")
+@Suite
 struct SupabaseArticleMappingTests {
     @Test("Article with both content and summary maps correctly")
     func contentAndSummaryMappedCorrectly() {

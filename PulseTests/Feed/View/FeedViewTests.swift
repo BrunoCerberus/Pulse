@@ -4,7 +4,7 @@ import EntropyCore
 import SwiftUI
 import Testing
 
-@Suite("FeedView Tests")
+@Suite
 @MainActor
 struct FeedViewTests {
     @Test("FeedView can be instantiated")

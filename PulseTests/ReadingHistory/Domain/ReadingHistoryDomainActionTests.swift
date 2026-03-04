@@ -2,7 +2,7 @@ import Foundation
 @testable import Pulse
 import Testing
 
-@Suite("ReadingHistoryDomainAction Tests")
+@Suite
 struct ReadingHistoryDomainActionTests {
     // MARK: - Action Case Tests
 

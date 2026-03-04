@@ -2,7 +2,7 @@ import Foundation
 @testable import Pulse
 import Testing
 
-@Suite("SummarizationDomainAction Tests")
+@Suite
 struct SummarizationDomainActionTests {
     @Test("startSummarization action exists")
     func startSummarization() {

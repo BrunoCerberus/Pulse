@@ -4,7 +4,7 @@ import Foundation
 @testable import Pulse
 import Testing
 
-@Suite("OnboardingDomainInteractor Tests")
+@Suite
 @MainActor
 struct OnboardingDomainInteractorTests {
     let mockOnboardingService: MockOnboardingService

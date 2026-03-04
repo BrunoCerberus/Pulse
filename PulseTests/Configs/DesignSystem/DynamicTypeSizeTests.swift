@@ -2,7 +2,7 @@ import Foundation
 import SwiftUI
 import Testing
 
-@Suite("DynamicTypeSize.isAccessibilitySize Tests")
+@Suite
 struct DynamicTypeSizeTests {
     /// Helper to call through Pulse's extension without ambiguity.
     /// Both the native SwiftUI property and the Pulse extension share

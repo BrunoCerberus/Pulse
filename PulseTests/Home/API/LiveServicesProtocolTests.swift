@@ -5,7 +5,7 @@ import Testing
 
 // MARK: - Live Service Protocol Conformance Tests
 
-@Suite("Live Services Protocol Conformance Tests")
+@Suite
 struct LiveServicesProtocolTests {
     @Test("LiveNewsService conforms to NewsService protocol")
     func liveNewsServiceConformance() {

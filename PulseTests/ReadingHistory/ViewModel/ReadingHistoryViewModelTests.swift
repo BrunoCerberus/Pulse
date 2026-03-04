@@ -4,7 +4,7 @@ import Foundation
 @testable import Pulse
 import Testing
 
-@Suite("ReadingHistoryViewModel Tests")
+@Suite
 @MainActor
 struct ReadingHistoryViewModelTests {
     let mockStorageService: MockStorageService

@@ -4,7 +4,7 @@ import Foundation
 @testable import Pulse
 import Testing
 
-@Suite("AudioPlayerManager Tests", .serialized)
+@Suite(.serialized)
 @MainActor
 struct AudioPlayerManagerTests {
     // MARK: - Initialization Tests
@@ -353,7 +353,7 @@ struct AudioPlayerManagerTests {
 
 // MARK: - CMTime Extension Tests
 
-@Suite("CMTime Usage Tests")
+@Suite
 struct CMTimeUsageTests {
     @Test("CMTime can be created with seconds and timescale")
     func cmTimeCanBeCreated() {

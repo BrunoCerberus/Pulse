@@ -2,7 +2,7 @@ import Foundation
 @testable import Pulse
 import Testing
 
-@Suite("WidgetDataManager Tests")
+@Suite
 @MainActor
 struct WidgetDataManagerTests {
     // MARK: - SharedWidgetArticle Encoding Tests

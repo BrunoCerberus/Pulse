@@ -5,7 +5,7 @@ import Foundation
 import Testing
 import UIKit
 
-@Suite("AuthDomainInteractor Tests")
+@Suite
 @MainActor
 struct AuthDomainInteractorTests {
     let mockAuthService: MockAuthService

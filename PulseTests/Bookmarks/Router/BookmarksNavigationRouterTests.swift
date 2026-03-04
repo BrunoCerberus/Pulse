@@ -7,7 +7,7 @@ import Testing
 /// - Article detail navigation
 /// - Nil coordinator safety
 /// - Equatable conformance
-@Suite("BookmarksNavigationRouter Tests")
+@Suite
 @MainActor
 struct BookmarksNavigationRouterTests {
     let serviceLocator: ServiceLocator

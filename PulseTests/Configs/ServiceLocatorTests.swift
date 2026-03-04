@@ -3,7 +3,7 @@ import Foundation
 @testable import Pulse
 import Testing
 
-@Suite("ServiceLocator Tests")
+@Suite
 @MainActor
 struct ServiceLocatorTests {
     @Test("Register and retrieve service")

@@ -2,7 +2,7 @@ import Foundation
 @testable import Pulse
 import Testing
 
-@Suite("SupabaseArticle Basic Tests")
+@Suite
 struct SupabaseArticleBasicTests {
     @Test("toArticle maps all fields correctly")
     func toArticleMapsFields() {

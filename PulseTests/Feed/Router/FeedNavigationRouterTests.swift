@@ -3,7 +3,7 @@ import Foundation
 @testable import Pulse
 import Testing
 
-@Suite("FeedNavigationRouter Tests")
+@Suite
 @MainActor
 struct FeedNavigationRouterTests {
     @Test("Router initializes with nil coordinator")
@@ -91,7 +91,7 @@ struct FeedNavigationRouterTests {
     }
 }
 
-@Suite("FeedNavigationEvent Tests")
+@Suite
 struct FeedNavigationEventTests {
     @Test("FeedNavigationEvent articleDetail carries article")
     func articleDetailCarriesArticle() {

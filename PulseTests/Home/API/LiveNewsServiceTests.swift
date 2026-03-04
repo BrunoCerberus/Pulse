@@ -4,7 +4,7 @@ import Foundation
 @testable import Pulse
 import Testing
 
-@Suite("LiveNewsService Tests")
+@Suite
 struct LiveNewsServiceTests {
     @Test("LiveNewsService can be instantiated")
     func canBeInstantiated() {
@@ -43,7 +43,7 @@ struct LiveNewsServiceTests {
     }
 }
 
-@Suite("GuardianAPI Tests")
+@Suite
 struct GuardianAPITests {
     @Test("GuardianAPI search path includes required parameters")
     func searchPathIncludesRequiredParameters() {

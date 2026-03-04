@@ -3,7 +3,7 @@ import Foundation
 import SwiftData
 import Testing
 
-@Suite("LiveStorageService Tests")
+@Suite
 @MainActor
 struct LiveStorageServiceTests {
     private var sut: LiveStorageService!

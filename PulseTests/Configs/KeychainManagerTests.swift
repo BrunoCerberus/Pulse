@@ -5,7 +5,7 @@ import Testing
 
 /// Note: Keychain tests require host app entitlements to run.
 /// These tests are disabled in unit test target but can run in UI tests.
-@Suite("KeychainManager Tests", .serialized, .disabled("Keychain requires host app entitlements"))
+@Suite(.serialized, .disabled("Keychain requires host app entitlements"))
 @MainActor
 struct KeychainManagerTests {
     let sut: KeychainManager

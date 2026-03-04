@@ -4,7 +4,7 @@ import Foundation
 import SwiftUI
 import Testing
 
-@Suite("ThemeManager Tests", .serialized)
+@Suite(.serialized)
 @MainActor
 struct ThemeManagerTests {
     // Note: ThemeManager uses a shared singleton, so tests must be serialized

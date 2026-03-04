@@ -3,7 +3,7 @@ import Foundation
 import StoreKit
 import Testing
 
-@Suite("PaywallDomainAction Tests")
+@Suite
 struct PaywallDomainActionTests {
     @Test("loadProducts action exists")
     func loadProducts() {

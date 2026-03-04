@@ -2,7 +2,7 @@ import Foundation
 @testable import Pulse
 import Testing
 
-@Suite("SettingsDomainState Tests")
+@Suite
 struct SettingsDomainStateTests {
     @Test("Initial state has correct default values")
     func initialState() {

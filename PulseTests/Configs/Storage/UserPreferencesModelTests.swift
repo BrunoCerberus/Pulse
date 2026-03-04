@@ -2,7 +2,7 @@ import Foundation
 @testable import Pulse
 import Testing
 
-@Suite("UserPreferencesModel Tests")
+@Suite
 struct UserPreferencesModelTests {
     // MARK: - Initialization Tests
 

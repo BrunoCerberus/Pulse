@@ -4,7 +4,7 @@ import Foundation
 @testable import Pulse
 import Testing
 
-@Suite("LiveBookmarksService Tests")
+@Suite
 struct LiveBookmarksServiceTests {
     let mockStorageService: MockStorageService
 

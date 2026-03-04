@@ -2,7 +2,7 @@ import Foundation
 @testable import Pulse
 import Testing
 
-@Suite("SearchViewState Tests")
+@Suite
 struct SearchViewStateTests {
     @Test("Initial state has correct defaults")
     func initialState() {

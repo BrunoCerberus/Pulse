@@ -2,7 +2,7 @@ import Foundation
 @testable import Pulse
 import Testing
 
-@Suite("OnboardingViewStateReducer Tests")
+@Suite
 struct OnboardingViewStateReducerTests {
     let sut = OnboardingViewStateReducer()
 

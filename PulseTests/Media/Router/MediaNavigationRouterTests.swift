@@ -2,7 +2,7 @@ import Foundation
 @testable import Pulse
 import Testing
 
-@Suite("MediaNavigationRouter Tests")
+@Suite
 @MainActor
 struct MediaNavigationRouterTests {
     @Test("Router initializes with nil coordinator")
@@ -52,7 +52,7 @@ struct MediaNavigationRouterTests {
     }
 }
 
-@Suite("MediaNavigationEvent Tests")
+@Suite
 struct MediaNavigationEventTests {
     @Test("MediaNavigationEvent mediaDetail carries article")
     func mediaDetailCarriesArticle() {

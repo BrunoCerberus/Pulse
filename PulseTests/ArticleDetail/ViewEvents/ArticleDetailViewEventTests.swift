@@ -2,7 +2,7 @@ import Foundation
 @testable import Pulse
 import Testing
 
-@Suite("ArticleDetailViewEvent Tests")
+@Suite
 struct ArticleDetailViewEventTests {
     @Test("onAppear event") func onAppear() {
         #expect(ArticleDetailViewEvent.onAppear == .onAppear)

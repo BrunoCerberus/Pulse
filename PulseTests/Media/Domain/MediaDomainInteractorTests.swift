@@ -4,7 +4,7 @@ import Foundation
 @testable import Pulse
 import Testing
 
-@Suite("MediaDomainInteractor Tests")
+@Suite
 @MainActor
 struct MediaDomainInteractorTests {
     let mockMediaService: MockMediaService

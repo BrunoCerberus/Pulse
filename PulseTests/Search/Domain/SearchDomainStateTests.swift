@@ -2,7 +2,7 @@ import Foundation
 @testable import Pulse
 import Testing
 
-@Suite("SearchDomainState Tests")
+@Suite
 struct SearchDomainStateTests {
     private var testArticles: [Article] {
         [
@@ -90,7 +90,7 @@ struct SearchDomainStateTests {
     }
 }
 
-@Suite("SearchSortOption Tests")
+@Suite
 struct SearchSortOptionTests {
     @Test("All cases exist")
     func allCases() {

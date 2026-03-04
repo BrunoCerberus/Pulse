@@ -4,7 +4,7 @@ import Foundation
 @testable import Pulse
 import Testing
 
-@Suite("MediaViewModel Tests")
+@Suite
 @MainActor
 struct MediaViewModelTests {
     let serviceLocator: ServiceLocator

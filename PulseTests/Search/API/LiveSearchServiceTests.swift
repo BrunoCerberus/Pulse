@@ -3,7 +3,7 @@ import Foundation
 @testable import Pulse
 import Testing
 
-@Suite("LiveSearchService Tests", .serialized)
+@Suite(.serialized)
 @MainActor
 struct LiveSearchServiceTests {
     private let recentSearchesKey = "pulse.recentSearches"

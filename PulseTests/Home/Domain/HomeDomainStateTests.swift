@@ -2,7 +2,7 @@ import Foundation
 @testable import Pulse
 import Testing
 
-@Suite("HomeDomainState Tests")
+@Suite
 struct HomeDomainStateTests {
     private static let referenceDate = Date(timeIntervalSince1970: 1_700_000_000)
 

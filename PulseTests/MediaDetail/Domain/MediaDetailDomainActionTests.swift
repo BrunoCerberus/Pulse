@@ -2,7 +2,7 @@ import Foundation
 @testable import Pulse
 import Testing
 
-@Suite("MediaDetailDomainAction Tests")
+@Suite
 struct MediaDetailDomainActionTests {
     @Test("onAppear action exists")
     func onAppear() {

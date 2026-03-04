@@ -2,7 +2,7 @@ import Foundation
 @testable import Pulse
 import Testing
 
-@Suite("AuthUser Model Tests")
+@Suite
 struct AuthUserTests {
     // MARK: - Initialization Tests
 
@@ -120,7 +120,7 @@ struct AuthUserTests {
     }
 }
 
-@Suite("AuthProvider Tests")
+@Suite
 struct AuthProviderTests {
     @Test("AuthProvider google has correct raw value")
     func googleRawValue() {
@@ -160,7 +160,7 @@ struct AuthProviderTests {
     }
 }
 
-@Suite("AuthError Tests")
+@Suite
 struct AuthErrorTests {
     @Test("AuthError signInCancelled has localized description")
     func signInCancelledDescription() {

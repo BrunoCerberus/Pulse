@@ -4,7 +4,7 @@ import Testing
 
 // MARK: - MemoryTier Tests
 
-@Suite("MemoryTier Tests")
+@Suite
 struct MemoryTierTests {
     @Test("MemoryTier has all cases")
     func hasAllCases() {
@@ -39,7 +39,7 @@ struct MemoryTierTests {
 
 // MARK: - LLMConfiguration Tests
 
-@Suite("LLMConfiguration Tests")
+@Suite
 struct LLMConfigurationTests {
     // MARK: - Model File Tests
 

@@ -10,7 +10,7 @@ import UIKit
 /// global state. Tests use unique URLs to avoid conflicts, but `clearCache()` affects global
 /// state. If parallel test execution causes issues, consider running these tests serially
 /// with `@Suite(.serialized)` or adding a test-specific cache instance capability.
-@Suite("ImageCache Tests")
+@Suite
 struct ImageCacheTests {
     // MARK: - Test Data
 
@@ -139,7 +139,7 @@ struct ImageCacheTests {
     }
 }
 
-@Suite("ImageCacheError Tests")
+@Suite
 struct ImageCacheErrorTests {
     @Test("invalidImageData error case exists")
     func invalidImageDataCase() {

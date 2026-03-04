@@ -2,7 +2,7 @@ import Foundation
 @testable import Pulse
 import Testing
 
-@Suite("BookmarksViewState Tests")
+@Suite
 struct BookmarksViewStateTests {
     @Test("Initial state has correct defaults")
     func initialState() {
@@ -33,7 +33,7 @@ struct BookmarksViewStateTests {
     }
 }
 
-@Suite("BookmarksViewEvent Tests")
+@Suite
 struct BookmarksViewEventTests {
     @Test("BookmarksViewEvent cases are Equatable")
     func equatable() {

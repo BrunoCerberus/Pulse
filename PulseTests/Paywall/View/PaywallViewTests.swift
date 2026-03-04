@@ -5,7 +5,7 @@ import StoreKit
 import SwiftUI
 import Testing
 
-@Suite("PaywallView Tests")
+@Suite
 @MainActor
 struct PaywallViewTests {
     @Test("PaywallView can be instantiated")

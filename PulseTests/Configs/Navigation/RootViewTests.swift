@@ -4,7 +4,7 @@ import Foundation
 @testable import Pulse
 import Testing
 
-@Suite("RootView Tests")
+@Suite
 struct RootViewTests {
     @Test("RootView can be instantiated")
     func canBeInstantiated() {

@@ -2,7 +2,7 @@ import Foundation
 @testable import Pulse
 import Testing
 
-@Suite("MemoryOperation Tests")
+@Suite
 struct MemoryOperationTests {
     // MARK: - Enum Cases Tests
 

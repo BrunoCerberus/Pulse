@@ -4,7 +4,7 @@ import Foundation
 @testable import Pulse
 import Testing
 
-@Suite("LiveSettingsService Tests")
+@Suite
 struct LiveSettingsServiceTests {
     let mockStorageService: MockStorageService
 

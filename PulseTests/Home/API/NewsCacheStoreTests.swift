@@ -4,7 +4,7 @@ import Testing
 
 // MARK: - LiveNewsCacheStore Tests
 
-@Suite("LiveNewsCacheStore Tests")
+@Suite
 struct LiveNewsCacheStoreTests {
     let sut: LiveNewsCacheStore
 
@@ -129,7 +129,7 @@ struct LiveNewsCacheStoreTests {
 
 // MARK: - NewsCacheTTL Tests
 
-@Suite("NewsCacheTTL Tests")
+@Suite
 struct NewsCacheTTLTests {
     @Test("Default TTL is 10 minutes")
     func defaultTTLIsTenMinutes() {
@@ -139,7 +139,7 @@ struct NewsCacheTTLTests {
 
 // MARK: - Additional CacheEntry Tests
 
-@Suite("CacheEntry Extended Tests")
+@Suite
 struct CacheEntryExtendedTests {
     @Test("CacheEntry stores timestamp correctly")
     func storesTimestamp() {
@@ -164,7 +164,7 @@ struct CacheEntryExtendedTests {
 
 // MARK: - Additional NewsCacheKey Tests
 
-@Suite("NewsCacheKey Extended Tests")
+@Suite
 struct NewsCacheKeyExtendedTests {
     @Test("Article key contains article id")
     func articleKeyContainsId() {

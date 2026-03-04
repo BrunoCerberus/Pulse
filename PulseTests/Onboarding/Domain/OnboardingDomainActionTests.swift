@@ -2,7 +2,7 @@ import Foundation
 @testable import Pulse
 import Testing
 
-@Suite("OnboardingDomainAction Tests")
+@Suite
 struct OnboardingDomainActionTests {
     @Test("nextPage action exists")
     func nextPage() {

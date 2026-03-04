@@ -2,7 +2,7 @@ import Foundation
 @testable import Pulse
 import Testing
 
-@Suite("OnboardingEventActionMap Tests")
+@Suite
 struct OnboardingEventActionMapTests {
     let sut = OnboardingEventActionMap()
 

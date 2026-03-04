@@ -2,7 +2,7 @@ import Foundation
 @testable import Pulse
 import Testing
 
-@Suite("GuardianResponse Model Tests")
+@Suite
 struct GuardianResponseTests {
     // MARK: - JSON Test Data
 
@@ -245,7 +245,7 @@ struct GuardianResponseTests {
     }
 }
 
-@Suite("GuardianArticleDTO Tests")
+@Suite
 struct GuardianArticleDTOTests {
     @Test("GuardianArticleDTO decodes all fields")
     func decodesAllFields() throws {
@@ -308,7 +308,7 @@ struct GuardianArticleDTOTests {
     }
 }
 
-@Suite("GuardianSingleArticleResponse Tests")
+@Suite
 struct GuardianSingleArticleResponseTests {
     @Test("GuardianSingleArticleResponse decodes correctly")
     func decodesCorrectly() throws {

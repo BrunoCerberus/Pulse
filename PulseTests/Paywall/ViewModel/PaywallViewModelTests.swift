@@ -4,7 +4,7 @@ import Foundation
 @testable import Pulse
 import Testing
 
-@Suite("PaywallViewModel Tests")
+@Suite
 @MainActor
 struct PaywallViewModelTests {
     let mockStoreKitService: MockStoreKitService

@@ -3,7 +3,7 @@ import Foundation
 @testable import Pulse
 import Testing
 
-@Suite("ArticleDetailEventActionMap Tests")
+@Suite
 struct ArticleDetailEventActionMapTests {
     let sut = ArticleDetailEventActionMap()
 

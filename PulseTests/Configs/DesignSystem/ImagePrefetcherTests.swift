@@ -3,7 +3,7 @@ import Foundation
 @testable import Pulse
 import Testing
 
-@Suite("ImagePrefetcher Tests")
+@Suite
 struct ImagePrefetcherTests {
     // MARK: - Test URLs
 

@@ -4,7 +4,7 @@ import Foundation
 @testable import Pulse
 import Testing
 
-@Suite("BookmarksDomainInteractor Tests")
+@Suite
 @MainActor
 struct BookmarksDomainInteractorTests {
     let mockBookmarksService: MockBookmarksService

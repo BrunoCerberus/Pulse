@@ -2,7 +2,7 @@ import Foundation
 @testable import Pulse
 import Testing
 
-@Suite("DiskNewsCacheStore Tests")
+@Suite
 struct DiskNewsCacheStoreTests {
     let sut: DiskNewsCacheStore
     let testDirectory: URL

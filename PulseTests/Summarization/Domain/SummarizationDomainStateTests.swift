@@ -2,7 +2,7 @@ import Foundation
 @testable import Pulse
 import Testing
 
-@Suite("SummarizationDomainState Tests")
+@Suite
 struct SummarizationDomainStateTests {
     private static let referenceDate = Date(timeIntervalSince1970: 1_700_000_000)
 
@@ -110,7 +110,7 @@ struct SummarizationDomainStateTests {
     }
 }
 
-@Suite("SummarizationState Tests")
+@Suite
 struct SummarizationStateTests {
     @Test("Idle state exists")
     func idle() {

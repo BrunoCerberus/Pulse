@@ -2,7 +2,7 @@ import Foundation
 @testable import Pulse
 import Testing
 
-@Suite("HomeViewStateReducer Tests")
+@Suite
 struct HomeViewStateReducerTests {
     let sut = HomeViewStateReducer()
 

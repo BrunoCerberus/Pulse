@@ -2,7 +2,7 @@ import Foundation
 @testable import Pulse
 import Testing
 
-@Suite("DailyDigest Model Tests")
+@Suite
 struct DailyDigestTests {
     // MARK: - Test Data
 

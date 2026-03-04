@@ -4,7 +4,7 @@ import Foundation
 @testable import Pulse
 import Testing
 
-@Suite("MediaDetailDomainInteractor Tests")
+@Suite
 @MainActor
 struct MediaDetailDomainInteractorTests {
     let mockStorageService: MockStorageService

@@ -2,7 +2,7 @@ import Foundation
 @testable import Pulse
 import Testing
 
-@Suite("FeedDomainState Tests")
+@Suite
 struct FeedDomainStateTests {
     private static let referenceDate = Date(timeIntervalSince1970: 1_700_000_000)
 
@@ -258,7 +258,7 @@ struct FeedDomainStateTests {
 
 // MARK: - FeedGenerationState Tests
 
-@Suite("FeedGenerationState Tests")
+@Suite
 struct FeedGenerationStateTests {
     @Test("Idle state exists")
     func idleState() {

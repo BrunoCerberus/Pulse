@@ -4,7 +4,7 @@ import Foundation
 @testable import Pulse
 import Testing
 
-@Suite("LiveLLMService Tests")
+@Suite
 struct LiveLLMServiceTests {
     @Test("LiveLLMService can be instantiated")
     func canBeInstantiated() {
