@@ -49,11 +49,12 @@ private enum Constants {
 
 // MARK: - MediaDetailView
 
-/// Detail view for video and podcast media playback.
-///
-/// - Videos are displayed using an embedded WKWebView (YouTube, etc.)
-/// - Podcasts are played using AVPlayer with custom controls
-struct MediaDetailView: View { // swiftlint:disable:this type_body_length
+// Detail view for video and podcast media playback.
+//
+// - Videos are displayed using an embedded WKWebView (YouTube, etc.)
+// - Podcasts are played using AVPlayer with custom controls
+// swiftlint:disable:next type_body_length
+struct MediaDetailView: View {
     @StateObject private var viewModel: MediaDetailViewModel
     @Environment(\.dismiss) private var dismiss
     @Environment(\.colorScheme) private var colorScheme
