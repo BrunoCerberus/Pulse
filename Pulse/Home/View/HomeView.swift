@@ -237,6 +237,7 @@ struct HomeView<R: HomeNavigationRouter>: View {
             .padding(.horizontal, Spacing.md)
             .padding(.vertical, Spacing.sm)
         }
+        .accessibilityIdentifier("categoryTabsScrollView")
     }
 
     private func categoryChip(
