@@ -7,6 +7,7 @@ import XCTest
 /// Snapshot tests verifying SettingsAccountSection layout at accessibility text sizes.
 /// Validates the HStack-to-VStack transition for profile info at accessibility sizes.
 @MainActor
+// swiftlint:disable:next type_name
 final class SettingsAccountSectionAccessibilitySnapshotTests: XCTestCase {
     func testSettingsAccountSectionAccessibilitySize() {
         let view = List {

@@ -127,7 +127,8 @@ final class BentoDigestGridSnapshotTests: XCTestCase {
     }
 
     func testBentoDigestGridSingleParagraph() {
-        let summary = "Today's reading focused on technology and business developments. AI advancements dominated the tech news with several major announcements."
+        let summary = "Today's reading focused on technology and business developments. "
+            + "AI advancements dominated the tech news with several major announcements."
 
         let digest = DigestViewItem(
             from: DailyDigest(

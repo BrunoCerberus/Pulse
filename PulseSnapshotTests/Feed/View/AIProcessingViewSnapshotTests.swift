@@ -23,7 +23,8 @@ final class AIProcessingViewSnapshotTests: XCTestCase {
     func testAIProcessingViewGeneratingWithStreamingText() {
         let view = AIProcessingView(
             phase: .generating,
-            streamingText: "Today's digest covers the latest developments in technology and business. Key highlights include advancements in AI..."
+            streamingText: "Today's digest covers the latest developments in technology "
+                + "and business. Key highlights include advancements in AI..."
         )
         let controller = UIHostingController(rootView: view)
 

@@ -1,0 +1,7 @@
+# SwiftFormat Configuration
+
+# Disable rules that remove Swift Testing @Suite annotations
+--disable redundantSwiftTestingSuite
+
+# Disable test case name rewriting (testFoo -> foo)
+--disable swiftTestingTestCaseNames

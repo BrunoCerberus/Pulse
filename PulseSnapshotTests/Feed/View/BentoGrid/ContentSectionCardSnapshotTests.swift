@@ -46,7 +46,8 @@ final class ContentSectionCardSnapshotTests: XCTestCase {
         let section = DigestSection(
             id: "test-section-1",
             title: "Technology",
-            content: "The technology sector saw significant developments with new AI models being announced and companies pivoting their strategies.",
+            content: "The technology sector saw significant developments "
+                + "with new AI models being announced and companies pivoting their strategies.",
             category: .technology,
             relatedArticles: testArticles
         )
@@ -98,7 +99,8 @@ final class ContentSectionCardSnapshotTests: XCTestCase {
         let section = DigestSection(
             id: "test-section-3",
             title: "Business",
-            content: "Business markets responded positively to the tech developments, with stock prices reflecting investor optimism.",
+            content: "Business markets responded positively to the tech developments, "
+                + "with stock prices reflecting investor optimism.",
             category: .business,
             relatedArticles: []
         )

@@ -77,7 +77,11 @@ struct CoordinatorView: View {
                     }
                 }
 
-                Tab(appLocalization.localized("tab.bookmarks"), systemImage: AppTab.bookmarks.symbolImage, value: .bookmarks) {
+                Tab(
+                    appLocalization.localized("tab.bookmarks"),
+                    systemImage: AppTab.bookmarks.symbolImage,
+                    value: .bookmarks
+                ) {
                     NavigationStack(path: $coordinator.bookmarksPath) {
                         BookmarksView(
                             router: BookmarksNavigationRouter(coordinator: coordinator),
@@ -89,7 +93,12 @@ struct CoordinatorView: View {
                     }
                 }
 
-                Tab(appLocalization.localized("tab.search"), systemImage: AppTab.search.symbolImage, value: .search, role: .search) {
+                Tab(
+                    appLocalization.localized("tab.search"),
+                    systemImage: AppTab.search.symbolImage,
+                    value: .search,
+                    role: .search
+                ) {
                     NavigationStack(path: $coordinator.searchPath) {
                         SearchView(
                             router: SearchNavigationRouter(coordinator: coordinator),

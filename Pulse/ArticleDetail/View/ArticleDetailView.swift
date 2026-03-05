@@ -1,3 +1,4 @@
+// swiftlint:disable file_length
 import Combine
 import EntropyCore
 import SwiftUI
@@ -84,6 +85,7 @@ private enum Constants {
 
 // MARK: - ArticleDetailView
 
+// swiftlint:disable:next type_body_length
 struct ArticleDetailView: View {
     @StateObject private var viewModel: ArticleDetailViewModel
     @StateObject private var paywallViewModel: PaywallViewModel

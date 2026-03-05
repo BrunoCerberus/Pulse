@@ -1,3 +1,4 @@
+// swiftlint:disable file_length
 import EntropyCore
 @testable import Pulse
 import SnapshotTesting
@@ -5,6 +6,7 @@ import SwiftUI
 import XCTest
 
 @MainActor
+// swiftlint:disable:next type_body_length
 final class HomeViewSnapshotTests: XCTestCase {
     private var serviceLocator: ServiceLocator!
 
@@ -45,8 +47,11 @@ final class HomeViewSnapshotTests: XCTestCase {
     private var longTitleArticle: Article {
         Article(
             id: "snapshot-long",
-            title: "This Is An Extremely Long Article Title That Should Test How The UI Handles Text Truncation And Line Limits In The Article Row View Component",
-            description: "A brief description that accompanies this article with the very long title to see how both elements render together.",
+            title: "This Is An Extremely Long Article Title That Should Test "
+                + "How The UI Handles Text Truncation And Line Limits "
+                + "In The Article Row View Component",
+            description: "A brief description that accompanies this article "
+                + "with the very long title to see how both elements render together.",
             content: "Full article content here...",
             author: "Jane Smith",
             source: ArticleSource(id: "reuters", name: "Reuters"),
@@ -593,7 +598,11 @@ private struct CategoryTabsPreview: View {
                         .padding(.vertical, Spacing.xs)
                         .background {
                             Capsule()
-                                .fill(selectedCategory == nil ? Color.Accent.primary : Color.Accent.primary.opacity(0.15))
+                                .fill(
+                                    selectedCategory == nil
+                                        ? Color.Accent.primary
+                                        : Color.Accent.primary.opacity(0.15)
+                                )
                         }
                 }
 

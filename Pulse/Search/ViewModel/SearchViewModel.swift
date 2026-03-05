@@ -31,6 +31,7 @@ final class SearchViewModel: CombineViewModel, ObservableObject {
         setupDebouncedSearch()
     }
 
+    // swiftlint:disable:next cyclomatic_complexity
     func handle(event: SearchViewEvent) {
         switch event {
         case let .onQueryChanged(query):

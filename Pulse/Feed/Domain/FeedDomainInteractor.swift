@@ -1,3 +1,4 @@
+// swiftlint:disable file_length
 import Combine
 import EntropyCore
 import Foundation
@@ -184,6 +185,7 @@ private extension FeedDomainInteractor {
         }
     }
 
+    // swiftlint:disable:next function_body_length
     func fetchLatestNews() {
         fetchArticlesTask?.cancel()
         updateState { $0.generationState = .loadingArticles }
