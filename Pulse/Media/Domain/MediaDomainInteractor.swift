@@ -19,6 +19,7 @@ import Foundation
 /// ## Dependencies
 /// - `MediaService`: Fetches media content from Supabase
 @MainActor
+// swiftlint:disable:next type_body_length
 final class MediaDomainInteractor: CombineInteractor {
     typealias DomainState = MediaDomainState
     typealias DomainAction = MediaDomainAction

@@ -1,3 +1,4 @@
+// swiftlint:disable file_length
 import EntropyCore
 @testable import Pulse
 import SnapshotTesting
@@ -5,6 +6,7 @@ import SwiftUI
 import XCTest
 
 @MainActor
+// swiftlint:disable:next type_body_length
 final class MediaViewSnapshotTests: XCTestCase {
     private var serviceLocator: ServiceLocator!
 
@@ -70,7 +72,9 @@ final class MediaViewSnapshotTests: XCTestCase {
     private var longTitleVideoArticle: Article {
         Article(
             id: "snapshot-video-long",
-            title: "This Is An Extremely Long Video Title That Should Test How The UI Handles Text Truncation And Line Limits In The Media Card View Component",
+            title: "This Is An Extremely Long Video Title That Should Test "
+                + "How The UI Handles Text Truncation And Line Limits "
+                + "In The Media Card View Component",
             description: "A brief description that accompanies this video with the very long title.",
             content: nil,
             author: "Long Form Creator",

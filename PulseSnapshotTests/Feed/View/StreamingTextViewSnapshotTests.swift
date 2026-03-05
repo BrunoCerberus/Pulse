@@ -15,7 +15,8 @@ final class StreamingTextViewSnapshotTests: XCTestCase {
 
     func testStreamingTextViewWithContent() {
         let view = StreamingTextView(
-            text: "Today's reading focused on technology and business topics. You explored developments in AI and market trends."
+            text: "Today's reading focused on technology and business topics. "
+                + "You explored developments in AI and market trends."
         )
         .padding()
         .frame(width: 375)

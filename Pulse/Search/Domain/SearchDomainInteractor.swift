@@ -19,6 +19,7 @@ import Foundation
 /// - `SearchService`: Performs search queries
 /// - `StorageService`: Persists reading history
 @MainActor
+// swiftlint:disable:next type_body_length
 final class SearchDomainInteractor: CombineInteractor {
     typealias DomainState = SearchDomainState
     typealias DomainAction = SearchDomainAction
@@ -92,6 +93,7 @@ final class SearchDomainInteractor: CombineInteractor {
             .store(in: &cancellables)
     }
 
+    // swiftlint:disable:next cyclomatic_complexity
     func dispatch(action: SearchDomainAction) {
         switch action {
         case let .updateQuery(query):

@@ -1,3 +1,4 @@
+// swiftlint:disable file_length
 import EntropyCore
 import SwiftUI
 
@@ -83,6 +84,7 @@ private enum Constants {
 
 // MARK: - SearchView
 
+// swiftlint:disable:next type_body_length
 struct SearchView<R: SearchNavigationRouter>: View {
     /// Router responsible for navigation actions
     private var router: R
@@ -230,7 +232,8 @@ struct SearchView<R: SearchNavigationRouter>: View {
                 VStack(alignment: .leading, spacing: Spacing.sm) {
                     GlassSectionHeader(Constants.trendingTopics)
 
-                    LazyVGrid(columns: [GridItem(.adaptive(minimum: dynamicTypeSize.isAccessibilitySize ? 150 : 100))], spacing: Spacing.sm) {
+                    let minWidth: CGFloat = dynamicTypeSize.isAccessibilitySize ? 150 : 100
+                    LazyVGrid(columns: [GridItem(.adaptive(minimum: minWidth))], spacing: Spacing.sm) {
                         ForEach(NewsCategory.allCases) { category in
                             GlassCategoryButton(category: category, isSelected: false) {
                                 viewModel.handle(event: .onQueryChanged(category.displayName))

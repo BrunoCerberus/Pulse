@@ -196,7 +196,10 @@ final class PremiumGatingPremiumUITests: BaseUITestCase {
         let modelLoadingIndicator = app.activityIndicators.firstMatch
 
         // Use longer timeout for CI - LLM model initialization can be slow
-        let hasSummarizationUI = waitForAny([summarizeTitle, generateButton, loadingText, generatingText, modelLoadingIndicator], timeout: 10)
+        let hasSummarizationUI = waitForAny(
+            [summarizeTitle, generateButton, loadingText, generatingText, modelLoadingIndicator],
+            timeout: 10
+        )
         // Note: In CI, the summarization sheet may show but model loading can be slow
         // We accept seeing any summarization-related UI as success
         XCTAssertTrue(hasSummarizationUI || summarySheet.exists, "Premium user should see summarization UI")

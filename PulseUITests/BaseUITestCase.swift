@@ -2,6 +2,7 @@ import XCTest
 
 /// Base class for UI tests that standardizes launch configuration and isolation.
 @MainActor
+// swiftlint:disable:next type_body_length
 class BaseUITestCase: XCTestCase {
     /// App instance - launched per test for isolation
     var app: XCUIApplication!

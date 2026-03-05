@@ -64,10 +64,10 @@ final class SpeechPlayerBarViewSnapshotTests: XCTestCase {
 
     func test_playing_dark() {
         let view = makeView()
-        let vc = UIHostingController(rootView: view)
+        let viewController = UIHostingController(rootView: view)
 
         assertSnapshot(
-            of: vc,
+            of: viewController,
             as: SnapshotConfig.snapshotting(on: compactConfig),
             record: false
         )
@@ -75,10 +75,10 @@ final class SpeechPlayerBarViewSnapshotTests: XCTestCase {
 
     func test_playing_light() {
         let view = makeView()
-        let vc = UIHostingController(rootView: view)
+        let viewController = UIHostingController(rootView: view)
 
         assertSnapshot(
-            of: vc,
+            of: viewController,
             as: SnapshotConfig.snapshotting(on: compactLightConfig),
             record: false
         )
@@ -86,10 +86,10 @@ final class SpeechPlayerBarViewSnapshotTests: XCTestCase {
 
     func test_paused() {
         let view = makeView(playbackState: .paused, progress: 0.6)
-        let vc = UIHostingController(rootView: view)
+        let viewController = UIHostingController(rootView: view)
 
         assertSnapshot(
-            of: vc,
+            of: viewController,
             as: SnapshotConfig.snapshotting(on: compactConfig),
             record: false
         )
@@ -97,10 +97,10 @@ final class SpeechPlayerBarViewSnapshotTests: XCTestCase {
 
     func test_fast_speed() {
         let view = makeView(progress: 0.2, speedPreset: .fast)
-        let vc = UIHostingController(rootView: view)
+        let viewController = UIHostingController(rootView: view)
 
         assertSnapshot(
-            of: vc,
+            of: viewController,
             as: SnapshotConfig.snapshotting(on: compactConfig),
             record: false
         )
@@ -108,10 +108,10 @@ final class SpeechPlayerBarViewSnapshotTests: XCTestCase {
 
     func test_fastest_speed() {
         let view = makeView(progress: 0.8, speedPreset: .fastest)
-        let vc = UIHostingController(rootView: view)
+        let viewController = UIHostingController(rootView: view)
 
         assertSnapshot(
-            of: vc,
+            of: viewController,
             as: SnapshotConfig.snapshotting(on: compactConfig),
             record: false
         )
@@ -119,13 +119,14 @@ final class SpeechPlayerBarViewSnapshotTests: XCTestCase {
 
     func test_long_title() {
         let view = makeView(
-            title: "This Is An Extremely Long Article Title That Should Test How The UI Handles Text Truncation In The Speech Player Bar",
+            title: "This Is An Extremely Long Article Title That Should "
+                + "Test How The UI Handles Text Truncation In The Speech Player Bar",
             progress: 0.5
         )
-        let vc = UIHostingController(rootView: view)
+        let viewController = UIHostingController(rootView: view)
 
         assertSnapshot(
-            of: vc,
+            of: viewController,
             as: SnapshotConfig.snapshotting(on: compactConfig),
             record: false
         )
@@ -135,10 +136,10 @@ final class SpeechPlayerBarViewSnapshotTests: XCTestCase {
 
     func test_faster_speed() {
         let view = makeView(progress: 0.5, speedPreset: .faster)
-        let vc = UIHostingController(rootView: view)
+        let viewController = UIHostingController(rootView: view)
 
         assertSnapshot(
-            of: vc,
+            of: viewController,
             as: SnapshotConfig.snapshotting(on: compactConfig),
             record: false
         )
@@ -148,10 +149,10 @@ final class SpeechPlayerBarViewSnapshotTests: XCTestCase {
 
     func test_playing_accessibility_size() {
         let view = makeView()
-        let vc = UIHostingController(rootView: view)
+        let viewController = UIHostingController(rootView: view)
 
         assertSnapshot(
-            of: vc,
+            of: viewController,
             as: SnapshotConfig.snapshotting(on: compactAccessibilityConfig),
             record: false
         )
@@ -159,10 +160,10 @@ final class SpeechPlayerBarViewSnapshotTests: XCTestCase {
 
     func test_playing_extra_extra_large_size() {
         let view = makeView()
-        let vc = UIHostingController(rootView: view)
+        let viewController = UIHostingController(rootView: view)
 
         assertSnapshot(
-            of: vc,
+            of: viewController,
             as: SnapshotConfig.snapshotting(on: compactExtraExtraLargeConfig),
             record: false
         )

@@ -7,6 +7,7 @@ import XCTest
 /// Snapshot tests verifying GlassCategoryButton layout at accessibility text sizes.
 /// Validates the minWidth adaptation when Dynamic Type reaches accessibility sizes.
 @MainActor
+// swiftlint:disable:next type_name
 final class GlassCategoryChipAccessibilitySnapshotTests: XCTestCase {
     func testGlassCategoryButtonAccessibilitySize() {
         let view = GlassCategoryButton(

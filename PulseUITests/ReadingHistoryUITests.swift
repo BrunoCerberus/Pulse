@@ -27,7 +27,8 @@ final class ReadingHistoryUITests: BaseUITestCase {
 
     // MARK: - Combined Flow Test
 
-    /// Tests reading history navigation via Settings, content states, and navigation
+    // Tests reading history navigation via Settings, content states, and navigation
+    // swiftlint:disable:next function_body_length cyclomatic_complexity
     func testReadingHistoryFlow() {
         // --- Navigate to Settings ---
         navigateToSettings()
@@ -67,7 +68,10 @@ final class ReadingHistoryUITests: BaseUITestCase {
 
         // --- Verify Reading History screen ---
         let readingHistoryNav = app.navigationBars["Reading History"]
-        XCTAssertTrue(readingHistoryNav.waitForExistence(timeout: Self.defaultTimeout), "Navigation title 'Reading History' should exist")
+        XCTAssertTrue(
+            readingHistoryNav.waitForExistence(timeout: Self.defaultTimeout),
+            "Navigation title 'Reading History' should exist"
+        )
 
         // --- Wait for content ---
         let noHistoryText = app.staticTexts["No Reading History"]
@@ -96,7 +100,10 @@ final class ReadingHistoryUITests: BaseUITestCase {
                     let detailBack = app.buttons["backButton"]
                     if detailBack.waitForExistence(timeout: Self.defaultTimeout) {
                         detailBack.tap()
-                        XCTAssertTrue(readingHistoryNav.waitForExistence(timeout: Self.defaultTimeout), "Should return to Reading History")
+                        XCTAssertTrue(
+                            readingHistoryNav.waitForExistence(timeout: Self.defaultTimeout),
+                            "Should return to Reading History"
+                        )
                     }
                 }
             }

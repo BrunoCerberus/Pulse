@@ -18,7 +18,8 @@ final class GlassArticleCardSnapshotTests: XCTestCase {
         Article(
             id: "snapshot-1",
             title: "SwiftUI 6.0 Brings Revolutionary New Features for iOS Development",
-            description: "Apple announces major updates to SwiftUI at WWDC 2024, including improved performance and new APIs",
+            description: "Apple announces major updates to SwiftUI at WWDC 2024, "
+                + "including improved performance and new APIs",
             content: "Full article content here...",
             author: "John Appleseed",
             source: ArticleSource(id: "techcrunch", name: "TechCrunch"),

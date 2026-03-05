@@ -16,7 +16,9 @@ final class ArticleDetailUITests: BaseUITestCase {
         }
 
         // Find and tap first article card
-        let articleCards = app.buttons.matching(NSPredicate(format: "label CONTAINS[c] 'ago' OR label CONTAINS[c] 'hour' OR label CONTAINS[c] 'minute'"))
+        let articleCards = app.buttons.matching(
+            NSPredicate(format: "label CONTAINS[c] 'ago' OR label CONTAINS[c] 'hour' OR label CONTAINS[c] 'minute'")
+        )
 
         guard articleCards.count > 0 else {
             return false
@@ -34,11 +36,13 @@ final class ArticleDetailUITests: BaseUITestCase {
 
     // MARK: - Combined Flow Test
 
-    /// Tests article detail toolbar, content, navigation, and bookmarking flow
+    // Tests article detail toolbar, content, navigation, and bookmarking flow
+    // swiftlint:disable:next function_body_length
     func testArticleDetailFlow() {
         let navigated = navigateToArticleDetail()
         if !navigated {
-            let errorState = app.staticTexts["Unable to Load News"].exists || app.staticTexts["No News Available"].exists
+            let errorState = app.staticTexts["Unable to Load News"].exists ||
+                app.staticTexts["No News Available"].exists
             XCTAssertTrue(errorState, "Home should show an empty or error state when article detail is unavailable")
             return
         }
@@ -58,12 +62,21 @@ final class ArticleDetailUITests: BaseUITestCase {
         // --- Bookmark Toggle ---
         if bookmarkButton.exists {
             bookmarkButton.tap()
-            XCTAssertTrue(bookmarkFilledButton.waitForExistence(timeout: 3), "Bookmark should become filled after tapping")
+            XCTAssertTrue(
+                bookmarkFilledButton.waitForExistence(timeout: 3),
+                "Bookmark should become filled after tapping"
+            )
         } else if bookmarkFilledButton.exists {
             bookmarkFilledButton.tap()
-            XCTAssertTrue(bookmarkButton.waitForExistence(timeout: 3), "Bookmark should become unfilled after tapping")
+            XCTAssertTrue(
+                bookmarkButton.waitForExistence(timeout: 3),
+                "Bookmark should become unfilled after tapping"
+            )
             bookmarkButton.tap()
-            XCTAssertTrue(bookmarkFilledButton.waitForExistence(timeout: 3), "Bookmark should become filled after tapping again")
+            XCTAssertTrue(
+                bookmarkFilledButton.waitForExistence(timeout: 3),
+                "Bookmark should become filled after tapping again"
+            )
         }
 
         // --- Share Button ---
@@ -87,13 +100,18 @@ final class ArticleDetailUITests: BaseUITestCase {
 
         // Wait for share sheet to dismiss and back button to become available
         let backButtonAfterShare = app.buttons["backButton"]
-        XCTAssertTrue(backButtonAfterShare.waitForExistence(timeout: 5), "Back button should exist after share sheet dismissed")
+        XCTAssertTrue(
+            backButtonAfterShare.waitForExistence(timeout: 5),
+            "Back button should exist after share sheet dismissed"
+        )
 
         // --- Article Content ---
         let staticTexts = app.staticTexts
         XCTAssertTrue(staticTexts.count > 0, "Article detail should have text content")
 
-        let hasMetadata = staticTexts.matching(NSPredicate(format: "label CONTAINS[c] 'By' OR label CONTAINS[c] 'ago' OR label CONTAINS[c] 'hour'")).count > 0
+        let hasMetadata = staticTexts.matching(
+            NSPredicate(format: "label CONTAINS[c] 'By' OR label CONTAINS[c] 'ago' OR label CONTAINS[c] 'hour'")
+        ).count > 0
         XCTAssertTrue(hasMetadata, "Article should display metadata (author, source, or date)")
 
         let scrollView = app.scrollViews["articleDetailScrollView"]
@@ -106,8 +124,13 @@ final class ArticleDetailUITests: BaseUITestCase {
             scrollViewGeneric.swipeUp()
         }
 
-        let readFullButton = app.buttons.matching(NSPredicate(format: "label CONTAINS[c] 'Read Full Article'")).firstMatch
-        XCTAssertTrue(readFullButton.waitForExistence(timeout: 3), "Read Full Article button should be visible after scrolling")
+        let readFullButton = app.buttons.matching(
+            NSPredicate(format: "label CONTAINS[c] 'Read Full Article'")
+        ).firstMatch
+        XCTAssertTrue(
+            readFullButton.waitForExistence(timeout: 3),
+            "Read Full Article button should be visible after scrolling"
+        )
 
         // Scroll to top by repeated swipe down gestures
         for _ in 0 ..< 3 {

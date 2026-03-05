@@ -26,7 +26,9 @@ final class PulseUITests: BaseUITestCase {
         XCTAssertTrue(feedTab.isSelected, "Feed tab should be selected")
 
         // --- Search Tab (verify exists) ---
-        let searchTab = app.tabBars.buttons.matching(NSPredicate(format: "label CONTAINS[c] 'search' OR identifier CONTAINS[c] 'search'")).firstMatch
+        let searchTab = app.tabBars.buttons.matching(
+            NSPredicate(format: "label CONTAINS[c] 'search' OR identifier CONTAINS[c] 'search'")
+        ).firstMatch
         XCTAssertTrue(searchTab.waitForExistence(timeout: 5), "Search tab should exist")
 
         // Return to Home tab for settings test

@@ -30,7 +30,8 @@ final class FeedUITests: BaseUITestCase {
 
     // MARK: - Combined Flow Test
 
-    /// Tests Feed tab navigation, content states, and interactions
+    // Tests Feed tab navigation, content states, and interactions
+    // swiftlint:disable:next function_body_length
     func testFeedFlow() {
         // --- Tab Navigation ---
         let feedTab = app.tabBars.buttons["Feed"]
@@ -41,7 +42,10 @@ final class FeedUITests: BaseUITestCase {
         navigateToFeed()
 
         let navTitle = app.navigationBars["Daily Digest"]
-        XCTAssertTrue(navTitle.waitForExistence(timeout: Self.defaultTimeout), "Navigation title 'Daily Digest' should exist")
+        XCTAssertTrue(
+            navTitle.waitForExistence(timeout: Self.defaultTimeout),
+            "Navigation title 'Daily Digest' should exist"
+        )
 
         // iOS 26+ occasionally reports stale tab selection accessibility state in CI.
         // Navigation/title presence is the reliable indicator that Feed is active.
@@ -91,7 +95,10 @@ final class FeedUITests: BaseUITestCase {
         XCTAssertTrue(homeNav.waitForExistence(timeout: Self.defaultTimeout), "Home should load")
 
         navigateToFeed()
-        XCTAssertTrue(navTitle.waitForExistence(timeout: Self.defaultTimeout), "Feed should be visible after tab switch")
+        XCTAssertTrue(
+            navTitle.waitForExistence(timeout: Self.defaultTimeout),
+            "Feed should be visible after tab switch"
+        )
 
         // --- Pull to Refresh ---
         let scrollView = app.scrollViews.firstMatch
@@ -100,7 +107,10 @@ final class FeedUITests: BaseUITestCase {
             _ = navTitle.waitForExistence(timeout: Self.shortTimeout)
         }
 
-        XCTAssertTrue(navTitle.waitForExistence(timeout: Self.shortTimeout), "View should remain functional after refresh")
+        XCTAssertTrue(
+            navTitle.waitForExistence(timeout: Self.shortTimeout),
+            "View should remain functional after refresh"
+        )
     }
 
     // MARK: - Tab Bar Position Test

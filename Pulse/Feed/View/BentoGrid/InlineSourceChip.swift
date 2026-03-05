@@ -61,7 +61,10 @@ struct InlineSourceChip: View {
         .buttonStyle(.plain)
         .pressEffect(scale: 0.95)
         .accessibilityElement(children: .combine)
-        .accessibilityLabel(String(format: Constants.articleAccessibilityLabel, article.title, article.source, article.formattedDate))
+        .accessibilityLabel(String(
+            format: Constants.articleAccessibilityLabel,
+            article.title, article.source, article.formattedDate
+        ))
         .accessibilityHint(Constants.readArticleHint)
     }
 

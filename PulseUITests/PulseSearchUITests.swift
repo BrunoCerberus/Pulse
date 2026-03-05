@@ -60,7 +60,8 @@ final class PulseSearchUITests: BaseUITestCase {
 
     // MARK: - Combined Flow Test
 
-    /// Tests search UI, input, sorting, keyboard behavior, and tab switching
+    // Tests search UI, input, sorting, keyboard behavior, and tab switching
+    // swiftlint:disable:next function_body_length cyclomatic_complexity
     func testSearchFlow() {
         // --- Search UI, Initial State, and Suggestions ---
         navigateToSearchTab()
@@ -75,7 +76,10 @@ final class PulseSearchUITests: BaseUITestCase {
         let searchUILoaded = waitForAny([searchField, searchForNews, searchSubtitle], timeout: Self.defaultTimeout)
 
         XCTAssertTrue(searchUILoaded, "Search UI should load (search field or empty state)")
-        XCTAssertTrue(searchForNews.exists || searchSubtitle.exists || searchField.exists, "Initial empty state should show search prompt")
+        XCTAssertTrue(
+            searchForNews.exists || searchSubtitle.exists || searchField.exists,
+            "Initial empty state should show search prompt"
+        )
 
         if searchField.exists {
             XCTAssertTrue(searchField.isHittable, "Search field should be interactable")
