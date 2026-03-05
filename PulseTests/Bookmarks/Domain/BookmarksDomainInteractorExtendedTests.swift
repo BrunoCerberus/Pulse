@@ -31,7 +31,7 @@ struct BookmarksDomainInteractorExtendedTests {
         mockBookmarksService.bookmarks = articles
 
         sut.dispatch(action: .loadBookmarks)
-        try await Task.sleep(nanoseconds: 300_000_000)
+        try await waitForStateUpdate(duration: TestWaitDuration.long)
 
         sut.dispatch(action: .shareArticle(articleId: articles[0].id))
         #expect(sut.currentState.articleToShare?.id == articles[0].id)
@@ -43,7 +43,7 @@ struct BookmarksDomainInteractorExtendedTests {
         mockBookmarksService.bookmarks = articles
 
         sut.dispatch(action: .loadBookmarks)
-        try await Task.sleep(nanoseconds: 300_000_000)
+        try await waitForStateUpdate(duration: TestWaitDuration.long)
 
         sut.dispatch(action: .shareArticle(articleId: "non-existent"))
         #expect(sut.currentState.articleToShare == nil)
@@ -55,7 +55,7 @@ struct BookmarksDomainInteractorExtendedTests {
         mockBookmarksService.bookmarks = articles
 
         sut.dispatch(action: .loadBookmarks)
-        try await Task.sleep(nanoseconds: 300_000_000)
+        try await waitForStateUpdate(duration: TestWaitDuration.long)
 
         sut.dispatch(action: .shareArticle(articleId: articles[0].id))
         #expect(sut.currentState.articleToShare != nil)
@@ -72,7 +72,7 @@ struct BookmarksDomainInteractorExtendedTests {
         mockBookmarksService.bookmarks = articles
 
         sut.dispatch(action: .loadBookmarks)
-        try await Task.sleep(nanoseconds: 300_000_000)
+        try await waitForStateUpdate(duration: TestWaitDuration.long)
 
         sut.dispatch(action: .shareArticle(articleId: articles[0].id))
 
@@ -87,15 +87,15 @@ struct BookmarksDomainInteractorExtendedTests {
         mockBookmarksService.bookmarks = Article.mockArticles
 
         sut.dispatch(action: .loadBookmarks)
-        try await Task.sleep(nanoseconds: 300_000_000)
+        try await waitForStateUpdate(duration: TestWaitDuration.long)
 
         let initialCount = sut.currentState.bookmarks.count
 
         // Remove first two
         sut.dispatch(action: .removeBookmark(articleId: Article.mockArticles[0].id))
-        try await Task.sleep(nanoseconds: 300_000_000)
+        try await waitForStateUpdate(duration: TestWaitDuration.long)
         sut.dispatch(action: .removeBookmark(articleId: Article.mockArticles[1].id))
-        try await Task.sleep(nanoseconds: 300_000_000)
+        try await waitForStateUpdate(duration: TestWaitDuration.long)
 
         #expect(sut.currentState.bookmarks.count == initialCount - 2)
     }
@@ -106,17 +106,17 @@ struct BookmarksDomainInteractorExtendedTests {
         mockBookmarksService.bookmarks = articles
 
         sut.dispatch(action: .loadBookmarks)
-        try await Task.sleep(nanoseconds: 300_000_000)
+        try await waitForStateUpdate(duration: TestWaitDuration.long)
 
         sut.dispatch(action: .selectArticle(articleId: articles[0].id))
-        try await Task.sleep(nanoseconds: 100_000_000)
+        try await waitForStateUpdate(duration: TestWaitDuration.short)
         #expect(sut.currentState.selectedArticle?.id == articles[0].id)
 
         sut.dispatch(action: .clearSelectedArticle)
         #expect(sut.currentState.selectedArticle == nil)
 
         sut.dispatch(action: .selectArticle(articleId: articles[1].id))
-        try await Task.sleep(nanoseconds: 100_000_000)
+        try await waitForStateUpdate(duration: TestWaitDuration.short)
         #expect(sut.currentState.selectedArticle?.id == articles[1].id)
     }
 
@@ -124,12 +124,12 @@ struct BookmarksDomainInteractorExtendedTests {
     func refreshAfterLoad() async throws {
         mockBookmarksService.bookmarks = Array(Article.mockArticles.prefix(2))
         sut.dispatch(action: .loadBookmarks)
-        try await Task.sleep(nanoseconds: 300_000_000)
+        try await waitForStateUpdate(duration: TestWaitDuration.long)
         #expect(sut.currentState.bookmarks.count == 2)
 
         mockBookmarksService.bookmarks = Article.mockArticles
         sut.dispatch(action: .refresh)
-        try await Task.sleep(nanoseconds: 300_000_000)
+        try await waitForStateUpdate(duration: TestWaitDuration.long)
         #expect(sut.currentState.bookmarks.count == Article.mockArticles.count)
     }
 }

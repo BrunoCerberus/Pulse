@@ -47,7 +47,7 @@ struct NetworkMonitorServiceTests {
             .sink { values.append($0) }
             .store(in: &cancellables)
 
-        try await Task.sleep(nanoseconds: 100_000_000)
+        try await waitForStateUpdate(duration: TestWaitDuration.short)
         #expect(!values.isEmpty)
         #expect(values.first == true)
     }
@@ -65,7 +65,7 @@ struct NetworkMonitorServiceTests {
         sut.simulateOffline()
         sut.simulateOnline()
 
-        try await Task.sleep(nanoseconds: 100_000_000)
+        try await waitForStateUpdate(duration: TestWaitDuration.short)
 
         #expect(values.contains(true))
         #expect(values.contains(false))
@@ -86,7 +86,7 @@ struct NetworkMonitorServiceTests {
         sut.simulateOnline()
         sut.simulateOnline()
 
-        try await Task.sleep(nanoseconds: 100_000_000)
+        try await waitForStateUpdate(duration: TestWaitDuration.short)
 
         // Should only have one true value due to removeDuplicates
         let trueCount = values.filter { $0 }.count
@@ -97,9 +97,8 @@ struct NetworkMonitorServiceTests {
 
     @Test("Live monitor can be instantiated")
     func liveMonitorInstantiation() {
-        let sut = LiveNetworkMonitorService()
-        // Should start assuming connected
-        #expect(sut.isConnected == true || sut.isConnected == false)
+        // Verify LiveNetworkMonitorService can be created without crashing
+        _ = LiveNetworkMonitorService()
     }
 
     @Test("Live monitor publisher emits a value")
@@ -112,7 +111,7 @@ struct NetworkMonitorServiceTests {
             .sink { values.append($0) }
             .store(in: &cancellables)
 
-        try await Task.sleep(nanoseconds: 200_000_000)
+        try await waitForStateUpdate(duration: TestWaitDuration.standard)
         #expect(!values.isEmpty)
     }
 }

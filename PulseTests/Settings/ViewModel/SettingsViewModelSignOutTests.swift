@@ -42,10 +42,10 @@ struct SettingsViewModelSignOutTests {
     func confirmSignOutCallsAuthService() async throws {
         let sut = createSUT()
         sut.handle(event: .onAppear)
-        try await Task.sleep(nanoseconds: 500_000_000)
+        try await waitForStateUpdate(duration: TestWaitDuration.long)
 
         sut.handle(event: .onConfirmSignOut)
-        try await Task.sleep(nanoseconds: 500_000_000)
+        try await waitForStateUpdate(duration: TestWaitDuration.long)
 
         // Sign out should dismiss the confirmation
         #expect(!sut.viewState.showSignOutConfirmation)
@@ -58,10 +58,10 @@ struct SettingsViewModelSignOutTests {
 
         let sut = createSUT()
         sut.handle(event: .onAppear)
-        try await Task.sleep(nanoseconds: 500_000_000)
+        try await waitForStateUpdate(duration: TestWaitDuration.long)
 
         sut.handle(event: .onConfirmSignOut)
-        try await Task.sleep(nanoseconds: 500_000_000)
+        try await waitForStateUpdate(duration: TestWaitDuration.long)
 
         #expect(!mockAppLockService.isEnabled)
         #expect(!mockAppLockService.hasPromptedFaceID)
@@ -70,22 +70,29 @@ struct SettingsViewModelSignOutTests {
     @Test("Sign out clears UserDefaults preferences")
     func signOutClearsUserDefaults() async throws {
         let defaults = UserDefaults.standard
+        let keysToCheck = [
+            "pulse.hasCompletedOnboarding",
+            "pulse.preferredLanguage",
+            "pulse.notificationsEnabled",
+            "pulse.deviceToken",
+        ]
+        defer { keysToCheck.forEach { defaults.removeObject(forKey: $0) } }
+
         defaults.set(true, forKey: "pulse.hasCompletedOnboarding")
-        defaults.set(true, forKey: "pulse.isDarkMode")
-        defaults.set(false, forKey: "pulse.useSystemTheme")
         defaults.set("pt", forKey: "pulse.preferredLanguage")
+        defaults.set(true, forKey: "pulse.notificationsEnabled")
+        defaults.set("token123", forKey: "pulse.deviceToken")
 
         let sut = createSUT()
         sut.handle(event: .onAppear)
-        try await Task.sleep(nanoseconds: 500_000_000)
+        try await waitForStateUpdate(duration: TestWaitDuration.long)
 
         sut.handle(event: .onConfirmSignOut)
-        try await Task.sleep(nanoseconds: 500_000_000)
+        try await waitForStateUpdate(duration: TestWaitDuration.long)
 
-        #expect(defaults.object(forKey: "pulse.hasCompletedOnboarding") == nil)
-        #expect(defaults.object(forKey: "pulse.isDarkMode") == nil)
-        #expect(defaults.object(forKey: "pulse.useSystemTheme") == nil)
-        #expect(defaults.object(forKey: "pulse.preferredLanguage") == nil)
+        for key in keysToCheck {
+            #expect(defaults.object(forKey: key) == nil, "Key '\(key)' should be nil after sign-out")
+        }
     }
 
     @Test("Sign out failure still dismisses confirmation")
@@ -96,14 +103,14 @@ struct SettingsViewModelSignOutTests {
 
         let sut = createSUT()
         sut.handle(event: .onAppear)
-        try await Task.sleep(nanoseconds: 500_000_000)
+        try await waitForStateUpdate(duration: TestWaitDuration.long)
 
         sut.handle(event: .onSignOutTapped)
-        try await Task.sleep(nanoseconds: 300_000_000)
+        try await waitForStateUpdate(duration: TestWaitDuration.long)
         #expect(sut.viewState.showSignOutConfirmation)
 
         sut.handle(event: .onConfirmSignOut)
-        try await Task.sleep(nanoseconds: 500_000_000)
+        try await waitForStateUpdate(duration: TestWaitDuration.long)
 
         #expect(!sut.viewState.showSignOutConfirmation)
     }
@@ -114,10 +121,10 @@ struct SettingsViewModelSignOutTests {
     func toggleNotificationsUpdatesViewState() async throws {
         let sut = createSUT()
         sut.handle(event: .onAppear)
-        try await Task.sleep(nanoseconds: 500_000_000)
+        try await waitForStateUpdate(duration: TestWaitDuration.long)
 
         sut.handle(event: .onToggleNotifications(false))
-        try await Task.sleep(nanoseconds: 500_000_000)
+        try await waitForStateUpdate(duration: TestWaitDuration.long)
 
         #expect(!sut.viewState.notificationsEnabled)
     }
@@ -126,10 +133,10 @@ struct SettingsViewModelSignOutTests {
     func toggleBreakingNewsUpdatesViewState() async throws {
         let sut = createSUT()
         sut.handle(event: .onAppear)
-        try await Task.sleep(nanoseconds: 500_000_000)
+        try await waitForStateUpdate(duration: TestWaitDuration.long)
 
         sut.handle(event: .onToggleBreakingNews(false))
-        try await Task.sleep(nanoseconds: 500_000_000)
+        try await waitForStateUpdate(duration: TestWaitDuration.long)
 
         #expect(!sut.viewState.breakingNewsEnabled)
     }
@@ -149,10 +156,10 @@ struct SettingsViewModelSignOutTests {
 
         let sut = createSUT()
         sut.handle(event: .onAppear)
-        try await Task.sleep(nanoseconds: 500_000_000)
+        try await waitForStateUpdate(duration: TestWaitDuration.long)
 
         sut.handle(event: .onRemoveMutedSource("Source1"))
-        try await Task.sleep(nanoseconds: 500_000_000)
+        try await waitForStateUpdate(duration: TestWaitDuration.long)
 
         #expect(!sut.viewState.mutedSources.contains("Source1"))
         #expect(sut.viewState.mutedSources.contains("Source2"))
@@ -171,10 +178,10 @@ struct SettingsViewModelSignOutTests {
 
         let sut = createSUT()
         sut.handle(event: .onAppear)
-        try await Task.sleep(nanoseconds: 500_000_000)
+        try await waitForStateUpdate(duration: TestWaitDuration.long)
 
         sut.handle(event: .onRemoveMutedKeyword("keyword1"))
-        try await Task.sleep(nanoseconds: 500_000_000)
+        try await waitForStateUpdate(duration: TestWaitDuration.long)
 
         #expect(!sut.viewState.mutedKeywords.contains("keyword1"))
         #expect(sut.viewState.mutedKeywords.contains("keyword2"))

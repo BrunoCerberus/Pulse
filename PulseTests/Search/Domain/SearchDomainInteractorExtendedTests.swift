@@ -35,7 +35,7 @@ struct SearchDomainInteractorExtendedTests {
 
         sut.dispatch(action: .updateQuery("test"))
         sut.dispatch(action: .search)
-        try await Task.sleep(nanoseconds: 500_000_000)
+        try await waitForStateUpdate(duration: TestWaitDuration.long)
 
         sut.dispatch(action: .shareArticle(articleId: articles[0].id))
 
@@ -49,7 +49,7 @@ struct SearchDomainInteractorExtendedTests {
 
         sut.dispatch(action: .updateQuery("test"))
         sut.dispatch(action: .search)
-        try await Task.sleep(nanoseconds: 500_000_000)
+        try await waitForStateUpdate(duration: TestWaitDuration.long)
 
         sut.dispatch(action: .shareArticle(articleId: "non-existent"))
 
@@ -63,7 +63,7 @@ struct SearchDomainInteractorExtendedTests {
 
         sut.dispatch(action: .updateQuery("test"))
         sut.dispatch(action: .search)
-        try await Task.sleep(nanoseconds: 500_000_000)
+        try await waitForStateUpdate(duration: TestWaitDuration.long)
 
         sut.dispatch(action: .shareArticle(articleId: articles[0].id))
         #expect(sut.currentState.articleToShare != nil)
@@ -81,10 +81,10 @@ struct SearchDomainInteractorExtendedTests {
 
         sut.dispatch(action: .updateQuery("test"))
         sut.dispatch(action: .search)
-        try await Task.sleep(nanoseconds: 500_000_000)
+        try await waitForStateUpdate(duration: TestWaitDuration.long)
 
         sut.dispatch(action: .bookmarkArticle(articleId: articles[0].id))
-        try await Task.sleep(nanoseconds: 300_000_000)
+        try await waitForStateUpdate(duration: TestWaitDuration.long)
 
         #expect(mockStorageService.bookmarkedArticles.contains(where: { $0.id == articles[0].id }))
     }
@@ -97,10 +97,10 @@ struct SearchDomainInteractorExtendedTests {
 
         sut.dispatch(action: .updateQuery("test"))
         sut.dispatch(action: .search)
-        try await Task.sleep(nanoseconds: 500_000_000)
+        try await waitForStateUpdate(duration: TestWaitDuration.long)
 
         sut.dispatch(action: .bookmarkArticle(articleId: articles[0].id))
-        try await Task.sleep(nanoseconds: 300_000_000)
+        try await waitForStateUpdate(duration: TestWaitDuration.long)
 
         #expect(!mockStorageService.bookmarkedArticles.contains(where: { $0.id == articles[0].id }))
     }
@@ -112,11 +112,11 @@ struct SearchDomainInteractorExtendedTests {
 
         sut.dispatch(action: .updateQuery("test"))
         sut.dispatch(action: .search)
-        try await Task.sleep(nanoseconds: 500_000_000)
+        try await waitForStateUpdate(duration: TestWaitDuration.long)
 
         let initialCount = mockStorageService.bookmarkedArticles.count
         sut.dispatch(action: .bookmarkArticle(articleId: "non-existent"))
-        try await Task.sleep(nanoseconds: 300_000_000)
+        try await waitForStateUpdate(duration: TestWaitDuration.long)
 
         #expect(mockStorageService.bookmarkedArticles.count == initialCount)
     }
@@ -130,7 +130,7 @@ struct SearchDomainInteractorExtendedTests {
 
         sut.dispatch(action: .updateQuery("test"))
         sut.dispatch(action: .search)
-        try await Task.sleep(nanoseconds: 500_000_000)
+        try await waitForStateUpdate(duration: TestWaitDuration.long)
 
         sut.dispatch(action: .selectArticle(articleId: articles[0].id))
 
@@ -145,7 +145,7 @@ struct SearchDomainInteractorExtendedTests {
 
         sut.dispatch(action: .updateQuery("test"))
         sut.dispatch(action: .search)
-        try await Task.sleep(nanoseconds: 500_000_000)
+        try await waitForStateUpdate(duration: TestWaitDuration.long)
 
         sut.dispatch(action: .selectArticle(articleId: articles[0].id))
         #expect(sut.currentState.selectedArticle != nil)
@@ -161,7 +161,7 @@ struct SearchDomainInteractorExtendedTests {
 
         sut.dispatch(action: .updateQuery("test"))
         sut.dispatch(action: .search)
-        try await Task.sleep(nanoseconds: 500_000_000)
+        try await waitForStateUpdate(duration: TestWaitDuration.long)
 
         sut.dispatch(action: .selectArticle(articleId: "non-existent"))
 
@@ -177,12 +177,12 @@ struct SearchDomainInteractorExtendedTests {
 
         sut.dispatch(action: .updateQuery("test"))
         sut.dispatch(action: .search)
-        try await Task.sleep(nanoseconds: 500_000_000)
+        try await waitForStateUpdate(duration: TestWaitDuration.long)
 
         #expect(sut.currentState.hasSearched)
 
         sut.dispatch(action: .setSortOption(.publishedAt))
-        try await Task.sleep(nanoseconds: 500_000_000)
+        try await waitForStateUpdate(duration: TestWaitDuration.long)
 
         #expect(sut.currentState.sortBy == .publishedAt)
         #expect(sut.currentState.currentPage == 1)
@@ -196,7 +196,7 @@ struct SearchDomainInteractorExtendedTests {
 
         sut.dispatch(action: .updateQuery("test"))
         sut.dispatch(action: .search)
-        try await Task.sleep(nanoseconds: 500_000_000)
+        try await waitForStateUpdate(duration: TestWaitDuration.long)
 
         // Now make search fail
         mockSearchService.searchResult = .failure(
@@ -204,7 +204,7 @@ struct SearchDomainInteractorExtendedTests {
         )
 
         sut.dispatch(action: .setSortOption(.popularity))
-        try await Task.sleep(nanoseconds: 500_000_000)
+        try await waitForStateUpdate(duration: TestWaitDuration.long)
 
         #expect(sut.currentState.error == "Sort failed")
         #expect(!sut.currentState.isSorting)
@@ -214,30 +214,43 @@ struct SearchDomainInteractorExtendedTests {
 
     @Test("Search offline error sets isOfflineError")
     func searchOfflineErrorSetsFlag() async throws {
-        let offlineError = URLError(.notConnectedToInternet)
-        mockSearchService.searchResult = .failure(offlineError)
+        mockSearchService.searchResult = .failure(PulseError.offlineNoCache)
 
         sut.dispatch(action: .updateQuery("test"))
         sut.dispatch(action: .search)
-        try await Task.sleep(nanoseconds: 500_000_000)
+        try await waitForStateUpdate(duration: TestWaitDuration.long)
 
         #expect(sut.currentState.isOfflineError)
+        #expect(sut.currentState.error != nil)
+    }
+
+    @Test("Non-offline error does not set isOfflineError")
+    func nonOfflineErrorDoesNotSetFlag() async throws {
+        let urlError = URLError(.notConnectedToInternet)
+        mockSearchService.searchResult = .failure(urlError)
+
+        sut.dispatch(action: .updateQuery("test"))
+        sut.dispatch(action: .search)
+        try await waitForStateUpdate(duration: TestWaitDuration.long)
+
+        // URLError is not PulseError, so isOfflineError should be false
+        #expect(!sut.currentState.isOfflineError)
         #expect(sut.currentState.error != nil)
     }
 
     @Test("Successful search clears isOfflineError")
     func successfulSearchClearsOfflineError() async throws {
         // First cause offline error
-        mockSearchService.searchResult = .failure(URLError(.notConnectedToInternet))
+        mockSearchService.searchResult = .failure(PulseError.offlineNoCache)
         sut.dispatch(action: .updateQuery("test"))
         sut.dispatch(action: .search)
-        try await Task.sleep(nanoseconds: 500_000_000)
+        try await waitForStateUpdate(duration: TestWaitDuration.long)
         #expect(sut.currentState.isOfflineError)
 
         // Now succeed
         mockSearchService.searchResult = .success(Article.mockArticles)
         sut.dispatch(action: .search)
-        try await Task.sleep(nanoseconds: 500_000_000)
+        try await waitForStateUpdate(duration: TestWaitDuration.long)
 
         #expect(!sut.currentState.isOfflineError)
         #expect(sut.currentState.error == nil)
@@ -252,7 +265,7 @@ struct SearchDomainInteractorExtendedTests {
 
         sut.dispatch(action: .updateQuery("test"))
         sut.dispatch(action: .search)
-        try await Task.sleep(nanoseconds: 500_000_000)
+        try await waitForStateUpdate(duration: TestWaitDuration.long)
 
         sut.dispatch(action: .shareArticle(articleId: articles[0].id))
 
@@ -267,10 +280,10 @@ struct SearchDomainInteractorExtendedTests {
 
         sut.dispatch(action: .updateQuery("test"))
         sut.dispatch(action: .search)
-        try await Task.sleep(nanoseconds: 500_000_000)
+        try await waitForStateUpdate(duration: TestWaitDuration.long)
 
         sut.dispatch(action: .bookmarkArticle(articleId: articles[0].id))
-        try await Task.sleep(nanoseconds: 300_000_000)
+        try await waitForStateUpdate(duration: TestWaitDuration.long)
 
         let bookmarkEvents = mockAnalyticsService.loggedEvents.filter { $0.name == "article_bookmarked" }
         #expect(bookmarkEvents.count == 1)
@@ -284,10 +297,10 @@ struct SearchDomainInteractorExtendedTests {
 
         sut.dispatch(action: .updateQuery("test"))
         sut.dispatch(action: .search)
-        try await Task.sleep(nanoseconds: 500_000_000)
+        try await waitForStateUpdate(duration: TestWaitDuration.long)
 
         sut.dispatch(action: .bookmarkArticle(articleId: articles[0].id))
-        try await Task.sleep(nanoseconds: 300_000_000)
+        try await waitForStateUpdate(duration: TestWaitDuration.long)
 
         let unbookmarkEvents = mockAnalyticsService.loggedEvents.filter { $0.name == "article_unbookmarked" }
         #expect(unbookmarkEvents.count == 1)
@@ -316,13 +329,13 @@ struct SearchDomainInteractorExtendedTests {
 
         sut.dispatch(action: .updateQuery("test"))
         sut.dispatch(action: .search)
-        try await Task.sleep(nanoseconds: 500_000_000)
+        try await waitForStateUpdate(duration: TestWaitDuration.long)
 
         #expect(sut.currentState.hasMorePages)
 
         mockSearchService.searchResult = .failure(NSError(domain: "test", code: 1))
         sut.dispatch(action: .loadMore)
-        try await Task.sleep(nanoseconds: 500_000_000)
+        try await waitForStateUpdate(duration: TestWaitDuration.long)
 
         #expect(!sut.currentState.isLoadingMore)
     }

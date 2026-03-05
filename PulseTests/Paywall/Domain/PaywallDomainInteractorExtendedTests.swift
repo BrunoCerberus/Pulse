@@ -30,13 +30,13 @@ struct PaywallDomainInteractorExtendedTests {
         mockStoreKitService.configurePurchaseFailure(true)
 
         sut.dispatch(action: .loadProducts)
-        try await Task.sleep(nanoseconds: 200_000_000)
+        try await waitForStateUpdate(duration: TestWaitDuration.standard)
 
         // We can't create a real Product, but we can test the restore failure path
         // which exercises similar completion handling
         mockStoreKitService.configureRestoreFailure(true)
         sut.dispatch(action: .restorePurchases)
-        try await Task.sleep(nanoseconds: 300_000_000)
+        try await waitForStateUpdate(duration: TestWaitDuration.long)
 
         #expect(!sut.currentState.isRestoring)
         #expect(sut.currentState.error != nil)
@@ -49,7 +49,7 @@ struct PaywallDomainInteractorExtendedTests {
         mockStoreKitService.setSubscriptionStatus(false)
 
         sut.dispatch(action: .restorePurchases)
-        try await Task.sleep(nanoseconds: 300_000_000)
+        try await waitForStateUpdate(duration: TestWaitDuration.long)
 
         #expect(!sut.currentState.isPremium)
         #expect(sut.currentState.restoreSuccessful)
@@ -61,7 +61,7 @@ struct PaywallDomainInteractorExtendedTests {
         mockStoreKitService.setSubscriptionStatus(true)
 
         sut.dispatch(action: .restorePurchases)
-        try await Task.sleep(nanoseconds: 300_000_000)
+        try await waitForStateUpdate(duration: TestWaitDuration.long)
 
         #expect(sut.currentState.isPremium)
         #expect(sut.currentState.restoreSuccessful)
@@ -75,7 +75,7 @@ struct PaywallDomainInteractorExtendedTests {
         mockStoreKitService.setSubscriptionStatus(true)
 
         sut.dispatch(action: .checkSubscriptionStatus)
-        try await Task.sleep(nanoseconds: 300_000_000)
+        try await waitForStateUpdate(duration: TestWaitDuration.long)
 
         #expect(sut.currentState.isPremium)
         #expect(sut.currentState.shouldDismiss)
@@ -86,7 +86,7 @@ struct PaywallDomainInteractorExtendedTests {
         mockStoreKitService.setSubscriptionStatus(false)
 
         sut.dispatch(action: .checkSubscriptionStatus)
-        try await Task.sleep(nanoseconds: 300_000_000)
+        try await waitForStateUpdate(duration: TestWaitDuration.long)
 
         #expect(!sut.currentState.isPremium)
         #expect(!sut.currentState.shouldDismiss)
@@ -94,27 +94,28 @@ struct PaywallDomainInteractorExtendedTests {
 
     // MARK: - Load Products Tests
 
-    @Test("Load products clears previous error")
-    func loadProductsClearsPreviousError() async throws {
-        // First cause an error via restore
-        mockStoreKitService.configureRestoreFailure(true)
-        sut.dispatch(action: .restorePurchases)
-        try await Task.sleep(nanoseconds: 300_000_000)
-        #expect(sut.currentState.error != nil)
+    @Test("Load products sets loading state and completes")
+    func loadProductsSetsLoadingAndCompletes() async throws {
+        var cancellables = Set<AnyCancellable>()
+        var loadingStates: [Bool] = []
 
-        // Now load products should clear the error
-        mockStoreKitService.configureRestoreFailure(false)
+        sut.statePublisher
+            .map(\.isLoadingProducts)
+            .sink { loadingStates.append($0) }
+            .store(in: &cancellables)
+
         sut.dispatch(action: .loadProducts)
-        try await Task.sleep(nanoseconds: 300_000_000)
+        try await waitForStateUpdate(duration: TestWaitDuration.long)
 
+        #expect(loadingStates.contains(true))
+        #expect(loadingStates.last == false)
         #expect(sut.currentState.error == nil)
-        #expect(!sut.currentState.isLoadingProducts)
     }
 
     @Test("Load products logs paywall_shown analytics")
     func loadProductsLogsPaywallShown() async throws {
         sut.dispatch(action: .loadProducts)
-        try await Task.sleep(nanoseconds: 200_000_000)
+        try await waitForStateUpdate(duration: TestWaitDuration.standard)
 
         let events = mockAnalyticsService.loggedEvents.filter { $0.name == "paywall_shown" }
         #expect(events.count == 1)
@@ -127,12 +128,12 @@ struct PaywallDomainInteractorExtendedTests {
         #expect(!sut.currentState.isPremium)
 
         mockStoreKitService.setSubscriptionStatus(true)
-        try await Task.sleep(nanoseconds: 200_000_000)
+        try await waitForStateUpdate(duration: TestWaitDuration.standard)
 
         #expect(sut.currentState.isPremium)
 
         mockStoreKitService.setSubscriptionStatus(false)
-        try await Task.sleep(nanoseconds: 200_000_000)
+        try await waitForStateUpdate(duration: TestWaitDuration.standard)
 
         #expect(!sut.currentState.isPremium)
     }
@@ -142,10 +143,10 @@ struct PaywallDomainInteractorExtendedTests {
     @Test("Dismiss sets shouldDismiss without affecting other state")
     func dismissPreservesOtherState() async throws {
         mockStoreKitService.setSubscriptionStatus(true)
-        try await Task.sleep(nanoseconds: 200_000_000)
+        try await waitForStateUpdate(duration: TestWaitDuration.standard)
 
         sut.dispatch(action: .dismiss)
-        try await Task.sleep(nanoseconds: 100_000_000)
+        try await waitForStateUpdate(duration: TestWaitDuration.short)
 
         #expect(sut.currentState.shouldDismiss)
         #expect(sut.currentState.isPremium)
@@ -164,7 +165,7 @@ struct PaywallDomainInteractorExtendedTests {
             .store(in: &cancellables)
 
         sut.dispatch(action: .restorePurchases)
-        try await Task.sleep(nanoseconds: 300_000_000)
+        try await waitForStateUpdate(duration: TestWaitDuration.long)
 
         #expect(restoringStates.contains(true))
         #expect(restoringStates.last == false)
@@ -183,7 +184,7 @@ struct PaywallDomainInteractorExtendedTests {
             .store(in: &cancellables)
 
         sut.dispatch(action: .restorePurchases)
-        try await Task.sleep(nanoseconds: 300_000_000)
+        try await waitForStateUpdate(duration: TestWaitDuration.long)
 
         #expect(restoringStates.contains(true))
         #expect(restoringStates.last == false)

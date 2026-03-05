@@ -26,10 +26,10 @@ struct SettingsViewModelExtendedTests {
     func toggleDarkMode() async throws {
         let sut = createSUT()
         sut.handle(event: .onAppear)
-        try await Task.sleep(nanoseconds: 300_000_000)
+        try await waitForStateUpdate(duration: TestWaitDuration.long)
 
         sut.handle(event: .onToggleDarkMode(true))
-        try await Task.sleep(nanoseconds: 300_000_000)
+        try await waitForStateUpdate(duration: TestWaitDuration.long)
 
         #expect(sut.viewState.isDarkMode)
     }
@@ -38,10 +38,10 @@ struct SettingsViewModelExtendedTests {
     func toggleSystemTheme() async throws {
         let sut = createSUT()
         sut.handle(event: .onAppear)
-        try await Task.sleep(nanoseconds: 300_000_000)
+        try await waitForStateUpdate(duration: TestWaitDuration.long)
 
         sut.handle(event: .onToggleSystemTheme(false))
-        try await Task.sleep(nanoseconds: 300_000_000)
+        try await waitForStateUpdate(duration: TestWaitDuration.long)
 
         #expect(!sut.viewState.useSystemTheme)
     }
@@ -52,10 +52,10 @@ struct SettingsViewModelExtendedTests {
     func signOutTappedShowsConfirmation() async throws {
         let sut = createSUT()
         sut.handle(event: .onAppear)
-        try await Task.sleep(nanoseconds: 300_000_000)
+        try await waitForStateUpdate(duration: TestWaitDuration.long)
 
         sut.handle(event: .onSignOutTapped)
-        try await Task.sleep(nanoseconds: 300_000_000)
+        try await waitForStateUpdate(duration: TestWaitDuration.long)
 
         #expect(sut.viewState.showSignOutConfirmation)
     }
@@ -64,14 +64,14 @@ struct SettingsViewModelExtendedTests {
     func cancelSignOutHidesConfirmation() async throws {
         let sut = createSUT()
         sut.handle(event: .onAppear)
-        try await Task.sleep(nanoseconds: 300_000_000)
+        try await waitForStateUpdate(duration: TestWaitDuration.long)
 
         sut.handle(event: .onSignOutTapped)
-        try await Task.sleep(nanoseconds: 300_000_000)
+        try await waitForStateUpdate(duration: TestWaitDuration.long)
         #expect(sut.viewState.showSignOutConfirmation)
 
         sut.handle(event: .onCancelSignOut)
-        try await Task.sleep(nanoseconds: 300_000_000)
+        try await waitForStateUpdate(duration: TestWaitDuration.long)
 
         #expect(!sut.viewState.showSignOutConfirmation)
     }
@@ -82,10 +82,10 @@ struct SettingsViewModelExtendedTests {
     func dismissErrorClearsMessage() async throws {
         let sut = createSUT()
         sut.handle(event: .onAppear)
-        try await Task.sleep(nanoseconds: 300_000_000)
+        try await waitForStateUpdate(duration: TestWaitDuration.long)
 
         sut.handle(event: .onDismissError)
-        try await Task.sleep(nanoseconds: 300_000_000)
+        try await waitForStateUpdate(duration: TestWaitDuration.long)
 
         #expect(sut.viewState.errorMessage == nil)
     }
@@ -94,10 +94,10 @@ struct SettingsViewModelExtendedTests {
     func dismissNotificationsDeniedAlert() async throws {
         let sut = createSUT()
         sut.handle(event: .onAppear)
-        try await Task.sleep(nanoseconds: 300_000_000)
+        try await waitForStateUpdate(duration: TestWaitDuration.long)
 
         sut.handle(event: .onDismissNotificationsDeniedAlert)
-        try await Task.sleep(nanoseconds: 300_000_000)
+        try await waitForStateUpdate(duration: TestWaitDuration.long)
 
         #expect(!sut.viewState.showNotificationsDeniedAlert)
     }
@@ -108,10 +108,10 @@ struct SettingsViewModelExtendedTests {
     func languageChange() async throws {
         let sut = createSUT()
         sut.handle(event: .onAppear)
-        try await Task.sleep(nanoseconds: 500_000_000)
+        try await waitForStateUpdate(duration: TestWaitDuration.long)
 
         sut.handle(event: .onLanguageChanged("pt"))
-        try await Task.sleep(nanoseconds: 500_000_000)
+        try await waitForStateUpdate(duration: TestWaitDuration.long)
 
         #expect(sut.viewState.selectedLanguage == "pt")
     }
@@ -122,7 +122,7 @@ struct SettingsViewModelExtendedTests {
     func initialStateDefaults() async throws {
         let sut = createSUT()
         sut.handle(event: .onAppear)
-        try await Task.sleep(nanoseconds: 500_000_000)
+        try await waitForStateUpdate(duration: TestWaitDuration.long)
 
         #expect(!sut.viewState.showSignOutConfirmation)
         #expect(sut.viewState.errorMessage == nil)
@@ -146,7 +146,7 @@ struct SettingsViewModelExtendedTests {
 
         let sut = createSUT()
         sut.handle(event: .onAppear)
-        try await Task.sleep(nanoseconds: 500_000_000)
+        try await waitForStateUpdate(duration: TestWaitDuration.long)
 
         #expect(sut.viewState.mutedSources.count == 2)
         #expect(sut.viewState.mutedKeywords.count == 1)
@@ -161,17 +161,17 @@ struct SettingsViewModelExtendedTests {
     func multipleEventsInSequence() async throws {
         let sut = createSUT()
         sut.handle(event: .onAppear)
-        try await Task.sleep(nanoseconds: 500_000_000)
+        try await waitForStateUpdate(duration: TestWaitDuration.long)
 
         sut.handle(event: .onNewMutedSourceChanged("Source1"))
-        try await Task.sleep(nanoseconds: 100_000_000)
+        try await waitForStateUpdate(duration: TestWaitDuration.short)
         sut.handle(event: .onAddMutedSource)
-        try await Task.sleep(nanoseconds: 500_000_000)
+        try await waitForStateUpdate(duration: TestWaitDuration.long)
 
         sut.handle(event: .onNewMutedKeywordChanged("Keyword1"))
-        try await Task.sleep(nanoseconds: 100_000_000)
+        try await waitForStateUpdate(duration: TestWaitDuration.short)
         sut.handle(event: .onAddMutedKeyword)
-        try await Task.sleep(nanoseconds: 500_000_000)
+        try await waitForStateUpdate(duration: TestWaitDuration.long)
 
         #expect(sut.viewState.mutedSources.contains("Source1"))
         #expect(sut.viewState.mutedKeywords.contains("Keyword1"))

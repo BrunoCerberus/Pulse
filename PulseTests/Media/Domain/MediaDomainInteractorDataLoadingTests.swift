@@ -28,7 +28,7 @@ struct MediaDomainInteractorDataLoadingTests {
         sut = MediaDomainInteractor(serviceLocator: serviceLocator)
     }
 
-    // MARK: - Deduplication Tests
+    // MARK: - Deduplication Tests (internal method, accessed via @testable import)
 
     @Test("deduplicateMedia removes items found in exclusion list")
     func deduplicateMediaRemovesExcluded() {
@@ -90,7 +90,7 @@ struct MediaDomainInteractorDataLoadingTests {
         )
 
         sut.dispatch(action: .loadInitialData)
-        try await Task.sleep(nanoseconds: 300_000_000)
+        try await waitForStateUpdate(duration: TestWaitDuration.long)
 
         let initialData = sut.currentState.hasLoadedInitialData
         #expect(initialData)
@@ -107,7 +107,7 @@ struct MediaDomainInteractorDataLoadingTests {
 
         // Trigger language check via notification
         NotificationCenter.default.post(name: .userPreferencesDidChange, object: nil)
-        try await Task.sleep(nanoseconds: 500_000_000)
+        try await waitForStateUpdate(duration: TestWaitDuration.long)
 
         // Should have reloaded data
         #expect(sut.currentState.hasLoadedInitialData)
@@ -126,13 +126,13 @@ struct MediaDomainInteractorDataLoadingTests {
         )
 
         sut.dispatch(action: .loadInitialData)
-        try await Task.sleep(nanoseconds: 300_000_000)
+        try await waitForStateUpdate(duration: TestWaitDuration.long)
 
         let mediaCountBefore = sut.currentState.mediaItems.count
 
         // Trigger language check via notification (same language)
         NotificationCenter.default.post(name: .userPreferencesDidChange, object: nil)
-        try await Task.sleep(nanoseconds: 300_000_000)
+        try await waitForStateUpdate(duration: TestWaitDuration.long)
 
         // Should not have cleared and reloaded
         #expect(sut.currentState.mediaItems.count == mediaCountBefore)
@@ -152,7 +152,7 @@ struct MediaDomainInteractorDataLoadingTests {
         )
 
         sut.dispatch(action: .loadInitialData)
-        try await Task.sleep(nanoseconds: 300_000_000)
+        try await waitForStateUpdate(duration: TestWaitDuration.long)
 
         // Make service fail
         mockMediaService.shouldFail = true
@@ -168,7 +168,7 @@ struct MediaDomainInteractorDataLoadingTests {
         )
 
         NotificationCenter.default.post(name: .userPreferencesDidChange, object: nil)
-        try await Task.sleep(nanoseconds: 500_000_000)
+        try await waitForStateUpdate(duration: TestWaitDuration.long)
 
         #expect(!sut.currentState.isLoading)
         #expect(sut.currentState.error != nil)
@@ -188,7 +188,7 @@ struct MediaDomainInteractorDataLoadingTests {
         )
 
         sut.dispatch(action: .loadInitialData)
-        try await Task.sleep(nanoseconds: 300_000_000)
+        try await waitForStateUpdate(duration: TestWaitDuration.long)
 
         mockMediaService.shouldFail = true
 
@@ -202,7 +202,7 @@ struct MediaDomainInteractorDataLoadingTests {
         )
 
         NotificationCenter.default.post(name: .userPreferencesDidChange, object: nil)
-        try await Task.sleep(nanoseconds: 500_000_000)
+        try await waitForStateUpdate(duration: TestWaitDuration.long)
 
         #expect(!sut.currentState.isLoading)
         // The mock uses URLError(.notConnectedToInternet) which is not PulseError.offlineNoCache
