@@ -127,7 +127,10 @@ final class DiskNewsCacheStore: NewsCacheStore {
             do {
                 try fileManager.removeItem(at: file)
             } catch {
-                Logger.shared.service("Disk cache cleanup failed for \(file.lastPathComponent): \(error)", level: .debug)
+                Logger.shared.service(
+                    "Disk cache cleanup failed for \(file.lastPathComponent): \(error)",
+                    level: .debug
+                )
             }
         }
     }
