@@ -16,7 +16,7 @@ enum GuardianAPI: APIFetcher {
 
     var path: String {
         guard var components = URLComponents(string: baseURL) else {
-            fatalError("Invalid base URL: \(baseURL)")
+            preconditionFailure("Invalid base URL: \(baseURL)")
         }
 
         var queryItems: [URLQueryItem] = []
@@ -51,7 +51,7 @@ enum GuardianAPI: APIFetcher {
         components.queryItems = queryItems
 
         guard let urlString = components.string else {
-            fatalError("Failed to construct URL from components")
+            preconditionFailure("Failed to construct URL from components")
         }
 
         return urlString

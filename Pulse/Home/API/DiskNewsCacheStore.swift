@@ -39,14 +39,22 @@ final class DiskNewsCacheStore: NewsCacheStore {
 
         // Create directory if needed
         if !fileManager.fileExists(atPath: cacheDirectory.path) {
-            try? fileManager.createDirectory(at: cacheDirectory, withIntermediateDirectories: true)
+            do {
+                try fileManager.createDirectory(at: cacheDirectory, withIntermediateDirectories: true)
+            } catch {
+                Logger.shared.service("Failed to create disk cache directory: \(error)", level: .warning)
+            }
         }
 
         // Set file protection so cache is encrypted at rest until first unlock
-        try? fileManager.setAttributes(
-            [.protectionKey: FileProtectionType.completeUntilFirstUserAuthentication],
-            ofItemAtPath: cacheDirectory.path
-        )
+        do {
+            try fileManager.setAttributes(
+                [.protectionKey: FileProtectionType.completeUntilFirstUserAuthentication],
+                ofItemAtPath: cacheDirectory.path
+            )
+        } catch {
+            Logger.shared.service("Failed to set file protection on cache directory: \(error)", level: .warning)
+        }
     }
 
     func get<T>(for key: NewsCacheKey) -> CacheEntry<T>? {
@@ -95,7 +103,11 @@ final class DiskNewsCacheStore: NewsCacheStore {
 
     func remove(for key: NewsCacheKey) {
         let fileURL = fileURL(for: key)
-        try? fileManager.removeItem(at: fileURL)
+        do {
+            try fileManager.removeItem(at: fileURL)
+        } catch {
+            Logger.shared.service("Disk cache remove failed for \(key.stringKey): \(error)", level: .debug)
+        }
     }
 
     func removeAll() {
@@ -105,7 +117,11 @@ final class DiskNewsCacheStore: NewsCacheStore {
         ) else { return }
 
         for file in files {
-            try? fileManager.removeItem(at: file)
+            do {
+                try fileManager.removeItem(at: file)
+            } catch {
+                Logger.shared.service("Disk cache cleanup failed for \(file.lastPathComponent): \(error)", level: .debug)
+            }
         }
     }
 

@@ -159,6 +159,7 @@ final class CachingNewsService: NewsService {
         // 4. Online: fetch from network, write-through to both caches
         Logger.shared.service("Cache miss for \(label)", level: .debug)
         return networkFetch()
+            .withNetworkResilience()
             .handleEvents(receiveOutput: { [weak self] data in
                 let entry = CacheEntry(data: data, timestamp: Date())
                 self?.memoryCacheStore.set(entry, for: key)
