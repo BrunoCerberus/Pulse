@@ -65,7 +65,7 @@ struct CachingNewsServiceArticleTests {
     }
 
     @Test("fetchArticle fetches from network when cache is expired")
-    func fetchArticleExpiredCache() async throws {
+    func fetchArticleExpiredCache() async {
         let expiredTimestamp = Date().addingTimeInterval(-NewsCacheTTL.default - 1)
         let cachedArticle = Article.mockArticles[0]
         let cacheKey = NewsCacheKey.article(id: cachedArticle.id)
@@ -90,7 +90,7 @@ struct CachingNewsServiceArticleTests {
             )
             .store(in: &cancellables)
 
-        try await Task.sleep(nanoseconds: 100_000_000)
+        _ = await waitForCondition { receivedArticle != nil }
 
         #expect(receivedArticle == networkArticle)
         #expect(mockCacheStore.setCallCount == 1)

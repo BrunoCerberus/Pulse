@@ -103,6 +103,7 @@ final class DiskNewsCacheStore: NewsCacheStore {
 
     func remove(for key: NewsCacheKey) {
         let fileURL = fileURL(for: key)
+        guard fileManager.fileExists(atPath: fileURL.path) else { return }
         do {
             try fileManager.removeItem(at: fileURL)
         } catch {
@@ -111,10 +112,16 @@ final class DiskNewsCacheStore: NewsCacheStore {
     }
 
     func removeAll() {
-        guard let files = try? fileManager.contentsOfDirectory(
-            at: cacheDirectory,
-            includingPropertiesForKeys: nil
-        ) else { return }
+        let files: [URL]
+        do {
+            files = try fileManager.contentsOfDirectory(
+                at: cacheDirectory,
+                includingPropertiesForKeys: nil
+            )
+        } catch {
+            Logger.shared.service("Failed to list disk cache directory: \(error)", level: .warning)
+            return
+        }
 
         for file in files {
             do {

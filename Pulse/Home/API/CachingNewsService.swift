@@ -157,6 +157,10 @@ final class CachingNewsService: NewsService {
         }
 
         // 4. Online: fetch from network, write-through to both caches
+        // MARK: Retry budget: 2 retries × 15s timeout = up to ~48s worst case per cache miss
+
+        // (includes exponential backoff delays: 1s + 2s). If the underlying service has its own
+        // fallback chain (e.g. Supabase → Guardian), retries re-attempt the full chain.
         Logger.shared.service("Cache miss for \(label)", level: .debug)
         return networkFetch()
             .withNetworkResilience()

@@ -5,6 +5,9 @@ import Testing
 
 @Suite("NetworkResilience Tests")
 struct NetworkResilienceTests {
+    // Tests use DispatchQueue.main as the scheduler to avoid ordering issues
+    // with synchronous mock publishers. Production uses .global() by default.
+
     // MARK: - Success on first attempt
 
     @Test("Succeeds immediately without retry")
@@ -16,7 +19,7 @@ struct NetworkResilienceTests {
                 promise(.success("ok"))
             }
         }
-        .withNetworkResilience(maxRetries: 2, baseDelay: 0.01, timeout: 5.0)
+        .withNetworkResilience(maxRetries: 2, baseDelay: 0.01, timeout: 5.0, scheduler: DispatchQueue.main)
 
         let result = try await awaitPublisher(publisher)
         #expect(result == "ok")
@@ -38,7 +41,7 @@ struct NetworkResilienceTests {
                 }
             }
         }
-        .withNetworkResilience(maxRetries: 2, baseDelay: 0.01, timeout: 5.0)
+        .withNetworkResilience(maxRetries: 2, baseDelay: 0.01, timeout: 5.0, scheduler: DispatchQueue.main)
 
         let result = try await awaitPublisher(publisher)
         #expect(result == "recovered")
@@ -56,7 +59,7 @@ struct NetworkResilienceTests {
                 promise(.failure(URLError(.notConnectedToInternet)))
             }
         }
-        .withNetworkResilience(maxRetries: 2, baseDelay: 0.01, timeout: 5.0)
+        .withNetworkResilience(maxRetries: 2, baseDelay: 0.01, timeout: 5.0, scheduler: DispatchQueue.main)
 
         do {
             _ = try await awaitPublisher(publisher)
@@ -77,7 +80,7 @@ struct NetworkResilienceTests {
                 promise(.failure(URLError(.badServerResponse)))
             }
         }
-        .withNetworkResilience(maxRetries: 0, baseDelay: 0.01, timeout: 5.0)
+        .withNetworkResilience(maxRetries: 0, baseDelay: 0.01, timeout: 5.0, scheduler: DispatchQueue.main)
 
         do {
             _ = try await awaitPublisher(publisher)
@@ -87,31 +90,54 @@ struct NetworkResilienceTests {
         }
     }
 
+    // MARK: - Timeout
+
+    @Test("Times out slow publisher")
+    func timeoutPublisher() async throws {
+        let publisher = Deferred {
+            Future<String, Error> { _ in
+                // never completes — will be cancelled by timeout
+            }
+        }
+        .withNetworkResilience(maxRetries: 0, baseDelay: 0.01, timeout: 0.05)
+
+        do {
+            _ = try await awaitPublisher(publisher)
+            Issue.record("Expected timeout error")
+        } catch {
+            // Timeout causes finished-without-value — caught as error
+        }
+    }
+
     // MARK: - Helpers
 
     private func awaitPublisher<P: Publisher>(
-        _ publisher: P,
-        timeout _: TimeInterval = 10.0
+        _ publisher: P
     ) async throws -> P.Output {
         try await withCheckedThrowingContinuation { continuation in
             var cancellable: AnyCancellable?
+            var hasValue = false
             var resumed = false
 
             cancellable = publisher
                 .sink(
                     receiveCompletion: { completion in
                         guard !resumed else { return }
-                        resumed = true
                         _ = cancellable // retain
                         switch completion {
                         case .finished:
-                            break // value already delivered
+                            if !hasValue {
+                                resumed = true
+                                continuation.resume(throwing: URLError(.timedOut))
+                            }
                         case let .failure(error):
+                            resumed = true
                             continuation.resume(throwing: error)
                         }
                     },
                     receiveValue: { value in
                         guard !resumed else { return }
+                        hasValue = true
                         resumed = true
                         continuation.resume(returning: value)
                     }

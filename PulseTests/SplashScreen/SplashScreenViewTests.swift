@@ -12,15 +12,16 @@ struct SplashScreenViewTests {
             callbackInvoked = true
         }
 
-        // Verify callback is callable
         view.onComplete()
         #expect(callbackInvoked == true)
     }
 
-    @Test("SplashScreenView body is accessible")
-    func bodyIsAccessible() {
+    /// Visual regression coverage is handled by snapshot tests in PulseSnapshotTests.
+    /// This test verifies the view body can be evaluated without crashing (e.g. missing
+    /// resources, broken modifiers), serving as a build-time smoke test.
+    @Test("SplashScreenView body evaluates without crashing")
+    func bodyEvaluates() {
         let view = SplashScreenView {}
-        // View can be created without crashing
         _ = view.body
     }
 }
