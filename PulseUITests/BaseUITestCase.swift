@@ -167,6 +167,12 @@ class BaseUITestCase: XCTestCase {
             wait(for: 0.3)
             if tab.isHittable {
                 tab.tap()
+            } else {
+                // On iOS 26+, fall back to direct button lookup when tab bar button reports not hittable
+                let tabButton = app.buttons[tabName]
+                if tabButton.waitForExistence(timeout: 2), !tabButton.isSelected {
+                    tabButton.tap()
+                }
             }
         } else if !tab.exists {
             // Fallback: try finding the button directly
@@ -302,6 +308,12 @@ class BaseUITestCase: XCTestCase {
             wait(for: 0.3)
             if bookmarksTab.isHittable {
                 bookmarksTab.tap()
+            } else {
+                // On iOS 26+, fall back to direct button lookup when tab bar button reports not hittable
+                let bookmarksButton = app.buttons["Bookmarks"]
+                if bookmarksButton.waitForExistence(timeout: 2), !bookmarksButton.isSelected {
+                    bookmarksButton.tap()
+                }
             }
         } else if !bookmarksTab.exists {
             // Fallback: try finding the button directly

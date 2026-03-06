@@ -22,9 +22,6 @@ final class NavigationUITests: BaseUITestCase {
         }
 
         // --- Navigate to Each Tab and Verify (except Search - tested in PulseSearchUITests) ---
-        // Use helper methods for safe tab navigation — iOS 26+ Liquid Glass tab bar
-        // exposes symbol sub-elements that cause XCTest crashes when tapped directly
-        // without an isHittable check.
 
         // Home
         navigateToTab("Home")
