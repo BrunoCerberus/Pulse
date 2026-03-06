@@ -2,7 +2,7 @@ import Combine
 import EntropyCore
 import Foundation
 
-extension Publisher {
+extension Publisher where Failure == Error {
     /// Adds retry with exponential backoff and per-attempt timeout to a publisher.
     ///
     /// - Parameters:
@@ -18,7 +18,7 @@ extension Publisher {
         scheduler: some Scheduler = DispatchQueue.global()
     ) -> AnyPublisher<Output, Failure> {
         self
-            .timeout(.seconds(timeout), scheduler: scheduler)
+            .timeout(.seconds(timeout), scheduler: scheduler, customError: { URLError(.timedOut) })
             .retryWithBackoff(maxRetries: maxRetries, baseDelay: baseDelay, scheduler: scheduler)
             .eraseToAnyPublisher()
     }

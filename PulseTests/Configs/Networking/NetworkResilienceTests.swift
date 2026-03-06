@@ -105,7 +105,27 @@ struct NetworkResilienceTests {
             _ = try await awaitPublisher(publisher)
             Issue.record("Expected timeout error")
         } catch {
-            // Timeout causes finished-without-value — caught as error
+            #expect((error as? URLError)?.code == .timedOut)
+        }
+    }
+
+    @Test("Timeout triggers retries before failing")
+    func timeoutWithRetries() async throws {
+        var callCount = 0
+        let publisher = Deferred {
+            Future<String, Error> { _ in
+                callCount += 1
+                // never completes — each attempt will time out
+            }
+        }
+        .withNetworkResilience(maxRetries: 2, baseDelay: 0.01, timeout: 0.05, scheduler: DispatchQueue.main)
+
+        do {
+            _ = try await awaitPublisher(publisher)
+            Issue.record("Expected timeout error")
+        } catch {
+            #expect(callCount == 3) // 1 initial + 2 retries
+            #expect((error as? URLError)?.code == .timedOut)
         }
     }
 
