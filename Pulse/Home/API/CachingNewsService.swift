@@ -15,6 +15,7 @@ final class CachingNewsService: NewsService {
     private let memoryCacheStore: NewsCacheStore
     private let diskCacheStore: NewsCacheStore?
     private let networkMonitor: NetworkMonitorService?
+    private let networkResilienceEnabled: Bool
 
     /// Creates a new caching news service.
     /// - Parameters:
@@ -22,16 +23,19 @@ final class CachingNewsService: NewsService {
     ///   - cacheStore: The L1 memory cache store (defaults to LiveNewsCacheStore)
     ///   - diskCacheStore: The L2 disk cache store (defaults to DiskNewsCacheStore)
     ///   - networkMonitor: Network monitor for offline detection (optional)
+    ///   - networkResilienceEnabled: Whether to apply retry/timeout on cache misses (default: true)
     init(
         wrapping wrapped: NewsService,
         cacheStore: NewsCacheStore = LiveNewsCacheStore(),
         diskCacheStore: NewsCacheStore? = DiskNewsCacheStore(),
-        networkMonitor: NetworkMonitorService? = nil
+        networkMonitor: NetworkMonitorService? = nil,
+        networkResilienceEnabled: Bool = true
     ) {
         self.wrapped = wrapped
         memoryCacheStore = cacheStore
         self.diskCacheStore = diskCacheStore
         self.networkMonitor = networkMonitor
+        self.networkResilienceEnabled = networkResilienceEnabled
     }
 
     // MARK: - NewsService Implementation
@@ -157,8 +161,16 @@ final class CachingNewsService: NewsService {
         }
 
         // 4. Online: fetch from network, write-through to both caches
+        // MARK: Retry budget: 2 retries × 15s timeout = up to ~48s worst case per cache miss
+
+        // (includes exponential backoff delays: 1s + 2s). If the underlying service has its own
+        // fallback chain (e.g. Supabase → Guardian), retries re-attempt the full chain.
         Logger.shared.service("Cache miss for \(label)", level: .debug)
-        return networkFetch()
+        let fetch = networkFetch()
+        let resilientFetch = networkResilienceEnabled
+            ? fetch.withNetworkResilience()
+            : fetch.eraseToAnyPublisher()
+        return resilientFetch
             .handleEvents(receiveOutput: { [weak self] data in
                 let entry = CacheEntry(data: data, timestamp: Date())
                 self?.memoryCacheStore.set(entry, for: key)

@@ -13,12 +13,12 @@ class BaseUITestCase: XCTestCase {
     static let launchTimeout: TimeInterval = 60
 
     /// Default timeout for element existence checks
-    /// 10s accounts for CI machine variability and slower simulators
-    static let defaultTimeout: TimeInterval = 10
+    /// 15s accounts for CI machine variability, slower simulators, and post-restart recovery
+    static let defaultTimeout: TimeInterval = 15
 
     /// Short timeout for quick checks (e.g., verifying element visibility)
-    /// 6s allows for CI machine variability while remaining responsive
-    static let shortTimeout: TimeInterval = 6
+    /// 10s allows for CI machine variability including post-restart recovery
+    static let shortTimeout: TimeInterval = 10
 
     // MARK: - Instance-level Setup (runs before each test)
 
@@ -89,16 +89,16 @@ class BaseUITestCase: XCTestCase {
         }
     }
 
-    override func tearDownWithError() throws {
+    override func tearDown() {
+        // Use tearDown() instead of tearDownWithError() to prevent termination
+        // failures from being recorded as test errors on CI.
+        // After a test crash/timeout, the simulator may be in an unrecoverable
+        // state where terminate() throws "Failed to terminate".
+        defer { app = nil }
         XCUIDevice.shared.orientation = .portrait
-        // Gracefully terminate app - don't fail test on termination issues
-        // XCUIApplication.terminate() can throw if the app is in an unexpected state
-        if let application = app, application.state != .notRunning {
-            application.terminate()
-            // Brief wait to allow termination to complete
-            _ = application.wait(for: .notRunning, timeout: 5)
-        }
-        app = nil
+        guard let application = app, application.state != .notRunning else { return }
+        application.terminate()
+        _ = application.wait(for: .notRunning, timeout: 5)
     }
 
     // MARK: - Subclass Hooks
@@ -113,6 +113,7 @@ class BaseUITestCase: XCTestCase {
 
     /// Reset to Home tab to start each test from a known state
     func resetToHomeTab() {
+        guard app.state == .runningForeground else { return }
         let tabBar = app.tabBars.firstMatch
 
         // Quick check - if tab bar not visible, try recovery
@@ -157,6 +158,9 @@ class BaseUITestCase: XCTestCase {
 
     /// Navigate to a specific tab with recovery
     func navigateToTab(_ tabName: String) {
+        // Guard against interacting with a crashed/terminated app
+        guard app.state == .runningForeground else { return }
+
         let tab = app.tabBars.buttons[tabName]
 
         // First attempt
@@ -194,6 +198,7 @@ class BaseUITestCase: XCTestCase {
 
     /// Navigate to Search tab (handles role: .search accessibility)
     func navigateToSearchTab() {
+        guard app.state == .runningForeground else { return }
         let searchTab = app.tabBars.buttons["Search"]
         // Use waitForExistence for CI reliability
         if searchTab.waitForExistence(timeout: Self.shortTimeout), !searchTab.isSelected {
@@ -214,6 +219,7 @@ class BaseUITestCase: XCTestCase {
 
     /// Navigate to Feed tab and verify navigation bar appears
     func navigateToFeedTab() {
+        guard app.state == .runningForeground else { return }
         let feedTab = app.tabBars.buttons["Feed"]
         // Use waitForExistence with longer timeout for CI reliability
         if feedTab.waitForExistence(timeout: Self.defaultTimeout), !feedTab.isSelected {
@@ -251,6 +257,7 @@ class BaseUITestCase: XCTestCase {
 
     /// Navigate to Media tab with recovery for CI
     func navigateToMediaTab() {
+        guard app.state == .runningForeground else { return }
         let mediaTab = app.tabBars.buttons["Media"]
 
         // First attempt
@@ -301,6 +308,7 @@ class BaseUITestCase: XCTestCase {
 
     /// Navigate to Bookmarks tab and verify navigation bar appears
     func navigateToBookmarksTab() {
+        guard app.state == .runningForeground else { return }
         let bookmarksTab = app.tabBars.buttons["Bookmarks"]
         // Use waitForExistence for CI reliability
         if bookmarksTab.waitForExistence(timeout: Self.shortTimeout), !bookmarksTab.isSelected {
@@ -327,6 +335,7 @@ class BaseUITestCase: XCTestCase {
 
     /// Navigate to Settings via gear button
     func navigateToSettings() {
+        guard app.state == .runningForeground else { return }
         navigateToTab("Home")
         let gearButton = app.navigationBars.buttons["Settings"]
         if gearButton.waitForExistence(timeout: Self.defaultTimeout) {

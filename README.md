@@ -10,7 +10,7 @@ A modern iOS news aggregation app built with Clean Architecture, SwiftUI, and Co
 - **Feed**: AI-powered Daily Digest summarizing latest news articles from the API using on-device LLM (Llama 3.2-1B) (**Premium**)
 - **Article Summarization**: On-device AI article summarization via sparkles button (**Premium**)
 - **Text-to-Speech**: Listen to articles read aloud using native `AVSpeechSynthesizer` with play/pause controls, speed presets (1x/1.25x/1.5x/2x), language-aware voices, and a floating mini-player bar
-- **Offline Experience**: Tiered cache (in-memory L1 + persistent disk L2), network monitoring via NWPathMonitor, offline banner, and graceful degradation preserving cached content
+- **Offline Experience**: Tiered cache (in-memory L1 + persistent disk L2), automatic retry with exponential backoff for transient failures, network monitoring via NWPathMonitor, offline banner, and graceful degradation preserving cached content
 - **Bookmarks**: Save articles for offline reading with SwiftData persistence
 - **Reading History**: Automatic tracking of read articles with SwiftData persistence, visual indicators on cards, and a dedicated history view accessible from Settings
 - **Related Articles**: After reading an article, discover related articles from the same category displayed in a horizontal carousel below the content
@@ -400,7 +400,7 @@ Pulse/
 │       ├── Navigation/     # Coordinator, Page, CoordinatorView, DeeplinkRouter, AnimatedTabView
 │       ├── DesignSystem/   # ColorSystem, Typography, Components, DynamicTypeHelpers, HapticManager
 │       ├── Models/         # Article, NewsCategory, UserPreferences, AppLocalization
-│       ├── Networking/     # APIKeysProvider, BaseURLs, SupabaseConfig, RemoteConfig, NetworkMonitorService
+│       ├── Networking/     # APIKeysProvider, BaseURLs, SupabaseConfig, RemoteConfig, NetworkMonitorService, NetworkResilience
 │       ├── Storage/        # StorageService (SwiftData)
 │       ├── Analytics/      # AnalyticsService protocol + LiveAnalyticsService
 │       ├── Mocks/          # Mock services for testing

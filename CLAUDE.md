@@ -189,7 +189,7 @@ Pulse/
 │       ├── Navigation/         # Coordinator, Page, CoordinatorView, DeeplinkRouter, AnimatedTabView
 │       ├── DesignSystem/       # ColorSystem, Typography, Components, DynamicTypeHelpers
 │       ├── Models/             # Article, NewsCategory, UserPreferences, ContentLanguage, AppLocalization
-│       ├── Networking/         # API keys, base URLs, SupabaseConfig, RemoteConfig, NetworkMonitorService
+│       ├── Networking/         # API keys, base URLs, SupabaseConfig, RemoteConfig, NetworkMonitorService, NetworkResilience
 │       ├── Storage/            # StorageService (SwiftData)
 │       ├── Analytics/          # AnalyticsService protocol + Live implementation
 │       ├── Mocks/              # Mock services for testing
@@ -413,7 +413,15 @@ serviceLocator.register(NetworkMonitorService.self, instance: networkMonitor)
 1. **L1 hit** (non-expired) → return immediately
 2. **L2 hit** (non-expired) → promote to L1, return
 3. **Offline**: serve stale data from L1 or L2; if nothing cached → `Fail(PulseError.offlineNoCache)`
-4. **Online**: network fetch → write-through to L1 + L2; on failure → fall back to stale L2
+4. **Online**: network fetch (with retry + timeout) → write-through to L1 + L2; on failure → fall back to stale L2
+
+### Network Resilience
+
+Network fetches in step 4 are wrapped with `Publisher.withNetworkResilience()` (defined in `NetworkResilience.swift`):
+- **Retry**: Up to 2 retries with exponential backoff (1s → 2s)
+- **Timeout**: 15 seconds per attempt
+- Applied at the caching layer (`CachingNewsService`/`CachingMediaService`), so retries only fire on cache misses
+- Stale cache fallback still works after retries exhaust
 
 ### Cache Invalidation
 
@@ -489,8 +497,9 @@ if let cachingService = newsService as? CachingNewsService {
 | **Caching & Offline** | |
 | `NewsCacheStore.swift` | Cache protocol, NSCache implementation (L1), TTL configuration |
 | `DiskNewsCacheStore.swift` | Persistent file-based cache (L2) in Caches/PulseNewsCache/ |
-| `CachingNewsService.swift` | Decorator wrapping LiveNewsService with tiered L1+L2 caching + offline awareness |
-| `CachingMediaService.swift` | Decorator wrapping LiveMediaService with tiered L1+L2 caching + offline awareness |
+| `CachingNewsService.swift` | Decorator wrapping LiveNewsService with tiered L1+L2 caching + offline awareness + network resilience |
+| `CachingMediaService.swift` | Decorator wrapping LiveMediaService with tiered L1+L2 caching + offline awareness + network resilience |
+| `NetworkResilience.swift` | Combine `Publisher` extension for retry with exponential backoff (2 retries, 1s→2s) + 15s timeout |
 | `NetworkMonitorService.swift` | Protocol + Live (NWPathMonitor) + Mock for connectivity monitoring |
 | `PulseError.swift` | Typed error enum distinguishing offline from server errors |
 | `OfflineBannerView.swift` | Animated offline banner shown at top of app when disconnected |

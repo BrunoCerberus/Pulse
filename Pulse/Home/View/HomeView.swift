@@ -397,5 +397,4 @@ struct HomeView<R: HomeNavigationRouter>: View {
             viewModel: HomeViewModel(serviceLocator: .preview)
         )
     }
-    .preferredColorScheme(.dark)
 }
