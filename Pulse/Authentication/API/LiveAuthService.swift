@@ -1,6 +1,7 @@
 import AuthenticationServices
 import Combine
 import CryptoKit
+import EntropyCore
 import FirebaseAuth
 import FirebaseCore
 import GoogleSignIn
@@ -94,7 +95,13 @@ final class LiveAuthService: NSObject, AuthService {
                 return
             }
 
-            let nonce = self.randomNonceString()
+            let nonce: String
+            do {
+                nonce = try self.randomNonceString()
+            } catch {
+                promise(.failure(error))
+                return
+            }
             self.currentNonce = nonce
 
             let provider = ASAuthorizationAppleIDProvider()
@@ -135,12 +142,12 @@ final class LiveAuthService: NSObject, AuthService {
 
     // MARK: - Apple Sign-In Helpers
 
-    private func randomNonceString(length: Int = 32) -> String {
+    private func randomNonceString(length: Int = 32) throws -> String {
         precondition(length > 0)
         var randomBytes = [UInt8](repeating: 0, count: length)
         let errorCode = SecRandomCopyBytes(kSecRandomDefault, randomBytes.count, &randomBytes)
-        if errorCode != errSecSuccess {
-            fatalError("Unable to generate nonce")
+        guard errorCode == errSecSuccess else {
+            throw AuthError.unknown("Unable to generate secure nonce (OSStatus: \(errorCode))")
         }
         return Data(randomBytes).base64EncodedString()
     }
@@ -165,6 +172,7 @@ extension LiveAuthService: ASAuthorizationControllerDelegate {
               let idTokenString = String(data: appleIDToken, encoding: .utf8)
         else {
             appleSignInContinuation?.resume(throwing: AuthError.invalidCredential)
+            cleanupAppleSignInState()
             return
         }
 
@@ -185,6 +193,7 @@ extension LiveAuthService: ASAuthorizationControllerDelegate {
             } catch {
                 appleSignInContinuation?.resume(throwing: AuthError.unknown(error.localizedDescription))
             }
+            cleanupAppleSignInState()
         }
     }
 
@@ -194,6 +203,12 @@ extension LiveAuthService: ASAuthorizationControllerDelegate {
         } else {
             appleSignInContinuation?.resume(throwing: AuthError.unknown(error.localizedDescription))
         }
+        cleanupAppleSignInState()
+    }
+
+    private func cleanupAppleSignInState() {
+        currentNonce = nil
+        appleSignInContinuation = nil
     }
 }
 
@@ -207,7 +222,9 @@ private extension FirebaseAuth.User {
         } else if providerData.contains(where: { $0.providerID == "apple.com" }) {
             provider = .apple
         } else {
-            provider = .google // Default fallback
+            let providerIDs = providerData.map(\.providerID).joined(separator: ", ")
+            Logger.shared.service("Unknown auth provider(s): \(providerIDs), defaulting to .google", level: .warning)
+            provider = .google
         }
 
         return AuthUser(
