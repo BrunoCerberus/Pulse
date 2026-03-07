@@ -66,7 +66,7 @@ Pulse/
 │       ├── Navigation/         # Coordinator, Page, CoordinatorView, DeeplinkRouter, AnimatedTabView
 │       ├── DesignSystem/       # ColorSystem, Typography, Components, DynamicTypeHelpers, Haptics
 │       ├── Models/             # Article, NewsCategory, UserPreferences, ContentLanguage, AppLocalization
-│       ├── Networking/         # API keys, base URLs, SupabaseConfig, RemoteConfig, NetworkMonitorService
+│       ├── Networking/         # API keys, base URLs, SupabaseConfig, RemoteConfig, NetworkMonitorService, NetworkResilience
 │       ├── Storage/            # StorageService (SwiftData)
 │       ├── Analytics/          # AnalyticsService protocol + Live implementation
 │       ├── Mocks/              # Mock services for testing
@@ -265,8 +265,9 @@ The app uses a tiered cache with offline resilience:
 
 | Component | Purpose |
 |-----------|---------|
-| `CachingNewsService` | Decorator wrapping `LiveNewsService` with `fetchWithTieredCache()` - L1 → L2 → network with stale fallback |
+| `CachingNewsService` | Decorator wrapping `LiveNewsService` with `fetchWithTieredCache()` - L1 → L2 → network (with retry + timeout) with stale fallback |
 | `CachingMediaService` | Decorator wrapping `LiveMediaService` with same tiered cache pattern for media endpoints |
+| `NetworkResilience` | Combine `Publisher.withNetworkResilience()` extension — 2 retries with exponential backoff (1s→2s), 15s timeout per attempt |
 | `DiskNewsCacheStore` | Persistent file-based cache implementing `NewsCacheStore` protocol |
 | `NetworkMonitorService` | Protocol + Live (`NWPathMonitor`) + Mock for connectivity tracking |
 | `PulseError` | Typed error enum with `.offlineNoCache` case |
@@ -304,6 +305,7 @@ The app uses a tiered cache with offline resilience:
 | `TTSSpeedPreset` | Enum: `.normal`, `.fast`, `.faster`, `.fastest` with `rate` and `next()` cycling |
 
 ### Offline Behavior
+- **Network resilience on cache miss**: Automatic retry (2x exponential backoff) with 15s timeout before falling back to stale cache
 - **Stale data served when offline**: L1 or L2 cache returned even if expired
 - **Content preserved on refresh failure**: Pull-to-refresh does not clear existing headlines/breaking news/media
 - **Offline error differentiation**: Domain states expose `isOfflineError: Bool` for offline-specific error views

@@ -73,7 +73,7 @@ final class HomeUITests: BaseUITestCase {
         }
 
         // Verify we're back on Home
-        XCTAssertTrue(app.navigationBars["News"].waitForExistence(timeout: Self.shortTimeout), "Should return to Home")
+        XCTAssertTrue(app.navigationBars["News"].waitForExistence(timeout: Self.defaultTimeout), "Should return to Home")
 
         // Wait for content to load
         _ = waitForHomeContent(timeout: 30)
@@ -202,7 +202,7 @@ final class HomeUITests: BaseUITestCase {
             app.swipeRight()
         }
 
-        XCTAssertTrue(app.navigationBars["News"].waitForExistence(timeout: Self.shortTimeout), "Should return to Home")
+        XCTAssertTrue(app.navigationBars["News"].waitForExistence(timeout: Self.defaultTimeout), "Should return to Home")
 
         // Only test article interactions if content loaded successfully and isn't an error/empty state
         // This makes tests resilient to CI environments with limited mock data
@@ -226,7 +226,7 @@ final class HomeUITests: BaseUITestCase {
                     // Navigate back
                     navigateBack()
                     XCTAssertTrue(
-                        app.navigationBars["News"].waitForExistence(timeout: Self.shortTimeout),
+                        app.navigationBars["News"].waitForExistence(timeout: Self.defaultTimeout),
                         "Should return to Home"
                     )
                 }

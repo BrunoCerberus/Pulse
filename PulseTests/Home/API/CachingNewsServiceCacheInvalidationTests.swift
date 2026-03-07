@@ -12,7 +12,7 @@ struct CachingNewsServiceCacheInvalidationTests {
     init() {
         mockNewsService = MockNewsService()
         mockCacheStore = MockNewsCacheStore()
-        sut = CachingNewsService(wrapping: mockNewsService, cacheStore: mockCacheStore, diskCacheStore: nil)
+        sut = CachingNewsService(wrapping: mockNewsService, cacheStore: mockCacheStore, diskCacheStore: nil, networkResilienceEnabled: false)
     }
 
     @Test("invalidateCache clears all cached data")
