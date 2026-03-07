@@ -89,16 +89,16 @@ class BaseUITestCase: XCTestCase {
         }
     }
 
-    override func tearDownWithError() throws {
-        XCUIDevice.shared.orientation = .portrait
-        // Gracefully terminate app - catch all failures to prevent cascading SIGABRT
-        // After a test crash/timeout, the app may be in an unrecoverable state
+    override func tearDown() {
+        // Use tearDown() instead of tearDownWithError() to prevent termination
+        // failures from being recorded as test errors on CI.
+        // After a test crash/timeout, the simulator may be in an unrecoverable
+        // state where terminate() throws "Failed to terminate".
         defer { app = nil }
-        guard let application = app else { return }
-        if application.state != .notRunning {
-            application.terminate()
-            _ = application.wait(for: .notRunning, timeout: 5)
-        }
+        XCUIDevice.shared.orientation = .portrait
+        guard let application = app, application.state != .notRunning else { return }
+        application.terminate()
+        _ = application.wait(for: .notRunning, timeout: 5)
     }
 
     // MARK: - Subclass Hooks
