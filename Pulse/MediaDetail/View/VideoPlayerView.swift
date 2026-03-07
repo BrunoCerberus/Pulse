@@ -74,7 +74,9 @@ struct VideoPlayerView: UIViewRepresentable {
             "picture-in-picture; web-share"
 
         let ytDomains = "https://www.youtube.com https://www.youtube-nocookie.com"
-        let csp = "default-src 'self' \(ytDomains); frame-src \(ytDomains); style-src 'unsafe-inline'"
+        let scriptDomains = "\(ytDomains) https://www.google.com"
+        let csp = "default-src 'self' \(ytDomains); script-src 'self' \(scriptDomains); " +
+            "frame-src \(ytDomains); style-src 'unsafe-inline'"
 
         return """
         <!DOCTYPE html>

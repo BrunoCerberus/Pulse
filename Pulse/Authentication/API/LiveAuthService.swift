@@ -183,6 +183,7 @@ extension LiveAuthService: ASAuthorizationControllerDelegate {
         )
 
         Task {
+            defer { cleanupAppleSignInState() }
             do {
                 let authResult = try await Auth.auth().signIn(with: credential)
                 if let user = authResult.user.toAuthUser() {
@@ -193,7 +194,6 @@ extension LiveAuthService: ASAuthorizationControllerDelegate {
             } catch {
                 appleSignInContinuation?.resume(throwing: AuthError.unknown(error.localizedDescription))
             }
-            cleanupAppleSignInState()
         }
     }
 
