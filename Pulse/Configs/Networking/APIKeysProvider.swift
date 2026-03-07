@@ -206,8 +206,6 @@ enum APIKeysProvider {
         1. Add \(keyName) to Firebase Remote Config, OR
         2. Set the \(keyName) environment variable in your build configuration, OR
         3. Call APIKeysProvider.setAPIKey("your_api_key", for: .\(keyName.lowercased())) before accessing the key
-
-        Current environment: \(ProcessInfo.processInfo.environment.keys.filter { $0.contains("API") })
         """, level: .error)
     }
 

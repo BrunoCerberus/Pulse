@@ -19,6 +19,25 @@ final class LiveAnalyticsService: AnalyticsService {
         var enrichedInfo = userInfo ?? [:]
         enrichedInfo["domain"] = nsError.domain
         enrichedInfo["code"] = nsError.code
-        Crashlytics.crashlytics().record(error: error, userInfo: enrichedInfo)
+
+        // Sanitize values to prevent PII leakage to Crashlytics
+        let sanitizedInfo = enrichedInfo.mapValues { value -> Any in
+            guard let stringValue = value as? String else { return value }
+            return Self.sanitize(stringValue)
+        }
+
+        Crashlytics.crashlytics().record(error: error, userInfo: sanitizedInfo)
+    }
+
+    /// Redacts potential PII patterns (emails, URLs with tokens) from error context.
+    private static func sanitize(_ value: String) -> String {
+        var result = value
+        // Redact email addresses
+        let emailPattern = /[A-Za-z0-9._%+-]+@[A-Za-z0-9.-]+\.[A-Za-z]{2,}/
+        result = result.replacing(emailPattern, with: "[REDACTED_EMAIL]")
+        // Redact URL query parameters (may contain tokens/keys)
+        let queryPattern = /\?[^\s]+/
+        result = result.replacing(queryPattern, with: "?[REDACTED_PARAMS]")
+        return result
     }
 }

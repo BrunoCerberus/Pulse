@@ -60,7 +60,7 @@ final class LiveSearchService: APIRequest, SearchService {
         }
         .handleEvents(receiveOutput: { articles in
             let count = articles.count
-            Logger.shared.service("LiveSearchService: \(count) results for '\(query)'", level: .debug)
+            Logger.shared.service("LiveSearchService: \(count) results (query length: \(query.count))", level: .debug)
         })
         .receive(on: DispatchQueue.main)
         .eraseToAnyPublisher()

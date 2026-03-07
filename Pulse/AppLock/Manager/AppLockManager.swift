@@ -46,6 +46,7 @@ final class AppLockManager: ObservableObject {
     func handleSceneDidBecomeActive() {
         guard !isAuthenticating else { return }
         guard let service = appLockService, service.isEnabled, isLocked else { return }
+        isAuthenticating = true
         Task { await attemptUnlock() }
     }
 
