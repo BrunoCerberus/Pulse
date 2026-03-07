@@ -8,8 +8,8 @@ final class HomeUITests: BaseUITestCase {
         // Verify we're on Home
         XCTAssertTrue(app.navigationBars["News"].waitForExistence(timeout: Self.shortTimeout), "Should be on Home")
 
-        // Find and tap the edit topics button
-        let editTopicsButton = app.navigationBars.buttons["line.3.horizontal.decrease.circle"]
+        // Find and tap the edit topics button (identified by accessibility label set in HomeView)
+        let editTopicsButton = app.navigationBars.buttons["Edit Topics"]
         XCTAssertTrue(editTopicsButton.waitForExistence(timeout: Self.shortTimeout), "Edit topics button should exist")
         editTopicsButton.tap()
 
@@ -45,8 +45,8 @@ final class HomeUITests: BaseUITestCase {
 
     /// Tests category tabs visibility and interaction after enabling topics
     func testCategoryTabsAfterEnablingTopics() {
-        // Open edit topics sheet
-        let editTopicsButton = app.navigationBars.buttons["line.3.horizontal.decrease.circle"]
+        // Open edit topics sheet (identified by accessibility label set in HomeView)
+        let editTopicsButton = app.navigationBars.buttons["Edit Topics"]
         XCTAssertTrue(editTopicsButton.waitForExistence(timeout: Self.shortTimeout), "Edit topics button should exist")
         editTopicsButton.tap()
 

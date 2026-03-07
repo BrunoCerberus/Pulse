@@ -301,24 +301,14 @@ class BaseUITestCase: XCTestCase {
 
     /// Navigate to Bookmarks tab and verify navigation bar appears
     func navigateToBookmarksTab() {
-        let bookmarksTab = app.tabBars.buttons["Bookmarks"]
-        // Use waitForExistence for CI reliability
-        if bookmarksTab.waitForExistence(timeout: Self.shortTimeout), !bookmarksTab.isSelected {
-            // Wait for element to become hittable (iOS 26+ Liquid Glass tab bar)
+        // On iOS 26+ Liquid Glass tab bar, app.tabBars.buttons[] queries can crash
+        // (SIGABRT via _XCTestCaseInterruptionException) when the tab bar exposes symbol
+        // sub-elements that don't match by label. Use app.buttons[] directly, which works
+        // reliably across all iOS versions including iOS 26 Liquid Glass.
+        let bookmarksButton = app.buttons["Bookmarks"]
+        if bookmarksButton.waitForExistence(timeout: Self.shortTimeout), !bookmarksButton.isSelected {
             wait(for: 0.3)
-            if bookmarksTab.isHittable {
-                bookmarksTab.tap()
-            } else {
-                // On iOS 26+, fall back to direct button lookup when tab bar button reports not hittable
-                let bookmarksButton = app.buttons["Bookmarks"]
-                if bookmarksButton.waitForExistence(timeout: 2), !bookmarksButton.isSelected {
-                    bookmarksButton.tap()
-                }
-            }
-        } else if !bookmarksTab.exists {
-            // Fallback: try finding the button directly
-            let bookmarksButton = app.buttons["Bookmarks"]
-            if bookmarksButton.waitForExistence(timeout: 2), !bookmarksButton.isSelected {
+            if bookmarksButton.isHittable {
                 bookmarksButton.tap()
             }
         }
