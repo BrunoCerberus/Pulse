@@ -16,7 +16,8 @@ struct CachingMediaServiceTests {
         sut = CachingMediaService(
             wrapping: mockMediaService,
             cacheStore: mockCacheStore,
-            diskCacheStore: nil
+            diskCacheStore: nil,
+            networkResilienceEnabled: false
         )
     }
 

@@ -266,12 +266,16 @@ final class MockSummarizationService: SummarizationService {
 
     func summarize(article _: Article) -> AsyncThrowingStream<String, Error> {
         AsyncThrowingStream { [self] continuation in
-            Task {
+            let task = Task {
                 let delayPerWord = UInt64(generateDelay * 1_000_000_000 / 4)
 
                 switch generateResult {
                 case let .success(text):
                     for word in text.split(separator: " ") {
+                        guard !Task.isCancelled else {
+                            continuation.finish()
+                            return
+                        }
                         try? await Task.sleep(nanoseconds: delayPerWord)
                         continuation.yield(String(word) + " ")
                     }
@@ -279,6 +283,9 @@ final class MockSummarizationService: SummarizationService {
                 case let .failure(error):
                     continuation.finish(throwing: error)
                 }
+            }
+            continuation.onTermination = { _ in
+                task.cancel()
             }
         }
     }

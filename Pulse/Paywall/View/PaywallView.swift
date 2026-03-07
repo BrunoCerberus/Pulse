@@ -127,6 +127,7 @@ struct PaywallView: View {
     /// Check if running in test environment where SubscriptionStoreView doesn't render properly.
     private var isRunningTests: Bool {
         ProcessInfo.processInfo.environment["XCTestConfigurationFilePath"] != nil
+            || ProcessInfo.processInfo.environment["UI_TESTING"] == "1"
     }
 
     @ViewBuilder
