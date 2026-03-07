@@ -267,10 +267,11 @@ class BaseUITestCase: XCTestCase {
             // The new TabView API may expose image name as the button label
             let mediaByImage = app.tabBars.buttons["play.tv"]
             if mediaByImage.waitForExistence(timeout: Self.shortTimeout), !mediaByImage.isSelected {
-                wait(for: 0.3)
-                if mediaByImage.isHittable {
-                    mediaByImage.tap()
-                }
+                wait(for: 0.5)
+                // Use coordinate-based tap to bypass XCTest hittability evaluation
+                // which can time out on iOS 26 Liquid Glass tab bar
+                let center = mediaByImage.coordinate(withNormalizedOffset: CGVector(dx: 0.5, dy: 0.5))
+                center.tap()
             } else {
                 // Last resort: try finding the button directly
                 let mediaButton = app.buttons["Media"]
@@ -290,9 +291,11 @@ class BaseUITestCase: XCTestCase {
         // Verify with recovery
         var navBarVisible = app.navigationBars["Media"].waitForExistence(timeout: Self.defaultTimeout)
         if !navBarVisible {
-            // Recovery: tap again if tab still exists
-            if mediaTab.exists, mediaTab.isHittable {
-                mediaTab.tap()
+            // Recovery: tap again with coordinate-based approach
+            let retryTab = mediaTab.exists ? mediaTab : app.tabBars.buttons["play.tv"]
+            if retryTab.exists {
+                let center = retryTab.coordinate(withNormalizedOffset: CGVector(dx: 0.5, dy: 0.5))
+                center.tap()
                 wait(for: 1.0)
                 navBarVisible = app.navigationBars["Media"].waitForExistence(timeout: Self.defaultTimeout)
             }
