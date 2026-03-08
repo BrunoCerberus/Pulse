@@ -123,16 +123,12 @@ class BaseUITestCase: XCTestCase {
             // Don't fail if tabBar query fails - try direct button access as fallback
         }
 
-        // Select Home tab - try multiple strategies for CI reliability
+        // Select Home tab - use coordinate-based taps for iOS 26 Liquid Glass reliability
         let homeTab = tabBar.buttons["Home"]
         if homeTab.exists, !homeTab.isSelected {
-            // Wait for element to become hittable (iOS 26+ Liquid Glass tab bar
-            // exposes symbol sub-elements that can cause XCTest crashes if tapped
-            // without checking hittability first)
             wait(for: 0.3)
-            if homeTab.isHittable {
-                homeTab.tap()
-            }
+            let center = homeTab.coordinate(withNormalizedOffset: CGVector(dx: 0.5, dy: 0.5))
+            center.tap()
         } else if !homeTab.exists {
             // Fallback: try finding Home button directly (handles tabBar query issues on CI)
             let homeButton = app.buttons["Home"]
@@ -141,17 +137,20 @@ class BaseUITestCase: XCTestCase {
             } else if tabBar.exists {
                 // Last resort: tap first tab (Home is always first)
                 let firstTab = tabBar.buttons.element(boundBy: 0)
-                if firstTab.isHittable {
-                    firstTab.tap()
+                if firstTab.exists {
+                    let center = firstTab.coordinate(withNormalizedOffset: CGVector(dx: 0.5, dy: 0.5))
+                    center.tap()
                 }
             }
         }
 
         // Pop all navigation stack levels (handles deep navigation states)
+        // Avoid .isHittable checks which can time out on iOS 26 Liquid Glass
         for _ in 0 ..< 3 {
             let backButton = app.buttons["backButton"]
-            guard backButton.exists, backButton.isHittable else { break }
-            backButton.tap()
+            guard backButton.exists else { break }
+            let center = backButton.coordinate(withNormalizedOffset: CGVector(dx: 0.5, dy: 0.5))
+            center.tap()
             wait(for: 0.2) // Allow navigation animation to settle
         }
     }
@@ -172,11 +171,10 @@ class BaseUITestCase: XCTestCase {
             if tab.isHittable {
                 tab.tap()
             } else {
-                // On iOS 26+, fall back to direct button lookup when tab bar button reports not hittable
-                let tabButton = app.buttons[tabName]
-                if tabButton.waitForExistence(timeout: 2), !tabButton.isSelected {
-                    tabButton.tap()
-                }
+                // On iOS 26+, use coordinate-based tap to bypass hittability evaluation
+                // which can time out on Liquid Glass tab bar
+                let center = tab.coordinate(withNormalizedOffset: CGVector(dx: 0.5, dy: 0.5))
+                center.tap()
             }
         } else if !tab.exists {
             // Fallback: try finding the button directly
@@ -192,8 +190,9 @@ class BaseUITestCase: XCTestCase {
         // Wait for UI to settle on CI
         wait(for: 0.5)
 
-        // Verify navigation if needed - don't assert, just return
-        _ = app.navigationBars[tabName].waitForExistence(timeout: Self.defaultTimeout)
+        // Verify navigation - Home tab nav bar is titled "News", not "Home"
+        let navBarTitle = tabName == "Home" ? "News" : tabName
+        _ = app.navigationBars[navBarTitle].waitForExistence(timeout: Self.shortTimeout)
     }
 
     /// Navigate to Search tab (handles role: .search accessibility)
@@ -206,6 +205,9 @@ class BaseUITestCase: XCTestCase {
             wait(for: 0.3)
             if searchTab.isHittable {
                 searchTab.tap()
+            } else {
+                let center = searchTab.coordinate(withNormalizedOffset: CGVector(dx: 0.5, dy: 0.5))
+                center.tap()
             }
         } else if !searchTab.exists {
             // Fallback: try finding the button directly
@@ -243,6 +245,9 @@ class BaseUITestCase: XCTestCase {
                 wait(for: 0.3)
                 if feedByImage.isHittable {
                     feedByImage.tap()
+                } else {
+                    let center = feedByImage.coordinate(withNormalizedOffset: CGVector(dx: 0.5, dy: 0.5))
+                    center.tap()
                 }
             } else {
                 // Last resort: try finding the button directly
@@ -340,9 +345,24 @@ class BaseUITestCase: XCTestCase {
     func navigateToSettings() {
         guard app.state == .runningForeground else { return }
         navigateToTab("Home")
-        let gearButton = app.navigationBars.buttons["Settings"]
-        if gearButton.waitForExistence(timeout: Self.defaultTimeout) {
-            gearButton.tap()
+
+        // Try multiple strategies to find the gear button
+        // Strategy 1: Navigation bar buttons query
+        var gearButton = app.navigationBars.buttons["Settings"]
+        if !gearButton.waitForExistence(timeout: Self.shortTimeout) {
+            // Strategy 2: Direct button lookup (toolbar items may not be in navBar on iOS 26)
+            gearButton = app.buttons["Settings"]
+        }
+
+        if gearButton.waitForExistence(timeout: Self.shortTimeout) {
+            wait(for: 0.3)
+            if gearButton.isHittable {
+                gearButton.tap()
+            } else {
+                // On iOS 26+, use coordinate-based tap to bypass hittability issues
+                let center = gearButton.coordinate(withNormalizedOffset: CGVector(dx: 0.5, dy: 0.5))
+                center.tap()
+            }
             _ = app.navigationBars["Settings"].waitForExistence(timeout: Self.defaultTimeout)
         }
     }
