@@ -205,6 +205,9 @@ class BaseUITestCase: XCTestCase {
             wait(for: 0.3)
             if searchTab.isHittable {
                 searchTab.tap()
+            } else {
+                let center = searchTab.coordinate(withNormalizedOffset: CGVector(dx: 0.5, dy: 0.5))
+                center.tap()
             }
         } else if !searchTab.exists {
             // Fallback: try finding the button directly
@@ -242,6 +245,9 @@ class BaseUITestCase: XCTestCase {
                 wait(for: 0.3)
                 if feedByImage.isHittable {
                     feedByImage.tap()
+                } else {
+                    let center = feedByImage.coordinate(withNormalizedOffset: CGVector(dx: 0.5, dy: 0.5))
+                    center.tap()
                 }
             } else {
                 // Last resort: try finding the button directly
