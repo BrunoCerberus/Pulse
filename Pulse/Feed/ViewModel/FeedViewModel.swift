@@ -32,8 +32,7 @@ final class FeedViewModel: CombineViewModel, ObservableObject {
     ) {
         self.eventActionMap = eventActionMap
         self.viewStateReducer = viewStateReducer
-        // swiftlint:disable:next force_unwrapping
-        interactor = FeedDomainInteractor(serviceLocator: serviceLocator)!
+        interactor = FeedDomainInteractor(serviceLocator: serviceLocator)
 
         setupBindings()
     }

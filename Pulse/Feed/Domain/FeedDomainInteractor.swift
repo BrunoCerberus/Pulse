@@ -43,13 +43,12 @@ final class FeedDomainInteractor: CombineInteractor {
         stateSubject.value
     }
 
-    init?(serviceLocator: ServiceLocator) {
+    init(serviceLocator: ServiceLocator) {
         do {
             feedService = try serviceLocator.retrieve(FeedService.self)
             newsService = try serviceLocator.retrieve(NewsService.self)
         } catch {
-            Logger.shared.service("Failed to retrieve required services: \(error)", level: .warning)
-            return nil
+            fatalError("FeedDomainInteractor requires FeedService and NewsService: \(error)")
         }
 
         networkMonitor = try? serviceLocator.retrieve(NetworkMonitorService.self)

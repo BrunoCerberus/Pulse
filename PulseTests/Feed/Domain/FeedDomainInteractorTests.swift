@@ -28,7 +28,7 @@ struct FeedDomainInteractorTests {
         serviceLocator.register(NetworkMonitorService.self, instance: mockNetworkMonitor)
         serviceLocator.register(AnalyticsService.self, instance: mockAnalyticsService)
 
-        sut = FeedDomainInteractor(serviceLocator: serviceLocator)!
+        sut = FeedDomainInteractor(serviceLocator: serviceLocator)
     }
 
     @Test("Initial state is correct")
