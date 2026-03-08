@@ -54,6 +54,46 @@ func waitForCondition(
     return condition()
 }
 
+// MARK: - Publisher Awaiting
+
+enum PublisherError: Error {
+    case finishedWithoutValue
+}
+
+/// Bridges a Combine publisher to async/await for test assertions.
+/// Uses `.first()` to take the first emitted value. If the publisher
+/// completes without emitting, throws `PublisherError.finishedWithoutValue`.
+func awaitPublisher<T>(_ publisher: AnyPublisher<T, Error>) async throws -> T {
+    try await withCheckedThrowingContinuation { continuation in
+        var resumed = false
+        var cancellable: AnyCancellable?
+        cancellable = publisher
+            .first()
+            .sink(
+                receiveCompletion: { completion in
+                    guard !resumed else {
+                        cancellable?.cancel()
+                        return
+                    }
+                    if case let .failure(error) = completion {
+                        resumed = true
+                        continuation.resume(throwing: error)
+                    } else {
+                        // .finished without a value
+                        resumed = true
+                        continuation.resume(throwing: PublisherError.finishedWithoutValue)
+                    }
+                    cancellable?.cancel()
+                },
+                receiveValue: { value in
+                    guard !resumed else { return }
+                    resumed = true
+                    continuation.resume(returning: value)
+                }
+            )
+    }
+}
+
 // MARK: - ServiceLocator Factory
 
 /// Container for mock services returned by TestServiceLocatorFactory.

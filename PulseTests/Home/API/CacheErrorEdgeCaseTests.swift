@@ -268,25 +268,4 @@ struct MalformedNetworkResponseTests {
             #expect(mockWrapped.fetchedTopHeadlinesLanguages.count == 1)
         }
     }
-
-    // MARK: - Helpers
-
-    private func awaitPublisher<T>(_ publisher: AnyPublisher<T, Error>) async throws -> T {
-        try await withCheckedThrowingContinuation { continuation in
-            var cancellable: AnyCancellable?
-            cancellable = publisher
-                .first()
-                .sink(
-                    receiveCompletion: { completion in
-                        if case let .failure(error) = completion {
-                            continuation.resume(throwing: error)
-                        }
-                        cancellable?.cancel()
-                    },
-                    receiveValue: { value in
-                        continuation.resume(returning: value)
-                    }
-                )
-        }
-    }
 }

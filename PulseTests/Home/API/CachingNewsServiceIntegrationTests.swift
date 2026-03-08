@@ -12,8 +12,6 @@ struct CachingNewsServiceIntegrationTests {
     let mockNetwork: MockNetworkMonitorService
     let testDirectory: URL
 
-    private var cancellables = Set<AnyCancellable>()
-
     init() {
         mockWrapped = MockNewsService()
         mockL1 = MockNewsCacheStore()
@@ -175,7 +173,7 @@ struct CachingNewsServiceIntegrationTests {
     }
 
     @Test("Network failure with no stale cache propagates error")
-    func networkFailureNoStalePropagatessError() async {
+    func networkFailureNoStalePropagatesError() async {
         defer { cleanup() }
 
         mockWrapped.topHeadlinesResult = .failure(URLError(.timedOut))
@@ -265,26 +263,5 @@ struct CachingNewsServiceIntegrationTests {
 
         #expect(techEntry != nil, "Technology cache should exist")
         #expect(sportsEntry != nil, "Sports cache should exist")
-    }
-
-    // MARK: - Helpers
-
-    private func awaitPublisher<T>(_ publisher: AnyPublisher<T, Error>) async throws -> T {
-        try await withCheckedThrowingContinuation { continuation in
-            var cancellable: AnyCancellable?
-            cancellable = publisher
-                .first()
-                .sink(
-                    receiveCompletion: { completion in
-                        if case let .failure(error) = completion {
-                            continuation.resume(throwing: error)
-                        }
-                        cancellable?.cancel()
-                    },
-                    receiveValue: { value in
-                        continuation.resume(returning: value)
-                    }
-                )
-        }
     }
 }

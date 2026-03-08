@@ -175,8 +175,10 @@ struct SupabaseAPIContractTests {
         let articles = try decoder.decode([SupabaseArticle].self, from: data)
         let article = articles[0].toArticle()
 
-        // Should not fallback to Date() — the parsed date should be in the past
-        #expect(article.publishedAt < Date())
+        // 2026-01-22T05:01:00+05:30 is 2026-01-21T23:31:00Z
+        let expectedDate = try #require(ISO8601DateFormatter().date(from: "2026-01-21T23:31:00Z"))
+        let interval = article.publishedAt.timeIntervalSince(expectedDate)
+        #expect(Swift.abs(interval) < 1)
     }
 
     @Test("Parses date with fractional seconds")
@@ -194,7 +196,10 @@ struct SupabaseAPIContractTests {
         let articles = try decoder.decode([SupabaseArticle].self, from: data)
         let article = articles[0].toArticle()
 
-        #expect(article.publishedAt < Date())
+        // 2026-01-22T05:01:00.123+00:00 is 2026-01-22T05:01:00Z
+        let expectedDate = try #require(ISO8601DateFormatter().date(from: "2026-01-22T05:01:00Z"))
+        let interval = article.publishedAt.timeIntervalSince(expectedDate)
+        #expect(Swift.abs(interval) < 1)
     }
 
     // MARK: - Extra Unknown Fields Tolerance
