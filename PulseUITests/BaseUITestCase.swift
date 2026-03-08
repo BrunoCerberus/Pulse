@@ -192,8 +192,10 @@ class BaseUITestCase: XCTestCase {
         // Wait for UI to settle on CI
         wait(for: 0.5)
 
-        // Verify navigation if needed - don't assert, just return
-        _ = app.navigationBars[tabName].waitForExistence(timeout: Self.defaultTimeout)
+        // Verify navigation if needed - don't assert, just return.
+        // Note: "Home" tab nav bar is titled "News", not "Home".
+        let navBarTitle = tabName == "Home" ? "News" : tabName
+        _ = app.navigationBars[navBarTitle].waitForExistence(timeout: Self.shortTimeout)
     }
 
     /// Navigate to Search tab (handles role: .search accessibility)
@@ -243,6 +245,11 @@ class BaseUITestCase: XCTestCase {
                 wait(for: 0.3)
                 if feedByImage.isHittable {
                     feedByImage.tap()
+                } else {
+                    // Use coordinate-based tap to bypass XCTest hittability evaluation
+                    // which can time out on iOS 26 Liquid Glass tab bar
+                    let center = feedByImage.coordinate(withNormalizedOffset: CGVector(dx: 0.5, dy: 0.5))
+                    center.tap()
                 }
             } else {
                 // Last resort: try finding the button directly
@@ -268,6 +275,11 @@ class BaseUITestCase: XCTestCase {
             wait(for: 0.3)
             if mediaTab.isHittable {
                 mediaTab.tap()
+            } else {
+                // On iOS 26+, the tab bar button may exist but report not hittable
+                // due to Liquid Glass sub-element layout. Use coordinate-based tap.
+                let center = mediaTab.coordinate(withNormalizedOffset: CGVector(dx: 0.5, dy: 0.5))
+                center.tap()
             }
         } else if !mediaTab.exists {
             // Fallback for iOS 26+: try finding by image name "play.tv"

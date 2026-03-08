@@ -234,6 +234,7 @@ private extension HomeDomainInteractor {
         }
 
         headlinesPublisher
+            .receive(on: DispatchQueue.main)
             .sink { [weak self] completion in
                 if case let .failure(error) = completion {
                     self?.analyticsService?.recordError(error)
