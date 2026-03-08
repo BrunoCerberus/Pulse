@@ -185,7 +185,7 @@ struct HomeView<R: HomeNavigationRouter>: View {
                 }
             )
         }
-        .onAppear {
+        .task {
             viewModel.handle(event: .onAppear)
         }
         .onChange(of: viewModel.viewState.selectedArticle) { _, newValue in
@@ -212,7 +212,7 @@ struct HomeView<R: HomeNavigationRouter>: View {
     // MARK: - Category Tab Bar
 
     var categoryTabBar: some View {
-        ScrollView(.horizontal, showsIndicators: false) {
+        ScrollView(.horizontal) {
             HStack(spacing: Spacing.sm) {
                 // "All" tab - always first
                 categoryChip(
@@ -237,6 +237,7 @@ struct HomeView<R: HomeNavigationRouter>: View {
             .padding(.horizontal, Spacing.md)
             .padding(.vertical, Spacing.sm)
         }
+        .scrollIndicators(.hidden)
         .accessibilityIdentifier("categoryTabsScrollView")
     }
 

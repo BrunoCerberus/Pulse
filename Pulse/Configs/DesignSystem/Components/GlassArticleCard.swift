@@ -177,10 +177,10 @@ struct GlassArticleCard: View {
                         }
                 }
                 .clipShape(RoundedRectangle(cornerRadius: CornerRadius.sm, style: .continuous))
-                .overlay(
+                .overlay {
                     RoundedRectangle(cornerRadius: CornerRadius.sm, style: .continuous)
                         .stroke(Color.Border.adaptive(for: colorScheme), lineWidth: 0.5)
-                )
+                }
                 .opacity(isRead ? 0.7 : 1.0)
             } else {
                 CachedAsyncImage(url: imageURL, accessibilityLabel: title) { image in
@@ -198,10 +198,10 @@ struct GlassArticleCard: View {
                 }
                 .frame(width: imageSize, height: imageSize)
                 .clipShape(RoundedRectangle(cornerRadius: CornerRadius.sm, style: .continuous))
-                .overlay(
+                .overlay {
                     RoundedRectangle(cornerRadius: CornerRadius.sm, style: .continuous)
                         .stroke(Color.Border.adaptive(for: colorScheme), lineWidth: 0.5)
-                )
+                }
                 .opacity(isRead ? 0.7 : 1.0)
             }
         }

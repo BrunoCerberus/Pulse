@@ -71,10 +71,10 @@ struct FeaturedMediaCard: View {
             }
             .frame(width: effectiveCardWidth, height: effectiveCardHeight)
             .clipShape(RoundedRectangle(cornerRadius: CornerRadius.lg, style: .continuous))
-            .overlay(
+            .overlay {
                 RoundedRectangle(cornerRadius: CornerRadius.lg, style: .continuous)
                     .stroke(Color.Border.glass, lineWidth: 0.5)
-            )
+            }
             .depthShadow(.elevated)
         }
         .pressEffect()
@@ -150,7 +150,7 @@ struct FeaturedMediaCard: View {
 
             Text(item.title)
                 .font(Typography.headlineLarge)
-                .fontWeight(.bold)
+                .bold()
                 .foregroundStyle(.white)
                 .lineLimit(dynamicTypeSize.isAccessibilitySize ? 4 : 2)
                 .multilineTextAlignment(.leading)
@@ -175,7 +175,7 @@ struct FeaturedMediaCard: View {
             Text(type.displayName.uppercased())
         }
         .font(Typography.labelSmall)
-        .fontWeight(.bold)
+        .bold()
         .foregroundStyle(.white)
         .padding(.horizontal, Spacing.xs)
         .padding(.vertical, Spacing.xxs)
@@ -209,7 +209,7 @@ struct FeaturedMediaCard: View {
         LinearGradient.meshFallback
             .ignoresSafeArea()
 
-        ScrollView(.horizontal, showsIndicators: false) {
+        ScrollView(.horizontal) {
             HStack(spacing: Spacing.md) {
                 FeaturedMediaCard(
                     item: MediaViewItem(
@@ -260,6 +260,7 @@ struct FeaturedMediaCard: View {
             }
             .padding()
         }
+        .scrollIndicators(.hidden)
     }
     .preferredColorScheme(.dark)
 }

@@ -169,7 +169,7 @@ final class SummarizationDomainInteractor: CombineInteractor {
             "<|im_start|>", "<|im_end|>", "</s>", "<s>",
         ]
         for marker in markers {
-            cleaned = cleaned.replacingOccurrences(of: marker, with: "")
+            cleaned = cleaned.replacing(marker, with: "")
         }
 
         // Remove common instruction artifacts (case-insensitive, at start)

@@ -165,7 +165,6 @@ struct StatsCard: View {
         }
 
         let stepDuration = duration / Double(steps)
-        let stepNanoseconds = UInt64(stepDuration * 1_000_000_000)
 
         for step in 0 ... steps {
             guard !Task.isCancelled else { return }
@@ -177,7 +176,7 @@ struct StatsCard: View {
             }
 
             if step < steps {
-                try? await Task.sleep(nanoseconds: stepNanoseconds)
+                try? await Task.sleep(for: .seconds(stepDuration))
             }
         }
     }

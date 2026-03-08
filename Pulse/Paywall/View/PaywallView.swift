@@ -50,7 +50,7 @@ struct PaywallView: View {
                     }
                 }
         }
-        .onAppear {
+        .task {
             viewModel.handle(event: .viewDidAppear)
         }
         .onChange(of: viewModel.shouldDismiss) { _, shouldDismiss in
@@ -235,7 +235,7 @@ struct PaywallView: View {
                     label: {
                         Text(Localizable.paywall.restorePurchases)
                             .font(.caption)
-                            .foregroundColor(.secondary)
+                            .foregroundStyle(.secondary)
                     }
                 )
                 .padding(.bottom, 20)

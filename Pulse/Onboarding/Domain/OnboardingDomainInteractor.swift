@@ -7,8 +7,8 @@ final class OnboardingDomainInteractor: CombineInteractor {
     typealias DomainState = OnboardingDomainState
     typealias DomainAction = OnboardingDomainAction
 
-    let stateSubject = CurrentValueSubject<OnboardingDomainState, Never>(.initial)
-    var cancellables = Set<AnyCancellable>()
+    private let stateSubject = CurrentValueSubject<OnboardingDomainState, Never>(.initial)
+    private var cancellables = Set<AnyCancellable>()
 
     private var onboardingService: OnboardingService
     private let analyticsService: AnalyticsService?

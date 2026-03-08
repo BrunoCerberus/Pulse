@@ -44,6 +44,7 @@ struct OnboardingPageView: View {
                 .font(.system(size: 44))
                 .foregroundStyle(.white)
         }
+        .accessibilityHidden(true)
         .glowEffect(color: page.iconColor, radius: 20)
     }
 }

@@ -33,7 +33,12 @@ final class DiskNewsCacheStore: NewsCacheStore {
         if let directory {
             cacheDirectory = directory
         } else {
-            let cachesDir = fileManager.urls(for: .cachesDirectory, in: .userDomainMask).first!
+            guard let cachesDir = fileManager.urls(for: .cachesDirectory, in: .userDomainMask).first else {
+                cacheDirectory = fileManager.temporaryDirectory.appendingPathComponent("PulseNewsCache", isDirectory: true)
+                Logger.shared.service("Caches directory not found, using temp directory", level: .warning)
+                // Fall through to directory creation below
+                return
+            }
             cacheDirectory = cachesDir.appendingPathComponent("PulseNewsCache", isDirectory: true)
         }
 

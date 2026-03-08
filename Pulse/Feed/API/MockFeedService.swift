@@ -124,7 +124,7 @@ final class MockFeedService: FeedService {
             id: "mock-digest",
             summary: "This is a sample daily digest summarizing your recent reading activity.",
             sourceArticles: Article.mockArticles,
-            generatedAt: Date()
+            generatedAt: .now
         )
         return service
     }

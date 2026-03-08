@@ -46,7 +46,7 @@ final class BookmarkedArticle {
         url = article.url
         imageURL = article.imageURL
         publishedAt = article.publishedAt
-        savedAt = Date()
+        savedAt = .now
         category = article.category?.rawValue
     }
 

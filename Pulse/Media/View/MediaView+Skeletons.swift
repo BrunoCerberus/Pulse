@@ -5,7 +5,7 @@ import SwiftUI
 
 struct FeaturedMediaCarouselSkeleton: View {
     var body: some View {
-        ScrollView(.horizontal, showsIndicators: false) {
+        ScrollView(.horizontal) {
             HStack(spacing: Spacing.md) {
                 ForEach(0 ..< 3, id: \.self) { index in
                     FeaturedMediaCardSkeleton()
@@ -15,6 +15,7 @@ struct FeaturedMediaCarouselSkeleton: View {
             .padding(.horizontal, Spacing.md)
             .padding(.vertical, Spacing.sm)
         }
+        .scrollIndicators(.hidden)
     }
 }
 

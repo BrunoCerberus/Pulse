@@ -43,13 +43,13 @@ final class FeedDomainInteractor: CombineInteractor {
         stateSubject.value
     }
 
-    init(serviceLocator: ServiceLocator) {
+    init?(serviceLocator: ServiceLocator) {
         do {
             feedService = try serviceLocator.retrieve(FeedService.self)
             newsService = try serviceLocator.retrieve(NewsService.self)
         } catch {
             Logger.shared.service("Failed to retrieve required services: \(error)", level: .warning)
-            fatalError("FeedService and NewsService are required")
+            return nil
         }
 
         networkMonitor = try? serviceLocator.retrieve(NetworkMonitorService.self)
@@ -148,7 +148,7 @@ private extension FeedDomainInteractor {
         if let cachedDigest = feedService.fetchTodaysDigest() {
             // Brief delay to ensure animation is visible before showing cached content
             Task { @MainActor in
-                try? await Task.sleep(nanoseconds: 300_000_000) // 300ms
+                try? await Task.sleep(for: .seconds(0.3))
                 updateState { state in
                     state.currentDigest = cachedDigest
                     state.latestArticles = cachedDigest.sourceArticles
@@ -362,7 +362,7 @@ private extension FeedDomainInteractor {
                     id: UUID().uuidString,
                     summary: finalSummary,
                     sourceArticles: articlesToProcess,
-                    generatedAt: Date()
+                    generatedAt: .now
                 )
                 feedService.saveDigest(digest)
                 dispatch(action: .digestCompleted(digest))

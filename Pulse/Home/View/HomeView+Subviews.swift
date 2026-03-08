@@ -84,23 +84,11 @@ extension HomeView {
     // MARK: - Empty State View
 
     var emptyStateView: some View {
-        GlassCard(style: .thin, shadowStyle: .medium, padding: Spacing.xl) {
-            VStack(spacing: Spacing.md) {
-                Image(systemName: "newspaper")
-                    .font(.system(size: IconSize.xxl))
-                    .foregroundStyle(.secondary)
-                    .accessibilityHidden(true)
-
-                Text(HomeViewConstants.emptyTitle)
-                    .font(Typography.titleMedium)
-
-                Text(HomeViewConstants.emptyMessage)
-                    .font(Typography.bodyMedium)
-                    .foregroundStyle(.secondary)
-                    .multilineTextAlignment(.center)
-            }
-        }
-        .padding(Spacing.lg)
+        ContentUnavailableView(
+            HomeViewConstants.emptyTitle,
+            systemImage: "newspaper",
+            description: Text(HomeViewConstants.emptyMessage)
+        )
     }
 
     // MARK: - Breaking News Carousel
@@ -119,7 +107,7 @@ extension HomeView {
             .padding(.horizontal, Spacing.md)
             .padding(.vertical, Spacing.sm)
         } else {
-            ScrollView(.horizontal, showsIndicators: false) {
+            ScrollView(.horizontal) {
                 LazyHStack(spacing: Spacing.md) {
                     ForEach(viewModel.viewState.breakingNews) { item in
                         HeroNewsCard(item: item) {
@@ -131,6 +119,7 @@ extension HomeView {
                 .padding(.horizontal, Spacing.md)
                 .padding(.vertical, Spacing.sm)
             }
+            .scrollIndicators(.hidden)
         }
     }
 
@@ -155,7 +144,7 @@ extension HomeView {
             .padding(.horizontal, Spacing.md)
             .padding(.vertical, Spacing.sm)
         } else {
-            ScrollView(.horizontal, showsIndicators: false) {
+            ScrollView(.horizontal) {
                 LazyHStack(spacing: Spacing.sm) {
                     ForEach(viewModel.viewState.recentlyRead) { item in
                         GlassArticleCardCompact(
@@ -173,6 +162,7 @@ extension HomeView {
                 .padding(.horizontal, Spacing.md)
                 .padding(.vertical, Spacing.sm)
             }
+            .scrollIndicators(.hidden)
         }
     }
 

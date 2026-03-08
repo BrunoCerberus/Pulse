@@ -75,10 +75,10 @@ struct GlassTabBar: View {
         .padding(.vertical, Spacing.xs)
         .background(.ultraThinMaterial)
         .clipShape(Capsule())
-        .overlay(
+        .overlay {
             Capsule()
                 .stroke(Color.Border.adaptive(for: colorScheme), lineWidth: 0.5)
-        )
+        }
         .depthShadow(.floating)
         .padding(.horizontal, Spacing.md)
         .padding(.bottom, Spacing.xs)

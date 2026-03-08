@@ -122,7 +122,7 @@ struct ArticleListSkeleton: View {
 
 struct HeroCarouselSkeleton: View {
     var body: some View {
-        ScrollView(.horizontal, showsIndicators: false) {
+        ScrollView(.horizontal) {
             HStack(spacing: Spacing.md) {
                 ForEach(0 ..< 3, id: \.self) { index in
                     GlassHeroSkeleton()
@@ -131,6 +131,7 @@ struct HeroCarouselSkeleton: View {
             }
             .padding(.horizontal, Spacing.md)
         }
+        .scrollIndicators(.hidden)
     }
 }
 

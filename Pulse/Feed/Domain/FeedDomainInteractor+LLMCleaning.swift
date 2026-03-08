@@ -5,7 +5,7 @@ extension FeedDomainInteractor {
         var cleaned = text
 
         // Remove null characters (LLM sometimes outputs these between tokens)
-        cleaned = cleaned.replacingOccurrences(of: "\0", with: "")
+        cleaned = cleaned.replacing("\0", with: "")
 
         // Remove chat template markers (ChatML + general)
         let markers = [
@@ -13,7 +13,7 @@ extension FeedDomainInteractor {
             "<|im_start|>", "<|im_end|>", "</s>", "<s>",
         ]
         for marker in markers {
-            cleaned = cleaned.replacingOccurrences(of: marker, with: "")
+            cleaned = cleaned.replacing(marker, with: "")
         }
 
         // Remove common instruction artifacts (case-insensitive, at start)

@@ -66,19 +66,19 @@ struct BreakingNewsCard: View {
                     HStack {
                         Text(Constants.breaking)
                             .font(.caption2)
-                            .fontWeight(.bold)
+                            .bold()
                             .padding(.horizontal, 6)
                             .padding(.vertical, 2)
                             .background(.red)
                             .foregroundStyle(.white)
-                            .clipShape(RoundedRectangle(cornerRadius: 4))
+                            .clipShape(.rect(cornerRadius: 4))
 
                         Spacer()
                     }
 
                     Text(item.title)
                         .font(.headline)
-                        .fontWeight(.bold)
+                        .bold()
                         .foregroundStyle(.white)
                         .lineLimit(3)
                         .multilineTextAlignment(.leading)
@@ -99,7 +99,7 @@ struct BreakingNewsCard: View {
                 .padding()
             }
             .frame(width: cardWidth, height: cardHeight)
-            .clipShape(RoundedRectangle(cornerRadius: 12))
+            .clipShape(.rect(cornerRadius: 12))
             .shadow(radius: 4)
         }
         .buttonStyle(.plain)

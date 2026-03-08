@@ -122,7 +122,7 @@ extension DigestViewItem {
         result = result.replacingOccurrences(of: #"^[:\-–—]\s*"#, with: "", options: .regularExpression)
 
         // Strip bold markdown
-        result = result.replacingOccurrences(of: "**", with: "")
+        result = result.replacing("**", with: "")
 
         // Strip inline source references like "(BBC News - Health, Health)"
         result = result.replacingOccurrences(
@@ -161,7 +161,7 @@ extension DigestViewItem {
 
         // Collapse excessive dashes/em-dashes from stripped sources
         result = cappedParagraphs.joined(separator: "\n\n")
-        result = result.replacingOccurrences(of: " — —", with: " —")
+        result = result.replacing(" — —", with: " —")
         result = result.replacingOccurrences(of: "  +", with: " ", options: .regularExpression)
         result = result.trimmingCharacters(in: .whitespacesAndNewlines)
 

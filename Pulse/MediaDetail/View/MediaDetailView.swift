@@ -128,7 +128,7 @@ struct MediaDetailView: View {
                 ShareSheet(activityItems: [url])
             }
         }
-        .onAppear {
+        .task {
             viewModel.handle(event: .onAppear)
         }
         .enableSwipeBack()

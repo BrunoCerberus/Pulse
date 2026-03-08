@@ -172,7 +172,7 @@ final class CachingNewsService: NewsService {
             : fetch.eraseToAnyPublisher()
         return resilientFetch
             .handleEvents(receiveOutput: { [weak self] data in
-                let entry = CacheEntry(data: data, timestamp: Date())
+                let entry = CacheEntry(data: data, timestamp: .now)
                 self?.memoryCacheStore.set(entry, for: key)
                 self?.diskCacheStore?.set(entry, for: key)
             })

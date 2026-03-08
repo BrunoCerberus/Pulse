@@ -89,7 +89,7 @@ struct SupabaseArticle: Codable {
 
         let msg = "SupabaseArticle: Failed to parse date '\(publishedAt)' for \(id)"
         Logger.shared.service(msg, level: .warning)
-        return Date()
+        return .now
     }
 
     private var descriptionAndContent: (description: String?, content: String?) {
@@ -183,7 +183,7 @@ struct SupabaseSearchResult: Codable {
     private var parsedPublishedAt: Date {
         Self.iso8601Formatter.date(from: publishedAt)
             ?? Self.iso8601FormatterNoFraction.date(from: publishedAt)
-            ?? Date()
+            ?? .now
     }
 
     private var descriptionAndContent: (description: String?, content: String?) {
