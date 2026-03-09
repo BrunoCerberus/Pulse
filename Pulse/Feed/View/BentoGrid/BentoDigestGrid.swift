@@ -147,21 +147,21 @@ struct BentoDigestGrid: View {
         }
 
         // Staggered reveal sequence
-        try? await Task.sleep(nanoseconds: 100_000_000) // 0.1 second
+        try? await Task.sleep(for: .seconds(0.1))
         guard !Task.isCancelled else { return }
         showStats = true
 
-        try? await Task.sleep(nanoseconds: 50_000_000) // 0.05 second (total 0.15)
+        try? await Task.sleep(for: .seconds(0.05))
         guard !Task.isCancelled else { return }
         showTopics = true
 
         // Stagger content sections
-        try? await Task.sleep(nanoseconds: 100_000_000) // 0.1 second (total 0.25)
+        try? await Task.sleep(for: .seconds(0.1))
 
         for section in sections {
             guard !Task.isCancelled else { return }
             showSections.insert(section.id)
-            try? await Task.sleep(nanoseconds: 100_000_000) // 0.1 second between each
+            try? await Task.sleep(for: .seconds(0.1))
         }
     }
 }
@@ -182,7 +182,7 @@ struct BentoDigestGrid: View {
             id: "preview",
             summary: previewSummary,
             sourceArticles: Article.mockArticles,
-            generatedAt: Date()
+            generatedAt: .now
         )
     )
 

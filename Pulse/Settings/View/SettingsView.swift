@@ -289,8 +289,10 @@ struct SettingsView: View {
                     .foregroundStyle(.secondary)
             }
 
-            Link(destination: URL(string: "https://github.com/BrunoCerberus/Pulse")!) {
-                Label(Constants.viewGithub, systemImage: "link")
+            if let githubURL = URL(string: "https://github.com/BrunoCerberus/Pulse") {
+                Link(destination: githubURL) {
+                    Label(Constants.viewGithub, systemImage: "link")
+                }
             }
         }
     }

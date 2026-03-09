@@ -59,6 +59,7 @@ struct SpeechPlayerBarView: View {
                         .font(.system(size: 20))
                         .frame(width: 32, height: 32)
                 }
+                .frame(minWidth: 44, minHeight: 44)
                 .accessibilityIdentifier("ttsPlayPauseButton")
                 .accessibilityLabel(
                     playbackState == .playing
@@ -102,6 +103,7 @@ struct SpeechPlayerBarView: View {
                         .background(.ultraThinMaterial)
                         .clipShape(Circle())
                 }
+                .frame(minWidth: 44, minHeight: 44)
                 .accessibilityIdentifier("ttsStopButton")
                 .accessibilityLabel(Constants.stop)
             }

@@ -24,7 +24,7 @@ struct SplashScreenView: View {
 
     /// Controls whether the animation has finished playing
     @State private var isAnimationComplete = false
-    @State private var logoScale: CGFloat = 0.8
+    @State private var logoScale: Double = 0.8
     @State private var logoOpacity: Double = 0
 
     @Environment(\.accessibilityReduceMotion) private var reduceMotion
@@ -45,7 +45,8 @@ struct SplashScreenView: View {
                             isAnimationComplete = true
                         }
                     }
-                    DispatchQueue.main.asyncAfter(deadline: .now() + 0.3) {
+                    Task { @MainActor in
+                        try? await Task.sleep(for: .seconds(0.3))
                         Logger.shared.debug("Animation complete!")
                         onComplete()
                     }

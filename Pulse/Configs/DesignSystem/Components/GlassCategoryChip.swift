@@ -81,10 +81,10 @@ struct GlassCategoryChip: View {
             } else {
                 Capsule()
                     .fill(category.color.opacity(0.15))
-                    .overlay(
+                    .overlay {
                         Capsule()
                             .stroke(category.color.opacity(0.3), lineWidth: 0.5)
-                    )
+                    }
             }
         }
         .glowEffect(color: isSelected ? category.color : .clear, radius: 6)
@@ -185,10 +185,10 @@ struct GlassTopicChip: View {
                     } else {
                         Capsule()
                             .fill(.ultraThinMaterial)
-                            .overlay(
+                            .overlay {
                                 Capsule()
                                     .stroke(color.opacity(0.3), lineWidth: 0.5)
-                            )
+                            }
                     }
                 }
                 .glowEffect(color: isSelected ? color : .clear, radius: 6)
@@ -218,7 +218,7 @@ struct GlassTopicChip: View {
                 GlassCategoryChip(category: .health, style: .medium, isSelected: false)
             }
 
-            ScrollView(.horizontal, showsIndicators: false) {
+            ScrollView(.horizontal) {
                 HStack(spacing: Spacing.sm) {
                     ForEach(NewsCategory.allCases, id: \.self) { category in
                         GlassCategoryButton(
@@ -229,6 +229,7 @@ struct GlassTopicChip: View {
                 }
                 .padding(.horizontal)
             }
+            .scrollIndicators(.hidden)
 
             HStack(spacing: Spacing.sm) {
                 GlassTopicChip(topic: "AI", isSelected: true, color: .purple) {}

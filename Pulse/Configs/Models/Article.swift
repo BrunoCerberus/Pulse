@@ -157,7 +157,7 @@ struct Article: Identifiable, Equatable, Codable, Hashable {
     }
 
     var formattedDate: String {
-        Self.relativeFormatter.localizedString(for: publishedAt, relativeTo: Date())
+        Self.relativeFormatter.localizedString(for: publishedAt, relativeTo: .now)
     }
 
     /// Formatted duration string (e.g., "1:23:45" or "23:45").

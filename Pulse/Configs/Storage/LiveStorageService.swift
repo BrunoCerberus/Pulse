@@ -89,7 +89,7 @@ final class LiveStorageService: StorageService {
             predicate: #Predicate { $0.articleID == articleID }
         )
         if let existing = try context.fetch(descriptor).first {
-            existing.readAt = Date()
+            existing.readAt = .now
         } else {
             context.insert(ReadArticle(from: article))
         }

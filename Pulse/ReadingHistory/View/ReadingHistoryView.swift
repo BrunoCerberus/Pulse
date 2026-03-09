@@ -69,6 +69,7 @@ struct ReadingHistoryView<R: ReadingHistoryNavigationRouter>: View {
                         Image(systemName: "trash")
                             .font(Typography.bodyMedium)
                     }
+                    .accessibilityLabel(Constants.clearHistory)
                 }
             }
         }
@@ -81,7 +82,7 @@ struct ReadingHistoryView<R: ReadingHistoryNavigationRouter>: View {
         } message: {
             Text(Constants.clearConfirm)
         }
-        .onAppear {
+        .task {
             viewModel.handle(event: .onAppear)
         }
         .sheet(item: Binding(

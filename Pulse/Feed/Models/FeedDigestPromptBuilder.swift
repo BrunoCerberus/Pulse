@@ -107,12 +107,12 @@ enum FeedDigestPromptBuilder {
 
     private static func stripHTML(from html: String) -> String {
         html.replacingOccurrences(of: #"<[^>]+>"#, with: " ", options: .regularExpression)
-            .replacingOccurrences(of: "&nbsp;", with: " ")
-            .replacingOccurrences(of: "&amp;", with: "&")
-            .replacingOccurrences(of: "&lt;", with: "<")
-            .replacingOccurrences(of: "&gt;", with: ">")
-            .replacingOccurrences(of: "&quot;", with: "\"")
-            .replacingOccurrences(of: "&#39;", with: "'")
+            .replacing("&nbsp;", with: " ")
+            .replacing("&amp;", with: "&")
+            .replacing("&lt;", with: "<")
+            .replacing("&gt;", with: ">")
+            .replacing("&quot;", with: "\"")
+            .replacing("&#39;", with: "'")
             .replacingOccurrences(of: #"\s+"#, with: " ", options: .regularExpression)
             .trimmingCharacters(in: .whitespacesAndNewlines)
     }

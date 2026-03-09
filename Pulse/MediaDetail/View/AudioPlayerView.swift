@@ -80,7 +80,7 @@ struct AudioPlayerView: View {
                 .padding(.bottom, Spacing.lg)
         }
         .padding(.horizontal, Spacing.lg)
-        .onAppear {
+        .task {
             loadAudio()
         }
         .onDisappear {

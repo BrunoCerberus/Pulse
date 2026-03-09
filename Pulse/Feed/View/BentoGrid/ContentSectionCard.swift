@@ -253,7 +253,7 @@ struct ContentSectionCard: View {
                 .font(Typography.captionSmall)
                 .foregroundStyle(.secondary)
 
-            ScrollView(.horizontal, showsIndicators: false) {
+            ScrollView(.horizontal) {
                 HStack(spacing: Spacing.xs) {
                     ForEach(remainingArticles) { article in
                         InlineSourceChip(article: article) {
@@ -263,6 +263,7 @@ struct ContentSectionCard: View {
                     }
                 }
             }
+            .scrollIndicators(.hidden)
         }
     }
 }

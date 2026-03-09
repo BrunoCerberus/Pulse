@@ -41,7 +41,7 @@ final class LiveSearchService: APIRequest, SearchService {
     func getSuggestions(for query: String) -> AnyPublisher<[String], Never> {
         let recentSearches = getRecentSearches()
         let filtered = recentSearches.filter {
-            $0.lowercased().contains(query.lowercased())
+            $0.localizedStandardContains(query)
         }
         return Just(filtered).eraseToAnyPublisher()
     }
@@ -105,7 +105,7 @@ final class LiveSearchService: APIRequest, SearchService {
 
     private func saveRecentSearch(_ query: String) {
         var searches = getRecentSearches()
-        searches.removeAll { $0.lowercased() == query.lowercased() }
+        searches.removeAll { $0.localizedCaseInsensitiveCompare(query) == .orderedSame }
         searches.insert(query, at: 0)
         if searches.count > maxRecentSearches {
             searches = Array(searches.prefix(maxRecentSearches))

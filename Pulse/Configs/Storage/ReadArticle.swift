@@ -46,7 +46,7 @@ final class ReadArticle {
         url = article.url
         imageURL = article.imageURL
         publishedAt = article.publishedAt
-        readAt = Date()
+        readAt = .now
         category = article.category?.rawValue
     }
 

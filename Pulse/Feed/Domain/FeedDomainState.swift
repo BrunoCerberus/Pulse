@@ -77,7 +77,7 @@ struct FeedDomainState: Equatable {
     }
 
     var digestDate: String {
-        currentDigest?.formattedDate ?? Self.todayFormatter.string(from: Date())
+        currentDigest?.formattedDate ?? Self.todayFormatter.string(from: .now)
     }
 
     private static let todayFormatter: DateFormatter = {

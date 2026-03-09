@@ -53,10 +53,10 @@ struct HeroNewsCard: View {
             }
             .frame(width: effectiveCardWidth, height: cardHeight)
             .clipShape(RoundedRectangle(cornerRadius: CornerRadius.lg, style: .continuous))
-            .overlay(
+            .overlay {
                 RoundedRectangle(cornerRadius: CornerRadius.lg, style: .continuous)
                     .stroke(Color.Border.glass, lineWidth: 0.5)
-            )
+            }
             .depthShadow(.elevated)
         }
         .pressEffect()
@@ -120,7 +120,7 @@ struct HeroNewsCard: View {
 
             Text(item.title)
                 .font(Typography.headlineLarge)
-                .fontWeight(.bold)
+                .bold()
                 .foregroundStyle(.white)
                 .lineLimit(dynamicTypeSize.isAccessibilitySize ? 5 : 3)
                 .multilineTextAlignment(.leading)
@@ -149,7 +149,7 @@ struct HeroNewsCard: View {
 
             Text(Constants.breakingLabel)
                 .font(Typography.labelSmall)
-                .fontWeight(.bold)
+                .bold()
         }
         .foregroundStyle(.white)
         .padding(.horizontal, Spacing.xs)
@@ -311,7 +311,7 @@ struct FeaturedArticleCard: View {
         LinearGradient.meshFallback
             .ignoresSafeArea()
 
-        ScrollView(.horizontal, showsIndicators: false) {
+        ScrollView(.horizontal) {
             HStack(spacing: Spacing.md) {
                 HeroNewsCard(
                     item: ArticleViewItem(
@@ -341,6 +341,7 @@ struct FeaturedArticleCard: View {
             }
             .padding()
         }
+        .scrollIndicators(.hidden)
     }
     .preferredColorScheme(.dark)
 }

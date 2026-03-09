@@ -302,7 +302,7 @@ struct ArticleDetailView: View {
 
             Text(viewModel.viewState.article.title)
                 .font(Typography.titleLarge)
-                .fontWeight(.bold)
+                .bold()
                 .accessibilityAddTraits(.isHeader)
 
             metadataRow
@@ -409,7 +409,7 @@ struct ArticleDetailView: View {
 
             Text(Constants.relatedArticles)
                 .font(Typography.titleMedium)
-                .fontWeight(.bold)
+                .bold()
                 .accessibilityAddTraits(.isHeader)
 
             if dynamicTypeSize.isAccessibilitySize {
@@ -419,7 +419,7 @@ struct ArticleDetailView: View {
                     }
                 }
             } else {
-                ScrollView(.horizontal, showsIndicators: false) {
+                ScrollView(.horizontal) {
                     LazyHStack(spacing: Spacing.sm) {
                         ForEach(viewModel.viewState.relatedArticles) { item in
                             relatedArticleCard(for: item)
@@ -427,6 +427,7 @@ struct ArticleDetailView: View {
                         }
                     }
                 }
+                .scrollIndicators(.hidden)
             }
         }
         .padding(.top, Spacing.sm)

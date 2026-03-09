@@ -99,7 +99,7 @@ final class MockSearchService: SearchService {
     }
 
     func getSuggestions(for query: String) -> AnyPublisher<[String], Never> {
-        Just(suggestionsResult.filter { $0.lowercased().contains(query.lowercased()) })
+        Just(suggestionsResult.filter { $0.localizedStandardContains(query) })
             .eraseToAnyPublisher()
     }
 

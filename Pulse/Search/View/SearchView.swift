@@ -217,7 +217,7 @@ struct SearchView<R: SearchNavigationRouter>: View {
                             }
                             .padding(.horizontal, Spacing.md)
                         } else {
-                            ScrollView(.horizontal, showsIndicators: false) {
+                            ScrollView(.horizontal) {
                                 HStack(spacing: Spacing.sm) {
                                     ForEach(viewModel.viewState.suggestions, id: \.self) { suggestion in
                                         suggestionChip(suggestion)
@@ -225,6 +225,7 @@ struct SearchView<R: SearchNavigationRouter>: View {
                                 }
                                 .padding(.horizontal, Spacing.md)
                             }
+                            .scrollIndicators(.hidden)
                         }
                     }
                 }

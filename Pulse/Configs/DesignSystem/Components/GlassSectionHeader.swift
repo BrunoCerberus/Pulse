@@ -58,12 +58,11 @@ struct GlassSectionHeader: View {
         .padding(.vertical, Spacing.sm)
         .frame(maxWidth: .infinity, alignment: .leading)
         .background(style.material)
-        .overlay(
+        .overlay(alignment: .bottom) {
             Rectangle()
                 .frame(height: 0.5)
-                .foregroundColor(Color.Border.adaptive(for: colorScheme)),
-            alignment: .bottom
-        )
+                .foregroundStyle(Color.Border.adaptive(for: colorScheme))
+        }
         .accessibilityAddTraits(.isHeader)
     }
 }

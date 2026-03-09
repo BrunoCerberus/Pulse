@@ -13,7 +13,7 @@ struct CacheEntry<T> {
     /// - Parameter ttl: Time-to-live in seconds
     /// - Returns: `true` if the entry has expired, `false` otherwise
     func isExpired(ttl: TimeInterval) -> Bool {
-        Date().timeIntervalSince(timestamp) >= ttl
+        Date.now.timeIntervalSince(timestamp) >= ttl
     }
 }
 

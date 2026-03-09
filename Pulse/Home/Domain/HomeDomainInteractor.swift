@@ -120,13 +120,13 @@ final class HomeDomainInteractor: CombineInteractor {
     private func handleArticleActions(_ action: HomeDomainAction) -> Bool {
         switch action {
         case let .selectArticle(articleId):
-            findArticle(by: articleId).map { selectArticle($0) }
+            if let article = findArticle(by: articleId) { selectArticle(article) }
         case .clearSelectedArticle:
             clearSelectedArticle()
         case let .bookmarkArticle(articleId):
-            findArticle(by: articleId).map { toggleBookmark($0) }
+            if let article = findArticle(by: articleId) { toggleBookmark(article) }
         case let .shareArticle(articleId):
-            findArticle(by: articleId).map { shareArticle($0) }
+            if let article = findArticle(by: articleId) { shareArticle(article) }
         case .clearArticleToShare:
             clearArticleToShare()
         case let .selectRecentlyRead(articleId):

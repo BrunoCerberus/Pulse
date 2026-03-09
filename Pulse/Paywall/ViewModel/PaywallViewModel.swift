@@ -26,7 +26,7 @@ final class PaywallViewModel: ObservableObject, CombineViewModel {
     typealias ViewEvent = PaywallViewEvent
 
     /// Single source of truth for the view state.
-    @Published var viewState: PaywallViewState = .loading
+    @Published private(set) var viewState: PaywallViewState = .loading
 
     // MARK: - Dependencies
 

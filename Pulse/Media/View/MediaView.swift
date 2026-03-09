@@ -95,7 +95,7 @@ struct MediaView<R: MediaNavigationRouter>: View {
         )) { article in
             ShareSheet(activityItems: [URL(string: article.url) ?? article.title])
         }
-        .onAppear {
+        .task {
             viewModel.handle(event: .onAppear)
         }
         .onChange(of: viewModel.viewState.selectedMedia) { _, newValue in
@@ -198,23 +198,11 @@ struct MediaView<R: MediaNavigationRouter>: View {
     }
 
     private var emptyStateView: some View {
-        GlassCard(style: .thin, shadowStyle: .medium, padding: Spacing.xl) {
-            VStack(spacing: Spacing.md) {
-                Image(systemName: "play.rectangle.on.rectangle")
-                    .font(.system(size: IconSize.xxl))
-                    .foregroundStyle(.secondary)
-                    .accessibilityHidden(true)
-
-                Text(Constants.emptyTitle)
-                    .font(Typography.titleMedium)
-
-                Text(Constants.emptyMessage)
-                    .font(Typography.bodyMedium)
-                    .foregroundStyle(.secondary)
-                    .multilineTextAlignment(.center)
-            }
-        }
-        .padding(Spacing.lg)
+        ContentUnavailableView(
+            Constants.emptyTitle,
+            systemImage: "play.rectangle.on.rectangle",
+            description: Text(Constants.emptyMessage)
+        )
     }
 
     private var mediaList: some View {
@@ -295,7 +283,7 @@ struct MediaView<R: MediaNavigationRouter>: View {
     // MARK: - Featured Carousel
 
     private var featuredCarousel: some View {
-        ScrollView(.horizontal, showsIndicators: false) {
+        ScrollView(.horizontal) {
             LazyHStack(spacing: Spacing.md) {
                 ForEach(viewModel.viewState.featuredMedia) { item in
                     FeaturedMediaCard(item: item) {
@@ -307,6 +295,7 @@ struct MediaView<R: MediaNavigationRouter>: View {
             .padding(.horizontal, Spacing.md)
             .padding(.vertical, Spacing.sm)
         }
+        .scrollIndicators(.hidden)
     }
 
     // MARK: - Media Playback

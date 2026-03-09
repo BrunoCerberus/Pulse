@@ -65,7 +65,7 @@ struct BookmarksView<R: BookmarksNavigationRouter>: View {
             HapticManager.shared.refresh()
             viewModel.handle(event: .onRefresh)
         }
-        .onAppear {
+        .task {
             viewModel.handle(event: .onAppear)
         }
         .sheet(item: Binding(
