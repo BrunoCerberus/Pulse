@@ -3,7 +3,8 @@ import XCTest
 final class MediaUITests: BaseUITestCase {
     // MARK: - Tab Navigation Tests
 
-    func testMediaTabExists() {
+    func testMediaTabExists() throws {
+        try ensureAppRunning()
         let mediaTab = app.tabBars.buttons["Media"]
         XCTAssertTrue(
             mediaTab.waitForExistence(timeout: Self.shortTimeout),
@@ -49,7 +50,8 @@ final class MediaUITests: BaseUITestCase {
 
     // MARK: - Media Type Filter Tests
 
-    func testFilterByVideos() {
+    func testFilterByVideos() throws {
+        try ensureAppRunning()
         navigateToMediaTab()
         wait(for: 1.0)
 

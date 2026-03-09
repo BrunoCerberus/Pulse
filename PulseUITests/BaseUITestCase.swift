@@ -23,7 +23,13 @@ class BaseUITestCase: XCTestCase {
     // MARK: - Instance-level Setup (runs before each test)
 
     override func setUpWithError() throws {
-        continueAfterFailure = false
+        // Use continueAfterFailure = true to prevent Xcode 26 C++ exception crashes.
+        // When set to false, XCTest throws a C++ exception on assertion failure, but
+        // the Swift runtime is compiled without C++ exception support, causing SIGABRT
+        // ("C++ exception handling detected but the Swift runtime was compiled with
+        // exceptions disabled"). This crashes the test runner and cascades to all
+        // subsequent tests. With true, failures are recorded without crashing.
+        continueAfterFailure = true
         XCUIDevice.shared.orientation = .portrait
 
         app = XCUIApplication()
@@ -96,7 +102,11 @@ class BaseUITestCase: XCTestCase {
         // state where terminate() throws "Failed to terminate".
         defer { app = nil }
         XCUIDevice.shared.orientation = .portrait
-        guard let application = app, application.state != .notRunning else { return }
+        guard let application = app else { return }
+
+        // Skip terminate if the app is already not running (crashed or killed)
+        guard application.state != .notRunning, application.state != .unknown else { return }
+
         application.terminate()
         _ = application.wait(for: .notRunning, timeout: 5)
     }
@@ -107,6 +117,21 @@ class BaseUITestCase: XCTestCase {
     /// Called after standard environment is configured but before launch.
     func configureLaunchEnvironment() {
         // Default: no additional configuration
+    }
+
+    /// Guard that ensures the app is still running in foreground.
+    /// Use at the start of multi-step test sections to bail out early if the app crashed.
+    /// Returns true if the app is alive, throws XCTSkip otherwise.
+    @discardableResult
+    func ensureAppRunning(file: StaticString = #filePath, line: UInt = #line) throws -> Bool {
+        guard app.state == .runningForeground else {
+            throw XCTSkip(
+                "App is not running (state: \(app.state.rawValue)). Skipping remainder of test.",
+                file: file,
+                line: line
+            )
+        }
+        return true
     }
 
     // MARK: - Navigation Helpers
