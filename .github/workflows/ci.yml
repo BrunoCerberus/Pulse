@@ -308,19 +308,6 @@ jobs:
         echo "============================================"
         grep -E "(Test Suite.*started|Test Suite.*passed|Test Suite.*failed|Executed [0-9]+ test)" /tmp/test_output.log | tail -10 || echo "${{ matrix.test-name }} completed"
 
-        # Xcode 26 workaround: exit code 65 (TEST EXECUTE FAILED) can occur
-        # when the test runner crashes due to C++ exception handling bugs, even
-        # if all tests pass on retry. Check actual test results before failing.
-        if [ $TEST_EXIT_CODE -eq 65 ]; then
-          FINAL_SUMMARY=$(grep -E "Executed [0-9]+ test" /tmp/test_output.log | tail -1)
-          if echo "$FINAL_SUMMARY" | grep -q "with 0 failures"; then
-            echo ""
-            echo "⚠️  xcodebuild exited with 65 (runner crash) but all tests passed."
-            echo "   Treating as success (Xcode 26 C++ exception bug workaround)."
-            exit 0
-          fi
-        fi
-
         exit $TEST_EXIT_CODE
 
     - name: Extract and display test failures
