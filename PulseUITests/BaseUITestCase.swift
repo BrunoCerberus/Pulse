@@ -181,35 +181,32 @@ class BaseUITestCase: XCTestCase {
     }
 
     /// Navigate to a specific tab with recovery
+    ///
+    /// Avoids `waitForExistence` on tab bar buttons to prevent Xcode 26 C++ exception
+    /// crashes. The tab bar is already verified in setUp, so we use synchronous `.exists`
+    /// checks (single accessibility snapshot) and coordinate-based taps instead.
     func navigateToTab(_ tabName: String) {
         // Guard against interacting with a crashed/terminated app
         guard app.state == .runningForeground else { return }
 
         let tab = app.tabBars.buttons[tabName]
 
-        // First attempt
-        if tab.waitForExistence(timeout: Self.shortTimeout), !tab.isSelected {
-            // Wait for element to become hittable (iOS 26+ Liquid Glass tab bar
-            // exposes symbol sub-elements that can cause XCTest crashes if tapped
-            // without checking hittability first)
+        // Use synchronous .exists (single snapshot) instead of waitForExistence
+        // (polling loop) to avoid repeated accessibility hierarchy queries that
+        // can trigger Xcode 26 C++ exception crashes
+        if tab.exists {
+            guard !tab.isSelected else { return }
             wait(for: 0.3)
-            if tab.isHittable {
-                tab.tap()
-            } else {
-                // On iOS 26+, use coordinate-based tap to bypass hittability evaluation
-                // which can time out on Liquid Glass tab bar
-                let center = tab.coordinate(withNormalizedOffset: CGVector(dx: 0.5, dy: 0.5))
-                center.tap()
-            }
-        } else if !tab.exists {
-            // Fallback: try finding the button directly
+            // Always use coordinate-based tap to bypass hittability evaluation
+            // which can also crash on iOS 26 Liquid Glass tab bar
+            let center = tab.coordinate(withNormalizedOffset: CGVector(dx: 0.5, dy: 0.5))
+            center.tap()
+        } else {
+            // Fallback: try finding the button directly (outside tab bar query)
             let tabButton = app.buttons[tabName]
-            if tabButton.waitForExistence(timeout: Self.shortTimeout), !tabButton.isSelected {
+            if tabButton.exists, !tabButton.isSelected {
                 tabButton.tap()
             }
-        } else if tab.isSelected {
-            // Already on this tab, nothing to do
-            return
         }
 
         // Wait for UI to settle on CI
@@ -224,20 +221,17 @@ class BaseUITestCase: XCTestCase {
     func navigateToSearchTab() {
         guard app.state == .runningForeground else { return }
         let searchTab = app.tabBars.buttons["Search"]
-        // Use waitForExistence for CI reliability
-        if searchTab.waitForExistence(timeout: Self.shortTimeout), !searchTab.isSelected {
-            // Wait for element to become hittable (iOS 26+ Liquid Glass tab bar)
-            wait(for: 0.3)
-            if searchTab.isHittable {
-                searchTab.tap()
-            } else {
-                let center = searchTab.coordinate(withNormalizedOffset: CGVector(dx: 0.5, dy: 0.5))
-                center.tap()
+        if searchTab.exists {
+            guard !searchTab.isSelected else {
+                _ = app.navigationBars["Search"].waitForExistence(timeout: Self.defaultTimeout)
+                return
             }
-        } else if !searchTab.exists {
-            // Fallback: try finding the button directly
+            wait(for: 0.3)
+            let center = searchTab.coordinate(withNormalizedOffset: CGVector(dx: 0.5, dy: 0.5))
+            center.tap()
+        } else {
             let searchButton = app.buttons["Search"]
-            if searchButton.waitForExistence(timeout: 2), !searchButton.isSelected {
+            if searchButton.exists, !searchButton.isSelected {
                 searchButton.tap()
             }
         }
@@ -248,36 +242,24 @@ class BaseUITestCase: XCTestCase {
     func navigateToFeedTab() {
         guard app.state == .runningForeground else { return }
         let feedTab = app.tabBars.buttons["Feed"]
-        // Use waitForExistence with longer timeout for CI reliability
-        if feedTab.waitForExistence(timeout: Self.defaultTimeout), !feedTab.isSelected {
-            // Wait for element to become hittable
-            wait(for: 0.3)
-            if feedTab.isHittable {
-                feedTab.tap()
-            } else {
-                // On iOS 26+, the Feed button may report as not hittable due to
-                // Liquid Glass sub-element layout — fall through to direct button lookup
-                let feedButton = app.buttons["Feed"]
-                if feedButton.waitForExistence(timeout: 2), !feedButton.isSelected {
-                    feedButton.tap()
-                }
+        if feedTab.exists {
+            guard !feedTab.isSelected else {
+                _ = app.navigationBars["Daily Digest"].waitForExistence(timeout: Self.defaultTimeout)
+                return
             }
-        } else if !feedTab.exists {
+            wait(for: 0.3)
+            let center = feedTab.coordinate(withNormalizedOffset: CGVector(dx: 0.5, dy: 0.5))
+            center.tap()
+        } else {
             // Fallback for iOS 26+: try finding by image name "text.document"
-            // The new TabView API may expose image name as the button label
             let feedByImage = app.tabBars.buttons["text.document"]
-            if feedByImage.waitForExistence(timeout: Self.shortTimeout), !feedByImage.isSelected {
+            if feedByImage.exists, !feedByImage.isSelected {
                 wait(for: 0.3)
-                if feedByImage.isHittable {
-                    feedByImage.tap()
-                } else {
-                    let center = feedByImage.coordinate(withNormalizedOffset: CGVector(dx: 0.5, dy: 0.5))
-                    center.tap()
-                }
+                let center = feedByImage.coordinate(withNormalizedOffset: CGVector(dx: 0.5, dy: 0.5))
+                center.tap()
             } else {
-                // Last resort: try finding the button directly
                 let feedButton = app.buttons["Feed"]
-                if feedButton.waitForExistence(timeout: 2), !feedButton.isSelected {
+                if feedButton.exists, !feedButton.isSelected {
                     feedButton.tap()
                 }
             }
@@ -290,36 +272,27 @@ class BaseUITestCase: XCTestCase {
         guard app.state == .runningForeground else { return }
         let mediaTab = app.tabBars.buttons["Media"]
 
-        // First attempt
-        if mediaTab.waitForExistence(timeout: Self.shortTimeout), !mediaTab.isSelected {
-            // Wait for element to become hittable (iOS 26+ Liquid Glass tab bar
-            // exposes symbol sub-elements that can cause XCTest crashes if tapped
-            // without checking hittability first)
-            wait(for: 0.3)
-            if mediaTab.isHittable {
-                mediaTab.tap()
-            }
-        } else if !mediaTab.exists {
-            // Fallback for iOS 26+: try finding by image name "play.tv"
-            // The new TabView API may expose image name as the button label
-            let mediaByImage = app.tabBars.buttons["play.tv"]
-            if mediaByImage.waitForExistence(timeout: Self.shortTimeout), !mediaByImage.isSelected {
+        if mediaTab.exists {
+            guard !mediaTab.isSelected else {
                 wait(for: 0.5)
-                // Use coordinate-based tap to bypass XCTest hittability evaluation
-                // which can time out on iOS 26 Liquid Glass tab bar
+                return
+            }
+            wait(for: 0.3)
+            let center = mediaTab.coordinate(withNormalizedOffset: CGVector(dx: 0.5, dy: 0.5))
+            center.tap()
+        } else {
+            // Fallback for iOS 26+: try finding by image name "play.tv"
+            let mediaByImage = app.tabBars.buttons["play.tv"]
+            if mediaByImage.exists, !mediaByImage.isSelected {
+                wait(for: 0.3)
                 let center = mediaByImage.coordinate(withNormalizedOffset: CGVector(dx: 0.5, dy: 0.5))
                 center.tap()
             } else {
-                // Last resort: try finding the button directly
                 let mediaButton = app.buttons["Media"]
-                if mediaButton.waitForExistence(timeout: 2), !mediaButton.isSelected {
+                if mediaButton.exists, !mediaButton.isSelected {
                     mediaButton.tap()
                 }
             }
-        } else if mediaTab.isSelected {
-            // Already on Media tab
-            wait(for: 0.5)
-            return
         }
 
         // Wait for UI to settle on CI
@@ -343,23 +316,17 @@ class BaseUITestCase: XCTestCase {
     func navigateToBookmarksTab() {
         guard app.state == .runningForeground else { return }
         let bookmarksTab = app.tabBars.buttons["Bookmarks"]
-        // Use waitForExistence for CI reliability
-        if bookmarksTab.waitForExistence(timeout: Self.shortTimeout), !bookmarksTab.isSelected {
-            // Wait for element to become hittable (iOS 26+ Liquid Glass tab bar)
-            wait(for: 0.3)
-            if bookmarksTab.isHittable {
-                bookmarksTab.tap()
-            } else {
-                // On iOS 26+, fall back to direct button lookup when tab bar button reports not hittable
-                let bookmarksButton = app.buttons["Bookmarks"]
-                if bookmarksButton.waitForExistence(timeout: 2), !bookmarksButton.isSelected {
-                    bookmarksButton.tap()
-                }
+        if bookmarksTab.exists {
+            guard !bookmarksTab.isSelected else {
+                _ = app.navigationBars["Bookmarks"].waitForExistence(timeout: Self.defaultTimeout)
+                return
             }
-        } else if !bookmarksTab.exists {
-            // Fallback: try finding the button directly
+            wait(for: 0.3)
+            let center = bookmarksTab.coordinate(withNormalizedOffset: CGVector(dx: 0.5, dy: 0.5))
+            center.tap()
+        } else {
             let bookmarksButton = app.buttons["Bookmarks"]
-            if bookmarksButton.waitForExistence(timeout: 2), !bookmarksButton.isSelected {
+            if bookmarksButton.exists, !bookmarksButton.isSelected {
                 bookmarksButton.tap()
             }
         }
@@ -372,22 +339,16 @@ class BaseUITestCase: XCTestCase {
         navigateToTab("Home")
 
         // Try multiple strategies to find the gear button
-        // Strategy 1: Navigation bar buttons query
         var gearButton = app.navigationBars.buttons["Settings"]
-        if !gearButton.waitForExistence(timeout: Self.shortTimeout) {
-            // Strategy 2: Direct button lookup (toolbar items may not be in navBar on iOS 26)
+        if !gearButton.exists {
+            // Toolbar items may not be in navBar on iOS 26
             gearButton = app.buttons["Settings"]
         }
 
-        if gearButton.waitForExistence(timeout: Self.shortTimeout) {
+        if gearButton.exists {
             wait(for: 0.3)
-            if gearButton.isHittable {
-                gearButton.tap()
-            } else {
-                // On iOS 26+, use coordinate-based tap to bypass hittability issues
-                let center = gearButton.coordinate(withNormalizedOffset: CGVector(dx: 0.5, dy: 0.5))
-                center.tap()
-            }
+            let center = gearButton.coordinate(withNormalizedOffset: CGVector(dx: 0.5, dy: 0.5))
+            center.tap()
             _ = app.navigationBars["Settings"].waitForExistence(timeout: Self.defaultTimeout)
         }
     }
@@ -493,7 +454,7 @@ class BaseUITestCase: XCTestCase {
 
     /// Scroll to find an element
     func scrollToElement(_ element: XCUIElement, in scrollView: XCUIElement? = nil, maxSwipes: Int = 5) -> Bool {
-        if element.exists, element.isHittable {
+        if element.exists {
             return true
         }
 
@@ -502,8 +463,7 @@ class BaseUITestCase: XCTestCase {
 
         for _ in 0 ..< maxSwipes {
             container.swipeUp()
-            // Use element check instead of fixed delay
-            if element.waitForExistence(timeout: 0.1), element.isHittable {
+            if element.exists {
                 return true
             }
         }
