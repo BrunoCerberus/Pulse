@@ -64,7 +64,7 @@ class BaseUITestCase: XCTestCase {
         // Wait for loading state to clear if present
         // Use shorter detection timeout — don't wait long if no spinner appears
         let loadingIndicator = app.activityIndicators.firstMatch
-        if loadingIndicator.waitForExistence(timeout: 5) {
+        if safeWaitForExistence(loadingIndicator, timeout: 5) {
             // Wait for loading to complete (app initializing auth state)
             _ = waitForElementToDisappear(loadingIndicator, timeout: Self.launchTimeout)
         }
@@ -142,7 +142,7 @@ class BaseUITestCase: XCTestCase {
         let tabBar = app.tabBars.firstMatch
 
         // Quick check - if tab bar not visible, try recovery
-        if !tabBar.waitForExistence(timeout: Self.shortTimeout) {
+        if !safeWaitForExistence(tabBar, timeout: Self.shortTimeout) {
             let backButton = app.buttons["backButton"]
             if backButton.exists { backButton.tap() }
             // Don't fail if tabBar query fails - try direct button access as fallback
@@ -157,7 +157,7 @@ class BaseUITestCase: XCTestCase {
         } else if !homeTab.exists {
             // Fallback: try finding Home button directly (handles tabBar query issues on CI)
             let homeButton = app.buttons["Home"]
-            if homeButton.waitForExistence(timeout: 2), !homeButton.isSelected {
+            if safeWaitForExistence(homeButton, timeout: 2), !homeButton.isSelected {
                 homeButton.tap()
             } else if tabBar.exists {
                 // Last resort: tap first tab (Home is always first)
@@ -214,7 +214,7 @@ class BaseUITestCase: XCTestCase {
 
         // Verify navigation - Home tab nav bar is titled "News", not "Home"
         let navBarTitle = tabName == "Home" ? "News" : tabName
-        _ = app.navigationBars[navBarTitle].waitForExistence(timeout: Self.shortTimeout)
+        _ = safeWaitForExistence(app.navigationBars[navBarTitle], timeout: Self.shortTimeout)
     }
 
     /// Navigate to Search tab (handles role: .search accessibility)
@@ -223,7 +223,7 @@ class BaseUITestCase: XCTestCase {
         let searchTab = app.tabBars.buttons["Search"]
         if searchTab.exists {
             guard !searchTab.isSelected else {
-                _ = app.navigationBars["Search"].waitForExistence(timeout: Self.defaultTimeout)
+                _ = safeWaitForExistence(app.navigationBars["Search"], timeout: Self.defaultTimeout)
                 return
             }
             wait(for: 0.3)
@@ -235,7 +235,7 @@ class BaseUITestCase: XCTestCase {
                 searchButton.tap()
             }
         }
-        _ = app.navigationBars["Search"].waitForExistence(timeout: Self.defaultTimeout)
+        _ = safeWaitForExistence(app.navigationBars["Search"], timeout: Self.defaultTimeout)
     }
 
     /// Navigate to Feed tab and verify navigation bar appears
@@ -244,7 +244,7 @@ class BaseUITestCase: XCTestCase {
         let feedTab = app.tabBars.buttons["Feed"]
         if feedTab.exists {
             guard !feedTab.isSelected else {
-                _ = app.navigationBars["Daily Digest"].waitForExistence(timeout: Self.defaultTimeout)
+                _ = safeWaitForExistence(app.navigationBars["Daily Digest"], timeout: Self.defaultTimeout)
                 return
             }
             wait(for: 0.3)
@@ -264,7 +264,7 @@ class BaseUITestCase: XCTestCase {
                 }
             }
         }
-        _ = app.navigationBars["Daily Digest"].waitForExistence(timeout: Self.defaultTimeout)
+        _ = safeWaitForExistence(app.navigationBars["Daily Digest"], timeout: Self.defaultTimeout)
     }
 
     /// Navigate to Media tab with recovery for CI
@@ -299,7 +299,7 @@ class BaseUITestCase: XCTestCase {
         wait(for: 0.5)
 
         // Verify with recovery
-        var navBarVisible = app.navigationBars["Media"].waitForExistence(timeout: Self.defaultTimeout)
+        var navBarVisible = safeWaitForExistence(app.navigationBars["Media"], timeout: Self.defaultTimeout)
         if !navBarVisible {
             // Recovery: tap again with coordinate-based approach
             let retryTab = mediaTab.exists ? mediaTab : app.tabBars.buttons["play.tv"]
@@ -307,7 +307,7 @@ class BaseUITestCase: XCTestCase {
                 let center = retryTab.coordinate(withNormalizedOffset: CGVector(dx: 0.5, dy: 0.5))
                 center.tap()
                 wait(for: 1.0)
-                navBarVisible = app.navigationBars["Media"].waitForExistence(timeout: Self.defaultTimeout)
+                navBarVisible = safeWaitForExistence(app.navigationBars["Media"], timeout: Self.defaultTimeout)
             }
         }
     }
@@ -318,7 +318,7 @@ class BaseUITestCase: XCTestCase {
         let bookmarksTab = app.tabBars.buttons["Bookmarks"]
         if bookmarksTab.exists {
             guard !bookmarksTab.isSelected else {
-                _ = app.navigationBars["Bookmarks"].waitForExistence(timeout: Self.defaultTimeout)
+                _ = safeWaitForExistence(app.navigationBars["Bookmarks"], timeout: Self.defaultTimeout)
                 return
             }
             wait(for: 0.3)
@@ -330,7 +330,7 @@ class BaseUITestCase: XCTestCase {
                 bookmarksButton.tap()
             }
         }
-        _ = app.navigationBars["Bookmarks"].waitForExistence(timeout: Self.defaultTimeout)
+        _ = safeWaitForExistence(app.navigationBars["Bookmarks"], timeout: Self.defaultTimeout)
     }
 
     /// Navigate to Settings via gear button
@@ -349,11 +349,31 @@ class BaseUITestCase: XCTestCase {
             wait(for: 0.3)
             let center = gearButton.coordinate(withNormalizedOffset: CGVector(dx: 0.5, dy: 0.5))
             center.tap()
-            _ = app.navigationBars["Settings"].waitForExistence(timeout: Self.defaultTimeout)
+            _ = safeWaitForExistence(app.navigationBars["Settings"], timeout: Self.defaultTimeout)
         }
     }
 
     // MARK: - Wait Helpers
+
+    /// Safe alternative to XCTest's `waitForExistence` that avoids Xcode 26 C++ exception crashes.
+    ///
+    /// `waitForExistence(timeout:)` uses XCTest's internal snapshot comparison loop which can
+    /// throw an uncatchable C++ exception ("C++ exception handling detected but the Swift runtime
+    /// was compiled with exceptions disabled") when a snapshot evaluation times out. This crashes
+    /// the test runner with SIGABRT.
+    ///
+    /// This method polls `.exists` (single snapshot per iteration) with RunLoop-based delays,
+    /// which avoids the internal snapshot loop that triggers the crash.
+    @discardableResult
+    func safeWaitForExistence(_ element: XCUIElement, timeout: TimeInterval) -> Bool {
+        if element.exists { return true }
+        let deadline = Date().addingTimeInterval(timeout)
+        while Date() < deadline {
+            RunLoop.current.run(until: Date().addingTimeInterval(0.25))
+            if element.exists { return true }
+        }
+        return false
+    }
 
     /// Smart wait that replaces Thread.sleep - waits for UI to settle
     /// Uses RunLoop to allow UI updates while waiting, more efficient than Thread.sleep
@@ -421,10 +441,10 @@ class BaseUITestCase: XCTestCase {
     /// Wait for article detail view
     func waitForArticleDetail(timeout: TimeInterval = 5) -> Bool {
         let detailScrollView = app.scrollViews["articleDetailScrollView"]
-        if detailScrollView.waitForExistence(timeout: timeout) {
+        if safeWaitForExistence(detailScrollView, timeout: timeout) {
             return true
         }
-        return app.buttons["backButton"].waitForExistence(timeout: 1)
+        return safeWaitForExistence(app.buttons["backButton"], timeout: 1)
     }
 
     /// Navigate back from current view
