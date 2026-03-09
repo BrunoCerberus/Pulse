@@ -96,19 +96,12 @@ class BaseUITestCase: XCTestCase {
     }
 
     override func tearDown() {
-        // Use tearDown() instead of tearDownWithError() to prevent termination
-        // failures from being recorded as test errors on CI.
-        // After a test crash/timeout, the simulator may be in an unrecoverable
-        // state where terminate() throws "Failed to terminate".
         defer { app = nil }
         XCUIDevice.shared.orientation = .portrait
-        guard let application = app else { return }
-
-        // Skip terminate if the app is already not running (crashed or killed)
-        guard application.state != .notRunning, application.state != .unknown else { return }
-
-        application.terminate()
-        _ = application.wait(for: .notRunning, timeout: 5)
+        // Do NOT call app.terminate() — on Xcode 26+ it triggers internal
+        // accessibility snapshot queries that throw uncatchable C++ exceptions,
+        // crashing the test runner. XCTest handles app lifecycle automatically
+        // between tests, so explicit termination is unnecessary.
     }
 
     // MARK: - Subclass Hooks
