@@ -12,6 +12,7 @@ enum NotificationAuthorizationStatus: Equatable {
 ///
 /// Separates `UNUserNotificationCenter` interactions from domain logic,
 /// enabling testability via `MockNotificationService`.
+@MainActor
 protocol NotificationService: AnyObject {
     /// Fetches the current OS-level authorization status.
     func authorizationStatus() async -> NotificationAuthorizationStatus
