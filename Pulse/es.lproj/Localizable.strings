@@ -439,3 +439,30 @@
 "paywall.period.months" = "cada %d meses";
 "paywall.period.year" = "por año";
 "paywall.period.years" = "cada %d años";
+
+/* ==================== */
+/* MARK: - Story Threads */
+/* ==================== */
+
+"story_threads.title" = "Historias";
+"story_threads.empty.title" = "Sin Historias";
+"story_threads.empty.message" = "Sigue historias en desarrollo para verlas aquí.";
+"story_threads.error.title" = "No se pudieron cargar";
+"story_threads.follow" = "Seguir Historia";
+"story_threads.unfollow" = "Dejar de Seguir";
+"story_threads.story_so_far" = "Resumen de la Historia";
+"story_threads.articles_in_thread" = "Artículos en la Historia";
+"story_threads.article_count" = "%d artículos";
+"story_threads.new_updates" = "Nuevas Actualizaciones";
+"story_threads.new_updates_count" = "%d nuevas actualizaciones";
+"story_threads.generate_summary" = "Generar Resumen";
+"story_threads.card_hint" = "Toca dos veces para ver la línea de tiempo";
+"story_threads.part_of" = "Parte de: %@";
+"story_threads.thread_summary_line" = "%d artículos en %d días";
+
+/* ==================== */
+/* MARK: - Premium Gate (Story Threads) */
+/* ==================== */
+
+"premium_gate.story_thread_summary.title" = "Resúmenes de Historias con IA";
+"premium_gate.story_thread_summary.description" = "Obtén resúmenes generados por IA de historias en desarrollo para mantenerte al día.";

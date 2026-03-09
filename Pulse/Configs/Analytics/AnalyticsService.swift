@@ -12,6 +12,8 @@ enum AnalyticsScreen: String {
     case articleDetail = "article_detail"
     case mediaDetail = "media_detail"
     case onboarding
+    case storyThreads = "story_threads"
+    case storyThreadDetail = "story_thread_detail"
 }
 
 // MARK: - Analytics Source
@@ -47,6 +49,10 @@ enum AnalyticsEvent {
     case ttsStarted
     case ttsStopped
     case ttsSpeedChanged(speed: String)
+    case storyThreadViewed(threadID: String)
+    case storyThreadFollowed(threadID: String)
+    case storyThreadUnfollowed(threadID: String)
+    case storyThreadSummaryGenerated(threadID: String)
 
     var name: String {
         switch self {
@@ -71,6 +77,10 @@ enum AnalyticsEvent {
         case .ttsStarted: "tts_started"
         case .ttsStopped: "tts_stopped"
         case .ttsSpeedChanged: "tts_speed_changed"
+        case .storyThreadViewed: "story_thread_viewed"
+        case .storyThreadFollowed: "story_thread_followed"
+        case .storyThreadUnfollowed: "story_thread_unfollowed"
+        case .storyThreadSummaryGenerated: "story_thread_summary_generated"
         }
     }
 
@@ -108,6 +118,14 @@ enum AnalyticsEvent {
             ["page": page]
         case let .ttsSpeedChanged(speed):
             ["speed": speed]
+        case let .storyThreadViewed(threadID):
+            ["thread_id": threadID]
+        case let .storyThreadFollowed(threadID):
+            ["thread_id": threadID]
+        case let .storyThreadUnfollowed(threadID):
+            ["thread_id": threadID]
+        case let .storyThreadSummaryGenerated(threadID):
+            ["thread_id": threadID]
         }
     }
 }

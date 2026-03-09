@@ -81,6 +81,14 @@ private enum Constants {
     static var relatedArticles: String {
         AppLocalization.localized("article_detail.related_articles")
     }
+
+    static var partOfThread: String {
+        AppLocalization.localized("story_threads.part_of")
+    }
+
+    static var followThisStory: String {
+        AppLocalization.localized("story_threads.follow")
+    }
 }
 
 // MARK: - ArticleDetailView
@@ -98,6 +106,7 @@ struct ArticleDetailView: View {
 
     @State private var isPremium = false
     @State private var isPaywallPresented = false
+    @State private var relatedThread: StoryThread?
 
     init(
         article: Article,
@@ -231,6 +240,7 @@ struct ArticleDetailView: View {
         .onAppear {
             viewModel.handle(event: .onAppear)
             initializeSubscriptionStatus()
+            loadRelatedThread()
         }
         .onDisappear {
             viewModel.handle(event: .onDisappear)
@@ -336,6 +346,10 @@ struct ArticleDetailView: View {
                 .frame(height: 0.5)
 
             readFullArticleButton
+
+            if let thread = relatedThread {
+                storyThreadSection(thread: thread)
+            }
 
             if !viewModel.viewState.relatedArticles.isEmpty {
                 relatedArticlesSection
@@ -446,6 +460,82 @@ struct ArticleDetailView: View {
                 }
             }
         )
+    }
+
+    private func storyThreadSection(thread: StoryThread) -> some View {
+        VStack(alignment: .leading, spacing: Spacing.sm) {
+            Rectangle()
+                .fill(Color.Border.adaptive(for: colorScheme))
+                .frame(height: 0.5)
+
+            HStack(spacing: Spacing.sm) {
+                Image(systemName: "rectangle.stack")
+                    .foregroundStyle(Color.accentColor)
+                    .accessibilityHidden(true)
+
+                VStack(alignment: .leading, spacing: Spacing.xxs) {
+                    Text(String(format: Constants.partOfThread, thread.title))
+                        .font(Typography.bodySmall)
+                        .bold()
+
+                    let days = max(1, Int(thread.updatedAt.timeIntervalSince(thread.createdAt) / 86400))
+                    Text(
+                        String(
+                            format: AppLocalization.localized("story_threads.thread_summary_line"),
+                            thread.articleIDs.count,
+                            days
+                        )
+                    )
+                    .font(Typography.captionLarge)
+                    .foregroundStyle(.secondary)
+                }
+
+                Spacer()
+
+                if !thread.isFollowing {
+                    Button {
+                        followThread(thread)
+                    } label: {
+                        Text(Constants.followThisStory)
+                            .font(Typography.labelMedium)
+                    }
+                    .buttonStyle(.borderedProminent)
+                    .controlSize(.small)
+                    .accessibilityIdentifier("followStoryButton")
+                }
+            }
+        }
+        .padding(.top, Spacing.sm)
+    }
+
+    private func followThread(_ thread: StoryThread) {
+        guard let service = try? serviceLocator.retrieve(StoryThreadService.self) else { return }
+        var cancellable: AnyCancellable?
+        cancellable = service.followThread(id: thread.id)
+            .receive(on: DispatchQueue.main)
+            .sink(
+                receiveCompletion: { _ in
+                    _ = cancellable
+                },
+                receiveValue: { [self] in
+                    self.relatedThread?.isFollowing = true
+                }
+            )
+    }
+
+    private func loadRelatedThread() {
+        guard let service = try? serviceLocator.retrieve(StoryThreadService.self) else { return }
+        var cancellable: AnyCancellable?
+        cancellable = service.fetchThreads(for: viewModel.viewState.article.id)
+            .receive(on: DispatchQueue.main)
+            .sink(
+                receiveCompletion: { _ in
+                    _ = cancellable
+                },
+                receiveValue: { [self] threads in
+                    self.relatedThread = threads.first
+                }
+            )
     }
 
     private var readFullArticleButton: some View {

@@ -15,6 +15,7 @@ import SwiftUI
 enum PremiumFeature {
     case dailyDigest
     case articleSummarization
+    case storyThreadSummary
 
     var icon: String {
         switch self {
@@ -22,6 +23,8 @@ enum PremiumFeature {
             return "sparkles"
         case .articleSummarization:
             return "doc.text.magnifyingglass"
+        case .storyThreadSummary:
+            return "rectangle.stack"
         }
     }
 
@@ -31,6 +34,8 @@ enum PremiumFeature {
             return .purple
         case .articleSummarization:
             return .blue
+        case .storyThreadSummary:
+            return .teal
         }
     }
 
@@ -40,6 +45,8 @@ enum PremiumFeature {
             return AppLocalization.localized("premium_gate.daily_digest.title")
         case .articleSummarization:
             return AppLocalization.localized("premium_gate.summarization.title")
+        case .storyThreadSummary:
+            return AppLocalization.localized("premium_gate.story_thread_summary.title")
         }
     }
 
@@ -49,6 +56,8 @@ enum PremiumFeature {
             return AppLocalization.localized("premium_gate.daily_digest.description")
         case .articleSummarization:
             return AppLocalization.localized("premium_gate.summarization.description")
+        case .storyThreadSummary:
+            return AppLocalization.localized("premium_gate.story_thread_summary.description")
         }
     }
 }

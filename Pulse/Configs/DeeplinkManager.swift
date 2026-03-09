@@ -34,6 +34,9 @@ enum Deeplink: Equatable {
     /// Open a specific article by ID.
     case article(id: String)
 
+    /// Navigate to story threads list, optionally opening a specific thread.
+    case threads(id: UUID? = nil)
+
     /// Filter articles by category name.
     case category(name: String)
 
@@ -113,6 +116,10 @@ final class DeeplinkManager: ObservableObject {
             deeplink = .feed
         case "settings":
             deeplink = .settings
+        case "threads":
+            let idString = components.queryItems?.first(where: { $0.name == "id" })?.value
+            let threadID = idString.flatMap { UUID(uuidString: $0) }
+            deeplink = .threads(id: threadID)
         case "article":
             guard let articleID = components.queryItems?.first(where: { $0.name == "id" })?.value,
                   Deeplink.isValidArticleID(articleID)

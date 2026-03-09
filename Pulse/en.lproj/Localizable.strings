@@ -439,3 +439,30 @@
 "paywall.period.months" = "every %d months";
 "paywall.period.year" = "per year";
 "paywall.period.years" = "every %d years";
+
+/* ==================== */
+/* MARK: - Story Threads */
+/* ==================== */
+
+"story_threads.title" = "Story Threads";
+"story_threads.empty.title" = "No Story Threads";
+"story_threads.empty.message" = "Follow developing stories to track them here.";
+"story_threads.error.title" = "Unable to Load Threads";
+"story_threads.follow" = "Follow Story";
+"story_threads.unfollow" = "Unfollow Story";
+"story_threads.story_so_far" = "Story So Far";
+"story_threads.articles_in_thread" = "Articles in Thread";
+"story_threads.article_count" = "%d articles";
+"story_threads.new_updates" = "New Updates";
+"story_threads.new_updates_count" = "%d new updates";
+"story_threads.generate_summary" = "Generate Summary";
+"story_threads.card_hint" = "Double tap to view thread timeline";
+"story_threads.part_of" = "Part of: %@";
+"story_threads.thread_summary_line" = "%d articles over %d days";
+
+/* ==================== */
+/* MARK: - Premium Gate (Story Threads) */
+/* ==================== */
+
+"premium_gate.story_thread_summary.title" = "AI Story Summaries";
+"premium_gate.story_thread_summary.description" = "Get AI-generated recaps of developing stories to stay up to speed.";

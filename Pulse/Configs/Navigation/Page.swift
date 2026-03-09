@@ -16,4 +16,10 @@ enum Page: Hashable {
 
     /// Navigate to reading history view
     case readingHistory
+
+    /// Navigate to story threads list
+    case storyThreads
+
+    /// Navigate to a specific story thread detail
+    case storyThreadDetail(id: UUID, title: String)
 }

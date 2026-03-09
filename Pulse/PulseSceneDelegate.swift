@@ -184,6 +184,7 @@ final class PulseSceneDelegate: UIResponder, UIWindowSceneDelegate {
                 serviceLocator.register(AnalyticsService.self, instance: MockAnalyticsService())
                 serviceLocator.register(TextToSpeechService.self, instance: MockTextToSpeechService())
                 serviceLocator.register(NotificationService.self, instance: MockNotificationService())
+                serviceLocator.register(StoryThreadService.self, instance: MockStoryThreadService.withSampleData())
                 let mockOnboarding = MockOnboardingService(hasCompletedOnboarding: true)
                 serviceLocator.register(OnboardingService.self, instance: mockOnboarding)
 
@@ -255,6 +256,10 @@ final class PulseSceneDelegate: UIResponder, UIWindowSceneDelegate {
 
         // Register notification service
         serviceLocator.register(NotificationService.self, instance: LiveNotificationService.shared)
+
+        // Register story thread service
+        let llmService = try? serviceLocator.retrieve(LLMService.self)
+        serviceLocator.register(StoryThreadService.self, instance: LiveStoryThreadService(llmService: llmService))
     }
 
     private func syncLanguagePreference() {

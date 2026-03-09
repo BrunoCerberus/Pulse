@@ -100,6 +100,9 @@ final class DeeplinkRouter {
             coordinator.switchTab(to: .home, popToRoot: true)
             coordinator.push(page: .settings)
 
+        case let .threads(id):
+            routeToThreads(id: id, coordinator: coordinator)
+
         case let .article(id):
             // Fetch the article by ID and navigate to article detail
             coordinator.switchTab(to: .home, popToRoot: true)
@@ -113,6 +116,14 @@ final class DeeplinkRouter {
 
         // Clear the deeplink after processing
         DeeplinkManager.shared.clearDeeplink()
+    }
+
+    private func routeToThreads(id: UUID?, coordinator: Coordinator) {
+        coordinator.switchTab(to: .home, popToRoot: true)
+        coordinator.push(page: .storyThreads)
+        if let id {
+            coordinator.push(page: .storyThreadDetail(id: id, title: ""))
+        }
     }
 
     private func routeToMedia(type: MediaType?, coordinator: Coordinator) {

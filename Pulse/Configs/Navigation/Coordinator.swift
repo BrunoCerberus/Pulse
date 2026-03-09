@@ -202,6 +202,22 @@ final class Coordinator: ObservableObject {
                 router: ReadingHistoryNavigationRouter(coordinator: self),
                 viewModel: ReadingHistoryViewModel(serviceLocator: serviceLocator)
             )
+
+        case .storyThreads:
+            StoryThreadsView(
+                router: StoryThreadNavigationRouter(coordinator: self),
+                viewModel: StoryThreadViewModel(serviceLocator: serviceLocator)
+            )
+
+        case let .storyThreadDetail(id, _):
+            StoryThreadDetailView(
+                thread: StoryThreadItem(from: StoryThread.sampleThreads.first
+                    ?? StoryThread(title: "", summary: "", category: "")),
+                serviceLocator: serviceLocator,
+                onArticleTapped: { [weak self] article in
+                    self?.push(page: .articleDetail(article))
+                }
+            )
         }
     }
 }
