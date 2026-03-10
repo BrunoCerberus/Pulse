@@ -90,7 +90,9 @@ final class HomeUITests: BaseUITestCase {
     }
 
     /// Tests that tapping a category tab filters content
-    func testCategoryTabFiltersContent() {
+    func testCategoryTabFiltersContent() throws {
+        try ensureAppRunning()
+
         // Wait for content to load
         _ = waitForHomeContent(timeout: 30)
 

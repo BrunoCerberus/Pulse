@@ -33,7 +33,8 @@ final class FeaturedMediaCardAccessibilitySnapshotTests: XCTestCase {
         )
         .frame(width: 375)
         .padding()
-        .background(LinearGradient.meshFallback)
+        .background(Color(red: 0.1, green: 0.1, blue: 0.15))
+        .drawingGroup()
 
         let controller = UIHostingController(rootView: view)
 
@@ -51,7 +52,8 @@ final class FeaturedMediaCardAccessibilitySnapshotTests: XCTestCase {
         )
         .frame(width: 375)
         .padding()
-        .background(LinearGradient.meshFallback)
+        .background(Color(red: 0.1, green: 0.1, blue: 0.15))
+        .drawingGroup()
 
         let controller = UIHostingController(rootView: view)
 

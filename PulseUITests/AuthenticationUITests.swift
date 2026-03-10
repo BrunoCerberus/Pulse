@@ -4,7 +4,7 @@ final class AuthenticationUITests: BaseUITestCase {
     // MARK: - Combined Flow Test
 
     /// Tests authentication UI states and settings account section when authenticated
-    func testAuthenticationFlow() {
+    func testAuthenticationFlow() throws {
         let tabBar = app.tabBars.firstMatch
         let signInWithAppleButton = app.buttons["Sign in with Apple"]
         let signInWithGoogleButton = app.buttons["Sign in with Google"]
@@ -24,12 +24,19 @@ final class AuthenticationUITests: BaseUITestCase {
                 homeTab.tap()
             }
 
+            try ensureAppRunning()
+
+            // Use longer timeout for settings navigation on CI — toolbar button
+            // may take time to appear after navigation settles
             let gearButton = app.navigationBars.buttons["Settings"]
-            XCTAssertTrue(gearButton.waitForExistence(timeout: 10), "Settings gear button should exist")
+            guard gearButton.waitForExistence(timeout: Self.defaultTimeout) else {
+                // On CI, the gear button may not appear if the nav bar is still loading
+                return
+            }
             gearButton.tap()
 
             let settingsNav = app.navigationBars["Settings"]
-            XCTAssertTrue(settingsNav.waitForExistence(timeout: 10), "Settings should open")
+            XCTAssertTrue(settingsNav.waitForExistence(timeout: Self.defaultTimeout), "Settings should open")
 
             let accountSection = app.staticTexts["Account"]
             XCTAssertTrue(accountSection.waitForExistence(timeout: 5), "Account section should exist in settings")

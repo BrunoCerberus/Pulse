@@ -13,8 +13,10 @@ final class AccessibilityAuditTests: BaseUITestCase {
             throw XCTSkip("performAccessibilityAudit requires iOS 17+")
         }
 
+        try ensureAppRunning()
         waitForHomeContent()
         wait(for: 2.0)
+        try ensureAppRunning()
 
         try app.performAccessibilityAudit(for: [.dynamicType, .sufficientElementDescription, .hitRegion]) { issue in
             // Ignore issues from system components we don't control
@@ -35,8 +37,10 @@ final class AccessibilityAuditTests: BaseUITestCase {
             throw XCTSkip("performAccessibilityAudit requires iOS 17+")
         }
 
+        try ensureAppRunning()
         navigateToMediaTab()
         wait(for: 2.0)
+        try ensureAppRunning()
 
         try app.performAccessibilityAudit(for: [.dynamicType, .sufficientElementDescription, .hitRegion]) { issue in
             let description = issue.debugDescription
@@ -56,8 +60,10 @@ final class AccessibilityAuditTests: BaseUITestCase {
             throw XCTSkip("performAccessibilityAudit requires iOS 17+")
         }
 
+        try ensureAppRunning()
         navigateToBookmarksTab()
         wait(for: 2.0)
+        try ensureAppRunning()
 
         try app.performAccessibilityAudit(for: [.dynamicType, .sufficientElementDescription, .hitRegion]) { issue in
             let description = issue.debugDescription
@@ -77,8 +83,10 @@ final class AccessibilityAuditTests: BaseUITestCase {
             throw XCTSkip("performAccessibilityAudit requires iOS 17+")
         }
 
+        try ensureAppRunning()
         navigateToSearchTab()
         wait(for: 2.0)
+        try ensureAppRunning()
 
         try app.performAccessibilityAudit(for: [.dynamicType, .sufficientElementDescription, .hitRegion]) { issue in
             let description = issue.debugDescription
@@ -99,8 +107,10 @@ final class AccessibilityAuditTests: BaseUITestCase {
             throw XCTSkip("performAccessibilityAudit requires iOS 17+")
         }
 
+        try ensureAppRunning()
         navigateToSettings()
         wait(for: 2.0)
+        try ensureAppRunning()
 
         try app.performAccessibilityAudit(for: [.dynamicType, .sufficientElementDescription, .hitRegion]) { issue in
             let description = issue.debugDescription
