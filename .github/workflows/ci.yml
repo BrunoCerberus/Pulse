@@ -122,6 +122,9 @@ jobs:
     - name: Install iOS Simulator Runtime
       run: |
         echo "Installing iOS simulator runtime..."
+        # Initialize CoreSimulator service before downloading
+        xcrun simctl list runtimes > /dev/null 2>&1 || true
+        sleep 5
         xcodebuild -downloadPlatform iOS
         echo "Available iOS simulator runtimes:"
         xcrun simctl list runtimes | grep iOS
@@ -249,6 +252,9 @@ jobs:
     - name: Install iOS Simulator Runtime
       run: |
         echo "Installing iOS simulator runtime..."
+        # Initialize CoreSimulator service before downloading
+        xcrun simctl list runtimes > /dev/null 2>&1 || true
+        sleep 5
         xcodebuild -downloadPlatform iOS
         echo "Available iOS simulator runtimes:"
         xcrun simctl list runtimes | grep iOS
