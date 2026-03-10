@@ -299,8 +299,8 @@ func createTestServiceLocator() -> ServiceLocator {
 
 ## Requirements
 
-- Xcode 26.2+
-- iOS 26.2+
+- Xcode 26.3+
+- iOS 26.3+
 - Swift 5.0+
 
 ## Setup
