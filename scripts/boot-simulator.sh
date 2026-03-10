@@ -45,9 +45,21 @@ echo "Found UDID: $UDID"
 echo "Erasing simulator..."
 xcrun simctl erase "$UDID" 2>/dev/null || true
 
-# 4. Boot the simulator (with 30s timeout to prevent hanging)
+# 4. Boot the simulator (background with 30s timeout to prevent hanging)
 echo "Booting simulator..."
-timeout 30 xcrun simctl boot "$UDID"
+xcrun simctl boot "$UDID" &
+BOOT_PID=$!
+BOOT_WAIT=0
+while kill -0 "$BOOT_PID" 2>/dev/null && [ "$BOOT_WAIT" -lt 30 ]; do
+    sleep 1
+    BOOT_WAIT=$((BOOT_WAIT + 1))
+done
+if kill -0 "$BOOT_PID" 2>/dev/null; then
+    kill "$BOOT_PID" 2>/dev/null || true
+    echo "ERROR: simctl boot timed out after 30s"
+    exit 1
+fi
+wait "$BOOT_PID" || true
 
 # 5. Wait for the simulator to report fully booted (polling with 120s timeout)
 echo "Waiting for boot to complete..."
