@@ -184,8 +184,8 @@ jobs:
 
     - name: Pre-boot simulator
       run: |
-        echo "Pre-booting simulator..."
-        xcrun simctl boot "iPhone Air" || echo "Simulator already booted or unavailable"
+        chmod +x scripts/boot-simulator.sh
+        ./scripts/boot-simulator.sh "iPhone Air" 30
 
     - name: Build for testing (PulseDev)
       run: |
@@ -300,8 +300,8 @@ jobs:
 
     - name: Pre-boot simulator
       run: |
-        echo "Pre-booting simulator..."
-        xcrun simctl boot "iPhone Air" || echo "Simulator already booted or unavailable"
+        chmod +x scripts/boot-simulator.sh
+        ./scripts/boot-simulator.sh "iPhone Air" 30
 
     - name: Run ${{ matrix.test-name }}
       timeout-minutes: ${{ matrix.timeout }}
