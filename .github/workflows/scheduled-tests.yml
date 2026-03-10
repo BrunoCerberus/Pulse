@@ -88,7 +88,7 @@ jobs:
         xcodebuild build-for-testing \
           -project Pulse.xcodeproj \
           -scheme PulseDev \
-          -destination 'platform=iOS Simulator,name=iPhone Air,OS=26.3' \
+          -destination 'platform=iOS Simulator,name=iPhone Air,OS=26.3.1' \
           -derivedDataPath ./DerivedData \
           -skipMacroValidation
 
@@ -98,7 +98,7 @@ jobs:
         xcodebuild build-for-testing \
           -project Pulse.xcodeproj \
           -scheme PulseSnapshotTests \
-          -destination 'platform=iOS Simulator,name=iPhone Air,OS=26.3' \
+          -destination 'platform=iOS Simulator,name=iPhone Air,OS=26.3.1' \
           -derivedDataPath ./DerivedData \
           -skipMacroValidation
 
@@ -196,7 +196,7 @@ jobs:
           -project Pulse.xcodeproj \
           -scheme ${{ matrix.scheme }} \
           -only-testing:${{ matrix.test-target }} \
-          -destination 'platform=iOS Simulator,name=iPhone Air,OS=26.3' \
+          -destination 'platform=iOS Simulator,name=iPhone Air,OS=26.3.1' \
           -derivedDataPath ./DerivedData \
           -resultBundlePath test-results/${{ matrix.artifact-name }}.xcresult \
           -disableAutomaticPackageResolution \
@@ -653,7 +653,7 @@ jobs:
         xcodebuild build \
           -project Pulse.xcodeproj \
           -scheme PulseDev \
-          -destination 'platform=iOS Simulator,name=iPhone Air,OS=26.3' \
+          -destination 'platform=iOS Simulator,name=iPhone Air,OS=26.3.1' \
           -quiet \
           CODE_SIGNING_ALLOWED=NO \
           -skipMacroValidation || {
