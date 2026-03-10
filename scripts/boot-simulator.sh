@@ -5,12 +5,12 @@
 #
 # Usage: ./scripts/boot-simulator.sh [device_name] [warmup_seconds]
 #   device_name    - Simulator name (default: "iPhone Air")
-#   warmup_seconds - Extra sleep after boot (default: 30)
+#   warmup_seconds - Extra sleep after boot (default: 20)
 
 set -euo pipefail
 
 DEVICE_NAME="${1:-iPhone Air}"
-WARMUP_SECONDS="${2:-30}"
+WARMUP_SECONDS="${2:-20}"
 
 echo "=== Simulator Pre-boot & Warmup ==="
 echo "Device: $DEVICE_NAME"
@@ -45,13 +45,29 @@ echo "Found UDID: $UDID"
 echo "Erasing simulator..."
 xcrun simctl erase "$UDID" 2>/dev/null || true
 
-# 4. Boot the simulator
+# 4. Boot the simulator (with 30s timeout to prevent hanging)
 echo "Booting simulator..."
-xcrun simctl boot "$UDID"
+timeout 30 xcrun simctl boot "$UDID"
 
-# 5. Wait for the simulator to report fully booted
+# 5. Wait for the simulator to report fully booted (polling with 120s timeout)
 echo "Waiting for boot to complete..."
-xcrun simctl bootstatus "$UDID" -b
+BOOT_TIMEOUT=120
+POLL_INTERVAL=5
+ELAPSED=0
+while [ "$ELAPSED" -lt "$BOOT_TIMEOUT" ]; do
+    if xcrun simctl list devices booted | grep -q "$UDID"; then
+        echo "Simulator booted successfully after ${ELAPSED}s."
+        break
+    fi
+    sleep "$POLL_INTERVAL"
+    ELAPSED=$((ELAPSED + POLL_INTERVAL))
+done
+
+if [ "$ELAPSED" -ge "$BOOT_TIMEOUT" ]; then
+    echo "ERROR: Simulator failed to boot within ${BOOT_TIMEOUT}s!"
+    xcrun simctl list devices
+    exit 1
+fi
 
 # 6. Extra warmup time — iOS 26.3 simulators on CI need this to stabilise
 echo "Warming up simulator (${WARMUP_SECONDS}s)..."
