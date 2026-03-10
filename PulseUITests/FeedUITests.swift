@@ -147,7 +147,7 @@ final class FeedUITests: BaseUITestCase {
         // Look for source articles section
         let sourceArticlesText = app.staticTexts["Source Articles"]
 
-        if sourceArticlesText.waitForExistence(timeout: Self.defaultTimeout) {
+        if safeWaitForExistence(sourceArticlesText, timeout: Self.defaultTimeout) {
             // Tap to expand
             sourceArticlesText.tap()
 
@@ -164,19 +164,22 @@ final class FeedUITests: BaseUITestCase {
             if buttonCount > 0 {
                 // Tap the first available source article
                 let firstButton = chevronButtons.element(boundBy: 0)
-                if firstButton.waitForExistence(timeout: Self.shortTimeout), firstButton.isHittable {
+                if safeWaitForExistence(firstButton, timeout: Self.shortTimeout), firstButton.isHittable {
                     firstButton.tap()
 
                     // Check if we navigated to article detail
                     let backButton = app.buttons["backButton"]
-                    if backButton.waitForExistence(timeout: Self.defaultTimeout) {
+                    if safeWaitForExistence(backButton, timeout: Self.defaultTimeout) {
                         XCTAssertTrue(backButton.exists, "Should navigate to article detail")
 
                         // Navigate back
                         backButton.tap()
 
                         let navTitle = app.navigationBars["Daily Digest"]
-                        XCTAssertTrue(navTitle.waitForExistence(timeout: Self.defaultTimeout), "Should return to Feed")
+                        XCTAssertTrue(
+                            safeWaitForExistence(navTitle, timeout: Self.defaultTimeout),
+                            "Should return to Feed"
+                        )
                     }
                 }
             }
