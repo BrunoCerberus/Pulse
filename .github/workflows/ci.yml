@@ -119,6 +119,13 @@ jobs:
       with:
         xcode-version: '26.3'
 
+    - name: Install iOS Simulator Runtime
+      run: |
+        echo "Installing iOS simulator runtime..."
+        xcodebuild -downloadPlatform iOS
+        echo "Available iOS simulator runtimes:"
+        xcrun simctl list runtimes | grep iOS
+
     # Cache Homebrew packages
     # Note: Static version key (brew-v1) - increment manually when brew dependencies change
     - name: Cache Homebrew packages
@@ -183,7 +190,7 @@ jobs:
         xcodebuild build-for-testing \
           -project Pulse.xcodeproj \
           -scheme PulseDev \
-          -destination 'platform=iOS Simulator,name=iPhone Air,OS=26.3.1' \
+          -destination 'platform=iOS Simulator,name=iPhone Air,OS=latest' \
           -derivedDataPath ./DerivedData \
           -skipMacroValidation \
           ENABLE_ONLY_ACTIVE_RESOURCES=NO
@@ -194,7 +201,7 @@ jobs:
         xcodebuild build-for-testing \
           -project Pulse.xcodeproj \
           -scheme PulseSnapshotTests \
-          -destination 'platform=iOS Simulator,name=iPhone Air,OS=26.3.1' \
+          -destination 'platform=iOS Simulator,name=iPhone Air,OS=latest' \
           -derivedDataPath ./DerivedData \
           -skipMacroValidation \
           ENABLE_ONLY_ACTIVE_RESOURCES=NO
@@ -238,6 +245,13 @@ jobs:
       uses: maxim-lobanov/setup-xcode@60606e260d2fc5762a71e64e74b2174e8ea3c8bd # v1
       with:
         xcode-version: '26.3'
+
+    - name: Install iOS Simulator Runtime
+      run: |
+        echo "Installing iOS simulator runtime..."
+        xcodebuild -downloadPlatform iOS
+        echo "Available iOS simulator runtimes:"
+        xcrun simctl list runtimes | grep iOS
 
     # Cache Homebrew packages
     # Note: Static version key (brew-v1) - increment manually when brew dependencies change
@@ -293,7 +307,7 @@ jobs:
           -project Pulse.xcodeproj \
           -scheme ${{ matrix.scheme }} \
           -only-testing:${{ matrix.test-target }} \
-          -destination 'platform=iOS Simulator,name=iPhone Air,OS=26.3.1' \
+          -destination 'platform=iOS Simulator,name=iPhone Air,OS=latest' \
           -derivedDataPath ./DerivedData \
           -resultBundlePath test-results/${{ matrix.artifact-name }}.xcresult \
           -disableAutomaticPackageResolution \
