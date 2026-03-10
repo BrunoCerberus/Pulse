@@ -143,14 +143,12 @@ final class ArticleDetailUITests: BaseUITestCase {
         XCTAssertTrue(backButtonAfterShare.exists, "Navigation should still work after scrolling")
 
         // --- Back Navigation ---
-        // Use predicate-based wait for hittability with longer timeout for scroll settling
-        let hittablePredicate = NSPredicate(format: "isHittable == true")
-        let expectation = XCTNSPredicateExpectation(predicate: hittablePredicate, object: backButtonAfterShare)
-        let isHittable = XCTWaiter.wait(for: [expectation], timeout: 5) == .completed
-
-        // If button isn't hittable, use swipe-right gesture to navigate back (enabled via .enableSwipeBack())
-        if isHittable {
-            backButtonAfterShare.tap()
+        // Avoid .isHittable evaluation and XCTNSPredicateExpectation which can throw
+        // uncatchable C++ exceptions on Xcode 26 / iOS 26. Use coordinate-based tap
+        // which bypasses hittability checks entirely (same pattern as resetToHomeTab).
+        if backButtonAfterShare.exists {
+            let center = backButtonAfterShare.coordinate(withNormalizedOffset: CGVector(dx: 0.5, dy: 0.5))
+            center.tap()
         } else {
             // Use swipe gesture to go back - swipe from left edge
             app.swipeRight()

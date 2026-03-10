@@ -99,7 +99,7 @@ final class HomeUITests: BaseUITestCase {
         // Check if category tabs exist
         let allTabButton = app.buttons["All"]
 
-        if allTabButton.waitForExistence(timeout: Self.shortTimeout) {
+        if safeWaitForExistence(allTabButton, timeout: Self.shortTimeout) {
             // Try to find and tap a category tab
             let technologyTab = app.buttons["Technology"]
             let businessTab = app.buttons["Business"]
