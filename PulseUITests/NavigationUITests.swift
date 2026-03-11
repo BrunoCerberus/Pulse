@@ -58,9 +58,9 @@ final class NavigationUITests: BaseUITestCase {
             "Settings should be accessible from Home"
         )
 
-        navigateBack()
+        navigateBack(waitForNavBar: "News")
         XCTAssertTrue(
-            app.navigationBars["News"].waitForExistence(timeout: Self.defaultTimeout),
+            safeWaitForExistence(app.navigationBars["News"], timeout: Self.defaultTimeout),
             "Should return to Home after navigating back from Settings"
         )
 
@@ -84,9 +84,9 @@ final class NavigationUITests: BaseUITestCase {
                     firstCard.tap()
                     XCTAssertTrue(waitForArticleDetail(), "Should navigate to article detail")
 
-                    navigateBack()
+                    navigateBack(waitForNavBar: "News")
                     XCTAssertTrue(
-                        app.navigationBars["News"].waitForExistence(timeout: Self.defaultTimeout),
+                        safeWaitForExistence(app.navigationBars["News"], timeout: Self.defaultTimeout),
                         "Should return to Home after navigating back from article"
                     )
                 }

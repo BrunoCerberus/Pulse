@@ -118,6 +118,10 @@ class BaseUITestCase: XCTestCase {
         // rather than crashing the test runner.
         if let app, app.state != .notRunning {
             app.terminate()
+            // Wait for termination to complete before next test starts.
+            // "Failed to terminate" errors in CI happen when the next test's launch()
+            // runs before the previous instance fully exits.
+            _ = app.wait(for: .notRunning, timeout: 10)
         }
     }
 
@@ -457,13 +461,33 @@ class BaseUITestCase: XCTestCase {
         return safeWaitForExistence(app.buttons["backButton"], timeout: 1)
     }
 
-    /// Navigate back from current view
-    func navigateBack() {
+    /// Navigate back from current view with post-navigation wait for CI stability
+    func navigateBack(waitForNavBar navBarTitle: String? = nil, timeout: TimeInterval = 15) {
         let backButton = app.buttons["backButton"]
         if backButton.exists {
-            backButton.tap()
+            let center = backButton.coordinate(withNormalizedOffset: CGVector(dx: 0.5, dy: 0.5))
+            center.tap()
         } else {
             app.swipeRight()
+        }
+
+        // Wait for navigation animation to settle (critical on slow CI runners)
+        wait(for: 0.5)
+
+        // If a target nav bar was specified, wait for it to appear with retry
+        if let navBarTitle {
+            if !safeWaitForExistence(app.navigationBars[navBarTitle], timeout: timeout) {
+                // Recovery: try navigating back again (tap may have been swallowed)
+                let retryBack = app.buttons["backButton"]
+                if retryBack.exists {
+                    let center = retryBack.coordinate(withNormalizedOffset: CGVector(dx: 0.5, dy: 0.5))
+                    center.tap()
+                    wait(for: 0.5)
+                } else {
+                    app.swipeRight()
+                    wait(for: 0.5)
+                }
+            }
         }
     }
 

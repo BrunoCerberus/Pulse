@@ -35,16 +35,19 @@ final class MediaUITests: BaseUITestCase {
     func testMediaTabShowsSegmentedControl() {
         navigateToMediaTab()
 
-        // Wait for content to load
-        wait(for: 1.0)
+        // Wait for content to load (CI can be slow to render segmented control)
+        wait(for: 2.0)
 
-        // Check for segmented control buttons
+        // Check for segmented control buttons with proper wait
         let allButton = app.buttons["All"]
         let videosButton = app.buttons["Videos"]
         let podcastsButton = app.buttons["Podcasts"]
 
-        // At least one should exist
-        let segmentedControlExists = allButton.exists || videosButton.exists || podcastsButton.exists
+        // At least one should exist - use waitForAny for CI reliability
+        let segmentedControlExists = waitForAny(
+            [allButton, videosButton, podcastsButton],
+            timeout: Self.defaultTimeout
+        )
         XCTAssertTrue(segmentedControlExists, "Media segmented control should be visible")
     }
 
