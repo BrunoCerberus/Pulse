@@ -403,26 +403,32 @@ class BaseUITestCase: XCTestCase {
         return true
     }
 
-    /// Wait for any of the provided elements to exist - efficient predicate-based waiting
+    /// Wait for any of the provided elements to exist.
+    /// Uses 0.5s polling interval to reduce UI query pressure on CI shared runners,
+    /// where rapid .exists calls can trigger Xcode 26 C++ exception crashes
+    /// ("Timed out while evaluating UI query").
     func waitForAny(_ elements: [XCUIElement], timeout: TimeInterval = 10) -> Bool {
+        // Check immediately before entering the polling loop
+        if elements.contains(where: { $0.exists }) { return true }
         let deadline = Date().addingTimeInterval(timeout)
         while Date() < deadline {
+            RunLoop.current.run(until: Date().addingTimeInterval(0.5))
             if elements.contains(where: { $0.exists }) {
                 return true
             }
-            RunLoop.current.run(until: Date().addingTimeInterval(0.1))
         }
         return false
     }
 
     /// Wait for any element matching query to exist
     func waitForAnyMatch(_ query: XCUIElementQuery, timeout: TimeInterval = 10) -> Bool {
+        if query.count > 0 { return true }
         let deadline = Date().addingTimeInterval(timeout)
         while Date() < deadline {
+            RunLoop.current.run(until: Date().addingTimeInterval(0.5))
             if query.count > 0 {
                 return true
             }
-            RunLoop.current.run(until: Date().addingTimeInterval(0.1))
         }
         return false
     }

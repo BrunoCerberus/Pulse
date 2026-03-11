@@ -35,20 +35,26 @@ final class MediaUITests: BaseUITestCase {
     func testMediaTabShowsSegmentedControl() {
         navigateToMediaTab()
 
-        // Wait for content to load (CI can be slow to render segmented control)
-        wait(for: 2.0)
+        // Wait for Media tab to fully render before querying UI elements.
+        // On CI shared runners, rapid .exists polling can trigger Xcode 26 C++ exception
+        // crashes ("Timed out while evaluating UI query"), so we give the view enough time
+        // to stabilize and then check a single element to minimize UI query pressure.
+        wait(for: 3.0)
 
-        // Check for segmented control buttons with proper wait
+        // Use safeWaitForExistence on a single element to avoid overwhelming the
+        // accessibility framework with multiple concurrent UI queries
         let allButton = app.buttons["All"]
-        let videosButton = app.buttons["Videos"]
-        let podcastsButton = app.buttons["Podcasts"]
+        let segmentedControlExists = safeWaitForExistence(allButton, timeout: Self.defaultTimeout)
 
-        // At least one should exist - use waitForAny for CI reliability
-        let segmentedControlExists = waitForAny(
-            [allButton, videosButton, podcastsButton],
-            timeout: Self.defaultTimeout
-        )
-        XCTAssertTrue(segmentedControlExists, "Media segmented control should be visible")
+        if !segmentedControlExists {
+            // Fallback: check other segment buttons individually (single snapshot each)
+            let videosButton = app.buttons["Videos"]
+            let podcastsButton = app.buttons["Podcasts"]
+            XCTAssertTrue(
+                videosButton.exists || podcastsButton.exists,
+                "Media segmented control should be visible"
+            )
+        }
     }
 
     // MARK: - Media Type Filter Tests
