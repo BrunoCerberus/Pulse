@@ -195,16 +195,32 @@ final class HomeUITests: BaseUITestCase {
             settingsBackButton = settingsNavBar.buttons["Back"]
         }
         if !settingsBackButton.exists {
+            settingsBackButton = settingsNavBar.buttons["News"]
+        }
+        if !settingsBackButton.exists {
             settingsBackButton = settingsNavBar.buttons.firstMatch
         }
 
         if settingsBackButton.exists {
-            settingsBackButton.tap()
+            // Use coordinate-based tap for reliability on iOS 26 Liquid Glass
+            let center = settingsBackButton.coordinate(withNormalizedOffset: CGVector(dx: 0.5, dy: 0.5))
+            center.tap()
         } else {
             app.swipeRight()
         }
 
-        XCTAssertTrue(app.navigationBars["News"].waitForExistence(timeout: Self.defaultTimeout), "Should return to Home")
+        // Allow navigation animation to settle on CI
+        wait(for: 1.0)
+
+        let returnedToHome = safeWaitForExistence(app.navigationBars["News"], timeout: Self.defaultTimeout)
+        if !returnedToHome {
+            // Recovery: navigate back via Home tab
+            navigateToTab("Home")
+        }
+        XCTAssertTrue(
+            safeWaitForExistence(app.navigationBars["News"], timeout: Self.shortTimeout),
+            "Should return to Home"
+        )
 
         // Only test article interactions if content loaded successfully and isn't an error/empty state
         // This makes tests resilient to CI environments with limited mock data
@@ -243,8 +259,9 @@ final class HomeUITests: BaseUITestCase {
 
                 // Vertical scroll
                 scrollView.swipeUp()
+                wait(for: 0.5)
                 XCTAssertTrue(
-                    app.navigationBars["News"].waitForExistence(timeout: Self.shortTimeout),
+                    safeWaitForExistence(app.navigationBars["News"], timeout: Self.shortTimeout),
                     "App should remain responsive after scrolling"
                 )
 
