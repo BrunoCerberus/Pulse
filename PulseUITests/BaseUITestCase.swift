@@ -118,6 +118,10 @@ class BaseUITestCase: XCTestCase {
         // rather than crashing the test runner.
         if let app, app.state != .notRunning {
             app.terminate()
+            // Wait for termination to complete before next test starts.
+            // "Failed to terminate" errors in CI happen when the next test's launch()
+            // runs before the previous instance fully exits.
+            _ = app.wait(for: .notRunning, timeout: 10)
         }
     }
 
@@ -399,26 +403,32 @@ class BaseUITestCase: XCTestCase {
         return true
     }
 
-    /// Wait for any of the provided elements to exist - efficient predicate-based waiting
+    /// Wait for any of the provided elements to exist.
+    /// Uses 0.5s polling interval to reduce UI query pressure on CI shared runners,
+    /// where rapid .exists calls can trigger Xcode 26 C++ exception crashes
+    /// ("Timed out while evaluating UI query").
     func waitForAny(_ elements: [XCUIElement], timeout: TimeInterval = 10) -> Bool {
+        // Check immediately before entering the polling loop
+        if elements.contains(where: { $0.exists }) { return true }
         let deadline = Date().addingTimeInterval(timeout)
         while Date() < deadline {
+            RunLoop.current.run(until: Date().addingTimeInterval(0.5))
             if elements.contains(where: { $0.exists }) {
                 return true
             }
-            RunLoop.current.run(until: Date().addingTimeInterval(0.1))
         }
         return false
     }
 
     /// Wait for any element matching query to exist
     func waitForAnyMatch(_ query: XCUIElementQuery, timeout: TimeInterval = 10) -> Bool {
+        if query.count > 0 { return true }
         let deadline = Date().addingTimeInterval(timeout)
         while Date() < deadline {
+            RunLoop.current.run(until: Date().addingTimeInterval(0.5))
             if query.count > 0 {
                 return true
             }
-            RunLoop.current.run(until: Date().addingTimeInterval(0.1))
         }
         return false
     }
@@ -457,13 +467,33 @@ class BaseUITestCase: XCTestCase {
         return safeWaitForExistence(app.buttons["backButton"], timeout: 1)
     }
 
-    /// Navigate back from current view
-    func navigateBack() {
+    /// Navigate back from current view with post-navigation wait for CI stability
+    func navigateBack(waitForNavBar navBarTitle: String? = nil, timeout: TimeInterval = 15) {
         let backButton = app.buttons["backButton"]
         if backButton.exists {
-            backButton.tap()
+            let center = backButton.coordinate(withNormalizedOffset: CGVector(dx: 0.5, dy: 0.5))
+            center.tap()
         } else {
             app.swipeRight()
+        }
+
+        // Wait for navigation animation to settle (critical on slow CI runners)
+        wait(for: 0.5)
+
+        // If a target nav bar was specified, wait for it to appear with retry
+        if let navBarTitle {
+            if !safeWaitForExistence(app.navigationBars[navBarTitle], timeout: timeout) {
+                // Recovery: try navigating back again (tap may have been swallowed)
+                let retryBack = app.buttons["backButton"]
+                if retryBack.exists {
+                    let center = retryBack.coordinate(withNormalizedOffset: CGVector(dx: 0.5, dy: 0.5))
+                    center.tap()
+                    wait(for: 0.5)
+                } else {
+                    app.swipeRight()
+                    wait(for: 0.5)
+                }
+            }
         }
     }
 

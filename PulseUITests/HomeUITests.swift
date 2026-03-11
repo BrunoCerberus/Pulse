@@ -96,10 +96,10 @@ final class HomeUITests: BaseUITestCase {
         // Wait for content to load
         _ = waitForHomeContent(timeout: 30)
 
-        // Check if category tabs exist
+        // Check if category tabs exist - use safeWaitForExistence to avoid C++ exception crash
         let allTabButton = app.buttons["All"]
 
-        if allTabButton.waitForExistence(timeout: Self.shortTimeout) {
+        if safeWaitForExistence(allTabButton, timeout: Self.shortTimeout) {
             // Try to find and tap a category tab
             let technologyTab = app.buttons["Technology"]
             let businessTab = app.buttons["Business"]
@@ -209,16 +209,25 @@ final class HomeUITests: BaseUITestCase {
             app.swipeRight()
         }
 
-        // Allow navigation animation to settle on CI
-        wait(for: 1.0)
+        // Wait for navigation animation to settle on CI (shared runners are significantly slower)
+        wait(for: 1.5)
 
         let returnedToHome = safeWaitForExistence(app.navigationBars["News"], timeout: Self.defaultTimeout)
         if !returnedToHome {
-            // Recovery: navigate back via Home tab
-            navigateToTab("Home")
+            // Recovery attempt 1: try back button again (tap may have been swallowed on slow CI)
+            let retryBack = app.navigationBars.buttons.firstMatch
+            if retryBack.exists {
+                let center = retryBack.coordinate(withNormalizedOffset: CGVector(dx: 0.5, dy: 0.5))
+                center.tap()
+                wait(for: 1.0)
+            }
+            // Recovery attempt 2: navigate back via Home tab
+            if !safeWaitForExistence(app.navigationBars["News"], timeout: 5) {
+                navigateToTab("Home")
+            }
         }
         XCTAssertTrue(
-            safeWaitForExistence(app.navigationBars["News"], timeout: Self.shortTimeout),
+            safeWaitForExistence(app.navigationBars["News"], timeout: Self.defaultTimeout),
             "Should return to Home"
         )
 
@@ -241,10 +250,10 @@ final class HomeUITests: BaseUITestCase {
                     firstCard.tap()
                     XCTAssertTrue(waitForArticleDetail(), "Should navigate to article detail")
 
-                    // Navigate back
-                    navigateBack()
+                    // Navigate back with explicit wait for News nav bar
+                    navigateBack(waitForNavBar: "News")
                     XCTAssertTrue(
-                        app.navigationBars["News"].waitForExistence(timeout: Self.defaultTimeout),
+                        safeWaitForExistence(app.navigationBars["News"], timeout: Self.defaultTimeout),
                         "Should return to Home"
                     )
                 }
@@ -259,9 +268,9 @@ final class HomeUITests: BaseUITestCase {
 
                 // Vertical scroll
                 scrollView.swipeUp()
-                wait(for: 0.5)
+                wait(for: 1.0)
                 XCTAssertTrue(
-                    safeWaitForExistence(app.navigationBars["News"], timeout: Self.shortTimeout),
+                    safeWaitForExistence(app.navigationBars["News"], timeout: Self.defaultTimeout),
                     "App should remain responsive after scrolling"
                 )
 

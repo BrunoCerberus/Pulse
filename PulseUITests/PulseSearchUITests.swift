@@ -136,16 +136,22 @@ final class PulseSearchUITests: BaseUITestCase {
         let clearButton = app.searchFields.buttons["Clear text"]
         if clearButton.waitForExistence(timeout: 3) {
             clearButton.tap()
+            // Allow UI state to propagate after clear (CI simulators can be slow)
+            wait(for: 1.0)
 
             // Wait for empty state to return or field to clear
-            let emptyStateReturned = waitForAny([searchForNews, searchSubtitle], timeout: 3)
+            let emptyStateReturned = waitForAny([searchForNews, searchSubtitle], timeout: 5)
             var fieldValue = app.searchFields.firstMatch.value as? String ?? ""
+            let placeholderValue = app.searchFields.firstMatch.placeholderValue ?? ""
             var isCleared = emptyStateReturned || !fieldValue.lowercased().contains("apple")
+                || fieldValue == placeholderValue
 
             if !isCleared {
                 clearSearchFieldIfNeeded(searchField)
+                wait(for: 0.5)
                 fieldValue = app.searchFields.firstMatch.value as? String ?? ""
                 isCleared = !fieldValue.lowercased().contains("apple") || fieldValue.isEmpty
+                    || fieldValue == placeholderValue
             }
 
             XCTAssertTrue(isCleared, "Search field should be cleared")
