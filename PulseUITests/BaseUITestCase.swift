@@ -54,8 +54,21 @@ class BaseUITestCase: XCTestCase {
 
         app.launch()
 
-        // Launch verification - uses longer timeout as app startup takes time
-        _ = app.wait(for: .runningForeground, timeout: Self.launchTimeout)
+        // If the app didn't reach foreground (e.g., previous instance failed to terminate),
+        // retry with a fresh XCUIApplication instance
+        if !app.wait(for: .runningForeground, timeout: Self.launchTimeout) {
+            app = XCUIApplication()
+            app.launchEnvironment["UI_TESTING"] = "1"
+            app.launchEnvironment["DISABLE_ANIMATIONS"] = "1"
+            app.launchArguments += ["-UIViewAnimationDuration", "0.01"]
+            app.launchArguments += ["-CATransactionAnimationDuration", "0.01"]
+            app.launchArguments += ["-pulse.hasCompletedOnboarding", "YES"]
+            app.launchArguments += ["-AppleLanguages", "(en)"]
+            app.launchArguments += ["-AppleLocale", "en_US"]
+            configureLaunchEnvironment()
+            app.launch()
+            _ = app.wait(for: .runningForeground, timeout: Self.launchTimeout)
+        }
 
         // Wait for UI to stabilize after launch
         // CI cold starts need more time for accessibility services to be ready
@@ -98,10 +111,14 @@ class BaseUITestCase: XCTestCase {
     override func tearDown() {
         defer { app = nil }
         XCUIDevice.shared.orientation = .portrait
-        // Do NOT call app.terminate() — on Xcode 26+ it triggers internal
-        // accessibility snapshot queries that throw uncatchable C++ exceptions,
-        // crashing the test runner. XCTest handles app lifecycle automatically
-        // between tests, so explicit termination is unnecessary.
+        // Terminate the app explicitly to prevent "Failed to terminate" errors
+        // in the next test's setUp when app.launch() tries to kill a lingering instance.
+        // With continueAfterFailure = true, any C++ exception from Xcode 26's
+        // accessibility queries during termination is recorded as a non-fatal issue
+        // rather than crashing the test runner.
+        if let app, app.state != .notRunning {
+            app.terminate()
+        }
     }
 
     // MARK: - Subclass Hooks

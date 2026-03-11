@@ -21,7 +21,7 @@ jobs:
     - name: Setup Xcode
       uses: maxim-lobanov/setup-xcode@60606e260d2fc5762a71e64e74b2174e8ea3c8bd # v1
       with:
-        xcode-version: '26.2'
+        xcode-version: '26.3'
 
     # Cache Homebrew packages
     # Note: Static version key (brew-v1) - increment manually when brew dependencies change
@@ -117,7 +117,17 @@ jobs:
     - name: Setup Xcode
       uses: maxim-lobanov/setup-xcode@60606e260d2fc5762a71e64e74b2174e8ea3c8bd # v1
       with:
-        xcode-version: '26.2'
+        xcode-version: '26.3'
+
+    - name: Install iOS Simulator Runtime
+      run: |
+        echo "Installing iOS simulator runtime..."
+        # Initialize CoreSimulator service before downloading
+        xcrun simctl list runtimes > /dev/null 2>&1 || true
+        sleep 5
+        xcodebuild -downloadPlatform iOS
+        echo "Available iOS simulator runtimes:"
+        xcrun simctl list runtimes | grep iOS
 
     # Cache Homebrew packages
     # Note: Static version key (brew-v1) - increment manually when brew dependencies change
@@ -174,8 +184,8 @@ jobs:
 
     - name: Pre-boot simulator
       run: |
-        echo "Pre-booting simulator..."
-        xcrun simctl boot "iPhone Air" || echo "Simulator already booted or unavailable"
+        chmod +x scripts/boot-simulator.sh
+        ./scripts/boot-simulator.sh "iPhone Air" 30
 
     - name: Build for testing (PulseDev)
       run: |
@@ -183,7 +193,7 @@ jobs:
         xcodebuild build-for-testing \
           -project Pulse.xcodeproj \
           -scheme PulseDev \
-          -destination 'platform=iOS Simulator,name=iPhone Air,OS=26.2' \
+          -destination 'platform=iOS Simulator,name=iPhone Air,OS=latest' \
           -derivedDataPath ./DerivedData \
           -skipMacroValidation \
           ENABLE_ONLY_ACTIVE_RESOURCES=NO
@@ -194,7 +204,7 @@ jobs:
         xcodebuild build-for-testing \
           -project Pulse.xcodeproj \
           -scheme PulseSnapshotTests \
-          -destination 'platform=iOS Simulator,name=iPhone Air,OS=26.2' \
+          -destination 'platform=iOS Simulator,name=iPhone Air,OS=latest' \
           -derivedDataPath ./DerivedData \
           -skipMacroValidation \
           ENABLE_ONLY_ACTIVE_RESOURCES=NO
@@ -237,7 +247,17 @@ jobs:
     - name: Setup Xcode
       uses: maxim-lobanov/setup-xcode@60606e260d2fc5762a71e64e74b2174e8ea3c8bd # v1
       with:
-        xcode-version: '26.2'
+        xcode-version: '26.3'
+
+    - name: Install iOS Simulator Runtime
+      run: |
+        echo "Installing iOS simulator runtime..."
+        # Initialize CoreSimulator service before downloading
+        xcrun simctl list runtimes > /dev/null 2>&1 || true
+        sleep 5
+        xcodebuild -downloadPlatform iOS
+        echo "Available iOS simulator runtimes:"
+        xcrun simctl list runtimes | grep iOS
 
     # Cache Homebrew packages
     # Note: Static version key (brew-v1) - increment manually when brew dependencies change
@@ -280,8 +300,8 @@ jobs:
 
     - name: Pre-boot simulator
       run: |
-        echo "Pre-booting simulator..."
-        xcrun simctl boot "iPhone Air" || echo "Simulator already booted or unavailable"
+        chmod +x scripts/boot-simulator.sh
+        ./scripts/boot-simulator.sh "iPhone Air" 30
 
     - name: Run ${{ matrix.test-name }}
       timeout-minutes: ${{ matrix.timeout }}
@@ -293,7 +313,7 @@ jobs:
           -project Pulse.xcodeproj \
           -scheme ${{ matrix.scheme }} \
           -only-testing:${{ matrix.test-target }} \
-          -destination 'platform=iOS Simulator,name=iPhone Air,OS=26.2' \
+          -destination 'platform=iOS Simulator,name=iPhone Air,OS=latest' \
           -derivedDataPath ./DerivedData \
           -resultBundlePath test-results/${{ matrix.artifact-name }}.xcresult \
           -disableAutomaticPackageResolution \
