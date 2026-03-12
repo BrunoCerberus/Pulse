@@ -48,8 +48,13 @@ final class ArticleDetailUITests: BaseUITestCase {
         }
 
         // --- Toolbar Buttons ---
+        // Use safeWaitForExistence to allow toolbar items time to load into the accessibility
+        // hierarchy after the scroll view appears (toolbar loads asynchronously on iOS 26)
         let backButton = app.buttons["backButton"]
-        XCTAssertTrue(backButton.exists, "Back button should exist in navigation bar")
+        XCTAssertTrue(
+            safeWaitForExistence(backButton, timeout: 3),
+            "Back button should exist in navigation bar"
+        )
 
         let bookmarkButton = app.navigationBars.buttons["bookmark"]
         let bookmarkFilledButton = app.navigationBars.buttons["bookmark.fill"]

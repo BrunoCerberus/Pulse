@@ -80,9 +80,11 @@ final class HomeUITests: BaseUITestCase {
 
         // Check if category tabs are visible (look for "All" button which is always present when tabs are shown)
         let allTabButton = app.buttons["All"]
-        if allTabButton.waitForExistence(timeout: Self.shortTimeout) {
+        if safeWaitForExistence(allTabButton, timeout: Self.shortTimeout) {
             // Category tabs are visible - test interaction
-            allTabButton.tap()
+            // Use coordinate-based tap to avoid Xcode 26 C++ exception crash from element lookup
+            let center = allTabButton.coordinate(withNormalizedOffset: CGVector(dx: 0.5, dy: 0.5))
+            center.tap()
 
             // Verify app remains responsive
             XCTAssertTrue(app.navigationBars["News"].exists, "App should remain on Home after tapping All tab")
