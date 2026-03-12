@@ -23,14 +23,26 @@ xcrun simctl shutdown all 2>/dev/null || true
 # 2. Find the device UDID
 echo "Looking up simulator UDID..."
 UDID=$(xcrun simctl list devices available -j | python3 -c "
-import json, sys
+import json, sys, re
 data = json.load(sys.stdin)
+best_udid = None
+best_version = (0, 0, 0)
 for runtime, devices in data.get('devices', {}).items():
-    if 'iOS' in runtime:
-        for d in devices:
-            if d['name'] == '${DEVICE_NAME}' and d['isAvailable']:
-                print(d['udid'])
-                sys.exit(0)
+    if 'iOS' not in runtime:
+        continue
+    # Extract version from runtime identifier (e.g. 'com.apple.CoreSimulator.SimRuntime.iOS-26-3')
+    m = re.search(r'iOS[- ](\d+)[.-](\d+)(?:[.-](\d+))?', runtime)
+    if not m:
+        continue
+    version = (int(m.group(1)), int(m.group(2)), int(m.group(3) or 0))
+    for d in devices:
+        if d['name'] == '${DEVICE_NAME}' and d['isAvailable']:
+            if version >= best_version:
+                best_version = version
+                best_udid = d['udid']
+if best_udid:
+    print(best_udid)
+    sys.exit(0)
 sys.exit(1)
 ") || {
     echo "ERROR: '$DEVICE_NAME' simulator not found!"
