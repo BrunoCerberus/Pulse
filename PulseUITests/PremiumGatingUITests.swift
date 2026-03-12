@@ -11,7 +11,7 @@ final class PremiumGatingNonPremiumUITests: BaseUITestCase {
     func testFeedTabShowsPremiumGateForNonPremiumUser() {
         // Navigate to Feed tab
         let feedTab = app.tabBars.buttons["Feed"]
-        XCTAssertTrue(feedTab.waitForExistence(timeout: Self.launchTimeout), "Feed tab should exist")
+        XCTAssertTrue(feedTab.safeWaitForExistence(timeout: Self.launchTimeout), "Feed tab should exist")
 
         navigateToFeedTab()
 
@@ -32,7 +32,7 @@ final class PremiumGatingNonPremiumUITests: BaseUITestCase {
     func testFeedUnlockButtonShowsPaywall() {
         // Ensure tab bar is ready before navigation
         let feedTab = app.tabBars.buttons["Feed"]
-        XCTAssertTrue(feedTab.waitForExistence(timeout: Self.launchTimeout), "Feed tab should exist")
+        XCTAssertTrue(feedTab.safeWaitForExistence(timeout: Self.launchTimeout), "Feed tab should exist")
 
         navigateToFeedTab()
 
@@ -40,7 +40,7 @@ final class PremiumGatingNonPremiumUITests: BaseUITestCase {
         wait(for: 1.0)
 
         let unlockButton = app.buttons["unlockPremiumButton"]
-        guard unlockButton.waitForExistence(timeout: 10) else {
+        guard unlockButton.safeWaitForExistence(timeout: 10) else {
             XCTFail("unlockPremiumButton should exist for non-premium user")
             return
         }
@@ -51,7 +51,7 @@ final class PremiumGatingNonPremiumUITests: BaseUITestCase {
         let paywallTitle = app.staticTexts["Unlock Premium"]
         let subscriptionView = app.scrollViews.firstMatch
 
-        let paywallAppeared = paywallTitle.waitForExistence(timeout: 5) || subscriptionView.waitForExistence(timeout: 5)
+        let paywallAppeared = paywallTitle.safeWaitForExistence(timeout: 5) || subscriptionView.safeWaitForExistence(timeout: 5)
         XCTAssertTrue(paywallAppeared, "Paywall should appear after tapping Unlock Premium")
 
         // Dismiss the sheet
@@ -71,7 +71,7 @@ final class PremiumGatingNonPremiumUITests: BaseUITestCase {
 
         // Find and tap the summarize button
         let summarizeButton = app.buttons["summarizeButton"]
-        guard summarizeButton.waitForExistence(timeout: 5) else {
+        guard summarizeButton.safeWaitForExistence(timeout: 5) else {
             XCTFail("Summarize button should exist in article detail")
             return
         }
@@ -82,7 +82,7 @@ final class PremiumGatingNonPremiumUITests: BaseUITestCase {
         let paywallTitle = app.staticTexts["Unlock Premium"]
         let subscriptionView = app.scrollViews.firstMatch
 
-        let paywallAppeared = paywallTitle.waitForExistence(timeout: 5) || subscriptionView.waitForExistence(timeout: 5)
+        let paywallAppeared = paywallTitle.safeWaitForExistence(timeout: 5) || subscriptionView.safeWaitForExistence(timeout: 5)
         XCTAssertTrue(paywallAppeared, "Paywall should appear when non-premium user taps summarize")
 
         // Dismiss the sheet
@@ -98,7 +98,7 @@ final class PremiumGatingNonPremiumUITests: BaseUITestCase {
 
         // Wait for articles to load
         let topHeadlinesHeader = app.staticTexts["Top Headlines"]
-        guard topHeadlinesHeader.waitForExistence(timeout: 10) else {
+        guard topHeadlinesHeader.safeWaitForExistence(timeout: 10) else {
             return false
         }
 
@@ -112,7 +112,7 @@ final class PremiumGatingNonPremiumUITests: BaseUITestCase {
         }
 
         let firstCard = articleCardsQuery.firstMatch
-        guard firstCard.waitForExistence(timeout: 5) else {
+        guard firstCard.safeWaitForExistence(timeout: 5) else {
             return false
         }
 
@@ -140,7 +140,7 @@ final class PremiumGatingPremiumUITests: BaseUITestCase {
     func testFeedTabShowsContentForPremiumUser() {
         // Navigate to Feed tab
         let feedTab = app.tabBars.buttons["Feed"]
-        XCTAssertTrue(feedTab.waitForExistence(timeout: Self.launchTimeout), "Feed tab should exist")
+        XCTAssertTrue(feedTab.safeWaitForExistence(timeout: Self.launchTimeout), "Feed tab should exist")
 
         navigateToFeedTab()
 
@@ -176,7 +176,7 @@ final class PremiumGatingPremiumUITests: BaseUITestCase {
 
         // Find and tap the summarize button
         let summarizeButton = app.buttons["summarizeButton"]
-        guard summarizeButton.waitForExistence(timeout: 5) else {
+        guard summarizeButton.safeWaitForExistence(timeout: 5) else {
             XCTFail("Summarize button should exist in article detail")
             return
         }
@@ -185,7 +185,7 @@ final class PremiumGatingPremiumUITests: BaseUITestCase {
 
         // Should see summarization sheet, NOT paywall
         let paywallTitle = app.staticTexts["Unlock Premium"]
-        XCTAssertFalse(paywallTitle.waitForExistence(timeout: 2), "Premium user should not see paywall")
+        XCTAssertFalse(paywallTitle.safeWaitForExistence(timeout: 2), "Premium user should not see paywall")
 
         // Should see summarization UI elements (various states possible)
         let summarizeTitle = app.staticTexts["Summarize"]
@@ -241,12 +241,12 @@ final class PremiumGatingPremiumUITests: BaseUITestCase {
             firstCard = articleCardsById.firstMatch
         }
 
-        guard let card = firstCard, card.waitForExistence(timeout: 10) else {
+        guard let card = firstCard, card.safeWaitForExistence(timeout: 10) else {
             return false
         }
 
         // Scroll to make card hittable if needed
-        if !card.isHittable {
+        if !card.exists {
             scrollView.swipeUp()
             wait(for: 0.3)
         }

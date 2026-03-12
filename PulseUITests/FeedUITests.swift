@@ -43,7 +43,7 @@ final class FeedUITests: BaseUITestCase {
 
         let navTitle = app.navigationBars["Daily Digest"]
         XCTAssertTrue(
-            navTitle.waitForExistence(timeout: Self.defaultTimeout),
+            navTitle.safeWaitForExistence(timeout: Self.defaultTimeout),
             "Navigation title 'Daily Digest' should exist"
         )
 
@@ -88,15 +88,15 @@ final class FeedUITests: BaseUITestCase {
 
         // --- Tab Switching ---
         let homeTab = app.tabBars.buttons["Home"]
-        XCTAssertTrue(homeTab.waitForExistence(timeout: Self.shortTimeout), "Home tab should exist")
+        XCTAssertTrue(homeTab.safeWaitForExistence(timeout: Self.shortTimeout), "Home tab should exist")
         homeTab.tap()
 
         let homeNav = app.navigationBars["News"]
-        XCTAssertTrue(homeNav.waitForExistence(timeout: Self.defaultTimeout), "Home should load")
+        XCTAssertTrue(homeNav.safeWaitForExistence(timeout: Self.defaultTimeout), "Home should load")
 
         navigateToFeed()
         XCTAssertTrue(
-            navTitle.waitForExistence(timeout: Self.defaultTimeout),
+            navTitle.safeWaitForExistence(timeout: Self.defaultTimeout),
             "Feed should be visible after tab switch"
         )
 
@@ -104,11 +104,11 @@ final class FeedUITests: BaseUITestCase {
         let scrollView = app.scrollViews.firstMatch
         if scrollView.exists {
             scrollView.swipeDown()
-            _ = navTitle.waitForExistence(timeout: Self.shortTimeout)
+            _ = navTitle.safeWaitForExistence(timeout: Self.shortTimeout)
         }
 
         XCTAssertTrue(
-            navTitle.waitForExistence(timeout: Self.shortTimeout),
+            navTitle.safeWaitForExistence(timeout: Self.shortTimeout),
             "View should remain functional after refresh"
         )
     }
@@ -117,7 +117,7 @@ final class FeedUITests: BaseUITestCase {
 
     func testFeedTabPosition() {
         let tabBar = app.tabBars.firstMatch
-        XCTAssertTrue(tabBar.waitForExistence(timeout: Self.launchTimeout), "Tab bar should exist")
+        XCTAssertTrue(tabBar.safeWaitForExistence(timeout: Self.launchTimeout), "Tab bar should exist")
 
         // Verify Feed tab exists and is in the correct position
         let tabButtons = tabBar.buttons.allElementsBoundByIndex
@@ -164,7 +164,7 @@ final class FeedUITests: BaseUITestCase {
             if buttonCount > 0 {
                 // Tap the first available source article
                 let firstButton = chevronButtons.element(boundBy: 0)
-                if safeWaitForExistence(firstButton, timeout: Self.shortTimeout), firstButton.isHittable {
+                if safeWaitForExistence(firstButton, timeout: Self.shortTimeout) {
                     firstButton.tap()
 
                     // Check if we navigated to article detail
@@ -197,7 +197,7 @@ final class FeedUITests: BaseUITestCase {
         // If we see a generate button (when digest not yet generated), test it
         let generateButton = app.buttons.matching(NSPredicate(format: "label CONTAINS[c] 'Generate'")).firstMatch
 
-        if generateButton.waitForExistence(timeout: Self.shortTimeout), generateButton.isHittable {
+        if generateButton.safeWaitForExistence(timeout: Self.shortTimeout) {
             generateButton.tap()
 
             // Should see some indication of generation starting

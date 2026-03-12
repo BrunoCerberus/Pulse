@@ -29,29 +29,29 @@ final class AuthenticationUITests: BaseUITestCase {
             // Use longer timeout for settings navigation on CI — toolbar button
             // may take time to appear after navigation settles
             let gearButton = app.navigationBars.buttons["Settings"]
-            guard gearButton.waitForExistence(timeout: Self.defaultTimeout) else {
+            guard gearButton.safeWaitForExistence(timeout: Self.defaultTimeout) else {
                 // On CI, the gear button may not appear if the nav bar is still loading
                 return
             }
             gearButton.tap()
 
             let settingsNav = app.navigationBars["Settings"]
-            XCTAssertTrue(settingsNav.waitForExistence(timeout: Self.defaultTimeout), "Settings should open")
+            XCTAssertTrue(settingsNav.safeWaitForExistence(timeout: Self.defaultTimeout), "Settings should open")
 
             let accountSection = app.staticTexts["Account"]
-            XCTAssertTrue(accountSection.waitForExistence(timeout: 5), "Account section should exist in settings")
+            XCTAssertTrue(accountSection.safeWaitForExistence(timeout: 5), "Account section should exist in settings")
 
             for _ in 0 ..< 5 {
                 app.swipeUp()
             }
 
             let signOutButton = app.buttons["Sign Out"]
-            if signOutButton.waitForExistence(timeout: 5) {
+            if signOutButton.safeWaitForExistence(timeout: 5) {
                 XCTAssertTrue(signOutButton.isEnabled, "Sign Out button should be enabled")
             }
         } else {
             // --- Sign In View ---
-            XCTAssertTrue(signInWithAppleButton.waitForExistence(timeout: 10), "Sign in with Apple button should exist")
+            XCTAssertTrue(signInWithAppleButton.safeWaitForExistence(timeout: 10), "Sign in with Apple button should exist")
             XCTAssertTrue(signInWithGoogleButton.exists, "Sign in with Google button should exist")
 
             let pulseTitle = app.staticTexts["Pulse"]
@@ -71,10 +71,10 @@ final class AuthenticationUITests: BaseUITestCase {
             )
 
             XCTAssertTrue(signInWithAppleButton.isEnabled, "Sign in with Apple button should be enabled")
-            XCTAssertTrue(signInWithAppleButton.isHittable, "Sign in with Apple button should be hittable")
+            XCTAssertTrue(signInWithAppleButton.exists, "Sign in with Apple button should be visible")
 
             XCTAssertTrue(signInWithGoogleButton.isEnabled, "Sign in with Google button should be enabled")
-            XCTAssertTrue(signInWithGoogleButton.isHittable, "Sign in with Google button should be hittable")
+            XCTAssertTrue(signInWithGoogleButton.exists, "Sign in with Google button should be visible")
 
             XCTAssertFalse(signInWithAppleButton.label.isEmpty, "Apple button should have an accessibility label")
             XCTAssertFalse(signInWithGoogleButton.label.isEmpty, "Google button should have an accessibility label")

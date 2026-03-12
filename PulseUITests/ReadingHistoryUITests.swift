@@ -16,11 +16,11 @@ final class ReadingHistoryUITests: BaseUITestCase {
     private func findReadingHistoryRow() -> XCUIElement? {
         // Strategy 1: Button with label (NavigationLink renders as button)
         let button = app.buttons.matching(NSPredicate(format: "label CONTAINS[c] 'Reading History'")).firstMatch
-        if button.waitForExistence(timeout: 3) { return button }
+        if button.safeWaitForExistence(timeout: 3) { return button }
 
         // Strategy 2: Static text (some iOS versions expose Label text directly)
         let text = app.staticTexts["Reading History"]
-        if text.waitForExistence(timeout: 2) { return text }
+        if text.safeWaitForExistence(timeout: 2) { return text }
 
         return nil
     }
@@ -34,7 +34,7 @@ final class ReadingHistoryUITests: BaseUITestCase {
         navigateToSettings()
 
         let settingsNav = app.navigationBars["Settings"]
-        XCTAssertTrue(settingsNav.waitForExistence(timeout: Self.defaultTimeout), "Should be on Settings")
+        XCTAssertTrue(settingsNav.safeWaitForExistence(timeout: Self.defaultTimeout), "Should be on Settings")
 
         // Wait for Settings list to stabilize on CI
         wait(for: 1.0)
@@ -59,17 +59,16 @@ final class ReadingHistoryUITests: BaseUITestCase {
         }
 
         // Ensure element is hittable before tapping
-        if !row.isHittable {
-            container.swipeUp()
-            wait(for: 0.3)
-        }
+        // Scroll to ensure row is visible before tapping
+        container.swipeUp()
+        wait(for: 0.3)
 
         row.tap()
 
         // --- Verify Reading History screen ---
         let readingHistoryNav = app.navigationBars["Reading History"]
         XCTAssertTrue(
-            readingHistoryNav.waitForExistence(timeout: Self.defaultTimeout),
+            readingHistoryNav.safeWaitForExistence(timeout: Self.defaultTimeout),
             "Navigation title 'Reading History' should exist"
         )
 
@@ -91,17 +90,17 @@ final class ReadingHistoryUITests: BaseUITestCase {
         if scrollView.exists, !noHistoryText.exists {
             let cards = articleCards()
 
-            if cards.firstMatch.waitForExistence(timeout: Self.defaultTimeout), cards.count > 0 {
+            if cards.firstMatch.safeWaitForExistence(timeout: Self.defaultTimeout), cards.count > 0 {
                 let firstCard = cards.firstMatch
 
-                if firstCard.isHittable {
+                if firstCard.exists {
                     firstCard.tap()
 
                     let detailBack = app.buttons["backButton"]
-                    if detailBack.waitForExistence(timeout: Self.defaultTimeout) {
+                    if detailBack.safeWaitForExistence(timeout: Self.defaultTimeout) {
                         detailBack.tap()
                         XCTAssertTrue(
-                            readingHistoryNav.waitForExistence(timeout: Self.defaultTimeout),
+                            readingHistoryNav.safeWaitForExistence(timeout: Self.defaultTimeout),
                             "Should return to Reading History"
                         )
                     }
@@ -112,13 +111,13 @@ final class ReadingHistoryUITests: BaseUITestCase {
         // --- Clear button interaction ---
         let trashButton = readingHistoryNav.buttons["trash"]
 
-        if trashButton.waitForExistence(timeout: 3) {
+        if trashButton.safeWaitForExistence(timeout: 3) {
             trashButton.tap()
 
             let clearHistoryAlert = app.alerts.firstMatch
-            if clearHistoryAlert.waitForExistence(timeout: 3) {
+            if clearHistoryAlert.safeWaitForExistence(timeout: 3) {
                 let cancelButton = clearHistoryAlert.buttons["Cancel"]
-                if cancelButton.waitForExistence(timeout: 2) {
+                if cancelButton.safeWaitForExistence(timeout: 2) {
                     cancelButton.tap()
                 }
             }
@@ -128,6 +127,6 @@ final class ReadingHistoryUITests: BaseUITestCase {
         navigateBack()
 
         let settingsNavAfter = app.navigationBars["Settings"]
-        XCTAssertTrue(settingsNavAfter.waitForExistence(timeout: Self.defaultTimeout), "Should return to Settings")
+        XCTAssertTrue(settingsNavAfter.safeWaitForExistence(timeout: Self.defaultTimeout), "Should return to Settings")
     }
 }

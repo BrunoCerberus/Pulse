@@ -9,14 +9,14 @@ final class NavigationUITests: BaseUITestCase {
     func testNavigationFlow() {
         // --- Tab Bar Exists ---
         let tabBar = app.tabBars.firstMatch
-        XCTAssertTrue(tabBar.waitForExistence(timeout: Self.launchTimeout), "Tab bar should be visible after launch")
+        XCTAssertTrue(tabBar.safeWaitForExistence(timeout: Self.launchTimeout), "Tab bar should be visible after launch")
 
         // --- All Tabs Accessible ---
         let expectedTabs = ["Home", "Feed", "Bookmarks", "Search"]
         for tabName in expectedTabs {
             let tab = tabBar.buttons[tabName]
             XCTAssertTrue(
-                tab.waitForExistence(timeout: Self.defaultTimeout),
+                tab.safeWaitForExistence(timeout: Self.defaultTimeout),
                 "Tab '\(tabName)' should exist in tab bar"
             )
         }
@@ -26,35 +26,35 @@ final class NavigationUITests: BaseUITestCase {
         // Home
         navigateToTab("Home")
         XCTAssertTrue(
-            app.navigationBars["News"].waitForExistence(timeout: Self.defaultTimeout),
+            app.navigationBars["News"].safeWaitForExistence(timeout: Self.defaultTimeout),
             "Home tab should display News navigation bar"
         )
 
         // Feed (Daily Digest)
         navigateToFeedTab()
         XCTAssertTrue(
-            app.navigationBars["Daily Digest"].waitForExistence(timeout: Self.defaultTimeout),
+            app.navigationBars["Daily Digest"].safeWaitForExistence(timeout: Self.defaultTimeout),
             "Feed tab should display Daily Digest navigation bar"
         )
 
         // Bookmarks
         navigateToBookmarksTab()
         XCTAssertTrue(
-            app.navigationBars["Bookmarks"].waitForExistence(timeout: Self.defaultTimeout),
+            app.navigationBars["Bookmarks"].safeWaitForExistence(timeout: Self.defaultTimeout),
             "Bookmarks tab should display Bookmarks navigation bar"
         )
 
         // Return to Home for Settings test
         navigateToTab("Home")
         XCTAssertTrue(
-            app.navigationBars["News"].waitForExistence(timeout: Self.defaultTimeout),
+            app.navigationBars["News"].safeWaitForExistence(timeout: Self.defaultTimeout),
             "Should return to Home tab"
         )
 
         // --- Settings Navigation ---
         navigateToSettings()
         XCTAssertTrue(
-            app.navigationBars["Settings"].waitForExistence(timeout: Self.defaultTimeout),
+            app.navigationBars["Settings"].safeWaitForExistence(timeout: Self.defaultTimeout),
             "Settings should be accessible from Home"
         )
 
@@ -75,13 +75,14 @@ final class NavigationUITests: BaseUITestCase {
             let firstCard = cards.firstMatch
 
             // Use longer timeout for CI - articles may take time to render
-            if firstCard.waitForExistence(timeout: 15) {
-                if !firstCard.isHittable {
-                    app.scrollViews.firstMatch.swipeUp()
-                }
+            if firstCard.safeWaitForExistence(timeout: 15) {
+                // Scroll to ensure card is visible, then use coordinate tap
+                app.scrollViews.firstMatch.swipeUp()
+                wait(for: 0.3)
 
-                if firstCard.isHittable {
-                    firstCard.tap()
+                if firstCard.exists {
+                    let center = firstCard.coordinate(withNormalizedOffset: CGVector(dx: 0.5, dy: 0.5))
+                    center.tap()
                     XCTAssertTrue(waitForArticleDetail(), "Should navigate to article detail")
 
                     navigateBack(waitForNavBar: "News")

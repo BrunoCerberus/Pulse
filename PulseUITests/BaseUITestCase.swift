@@ -1,5 +1,26 @@
 import XCTest
 
+/// Extension that provides a crash-safe alternative to `waitForExistence(timeout:)`.
+///
+/// On Xcode 26, `waitForExistence` uses an internal snapshot comparison loop that can throw
+/// an uncatchable C++ exception ("C++ exception handling detected but the Swift runtime was
+/// compiled with exceptions disabled"), crashing the test runner with SIGABRT.
+///
+/// This extension polls `.exists` (single snapshot per iteration) with RunLoop-based delays,
+/// avoiding the internal loop that triggers the crash.
+extension XCUIElement {
+    @discardableResult
+    func safeWaitForExistence(timeout: TimeInterval) -> Bool {
+        if exists { return true }
+        let deadline = Date().addingTimeInterval(timeout)
+        while Date() < deadline {
+            RunLoop.current.run(until: Date().addingTimeInterval(0.25))
+            if exists { return true }
+        }
+        return false
+    }
+}
+
 /// Base class for UI tests that standardizes launch configuration and isolation.
 @MainActor
 // swiftlint:disable:next type_body_length
@@ -113,16 +134,23 @@ class BaseUITestCase: XCTestCase {
         XCUIDevice.shared.orientation = .portrait
         // Terminate the app explicitly to prevent "Failed to terminate" errors
         // in the next test's setUp when app.launch() tries to kill a lingering instance.
-        // With continueAfterFailure = true, any C++ exception from Xcode 26's
-        // accessibility queries during termination is recorded as a non-fatal issue
-        // rather than crashing the test runner.
-        if let app, app.state != .notRunning {
+        //
+        // On Xcode 26, app.terminate() can trigger a C++ exception that crashes the
+        // test runner. Using XCTExpectFailure around termination absorbs the error
+        // annotation without crashing, preventing cascade failures to subsequent tests.
+        guard let app, app.state != .notRunning else { return }
+
+        // Allow termination to fail without crashing the test runner.
+        // The "Failed to terminate" error from Xcode 26 C++ exceptions is a known
+        // framework issue, not a test failure.
+        XCTExpectFailure("App termination may fail on Xcode 26 due to C++ exception handling") {
             app.terminate()
-            // Wait for termination to complete before next test starts.
-            // "Failed to terminate" errors in CI happen when the next test's launch()
-            // runs before the previous instance fully exits.
-            _ = app.wait(for: .notRunning, timeout: 10)
         }
+        // Wait for termination to complete before next test starts.
+        // "Failed to terminate" errors in CI happen when the next test's launch()
+        // runs before the previous instance fully exits.
+        // Use longer timeout (15s) since CI shared runners can be very slow.
+        _ = app.wait(for: .notRunning, timeout: 15)
     }
 
     // MARK: - Subclass Hooks

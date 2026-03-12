@@ -11,7 +11,7 @@ final class ArticleDetailUITests: BaseUITestCase {
 
         // Wait for articles to load
         let topHeadlinesHeader = app.staticTexts["Top Headlines"]
-        guard topHeadlinesHeader.waitForExistence(timeout: 10) else {
+        guard topHeadlinesHeader.safeWaitForExistence(timeout: 10) else {
             return false
         }
 
@@ -25,7 +25,7 @@ final class ArticleDetailUITests: BaseUITestCase {
         }
 
         let firstCard = articleCards.firstMatch
-        guard firstCard.waitForExistence(timeout: 5) else {
+        guard firstCard.safeWaitForExistence(timeout: 5) else {
             return false
         }
 
@@ -63,18 +63,18 @@ final class ArticleDetailUITests: BaseUITestCase {
         if bookmarkButton.exists {
             bookmarkButton.tap()
             XCTAssertTrue(
-                bookmarkFilledButton.waitForExistence(timeout: 3),
+                bookmarkFilledButton.safeWaitForExistence(timeout: 3),
                 "Bookmark should become filled after tapping"
             )
         } else if bookmarkFilledButton.exists {
             bookmarkFilledButton.tap()
             XCTAssertTrue(
-                bookmarkButton.waitForExistence(timeout: 3),
+                bookmarkButton.safeWaitForExistence(timeout: 3),
                 "Bookmark should become unfilled after tapping"
             )
             bookmarkButton.tap()
             XCTAssertTrue(
-                bookmarkFilledButton.waitForExistence(timeout: 3),
+                bookmarkFilledButton.safeWaitForExistence(timeout: 3),
                 "Bookmark should become filled after tapping again"
             )
         }
@@ -86,9 +86,9 @@ final class ArticleDetailUITests: BaseUITestCase {
         let copyButton = app.buttons["Copy"]
         let closeButton = app.buttons["Close"]
 
-        let shareSheetAppeared = shareSheet.waitForExistence(timeout: 5) ||
-            copyButton.waitForExistence(timeout: 5) ||
-            closeButton.waitForExistence(timeout: 5)
+        let shareSheetAppeared = shareSheet.safeWaitForExistence(timeout: 5) ||
+            copyButton.safeWaitForExistence(timeout: 5) ||
+            closeButton.safeWaitForExistence(timeout: 5)
 
         XCTAssertTrue(shareSheetAppeared, "Share sheet should appear after tapping share button")
 
@@ -101,7 +101,7 @@ final class ArticleDetailUITests: BaseUITestCase {
         // Wait for share sheet to dismiss and back button to become available
         let backButtonAfterShare = app.buttons["backButton"]
         XCTAssertTrue(
-            backButtonAfterShare.waitForExistence(timeout: 5),
+            backButtonAfterShare.safeWaitForExistence(timeout: 5),
             "Back button should exist after share sheet dismissed"
         )
 
@@ -115,7 +115,7 @@ final class ArticleDetailUITests: BaseUITestCase {
         XCTAssertTrue(hasMetadata, "Article should display metadata (author, source, or date)")
 
         let scrollView = app.scrollViews["articleDetailScrollView"]
-        XCTAssertTrue(scrollView.waitForExistence(timeout: 5), "Article detail should have a scroll view")
+        XCTAssertTrue(scrollView.safeWaitForExistence(timeout: 5), "Article detail should have a scroll view")
 
         let scrollViewGeneric = app.scrollViews.firstMatch
         XCTAssertTrue(scrollViewGeneric.exists, "Article detail should have a scroll view")
@@ -128,7 +128,7 @@ final class ArticleDetailUITests: BaseUITestCase {
             NSPredicate(format: "label CONTAINS[c] 'Read Full Article'")
         ).firstMatch
         XCTAssertTrue(
-            readFullButton.waitForExistence(timeout: 3),
+            readFullButton.safeWaitForExistence(timeout: 3),
             "Read Full Article button should be visible after scrolling"
         )
 
@@ -165,12 +165,12 @@ final class ArticleDetailUITests: BaseUITestCase {
         // Check various indicators that we're back at home
         let topHeadlinesHeader = app.staticTexts["Top Headlines"]
         let breakingNewsHeader = app.staticTexts["Breaking News"]
-        let homeTabSelected = homeTab.waitForExistence(timeout: 5) && homeTab.isSelected
+        let homeTabSelected = homeTab.safeWaitForExistence(timeout: 5) && homeTab.isSelected
 
-        let navigatedBack = homeNavBar.waitForExistence(timeout: 10) ||
+        let navigatedBack = homeNavBar.safeWaitForExistence(timeout: 10) ||
             homeTabSelected ||
-            topHeadlinesHeader.waitForExistence(timeout: 3) ||
-            breakingNewsHeader.waitForExistence(timeout: 3)
+            topHeadlinesHeader.safeWaitForExistence(timeout: 3) ||
+            breakingNewsHeader.safeWaitForExistence(timeout: 3)
 
         XCTAssertTrue(navigatedBack, "Should navigate back to Home")
 

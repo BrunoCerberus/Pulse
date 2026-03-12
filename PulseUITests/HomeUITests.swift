@@ -6,23 +6,23 @@ final class HomeUITests: BaseUITestCase {
     /// Tests opening the edit topics sheet from Home and toggling topics
     func testEditTopicsFromHome() {
         // Verify we're on Home
-        XCTAssertTrue(app.navigationBars["News"].waitForExistence(timeout: Self.shortTimeout), "Should be on Home")
+        XCTAssertTrue(app.navigationBars["News"].safeWaitForExistence(timeout: Self.shortTimeout), "Should be on Home")
 
         // Find and tap the edit topics button
         let editTopicsButton = app.navigationBars.buttons["line.3.horizontal.decrease.circle"]
-        XCTAssertTrue(editTopicsButton.waitForExistence(timeout: Self.shortTimeout), "Edit topics button should exist")
+        XCTAssertTrue(editTopicsButton.safeWaitForExistence(timeout: Self.shortTimeout), "Edit topics button should exist")
         editTopicsButton.tap()
 
         // Verify the edit topics sheet opens
         let editTopicsTitle = app.staticTexts["Edit Topics"]
-        XCTAssertTrue(editTopicsTitle.waitForExistence(timeout: Self.defaultTimeout), "Edit Topics sheet should open")
+        XCTAssertTrue(editTopicsTitle.safeWaitForExistence(timeout: Self.defaultTimeout), "Edit Topics sheet should open")
 
         // Verify topics are displayed
         let technologyTopic = app.buttons.matching(
             NSPredicate(format: "label CONTAINS[c] 'Technology'")
         ).firstMatch
         XCTAssertTrue(
-            technologyTopic.waitForExistence(timeout: Self.shortTimeout),
+            technologyTopic.safeWaitForExistence(timeout: Self.shortTimeout),
             "Technology topic should be visible"
         )
 
@@ -31,12 +31,12 @@ final class HomeUITests: BaseUITestCase {
 
         // Verify Done button exists and tap it
         let doneButton = app.buttons["Done"]
-        XCTAssertTrue(doneButton.waitForExistence(timeout: Self.shortTimeout), "Done button should exist")
+        XCTAssertTrue(doneButton.safeWaitForExistence(timeout: Self.shortTimeout), "Done button should exist")
         doneButton.tap()
 
         // Verify sheet is dismissed and we're back on Home
         XCTAssertTrue(
-            app.navigationBars["News"].waitForExistence(timeout: Self.shortTimeout),
+            app.navigationBars["News"].safeWaitForExistence(timeout: Self.shortTimeout),
             "Should return to Home after dismissing sheet"
         )
     }
@@ -47,22 +47,22 @@ final class HomeUITests: BaseUITestCase {
     func testCategoryTabsAfterEnablingTopics() {
         // Open edit topics sheet
         let editTopicsButton = app.navigationBars.buttons["line.3.horizontal.decrease.circle"]
-        XCTAssertTrue(editTopicsButton.waitForExistence(timeout: Self.shortTimeout), "Edit topics button should exist")
+        XCTAssertTrue(editTopicsButton.safeWaitForExistence(timeout: Self.shortTimeout), "Edit topics button should exist")
         editTopicsButton.tap()
 
         // Verify the edit topics sheet opens
         let editTopicsTitle = app.staticTexts["Edit Topics"]
-        XCTAssertTrue(editTopicsTitle.waitForExistence(timeout: Self.defaultTimeout), "Edit Topics sheet should open")
+        XCTAssertTrue(editTopicsTitle.safeWaitForExistence(timeout: Self.defaultTimeout), "Edit Topics sheet should open")
 
         // Enable some topics
         let technologyTopic = app.buttons.matching(NSPredicate(format: "label CONTAINS[c] 'Technology'")).firstMatch
         let businessTopic = app.buttons.matching(NSPredicate(format: "label CONTAINS[c] 'Business'")).firstMatch
 
-        if technologyTopic.waitForExistence(timeout: Self.shortTimeout) {
+        if technologyTopic.safeWaitForExistence(timeout: Self.shortTimeout) {
             technologyTopic.tap()
         }
 
-        if businessTopic.waitForExistence(timeout: Self.shortTimeout) {
+        if businessTopic.safeWaitForExistence(timeout: Self.shortTimeout) {
             businessTopic.tap()
         }
 
@@ -73,14 +73,14 @@ final class HomeUITests: BaseUITestCase {
         }
 
         // Verify we're back on Home
-        XCTAssertTrue(app.navigationBars["News"].waitForExistence(timeout: Self.defaultTimeout), "Should return to Home")
+        XCTAssertTrue(app.navigationBars["News"].safeWaitForExistence(timeout: Self.defaultTimeout), "Should return to Home")
 
         // Wait for content to load
         _ = waitForHomeContent(timeout: 30)
 
         // Check if category tabs are visible (look for "All" button which is always present when tabs are shown)
         let allTabButton = app.buttons["All"]
-        if allTabButton.waitForExistence(timeout: Self.shortTimeout) {
+        if allTabButton.safeWaitForExistence(timeout: Self.shortTimeout) {
             // Category tabs are visible - test interaction
             allTabButton.tap()
 
@@ -132,11 +132,11 @@ final class HomeUITests: BaseUITestCase {
         // Check if category tabs exist
         let allTabButton = app.buttons["All"]
 
-        if allTabButton.waitForExistence(timeout: Self.shortTimeout) {
+        if allTabButton.safeWaitForExistence(timeout: Self.shortTimeout) {
             // Target the category tabs scroll view specifically by its accessibility identifier
             let tabsScrollView = app.scrollViews["categoryTabsScrollView"]
 
-            if tabsScrollView.waitForExistence(timeout: Self.shortTimeout) {
+            if tabsScrollView.safeWaitForExistence(timeout: Self.shortTimeout) {
                 // Perform horizontal swipe
                 tabsScrollView.swipeLeft()
                 _ = wait(for: 0.5)
@@ -157,14 +157,14 @@ final class HomeUITests: BaseUITestCase {
     func testHomeContentInteractionsAndSettingsFlow() {
         // Verify navigation title
         XCTAssertTrue(
-            app.navigationBars["News"].waitForExistence(timeout: Self.shortTimeout),
+            app.navigationBars["News"].safeWaitForExistence(timeout: Self.shortTimeout),
             "Navigation title 'News' should exist"
         )
 
         // Verify gear button
         let gearButton = app.navigationBars.buttons["gearshape"]
         XCTAssertTrue(
-            gearButton.waitForExistence(timeout: Self.shortTimeout),
+            gearButton.safeWaitForExistence(timeout: Self.shortTimeout),
             "Gear button should exist in navigation bar"
         )
 
@@ -188,7 +188,7 @@ final class HomeUITests: BaseUITestCase {
         gearButton.tap()
 
         let settingsNavBar = app.navigationBars["Settings"]
-        XCTAssertTrue(settingsNavBar.waitForExistence(timeout: Self.defaultTimeout), "Settings should open")
+        XCTAssertTrue(settingsNavBar.safeWaitForExistence(timeout: Self.defaultTimeout), "Settings should open")
 
         var settingsBackButton = settingsNavBar.buttons["Pulse"]
         if !settingsBackButton.exists {
@@ -238,16 +238,16 @@ final class HomeUITests: BaseUITestCase {
             let firstCard = cards.firstMatch
 
             // Use longer timeout for CI - articles may take time to render
-            if firstCard.waitForExistence(timeout: 15) {
+            if firstCard.safeWaitForExistence(timeout: 15) {
                 // --- Article Card Navigation ---
 
-                // Scroll to make the card hittable if needed
-                if !firstCard.isHittable {
-                    app.scrollViews.firstMatch.swipeUp()
-                }
+                // Scroll to ensure card is visible, then use coordinate tap
+                app.scrollViews.firstMatch.swipeUp()
+                wait(for: 0.3)
 
-                if firstCard.isHittable {
-                    firstCard.tap()
+                if firstCard.exists {
+                    let center = firstCard.coordinate(withNormalizedOffset: CGVector(dx: 0.5, dy: 0.5))
+                    center.tap()
                     XCTAssertTrue(waitForArticleDetail(), "Should navigate to article detail")
 
                     // Navigate back with explicit wait for News nav bar
@@ -260,7 +260,7 @@ final class HomeUITests: BaseUITestCase {
 
                 // --- Scroll Interactions ---
                 let scrollView = app.scrollViews.firstMatch
-                XCTAssertTrue(scrollView.waitForExistence(timeout: Self.shortTimeout), "ScrollView should exist")
+                XCTAssertTrue(scrollView.safeWaitForExistence(timeout: Self.shortTimeout), "ScrollView should exist")
 
                 // Pull to refresh
                 scrollView.swipeDown()
@@ -282,11 +282,11 @@ final class HomeUITests: BaseUITestCase {
                 // --- Context Menu ---
                 let cardsAfterScroll = articleCards()
                 let contextCard = cardsAfterScroll.firstMatch
-                if contextCard.waitForExistence(timeout: Self.shortTimeout) {
+                if contextCard.safeWaitForExistence(timeout: Self.shortTimeout) {
                     contextCard.press(forDuration: 0.5)
 
-                    let contextMenuAppeared = app.buttons["Bookmark"].waitForExistence(timeout: Self.shortTimeout) ||
-                        app.buttons["Share"].waitForExistence(timeout: 1)
+                    let contextMenuAppeared = app.buttons["Bookmark"].safeWaitForExistence(timeout: Self.shortTimeout) ||
+                        app.buttons["Share"].safeWaitForExistence(timeout: 1)
 
                     if contextMenuAppeared {
                         app.tap() // Dismiss context menu
