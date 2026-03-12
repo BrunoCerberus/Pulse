@@ -141,30 +141,31 @@ final class CachingNewsService: NewsService {
 
         // 3. If offline: serve stale data or fail
         if networkMonitor?.isConnected == false {
-            // Try stale L1
-            if let staleL1: CacheEntry<T> = memoryCacheStore.get(for: key) {
-                Logger.shared.service("Offline: serving stale L1 for \(label)", level: .debug)
-                return Just(staleL1.data)
-                    .setFailureType(to: Error.self)
-                    .eraseToAnyPublisher()
-            }
-            // Try stale L2 (expired but better than nothing)
-            if let staleL2: CacheEntry<T> = diskCacheStore?.get(for: key) {
-                Logger.shared.service("Offline: serving stale L2 for \(label)", level: .debug)
-                return Just(staleL2.data)
-                    .setFailureType(to: Error.self)
-                    .eraseToAnyPublisher()
-            }
-            Logger.shared.service("Offline: no cache for \(label)", level: .debug)
-            return Fail(error: PulseError.offlineNoCache)
-                .eraseToAnyPublisher()
+            return serveStaleData(for: key, label: label)
         }
 
         // 4. Online: fetch from network, write-through to both caches
-        // MARK: Retry budget: 2 retries × 15s timeout = up to ~48s worst case per cache miss
+        return fetchFromNetwork(key: key, label: label, networkFetch: networkFetch)
+    }
 
-        // (includes exponential backoff delays: 1s + 2s). If the underlying service has its own
-        // fallback chain (e.g. Supabase → Guardian), retries re-attempt the full chain.
+    private func serveStaleData<T>(for key: NewsCacheKey, label: String) -> AnyPublisher<T, Error> {
+        if let staleL1: CacheEntry<T> = memoryCacheStore.get(for: key) {
+            Logger.shared.service("Offline: serving stale L1 for \(label)", level: .debug)
+            return Just(staleL1.data).setFailureType(to: Error.self).eraseToAnyPublisher()
+        }
+        if let staleL2: CacheEntry<T> = diskCacheStore?.get(for: key) {
+            Logger.shared.service("Offline: serving stale L2 for \(label)", level: .debug)
+            return Just(staleL2.data).setFailureType(to: Error.self).eraseToAnyPublisher()
+        }
+        Logger.shared.service("Offline: no cache for \(label)", level: .debug)
+        return Fail(error: PulseError.offlineNoCache).eraseToAnyPublisher()
+    }
+
+    private func fetchFromNetwork<T>(
+        key: NewsCacheKey,
+        label: String,
+        networkFetch: @escaping () -> AnyPublisher<T, Error>
+    ) -> AnyPublisher<T, Error> {
         Logger.shared.service("Cache miss for \(label)", level: .debug)
         let fetch = networkFetch()
         let resilientFetch = networkResilienceEnabled
@@ -177,15 +178,11 @@ final class CachingNewsService: NewsService {
                 self?.diskCacheStore?.set(entry, for: key)
             })
             .catch { [weak self] error -> AnyPublisher<T, Error> in
-                // On network failure, fall back to stale disk cache
                 if let staleL2: CacheEntry<T> = self?.diskCacheStore?.get(for: key) {
                     Logger.shared.service("Network error: serving stale L2 for \(label)", level: .debug)
-                    return Just(staleL2.data)
-                        .setFailureType(to: Error.self)
-                        .eraseToAnyPublisher()
+                    return Just(staleL2.data).setFailureType(to: Error.self).eraseToAnyPublisher()
                 }
-                return Fail(error: error)
-                    .eraseToAnyPublisher()
+                return Fail(error: error).eraseToAnyPublisher()
             }
             .eraseToAnyPublisher()
     }

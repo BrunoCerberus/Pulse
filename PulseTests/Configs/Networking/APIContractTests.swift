@@ -223,8 +223,17 @@ struct SupabaseAPIContractTests {
         #expect(articles.count == 1)
         #expect(articles[0].id == "extra-001")
     }
+}
 
-    // MARK: - toArticle Content Mapping
+// MARK: - Supabase Article Mapping Contract Tests
+
+@Suite("Supabase Article Mapping Contract Tests")
+struct SupabaseArticleMappingContractTests {
+    private let decoder: JSONDecoder = {
+        let decoder = JSONDecoder()
+        decoder.keyDecodingStrategy = .convertFromSnakeCase
+        return decoder
+    }()
 
     @Test("toArticle maps content and summary correctly when both present")
     func toArticleMapsContentAndSummary() throws {
