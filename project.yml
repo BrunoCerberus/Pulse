@@ -230,6 +230,8 @@ targets:
     deploymentTarget: "26.3"
     sources:
       - path: PulseSnapshotTests
+        excludes:
+          - "**/__Snapshots__/**"
     settings:
       base:
         PRODUCT_BUNDLE_IDENTIFIER: com.bruno.PulseSnapshotTests
