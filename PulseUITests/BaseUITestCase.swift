@@ -301,6 +301,10 @@ class BaseUITestCase: XCTestCase {
                 wait(for: 0.3)
                 let center = mediaByImage.coordinate(withNormalizedOffset: CGVector(dx: 0.5, dy: 0.5))
                 center.tap()
+                // Extra settle time for image-based tap: navigation takes longer to complete
+                // when using the play.tv fallback on iOS 26+, and starting accessibility
+                // queries too soon after this tap triggers SIGABRT crashes on Xcode 26.3
+                wait(for: 1.0)
             } else {
                 let mediaButton = app.buttons["Media"]
                 if mediaButton.exists, !mediaButton.isSelected {

@@ -6,8 +6,10 @@ final class MediaUITests: BaseUITestCase {
     func testMediaTabExists() throws {
         try ensureAppRunning()
         let mediaTab = app.tabBars.buttons["Media"]
+        // Use safeWaitForExistence to avoid Xcode 26 C++ exception crash from
+        // waitForExistence's internal polling loop timing out under SIGABRT
         XCTAssertTrue(
-            mediaTab.waitForExistence(timeout: Self.shortTimeout),
+            safeWaitForExistence(mediaTab, timeout: Self.shortTimeout),
             "Media tab should exist in tab bar"
         )
     }
@@ -65,7 +67,9 @@ final class MediaUITests: BaseUITestCase {
         wait(for: 1.0)
 
         let videosButton = app.buttons["Videos"]
-        if videosButton.waitForExistence(timeout: Self.shortTimeout), videosButton.isHittable {
+        // Use safeWaitForExistence to avoid Xcode 26 C++ exception crash from
+        // waitForExistence's internal polling loop timing out under SIGABRT
+        if safeWaitForExistence(videosButton, timeout: Self.shortTimeout), videosButton.isHittable {
             videosButton.tap()
             wait(for: 0.5)
 
