@@ -14,9 +14,9 @@ struct SpeechPlayerBarView: View {
         VStack(spacing: 0) {
             ProgressView(value: progress)
                 .tint(Color.Accent.gradient)
-                .accessibilityLabel(SpeechPlayerBarConstants.progress)
+                .accessibilityLabel(Constants.progress)
                 .accessibilityValue(
-                    String(format: SpeechPlayerBarConstants.progressValue, Int(progress * 100))
+                    String(format: Constants.progressValue, Int(progress * 100))
                 )
 
             HStack(spacing: Spacing.md) {
@@ -29,12 +29,12 @@ struct SpeechPlayerBarView: View {
                 .accessibilityIdentifier("ttsPlayPauseButton")
                 .accessibilityLabel(
                     playbackState == .playing
-                        ? SpeechPlayerBarConstants.pause
-                        : SpeechPlayerBarConstants.play
+                        ? Constants.pause
+                        : Constants.play
                 )
 
                 VStack(alignment: .leading, spacing: 2) {
-                    Text(SpeechPlayerBarConstants.listening)
+                    Text(Constants.listening)
                         .font(Typography.captionLarge)
                         .foregroundStyle(.secondary)
                         .lineLimit(1)
@@ -58,9 +58,9 @@ struct SpeechPlayerBarView: View {
                 }
                 .accessibilityIdentifier("ttsSpeedButton")
                 .accessibilityLabel(
-                    String(format: SpeechPlayerBarConstants.speedLabel, speedPreset.label)
+                    String(format: Constants.speedLabel, speedPreset.label)
                 )
-                .accessibilityHint(SpeechPlayerBarConstants.speedHint)
+                .accessibilityHint(Constants.speedHint)
 
                 Button(action: onStop) {
                     Image(systemName: "xmark")
@@ -71,7 +71,7 @@ struct SpeechPlayerBarView: View {
                 }
                 .frame(minWidth: 44, minHeight: 44)
                 .accessibilityIdentifier("ttsStopButton")
-                .accessibilityLabel(SpeechPlayerBarConstants.stop)
+                .accessibilityLabel(Constants.stop)
             }
             .padding(.horizontal, Spacing.md)
             .padding(.vertical, Spacing.sm)

@@ -58,15 +58,15 @@ struct GlassArticleCard: View {
         }
         .pressEffect()
         .accessibilityElement(children: .combine)
-        .accessibilityLabel(String(format: GlassArticleCardConstants.accessibilityLabelFormat, title, sourceName, formattedDate))
-        .accessibilityHint(GlassArticleCardConstants.accessibilityHint)
+        .accessibilityLabel(String(format: Constants.accessibilityLabelFormat, title, sourceName, formattedDate))
+        .accessibilityHint(Constants.accessibilityHint)
         .accessibilityIdentifier("articleCard")
         .contextMenu {
             Button {
                 onBookmark()
             } label: {
                 Label(
-                    isBookmarked ? GlassArticleCardConstants.removeBookmark : GlassArticleCardConstants.bookmark,
+                    isBookmarked ? Constants.removeBookmark : Constants.bookmark,
                     systemImage: isBookmarked ? "bookmark.fill" : "bookmark"
                 )
             }
@@ -74,7 +74,7 @@ struct GlassArticleCard: View {
             Button {
                 onShare()
             } label: {
-                Label(GlassArticleCardConstants.share, systemImage: "square.and.arrow.up")
+                Label(Constants.share, systemImage: "square.and.arrow.up")
             }
         }
     }
@@ -267,8 +267,8 @@ struct GlassArticleCardCompact: View {
         }
         .pressEffect()
         .accessibilityElement(children: .combine)
-        .accessibilityLabel(String(format: GlassArticleCardConstants.accessibilityLabelFormat, title, sourceName, ""))
-        .accessibilityHint(GlassArticleCardConstants.accessibilityHint)
+        .accessibilityLabel(String(format: GlassArticleCard.Constants.accessibilityLabelFormat, title, sourceName, ""))
+        .accessibilityHint(GlassArticleCard.Constants.accessibilityHint)
         .accessibilityIdentifier("articleCard")
     }
 }

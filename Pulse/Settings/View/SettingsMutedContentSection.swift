@@ -16,16 +16,16 @@ struct SettingsMutedContentSection: View {
             mutedSourcesGroup
             mutedKeywordsGroup
         } header: {
-            Text(MutedContentConstants.contentFilters)
+            Text(Constants.contentFilters)
         } footer: {
-            Text(MutedContentConstants.contentFiltersDescription)
+            Text(Constants.contentFiltersDescription)
         }
     }
 
     private var mutedSourcesGroup: some View {
-        DisclosureGroup("\(MutedContentConstants.mutedSources) (\(mutedSources.count))") {
+        DisclosureGroup("\(Constants.mutedSources) (\(mutedSources.count))") {
             HStack {
-                TextField(MutedContentConstants.addSource, text: $newMutedSource)
+                TextField(Constants.addSource, text: $newMutedSource)
                     .textFieldStyle(.roundedBorder)
 
                 Button {
@@ -33,7 +33,7 @@ struct SettingsMutedContentSection: View {
                 } label: {
                     Image(systemName: "plus.circle.fill")
                 }
-                .accessibilityLabel(MutedContentConstants.addSourceAction)
+                .accessibilityLabel(Constants.addSourceAction)
                 .disabled(newMutedSource.isEmpty)
             }
 
@@ -47,16 +47,16 @@ struct SettingsMutedContentSection: View {
                         Image(systemName: "xmark.circle")
                             .foregroundStyle(.secondary)
                     }
-                    .accessibilityLabel(MutedContentConstants.removeSourceAction)
+                    .accessibilityLabel(Constants.removeSourceAction)
                 }
             }
         }
     }
 
     private var mutedKeywordsGroup: some View {
-        DisclosureGroup("\(MutedContentConstants.mutedKeywords) (\(mutedKeywords.count))") {
+        DisclosureGroup("\(Constants.mutedKeywords) (\(mutedKeywords.count))") {
             HStack {
-                TextField(MutedContentConstants.addKeyword, text: $newMutedKeyword)
+                TextField(Constants.addKeyword, text: $newMutedKeyword)
                     .textFieldStyle(.roundedBorder)
 
                 Button {
@@ -64,7 +64,7 @@ struct SettingsMutedContentSection: View {
                 } label: {
                     Image(systemName: "plus.circle.fill")
                 }
-                .accessibilityLabel(MutedContentConstants.addKeywordAction)
+                .accessibilityLabel(Constants.addKeywordAction)
                 .disabled(newMutedKeyword.isEmpty)
             }
 
@@ -78,7 +78,7 @@ struct SettingsMutedContentSection: View {
                         Image(systemName: "xmark.circle")
                             .foregroundStyle(.secondary)
                     }
-                    .accessibilityLabel(MutedContentConstants.removeKeywordAction)
+                    .accessibilityLabel(Constants.removeKeywordAction)
                 }
             }
         }

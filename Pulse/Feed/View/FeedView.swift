@@ -45,7 +45,7 @@ struct FeedView<R: FeedNavigationRouter>: View {
                     feature: .dailyDigest,
                     serviceLocator: serviceLocator
                 )
-                .navigationTitle(FeedViewConstants.title)
+                .navigationTitle(Constants.title)
                 .navigationBarTitleDisplayMode(.large)
             }
         }
@@ -65,7 +65,7 @@ struct FeedView<R: FeedNavigationRouter>: View {
             content
         }
         .animation(.easeInOut(duration: 0.35), value: viewModel.viewState.displayState)
-        .navigationTitle(isProcessing ? "" : FeedViewConstants.title)
+        .navigationTitle(isProcessing ? "" : Constants.title)
         .navigationBarTitleDisplayMode(.large)
         .toolbarBackground(.hidden, for: .navigationBar)
         .toolbar(isProcessing ? .hidden : .automatic, for: .navigationBar)
@@ -81,7 +81,7 @@ struct FeedView<R: FeedNavigationRouter>: View {
         .onChange(of: viewModel.viewState.displayState) { _, newState in
             if case .completed = newState {
                 isDigestFocused = true
-                AccessibilityNotification.Announcement(FeedViewConstants.digestReady).post()
+                AccessibilityNotification.Announcement(Constants.digestReady).post()
             }
         }
     }
@@ -215,10 +215,10 @@ struct FeedView<R: FeedNavigationRouter>: View {
                     .foregroundStyle(.orange)
                     .accessibilityHidden(true)
 
-                Text(FeedViewConstants.offlineTitle)
+                Text(Constants.offlineTitle)
                     .font(Typography.titleMedium)
 
-                Text(FeedViewConstants.offlineMessage)
+                Text(Constants.offlineMessage)
                     .font(Typography.bodyMedium)
                     .foregroundStyle(.secondary)
                     .multilineTextAlignment(.center)
@@ -235,7 +235,7 @@ struct FeedView<R: FeedNavigationRouter>: View {
                     .foregroundStyle(Color.Semantic.warning)
                     .accessibilityHidden(true)
 
-                Text(FeedViewConstants.errorTitle)
+                Text(Constants.errorTitle)
                     .font(Typography.titleMedium)
 
                 if let error = viewModel.viewState.errorMessage {
@@ -251,7 +251,7 @@ struct FeedView<R: FeedNavigationRouter>: View {
                 } label: {
                     HStack(spacing: Spacing.sm) {
                         Image(systemName: "arrow.clockwise")
-                        Text(FeedViewConstants.tryAgain)
+                        Text(Constants.tryAgain)
                     }
                     .font(Typography.labelLarge)
                     .foregroundStyle(.white)
@@ -262,7 +262,7 @@ struct FeedView<R: FeedNavigationRouter>: View {
                 }
                 .buttonStyle(.plain)
                 .pressEffect()
-                .accessibilityHint(FeedViewConstants.retryHint)
+                .accessibilityHint(Constants.retryHint)
             }
         }
         .padding(.horizontal, Spacing.md)
@@ -273,7 +273,7 @@ struct FeedView<R: FeedNavigationRouter>: View {
     private var dateHeader: some View {
         HStack {
             VStack(alignment: .leading, spacing: Spacing.xxs) {
-                Text(FeedViewConstants.headerTitle)
+                Text(Constants.headerTitle)
                     .font(Typography.titleLarge)
                     .accessibilityAddTraits(.isHeader)
                 Text(viewModel.viewState.headerDate)

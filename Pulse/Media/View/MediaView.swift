@@ -34,7 +34,7 @@ struct MediaView<R: MediaNavigationRouter>: View {
 
             content
         }
-        .navigationTitle(MediaViewConstants.title)
+        .navigationTitle(Constants.title)
         .navigationBarTitleDisplayMode(.large)
         .toolbarBackground(.hidden, for: .navigationBar)
         .refreshable {
@@ -89,10 +89,10 @@ struct MediaView<R: MediaNavigationRouter>: View {
             VStack(spacing: Spacing.lg) {
                 mediaTypeSelector
 
-                GlassSectionHeader(MediaViewConstants.featured)
+                GlassSectionHeader(Constants.featured)
                 FeaturedMediaCarouselSkeleton()
 
-                GlassSectionHeader(MediaViewConstants.latest)
+                GlassSectionHeader(Constants.latest)
                 MediaListSkeleton(count: 5)
             }
         }
@@ -108,10 +108,10 @@ struct MediaView<R: MediaNavigationRouter>: View {
                         .foregroundStyle(.orange)
                         .accessibilityHidden(true)
 
-                    Text(MediaViewConstants.offlineTitle)
+                    Text(Constants.offlineTitle)
                         .font(Typography.titleMedium)
 
-                    Text(MediaViewConstants.offlineMessage)
+                    Text(Constants.offlineMessage)
                         .font(Typography.bodyMedium)
                         .foregroundStyle(.secondary)
                         .multilineTextAlignment(.center)
@@ -121,7 +121,7 @@ struct MediaView<R: MediaNavigationRouter>: View {
                         .foregroundStyle(Color.Semantic.warning)
                         .accessibilityHidden(true)
 
-                    Text(MediaViewConstants.errorTitle)
+                    Text(Constants.errorTitle)
                         .font(Typography.titleMedium)
 
                     Text(message)
@@ -133,7 +133,7 @@ struct MediaView<R: MediaNavigationRouter>: View {
                         HapticManager.shared.tap()
                         viewModel.handle(event: .onRefresh)
                     } label: {
-                        Text(MediaViewConstants.tryAgain)
+                        Text(Constants.tryAgain)
                             .font(Typography.labelLarge)
                             .foregroundStyle(.white)
                             .padding(.horizontal, Spacing.lg)
@@ -151,9 +151,9 @@ struct MediaView<R: MediaNavigationRouter>: View {
 
     private var emptyStateView: some View {
         ContentUnavailableView(
-            MediaViewConstants.emptyTitle,
+            Constants.emptyTitle,
             systemImage: "play.rectangle.on.rectangle",
-            description: Text(MediaViewConstants.emptyMessage)
+            description: Text(Constants.emptyMessage)
         )
     }
 
@@ -170,7 +170,7 @@ struct MediaView<R: MediaNavigationRouter>: View {
                     Section {
                         featuredCarousel
                     } header: {
-                        GlassSectionHeader(MediaViewConstants.featured)
+                        GlassSectionHeader(Constants.featured)
                     }
                 }
 
@@ -204,7 +204,7 @@ struct MediaView<R: MediaNavigationRouter>: View {
                         HStack {
                             ProgressView()
                                 .tint(.secondary)
-                            Text(MediaViewConstants.loadingMore)
+                            Text(Constants.loadingMore)
                                 .font(Typography.captionLarge)
                                 .foregroundStyle(.secondary)
                         }
@@ -212,7 +212,7 @@ struct MediaView<R: MediaNavigationRouter>: View {
                         .padding(Spacing.lg)
                     }
                 } header: {
-                    GlassSectionHeader(MediaViewConstants.latest)
+                    GlassSectionHeader(Constants.latest)
                 }
             }
         }

@@ -35,12 +35,12 @@ struct SignInView: View {
                 loadingOverlay
             }
         }
-        .alert(SignInConstants.error, isPresented: $showError) {
-            Button(SignInConstants.okButton) {
+        .alert(Constants.error, isPresented: $showError) {
+            Button(Constants.okButton) {
                 viewModel.handle(event: .onDismissError)
             }
         } message: {
-            Text(viewModel.viewState.errorMessage ?? SignInConstants.unknownError)
+            Text(viewModel.viewState.errorMessage ?? Constants.unknownError)
         }
         .onChange(of: viewModel.viewState.errorMessage) { _, newValue in
             showError = newValue != nil
@@ -78,11 +78,11 @@ struct SignInView: View {
             .accessibilityHidden(true)
 
             VStack(spacing: Spacing.xs) {
-                Text(SignInConstants.appName)
+                Text(Constants.appName)
                     .font(Typography.displayLarge)
                     .foregroundStyle(.white)
 
-                Text(SignInConstants.tagline)
+                Text(Constants.tagline)
                     .font(Typography.bodyLarge)
                     .foregroundStyle(.white.opacity(0.7))
             }
@@ -100,7 +100,7 @@ struct SignInView: View {
                     Image(systemName: "apple.logo")
                         .font(.headline)
 
-                    Text(SignInConstants.signInApple)
+                    Text(Constants.signInApple)
                         .font(Typography.labelLarge)
                 }
                 .frame(maxWidth: .infinity)
@@ -110,8 +110,8 @@ struct SignInView: View {
                 .clipShape(RoundedRectangle(cornerRadius: CornerRadius.md))
             }
             .buttonStyle(.plain)
-            .accessibilityLabel(SignInConstants.signInApple)
-            .accessibilityHint(SignInConstants.appleHint)
+            .accessibilityLabel(Constants.signInApple)
+            .accessibilityHint(Constants.appleHint)
 
             // Sign in with Google
             Button {
@@ -126,7 +126,7 @@ struct SignInView: View {
                     googleLogo
                         .frame(width: 20, height: 20)
 
-                    Text(SignInConstants.signInGoogle)
+                    Text(Constants.signInGoogle)
                         .font(Typography.labelLarge)
                 }
                 .frame(maxWidth: .infinity)
@@ -136,8 +136,8 @@ struct SignInView: View {
                 .clipShape(RoundedRectangle(cornerRadius: CornerRadius.md))
             }
             .buttonStyle(.plain)
-            .accessibilityLabel(SignInConstants.signInGoogle)
-            .accessibilityHint(SignInConstants.googleHint)
+            .accessibilityLabel(Constants.signInGoogle)
+            .accessibilityHint(Constants.googleHint)
         }
     }
 
@@ -156,7 +156,7 @@ struct SignInView: View {
     }
 
     private var termsSection: some View {
-        Text(SignInConstants.terms)
+        Text(Constants.terms)
             .font(Typography.captionMedium)
             .foregroundStyle(.white.opacity(0.5))
             .multilineTextAlignment(.center)
@@ -172,7 +172,7 @@ struct SignInView: View {
                     .tint(.white)
                     .scaleEffect(1.5)
 
-                Text(SignInConstants.signingIn)
+                Text(Constants.signingIn)
                     .font(Typography.bodyMedium)
                     .foregroundStyle(.white)
             }
@@ -180,7 +180,7 @@ struct SignInView: View {
             .background(.ultraThinMaterial)
             .clipShape(RoundedRectangle(cornerRadius: CornerRadius.lg))
             .accessibilityElement(children: .combine)
-            .accessibilityLabel(SignInConstants.signingIn)
+            .accessibilityLabel(Constants.signingIn)
         }
     }
 }

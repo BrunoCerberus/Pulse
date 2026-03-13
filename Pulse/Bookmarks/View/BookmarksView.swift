@@ -26,7 +26,7 @@ struct BookmarksView<R: BookmarksNavigationRouter>: View {
 
             content
         }
-        .navigationTitle(BookmarksViewConstants.title)
+        .navigationTitle(Constants.title)
         .navigationBarTitleDisplayMode(.large)
         .toolbarBackground(.hidden, for: .navigationBar)
         .refreshable {
@@ -56,7 +56,7 @@ struct BookmarksView<R: BookmarksNavigationRouter>: View {
             VStack(spacing: Spacing.md) {
                 ProgressView()
                     .scaleEffect(1.2)
-                Text(BookmarksViewConstants.loading)
+                Text(Constants.loading)
                     .font(Typography.bodyMedium)
                     .foregroundStyle(.secondary)
             }
@@ -78,7 +78,7 @@ struct BookmarksView<R: BookmarksNavigationRouter>: View {
                     .foregroundStyle(Color.Semantic.warning)
                     .accessibilityHidden(true)
 
-                Text(BookmarksViewConstants.errorTitle)
+                Text(Constants.errorTitle)
                     .font(Typography.titleMedium)
 
                 Text(message)
@@ -90,7 +90,7 @@ struct BookmarksView<R: BookmarksNavigationRouter>: View {
                     HapticManager.shared.tap()
                     viewModel.handle(event: .onRefresh)
                 } label: {
-                    Text(BookmarksViewConstants.tryAgain)
+                    Text(Constants.tryAgain)
                         .font(Typography.labelLarge)
                         .foregroundStyle(.white)
                         .padding(.horizontal, Spacing.lg)
@@ -113,10 +113,10 @@ struct BookmarksView<R: BookmarksNavigationRouter>: View {
                     .foregroundStyle(Color.Accent.primary)
                     .accessibilityHidden(true)
 
-                Text(BookmarksViewConstants.emptyTitle)
+                Text(Constants.emptyTitle)
                     .font(Typography.titleMedium)
 
-                Text(BookmarksViewConstants.emptyMessage)
+                Text(Constants.emptyMessage)
                     .font(Typography.bodyMedium)
                     .foregroundStyle(.secondary)
                     .multilineTextAlignment(.center)
@@ -159,7 +159,7 @@ struct BookmarksView<R: BookmarksNavigationRouter>: View {
         HStack {
             Image(systemName: "bookmark.fill")
                 .foregroundStyle(Color.Accent.primary)
-            Text(String(format: BookmarksViewConstants.savedCount, viewModel.viewState.bookmarks.count))
+            Text(String(format: Constants.savedCount, viewModel.viewState.bookmarks.count))
                 .font(Typography.captionLarge)
                 .foregroundStyle(.secondary)
             Spacer()

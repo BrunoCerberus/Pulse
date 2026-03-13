@@ -21,13 +21,13 @@ struct StatsCard: View {
             VStack(alignment: .leading, spacing: Spacing.xs) {
                 statRow(
                     value: animatedArticleCount,
-                    label: StatsCardConstants.articlesLabel,
+                    label: Constants.articlesLabel,
                     icon: "doc.text"
                 )
 
                 statRow(
                     value: animatedTopicsCount,
-                    label: StatsCardConstants.topicsLabel,
+                    label: Constants.topicsLabel,
                     icon: "tag"
                 )
 
@@ -37,7 +37,7 @@ struct StatsCard: View {
                         .foregroundStyle(.secondary)
                         .accessibilityHidden(true)
 
-                    Text(StatsCardConstants.timeSpanLabel)
+                    Text(Constants.timeSpanLabel)
                         .font(Typography.captionMedium)
                         .foregroundStyle(.secondary)
                 }
@@ -52,7 +52,7 @@ struct StatsCard: View {
         .glassBackground(style: .thin, cornerRadius: CornerRadius.lg)
         .depthShadow(.medium)
         .accessibilityElement(children: .combine)
-        .accessibilityLabel(String(format: StatsCardConstants.statsAccessibility, articleCount, topicsCount))
+        .accessibilityLabel(String(format: Constants.statsAccessibility, articleCount, topicsCount))
         .onAppear {
             animationTask?.cancel()
             animationTask = Task {
@@ -74,7 +74,7 @@ struct StatsCard: View {
                 .foregroundStyle(Color.Accent.gradient)
                 .accessibilityHidden(true)
 
-            Text(StatsCardConstants.statsTitle)
+            Text(Constants.statsTitle)
                 .font(Typography.labelMedium)
                 .foregroundStyle(.primary)
         }

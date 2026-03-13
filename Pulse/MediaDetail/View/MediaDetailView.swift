@@ -49,11 +49,11 @@ struct MediaDetailView: View {
                 Button {
                     dismiss()
                 } label: {
-                    Label(MediaDetailConstants.back, systemImage: "chevron.left")
+                    Label(Constants.back, systemImage: "chevron.left")
                         .labelStyle(.iconOnly)
                 }
                 .accessibilityIdentifier("backButton")
-                .accessibilityLabel(MediaDetailConstants.back)
+                .accessibilityLabel(Constants.back)
             }
 
             ToolbarItem(placement: .topBarTrailing) {
@@ -64,15 +64,15 @@ struct MediaDetailView: View {
                     .accessibilityIdentifier(viewModel.viewState.isBookmarked ? "bookmark.fill" : "bookmark")
                     .accessibilityLabel(
                         viewModel.viewState.isBookmarked
-                            ? MediaDetailConstants.removeBookmark
-                            : MediaDetailConstants.addBookmark
+                            ? Constants.removeBookmark
+                            : Constants.addBookmark
                     )
 
                     Button("", systemImage: "square.and.arrow.up") {
                         viewModel.handle(event: .onShareTapped)
                     }
                     .accessibilityIdentifier("shareButton")
-                    .accessibilityLabel(MediaDetailConstants.share)
+                    .accessibilityLabel(Constants.share)
                 }
             }
         }
@@ -127,10 +127,10 @@ struct MediaDetailView: View {
                     }
                     .padding(.horizontal, Spacing.md)
                 } else {
-                    errorView(message: MediaDetailConstants.videoUnavailable)
+                    errorView(message: Constants.videoUnavailable)
                 }
             } else {
-                errorView(message: MediaDetailConstants.videoUnavailable)
+                errorView(message: Constants.videoUnavailable)
             }
         }
     }
@@ -170,7 +170,7 @@ struct MediaDetailView: View {
                 .foregroundStyle(.secondary)
                 .accessibilityHidden(true)
 
-            Text(MediaDetailConstants.unsupportedType)
+            Text(Constants.unsupportedType)
                 .font(Typography.bodyLarge)
                 .foregroundStyle(.secondary)
         }
@@ -255,7 +255,7 @@ struct MediaDetailView: View {
                 .foregroundStyle(.red.opacity(0.8))
                 .accessibilityHidden(true)
 
-            Text(MediaDetailConstants.errorTitle)
+            Text(Constants.errorTitle)
                 .font(Typography.titleSmall)
                 .fontWeight(.semibold)
 
@@ -292,7 +292,7 @@ struct MediaDetailView: View {
         } label: {
             HStack(spacing: Spacing.sm) {
                 Image(systemName: "safari.fill")
-                Text(MediaDetailConstants.openInBrowser)
+                Text(Constants.openInBrowser)
             }
             .font(Typography.labelLarge)
             .foregroundStyle(.white)
@@ -302,7 +302,7 @@ struct MediaDetailView: View {
             .clipShape(RoundedRectangle(cornerRadius: CornerRadius.md, style: .continuous))
         }
         .pressEffect()
-        .accessibilityHint(MediaDetailConstants.opensInSafari)
+        .accessibilityHint(Constants.opensInSafari)
     }
 }
 

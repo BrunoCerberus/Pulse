@@ -31,16 +31,16 @@ struct SummarizationSheet: View {
                 .padding(Spacing.lg)
             }
             .background(Color.Glass.background)
-            .navigationTitle(SummarizationConstants.title)
+            .navigationTitle(Constants.title)
             .navigationBarTitleDisplayMode(.inline)
         }
         .presentationDetents([.medium, .large])
         .presentationDragIndicator(.visible)
         .onAppear {
-            withAnimation(SummarizationAnimationConstants.contentAppear.delay(0.1)) {
+            withAnimation(AnimationConstants.contentAppear.delay(0.1)) {
                 headerAppeared = true
             }
-            withAnimation(SummarizationAnimationConstants.contentAppear.delay(0.25)) {
+            withAnimation(AnimationConstants.contentAppear.delay(0.25)) {
                 contentAppeared = true
             }
         }
@@ -53,7 +53,7 @@ struct SummarizationSheet: View {
             case .completed:
                 isSummaryFocused = true
                 AccessibilityNotification.Announcement(
-                    SummarizationConstants.summarizationComplete
+                    Constants.summarizationComplete
                 ).post()
             case .error:
                 isSummaryFocused = true
@@ -72,7 +72,7 @@ struct SummarizationSheet: View {
                 Image(systemName: "sparkles")
                     .font(.system(size: IconSize.xxl))
                     .foregroundStyle(Color.Accent.primary.opacity(0.3))
-                    .blur(radius: SummarizationAnimationConstants.iconGlowRadius)
+                    .blur(radius: AnimationConstants.iconGlowRadius)
 
                 Image(systemName: "sparkles")
                     .font(.system(size: IconSize.xxl))
@@ -81,7 +81,7 @@ struct SummarizationSheet: View {
             }
             .accessibilityHidden(true)
 
-            Text(SummarizationConstants.subtitle)
+            Text(Constants.subtitle)
                 .font(Typography.bodyMedium)
                 .foregroundStyle(.secondary)
                 .multilineTextAlignment(.center)
@@ -117,7 +117,7 @@ struct SummarizationSheet: View {
                     .transition(.opacity.combined(with: .scale(scale: 0.95)))
             }
         }
-        .animation(SummarizationAnimationConstants.stateTransition, value: viewModel.viewState.summarizationState)
+        .animation(AnimationConstants.stateTransition, value: viewModel.viewState.summarizationState)
     }
 
     // MARK: - Idle State
@@ -180,7 +180,7 @@ struct SummarizationSheet: View {
                     .scaleEffect(0.8)
                     .tint(Color.Accent.primary)
 
-                Text(SummarizationConstants.loadingModel)
+                Text(Constants.loadingModel)
                     .font(Typography.bodySmall)
                     .foregroundStyle(.secondary)
             }
@@ -204,7 +204,7 @@ struct SummarizationSheet: View {
             HStack(spacing: Spacing.sm) {
                 TypingIndicator()
 
-                Text(SummarizationConstants.generating)
+                Text(Constants.generating)
                     .font(Typography.bodyMedium)
                     .foregroundStyle(.secondary)
             }
@@ -220,7 +220,7 @@ struct SummarizationSheet: View {
                 HapticManager.shared.tap()
                 viewModel.handle(event: .onSummarizationCancelled)
             } label: {
-                Text(SummarizationConstants.cancelButton)
+                Text(Constants.cancelButton)
                     .font(Typography.labelMedium)
                     .foregroundStyle(.secondary)
                     .padding(.horizontal, Spacing.lg)
@@ -245,7 +245,7 @@ struct SummarizationSheet: View {
                     .symbolEffect(.pulse.byLayer, options: .repeat(.periodic(delay: 2.0)))
                     .accessibilityHidden(true)
 
-                Text(SummarizationConstants.aiSummary)
+                Text(Constants.aiSummary)
                     .font(Typography.labelMedium)
                     .foregroundStyle(Color.Accent.primary)
                     .accessibilityAddTraits(.isHeader)
@@ -301,7 +301,7 @@ struct SummarizationSheet: View {
             } label: {
                 HStack(spacing: Spacing.sm) {
                     Image(systemName: "arrow.clockwise")
-                    Text(SummarizationConstants.retryButton)
+                    Text(Constants.retryButton)
                 }
                 .font(Typography.labelMedium)
                 .foregroundStyle(.white)
@@ -331,7 +331,7 @@ private struct GenerateButton: View {
                 Image(systemName: "sparkles")
                     .symbolEffect(.variableColor.iterative, options: reduceMotion ? .repeat(1) : .repeat(.continuous))
 
-                Text(SummarizationConstants.generateButton)
+                Text(SummarizationSheet.Constants.generateButton)
             }
             .font(Typography.labelLarge)
             .foregroundStyle(.white)
@@ -374,7 +374,7 @@ private struct ShimmerOverlay: View {
             .offset(x: -geometry.size.width * 0.5 + phase * geometry.size.width * 1.5)
             .onAppear {
                 withAnimation(
-                    .linear(duration: SummarizationAnimationConstants.shimmerDuration)
+                    .linear(duration: SummarizationSheet.AnimationConstants.shimmerDuration)
                         .repeatForever(autoreverses: false)
                 ) {
                     phase = 1
@@ -391,11 +391,11 @@ private struct TypingIndicator: View {
     @State private var animatingDot = 0
 
     var body: some View {
-        HStack(spacing: SummarizationAnimationConstants.typingDotSpacing) {
+        HStack(spacing: SummarizationSheet.AnimationConstants.typingDotSpacing) {
             ForEach(0 ..< 3) { index in
                 Circle()
                     .fill(Color.Accent.primary)
-                    .frame(width: SummarizationAnimationConstants.typingDotSize, height: SummarizationAnimationConstants.typingDotSize)
+                    .frame(width: SummarizationSheet.AnimationConstants.typingDotSize, height: SummarizationSheet.AnimationConstants.typingDotSize)
                     .scaleEffect(animatingDot == index ? 1.3 : 0.8)
                     .opacity(animatingDot == index ? 1 : 0.5)
             }
@@ -437,10 +437,10 @@ private struct FormattedSummaryText: View {
                         Circle()
                             .fill(Color.Accent.primary)
                             .frame(
-                                width: SummarizationAnimationConstants.bulletPointSize,
-                                height: SummarizationAnimationConstants.bulletPointSize
+                                width: SummarizationSheet.AnimationConstants.bulletPointSize,
+                                height: SummarizationSheet.AnimationConstants.bulletPointSize
                             )
-                            .padding(.top, SummarizationAnimationConstants.bulletPointTopPadding)
+                            .padding(.top, SummarizationSheet.AnimationConstants.bulletPointTopPadding)
 
                         Text(paragraph.text)
                             .font(Typography.bodyMedium)

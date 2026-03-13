@@ -101,7 +101,7 @@ struct ContentSectionCard: View {
 
     private var articleCountBadge: some View {
         let count = section.relatedArticles.count
-        let text = count == 1 ? ContentSectionCardConstants.articleCountOne : String(format: ContentSectionCardConstants.articleCountOther, count)
+        let text = count == 1 ? Constants.articleCountOne : String(format: Constants.articleCountOther, count)
 
         return Text(text)
             .font(Typography.captionSmall)
@@ -174,10 +174,10 @@ struct ContentSectionCard: View {
         .pressEffect(scale: 0.98)
         .accessibilityElement(children: .combine)
         .accessibilityLabel(String(
-            format: ContentSectionCardConstants.articleAccessibilityLabel,
+            format: Constants.articleAccessibilityLabel,
             article.title, article.source, article.formattedDate
         ))
-        .accessibilityHint(ContentSectionCardConstants.readArticleHint)
+        .accessibilityHint(Constants.readArticleHint)
     }
 
     @ViewBuilder
@@ -191,8 +191,8 @@ struct ContentSectionCard: View {
                     image
                         .resizable()
                         .aspectRatio(contentMode: .fill)
-                        .frame(height: ContentSectionCardConstants.featuredImageHeight)
-                        .clipShape(RoundedRectangle(cornerRadius: ContentSectionCardConstants.featuredImageCornerRadius))
+                        .frame(height: Constants.featuredImageHeight)
+                        .clipShape(RoundedRectangle(cornerRadius: Constants.featuredImageCornerRadius))
                 case .failure:
                     featuredImagePlaceholder
                 @unknown default:
@@ -200,17 +200,17 @@ struct ContentSectionCard: View {
                 }
             }
             .frame(maxWidth: .infinity)
-            .frame(height: ContentSectionCardConstants.featuredImageHeight)
-            .clipShape(RoundedRectangle(cornerRadius: ContentSectionCardConstants.featuredImageCornerRadius))
+            .frame(height: Constants.featuredImageHeight)
+            .clipShape(RoundedRectangle(cornerRadius: Constants.featuredImageCornerRadius))
         } else {
             featuredImagePlaceholder
         }
     }
 
     private var featuredImagePlaceholder: some View {
-        RoundedRectangle(cornerRadius: ContentSectionCardConstants.featuredImageCornerRadius)
+        RoundedRectangle(cornerRadius: Constants.featuredImageCornerRadius)
             .fill(Color.secondary.opacity(0.1))
-            .frame(height: ContentSectionCardConstants.featuredImageHeight)
+            .frame(height: Constants.featuredImageHeight)
             .overlay {
                 Image(systemName: "newspaper.fill")
                     .font(.system(size: IconSize.xl))
@@ -222,7 +222,7 @@ struct ContentSectionCard: View {
 
     private var sourcesRow: some View {
         VStack(alignment: .leading, spacing: Spacing.xs) {
-            Text(ContentSectionCardConstants.relatedArticles)
+            Text(Constants.relatedArticles)
                 .font(Typography.captionSmall)
                 .foregroundStyle(.secondary)
 

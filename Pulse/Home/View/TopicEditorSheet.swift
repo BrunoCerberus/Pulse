@@ -40,19 +40,19 @@ struct TopicEditorSheet: View {
                         .accessibilityAddTraits(followedTopics.contains(topic) ? .isSelected : [])
                         .accessibilityHint(
                             followedTopics.contains(topic)
-                                ? TopicEditorConstants.unfollowHint
-                                : TopicEditorConstants.followHint
+                                ? Constants.unfollowHint
+                                : Constants.followHint
                         )
                     }
                 } footer: {
-                    Text(TopicEditorConstants.description)
+                    Text(Constants.description)
                 }
             }
-            .navigationTitle(TopicEditorConstants.title)
+            .navigationTitle(Constants.title)
             .navigationBarTitleDisplayMode(.inline)
             .toolbar {
                 ToolbarItem(placement: .confirmationAction) {
-                    Button(TopicEditorConstants.done) {
+                    Button(Constants.done) {
                         HapticManager.shared.tap()
                         onDismiss()
                     }

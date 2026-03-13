@@ -50,7 +50,7 @@ struct HomeView<R: HomeNavigationRouter>: View {
 
             content
         }
-        .navigationTitle(HomeViewConstants.title)
+        .navigationTitle(Constants.title)
         .navigationBarTitleDisplayMode(.large)
         .toolbarBackground(.hidden, for: .navigationBar)
         .toolbar {
@@ -64,8 +64,8 @@ struct HomeView<R: HomeNavigationRouter>: View {
                             .font(.system(size: IconSize.md))
                             .foregroundStyle(.primary)
                     }
-                    .accessibilityLabel(HomeViewConstants.editTopicsLabel)
-                    .accessibilityHint(HomeViewConstants.editTopicsHint)
+                    .accessibilityLabel(Constants.editTopicsLabel)
+                    .accessibilityHint(Constants.editTopicsHint)
 
                     Button {
                         HapticManager.shared.tap()
@@ -75,8 +75,8 @@ struct HomeView<R: HomeNavigationRouter>: View {
                             .font(.system(size: IconSize.md))
                             .foregroundStyle(.primary)
                     }
-                    .accessibilityLabel(HomeViewConstants.settingsLabel)
-                    .accessibilityHint(HomeViewConstants.settingsHint)
+                    .accessibilityLabel(Constants.settingsLabel)
+                    .accessibilityHint(Constants.settingsHint)
                 }
             }
         }
@@ -117,7 +117,7 @@ struct HomeView<R: HomeNavigationRouter>: View {
         .onChange(of: viewModel.viewState.isRefreshing) { oldValue, newValue in
             if oldValue && !newValue {
                 AccessibilityNotification.Announcement(
-                    HomeViewConstants.refreshComplete
+                    Constants.refreshComplete
                 ).post()
             }
         }
@@ -136,7 +136,7 @@ struct HomeView<R: HomeNavigationRouter>: View {
             HStack(spacing: Spacing.sm) {
                 // "All" tab - always first
                 categoryChip(
-                    title: HomeViewConstants.allCategory,
+                    title: Constants.allCategory,
                     color: Color.Accent.primary,
                     isSelected: viewModel.viewState.selectedCategory == nil
                 ) {
@@ -199,7 +199,7 @@ struct HomeView<R: HomeNavigationRouter>: View {
         .pressEffect(scale: 0.95)
         .accessibilityLabel(title)
         .accessibilityAddTraits(isSelected ? .isSelected : [])
-        .accessibilityHint(String(format: HomeViewConstants.filterCategoryHint, title))
+        .accessibilityHint(String(format: Constants.filterCategoryHint, title))
     }
 
     // MARK: - Content Views
@@ -241,7 +241,7 @@ struct HomeView<R: HomeNavigationRouter>: View {
                     Section {
                         breakingNewsCarousel
                     } header: {
-                        GlassSectionHeader(HomeViewConstants.breakingNews)
+                        GlassSectionHeader(Constants.breakingNews)
                     }
                 }
 
@@ -251,7 +251,7 @@ struct HomeView<R: HomeNavigationRouter>: View {
                     Section {
                         recentlyReadCarousel
                     } header: {
-                        GlassSectionHeader(HomeViewConstants.recentlyRead)
+                        GlassSectionHeader(Constants.recentlyRead)
                     }
                 }
 
@@ -294,7 +294,7 @@ struct HomeView<R: HomeNavigationRouter>: View {
                         HStack {
                             ProgressView()
                                 .tint(.secondary)
-                            Text(HomeViewConstants.loadingMore)
+                            Text(Constants.loadingMore)
                                 .font(Typography.captionLarge)
                                 .foregroundStyle(.secondary)
                         }
@@ -302,7 +302,7 @@ struct HomeView<R: HomeNavigationRouter>: View {
                         .padding(Spacing.lg)
                     }
                 } header: {
-                    GlassSectionHeader(HomeViewConstants.topHeadlines)
+                    GlassSectionHeader(Constants.topHeadlines)
                 }
             }
         }

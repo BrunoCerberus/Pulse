@@ -79,11 +79,11 @@ struct ArticleDetailView: View {
                 Button {
                     dismiss()
                 } label: {
-                    Label(ArticleDetailConstants.back, systemImage: "chevron.left")
+                    Label(Constants.back, systemImage: "chevron.left")
                         .labelStyle(.iconOnly)
                 }
                 .accessibilityIdentifier("backButton")
-                .accessibilityLabel(ArticleDetailConstants.back)
+                .accessibilityLabel(Constants.back)
             }
 
             ToolbarItem(placement: .topBarTrailing) {
@@ -92,8 +92,8 @@ struct ArticleDetailView: View {
                         viewModel.handle(event: .onListenTapped)
                     }
                     .accessibilityIdentifier("listenButton")
-                    .accessibilityLabel(ArticleDetailConstants.listen)
-                    .accessibilityHint(ArticleDetailConstants.listenHint)
+                    .accessibilityLabel(Constants.listen)
+                    .accessibilityHint(Constants.listenHint)
 
                     Button("", systemImage: "sparkles") {
                         if isPremium {
@@ -104,11 +104,11 @@ struct ArticleDetailView: View {
                         }
                     }
                     .accessibilityIdentifier("summarizeButton")
-                    .accessibilityLabel(ArticleDetailConstants.summarize)
+                    .accessibilityLabel(Constants.summarize)
                     .accessibilityHint(
                         isPremium
-                            ? ArticleDetailConstants.summarizeHint
-                            : ArticleDetailConstants.premiumHint
+                            ? Constants.summarizeHint
+                            : Constants.premiumHint
                     )
 
                     Button("", systemImage: viewModel.viewState.isBookmarked ? "bookmark.fill" : "bookmark") {
@@ -117,17 +117,17 @@ struct ArticleDetailView: View {
                     .accessibilityIdentifier(viewModel.viewState.isBookmarked ? "bookmark.fill" : "bookmark")
                     .accessibilityLabel(
                         viewModel.viewState.isBookmarked
-                            ? ArticleDetailConstants.removeBookmark
-                            : ArticleDetailConstants.addBookmark
+                            ? Constants.removeBookmark
+                            : Constants.addBookmark
                     )
-                    .accessibilityHint(ArticleDetailConstants.saveHint)
+                    .accessibilityHint(Constants.saveHint)
 
                     Button("", systemImage: "square.and.arrow.up") {
                         viewModel.handle(event: .onShareTapped)
                     }
                     .accessibilityIdentifier("square.and.arrow.up")
-                    .accessibilityLabel(ArticleDetailConstants.shareLabel)
-                    .accessibilityHint(ArticleDetailConstants.shareHint)
+                    .accessibilityLabel(Constants.shareLabel)
+                    .accessibilityHint(Constants.shareHint)
                 }
             }
         }
@@ -165,16 +165,16 @@ struct ArticleDetailView: View {
         )
         .onChange(of: viewModel.viewState.isBookmarked) { _, isBookmarked in
             let announcement = isBookmarked
-                ? ArticleDetailConstants.bookmarkAdded
-                : ArticleDetailConstants.bookmarkRemoved
+                ? Constants.bookmarkAdded
+                : Constants.bookmarkRemoved
             AccessibilityNotification.Announcement(announcement).post()
         }
         .onChange(of: viewModel.viewState.ttsPlaybackState) { _, newState in
             let announcement: String? = switch newState {
             case .playing:
-                ArticleDetailConstants.ttsStarted
+                Constants.ttsStarted
             case .paused:
-                ArticleDetailConstants.ttsPaused
+                Constants.ttsPaused
             case .idle:
                 nil
             }
@@ -279,7 +279,7 @@ struct ArticleDetailView: View {
         if dynamicTypeSize.isAccessibilitySize {
             VStack(alignment: .leading, spacing: Spacing.xxs) {
                 if let author = viewModel.viewState.article.author {
-                    Text(String(format: ArticleDetailConstants.byAuthor, author))
+                    Text(String(format: Constants.byAuthor, author))
                         .fontWeight(.medium)
                 }
 
@@ -292,7 +292,7 @@ struct ArticleDetailView: View {
         } else {
             HStack(spacing: Spacing.xs) {
                 if let author = viewModel.viewState.article.author {
-                    Text(String(format: ArticleDetailConstants.byAuthor, author))
+                    Text(String(format: Constants.byAuthor, author))
                         .fontWeight(.medium)
                         .lineLimit(1)
                         .truncationMode(.tail)
@@ -327,7 +327,7 @@ struct ArticleDetailView: View {
                 .fill(Color.Border.adaptive(for: colorScheme))
                 .frame(height: 0.5)
 
-            Text(ArticleDetailConstants.relatedArticles)
+            Text(Constants.relatedArticles)
                 .font(Typography.titleMedium)
                 .bold()
                 .accessibilityAddTraits(.isHeader)
@@ -375,7 +375,7 @@ struct ArticleDetailView: View {
         } label: {
             HStack(spacing: Spacing.sm) {
                 Image(systemName: "safari.fill")
-                Text(ArticleDetailConstants.readFull)
+                Text(Constants.readFull)
             }
             .font(Typography.labelLarge)
             .foregroundStyle(.white)
@@ -385,7 +385,7 @@ struct ArticleDetailView: View {
             .clipShape(RoundedRectangle(cornerRadius: CornerRadius.md, style: .continuous))
         }
         .pressEffect()
-        .accessibilityHint(ArticleDetailConstants.opensInSafari)
+        .accessibilityHint(Constants.opensInSafari)
     }
 }
 

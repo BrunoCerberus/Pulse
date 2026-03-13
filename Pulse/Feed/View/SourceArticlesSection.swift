@@ -32,7 +32,7 @@ struct SourceArticlesSection: View {
             isExpanded.toggle()
         } label: {
             HStack {
-                Text(SourceArticlesConstants.sectionTitle)
+                Text(Constants.sectionTitle)
                     .font(Typography.titleSmall)
                     .foregroundStyle(.primary)
 
@@ -52,9 +52,9 @@ struct SourceArticlesSection: View {
         }
         .buttonStyle(.plain)
         .pressEffect()
-        .accessibilityLabel("\(SourceArticlesConstants.sectionTitle), \(articles.count) articles")
-        .accessibilityValue(isExpanded ? SourceArticlesConstants.expanded : SourceArticlesConstants.collapsed)
-        .accessibilityHint(isExpanded ? SourceArticlesConstants.collapseHint : SourceArticlesConstants.expandHint)
+        .accessibilityLabel("\(Constants.sectionTitle), \(articles.count) articles")
+        .accessibilityValue(isExpanded ? Constants.expanded : Constants.collapsed)
+        .accessibilityHint(isExpanded ? Constants.collapseHint : Constants.expandHint)
     }
 
     // MARK: - Articles List
@@ -119,8 +119,8 @@ private struct SourceArticleRow: View {
         .buttonStyle(.plain)
         .pressEffect()
         .accessibilityElement(children: .combine)
-        .accessibilityLabel(String(format: SourceArticlesConstants.articleAccessibilityLabel, article.title, article.source, ""))
-        .accessibilityHint(SourceArticlesConstants.readArticleHint)
+        .accessibilityLabel(String(format: SourceArticlesSection.Constants.articleAccessibilityLabel, article.title, article.source, ""))
+        .accessibilityHint(SourceArticlesSection.Constants.readArticleHint)
     }
 
     // MARK: - Thumbnail View
