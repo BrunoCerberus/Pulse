@@ -3,50 +3,6 @@ import Combine
 import EntropyCore
 import SwiftUI
 
-// MARK: - Constants
-
-private enum Constants {
-    static var back: String {
-        AppLocalization.localized("common.back")
-    }
-
-    static var share: String {
-        AppLocalization.localized("common.share")
-    }
-
-    static var openInBrowser: String {
-        AppLocalization.localized("media.open_in_browser")
-    }
-
-    static var errorTitle: String {
-        AppLocalization.localized("media.error_title")
-    }
-
-    static var videoUnavailable: String {
-        AppLocalization.localized("media.video_unavailable")
-    }
-
-    static var audioUnavailable: String {
-        AppLocalization.localized("media.audio_unavailable")
-    }
-
-    static var removeBookmark: String {
-        AppLocalization.localized("media_detail.remove_bookmark")
-    }
-
-    static var addBookmark: String {
-        AppLocalization.localized("media_detail.add_bookmark")
-    }
-
-    static var unsupportedType: String {
-        AppLocalization.localized("media.unsupported_type")
-    }
-
-    static var opensInSafari: String {
-        AppLocalization.localized("accessibility.opens_in_safari")
-    }
-}
-
 // MARK: - MediaDetailView
 
 // Detail view for video and podcast media playback.
@@ -93,11 +49,11 @@ struct MediaDetailView: View {
                 Button {
                     dismiss()
                 } label: {
-                    Label(Constants.back, systemImage: "chevron.left")
+                    Label(MediaDetailConstants.back, systemImage: "chevron.left")
                         .labelStyle(.iconOnly)
                 }
                 .accessibilityIdentifier("backButton")
-                .accessibilityLabel(Constants.back)
+                .accessibilityLabel(MediaDetailConstants.back)
             }
 
             ToolbarItem(placement: .topBarTrailing) {
@@ -108,15 +64,15 @@ struct MediaDetailView: View {
                     .accessibilityIdentifier(viewModel.viewState.isBookmarked ? "bookmark.fill" : "bookmark")
                     .accessibilityLabel(
                         viewModel.viewState.isBookmarked
-                            ? Constants.removeBookmark
-                            : Constants.addBookmark
+                            ? MediaDetailConstants.removeBookmark
+                            : MediaDetailConstants.addBookmark
                     )
 
                     Button("", systemImage: "square.and.arrow.up") {
                         viewModel.handle(event: .onShareTapped)
                     }
                     .accessibilityIdentifier("shareButton")
-                    .accessibilityLabel(Constants.share)
+                    .accessibilityLabel(MediaDetailConstants.share)
                 }
             }
         }
@@ -171,10 +127,10 @@ struct MediaDetailView: View {
                     }
                     .padding(.horizontal, Spacing.md)
                 } else {
-                    errorView(message: Constants.videoUnavailable)
+                    errorView(message: MediaDetailConstants.videoUnavailable)
                 }
             } else {
-                errorView(message: Constants.videoUnavailable)
+                errorView(message: MediaDetailConstants.videoUnavailable)
             }
         }
     }
@@ -214,7 +170,7 @@ struct MediaDetailView: View {
                 .foregroundStyle(.secondary)
                 .accessibilityHidden(true)
 
-            Text(Constants.unsupportedType)
+            Text(MediaDetailConstants.unsupportedType)
                 .font(Typography.bodyLarge)
                 .foregroundStyle(.secondary)
         }
@@ -299,7 +255,7 @@ struct MediaDetailView: View {
                 .foregroundStyle(.red.opacity(0.8))
                 .accessibilityHidden(true)
 
-            Text(Constants.errorTitle)
+            Text(MediaDetailConstants.errorTitle)
                 .font(Typography.titleSmall)
                 .fontWeight(.semibold)
 
@@ -336,7 +292,7 @@ struct MediaDetailView: View {
         } label: {
             HStack(spacing: Spacing.sm) {
                 Image(systemName: "safari.fill")
-                Text(Constants.openInBrowser)
+                Text(MediaDetailConstants.openInBrowser)
             }
             .font(Typography.labelLarge)
             .foregroundStyle(.white)
@@ -346,7 +302,7 @@ struct MediaDetailView: View {
             .clipShape(RoundedRectangle(cornerRadius: CornerRadius.md, style: .continuous))
         }
         .pressEffect()
-        .accessibilityHint(Constants.opensInSafari)
+        .accessibilityHint(MediaDetailConstants.opensInSafari)
     }
 }
 

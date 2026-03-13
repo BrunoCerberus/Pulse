@@ -1,54 +1,6 @@
 import EntropyCore
 import SwiftUI
 
-// MARK: - Constants
-
-private enum Constants {
-    static var title: String {
-        AppLocalization.localized("media.title")
-    }
-
-    static var featured: String {
-        AppLocalization.localized("media.featured")
-    }
-
-    static var latest: String {
-        AppLocalization.localized("media.latest")
-    }
-
-    static var all: String {
-        AppLocalization.localized("media.all_types")
-    }
-
-    static var errorTitle: String {
-        AppLocalization.localized("media.error.title")
-    }
-
-    static var emptyTitle: String {
-        AppLocalization.localized("media.empty.title")
-    }
-
-    static var emptyMessage: String {
-        AppLocalization.localized("media.empty.message")
-    }
-
-    static var offlineTitle: String {
-        AppLocalization.localized("media.offline.title")
-    }
-
-    static var offlineMessage: String {
-        AppLocalization.localized("media.offline.message")
-    }
-
-    static var tryAgain: String {
-        AppLocalization.localized("common.try_again")
-    }
-
-    static var loadingMore: String {
-        AppLocalization.localized("common.loading_more")
-    }
-}
-
 // MARK: - MediaView
 
 /// Main media screen displaying videos and podcasts.
@@ -82,7 +34,7 @@ struct MediaView<R: MediaNavigationRouter>: View {
 
             content
         }
-        .navigationTitle(Constants.title)
+        .navigationTitle(MediaViewConstants.title)
         .navigationBarTitleDisplayMode(.large)
         .toolbarBackground(.hidden, for: .navigationBar)
         .refreshable {
@@ -137,10 +89,10 @@ struct MediaView<R: MediaNavigationRouter>: View {
             VStack(spacing: Spacing.lg) {
                 mediaTypeSelector
 
-                GlassSectionHeader(Constants.featured)
+                GlassSectionHeader(MediaViewConstants.featured)
                 FeaturedMediaCarouselSkeleton()
 
-                GlassSectionHeader(Constants.latest)
+                GlassSectionHeader(MediaViewConstants.latest)
                 MediaListSkeleton(count: 5)
             }
         }
@@ -156,10 +108,10 @@ struct MediaView<R: MediaNavigationRouter>: View {
                         .foregroundStyle(.orange)
                         .accessibilityHidden(true)
 
-                    Text(Constants.offlineTitle)
+                    Text(MediaViewConstants.offlineTitle)
                         .font(Typography.titleMedium)
 
-                    Text(Constants.offlineMessage)
+                    Text(MediaViewConstants.offlineMessage)
                         .font(Typography.bodyMedium)
                         .foregroundStyle(.secondary)
                         .multilineTextAlignment(.center)
@@ -169,7 +121,7 @@ struct MediaView<R: MediaNavigationRouter>: View {
                         .foregroundStyle(Color.Semantic.warning)
                         .accessibilityHidden(true)
 
-                    Text(Constants.errorTitle)
+                    Text(MediaViewConstants.errorTitle)
                         .font(Typography.titleMedium)
 
                     Text(message)
@@ -181,7 +133,7 @@ struct MediaView<R: MediaNavigationRouter>: View {
                         HapticManager.shared.tap()
                         viewModel.handle(event: .onRefresh)
                     } label: {
-                        Text(Constants.tryAgain)
+                        Text(MediaViewConstants.tryAgain)
                             .font(Typography.labelLarge)
                             .foregroundStyle(.white)
                             .padding(.horizontal, Spacing.lg)
@@ -199,9 +151,9 @@ struct MediaView<R: MediaNavigationRouter>: View {
 
     private var emptyStateView: some View {
         ContentUnavailableView(
-            Constants.emptyTitle,
+            MediaViewConstants.emptyTitle,
             systemImage: "play.rectangle.on.rectangle",
-            description: Text(Constants.emptyMessage)
+            description: Text(MediaViewConstants.emptyMessage)
         )
     }
 
@@ -218,7 +170,7 @@ struct MediaView<R: MediaNavigationRouter>: View {
                     Section {
                         featuredCarousel
                     } header: {
-                        GlassSectionHeader(Constants.featured)
+                        GlassSectionHeader(MediaViewConstants.featured)
                     }
                 }
 
@@ -252,7 +204,7 @@ struct MediaView<R: MediaNavigationRouter>: View {
                         HStack {
                             ProgressView()
                                 .tint(.secondary)
-                            Text(Constants.loadingMore)
+                            Text(MediaViewConstants.loadingMore)
                                 .font(Typography.captionLarge)
                                 .foregroundStyle(.secondary)
                         }
@@ -260,7 +212,7 @@ struct MediaView<R: MediaNavigationRouter>: View {
                         .padding(Spacing.lg)
                     }
                 } header: {
-                    GlassSectionHeader(Constants.latest)
+                    GlassSectionHeader(MediaViewConstants.latest)
                 }
             }
         }

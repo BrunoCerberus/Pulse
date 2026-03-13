@@ -1,30 +1,6 @@
 import EntropyCore
 import SwiftUI
 
-// MARK: - Constants
-
-private enum Constants {
-    static var articlesLabel: String {
-        AppLocalization.localized("digest.articles_label")
-    }
-
-    static var topicsLabel: String {
-        AppLocalization.localized("digest.topics_label")
-    }
-
-    static var timeSpanLabel: String {
-        AppLocalization.localized("digest.time_span")
-    }
-
-    static var statsAccessibility: String {
-        AppLocalization.localized("digest.stats_accessibility")
-    }
-
-    static var statsTitle: String {
-        AppLocalization.localized("digest.stats_title")
-    }
-}
-
 // MARK: - StatsCard
 
 struct StatsCard: View {
@@ -45,13 +21,13 @@ struct StatsCard: View {
             VStack(alignment: .leading, spacing: Spacing.xs) {
                 statRow(
                     value: animatedArticleCount,
-                    label: Constants.articlesLabel,
+                    label: StatsCardConstants.articlesLabel,
                     icon: "doc.text"
                 )
 
                 statRow(
                     value: animatedTopicsCount,
-                    label: Constants.topicsLabel,
+                    label: StatsCardConstants.topicsLabel,
                     icon: "tag"
                 )
 
@@ -61,7 +37,7 @@ struct StatsCard: View {
                         .foregroundStyle(.secondary)
                         .accessibilityHidden(true)
 
-                    Text(Constants.timeSpanLabel)
+                    Text(StatsCardConstants.timeSpanLabel)
                         .font(Typography.captionMedium)
                         .foregroundStyle(.secondary)
                 }
@@ -76,7 +52,7 @@ struct StatsCard: View {
         .glassBackground(style: .thin, cornerRadius: CornerRadius.lg)
         .depthShadow(.medium)
         .accessibilityElement(children: .combine)
-        .accessibilityLabel(String(format: Constants.statsAccessibility, articleCount, topicsCount))
+        .accessibilityLabel(String(format: StatsCardConstants.statsAccessibility, articleCount, topicsCount))
         .onAppear {
             animationTask?.cancel()
             animationTask = Task {
@@ -98,7 +74,7 @@ struct StatsCard: View {
                 .foregroundStyle(Color.Accent.gradient)
                 .accessibilityHidden(true)
 
-            Text(Constants.statsTitle)
+            Text(StatsCardConstants.statsTitle)
                 .font(Typography.labelMedium)
                 .foregroundStyle(.primary)
         }

@@ -2,54 +2,6 @@ import AuthenticationServices
 import EntropyCore
 import SwiftUI
 
-// MARK: - Constants
-
-private enum Constants {
-    static var appName: String {
-        AppLocalization.localized("app.name")
-    }
-
-    static var tagline: String {
-        AppLocalization.localized("auth.tagline")
-    }
-
-    static var signInApple: String {
-        AppLocalization.localized("auth.sign_in_apple")
-    }
-
-    static var signInGoogle: String {
-        AppLocalization.localized("auth.sign_in_google")
-    }
-
-    static var terms: String {
-        AppLocalization.localized("auth.terms")
-    }
-
-    static var signingIn: String {
-        AppLocalization.localized("auth.signing_in")
-    }
-
-    static var error: String {
-        AppLocalization.localized("common.error")
-    }
-
-    static var okButton: String {
-        AppLocalization.localized("common.ok")
-    }
-
-    static var unknownError: String {
-        AppLocalization.localized("auth.unknown_error")
-    }
-
-    static var appleHint: String {
-        AppLocalization.localized("auth.apple_hint")
-    }
-
-    static var googleHint: String {
-        AppLocalization.localized("auth.google_hint")
-    }
-}
-
 // MARK: - SignInView
 
 struct SignInView: View {
@@ -83,12 +35,12 @@ struct SignInView: View {
                 loadingOverlay
             }
         }
-        .alert(Constants.error, isPresented: $showError) {
-            Button(Constants.okButton) {
+        .alert(SignInConstants.error, isPresented: $showError) {
+            Button(SignInConstants.okButton) {
                 viewModel.handle(event: .onDismissError)
             }
         } message: {
-            Text(viewModel.viewState.errorMessage ?? Constants.unknownError)
+            Text(viewModel.viewState.errorMessage ?? SignInConstants.unknownError)
         }
         .onChange(of: viewModel.viewState.errorMessage) { _, newValue in
             showError = newValue != nil
@@ -126,11 +78,11 @@ struct SignInView: View {
             .accessibilityHidden(true)
 
             VStack(spacing: Spacing.xs) {
-                Text(Constants.appName)
+                Text(SignInConstants.appName)
                     .font(Typography.displayLarge)
                     .foregroundStyle(.white)
 
-                Text(Constants.tagline)
+                Text(SignInConstants.tagline)
                     .font(Typography.bodyLarge)
                     .foregroundStyle(.white.opacity(0.7))
             }
@@ -148,7 +100,7 @@ struct SignInView: View {
                     Image(systemName: "apple.logo")
                         .font(.headline)
 
-                    Text(Constants.signInApple)
+                    Text(SignInConstants.signInApple)
                         .font(Typography.labelLarge)
                 }
                 .frame(maxWidth: .infinity)
@@ -158,8 +110,8 @@ struct SignInView: View {
                 .clipShape(RoundedRectangle(cornerRadius: CornerRadius.md))
             }
             .buttonStyle(.plain)
-            .accessibilityLabel(Constants.signInApple)
-            .accessibilityHint(Constants.appleHint)
+            .accessibilityLabel(SignInConstants.signInApple)
+            .accessibilityHint(SignInConstants.appleHint)
 
             // Sign in with Google
             Button {
@@ -174,7 +126,7 @@ struct SignInView: View {
                     googleLogo
                         .frame(width: 20, height: 20)
 
-                    Text(Constants.signInGoogle)
+                    Text(SignInConstants.signInGoogle)
                         .font(Typography.labelLarge)
                 }
                 .frame(maxWidth: .infinity)
@@ -184,8 +136,8 @@ struct SignInView: View {
                 .clipShape(RoundedRectangle(cornerRadius: CornerRadius.md))
             }
             .buttonStyle(.plain)
-            .accessibilityLabel(Constants.signInGoogle)
-            .accessibilityHint(Constants.googleHint)
+            .accessibilityLabel(SignInConstants.signInGoogle)
+            .accessibilityHint(SignInConstants.googleHint)
         }
     }
 
@@ -204,7 +156,7 @@ struct SignInView: View {
     }
 
     private var termsSection: some View {
-        Text(Constants.terms)
+        Text(SignInConstants.terms)
             .font(Typography.captionMedium)
             .foregroundStyle(.white.opacity(0.5))
             .multilineTextAlignment(.center)
@@ -220,7 +172,7 @@ struct SignInView: View {
                     .tint(.white)
                     .scaleEffect(1.5)
 
-                Text(Constants.signingIn)
+                Text(SignInConstants.signingIn)
                     .font(Typography.bodyMedium)
                     .foregroundStyle(.white)
             }
@@ -228,7 +180,7 @@ struct SignInView: View {
             .background(.ultraThinMaterial)
             .clipShape(RoundedRectangle(cornerRadius: CornerRadius.lg))
             .accessibilityElement(children: .combine)
-            .accessibilityLabel(Constants.signingIn)
+            .accessibilityLabel(SignInConstants.signingIn)
         }
     }
 }

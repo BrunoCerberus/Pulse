@@ -2,78 +2,6 @@ import Combine
 import EntropyCore
 import SwiftUI
 
-// MARK: - Constants
-
-private enum Constants {
-    static var title: String {
-        AppLocalization.localized("settings.title")
-    }
-
-    static var viewGithub: String {
-        AppLocalization.localized("settings.view_github")
-    }
-
-    static var signOut: String {
-        AppLocalization.localized("account.sign_out")
-    }
-
-    static var signOutConfirm: String {
-        AppLocalization.localized("account.sign_out.confirm")
-    }
-
-    static var cancel: String {
-        AppLocalization.localized("common.cancel")
-    }
-
-    static var version: String {
-        AppLocalization.localized("common.version")
-    }
-
-    static var notifications: String {
-        AppLocalization.localized("settings.notifications")
-    }
-
-    static var enableNotifications: String {
-        AppLocalization.localized("settings.enable_notifications")
-    }
-
-    static var breakingNewsAlerts: String {
-        AppLocalization.localized("settings.breaking_news_alerts")
-    }
-
-    static var contentLanguage: String {
-        AppLocalization.localized("settings.content_language")
-    }
-
-    static var contentLanguageLabel: String {
-        AppLocalization.localized("settings.content_language.label")
-    }
-
-    static var appearance: String {
-        AppLocalization.localized("settings.appearance")
-    }
-
-    static var useSystemTheme: String {
-        AppLocalization.localized("settings.use_system_theme")
-    }
-
-    static var darkMode: String {
-        AppLocalization.localized("settings.dark_mode")
-    }
-
-    static var data: String {
-        AppLocalization.localized("settings.data")
-    }
-
-    static var readingHistory: String {
-        AppLocalization.localized("settings.reading_history")
-    }
-
-    static var about: String {
-        AppLocalization.localized("settings.about")
-    }
-}
-
 // MARK: - SettingsView
 
 struct SettingsView: View {
@@ -137,22 +65,22 @@ struct SettingsView: View {
             }
             .scrollContentBackground(.hidden)
         }
-        .navigationTitle(Constants.title)
+        .navigationTitle(SettingsViewConstants.title)
         .toolbarBackground(.ultraThinMaterial, for: .navigationBar)
-        .alert(Constants.signOut, isPresented: Binding(
+        .alert(SettingsViewConstants.signOut, isPresented: Binding(
             get: { viewModel.viewState.showSignOutConfirmation },
             set: { _ in viewModel.handle(event: .onCancelSignOut) }
         )) {
-            Button(Constants.cancel, role: .cancel) {
+            Button(SettingsViewConstants.cancel, role: .cancel) {
                 HapticManager.shared.tap()
                 viewModel.handle(event: .onCancelSignOut)
             }
-            Button(Constants.signOut, role: .destructive) {
+            Button(SettingsViewConstants.signOut, role: .destructive) {
                 HapticManager.shared.notification(.warning)
                 viewModel.handle(event: .onConfirmSignOut)
             }
         } message: {
-            Text(Constants.signOutConfirm)
+            Text(SettingsViewConstants.signOutConfirm)
         }
         .alert(
             AppLocalization.localized("common.error"),
@@ -219,16 +147,16 @@ struct SettingsView: View {
     }
 
     private var notificationsSection: some View {
-        Section(Constants.notifications) {
+        Section(SettingsViewConstants.notifications) {
             Toggle(
-                Constants.enableNotifications,
+                SettingsViewConstants.enableNotifications,
                 isOn: Binding(
                     get: { viewModel.viewState.notificationsEnabled },
                     set: { viewModel.handle(event: .onToggleNotifications($0)) }
                 )
             )
 
-            Toggle(Constants.breakingNewsAlerts, isOn: Binding(
+            Toggle(SettingsViewConstants.breakingNewsAlerts, isOn: Binding(
                 get: { viewModel.viewState.breakingNewsEnabled },
                 set: { viewModel.handle(event: .onToggleBreakingNews($0)) }
             ))
@@ -237,9 +165,9 @@ struct SettingsView: View {
     }
 
     private var contentLanguageSection: some View {
-        Section(Constants.contentLanguage) {
+        Section(SettingsViewConstants.contentLanguage) {
             Picker(
-                Constants.contentLanguageLabel,
+                SettingsViewConstants.contentLanguageLabel,
                 selection: Binding(
                     get: { viewModel.viewState.selectedLanguage },
                     set: { viewModel.handle(event: .onLanguageChanged($0)) }
@@ -254,14 +182,14 @@ struct SettingsView: View {
     }
 
     private var appearanceSection: some View {
-        Section(Constants.appearance) {
-            Toggle(Constants.useSystemTheme, isOn: Binding(
+        Section(SettingsViewConstants.appearance) {
+            Toggle(SettingsViewConstants.useSystemTheme, isOn: Binding(
                 get: { viewModel.viewState.useSystemTheme },
                 set: { viewModel.handle(event: .onToggleSystemTheme($0)) }
             ))
 
             if !viewModel.viewState.useSystemTheme {
-                Toggle(Constants.darkMode, isOn: Binding(
+                Toggle(SettingsViewConstants.darkMode, isOn: Binding(
                     get: { viewModel.viewState.isDarkMode },
                     set: { viewModel.handle(event: .onToggleDarkMode($0)) }
                 ))
@@ -270,10 +198,10 @@ struct SettingsView: View {
     }
 
     private var dataSection: some View {
-        Section(Constants.data) {
+        Section(SettingsViewConstants.data) {
             NavigationLink(value: Page.readingHistory) {
                 Label(
-                    Constants.readingHistory,
+                    SettingsViewConstants.readingHistory,
                     systemImage: "clock.arrow.circlepath"
                 )
             }
@@ -281,9 +209,9 @@ struct SettingsView: View {
     }
 
     private var aboutSection: some View {
-        Section(Constants.about) {
+        Section(SettingsViewConstants.about) {
             HStack {
-                Text(Constants.version)
+                Text(SettingsViewConstants.version)
                 Spacer()
                 Text(Bundle.main.infoDictionary?["CFBundleShortVersionString"] as? String ?? "1.0.0")
                     .foregroundStyle(.secondary)
@@ -291,7 +219,7 @@ struct SettingsView: View {
 
             if let githubURL = URL(string: "https://github.com/BrunoCerberus/Pulse") {
                 Link(destination: githubURL) {
-                    Label(Constants.viewGithub, systemImage: "link")
+                    Label(SettingsViewConstants.viewGithub, systemImage: "link")
                 }
             }
         }

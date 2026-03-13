@@ -2,40 +2,6 @@ import EntropyCore
 import SwiftUI
 
 struct SpeechPlayerBarView: View {
-    private enum Constants {
-        static var progress: String {
-            AppLocalization.localized("tts.progress")
-        }
-
-        static var progressValue: String {
-            AppLocalization.localized("tts.progress_value")
-        }
-
-        static var pause: String {
-            AppLocalization.localized("tts.pause")
-        }
-
-        static var play: String {
-            AppLocalization.localized("tts.play")
-        }
-
-        static var listening: String {
-            AppLocalization.localized("tts.listening")
-        }
-
-        static var speedLabel: String {
-            AppLocalization.localized("tts.speed_label")
-        }
-
-        static var speedHint: String {
-            AppLocalization.localized("tts.speed_hint")
-        }
-
-        static var stop: String {
-            AppLocalization.localized("tts.stop")
-        }
-    }
-
     let title: String
     let playbackState: TTSPlaybackState
     let progress: Double
@@ -48,9 +14,9 @@ struct SpeechPlayerBarView: View {
         VStack(spacing: 0) {
             ProgressView(value: progress)
                 .tint(Color.Accent.gradient)
-                .accessibilityLabel(Constants.progress)
+                .accessibilityLabel(SpeechPlayerBarConstants.progress)
                 .accessibilityValue(
-                    String(format: Constants.progressValue, Int(progress * 100))
+                    String(format: SpeechPlayerBarConstants.progressValue, Int(progress * 100))
                 )
 
             HStack(spacing: Spacing.md) {
@@ -63,12 +29,12 @@ struct SpeechPlayerBarView: View {
                 .accessibilityIdentifier("ttsPlayPauseButton")
                 .accessibilityLabel(
                     playbackState == .playing
-                        ? Constants.pause
-                        : Constants.play
+                        ? SpeechPlayerBarConstants.pause
+                        : SpeechPlayerBarConstants.play
                 )
 
                 VStack(alignment: .leading, spacing: 2) {
-                    Text(Constants.listening)
+                    Text(SpeechPlayerBarConstants.listening)
                         .font(Typography.captionLarge)
                         .foregroundStyle(.secondary)
                         .lineLimit(1)
@@ -92,9 +58,9 @@ struct SpeechPlayerBarView: View {
                 }
                 .accessibilityIdentifier("ttsSpeedButton")
                 .accessibilityLabel(
-                    String(format: Constants.speedLabel, speedPreset.label)
+                    String(format: SpeechPlayerBarConstants.speedLabel, speedPreset.label)
                 )
-                .accessibilityHint(Constants.speedHint)
+                .accessibilityHint(SpeechPlayerBarConstants.speedHint)
 
                 Button(action: onStop) {
                     Image(systemName: "xmark")
@@ -105,7 +71,7 @@ struct SpeechPlayerBarView: View {
                 }
                 .frame(minWidth: 44, minHeight: 44)
                 .accessibilityIdentifier("ttsStopButton")
-                .accessibilityLabel(Constants.stop)
+                .accessibilityLabel(SpeechPlayerBarConstants.stop)
             }
             .padding(.horizontal, Spacing.md)
             .padding(.vertical, Spacing.sm)

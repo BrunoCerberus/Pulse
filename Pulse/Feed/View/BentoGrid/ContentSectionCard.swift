@@ -1,33 +1,6 @@
 import EntropyCore
 import SwiftUI
 
-// MARK: - Constants
-
-private enum Constants {
-    static let featuredImageHeight: CGFloat = 140
-    static let featuredImageCornerRadius: CGFloat = 12
-
-    static var articleCountOne: String {
-        AppLocalization.localized("digest.article_count_one")
-    }
-
-    static var articleCountOther: String {
-        AppLocalization.localized("digest.article_count_other")
-    }
-
-    static var articleAccessibilityLabel: String {
-        AppLocalization.localized("article_row.accessibility_label")
-    }
-
-    static var readArticleHint: String {
-        AppLocalization.localized("accessibility.read_article")
-    }
-
-    static var relatedArticles: String {
-        AppLocalization.localized("digest.related_articles")
-    }
-}
-
 // MARK: - ContentSectionCard
 
 struct ContentSectionCard: View {
@@ -128,7 +101,7 @@ struct ContentSectionCard: View {
 
     private var articleCountBadge: some View {
         let count = section.relatedArticles.count
-        let text = count == 1 ? Constants.articleCountOne : String(format: Constants.articleCountOther, count)
+        let text = count == 1 ? ContentSectionCardConstants.articleCountOne : String(format: ContentSectionCardConstants.articleCountOther, count)
 
         return Text(text)
             .font(Typography.captionSmall)
@@ -201,10 +174,10 @@ struct ContentSectionCard: View {
         .pressEffect(scale: 0.98)
         .accessibilityElement(children: .combine)
         .accessibilityLabel(String(
-            format: Constants.articleAccessibilityLabel,
+            format: ContentSectionCardConstants.articleAccessibilityLabel,
             article.title, article.source, article.formattedDate
         ))
-        .accessibilityHint(Constants.readArticleHint)
+        .accessibilityHint(ContentSectionCardConstants.readArticleHint)
     }
 
     @ViewBuilder
@@ -218,8 +191,8 @@ struct ContentSectionCard: View {
                     image
                         .resizable()
                         .aspectRatio(contentMode: .fill)
-                        .frame(height: Constants.featuredImageHeight)
-                        .clipShape(RoundedRectangle(cornerRadius: Constants.featuredImageCornerRadius))
+                        .frame(height: ContentSectionCardConstants.featuredImageHeight)
+                        .clipShape(RoundedRectangle(cornerRadius: ContentSectionCardConstants.featuredImageCornerRadius))
                 case .failure:
                     featuredImagePlaceholder
                 @unknown default:
@@ -227,17 +200,17 @@ struct ContentSectionCard: View {
                 }
             }
             .frame(maxWidth: .infinity)
-            .frame(height: Constants.featuredImageHeight)
-            .clipShape(RoundedRectangle(cornerRadius: Constants.featuredImageCornerRadius))
+            .frame(height: ContentSectionCardConstants.featuredImageHeight)
+            .clipShape(RoundedRectangle(cornerRadius: ContentSectionCardConstants.featuredImageCornerRadius))
         } else {
             featuredImagePlaceholder
         }
     }
 
     private var featuredImagePlaceholder: some View {
-        RoundedRectangle(cornerRadius: Constants.featuredImageCornerRadius)
+        RoundedRectangle(cornerRadius: ContentSectionCardConstants.featuredImageCornerRadius)
             .fill(Color.secondary.opacity(0.1))
-            .frame(height: Constants.featuredImageHeight)
+            .frame(height: ContentSectionCardConstants.featuredImageHeight)
             .overlay {
                 Image(systemName: "newspaper.fill")
                     .font(.system(size: IconSize.xl))
@@ -249,7 +222,7 @@ struct ContentSectionCard: View {
 
     private var sourcesRow: some View {
         VStack(alignment: .leading, spacing: Spacing.xs) {
-            Text(Constants.relatedArticles)
+            Text(ContentSectionCardConstants.relatedArticles)
                 .font(Typography.captionSmall)
                 .foregroundStyle(.secondary)
 

@@ -2,86 +2,6 @@
 import EntropyCore
 import SwiftUI
 
-// MARK: - Constants
-
-private enum Constants {
-    static var title: String {
-        AppLocalization.localized("search.title")
-    }
-
-    static var searching: String {
-        AppLocalization.localized("search.searching")
-    }
-
-    static var placeholderTitle: String {
-        AppLocalization.localized("search.placeholder.title")
-    }
-
-    static var placeholderMessage: String {
-        AppLocalization.localized("search.placeholder.message")
-    }
-
-    static var errorTitle: String {
-        AppLocalization.localized("search.error.title")
-    }
-
-    static var emptyTitle: String {
-        AppLocalization.localized("search.empty.title")
-    }
-
-    static var tryAgain: String {
-        AppLocalization.localized("common.try_again")
-    }
-
-    static var loadingMore: String {
-        AppLocalization.localized("common.loading_more")
-    }
-
-    static var prompt: String {
-        AppLocalization.localized("search.prompt")
-    }
-
-    static var searchResultsCount: String {
-        AppLocalization.localized("accessibility.search_results_count")
-    }
-
-    static var searchNoResults: String {
-        AppLocalization.localized("accessibility.search_no_results")
-    }
-
-    static var recentSearches: String {
-        AppLocalization.localized("search.recent_searches")
-    }
-
-    static var trendingTopics: String {
-        AppLocalization.localized("search.trending_topics")
-    }
-
-    static var recentLabel: String {
-        AppLocalization.localized("search.recent_label")
-    }
-
-    static var searchHint: String {
-        AppLocalization.localized("search.search_hint")
-    }
-
-    static var offlineTitle: String {
-        AppLocalization.localized("search.offline.title")
-    }
-
-    static var offlineMessage: String {
-        AppLocalization.localized("search.offline.message")
-    }
-
-    static var noResults: String {
-        AppLocalization.localized("search.no_results")
-    }
-
-    static var sortBy: String {
-        AppLocalization.localized("search.sort_by")
-    }
-}
-
 // MARK: - SearchView
 
 // swiftlint:disable:next type_body_length
@@ -112,7 +32,7 @@ struct SearchView<R: SearchNavigationRouter>: View {
 
             content
         }
-        .navigationTitle(Constants.title)
+        .navigationTitle(SearchViewConstants.title)
         .navigationBarTitleDisplayMode(.large)
         .toolbarBackground(.hidden, for: .navigationBar)
         .searchable(
@@ -121,7 +41,7 @@ struct SearchView<R: SearchNavigationRouter>: View {
                 set: { viewModel.handle(event: .onQueryChanged($0)) }
             ),
             placement: .navigationBarDrawer(displayMode: .always),
-            prompt: Constants.prompt
+            prompt: SearchViewConstants.prompt
         )
         .onSubmit(of: .search) {
             HapticManager.shared.tap()
@@ -142,13 +62,13 @@ struct SearchView<R: SearchNavigationRouter>: View {
         .onChange(of: viewModel.viewState.results) { _, newResults in
             if !newResults.isEmpty {
                 isFirstResultFocused = true
-                let announcement = String(format: Constants.searchResultsCount, newResults.count)
+                let announcement = String(format: SearchViewConstants.searchResultsCount, newResults.count)
                 AccessibilityNotification.Announcement(announcement).post()
             }
         }
         .onChange(of: viewModel.viewState.showNoResults) { _, showNoResults in
             if showNoResults {
-                AccessibilityNotification.Announcement(Constants.searchNoResults).post()
+                AccessibilityNotification.Announcement(SearchViewConstants.searchNoResults).post()
             }
         }
     }
@@ -159,7 +79,7 @@ struct SearchView<R: SearchNavigationRouter>: View {
             VStack(spacing: Spacing.md) {
                 ProgressView()
                     .scaleEffect(1.2)
-                Text(Constants.searching)
+                Text(SearchViewConstants.searching)
                     .font(Typography.bodyMedium)
                     .foregroundStyle(.secondary)
             }
@@ -189,10 +109,10 @@ struct SearchView<R: SearchNavigationRouter>: View {
                         .foregroundStyle(Color.Accent.primary)
                         .accessibilityHidden(true)
 
-                    Text(Constants.placeholderTitle)
+                    Text(SearchViewConstants.placeholderTitle)
                         .font(Typography.titleMedium)
 
-                    Text(Constants.placeholderMessage)
+                    Text(SearchViewConstants.placeholderMessage)
                         .font(Typography.bodyMedium)
                         .foregroundStyle(.secondary)
                         .multilineTextAlignment(.center)
@@ -207,7 +127,7 @@ struct SearchView<R: SearchNavigationRouter>: View {
             VStack(spacing: Spacing.lg) {
                 if !viewModel.viewState.suggestions.isEmpty {
                     VStack(alignment: .leading, spacing: Spacing.sm) {
-                        GlassSectionHeader(Constants.recentSearches)
+                        GlassSectionHeader(SearchViewConstants.recentSearches)
 
                         if dynamicTypeSize.isAccessibilitySize {
                             VStack(alignment: .leading, spacing: Spacing.sm) {
@@ -231,7 +151,7 @@ struct SearchView<R: SearchNavigationRouter>: View {
                 }
 
                 VStack(alignment: .leading, spacing: Spacing.sm) {
-                    GlassSectionHeader(Constants.trendingTopics)
+                    GlassSectionHeader(SearchViewConstants.trendingTopics)
 
                     let minWidth: CGFloat = dynamicTypeSize.isAccessibilitySize ? 150 : 100
                     LazyVGrid(columns: [GridItem(.adaptive(minimum: minWidth))], spacing: Spacing.sm) {
@@ -266,8 +186,8 @@ struct SearchView<R: SearchNavigationRouter>: View {
             .glassBackground(style: .thin, cornerRadius: CornerRadius.pill)
         }
         .pressEffect()
-        .accessibilityLabel(String(format: Constants.recentLabel, suggestion))
-        .accessibilityHint(Constants.searchHint)
+        .accessibilityLabel(String(format: SearchViewConstants.recentLabel, suggestion))
+        .accessibilityHint(SearchViewConstants.searchHint)
     }
 
     private func errorView(_ message: String) -> some View {
@@ -279,10 +199,10 @@ struct SearchView<R: SearchNavigationRouter>: View {
                         .foregroundStyle(.orange)
                         .accessibilityHidden(true)
 
-                    Text(Constants.offlineTitle)
+                    Text(SearchViewConstants.offlineTitle)
                         .font(Typography.titleMedium)
 
-                    Text(Constants.offlineMessage)
+                    Text(SearchViewConstants.offlineMessage)
                         .font(Typography.bodyMedium)
                         .foregroundStyle(.secondary)
                         .multilineTextAlignment(.center)
@@ -292,7 +212,7 @@ struct SearchView<R: SearchNavigationRouter>: View {
                         .foregroundStyle(Color.Semantic.error)
                         .accessibilityHidden(true)
 
-                    Text(Constants.errorTitle)
+                    Text(SearchViewConstants.errorTitle)
                         .font(Typography.titleMedium)
 
                     Text(message)
@@ -304,7 +224,7 @@ struct SearchView<R: SearchNavigationRouter>: View {
                         HapticManager.shared.tap()
                         viewModel.handle(event: .onSearch)
                     } label: {
-                        Text(Constants.tryAgain)
+                        Text(SearchViewConstants.tryAgain)
                             .font(Typography.labelLarge)
                             .foregroundStyle(.white)
                             .padding(.horizontal, Spacing.lg)
@@ -327,10 +247,10 @@ struct SearchView<R: SearchNavigationRouter>: View {
                     .foregroundStyle(.secondary)
                     .accessibilityHidden(true)
 
-                Text(Constants.emptyTitle)
+                Text(SearchViewConstants.emptyTitle)
                     .font(Typography.titleMedium)
 
-                Text(String(format: Constants.noResults, viewModel.viewState.query))
+                Text(String(format: SearchViewConstants.noResults, viewModel.viewState.query))
                     .font(Typography.bodyMedium)
                     .foregroundStyle(.secondary)
                     .multilineTextAlignment(.center)
@@ -389,7 +309,7 @@ struct SearchView<R: SearchNavigationRouter>: View {
                     HStack {
                         ProgressView()
                             .tint(.secondary)
-                        Text(Constants.loadingMore)
+                        Text(SearchViewConstants.loadingMore)
                             .font(Typography.captionLarge)
                             .foregroundStyle(.secondary)
                     }
@@ -405,7 +325,7 @@ struct SearchView<R: SearchNavigationRouter>: View {
 
 private extension SearchView {
     var sortPicker: some View {
-        Picker(Constants.sortBy, selection: Binding(
+        Picker(SearchViewConstants.sortBy, selection: Binding(
             get: { viewModel.viewState.sortOption },
             set: {
                 HapticManager.shared.selectionChanged()

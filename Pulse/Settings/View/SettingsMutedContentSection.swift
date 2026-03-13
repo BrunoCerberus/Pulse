@@ -2,48 +2,6 @@ import EntropyCore
 import SwiftUI
 
 struct SettingsMutedContentSection: View {
-    private enum Constants {
-        static var contentFilters: String {
-            AppLocalization.localized("settings.content_filters")
-        }
-
-        static var contentFiltersDescription: String {
-            AppLocalization.localized("settings.content_filters.description")
-        }
-
-        static var mutedSources: String {
-            AppLocalization.localized("settings.muted_sources")
-        }
-
-        static var addSource: String {
-            AppLocalization.localized("settings.muted_sources.add")
-        }
-
-        static var addSourceAction: String {
-            AppLocalization.localized("settings.muted_sources.add_action")
-        }
-
-        static var removeSourceAction: String {
-            AppLocalization.localized("settings.muted_sources.remove_action")
-        }
-
-        static var mutedKeywords: String {
-            AppLocalization.localized("settings.muted_keywords")
-        }
-
-        static var addKeyword: String {
-            AppLocalization.localized("settings.muted_keywords.add")
-        }
-
-        static var addKeywordAction: String {
-            AppLocalization.localized("settings.muted_keywords.add_action")
-        }
-
-        static var removeKeywordAction: String {
-            AppLocalization.localized("settings.muted_keywords.remove_action")
-        }
-    }
-
     let mutedSources: [String]
     let mutedKeywords: [String]
     @Binding var newMutedSource: String
@@ -58,16 +16,16 @@ struct SettingsMutedContentSection: View {
             mutedSourcesGroup
             mutedKeywordsGroup
         } header: {
-            Text(Constants.contentFilters)
+            Text(MutedContentConstants.contentFilters)
         } footer: {
-            Text(Constants.contentFiltersDescription)
+            Text(MutedContentConstants.contentFiltersDescription)
         }
     }
 
     private var mutedSourcesGroup: some View {
-        DisclosureGroup("\(Constants.mutedSources) (\(mutedSources.count))") {
+        DisclosureGroup("\(MutedContentConstants.mutedSources) (\(mutedSources.count))") {
             HStack {
-                TextField(Constants.addSource, text: $newMutedSource)
+                TextField(MutedContentConstants.addSource, text: $newMutedSource)
                     .textFieldStyle(.roundedBorder)
 
                 Button {
@@ -75,7 +33,7 @@ struct SettingsMutedContentSection: View {
                 } label: {
                     Image(systemName: "plus.circle.fill")
                 }
-                .accessibilityLabel(Constants.addSourceAction)
+                .accessibilityLabel(MutedContentConstants.addSourceAction)
                 .disabled(newMutedSource.isEmpty)
             }
 
@@ -89,16 +47,16 @@ struct SettingsMutedContentSection: View {
                         Image(systemName: "xmark.circle")
                             .foregroundStyle(.secondary)
                     }
-                    .accessibilityLabel(Constants.removeSourceAction)
+                    .accessibilityLabel(MutedContentConstants.removeSourceAction)
                 }
             }
         }
     }
 
     private var mutedKeywordsGroup: some View {
-        DisclosureGroup("\(Constants.mutedKeywords) (\(mutedKeywords.count))") {
+        DisclosureGroup("\(MutedContentConstants.mutedKeywords) (\(mutedKeywords.count))") {
             HStack {
-                TextField(Constants.addKeyword, text: $newMutedKeyword)
+                TextField(MutedContentConstants.addKeyword, text: $newMutedKeyword)
                     .textFieldStyle(.roundedBorder)
 
                 Button {
@@ -106,7 +64,7 @@ struct SettingsMutedContentSection: View {
                 } label: {
                     Image(systemName: "plus.circle.fill")
                 }
-                .accessibilityLabel(Constants.addKeywordAction)
+                .accessibilityLabel(MutedContentConstants.addKeywordAction)
                 .disabled(newMutedKeyword.isEmpty)
             }
 
@@ -120,7 +78,7 @@ struct SettingsMutedContentSection: View {
                         Image(systemName: "xmark.circle")
                             .foregroundStyle(.secondary)
                     }
-                    .accessibilityLabel(Constants.removeKeywordAction)
+                    .accessibilityLabel(MutedContentConstants.removeKeywordAction)
                 }
             }
         }

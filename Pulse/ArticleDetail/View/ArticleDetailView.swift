@@ -3,86 +3,6 @@ import Combine
 import EntropyCore
 import SwiftUI
 
-// MARK: - Constants
-
-private enum Constants {
-    static var back: String {
-        AppLocalization.localized("common.back")
-    }
-
-    static var readFull: String {
-        AppLocalization.localized("article.read_full")
-    }
-
-    static var summarize: String {
-        AppLocalization.localized("summarization.button")
-    }
-
-    static var listen: String {
-        AppLocalization.localized("tts.button")
-    }
-
-    static var listenHint: String {
-        AppLocalization.localized("tts.button_hint")
-    }
-
-    static var summarizeHint: String {
-        AppLocalization.localized("article_detail.summarize_hint")
-    }
-
-    static var premiumHint: String {
-        AppLocalization.localized("article_detail.premium_hint")
-    }
-
-    static var removeBookmark: String {
-        AppLocalization.localized("article_detail.remove_bookmark")
-    }
-
-    static var addBookmark: String {
-        AppLocalization.localized("article_detail.add_bookmark")
-    }
-
-    static var saveHint: String {
-        AppLocalization.localized("article_detail.save_hint")
-    }
-
-    static var shareLabel: String {
-        AppLocalization.localized("article_detail.share_label")
-    }
-
-    static var shareHint: String {
-        AppLocalization.localized("article_detail.share_hint")
-    }
-
-    static var bookmarkAdded: String {
-        AppLocalization.localized("accessibility.bookmark_added")
-    }
-
-    static var bookmarkRemoved: String {
-        AppLocalization.localized("accessibility.bookmark_removed")
-    }
-
-    static var ttsStarted: String {
-        AppLocalization.localized("accessibility.tts_started")
-    }
-
-    static var ttsPaused: String {
-        AppLocalization.localized("accessibility.tts_paused")
-    }
-
-    static var byAuthor: String {
-        AppLocalization.localized("article.by_author")
-    }
-
-    static var opensInSafari: String {
-        AppLocalization.localized("accessibility.opens_in_safari")
-    }
-
-    static var relatedArticles: String {
-        AppLocalization.localized("article_detail.related_articles")
-    }
-}
-
 // MARK: - ArticleDetailView
 
 // swiftlint:disable:next type_body_length
@@ -159,11 +79,11 @@ struct ArticleDetailView: View {
                 Button {
                     dismiss()
                 } label: {
-                    Label(Constants.back, systemImage: "chevron.left")
+                    Label(ArticleDetailConstants.back, systemImage: "chevron.left")
                         .labelStyle(.iconOnly)
                 }
                 .accessibilityIdentifier("backButton")
-                .accessibilityLabel(Constants.back)
+                .accessibilityLabel(ArticleDetailConstants.back)
             }
 
             ToolbarItem(placement: .topBarTrailing) {
@@ -172,8 +92,8 @@ struct ArticleDetailView: View {
                         viewModel.handle(event: .onListenTapped)
                     }
                     .accessibilityIdentifier("listenButton")
-                    .accessibilityLabel(Constants.listen)
-                    .accessibilityHint(Constants.listenHint)
+                    .accessibilityLabel(ArticleDetailConstants.listen)
+                    .accessibilityHint(ArticleDetailConstants.listenHint)
 
                     Button("", systemImage: "sparkles") {
                         if isPremium {
@@ -184,11 +104,11 @@ struct ArticleDetailView: View {
                         }
                     }
                     .accessibilityIdentifier("summarizeButton")
-                    .accessibilityLabel(Constants.summarize)
+                    .accessibilityLabel(ArticleDetailConstants.summarize)
                     .accessibilityHint(
                         isPremium
-                            ? Constants.summarizeHint
-                            : Constants.premiumHint
+                            ? ArticleDetailConstants.summarizeHint
+                            : ArticleDetailConstants.premiumHint
                     )
 
                     Button("", systemImage: viewModel.viewState.isBookmarked ? "bookmark.fill" : "bookmark") {
@@ -197,17 +117,17 @@ struct ArticleDetailView: View {
                     .accessibilityIdentifier(viewModel.viewState.isBookmarked ? "bookmark.fill" : "bookmark")
                     .accessibilityLabel(
                         viewModel.viewState.isBookmarked
-                            ? Constants.removeBookmark
-                            : Constants.addBookmark
+                            ? ArticleDetailConstants.removeBookmark
+                            : ArticleDetailConstants.addBookmark
                     )
-                    .accessibilityHint(Constants.saveHint)
+                    .accessibilityHint(ArticleDetailConstants.saveHint)
 
                     Button("", systemImage: "square.and.arrow.up") {
                         viewModel.handle(event: .onShareTapped)
                     }
                     .accessibilityIdentifier("square.and.arrow.up")
-                    .accessibilityLabel(Constants.shareLabel)
-                    .accessibilityHint(Constants.shareHint)
+                    .accessibilityLabel(ArticleDetailConstants.shareLabel)
+                    .accessibilityHint(ArticleDetailConstants.shareHint)
                 }
             }
         }
@@ -245,16 +165,16 @@ struct ArticleDetailView: View {
         )
         .onChange(of: viewModel.viewState.isBookmarked) { _, isBookmarked in
             let announcement = isBookmarked
-                ? Constants.bookmarkAdded
-                : Constants.bookmarkRemoved
+                ? ArticleDetailConstants.bookmarkAdded
+                : ArticleDetailConstants.bookmarkRemoved
             AccessibilityNotification.Announcement(announcement).post()
         }
         .onChange(of: viewModel.viewState.ttsPlaybackState) { _, newState in
             let announcement: String? = switch newState {
             case .playing:
-                Constants.ttsStarted
+                ArticleDetailConstants.ttsStarted
             case .paused:
-                Constants.ttsPaused
+                ArticleDetailConstants.ttsPaused
             case .idle:
                 nil
             }
@@ -359,7 +279,7 @@ struct ArticleDetailView: View {
         if dynamicTypeSize.isAccessibilitySize {
             VStack(alignment: .leading, spacing: Spacing.xxs) {
                 if let author = viewModel.viewState.article.author {
-                    Text(String(format: Constants.byAuthor, author))
+                    Text(String(format: ArticleDetailConstants.byAuthor, author))
                         .fontWeight(.medium)
                 }
 
@@ -372,7 +292,7 @@ struct ArticleDetailView: View {
         } else {
             HStack(spacing: Spacing.xs) {
                 if let author = viewModel.viewState.article.author {
-                    Text(String(format: Constants.byAuthor, author))
+                    Text(String(format: ArticleDetailConstants.byAuthor, author))
                         .fontWeight(.medium)
                         .lineLimit(1)
                         .truncationMode(.tail)
@@ -407,7 +327,7 @@ struct ArticleDetailView: View {
                 .fill(Color.Border.adaptive(for: colorScheme))
                 .frame(height: 0.5)
 
-            Text(Constants.relatedArticles)
+            Text(ArticleDetailConstants.relatedArticles)
                 .font(Typography.titleMedium)
                 .bold()
                 .accessibilityAddTraits(.isHeader)
@@ -455,7 +375,7 @@ struct ArticleDetailView: View {
         } label: {
             HStack(spacing: Spacing.sm) {
                 Image(systemName: "safari.fill")
-                Text(Constants.readFull)
+                Text(ArticleDetailConstants.readFull)
             }
             .font(Typography.labelLarge)
             .foregroundStyle(.white)
@@ -465,7 +385,7 @@ struct ArticleDetailView: View {
             .clipShape(RoundedRectangle(cornerRadius: CornerRadius.md, style: .continuous))
         }
         .pressEffect()
-        .accessibilityHint(Constants.opensInSafari)
+        .accessibilityHint(ArticleDetailConstants.opensInSafari)
     }
 }
 

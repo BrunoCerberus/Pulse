@@ -1,38 +1,6 @@
 import EntropyCore
 import SwiftUI
 
-// MARK: - Constants
-
-private enum Constants {
-    static var title: String {
-        AppLocalization.localized("bookmarks.title")
-    }
-
-    static var loading: String {
-        AppLocalization.localized("bookmarks.loading")
-    }
-
-    static var errorTitle: String {
-        AppLocalization.localized("bookmarks.error.title")
-    }
-
-    static var emptyTitle: String {
-        AppLocalization.localized("bookmarks.empty.title")
-    }
-
-    static var emptyMessage: String {
-        AppLocalization.localized("bookmarks.empty.message")
-    }
-
-    static var tryAgain: String {
-        AppLocalization.localized("common.try_again")
-    }
-
-    static var savedCount: String {
-        AppLocalization.localized("bookmarks.saved_count")
-    }
-}
-
 // MARK: - BookmarksView
 
 struct BookmarksView<R: BookmarksNavigationRouter>: View {
@@ -58,7 +26,7 @@ struct BookmarksView<R: BookmarksNavigationRouter>: View {
 
             content
         }
-        .navigationTitle(Constants.title)
+        .navigationTitle(BookmarksViewConstants.title)
         .navigationBarTitleDisplayMode(.large)
         .toolbarBackground(.hidden, for: .navigationBar)
         .refreshable {
@@ -88,7 +56,7 @@ struct BookmarksView<R: BookmarksNavigationRouter>: View {
             VStack(spacing: Spacing.md) {
                 ProgressView()
                     .scaleEffect(1.2)
-                Text(Constants.loading)
+                Text(BookmarksViewConstants.loading)
                     .font(Typography.bodyMedium)
                     .foregroundStyle(.secondary)
             }
@@ -110,7 +78,7 @@ struct BookmarksView<R: BookmarksNavigationRouter>: View {
                     .foregroundStyle(Color.Semantic.warning)
                     .accessibilityHidden(true)
 
-                Text(Constants.errorTitle)
+                Text(BookmarksViewConstants.errorTitle)
                     .font(Typography.titleMedium)
 
                 Text(message)
@@ -122,7 +90,7 @@ struct BookmarksView<R: BookmarksNavigationRouter>: View {
                     HapticManager.shared.tap()
                     viewModel.handle(event: .onRefresh)
                 } label: {
-                    Text(Constants.tryAgain)
+                    Text(BookmarksViewConstants.tryAgain)
                         .font(Typography.labelLarge)
                         .foregroundStyle(.white)
                         .padding(.horizontal, Spacing.lg)
@@ -145,10 +113,10 @@ struct BookmarksView<R: BookmarksNavigationRouter>: View {
                     .foregroundStyle(Color.Accent.primary)
                     .accessibilityHidden(true)
 
-                Text(Constants.emptyTitle)
+                Text(BookmarksViewConstants.emptyTitle)
                     .font(Typography.titleMedium)
 
-                Text(Constants.emptyMessage)
+                Text(BookmarksViewConstants.emptyMessage)
                     .font(Typography.bodyMedium)
                     .foregroundStyle(.secondary)
                     .multilineTextAlignment(.center)
@@ -191,7 +159,7 @@ struct BookmarksView<R: BookmarksNavigationRouter>: View {
         HStack {
             Image(systemName: "bookmark.fill")
                 .foregroundStyle(Color.Accent.primary)
-            Text(String(format: Constants.savedCount, viewModel.viewState.bookmarks.count))
+            Text(String(format: BookmarksViewConstants.savedCount, viewModel.viewState.bookmarks.count))
                 .font(Typography.captionLarge)
                 .foregroundStyle(.secondary)
             Spacer()

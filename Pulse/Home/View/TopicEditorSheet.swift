@@ -1,30 +1,6 @@
 import EntropyCore
 import SwiftUI
 
-// MARK: - Constants
-
-private enum Constants {
-    static var title: String {
-        AppLocalization.localized("home.edit_topics.title")
-    }
-
-    static var description: String {
-        AppLocalization.localized("home.edit_topics.description")
-    }
-
-    static var done: String {
-        AppLocalization.localized("common.done")
-    }
-
-    static var unfollowHint: String {
-        AppLocalization.localized("topic_editor.unfollow_hint")
-    }
-
-    static var followHint: String {
-        AppLocalization.localized("topic_editor.follow_hint")
-    }
-}
-
 // MARK: - TopicEditorSheet
 
 /// Sheet for managing followed topics.
@@ -64,19 +40,19 @@ struct TopicEditorSheet: View {
                         .accessibilityAddTraits(followedTopics.contains(topic) ? .isSelected : [])
                         .accessibilityHint(
                             followedTopics.contains(topic)
-                                ? Constants.unfollowHint
-                                : Constants.followHint
+                                ? TopicEditorConstants.unfollowHint
+                                : TopicEditorConstants.followHint
                         )
                     }
                 } footer: {
-                    Text(Constants.description)
+                    Text(TopicEditorConstants.description)
                 }
             }
-            .navigationTitle(Constants.title)
+            .navigationTitle(TopicEditorConstants.title)
             .navigationBarTitleDisplayMode(.inline)
             .toolbar {
                 ToolbarItem(placement: .confirmationAction) {
-                    Button(Constants.done) {
+                    Button(TopicEditorConstants.done) {
                         HapticManager.shared.tap()
                         onDismiss()
                     }
