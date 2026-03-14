@@ -1,6 +1,7 @@
 import Foundation
 @testable import Pulse
 import Testing
+import UIKit
 
 @Suite("SplashScreenView Tests")
 @MainActor
@@ -17,11 +18,14 @@ struct SplashScreenViewTests {
     }
 
     /// Visual regression coverage is handled by snapshot tests in PulseSnapshotTests.
-    /// This test verifies the view body can be evaluated without crashing (e.g. missing
-    /// resources, broken modifiers), serving as a build-time smoke test.
-    @Test("SplashScreenView body evaluates without crashing")
-    func bodyEvaluates() {
+    /// This test verifies the view renders without crashing (e.g. missing resources,
+    /// broken modifiers), serving as a build-time smoke test.
+    /// Note: Directly accessing view.body triggers @Environment outside a view hierarchy;
+    /// using UIHostingController to properly install the view instead.
+    @Test("SplashScreenView renders without crashing")
+    func renders() {
         let view = SplashScreenView {}
-        _ = view.body
+        let controller = UIHostingController(rootView: view)
+        _ = controller.view
     }
 }

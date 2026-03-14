@@ -68,14 +68,11 @@ final class SettingsViewsSnapshotTests: XCTestCase {
     // MARK: - SettingsMutedContentSection Tests
 
     func testSettingsMutedContentSectionEmpty() {
-        @State var newSource = ""
-        @State var newKeyword = ""
-
         let view = SettingsMutedContentSection(
             mutedSources: [],
             mutedKeywords: [],
-            newMutedSource: $newSource,
-            newMutedKeyword: $newKeyword,
+            newMutedSource: .constant(""),
+            newMutedKeyword: .constant(""),
             onAddMutedSource: {},
             onRemoveMutedSource: { _ in },
             onAddMutedKeyword: {},
@@ -92,14 +89,11 @@ final class SettingsViewsSnapshotTests: XCTestCase {
     }
 
     func testSettingsMutedContentSectionLightMode() {
-        @State var newSource = ""
-        @State var newKeyword = ""
-
         let view = SettingsMutedContentSection(
             mutedSources: [],
             mutedKeywords: [],
-            newMutedSource: $newSource,
-            newMutedKeyword: $newKeyword,
+            newMutedSource: .constant(""),
+            newMutedKeyword: .constant(""),
             onAddMutedSource: {},
             onRemoveMutedSource: { _ in },
             onAddMutedKeyword: {},
@@ -116,14 +110,11 @@ final class SettingsViewsSnapshotTests: XCTestCase {
     }
 
     func testSettingsMutedContentSectionWithData() {
-        @State var newSource = ""
-        @State var newKeyword = ""
-
         let view = SettingsMutedContentSection(
             mutedSources: ["TechCrunch", "BuzzFeed", "The Daily Mail"],
             mutedKeywords: ["politics", "celebrity gossip", "sports"],
-            newMutedSource: $newSource,
-            newMutedKeyword: $newKeyword,
+            newMutedSource: .constant(""),
+            newMutedKeyword: .constant(""),
             onAddMutedSource: {},
             onRemoveMutedSource: { _ in },
             onAddMutedKeyword: {},
@@ -140,14 +131,11 @@ final class SettingsViewsSnapshotTests: XCTestCase {
     }
 
     func testSettingsMutedContentSectionWithInput() {
-        @State var newSource = "New Source"
-        @State var newKeyword = "Breaking"
-
         let view = SettingsMutedContentSection(
             mutedSources: ["TechCrunch"],
             mutedKeywords: ["politics"],
-            newMutedSource: $newSource,
-            newMutedKeyword: $newKeyword,
+            newMutedSource: .constant("New Source"),
+            newMutedKeyword: .constant("Breaking"),
             onAddMutedSource: {},
             onRemoveMutedSource: { _ in },
             onAddMutedKeyword: {},

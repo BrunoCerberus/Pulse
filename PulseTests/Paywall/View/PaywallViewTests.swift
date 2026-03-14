@@ -15,11 +15,7 @@ struct PaywallViewTests {
         _ = PaywallView(viewModel: viewModel)
     }
 
-    @Test("init sets viewModel")
-    func initSetsViewModel() {
-        let serviceLocator = ServiceLocator()
-        let viewModel = PaywallViewModel(serviceLocator: serviceLocator)
-        let view = PaywallView(viewModel: viewModel)
-        #expect(view.viewModel === viewModel)
-    }
+    // Note: Testing @StateObject property access outside a View hierarchy is not supported
+    // by SwiftUI (triggers "Accessing StateObject's object without being installed on a View").
+    // The canBeInstantiated() test above already covers that the view can be created with a viewModel.
 }
