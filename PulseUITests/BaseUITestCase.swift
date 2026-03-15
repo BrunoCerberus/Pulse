@@ -34,6 +34,15 @@ class BaseUITestCase: XCTestCase {
 
         app = XCUIApplication()
 
+        // Terminate any lingering app process from a previous test that crashed or
+        // failed to tear down cleanly. Without this, app.launch() can fail with
+        // "Application does not have a process ID" because the simulator still has
+        // a zombie process. terminate() is a no-op if the app isn't running.
+        if app.state != .notRunning {
+            app.terminate()
+            _ = app.wait(for: .notRunning, timeout: 10)
+        }
+
         // Speed optimizations
         app.launchEnvironment["UI_TESTING"] = "1"
         app.launchEnvironment["DISABLE_ANIMATIONS"] = "1"
@@ -57,6 +66,8 @@ class BaseUITestCase: XCTestCase {
         // If the app didn't reach foreground (e.g., previous instance failed to terminate),
         // retry with a fresh XCUIApplication instance
         if !app.wait(for: .runningForeground, timeout: Self.launchTimeout) {
+            app.terminate()
+            _ = app.wait(for: .notRunning, timeout: 10)
             app = XCUIApplication()
             app.launchEnvironment["UI_TESTING"] = "1"
             app.launchEnvironment["DISABLE_ANIMATIONS"] = "1"
