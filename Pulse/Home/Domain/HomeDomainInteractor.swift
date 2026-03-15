@@ -344,9 +344,15 @@ private extension HomeDomainInteractor {
     }
 
     /// Safely tracks and auto-removes background tasks with proper cleanup on deinit.
-    nonisolated func trackBackgroundTask(_ operation: @escaping @Sendable () async -> Void) {
-        Task.detached {
+    func trackBackgroundTask(_ operation: @escaping @Sendable () async -> Void) {
+        let task = Task {
             await operation()
+        }
+        backgroundTasks.insert(task)
+
+        Task { [weak self] in
+            _ = await task.result
+            self?.backgroundTasks.remove(task)
         }
     }
 }
