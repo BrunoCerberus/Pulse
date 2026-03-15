@@ -25,7 +25,7 @@ enum SnapshotConfig {
     )
 
     /// iPhone Air with accessibility extra-large content size category (dark mode).
-    static let iPhoneAirAccessibility: ViewImageConfig = {
+    @MainActor static let iPhoneAirAccessibility: ViewImageConfig = {
         let traits = UITraitCollection { mutableTraits in
             mutableTraits.userInterfaceStyle = .dark
             mutableTraits.preferredContentSizeCategory = .accessibilityExtraLarge
@@ -38,7 +38,7 @@ enum SnapshotConfig {
     }()
 
     /// iPhone Air with extra-extra-large content size category (dark mode).
-    static let iPhoneAirExtraExtraLarge: ViewImageConfig = {
+    @MainActor static let iPhoneAirExtraExtraLarge: ViewImageConfig = {
         let traits = UITraitCollection { mutableTraits in
             mutableTraits.userInterfaceStyle = .dark
             mutableTraits.preferredContentSizeCategory = .extraExtraLarge

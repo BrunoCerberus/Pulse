@@ -1,7 +1,7 @@
 import Combine
 import Foundation
 
-final class LiveSettingsService: SettingsService {
+final class LiveSettingsService: SettingsService, @unchecked Sendable {
     private let storageService: StorageService
 
     init(storageService: StorageService) {
@@ -9,13 +9,15 @@ final class LiveSettingsService: SettingsService {
     }
 
     func fetchPreferences() -> AnyPublisher<UserPreferences, Error> {
-        Future { [storageService] promise in
+        let storageService = UncheckedSendableBox(value: storageService)
+        return Future { promise in
+            let promise = UncheckedSendableBox(value: promise)
             Task.detached {
                 do {
-                    let preferences = try await storageService.fetchUserPreferences() ?? .default
-                    promise(.success(preferences))
+                    let preferences = try await storageService.value.fetchUserPreferences() ?? .default
+                    promise.value(.success(preferences))
                 } catch {
-                    promise(.failure(error))
+                    promise.value(.failure(error))
                 }
             }
         }
@@ -24,16 +26,18 @@ final class LiveSettingsService: SettingsService {
     }
 
     func savePreferences(_ preferences: UserPreferences) -> AnyPublisher<Void, Error> {
-        Future { [storageService] promise in
+        let storageService = UncheckedSendableBox(value: storageService)
+        return Future { promise in
+            let promise = UncheckedSendableBox(value: promise)
             Task.detached {
                 do {
-                    try await storageService.saveUserPreferences(preferences)
+                    try await storageService.value.saveUserPreferences(preferences)
                     // Mirror notification preference to UserDefaults for PulseAppDelegate
                     // to check in willPresent without needing SwiftData access
                     UserDefaults.standard.set(preferences.notificationsEnabled, forKey: "pulse.notificationsEnabled")
-                    promise(.success(()))
+                    promise.value(.success(()))
                 } catch {
-                    promise(.failure(error))
+                    promise.value(.failure(error))
                 }
             }
         }

@@ -159,6 +159,7 @@ struct NetworkResilienceTests {
                         guard !resumed else { return }
                         hasValue = true
                         resumed = true
+                        nonisolated(unsafe) let value = value
                         continuation.resume(returning: value)
                     }
                 )

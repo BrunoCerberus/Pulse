@@ -47,7 +47,7 @@ struct SummarizationDomainInteractorTests {
         sut.dispatch(action: .startSummarization)
 
         // Wait for state to change from idle
-        let inProgress = await waitForCondition(timeout: 500_000_000) { [sut] in
+        let inProgress = await waitForCondition(timeout: 500_000_000) { @MainActor [sut] in
             let state = sut.currentState
             return state.summarizationState != .idle
         }
@@ -65,7 +65,7 @@ struct SummarizationDomainInteractorTests {
         sut.dispatch(action: .startSummarization)
 
         // Wait for summarization to complete with longer timeout
-        let completed = await waitForCondition(timeout: 3_000_000_000) { [sut] in
+        let completed = await waitForCondition(timeout: 3_000_000_000) { @MainActor [sut] in
             sut.currentState.summarizationState == .completed
         }
 
@@ -83,7 +83,7 @@ struct SummarizationDomainInteractorTests {
         sut.dispatch(action: .startSummarization)
 
         // Wait for error state
-        let hasError = await waitForCondition(timeout: 1_000_000_000) { [sut] in
+        let hasError = await waitForCondition(timeout: 1_000_000_000) { @MainActor [sut] in
             if case .error = sut.currentState.summarizationState { return true }
             return false
         }
@@ -101,7 +101,7 @@ struct SummarizationDomainInteractorTests {
         sut.dispatch(action: .startSummarization)
 
         // Wait for summarization to start (state not idle anymore)
-        let started = await waitForCondition(timeout: 500_000_000) { [sut] in
+        let started = await waitForCondition(timeout: 500_000_000) { @MainActor [sut] in
             sut.currentState.summarizationState != .idle
         }
         #expect(started, "Summarization should have started")
@@ -109,7 +109,7 @@ struct SummarizationDomainInteractorTests {
         sut.dispatch(action: .cancelSummarization)
 
         // Wait for state to reset to idle
-        let cancelled = await waitForCondition(timeout: 500_000_000) { [sut] in
+        let cancelled = await waitForCondition(timeout: 500_000_000) { @MainActor [sut] in
             sut.currentState.summarizationState == .idle
         }
         #expect(cancelled, "Summarization should be cancelled")

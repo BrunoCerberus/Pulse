@@ -180,7 +180,7 @@ struct Article: Identifiable, Equatable, Codable, Hashable {
         mediaType != nil
     }
 
-    private static let relativeFormatter: RelativeDateTimeFormatter = {
+    private nonisolated(unsafe) static let relativeFormatter: RelativeDateTimeFormatter = {
         let formatter = RelativeDateTimeFormatter()
         formatter.unitsStyle = .abbreviated
         return formatter

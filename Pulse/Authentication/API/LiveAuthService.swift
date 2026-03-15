@@ -40,10 +40,11 @@ final class LiveAuthService: NSObject, AuthService {
 
     func signInWithGoogle(presenting viewController: UIViewController) -> AnyPublisher<AuthUser, Error> {
         Future { promise in
+            let promise = UncheckedSendableBox(value: promise)
             Task { @MainActor in
                 do {
                     guard let clientID = FirebaseApp.app()?.options.clientID else {
-                        promise(.failure(AuthError.unknown("Missing Firebase client ID")))
+                        promise.value(.failure(AuthError.unknown("Missing Firebase client ID")))
                         return
                     }
 
@@ -52,7 +53,7 @@ final class LiveAuthService: NSObject, AuthService {
 
                     let result = try await GIDSignIn.sharedInstance.signIn(withPresenting: viewController)
                     guard let idToken = result.user.idToken?.tokenString else {
-                        promise(.failure(AuthError.invalidCredential))
+                        promise.value(.failure(AuthError.invalidCredential))
                         return
                     }
 
@@ -63,14 +64,14 @@ final class LiveAuthService: NSObject, AuthService {
 
                     let authResult = try await Auth.auth().signIn(with: credential)
                     if let user = authResult.user.toAuthUser() {
-                        promise(.success(user))
+                        promise.value(.success(user))
                     } else {
-                        promise(.failure(AuthError.unknown("Failed to create user")))
+                        promise.value(.failure(AuthError.unknown("Failed to create user")))
                     }
                 } catch let error as GIDSignInError where error.code == .canceled {
-                    promise(.failure(AuthError.signInCancelled))
+                    promise.value(.failure(AuthError.signInCancelled))
                 } catch {
-                    promise(.failure(AuthError.unknown(error.localizedDescription)))
+                    promise.value(.failure(AuthError.unknown(error.localizedDescription)))
                 }
             }
         }
@@ -114,14 +115,16 @@ final class LiveAuthService: NSObject, AuthService {
             controller.performRequests()
 
             // Store continuation for async handling
+            let promise = UncheckedSendableBox(value: promise)
+            let weakSelf = WeakRef(self)
             Task {
                 do {
                     let user = try await withCheckedThrowingContinuation { continuation in
-                        self.appleSignInContinuation = continuation
+                        weakSelf.object?.appleSignInContinuation = continuation
                     }
-                    promise(.success(user))
+                    promise.value(.success(user))
                 } catch {
-                    promise(.failure(error))
+                    promise.value(.failure(error))
                 }
             }
         }

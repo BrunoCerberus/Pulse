@@ -67,8 +67,9 @@ private struct ExtractImageViewsFromTabView<Value: AnimatedTabSelectable>: UIVie
 
         for tab in Value.allCases {
             // Find the image view matching this tab's symbol
+            let symbol = tab.symbolImage
             if let imageView = imageViews.first(where: {
-                $0.image?.description.contains(tab.symbolImage) ?? false
+                $0.image?.description.contains(symbol) ?? false
             }) {
                 dict[tab] = imageView
             }

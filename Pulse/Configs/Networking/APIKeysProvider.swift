@@ -41,12 +41,12 @@ enum APIKeysProvider {
     // MARK: - Dependencies
 
     /// The configured remote config service
-    private static var remoteConfigService: RemoteConfigService?
+    private nonisolated(unsafe) static var remoteConfigService: RemoteConfigService?
 
     // MARK: - Keychain Manager
 
     /// Shared keychain manager instance for API key storage
-    private static let keychainManager: KeychainManager = .init(service: keychainService)
+    private nonisolated(unsafe) static let keychainManager: KeychainManager = .init(service: keychainService)
 
     // MARK: - Configuration
 

@@ -30,8 +30,8 @@ packages:
     url: https://github.com/google/GoogleSignIn-iOS.git
     from: 8.0.0
   LeapSDK:
-    url: https://github.com/Liquid4All/leap-ios.git
-    from: 0.9.2
+    url: https://github.com/BrunoCerberus/leap-ios.git
+    revision: c6d3045e0551a58a0f16698a9c17fc3f15fed419
 
 settings:
   base:
@@ -41,7 +41,7 @@ settings:
     DEVELOPMENT_TEAM: RDTR6557FX
     CODE_SIGN_STYLE: Automatic
     IPHONEOS_DEPLOYMENT_TARGET: 26.3
-    SWIFT_VERSION: 5.0
+    SWIFT_VERSION: 6.2
     TARGETED_DEVICE_FAMILY: 1,2
     SUPPORTED_PLATFORMS: iphoneos iphonesimulator
     SUPPORTS_MACCATALYST: false
@@ -295,7 +295,7 @@ targets:
         TARGETED_DEVICE_FAMILY: 1,2
         SUPPORTED_PLATFORMS: iphoneos iphonesimulator
         SKIP_INSTALL: YES
-        SWIFT_VERSION: 5.0
+        SWIFT_VERSION: 6.2
         INFOPLIST_FILE: PulseWidgetExtension/Info.plist
         CODE_SIGN_ENTITLEMENTS: PulseWidgetExtension/PulseWidgetExtension.entitlements
         CODE_SIGN_ALLOW_ENTITLEMENTS_MODIFICATION: YES

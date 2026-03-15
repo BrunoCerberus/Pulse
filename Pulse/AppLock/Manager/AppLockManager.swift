@@ -55,12 +55,13 @@ final class AppLockManager: ObservableObject {
     /// Attempts biometric authentication to unlock the app.
     func attemptUnlock() async {
         guard let service = appLockService else { return }
+        let boxedService = UncheckedSendableBox(value: service)
 
         isAuthenticating = true
         defer { isAuthenticating = false }
 
         do {
-            let success = try await service.authenticate(
+            let success = try await boxedService.value.authenticate(
                 reason: AppLocalization.localized("applock.auth_reason")
             )
             if success {
@@ -83,12 +84,13 @@ final class AppLockManager: ObservableObject {
     /// User tapped "Enable" on the prompt. Validates biometrics then enables.
     func enableFromPrompt() async {
         guard let service = appLockService else { return }
+        let boxedService = UncheckedSendableBox(value: service)
 
         isAuthenticating = true
         defer { isAuthenticating = false }
 
         do {
-            let success = try await service.authenticate(
+            let success = try await boxedService.value.authenticate(
                 reason: AppLocalization.localized("applock.enable_reason")
             )
             if success {
@@ -125,13 +127,14 @@ final class AppLockManager: ObservableObject {
     /// Enabling requires biometric validation first; disabling is immediate.
     func toggleAppLock(enabled: Bool) async {
         guard let service = appLockService else { return }
+        let boxedService = UncheckedSendableBox(value: service)
 
         if enabled {
             isAuthenticating = true
             defer { isAuthenticating = false }
 
             do {
-                let success = try await service.authenticate(
+                let success = try await boxedService.value.authenticate(
                     reason: AppLocalization.localized("applock.enable_reason")
                 )
                 if success {

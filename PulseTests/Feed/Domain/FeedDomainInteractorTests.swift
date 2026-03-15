@@ -54,7 +54,7 @@ struct FeedDomainInteractorTests {
         sut.dispatch(action: .loadInitialData)
 
         // Wait for async article fetching to complete
-        let success = await waitForCondition(timeout: 2_000_000_000) { [sut] in
+        let success = await waitForCondition(timeout: 2_000_000_000) { @MainActor [sut] in
             sut.currentState.hasLoadedInitialData && !sut.currentState.latestArticles.isEmpty
         }
 
@@ -78,7 +78,7 @@ struct FeedDomainInteractorTests {
         sut.dispatch(action: .loadInitialData)
 
         // Wait for cached digest to appear (includes 300ms animation delay)
-        let success = await waitForCondition(timeout: 2_000_000_000) { [sut] in
+        let success = await waitForCondition(timeout: 2_000_000_000) { @MainActor [sut] in
             sut.currentState.currentDigest != nil
         }
 
@@ -95,7 +95,7 @@ struct FeedDomainInteractorTests {
         sut.dispatch(action: .loadInitialData)
 
         // Wait for async article fetching to complete (may result in empty due to all failures)
-        let success = await waitForCondition(timeout: 2_000_000_000) { [sut] in
+        let success = await waitForCondition(timeout: 2_000_000_000) { @MainActor [sut] in
             sut.currentState.hasLoadedInitialData ||
                 sut.currentState.generationState == .error("Unable to fetch news")
         }
@@ -112,7 +112,7 @@ struct FeedDomainInteractorTests {
         sut.dispatch(action: .loadInitialData)
 
         // Wait for articles to load
-        let articlesLoaded = await waitForCondition(timeout: 2_000_000_000) { [sut] in
+        let articlesLoaded = await waitForCondition(timeout: 2_000_000_000) { @MainActor [sut] in
             !sut.currentState.latestArticles.isEmpty
         }
         #expect(articlesLoaded, "Articles should be loaded")
@@ -175,7 +175,7 @@ struct FeedDomainInteractorTests {
         sut.dispatch(action: .loadInitialData)
 
         // Wait for preload to be triggered
-        let success = await waitForCondition(timeout: 2_000_000_000) { [mockFeedService] in
+        let success = await waitForCondition(timeout: 2_000_000_000) { @MainActor [mockFeedService] in
             mockFeedService.loadModelCallCount > 0
         }
 
@@ -209,7 +209,7 @@ struct FeedDomainInteractorTests {
         sut.dispatch(action: .loadInitialData)
 
         // Wait for initial data to load
-        let success = await waitForCondition(timeout: 2_000_000_000) { [sut] in
+        let success = await waitForCondition(timeout: 2_000_000_000) { @MainActor [sut] in
             sut.currentState.hasLoadedInitialData
         }
 
@@ -227,7 +227,7 @@ struct FeedDomainInteractorTests {
 
         sut.dispatch(action: .loadInitialData)
 
-        let success = await waitForCondition(timeout: 2_000_000_000) { [sut] in
+        let success = await waitForCondition(timeout: 2_000_000_000) { @MainActor [sut] in
             sut.currentState.isOfflineError
         }
 
@@ -250,7 +250,7 @@ struct FeedDomainInteractorTests {
 
         sut.dispatch(action: .loadInitialData)
 
-        let offlineSet = await waitForCondition(timeout: 2_000_000_000) { [sut] in
+        let offlineSet = await waitForCondition(timeout: 2_000_000_000) { @MainActor [sut] in
             sut.currentState.isOfflineError
         }
         #expect(offlineSet, "Should be offline first")
@@ -262,7 +262,7 @@ struct FeedDomainInteractorTests {
 
         sut.dispatch(action: .retryAfterError)
 
-        let recovered = await waitForCondition(timeout: 2_000_000_000) { [sut] in
+        let recovered = await waitForCondition(timeout: 2_000_000_000) { @MainActor [sut] in
             !sut.currentState.isOfflineError && sut.currentState.hasLoadedInitialData
         }
 

@@ -72,10 +72,11 @@ final class ReadingHistoryDomainInteractor: CombineInteractor {
             state.error = nil
         }
 
+        let service = UncheckedSendableBox(value: storageService)
         let task = Task { [weak self] in
             guard let self else { return }
             do {
-                let articles = try await storageService.fetchReadArticles()
+                let articles = try await service.value.fetchReadArticles()
                 await MainActor.run {
                     self.updateState { state in
                         state.articles = articles
@@ -95,10 +96,11 @@ final class ReadingHistoryDomainInteractor: CombineInteractor {
     }
 
     private func clearHistory() {
+        let service = UncheckedSendableBox(value: storageService)
         let task = Task { [weak self] in
             guard let self else { return }
             do {
-                try await storageService.clearReadingHistory()
+                try await service.value.clearReadingHistory()
                 await MainActor.run {
                     self.updateState { state in
                         state.articles = []
@@ -141,14 +143,15 @@ final class ReadingHistoryDomainInteractor: CombineInteractor {
     }
 
     private func toggleBookmark(_ article: Article) {
+        let service = UncheckedSendableBox(value: storageService)
         let task = Task { [weak self] in
             guard let self else { return }
-            let isBookmarked = await storageService.isBookmarked(article.id)
+            let isBookmarked = await service.value.isBookmarked(article.id)
             if isBookmarked {
-                try? await storageService.deleteArticle(article)
+                try? await service.value.deleteArticle(article)
                 await MainActor.run { self.analyticsService?.logEvent(.articleUnbookmarked) }
             } else {
-                try? await storageService.saveArticle(article)
+                try? await service.value.saveArticle(article)
                 await MainActor.run { self.analyticsService?.logEvent(.articleBookmarked) }
             }
         }

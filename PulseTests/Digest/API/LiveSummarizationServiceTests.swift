@@ -85,7 +85,9 @@ struct LiveSummarizationServiceTests {
         mockLLMService.isModelLoaded = false
         mockLLMService.loadDelay = 0.01
 
-        try await sut.loadModelIfNeeded()
+        let unwrappedSut = try #require(sut)
+        nonisolated(unsafe) let service = unwrappedSut
+        try await service.loadModelIfNeeded()
 
         #expect(mockLLMService.loadModelCallCount == 1)
     }
@@ -94,7 +96,9 @@ struct LiveSummarizationServiceTests {
     func loadModelIfNeededSkipsWhenLoaded() async throws {
         mockLLMService.isModelLoaded = true
 
-        try await sut.loadModelIfNeeded()
+        let unwrappedSut = try #require(sut)
+        nonisolated(unsafe) let service = unwrappedSut
+        try await service.loadModelIfNeeded()
 
         #expect(mockLLMService.loadModelCallCount == 0)
     }

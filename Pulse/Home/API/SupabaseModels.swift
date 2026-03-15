@@ -47,13 +47,13 @@ struct SupabaseArticle: Codable {
 
     // No CodingKeys needed - convertFromSnakeCase handles all conversions
 
-    private static let iso8601Formatter: ISO8601DateFormatter = {
+    private nonisolated(unsafe) static let iso8601Formatter: ISO8601DateFormatter = {
         let formatter = ISO8601DateFormatter()
         formatter.formatOptions = [.withInternetDateTime, .withFractionalSeconds]
         return formatter
     }()
 
-    private static let iso8601FormatterNoFraction: ISO8601DateFormatter = {
+    private nonisolated(unsafe) static let iso8601FormatterNoFraction: ISO8601DateFormatter = {
         let formatter = ISO8601DateFormatter()
         formatter.formatOptions = [.withInternetDateTime]
         return formatter
@@ -148,13 +148,13 @@ struct SupabaseSearchResult: Codable {
     let mediaDuration: Int?
     let mediaMimeType: String?
 
-    private static let iso8601Formatter: ISO8601DateFormatter = {
+    private nonisolated(unsafe) static let iso8601Formatter: ISO8601DateFormatter = {
         let formatter = ISO8601DateFormatter()
         formatter.formatOptions = [.withInternetDateTime, .withFractionalSeconds]
         return formatter
     }()
 
-    private static let iso8601FormatterNoFraction: ISO8601DateFormatter = {
+    private nonisolated(unsafe) static let iso8601FormatterNoFraction: ISO8601DateFormatter = {
         let formatter = ISO8601DateFormatter()
         formatter.formatOptions = [.withInternetDateTime]
         return formatter

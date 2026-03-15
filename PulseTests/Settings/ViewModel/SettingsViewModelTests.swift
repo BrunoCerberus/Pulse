@@ -63,7 +63,7 @@ struct SettingsViewModelTests {
         sut.handle(event: .onAppear)
 
         // Wait for initial load
-        let loaded = await waitForCondition(timeout: 1_000_000_000) { [sut] in
+        let loaded = await waitForCondition(timeout: 1_000_000_000) { @MainActor [sut] in
             !sut.viewState.isLoading
         }
         #expect(loaded, "Initial load should complete")
@@ -71,7 +71,7 @@ struct SettingsViewModelTests {
         sut.handle(event: .onNewMutedSourceChanged("TestSource"))
 
         // Wait for text field to update
-        let textUpdated = await waitForCondition(timeout: 500_000_000) { [sut] in
+        let textUpdated = await waitForCondition(timeout: 500_000_000) { @MainActor [sut] in
             sut.viewState.newMutedSource == "TestSource"
         }
         #expect(textUpdated, "Text field should update")
@@ -79,7 +79,7 @@ struct SettingsViewModelTests {
         sut.handle(event: .onAddMutedSource)
 
         // Wait for muted source to be added and field to clear
-        let added = await waitForCondition(timeout: 1_000_000_000) { [sut] in
+        let added = await waitForCondition(timeout: 1_000_000_000) { @MainActor [sut] in
             sut.viewState.mutedSources.contains("TestSource") && sut.viewState.newMutedSource.isEmpty
         }
         #expect(added, "Muted source should be added")
@@ -93,7 +93,7 @@ struct SettingsViewModelTests {
         sut.handle(event: .onAppear)
 
         // Wait for initial load
-        let loaded = await waitForCondition(timeout: 1_000_000_000) { [sut] in
+        let loaded = await waitForCondition(timeout: 1_000_000_000) { @MainActor [sut] in
             !sut.viewState.isLoading
         }
         #expect(loaded, "Initial load should complete")
@@ -101,7 +101,7 @@ struct SettingsViewModelTests {
         sut.handle(event: .onNewMutedKeywordChanged("TestKeyword"))
 
         // Wait for text field to update
-        let textUpdated = await waitForCondition(timeout: 500_000_000) { [sut] in
+        let textUpdated = await waitForCondition(timeout: 500_000_000) { @MainActor [sut] in
             sut.viewState.newMutedKeyword == "TestKeyword"
         }
         #expect(textUpdated, "Text field should update")
@@ -109,7 +109,7 @@ struct SettingsViewModelTests {
         sut.handle(event: .onAddMutedKeyword)
 
         // Wait for muted keyword to be added and field to clear
-        let added = await waitForCondition(timeout: 1_000_000_000) { [sut] in
+        let added = await waitForCondition(timeout: 1_000_000_000) { @MainActor [sut] in
             sut.viewState.mutedKeywords.contains("TestKeyword") && sut.viewState.newMutedKeyword.isEmpty
         }
         #expect(added, "Muted keyword should be added")

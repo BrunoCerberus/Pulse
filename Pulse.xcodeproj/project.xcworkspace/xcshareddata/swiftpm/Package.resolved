@@ -1,5 +1,5 @@
 {
-  "originHash" : "c4f311ee7daeeb17908ef280ae44339c860560313cd9121487a24b7e5ba8c1f4",
+  "originHash" : "c8a5f267bd80641949152974ee9e0862b2b93fec60105e996a05f113a9393e9a",
   "pins" : [
     {
       "identity" : "abseil-cpp-binary",
@@ -129,10 +129,9 @@
     {
       "identity" : "leap-ios",
       "kind" : "remoteSourceControl",
-      "location" : "https://github.com/Liquid4All/leap-ios.git",
+      "location" : "https://github.com/BrunoCerberus/leap-ios.git",
       "state" : {
-        "revision" : "d5a820805fd12b366daeeb2d2ea8ba2934377a7a",
-        "version" : "0.9.2"
+        "revision" : "c6d3045e0551a58a0f16698a9c17fc3f15fed419"
       }
     },
     {

@@ -97,16 +97,17 @@ final class LLMModelManager: @unchecked Sendable {
 
             // Only lock when setting the shared state
             // Double-check: another caller may have loaded while we were initializing
+            let boxedRunner = UncheckedSendableBox(value: runner)
             let wasAlreadyLoaded = lock.withLock {
                 if modelRunner != nil {
                     return true
                 }
-                modelRunner = runner
+                modelRunner = boxedRunner.value
                 return false
             }
             if wasAlreadyLoaded {
                 // Another thread loaded first, discard our instance
-                await runner.unload()
+                await boxedRunner.value.unload()
                 return
             }
 
@@ -120,12 +121,12 @@ final class LLMModelManager: @unchecked Sendable {
 
     /// Unload model and free memory
     func unloadModel() async {
-        let runner = lock.withLock { () -> ModelRunner? in
+        let boxed: UncheckedSendableBox<(any ModelRunner)?> = lock.withLock {
             let current = modelRunner
             modelRunner = nil
-            return current
+            return UncheckedSendableBox(value: current)
         }
-        await runner?.unload()
+        await boxed.value?.unload()
         logger.info("Model unloaded", category: logCategory)
     }
 
@@ -270,10 +271,14 @@ private extension LLMModelManager {
         stopSequences: [String],
         continuation: AsyncThrowingStream<String, Error>.Continuation
     ) async {
-        guard let runner = lock.withLock({ modelRunner }) else {
+        let boxedRunner: UncheckedSendableBox<(any ModelRunner)?> = lock.withLock {
+            UncheckedSendableBox(value: modelRunner)
+        }
+        guard let rawRunner = boxedRunner.value else {
             continuation.finish(throwing: LLMError.modelNotLoaded)
             return
         }
+        let runner = UncheckedSendableBox(value: rawRunner)
 
         // Pre-inference memory check to prevent crashes during generation
         guard hasAdequateMemory(for: .inference) else {
@@ -301,7 +306,7 @@ private extension LLMModelManager {
 
         do {
             // Create conversation with system prompt using LEAP SDK
-            let conversation = runner.createConversation(systemPrompt: systemPrompt)
+            let conversation = runner.value.createConversation(systemPrompt: systemPrompt)
 
             // Send user message and stream response
             let userMessage = ChatMessage(role: .user, content: [.text(prompt)])

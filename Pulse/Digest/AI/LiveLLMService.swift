@@ -23,7 +23,7 @@ import LeapSDK
 /// ## Thread Safety
 /// All operations are designed to be called from the main actor context.
 /// Background inference is handled internally with proper continuation management.
-final class LiveLLMService: LLMService {
+final class LiveLLMService: LLMService, @unchecked Sendable {
     private let modelManager: LLMModelManager
     private let modelStatusSubject = CurrentValueSubject<LLMModelStatus, Never>(.notLoaded)
     private var generationTask: Task<Void, Never>?
@@ -71,19 +71,22 @@ final class LiveLLMService: LLMService {
                 return
             }
 
+            let stream = UncheckedSendableBox(value: self.generateStream(
+                prompt: prompt,
+                systemPrompt: systemPrompt,
+                config: config
+            ))
+            let promise = UncheckedSendableBox(value: promise)
+
             Task {
                 do {
                     var result = ""
-                    for try await token in self.generateStream(
-                        prompt: prompt,
-                        systemPrompt: systemPrompt,
-                        config: config
-                    ) {
+                    for try await token in stream.value {
                         result += token
                     }
-                    promise(.success(result))
+                    promise.value(.success(result))
                 } catch {
-                    promise(.failure(error))
+                    promise.value(.failure(error))
                 }
             }
         }

@@ -171,7 +171,8 @@ struct HomeDomainInteractorTests {
         // Allow enough time for background Task to complete
         try await Task.sleep(nanoseconds: 300_000_000)
 
-        let isBookmarked = await mockStorageService.isBookmarked(article.id)
+        nonisolated(unsafe) let storage = mockStorageService
+        let isBookmarked = await storage.isBookmarked(article.id)
         #expect(isBookmarked)
     }
 

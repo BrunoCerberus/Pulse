@@ -170,10 +170,11 @@ private extension FeedDomainInteractor {
         // Skip if preload already in progress (task-based synchronization)
         guard preloadTask == nil else { return }
 
+        let service = UncheckedSendableBox(value: feedService)
         preloadTask = Task { @MainActor [weak self] in
             defer { self?.preloadTask = nil }
             do {
-                try await self?.feedService.loadModelIfNeeded()
+                try await service.value.loadModelIfNeeded()
             } catch {
                 // Preloading failure is non-fatal; generation will retry loading
                 Logger.shared.debug(
@@ -190,7 +191,7 @@ private extension FeedDomainInteractor {
         updateState { $0.generationState = .loadingArticles }
 
         // Capture newsService on MainActor before entering task group
-        let newsService = self.newsService
+        let newsService = UncheckedSendableBox(value: self.newsService)
 
         fetchArticlesTask = Task { @MainActor [weak self] in
             guard let self else { return }
@@ -205,7 +206,7 @@ private extension FeedDomainInteractor {
                             // Convert Combine publisher to async
                             let articles = try await withCheckedThrowingContinuation { continuation in
                                 var cancellable: AnyCancellable?
-                                cancellable = newsService
+                                cancellable = newsService.value
                                     .fetchTopHeadlines(category: category, language: "en", country: "us", page: 1)
                                     .first()
                                     .sink(
@@ -301,10 +302,11 @@ private extension FeedDomainInteractor {
             state.generationState = .generating
         }
 
+        let feedServiceBox = UncheckedSendableBox(value: feedService)
         generationTask = Task { @MainActor in
             do {
                 // Ensure model is loaded
-                try await feedService.loadModelIfNeeded()
+                try await feedServiceBox.value.loadModelIfNeeded()
 
                 guard !Task.isCancelled else { return }
 
@@ -313,7 +315,7 @@ private extension FeedDomainInteractor {
                 var tokensSinceLastUpdate = 0
                 let updateBatchSize = 3
 
-                for try await token in feedService.generateDigest(from: articlesToProcess) {
+                for try await token in feedServiceBox.value.generateDigest(from: articlesToProcess) {
                     guard !Task.isCancelled else { break }
 
                     fullText += token
@@ -363,7 +365,7 @@ private extension FeedDomainInteractor {
                     sourceArticles: articlesToProcess,
                     generatedAt: .now
                 )
-                feedService.saveDigest(digest)
+                feedServiceBox.value.saveDigest(digest)
                 dispatch(action: .digestCompleted(digest))
 
             } catch {
