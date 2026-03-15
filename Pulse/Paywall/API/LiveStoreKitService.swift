@@ -48,7 +48,10 @@ final class LiveStoreKitService: StoreKitService, @unchecked Sendable {
 
     // MARK: - Initialization
 
-    init() {
+    /// - Parameter startListening: When `false`, skips the transaction listener and initial
+    ///   status check. Use `false` in unit tests to avoid hanging on `Transaction.updates`.
+    init(startListening: Bool = true) {
+        guard startListening else { return }
         updateListenerTask = listenForTransactions()
         initialStatusTask = Task { [weak self] in
             await self?.updateSubscriptionStatus()
