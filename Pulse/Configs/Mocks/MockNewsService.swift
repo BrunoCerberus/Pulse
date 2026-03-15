@@ -240,8 +240,8 @@ final class MockStorageService: StorageService {
     }
 }
 
-final class MockSummarizationService: SummarizationService {
-    private let modelStatusSubject = CurrentValueSubject<LLMModelStatus, Never>(.notLoaded)
+final class MockSummarizationService: SummarizationService, @unchecked Sendable {
+    private nonisolated(unsafe) let modelStatusSubject = CurrentValueSubject<LLMModelStatus, Never>(.notLoaded)
     var generateResult: Result<String, Error> = .success(
         "This is a mock AI-generated summary of the article providing key insights and main points."
     )
@@ -259,9 +259,9 @@ final class MockSummarizationService: SummarizationService {
 
     func loadModelIfNeeded() async throws {
         guard !isModelLoaded else { return }
-        modelStatusSubject.send(.loading(progress: 0.5))
+        await MainActor.run { modelStatusSubject.send(.loading(progress: 0.5)) }
         try await Task.sleep(nanoseconds: UInt64(loadDelay * 1_000_000_000))
-        modelStatusSubject.send(.ready)
+        await MainActor.run { modelStatusSubject.send(.ready) }
     }
 
     func summarize(article _: Article) -> AsyncThrowingStream<String, Error> {
@@ -295,7 +295,7 @@ final class MockSummarizationService: SummarizationService {
     func cancelSummarization() {}
 }
 
-final class MockLLMService: LLMService {
+final class MockLLMService: LLMService, @unchecked Sendable {
     var modelStatus: LLMModelStatus = .notLoaded
     var generateResult: Result<String, Error> = .success(
         "Mock AI digest content with enough words to trigger progress updates during generation."
@@ -308,7 +308,7 @@ final class MockLLMService: LLMService {
     var loadModelCallCount = 0
     var cancelGenerationCallCount = 0
 
-    private let modelStatusSubject = CurrentValueSubject<LLMModelStatus, Never>(.notLoaded)
+    private nonisolated(unsafe) let modelStatusSubject = CurrentValueSubject<LLMModelStatus, Never>(.notLoaded)
 
     var modelStatusPublisher: AnyPublisher<LLMModelStatus, Never> {
         modelStatusSubject.eraseToAnyPublisher()
@@ -330,19 +330,19 @@ final class MockLLMService: LLMService {
 
     func loadModel() async throws {
         loadModelCallCount += 1
-        modelStatusSubject.send(.loading(progress: 0.5))
+        await MainActor.run { modelStatusSubject.send(.loading(progress: 0.5)) }
         try await Task.sleep(nanoseconds: UInt64(loadDelay * 1_000_000_000))
 
         if shouldSimulateMemoryPressure {
-            modelStatusSubject.send(.error("Memory pressure"))
+            await MainActor.run { modelStatusSubject.send(.error("Memory pressure")) }
             throw LLMError.memoryPressure
         }
 
-        modelStatusSubject.send(.ready)
+        await MainActor.run { modelStatusSubject.send(.ready) }
     }
 
     func unloadModel() async {
-        modelStatusSubject.send(.notLoaded)
+        await MainActor.run { modelStatusSubject.send(.notLoaded) }
     }
 
     func generate(
