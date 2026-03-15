@@ -121,7 +121,11 @@ class BaseUITestCase: XCTestCase {
             // Wait for termination to complete before next test starts.
             // "Failed to terminate" errors in CI happen when the next test's launch()
             // runs before the previous instance fully exits.
-            _ = app.wait(for: .notRunning, timeout: 10)
+            if !app.wait(for: .notRunning, timeout: 10) {
+                // Retry termination — CI shared runners can be slow to release processes
+                app.terminate()
+                _ = app.wait(for: .notRunning, timeout: 10)
+            }
         }
     }
 
@@ -164,14 +168,14 @@ class BaseUITestCase: XCTestCase {
 
         // Select Home tab - use coordinate-based taps for iOS 26 Liquid Glass reliability
         let homeTab = tabBar.buttons["Home"]
-        if homeTab.exists, !homeTab.isSelected {
+        if homeTab.exists {
             wait(for: 0.3)
             let center = homeTab.coordinate(withNormalizedOffset: CGVector(dx: 0.5, dy: 0.5))
             center.tap()
         } else if !homeTab.exists {
             // Fallback: try finding Home button directly (handles tabBar query issues on CI)
             let homeButton = app.buttons["Home"]
-            if safeWaitForExistence(homeButton, timeout: 2), !homeButton.isSelected {
+            if safeWaitForExistence(homeButton, timeout: 2) {
                 homeButton.tap()
             } else if tabBar.exists {
                 // Last resort: tap first tab (Home is always first)
@@ -207,9 +211,11 @@ class BaseUITestCase: XCTestCase {
 
         // Use synchronous .exists (single snapshot) instead of waitForExistence
         // (polling loop) to avoid repeated accessibility hierarchy queries that
-        // can trigger Xcode 26 C++ exception crashes
+        // can trigger Xcode 26 C++ exception crashes.
+        // Note: We skip .isSelected checks because they trigger a full accessibility
+        // hierarchy query that can time out on CI ("Timed out while evaluating UI query").
+        // Tapping an already-selected tab is a no-op, so always tapping is safe.
         if tab.exists {
-            guard !tab.isSelected else { return }
             wait(for: 0.3)
             // Always use coordinate-based tap to bypass hittability evaluation
             // which can also crash on iOS 26 Liquid Glass tab bar
@@ -218,7 +224,7 @@ class BaseUITestCase: XCTestCase {
         } else {
             // Fallback: try finding the button directly (outside tab bar query)
             let tabButton = app.buttons[tabName]
-            if tabButton.exists, !tabButton.isSelected {
+            if tabButton.exists {
                 tabButton.tap()
             }
         }
@@ -236,16 +242,12 @@ class BaseUITestCase: XCTestCase {
         guard app.state == .runningForeground else { return }
         let searchTab = app.tabBars.buttons["Search"]
         if searchTab.exists {
-            guard !searchTab.isSelected else {
-                _ = safeWaitForExistence(app.navigationBars["Search"], timeout: Self.defaultTimeout)
-                return
-            }
             wait(for: 0.3)
             let center = searchTab.coordinate(withNormalizedOffset: CGVector(dx: 0.5, dy: 0.5))
             center.tap()
         } else {
             let searchButton = app.buttons["Search"]
-            if searchButton.exists, !searchButton.isSelected {
+            if searchButton.exists {
                 searchButton.tap()
             }
         }
@@ -257,23 +259,19 @@ class BaseUITestCase: XCTestCase {
         guard app.state == .runningForeground else { return }
         let feedTab = app.tabBars.buttons["Feed"]
         if feedTab.exists {
-            guard !feedTab.isSelected else {
-                _ = safeWaitForExistence(app.navigationBars["Daily Digest"], timeout: Self.defaultTimeout)
-                return
-            }
             wait(for: 0.3)
             let center = feedTab.coordinate(withNormalizedOffset: CGVector(dx: 0.5, dy: 0.5))
             center.tap()
         } else {
             // Fallback for iOS 26+: try finding by image name "text.document"
             let feedByImage = app.tabBars.buttons["text.document"]
-            if feedByImage.exists, !feedByImage.isSelected {
+            if feedByImage.exists {
                 wait(for: 0.3)
                 let center = feedByImage.coordinate(withNormalizedOffset: CGVector(dx: 0.5, dy: 0.5))
                 center.tap()
             } else {
                 let feedButton = app.buttons["Feed"]
-                if feedButton.exists, !feedButton.isSelected {
+                if feedButton.exists {
                     feedButton.tap()
                 }
             }
@@ -287,23 +285,19 @@ class BaseUITestCase: XCTestCase {
         let mediaTab = app.tabBars.buttons["Media"]
 
         if mediaTab.exists {
-            guard !mediaTab.isSelected else {
-                wait(for: 0.5)
-                return
-            }
             wait(for: 0.3)
             let center = mediaTab.coordinate(withNormalizedOffset: CGVector(dx: 0.5, dy: 0.5))
             center.tap()
         } else {
             // Fallback for iOS 26+: try finding by image name "play.tv"
             let mediaByImage = app.tabBars.buttons["play.tv"]
-            if mediaByImage.exists, !mediaByImage.isSelected {
+            if mediaByImage.exists {
                 wait(for: 0.3)
                 let center = mediaByImage.coordinate(withNormalizedOffset: CGVector(dx: 0.5, dy: 0.5))
                 center.tap()
             } else {
                 let mediaButton = app.buttons["Media"]
-                if mediaButton.exists, !mediaButton.isSelected {
+                if mediaButton.exists {
                     mediaButton.tap()
                 }
             }
@@ -331,16 +325,12 @@ class BaseUITestCase: XCTestCase {
         guard app.state == .runningForeground else { return }
         let bookmarksTab = app.tabBars.buttons["Bookmarks"]
         if bookmarksTab.exists {
-            guard !bookmarksTab.isSelected else {
-                _ = safeWaitForExistence(app.navigationBars["Bookmarks"], timeout: Self.defaultTimeout)
-                return
-            }
             wait(for: 0.3)
             let center = bookmarksTab.coordinate(withNormalizedOffset: CGVector(dx: 0.5, dy: 0.5))
             center.tap()
         } else {
             let bookmarksButton = app.buttons["Bookmarks"]
-            if bookmarksButton.exists, !bookmarksButton.isSelected {
+            if bookmarksButton.exists {
                 bookmarksButton.tap()
             }
         }

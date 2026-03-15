@@ -1,38 +1,6 @@
 import EntropyCore
 import SwiftUI
 
-// MARK: - Constants
-
-private enum Constants {
-    static var sectionTitle: String {
-        AppLocalization.localized("digest.source_articles")
-    }
-
-    static var expanded: String {
-        AppLocalization.localized("source_articles.expanded")
-    }
-
-    static var collapsed: String {
-        AppLocalization.localized("source_articles.collapsed")
-    }
-
-    static var collapseHint: String {
-        AppLocalization.localized("source_articles.collapse_hint")
-    }
-
-    static var expandHint: String {
-        AppLocalization.localized("source_articles.expand_hint")
-    }
-
-    static var articleAccessibilityLabel: String {
-        AppLocalization.localized("article_row.accessibility_label")
-    }
-
-    static var readArticleHint: String {
-        AppLocalization.localized("accessibility.read_article")
-    }
-}
-
 // MARK: - SourceArticlesSection
 
 struct SourceArticlesSection: View {
@@ -151,8 +119,8 @@ private struct SourceArticleRow: View {
         .buttonStyle(.plain)
         .pressEffect()
         .accessibilityElement(children: .combine)
-        .accessibilityLabel(String(format: Constants.articleAccessibilityLabel, article.title, article.source, ""))
-        .accessibilityHint(Constants.readArticleHint)
+        .accessibilityLabel(String(format: SourceArticlesSection.Constants.articleAccessibilityLabel, article.title, article.source, ""))
+        .accessibilityHint(SourceArticlesSection.Constants.readArticleHint)
     }
 
     // MARK: - Thumbnail View
