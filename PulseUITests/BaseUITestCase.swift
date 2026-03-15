@@ -434,11 +434,18 @@ class BaseUITestCase: XCTestCase {
         return false
     }
 
-    /// Wait for an element to disappear
+    /// Wait for an element to disappear.
+    /// Uses polling with `.exists` (single snapshot per iteration) instead of
+    /// `XCTNSPredicateExpectation` which uses XCTest's internal snapshot loop
+    /// that can throw uncatchable C++ exceptions on Xcode 26.
     func waitForElementToDisappear(_ element: XCUIElement, timeout: TimeInterval = 10) -> Bool {
-        let predicate = NSPredicate { _, _ in !element.exists }
-        let expectation = XCTNSPredicateExpectation(predicate: predicate, object: nil)
-        return XCTWaiter.wait(for: [expectation], timeout: timeout) == .completed
+        if !element.exists { return true }
+        let deadline = Date().addingTimeInterval(timeout)
+        while Date() < deadline {
+            RunLoop.current.run(until: Date().addingTimeInterval(0.25))
+            if !element.exists { return true }
+        }
+        return false
     }
 
     /// Wait for content to load (articles, error, or empty state)
