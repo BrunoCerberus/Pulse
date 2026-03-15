@@ -352,19 +352,19 @@ class BaseUITestCase: XCTestCase {
         guard app.state == .runningForeground else { return }
         navigateToTab("Home")
 
-        // Try multiple strategies to find the gear button
-        var gearButton = app.navigationBars.buttons["Settings"]
-        if !gearButton.exists {
-            // Toolbar items may not be in navBar on iOS 26
-            gearButton = app.buttons["Settings"]
-        }
+        // Wait for the gear button to become available — toolbar items load asynchronously
+        // after the navigation bar title appears, so a synchronous .exists check is not reliable.
+        let gearInNavBar = app.navigationBars.buttons["Settings"]
+        let gearDirectButton = app.buttons["Settings"]
+        _ = waitForAny([gearInNavBar, gearDirectButton], timeout: Self.shortTimeout)
 
-        if gearButton.exists {
-            wait(for: 0.3)
-            let center = gearButton.coordinate(withNormalizedOffset: CGVector(dx: 0.5, dy: 0.5))
-            center.tap()
-            _ = safeWaitForExistence(app.navigationBars["Settings"], timeout: Self.defaultTimeout)
-        }
+        let gearButton: XCUIElement = gearInNavBar.exists ? gearInNavBar : gearDirectButton
+        guard gearButton.exists else { return }
+
+        wait(for: 0.3)
+        let center = gearButton.coordinate(withNormalizedOffset: CGVector(dx: 0.5, dy: 0.5))
+        center.tap()
+        _ = safeWaitForExistence(app.navigationBars["Settings"], timeout: Self.defaultTimeout)
     }
 
     // MARK: - Wait Helpers
