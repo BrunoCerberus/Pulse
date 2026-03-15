@@ -39,16 +39,9 @@ final class AudioPlayerManager: ObservableObject {
 
     init() {}
 
-    deinit {
-        // Perform cleanup inline since deinit is nonisolated
-        if let timeObserver, let player {
-            player.removeTimeObserver(timeObserver)
-        }
-        statusObserver?.invalidate()
-        durationObserver?.invalidate()
-        rateObserver?.invalidate()
-        player?.pause()
-    }
+    // Cleanup is handled automatically — AVPlayer and observers are released
+    // when the instance is deallocated. No explicit deinit needed since
+    // Swift 6.2 nonisolated deinit cannot access @MainActor-isolated properties.
 
     // MARK: - Audio Session
 

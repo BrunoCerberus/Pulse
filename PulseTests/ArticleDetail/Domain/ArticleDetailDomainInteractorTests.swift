@@ -68,7 +68,8 @@ struct ArticleDetailDomainInteractorTests {
         sut.dispatch(action: .onAppear)
         try await waitForStateUpdate(duration: TestWaitDuration.long)
 
-        let isRead = await mockStorageService.isRead(testArticle.id)
+        nonisolated(unsafe) let storage = mockStorageService
+        let isRead = await storage.isRead(testArticle.id)
         #expect(isRead == true)
     }
 
@@ -93,7 +94,8 @@ struct ArticleDetailDomainInteractorTests {
         try await waitForStateUpdate(duration: TestWaitDuration.long)
 
         #expect(sut.currentState.isBookmarked == true)
-        let isBookmarked = await mockStorageService.isBookmarked(testArticle.id)
+        nonisolated(unsafe) let storage = mockStorageService
+        let isBookmarked = await storage.isBookmarked(testArticle.id)
         #expect(isBookmarked == true)
     }
 
@@ -193,7 +195,7 @@ struct ArticleDetailDomainInteractorTests {
         let sut = createSUT(article: articleWithContent)
 
         // Wait for content processing to complete
-        let success = await waitForCondition(timeout: 2_000_000_000) {
+        let success = await waitForCondition(timeout: 2_000_000_000) { @MainActor in
             !sut.currentState.isProcessingContent &&
                 sut.currentState.processedContent != nil &&
                 sut.currentState.processedDescription != nil
@@ -217,7 +219,7 @@ struct ArticleDetailDomainInteractorTests {
         let sut = createSUT(article: articleWithoutContent)
 
         // Wait for content processing to complete (should finish quickly with nil values)
-        let success = await waitForCondition(timeout: 2_000_000_000) {
+        let success = await waitForCondition(timeout: 2_000_000_000) { @MainActor in
             !sut.currentState.isProcessingContent
         }
         #expect(success)

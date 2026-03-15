@@ -21,13 +21,15 @@ final class LiveBookmarksService: BookmarksService {
     }
 
     func fetchBookmarks() -> AnyPublisher<[Article], Error> {
-        Future { [storageService] promise in
+        let storageService = UncheckedSendableBox(value: storageService)
+        return Future { promise in
+            let promise = UncheckedSendableBox(value: promise)
             Task {
                 do {
-                    let articles = try await storageService.fetchBookmarkedArticles()
-                    promise(.success(articles))
+                    let articles = try await storageService.value.fetchBookmarkedArticles()
+                    promise.value(.success(articles))
                 } catch {
-                    promise(.failure(error))
+                    promise.value(.failure(error))
                 }
             }
         }
@@ -36,13 +38,15 @@ final class LiveBookmarksService: BookmarksService {
     }
 
     func removeBookmark(_ article: Article) -> AnyPublisher<Void, Error> {
-        Future { [storageService] promise in
+        let storageService = UncheckedSendableBox(value: storageService)
+        return Future { promise in
+            let promise = UncheckedSendableBox(value: promise)
             Task {
                 do {
-                    try await storageService.deleteArticle(article)
-                    promise(.success(()))
+                    try await storageService.value.deleteArticle(article)
+                    promise.value(.success(()))
                 } catch {
-                    promise(.failure(error))
+                    promise.value(.failure(error))
                 }
             }
         }

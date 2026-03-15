@@ -191,13 +191,14 @@ final class MediaDetailDomainInteractor: CombineInteractor {
         // Optimistic update
         updateState { $0.isBookmarked = !wasBookmarked }
 
+        let service = UncheckedSendableBox(value: storageService)
         let task = Task { [weak self] in
             guard let self else { return }
             do {
                 if wasBookmarked {
-                    try await storageService.deleteArticle(article)
+                    try await service.value.deleteArticle(article)
                 } else {
-                    try await storageService.saveArticle(article)
+                    try await service.value.saveArticle(article)
                 }
             } catch {
                 // Revert on error
@@ -211,9 +212,10 @@ final class MediaDetailDomainInteractor: CombineInteractor {
 
     private func checkBookmarkStatus() {
         let articleId = currentState.article.id
+        let service = UncheckedSendableBox(value: storageService)
         let task = Task { [weak self] in
             guard let self else { return }
-            let isBookmarked = await storageService.isBookmarked(articleId)
+            let isBookmarked = await service.value.isBookmarked(articleId)
             await MainActor.run { [weak self] in
                 self?.dispatch(action: .bookmarkStatusLoaded(isBookmarked))
             }

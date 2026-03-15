@@ -306,14 +306,15 @@ final class SearchDomainInteractor: CombineInteractor {
     }
 
     private func toggleBookmark(_ article: Article) {
+        let service = UncheckedSendableBox(value: storageService)
         let task = Task { [weak self] in
             guard let self else { return }
-            let isBookmarked = await storageService.isBookmarked(article.id)
+            let isBookmarked = await service.value.isBookmarked(article.id)
             if isBookmarked {
-                try? await storageService.deleteArticle(article)
+                try? await service.value.deleteArticle(article)
                 await MainActor.run { self.analyticsService?.logEvent(.articleUnbookmarked) }
             } else {
-                try? await storageService.saveArticle(article)
+                try? await service.value.saveArticle(article)
                 await MainActor.run { self.analyticsService?.logEvent(.articleBookmarked) }
             }
         }
@@ -323,9 +324,10 @@ final class SearchDomainInteractor: CombineInteractor {
     // MARK: - Reading History
 
     private func loadReadArticleIDs() {
+        let service = UncheckedSendableBox(value: storageService)
         let task = Task { [weak self] in
             guard let self else { return }
-            let readIDs = try? await self.storageService.fetchReadArticleIDs()
+            let readIDs = try? await service.value.fetchReadArticleIDs()
             await MainActor.run {
                 self.updateState { state in
                     state.readArticleIDs = readIDs ?? []

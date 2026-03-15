@@ -60,7 +60,8 @@ struct ServiceLocatorTests {
         Thread.sleep(forTimeInterval: 0.1)
 
         let resolved = try serviceLocator.retrieve(NewsService.self) as? MockNewsService
-        #expect(resolved === secondService)
+        let isSame = resolved === secondService
+        #expect(isSame)
     }
 
     @Test("Is registered returns correct value")

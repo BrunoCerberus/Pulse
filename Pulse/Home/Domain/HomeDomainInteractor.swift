@@ -329,30 +329,25 @@ private extension HomeDomainInteractor {
     }
 
     func toggleBookmark(_ article: Article) {
+        let service = UncheckedSendableBox(value: storageService)
         trackBackgroundTask { [weak self] in
             guard let self else { return }
-            let isBookmarked = await storageService.isBookmarked(article.id)
+            let isBookmarked = await service.value.isBookmarked(article.id)
             if isBookmarked {
-                try? await storageService.deleteArticle(article)
+                try? await service.value.deleteArticle(article)
                 await MainActor.run { self.analyticsService?.logEvent(.articleUnbookmarked) }
             } else {
-                try? await storageService.saveArticle(article)
+                try? await service.value.saveArticle(article)
                 await MainActor.run { self.analyticsService?.logEvent(.articleBookmarked) }
             }
         }
     }
 
     /// Safely tracks and auto-removes background tasks with proper cleanup on deinit.
-    func trackBackgroundTask(_ operation: @escaping @Sendable () async -> Void) {
-        var task: Task<Void, Never>!
-        task = Task.detached { [weak self] in
+    nonisolated func trackBackgroundTask(_ operation: @escaping @Sendable () async -> Void) {
+        Task.detached {
             await operation()
-            guard let strongSelf = self else { return }
-            _ = await MainActor.run {
-                strongSelf.backgroundTasks.remove(task)
-            }
         }
-        backgroundTasks.insert(task)
     }
 }
 
@@ -360,9 +355,10 @@ private extension HomeDomainInteractor {
 
 private extension HomeDomainInteractor {
     func loadReadArticleIDs() {
+        let service = UncheckedSendableBox(value: storageService)
         trackBackgroundTask { [weak self] in
             guard let self else { return }
-            let readIDs = try? await self.storageService.fetchReadArticleIDs()
+            let readIDs = try? await service.value.fetchReadArticleIDs()
             await MainActor.run {
                 self.updateState { state in
                     state.readArticleIDs = readIDs ?? []
@@ -372,9 +368,10 @@ private extension HomeDomainInteractor {
     }
 
     func loadRecentlyRead() {
+        let service = UncheckedSendableBox(value: storageService)
         trackBackgroundTask { [weak self] in
             guard let self else { return }
-            let articles = (try? await self.storageService.fetchReadArticles()) ?? []
+            let articles = (try? await service.value.fetchReadArticles()) ?? []
             let recent = Array(articles.filter { !$0.isMedia }.prefix(10))
             await MainActor.run {
                 self.updateState { state in

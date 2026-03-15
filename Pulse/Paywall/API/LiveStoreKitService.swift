@@ -17,7 +17,7 @@ import StoreKit
 /// - Purchase processing
 /// - Subscription status management
 /// - Transaction observation
-final class LiveStoreKitService: StoreKitService {
+final class LiveStoreKitService: StoreKitService, @unchecked Sendable {
     // MARK: - Product Configuration
 
     /// Product identifiers for the app's subscriptions.
@@ -65,12 +65,13 @@ final class LiveStoreKitService: StoreKitService {
 
     func fetchProducts() -> AnyPublisher<[Product], Error> {
         Future { promise in
+            let promise = UncheckedSendableBox(value: promise)
             Task {
                 do {
                     let products = try await Product.products(for: Self.productIdentifiers)
-                    promise(.success(products.sorted { $0.price < $1.price }))
+                    promise.value(.success(products.sorted { $0.price < $1.price }))
                 } catch {
-                    promise(.failure(error))
+                    promise.value(.failure(error))
                 }
             }
         }
@@ -79,29 +80,31 @@ final class LiveStoreKitService: StoreKitService {
     }
 
     func purchase(_ product: Product) -> AnyPublisher<Bool, Error> {
-        Future { [weak self] promise in
+        let weakSelf = UncheckedSendableBox(value: WeakRef(self))
+        return Future { promise in
+            let promise = UncheckedSendableBox(value: promise)
             Task {
                 do {
                     let result = try await product.purchase()
 
                     switch result {
                     case let .success(verification):
-                        let transaction = try self?.checkVerified(verification)
+                        let transaction = try weakSelf.value.object?.checkVerified(verification)
                         await transaction?.finish()
-                        await self?.updateSubscriptionStatus()
-                        promise(.success(true))
+                        await weakSelf.value.object?.updateSubscriptionStatus()
+                        promise.value(.success(true))
 
                     case .userCancelled:
-                        promise(.success(false))
+                        promise.value(.success(false))
 
                     case .pending:
-                        promise(.success(false))
+                        promise.value(.success(false))
 
                     @unknown default:
-                        promise(.success(false))
+                        promise.value(.success(false))
                     }
                 } catch {
-                    promise(.failure(error))
+                    promise.value(.failure(error))
                 }
             }
         }
@@ -110,15 +113,17 @@ final class LiveStoreKitService: StoreKitService {
     }
 
     func restorePurchases() -> AnyPublisher<Bool, Error> {
-        Future { [weak self] promise in
+        let weakSelf = UncheckedSendableBox(value: WeakRef(self))
+        return Future { promise in
+            let promise = UncheckedSendableBox(value: promise)
             Task {
                 do {
                     try await AppStore.sync()
-                    await self?.updateSubscriptionStatus()
-                    let isPremium = self?.isPremium ?? false
-                    promise(.success(isPremium))
+                    await weakSelf.value.object?.updateSubscriptionStatus()
+                    let isPremium = weakSelf.value.object?.isPremium ?? false
+                    promise.value(.success(isPremium))
                 } catch {
-                    promise(.failure(error))
+                    promise.value(.failure(error))
                 }
             }
         }
@@ -127,10 +132,12 @@ final class LiveStoreKitService: StoreKitService {
     }
 
     func checkSubscriptionStatus() -> AnyPublisher<Bool, Never> {
-        Future { [weak self] promise in
+        let weakSelf = UncheckedSendableBox(value: WeakRef(self))
+        return Future { promise in
+            let promise = UncheckedSendableBox(value: promise)
             Task {
-                await self?.updateSubscriptionStatus()
-                promise(.success(self?.isPremium ?? false))
+                await weakSelf.value.object?.updateSubscriptionStatus()
+                promise.value(.success(weakSelf.value.object?.isPremium ?? false))
             }
         }
         .receive(on: DispatchQueue.main)

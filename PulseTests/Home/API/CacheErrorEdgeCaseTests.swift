@@ -173,10 +173,11 @@ struct ConcurrentCacheAccessTests {
         store.set(CacheEntry(data: Article.mockArticles, timestamp: Date()), for: key)
 
         // Dispatch 10 concurrent reads
+        let boxedStore = UncheckedSendableBox(value: store)
         await withTaskGroup(of: Void.self) { group in
             for _ in 0 ..< 10 {
                 group.addTask {
-                    let _: CacheEntry<[Article]>? = store.get(for: key)
+                    let _: CacheEntry<[Article]>? = boxedStore.value.get(for: key)
                 }
             }
         }
@@ -195,18 +196,19 @@ struct ConcurrentCacheAccessTests {
 
         let key = NewsCacheKey.topHeadlines(language: "en", country: "us", page: 1)
 
+        let boxedStore2 = UncheckedSendableBox(value: store)
         await withTaskGroup(of: Void.self) { group in
             // Writers
             for index in 0 ..< 5 {
                 group.addTask {
                     let articles = Array(Article.mockArticles.prefix(index + 1))
-                    store.set(CacheEntry(data: articles, timestamp: Date()), for: key)
+                    boxedStore2.value.set(CacheEntry(data: articles, timestamp: Date()), for: key)
                 }
             }
             // Readers
             for _ in 0 ..< 5 {
                 group.addTask {
-                    let _: CacheEntry<[Article]>? = store.get(for: key)
+                    let _: CacheEntry<[Article]>? = boxedStore2.value.get(for: key)
                 }
             }
         }

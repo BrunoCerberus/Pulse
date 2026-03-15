@@ -16,7 +16,7 @@ protocol NetworkMonitorService: AnyObject {
 // MARK: - Live Implementation
 
 /// Live implementation using NWPathMonitor on a dedicated queue.
-final class LiveNetworkMonitorService: NetworkMonitorService {
+final class LiveNetworkMonitorService: NetworkMonitorService, @unchecked Sendable {
     private let monitor = NWPathMonitor()
     private let queue = DispatchQueue(label: "com.pulse.networkmonitor")
     private let subject = CurrentValueSubject<Bool, Never>(true)

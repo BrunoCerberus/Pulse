@@ -125,7 +125,7 @@ extension PulseAppDelegate {
 
 // MARK: - UNUserNotificationCenterDelegate
 
-extension PulseAppDelegate: UNUserNotificationCenterDelegate {
+extension PulseAppDelegate: @preconcurrency UNUserNotificationCenterDelegate {
     func userNotificationCenter(
         _: UNUserNotificationCenter,
         didReceive response: UNNotificationResponse

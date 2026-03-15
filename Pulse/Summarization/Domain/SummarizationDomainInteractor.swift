@@ -84,12 +84,13 @@ final class SummarizationDomainInteractor: CombineInteractor {
             state.summarizationState = .loadingModel(progress: 0)
         }
 
+        let service = UncheckedSendableBox(value: summarizationService)
         summarizationTask = Task { [weak self] in
             guard let self else { return }
 
             do {
                 // loadModelIfNeeded is idempotent and handles concurrent calls
-                try await summarizationService.loadModelIfNeeded()
+                try await service.value.loadModelIfNeeded()
 
                 guard !Task.isCancelled else { return }
 
@@ -101,7 +102,7 @@ final class SummarizationDomainInteractor: CombineInteractor {
                 var tokensSinceLastUpdate = 0
                 let updateBatchSize = 3
 
-                for try await token in summarizationService.summarize(article: currentState.article) {
+                for try await token in service.value.summarize(article: currentState.article) {
                     guard !Task.isCancelled else { break }
 
                     fullText += token

@@ -265,7 +265,9 @@ final class MockSummarizationService: SummarizationService {
     }
 
     func summarize(article _: Article) -> AsyncThrowingStream<String, Error> {
-        AsyncThrowingStream { [self] continuation in
+        let generateDelay = generateDelay
+        let generateResult = generateResult
+        return AsyncThrowingStream { continuation in
             let task = Task {
                 let delayPerWord = UInt64(generateDelay * 1_000_000_000 / 4)
 
@@ -361,7 +363,9 @@ final class MockLLMService: LLMService {
         systemPrompt _: String?,
         config _: LLMInferenceConfig
     ) -> AsyncThrowingStream<String, Error> {
-        AsyncThrowingStream { [self] continuation in
+        let generateDelay = generateDelay
+        let generateResult = generateResult
+        return AsyncThrowingStream { continuation in
             Task {
                 // Use generateDelay per word for longer running stream
                 let delayPerWord = UInt64(generateDelay * 1_000_000_000 / 4)

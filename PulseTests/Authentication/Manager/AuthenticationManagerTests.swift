@@ -91,7 +91,7 @@ struct AuthenticationManagerTests {
         mockAuthService.simulateSignedIn(testUser)
 
         // Wait for authenticated state to be published
-        let success = await waitForCondition {
+        let success = await waitForCondition { @MainActor in
             states.contains { state in
                 if case let .authenticated(user) = state {
                     return user == testUser
@@ -128,7 +128,7 @@ struct AuthenticationManagerTests {
         mockAuthService.simulateSignedIn(testUser)
 
         // Wait for state changes to be published
-        let success = await waitForCondition {
+        let success = await waitForCondition { @MainActor in
             states.count >= 1
         }
 
@@ -153,7 +153,7 @@ struct AuthenticationManagerTests {
         mockAuthService.simulateSignedOut()
 
         // Wait for unauthenticated state
-        let success = await waitForCondition { [sut] in
+        let success = await waitForCondition { @MainActor [sut] in
             sut.authState == .unauthenticated
         }
 
@@ -180,7 +180,7 @@ struct AuthenticationManagerTests {
         mockAuthService.simulateSignedIn(testUser)
 
         // Wait for current user to be updated
-        let success = await waitForCondition { [sut] in
+        let success = await waitForCondition { @MainActor [sut] in
             sut.currentUser == testUser
         }
 

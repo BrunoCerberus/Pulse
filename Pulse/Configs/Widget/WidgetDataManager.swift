@@ -17,7 +17,7 @@ import WidgetKit
 /// - Only saves first 10 articles to minimize storage
 /// - Skips save if article IDs haven't changed (hash comparison)
 /// - Uses lightweight model to minimize data transfer
-final class WidgetDataManager {
+final class WidgetDataManager: @unchecked Sendable {
     static let shared = WidgetDataManager()
 
     private let appGroupIdentifier = "group.com.bruno.Pulse-News"

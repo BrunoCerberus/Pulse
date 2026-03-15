@@ -15,10 +15,8 @@ final class AuthenticationManager: ObservableObject {
     @Published private(set) var currentUser: AuthUser?
 
     /// Publisher for auth state that can be accessed from any context
-    nonisolated var authStatePublisher: AnyPublisher<AuthState, Never> {
-        MainActor.assumeIsolated {
-            $authState.eraseToAnyPublisher()
-        }
+    var authStatePublisher: AnyPublisher<AuthState, Never> {
+        $authState.eraseToAnyPublisher()
     }
 
     private var authService: AuthService?

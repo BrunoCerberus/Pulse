@@ -23,7 +23,7 @@ enum SupabaseConfig {
     // MARK: - Dependencies
 
     /// The configured remote config service (shared with APIKeysProvider)
-    private static var remoteConfigService: RemoteConfigService?
+    private nonisolated(unsafe) static var remoteConfigService: RemoteConfigService?
 
     // MARK: - Configuration
 

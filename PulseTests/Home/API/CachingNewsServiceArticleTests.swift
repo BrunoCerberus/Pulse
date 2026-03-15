@@ -90,7 +90,8 @@ struct CachingNewsServiceArticleTests {
             )
             .store(in: &cancellables)
 
-        _ = await waitForCondition { receivedArticle != nil }
+        nonisolated(unsafe) let check = { receivedArticle != nil }
+        _ = await waitForCondition(condition: check)
 
         #expect(receivedArticle == networkArticle)
         #expect(mockCacheStore.setCallCount == 1)
