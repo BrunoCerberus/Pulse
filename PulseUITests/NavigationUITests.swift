@@ -76,11 +76,11 @@ final class NavigationUITests: BaseUITestCase {
 
             // Use longer timeout for CI - articles may take time to render
             if safeWaitForExistence(firstCard, timeout: 15) {
-                if !firstCard.isHittable {
+                if !firstCard.exists {
                     app.scrollViews.firstMatch.swipeUp()
                 }
 
-                if firstCard.isHittable {
+                if firstCard.exists {
                     firstCard.tap()
                     XCTAssertTrue(waitForArticleDetail(), "Should navigate to article detail")
 

@@ -47,20 +47,20 @@ final class PulseSettingsUITests: BaseUITestCase {
 
         let navigationTitle = app.navigationBars["Settings"]
         XCTAssertTrue(
-            navigationTitle.waitForExistence(timeout: Self.defaultTimeout),
+            safeWaitForExistence(navigationTitle, timeout: Self.defaultTimeout),
             "Settings navigation should exist"
         )
 
         let accountSection = app.staticTexts["Account"]
-        XCTAssertTrue(accountSection.waitForExistence(timeout: Self.defaultTimeout), "Account section should exist")
+        XCTAssertTrue(safeWaitForExistence(accountSection, timeout: Self.defaultTimeout), "Account section should exist")
 
         let subscriptionSection = app.staticTexts["Subscription"]
-        XCTAssertTrue(subscriptionSection.waitForExistence(timeout: 5), "Subscription section should exist")
+        XCTAssertTrue(safeWaitForExistence(subscriptionSection, timeout: 5), "Subscription section should exist")
 
         let goPremiumText = app.staticTexts.matching(
             NSPredicate(format: "label CONTAINS[c] 'Premium' OR label CONTAINS[c] 'premium'")
         ).firstMatch
-        XCTAssertTrue(goPremiumText.waitForExistence(timeout: 5), "Premium section should be visible")
+        XCTAssertTrue(safeWaitForExistence(goPremiumText, timeout: 5), "Premium section should be visible")
 
         let sectionHeaders = ["Subscription", "Notifications", "Appearance"]
         var foundSections = 0
@@ -72,10 +72,10 @@ final class PulseSettingsUITests: BaseUITestCase {
         app.swipeUp()
 
         let notificationsToggle = app.switches["Enable Notifications"]
-        XCTAssertTrue(notificationsToggle.waitForExistence(timeout: 5), "Notifications toggle should exist")
+        XCTAssertTrue(safeWaitForExistence(notificationsToggle, timeout: 5), "Notifications toggle should exist")
 
         let breakingNewsToggle = app.switches["Breaking News Alerts"]
-        XCTAssertTrue(breakingNewsToggle.waitForExistence(timeout: 5), "Breaking News toggle should exist")
+        XCTAssertTrue(safeWaitForExistence(breakingNewsToggle, timeout: 5), "Breaking News toggle should exist")
 
         let initialNotificationsEnabled = isSwitchOn(notificationsToggle)
         notificationsToggle.tap()
@@ -98,7 +98,7 @@ final class PulseSettingsUITests: BaseUITestCase {
         backButton.tap()
 
         let homeNav = app.navigationBars["News"]
-        XCTAssertTrue(homeNav.waitForExistence(timeout: 5), "Should return to Home")
+        XCTAssertTrue(safeWaitForExistence(homeNav, timeout: 5), "Should return to Home")
 
         navigateToSettings()
 
@@ -123,13 +123,13 @@ final class PulseSettingsUITests: BaseUITestCase {
         )
 
         let systemThemeToggle = app.switches["Use System Theme"]
-        XCTAssertTrue(systemThemeToggle.waitForExistence(timeout: 5))
+        XCTAssertTrue(safeWaitForExistence(systemThemeToggle, timeout: 5))
 
         let wasSystemThemeOn = isSwitchOn(systemThemeToggle)
         setSwitch(systemThemeToggle, to: false)
 
         let darkModeToggle = app.switches["Dark Mode"]
-        if darkModeToggle.waitForExistence(timeout: 2) {
+        if safeWaitForExistence(darkModeToggle, timeout: 2) {
             darkModeToggle.tap()
             darkModeToggle.tap()
         }
@@ -157,10 +157,10 @@ final class PulseSettingsUITests: BaseUITestCase {
         let mutedSourcesButton = app.buttons.matching(
             NSPredicate(format: "label CONTAINS[c] 'Muted Sources'")
         ).firstMatch
-        if mutedSourcesButton.waitForExistence(timeout: 3) {
+        if safeWaitForExistence(mutedSourcesButton, timeout: 3) {
             mutedSourcesButton.tap()
             let addSourceField = app.textFields["Add source..."]
-            XCTAssertTrue(addSourceField.waitForExistence(timeout: 2), "Add source field should appear")
+            XCTAssertTrue(safeWaitForExistence(addSourceField, timeout: 2), "Add source field should appear")
         }
 
         app.swipeUp()
@@ -168,23 +168,23 @@ final class PulseSettingsUITests: BaseUITestCase {
         let mutedKeywordsButton = app.buttons.matching(
             NSPredicate(format: "label CONTAINS[c] 'Muted Keywords'")
         ).firstMatch
-        if mutedKeywordsButton.waitForExistence(timeout: 3) {
+        if safeWaitForExistence(mutedKeywordsButton, timeout: 3) {
             mutedKeywordsButton.tap()
             let addKeywordField = app.textFields["Add keyword..."]
-            XCTAssertTrue(addKeywordField.waitForExistence(timeout: 2), "Add keyword field should appear")
+            XCTAssertTrue(safeWaitForExistence(addKeywordField, timeout: 2), "Add keyword field should appear")
         }
 
         let contentFiltersFooter = app.staticTexts["Muted sources and keywords will be hidden from all feeds."]
-        XCTAssertTrue(contentFiltersFooter.waitForExistence(timeout: 5), "Footer text should explain content filters")
+        XCTAssertTrue(safeWaitForExistence(contentFiltersFooter, timeout: 5), "Footer text should explain content filters")
 
         // --- About Section ---
         let aboutSection = app.staticTexts["About"]
         XCTAssertTrue(scrollToElement(aboutSection, in: container), "About section should exist")
 
         let versionLabel = app.staticTexts["Version"]
-        XCTAssertTrue(versionLabel.waitForExistence(timeout: 5), "Version label should exist")
+        XCTAssertTrue(safeWaitForExistence(versionLabel, timeout: 5), "Version label should exist")
 
         let githubLink = app.buttons["View on GitHub"]
-        XCTAssertTrue(githubLink.waitForExistence(timeout: 5), "GitHub link should exist")
+        XCTAssertTrue(safeWaitForExistence(githubLink, timeout: 5), "GitHub link should exist")
     }
 }

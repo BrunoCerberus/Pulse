@@ -11,7 +11,7 @@ final class PulseUITests: BaseUITestCase {
 
         // --- Bookmarks Tab ---
         let bookmarksTab = app.tabBars.buttons["Bookmarks"]
-        XCTAssertTrue(bookmarksTab.waitForExistence(timeout: 5), "Bookmarks tab should exist")
+        XCTAssertTrue(safeWaitForExistence(bookmarksTab, timeout: 5), "Bookmarks tab should exist")
 
         bookmarksTab.tap()
 
@@ -19,7 +19,7 @@ final class PulseUITests: BaseUITestCase {
 
         // --- Feed Tab ---
         let feedTab = app.tabBars.buttons["Feed"]
-        XCTAssertTrue(feedTab.waitForExistence(timeout: 5), "Feed tab should exist")
+        XCTAssertTrue(safeWaitForExistence(feedTab, timeout: 5), "Feed tab should exist")
 
         feedTab.tap()
 
@@ -29,7 +29,7 @@ final class PulseUITests: BaseUITestCase {
         let searchTab = app.tabBars.buttons.matching(
             NSPredicate(format: "label CONTAINS[c] 'search' OR identifier CONTAINS[c] 'search'")
         ).firstMatch
-        XCTAssertTrue(searchTab.waitForExistence(timeout: 5), "Search tab should exist")
+        XCTAssertTrue(safeWaitForExistence(searchTab, timeout: 5), "Search tab should exist")
 
         // Return to Home tab for settings test
         homeTab.tap()
@@ -54,7 +54,7 @@ final class PulseUITests: BaseUITestCase {
         // Verify Home tab is ready by checking for navigation bar with longer timeout
         // The Home screen uses "News" as its navigation bar title (see Localizable.strings: "home.title" = "News")
         let homeNavBar = app.navigationBars["News"]
-        let navBarReady = homeNavBar.waitForExistence(timeout: Self.launchTimeout)
+        let navBarReady = safeWaitForExistence(homeNavBar, timeout: Self.launchTimeout)
         XCTAssertTrue(navBarReady, "Home navigation bar ('News') should exist")
 
         // Find the gear button using both system image name and accessibility label.
@@ -69,6 +69,6 @@ final class PulseUITests: BaseUITestCase {
         buttonToTap.tap()
 
         let settingsNavBar = app.navigationBars["Settings"]
-        XCTAssertTrue(settingsNavBar.waitForExistence(timeout: Self.defaultTimeout), "Settings should open")
+        XCTAssertTrue(safeWaitForExistence(settingsNavBar, timeout: Self.defaultTimeout), "Settings should open")
     }
 }

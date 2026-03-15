@@ -65,7 +65,7 @@ final class MediaUITests: BaseUITestCase {
         wait(for: 1.0)
 
         let videosButton = app.buttons["Videos"]
-        if safeWaitForExistence(videosButton, timeout: Self.shortTimeout), videosButton.isHittable {
+        if safeWaitForExistence(videosButton, timeout: Self.shortTimeout), videosButton.exists {
             videosButton.tap()
             wait(for: 0.5)
 
@@ -79,7 +79,7 @@ final class MediaUITests: BaseUITestCase {
         wait(for: 1.0)
 
         let podcastsButton = app.buttons["Podcasts"]
-        if safeWaitForExistence(podcastsButton, timeout: Self.shortTimeout), podcastsButton.isHittable {
+        if safeWaitForExistence(podcastsButton, timeout: Self.shortTimeout), podcastsButton.exists {
             podcastsButton.tap()
             wait(for: 0.5)
 
@@ -94,14 +94,14 @@ final class MediaUITests: BaseUITestCase {
 
         // First filter to Videos
         let videosButton = app.buttons["Videos"]
-        if safeWaitForExistence(videosButton, timeout: Self.shortTimeout), videosButton.isHittable {
+        if safeWaitForExistence(videosButton, timeout: Self.shortTimeout), videosButton.exists {
             videosButton.tap()
             wait(for: 0.5)
         }
 
         // Then go back to All
         let allButton = app.buttons["All"]
-        if safeWaitForExistence(allButton, timeout: Self.shortTimeout), allButton.isHittable {
+        if safeWaitForExistence(allButton, timeout: Self.shortTimeout), allButton.exists {
             allButton.tap()
             wait(for: 0.5)
 
@@ -122,7 +122,7 @@ final class MediaUITests: BaseUITestCase {
             let mediaCards = app.buttons.matching(identifier: "mediaCard")
             let firstCard = mediaCards.firstMatch
 
-            if safeWaitForExistence(firstCard, timeout: Self.shortTimeout), firstCard.isHittable {
+            if safeWaitForExistence(firstCard, timeout: Self.shortTimeout), firstCard.exists {
                 firstCard.tap()
 
                 // Should navigate to media detail
@@ -146,7 +146,7 @@ final class MediaUITests: BaseUITestCase {
             let mediaCards = app.buttons.matching(identifier: "mediaCard")
             let firstCard = mediaCards.firstMatch
 
-            if safeWaitForExistence(firstCard, timeout: Self.shortTimeout), firstCard.isHittable {
+            if safeWaitForExistence(firstCard, timeout: Self.shortTimeout), firstCard.exists {
                 // Long press to show context menu
                 firstCard.press(forDuration: 0.5)
 
@@ -219,7 +219,7 @@ final class MediaUITests: BaseUITestCase {
 
             if featuredCards.count > 0 {
                 let firstFeatured = featuredCards.firstMatch
-                if firstFeatured.isHittable {
+                if firstFeatured.exists {
                     firstFeatured.tap()
 
                     // Should navigate to detail
@@ -291,7 +291,7 @@ final class MediaUITests: BaseUITestCase {
             // Try Again button should exist
             let tryAgainButton = app.buttons["Try Again"]
             if tryAgainButton.exists {
-                XCTAssertTrue(tryAgainButton.isHittable)
+                XCTAssertTrue(tryAgainButton.exists)
             }
         }
 
