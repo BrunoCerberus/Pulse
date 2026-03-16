@@ -317,18 +317,16 @@ class BaseUITestCase: XCTestCase {
 
     // MARK: - Exception-Safe Element Helpers
 
-    /// Checks `.exists` wrapped in an ObjC exception handler to prevent C++ exception
-    /// crashes from XCTest's accessibility framework on Xcode 26.
+    /// Checks `.exists` via ObjC++ @try/@catch to prevent C++ exception crashes.
+    /// The actual `.exists` call happens in ObjC++ code, NOT in a Swift closure,
+    /// so the C++ exception is caught before it reaches the Swift runtime.
     func safeExists(_ element: XCUIElement) -> Bool {
-        ObjCExceptionCatcher.tryBoolBlock({ element.exists }, fallback: false)
+        ObjCExceptionCatcher.safeExists(for: element)
     }
 
-    /// Taps an element using coordinate-based tap, wrapped in ObjC exception handler.
+    /// Taps an element using coordinate-based tap via ObjC++ @try/@catch.
     func safeTap(_ element: XCUIElement) {
-        ObjCExceptionCatcher.try {
-            let center = element.coordinate(withNormalizedOffset: CGVector(dx: 0.5, dy: 0.5))
-            center.tap()
-        }
+        ObjCExceptionCatcher.safeTap(element)
     }
 
     // MARK: - Wait Helpers
@@ -369,12 +367,11 @@ class BaseUITestCase: XCTestCase {
 
     /// Wait for any element matching query to exist
     func waitForAnyMatch(_ query: XCUIElementQuery, timeout: TimeInterval = 10) -> Bool {
-        let safeCount = { ObjCExceptionCatcher.tryBoolBlock({ query.count > 0 }, fallback: false) }
-        if safeCount() { return true }
+        if ObjCExceptionCatcher.safeCount(for: query) > 0 { return true }
         let deadline = Date().addingTimeInterval(timeout)
         while Date() < deadline {
             RunLoop.current.run(until: Date().addingTimeInterval(0.5))
-            if safeCount() { return true }
+            if ObjCExceptionCatcher.safeCount(for: query) > 0 { return true }
         }
         return false
     }

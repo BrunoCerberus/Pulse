@@ -1,19 +1,27 @@
 #import <Foundation/Foundation.h>
+#import <XCTest/XCTest.h>
 
 NS_ASSUME_NONNULL_BEGIN
 
-/// Catches Objective-C and C++ exceptions that would otherwise crash the Swift runtime.
-/// Xcode 26's XCTest accessibility queries can throw C++ exceptions ("Timed out while
-/// evaluating UI query") which Swift cannot catch, causing SIGABRT.
+/// Wraps XCTest element queries in ObjC++ @try/@catch to catch C++ exceptions
+/// that Xcode 26 throws ("Timed out while evaluating UI query"). These exceptions
+/// crash the Swift runtime with SIGABRT because Swift doesn't support C++ exceptions.
+///
+/// By performing the actual XCTest API calls in ObjC++ code (not in Swift closures),
+/// the C++ exception is thrown and caught entirely within the ObjC++ stack frame.
 @interface ObjCExceptionCatcher : NSObject
 
-/// Executes a block and catches any ObjC/C++ exception.
-/// Returns YES if the block executed without throwing, NO otherwise.
-+ (BOOL)tryBlock:(void (NS_NOESCAPE ^)(void))block;
+/// Checks element.exists, catching any C++ exception. Returns NO on exception.
++ (BOOL)safeExistsForElement:(XCUIElement *)element;
 
-/// Executes a block that returns a BOOL, catching any ObjC/C++ exception.
-/// Returns the block's return value, or the fallback value if an exception was caught.
-+ (BOOL)tryBoolBlock:(BOOL (NS_NOESCAPE ^)(void))block fallback:(BOOL)fallback;
+/// Taps an element using coordinate-based tap, catching any C++ exception.
++ (void)safeTapElement:(XCUIElement *)element;
+
+/// Checks element.exists and taps if it exists. Returns whether the tap happened.
++ (BOOL)safeTapIfExists:(XCUIElement *)element;
+
+/// Returns query.count, catching any C++ exception. Returns 0 on exception.
++ (NSInteger)safeCountForQuery:(XCUIElementQuery *)query;
 
 @end
 
