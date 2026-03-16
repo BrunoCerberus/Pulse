@@ -8,17 +8,13 @@ class BaseUITestCase: XCTestCase {
     var app: XCUIApplication!
 
     /// Timeout for app launch verification - requires more time than element checks
-    /// CI machines are significantly slower than local, especially on shared runners
-    /// Use 60 seconds to handle worst-case CI initialization times
-    static let launchTimeout: TimeInterval = 60
+    static let launchTimeout: TimeInterval = 30
 
     /// Default timeout for element existence checks
-    /// 15s accounts for CI machine variability, slower simulators, and post-restart recovery
-    static let defaultTimeout: TimeInterval = 15
+    static let defaultTimeout: TimeInterval = 10
 
     /// Short timeout for quick checks (e.g., verifying element visibility)
-    /// 10s allows for CI machine variability including post-restart recovery
-    static let shortTimeout: TimeInterval = 10
+    static let shortTimeout: TimeInterval = 5
 
     // MARK: - Instance-level Setup (runs before each test)
 
@@ -339,7 +335,7 @@ class BaseUITestCase: XCTestCase {
         if safeExists(element) { return true }
         let deadline = Date().addingTimeInterval(timeout)
         while Date() < deadline {
-            RunLoop.current.run(until: Date().addingTimeInterval(0.25))
+            RunLoop.current.run(until: Date().addingTimeInterval(1.0))
             if safeExists(element) { return true }
         }
         return false
@@ -381,7 +377,7 @@ class BaseUITestCase: XCTestCase {
         if !safeExists(element) { return true }
         let deadline = Date().addingTimeInterval(timeout)
         while Date() < deadline {
-            RunLoop.current.run(until: Date().addingTimeInterval(0.25))
+            RunLoop.current.run(until: Date().addingTimeInterval(1.0))
             if !safeExists(element) { return true }
         }
         return false
