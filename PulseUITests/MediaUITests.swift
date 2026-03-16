@@ -7,7 +7,7 @@ final class MediaUITests: BaseUITestCase {
         try ensureAppRunning()
         let mediaTab = app.tabBars.buttons["Media"]
         XCTAssertTrue(
-            mediaTab.waitForExistence(timeout: Self.shortTimeout),
+            safeWaitForExistence(mediaTab, timeout: Self.shortTimeout),
             "Media tab should exist in tab bar"
         )
     }
@@ -17,15 +17,16 @@ final class MediaUITests: BaseUITestCase {
 
         // Verify we're on Media tab with recovery approach
         let mediaNavBar = app.navigationBars["Media"]
-        var navBarVisible = mediaNavBar.waitForExistence(timeout: Self.defaultTimeout)
+        var navBarVisible = safeWaitForExistence(mediaNavBar, timeout: Self.defaultTimeout)
 
         if !navBarVisible {
             // Recovery: tap Media tab again
             let mediaTab = app.tabBars.buttons["Media"]
-            if mediaTab.exists {
-                mediaTab.tap()
+            if safeWaitForExistence(mediaTab, timeout: 3) {
+                let center = mediaTab.coordinate(withNormalizedOffset: CGVector(dx: 0.5, dy: 0.5))
+                center.tap()
                 wait(for: 1.0)
-                navBarVisible = mediaNavBar.waitForExistence(timeout: Self.defaultTimeout)
+                navBarVisible = safeWaitForExistence(mediaNavBar, timeout: Self.defaultTimeout)
             }
         }
 
@@ -51,7 +52,7 @@ final class MediaUITests: BaseUITestCase {
             let videosButton = app.buttons["Videos"]
             let podcastsButton = app.buttons["Podcasts"]
             XCTAssertTrue(
-                videosButton.exists || podcastsButton.exists,
+                safeWaitForExistence(videosButton, timeout: 5) || safeWaitForExistence(podcastsButton, timeout: 5),
                 "Media segmented control should be visible"
             )
         }
@@ -65,12 +66,13 @@ final class MediaUITests: BaseUITestCase {
         wait(for: 1.0)
 
         let videosButton = app.buttons["Videos"]
-        if videosButton.waitForExistence(timeout: Self.shortTimeout), videosButton.isHittable {
-            videosButton.tap()
+        if safeWaitForExistence(videosButton, timeout: Self.shortTimeout) {
+            let center = videosButton.coordinate(withNormalizedOffset: CGVector(dx: 0.5, dy: 0.5))
+            center.tap()
             wait(for: 0.5)
 
             // Verify still on Media tab
-            XCTAssertTrue(app.navigationBars["Media"].exists)
+            XCTAssertTrue(safeWaitForExistence(app.navigationBars["Media"], timeout: 5))
         }
     }
 
@@ -79,12 +81,13 @@ final class MediaUITests: BaseUITestCase {
         wait(for: 1.0)
 
         let podcastsButton = app.buttons["Podcasts"]
-        if podcastsButton.waitForExistence(timeout: Self.shortTimeout), podcastsButton.isHittable {
-            podcastsButton.tap()
+        if safeWaitForExistence(podcastsButton, timeout: Self.shortTimeout) {
+            let center = podcastsButton.coordinate(withNormalizedOffset: CGVector(dx: 0.5, dy: 0.5))
+            center.tap()
             wait(for: 0.5)
 
             // Verify still on Media tab
-            XCTAssertTrue(app.navigationBars["Media"].exists)
+            XCTAssertTrue(safeWaitForExistence(app.navigationBars["Media"], timeout: 5))
         }
     }
 
@@ -94,19 +97,21 @@ final class MediaUITests: BaseUITestCase {
 
         // First filter to Videos
         let videosButton = app.buttons["Videos"]
-        if videosButton.waitForExistence(timeout: Self.shortTimeout), videosButton.isHittable {
-            videosButton.tap()
+        if safeWaitForExistence(videosButton, timeout: Self.shortTimeout) {
+            let center = videosButton.coordinate(withNormalizedOffset: CGVector(dx: 0.5, dy: 0.5))
+            center.tap()
             wait(for: 0.5)
         }
 
         // Then go back to All
         let allButton = app.buttons["All"]
-        if allButton.waitForExistence(timeout: Self.shortTimeout), allButton.isHittable {
-            allButton.tap()
+        if safeWaitForExistence(allButton, timeout: Self.shortTimeout) {
+            let center = allButton.coordinate(withNormalizedOffset: CGVector(dx: 0.5, dy: 0.5))
+            center.tap()
             wait(for: 0.5)
 
             // Verify still on Media tab
-            XCTAssertTrue(app.navigationBars["Media"].exists)
+            XCTAssertTrue(safeWaitForExistence(app.navigationBars["Media"], timeout: 5))
         }
     }
 
@@ -122,8 +127,9 @@ final class MediaUITests: BaseUITestCase {
             let mediaCards = app.buttons.matching(identifier: "mediaCard")
             let firstCard = mediaCards.firstMatch
 
-            if firstCard.waitForExistence(timeout: Self.shortTimeout), firstCard.isHittable {
-                firstCard.tap()
+            if safeWaitForExistence(firstCard, timeout: Self.shortTimeout) {
+                let center = firstCard.coordinate(withNormalizedOffset: CGVector(dx: 0.5, dy: 0.5))
+                center.tap()
 
                 // Should navigate to media detail
                 let detailViewExists = waitForMediaDetail(timeout: Self.defaultTimeout)
@@ -131,7 +137,7 @@ final class MediaUITests: BaseUITestCase {
                 if detailViewExists {
                     // Navigate back
                     navigateBack()
-                    XCTAssertTrue(app.navigationBars["Media"].waitForExistence(timeout: Self.shortTimeout))
+                    XCTAssertTrue(safeWaitForExistence(app.navigationBars["Media"], timeout: Self.shortTimeout))
                 }
             }
         }
@@ -146,13 +152,13 @@ final class MediaUITests: BaseUITestCase {
             let mediaCards = app.buttons.matching(identifier: "mediaCard")
             let firstCard = mediaCards.firstMatch
 
-            if firstCard.waitForExistence(timeout: Self.shortTimeout), firstCard.isHittable {
+            if safeWaitForExistence(firstCard, timeout: Self.shortTimeout) {
                 // Long press to show context menu
                 firstCard.press(forDuration: 0.5)
 
                 // Check for context menu items
                 let shareButton = app.buttons["Share"]
-                let contextMenuAppeared = shareButton.waitForExistence(timeout: Self.shortTimeout)
+                let contextMenuAppeared = safeWaitForExistence(shareButton, timeout: Self.shortTimeout)
 
                 if contextMenuAppeared {
                     // Dismiss context menu
@@ -171,13 +177,13 @@ final class MediaUITests: BaseUITestCase {
 
         if contentLoaded {
             let scrollView = app.scrollViews.firstMatch
-            if scrollView.waitForExistence(timeout: Self.shortTimeout) {
+            if safeWaitForExistence(scrollView, timeout: Self.shortTimeout) {
                 // Pull to refresh
                 scrollView.swipeDown()
                 wait(for: 1.0)
 
                 // Should still be on Media tab
-                XCTAssertTrue(app.navigationBars["Media"].exists)
+                XCTAssertTrue(safeWaitForExistence(app.navigationBars["Media"], timeout: 5))
             }
         }
     }
@@ -191,7 +197,7 @@ final class MediaUITests: BaseUITestCase {
 
         if contentLoaded {
             let scrollView = app.scrollViews.firstMatch
-            if scrollView.waitForExistence(timeout: Self.shortTimeout) {
+            if safeWaitForExistence(scrollView, timeout: Self.shortTimeout) {
                 // Scroll down
                 scrollView.swipeUp()
                 wait(for: 0.5)
@@ -201,7 +207,7 @@ final class MediaUITests: BaseUITestCase {
                 wait(for: 0.5)
 
                 // Should still be on Media tab
-                XCTAssertTrue(app.navigationBars["Media"].exists)
+                XCTAssertTrue(safeWaitForExistence(app.navigationBars["Media"], timeout: 5))
             }
         }
     }
@@ -219,8 +225,9 @@ final class MediaUITests: BaseUITestCase {
 
             if featuredCards.count > 0 {
                 let firstFeatured = featuredCards.firstMatch
-                if firstFeatured.isHittable {
-                    firstFeatured.tap()
+                if safeWaitForExistence(firstFeatured, timeout: 3) {
+                    let center = firstFeatured.coordinate(withNormalizedOffset: CGVector(dx: 0.5, dy: 0.5))
+                    center.tap()
 
                     // Should navigate to detail
                     let detailExists = waitForMediaDetail(timeout: Self.defaultTimeout)
@@ -239,26 +246,30 @@ final class MediaUITests: BaseUITestCase {
 
         // Verify Media tab with recovery
         let mediaNavBar = app.navigationBars["Media"]
-        var mediaReady = mediaNavBar.waitForExistence(timeout: Self.defaultTimeout)
+        var mediaReady = safeWaitForExistence(mediaNavBar, timeout: Self.defaultTimeout)
         if !mediaReady {
             let mediaTab = app.tabBars.buttons["Media"]
-            if mediaTab.exists { mediaTab.tap() }
+            if safeWaitForExistence(mediaTab, timeout: 3) {
+                let center = mediaTab.coordinate(withNormalizedOffset: CGVector(dx: 0.5, dy: 0.5))
+                center.tap()
+            }
             wait(for: 1.0)
-            mediaReady = mediaNavBar.waitForExistence(timeout: Self.defaultTimeout)
+            mediaReady = safeWaitForExistence(mediaNavBar, timeout: Self.defaultTimeout)
         }
         XCTAssertTrue(mediaReady, "Media tab should be ready")
 
         // Switch to Home
         navigateToTab("Home")
-        var homeReady = app.navigationBars["News"].waitForExistence(timeout: Self.launchTimeout) ||
+        var homeReady = safeWaitForExistence(app.navigationBars["News"], timeout: Self.launchTimeout) ||
             app.tabBars.buttons["Home"].isSelected
         if !homeReady {
             // Recovery: tap Home directly
             let homeTab = app.tabBars.buttons["Home"]
-            if homeTab.exists {
-                homeTab.tap()
+            if safeWaitForExistence(homeTab, timeout: 3) {
+                let center = homeTab.coordinate(withNormalizedOffset: CGVector(dx: 0.5, dy: 0.5))
+                center.tap()
                 wait(for: 1.0)
-                homeReady = app.navigationBars["News"].waitForExistence(timeout: Self.launchTimeout)
+                homeReady = safeWaitForExistence(app.navigationBars["News"], timeout: Self.launchTimeout)
             }
         }
         XCTAssertTrue(homeReady, "Home tab should be ready after recovery")
@@ -266,14 +277,14 @@ final class MediaUITests: BaseUITestCase {
         // Switch back to Media
         navigateToMediaTab()
         XCTAssertTrue(
-            app.navigationBars["Media"].waitForExistence(timeout: Self.defaultTimeout),
+            safeWaitForExistence(app.navigationBars["Media"], timeout: Self.defaultTimeout),
             "Media tab should be visible"
         )
 
         // Switch to Bookmarks
         navigateToTab("Bookmarks")
         XCTAssertTrue(
-            app.navigationBars["Bookmarks"].waitForExistence(timeout: Self.shortTimeout) ||
+            safeWaitForExistence(app.navigationBars["Bookmarks"], timeout: Self.shortTimeout) ||
                 app.tabBars.buttons["Bookmarks"].isSelected,
             "Bookmarks tab should be visible"
         )
@@ -286,19 +297,19 @@ final class MediaUITests: BaseUITestCase {
         wait(for: 2.0)
 
         // Check for error state if it appears
-        let errorState = app.staticTexts["Unable to Load Media"].exists ||
-            app.staticTexts["No Media Available"].exists
+        let errorState = safeWaitForExistence(app.staticTexts["Unable to Load Media"], timeout: 3) ||
+            safeWaitForExistence(app.staticTexts["No Media Available"], timeout: 3)
 
         if errorState {
             // Try Again button should exist
             let tryAgainButton = app.buttons["Try Again"]
-            if tryAgainButton.exists {
-                XCTAssertTrue(tryAgainButton.isHittable)
+            if safeWaitForExistence(tryAgainButton, timeout: 3) {
+                XCTAssertTrue(tryAgainButton.exists)
             }
         }
 
         // Should still be on Media tab
-        XCTAssertTrue(app.navigationBars["Media"].exists)
+        XCTAssertTrue(safeWaitForExistence(app.navigationBars["Media"], timeout: 5))
     }
 
     // MARK: - Helper Methods

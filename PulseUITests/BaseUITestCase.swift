@@ -120,7 +120,11 @@ class BaseUITestCase: XCTestCase {
             // Wait for termination to complete before next test starts.
             // "Failed to terminate" errors in CI happen when the next test's launch()
             // runs before the previous instance fully exits.
-            _ = app.wait(for: .notRunning, timeout: 10)
+            if !app.wait(for: .notRunning, timeout: 10) {
+                // Retry termination — CI shared runners can be slow to release processes
+                app.terminate()
+                _ = app.wait(for: .notRunning, timeout: 10)
+            }
         }
     }
 
