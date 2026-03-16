@@ -18,11 +18,11 @@ extension HomeView {
 
                 // Only show breaking news skeleton when on "All" tab
                 if viewModel.viewState.selectedCategory == nil {
-                    GlassSectionHeader(HomeViewConstants.breakingNews)
+                    GlassSectionHeader(Constants.breakingNews)
                     HeroCarouselSkeleton()
                 }
 
-                GlassSectionHeader(HomeViewConstants.topHeadlines)
+                GlassSectionHeader(Constants.topHeadlines)
                 ArticleListSkeleton(count: 5)
             }
         }
@@ -40,10 +40,10 @@ extension HomeView {
                         .foregroundStyle(.orange)
                         .accessibilityHidden(true)
 
-                    Text(HomeViewConstants.offlineTitle)
+                    Text(Constants.offlineTitle)
                         .font(Typography.titleMedium)
 
-                    Text(HomeViewConstants.offlineMessage)
+                    Text(Constants.offlineMessage)
                         .font(Typography.bodyMedium)
                         .foregroundStyle(.secondary)
                         .multilineTextAlignment(.center)
@@ -53,7 +53,7 @@ extension HomeView {
                         .foregroundStyle(Color.Semantic.warning)
                         .accessibilityHidden(true)
 
-                    Text(HomeViewConstants.errorTitle)
+                    Text(Constants.errorTitle)
                         .font(Typography.titleMedium)
 
                     Text(message)
@@ -65,7 +65,7 @@ extension HomeView {
                         HapticManager.shared.tap()
                         viewModel.handle(event: .onRefresh)
                     } label: {
-                        Text(HomeViewConstants.tryAgain)
+                        Text(Constants.tryAgain)
                             .font(Typography.labelLarge)
                             .foregroundStyle(.white)
                             .padding(.horizontal, Spacing.lg)
@@ -85,9 +85,9 @@ extension HomeView {
 
     var emptyStateView: some View {
         ContentUnavailableView(
-            HomeViewConstants.emptyTitle,
+            Constants.emptyTitle,
             systemImage: "newspaper",
-            description: Text(HomeViewConstants.emptyMessage)
+            description: Text(Constants.emptyMessage)
         )
     }
 

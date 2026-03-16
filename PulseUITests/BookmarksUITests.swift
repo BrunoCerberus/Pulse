@@ -8,14 +8,14 @@ final class BookmarksUITests: BaseUITestCase {
     func testBookmarksFlow() {
         // --- Tab Navigation ---
         let bookmarksTab = app.tabBars.buttons["Bookmarks"]
-        XCTAssertTrue(bookmarksTab.waitForExistence(timeout: Self.shortTimeout), "Bookmarks tab should exist")
+        XCTAssertTrue(safeWaitForExistence(bookmarksTab, timeout: Self.shortTimeout), "Bookmarks tab should exist")
 
         navigateToBookmarksTab()
 
         // Wait for nav bar to confirm we're on Bookmarks (more reliable than isSelected)
         let navTitle = app.navigationBars["Bookmarks"]
         XCTAssertTrue(
-            navTitle.waitForExistence(timeout: Self.defaultTimeout),
+            safeWaitForExistence(navTitle, timeout: Self.defaultTimeout),
             "Navigation title 'Bookmarks' should exist"
         )
 
@@ -59,12 +59,12 @@ final class BookmarksUITests: BaseUITestCase {
                 cards.firstMatch.tap()
 
                 let backButton = app.buttons["backButton"]
-                XCTAssertTrue(backButton.waitForExistence(timeout: 5), "Should navigate to article detail")
+                XCTAssertTrue(safeWaitForExistence(backButton, timeout: 5), "Should navigate to article detail")
 
                 backButton.tap()
 
                 let bookmarksNav = app.navigationBars["Bookmarks"]
-                XCTAssertTrue(bookmarksNav.waitForExistence(timeout: 5), "Should return to Bookmarks")
+                XCTAssertTrue(safeWaitForExistence(bookmarksNav, timeout: 5), "Should return to Bookmarks")
             }
         }
 
@@ -78,24 +78,24 @@ final class BookmarksUITests: BaseUITestCase {
 
             let removeBookmarkOption = app.buttons["Remove Bookmark"]
 
-            if removeBookmarkOption.waitForExistence(timeout: 3) {
+            if safeWaitForExistence(removeBookmarkOption, timeout: 3) {
                 removeBookmarkOption.tap()
             } else {
                 app.tap()
             }
         }
 
-        let noBookmarksExists = noBookmarksText.waitForExistence(timeout: 2)
+        let noBookmarksExists = safeWaitForExistence(noBookmarksText, timeout: 2)
 
         navigateToTab("Home")
         let homeNav = app.navigationBars["News"]
-        XCTAssertTrue(homeNav.waitForExistence(timeout: Self.shortTimeout), "Should be on Home")
+        XCTAssertTrue(safeWaitForExistence(homeNav, timeout: Self.shortTimeout), "Should be on Home")
 
         navigateToBookmarksTab()
 
         if noBookmarksExists {
             XCTAssertTrue(
-                app.staticTexts["No Bookmarks"].waitForExistence(timeout: 10),
+                safeWaitForExistence(app.staticTexts["No Bookmarks"], timeout: 10),
                 "Empty state should be preserved"
             )
         }
@@ -109,13 +109,13 @@ final class BookmarksUITests: BaseUITestCase {
         navigateToTab("Home")
 
         let topHeadlinesHeader = app.staticTexts["Top Headlines"]
-        if topHeadlinesHeader.waitForExistence(timeout: 10) {
+        if safeWaitForExistence(topHeadlinesHeader, timeout: 10) {
             let homeArticleCards = articleCards()
             if homeArticleCards.count > 0 {
                 homeArticleCards.firstMatch.tap()
 
                 let backButton = app.buttons["backButton"]
-                if backButton.waitForExistence(timeout: 5) {
+                if safeWaitForExistence(backButton, timeout: 5) {
                     let bookmarkButton = app.navigationBars.buttons["bookmark"]
                     if bookmarkButton.exists {
                         bookmarkButton.tap()
@@ -134,12 +134,12 @@ final class BookmarksUITests: BaseUITestCase {
         }
 
         let homeNavAfterBookmark = app.navigationBars["News"]
-        XCTAssertTrue(homeNavAfterBookmark.waitForExistence(timeout: Self.shortTimeout), "Should return to Home")
+        XCTAssertTrue(safeWaitForExistence(homeNavAfterBookmark, timeout: Self.shortTimeout), "Should return to Home")
 
         navigateToBookmarksTab()
 
         let bookmarksNav = app.navigationBars["Bookmarks"]
-        XCTAssertTrue(bookmarksNav.waitForExistence(timeout: Self.shortTimeout), "Should be on Bookmarks")
+        XCTAssertTrue(safeWaitForExistence(bookmarksNav, timeout: Self.shortTimeout), "Should be on Bookmarks")
 
         let savedArticlesTextAfter = app.staticTexts.matching(
             NSPredicate(format: "label CONTAINS[c] 'saved articles'")

@@ -2,59 +2,6 @@
 import EntropyCore
 import SwiftUI
 
-// MARK: - Constants
-
-private enum Constants {
-    static var title: String {
-        AppLocalization.localized("summarization.title")
-    }
-
-    static var subtitle: String {
-        AppLocalization.localized("summarization.subtitle")
-    }
-
-    static var generateButton: String {
-        AppLocalization.localized("summarization.generate")
-    }
-
-    static var cancelButton: String {
-        AppLocalization.localized("summarization.cancel")
-    }
-
-    static var retryButton: String {
-        AppLocalization.localized("summarization.retry")
-    }
-
-    static var loadingModel: String {
-        AppLocalization.localized("summarization.loading_model")
-    }
-
-    static var generating: String {
-        AppLocalization.localized("summarization.generating")
-    }
-
-    static var aiSummary: String {
-        AppLocalization.localized("summarization.ai_summary")
-    }
-
-    static var summarizationComplete: String {
-        AppLocalization.localized("accessibility.summarization_complete")
-    }
-}
-
-// MARK: - Animation Constants
-
-private enum AnimationConstants {
-    static let stateTransition: Animation = .spring(response: 0.5, dampingFraction: 0.8)
-    static let contentAppear: Animation = .easeOut(duration: 0.4)
-    static let shimmerDuration: Double = 1.5
-    static let iconGlowRadius: CGFloat = 20
-    static let typingDotSize: CGFloat = 6
-    static let typingDotSpacing: CGFloat = 4
-    static let bulletPointSize: CGFloat = 6
-    static let bulletPointTopPadding: CGFloat = 7
-}
-
 // MARK: - SummarizationSheet
 
 // swiftlint:disable:next type_body_length
@@ -384,7 +331,7 @@ private struct GenerateButton: View {
                 Image(systemName: "sparkles")
                     .symbolEffect(.variableColor.iterative, options: reduceMotion ? .repeat(1) : .repeat(.continuous))
 
-                Text(Constants.generateButton)
+                Text(SummarizationSheet.Constants.generateButton)
             }
             .font(Typography.labelLarge)
             .foregroundStyle(.white)
@@ -427,7 +374,7 @@ private struct ShimmerOverlay: View {
             .offset(x: -geometry.size.width * 0.5 + phase * geometry.size.width * 1.5)
             .onAppear {
                 withAnimation(
-                    .linear(duration: AnimationConstants.shimmerDuration)
+                    .linear(duration: SummarizationSheet.AnimationConstants.shimmerDuration)
                         .repeatForever(autoreverses: false)
                 ) {
                     phase = 1
@@ -444,11 +391,11 @@ private struct TypingIndicator: View {
     @State private var animatingDot = 0
 
     var body: some View {
-        HStack(spacing: AnimationConstants.typingDotSpacing) {
+        HStack(spacing: SummarizationSheet.AnimationConstants.typingDotSpacing) {
             ForEach(0 ..< 3) { index in
                 Circle()
                     .fill(Color.Accent.primary)
-                    .frame(width: AnimationConstants.typingDotSize, height: AnimationConstants.typingDotSize)
+                    .frame(width: SummarizationSheet.AnimationConstants.typingDotSize, height: SummarizationSheet.AnimationConstants.typingDotSize)
                     .scaleEffect(animatingDot == index ? 1.3 : 0.8)
                     .opacity(animatingDot == index ? 1 : 0.5)
             }
@@ -490,10 +437,10 @@ private struct FormattedSummaryText: View {
                         Circle()
                             .fill(Color.Accent.primary)
                             .frame(
-                                width: AnimationConstants.bulletPointSize,
-                                height: AnimationConstants.bulletPointSize
+                                width: SummarizationSheet.AnimationConstants.bulletPointSize,
+                                height: SummarizationSheet.AnimationConstants.bulletPointSize
                             )
-                            .padding(.top, AnimationConstants.bulletPointTopPadding)
+                            .padding(.top, SummarizationSheet.AnimationConstants.bulletPointTopPadding)
 
                         Text(paragraph.text)
                             .font(Typography.bodyMedium)

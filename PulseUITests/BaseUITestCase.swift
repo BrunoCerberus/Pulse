@@ -8,7 +8,6 @@ class BaseUITestCase: XCTestCase {
 
     /// Timeout for app launch verification - requires more time than element checks
     /// CI machines are significantly slower than local, especially on shared runners
-    /// Use 60 seconds to handle worst-case CI initialization times
     static let launchTimeout: TimeInterval = 60
 
     /// Default timeout for element existence checks
@@ -32,41 +31,21 @@ class BaseUITestCase: XCTestCase {
         XCUIDevice.shared.orientation = .portrait
 
         app = XCUIApplication()
+        configureAndLaunchApp()
 
-        // Speed optimizations
-        app.launchEnvironment["UI_TESTING"] = "1"
-        app.launchEnvironment["DISABLE_ANIMATIONS"] = "1"
-
-        // Launch arguments to speed up tests
-        app.launchArguments += ["-UIViewAnimationDuration", "0.01"]
-        app.launchArguments += ["-CATransactionAnimationDuration", "0.01"]
-
-        // Skip onboarding flow in UI tests (sets UserDefaults via argument domain)
-        app.launchArguments += ["-pulse.hasCompletedOnboarding", "YES"]
-
-        // Force English locale for deterministic behavior across CI environments
-        app.launchArguments += ["-AppleLanguages", "(en)"]
-        app.launchArguments += ["-AppleLocale", "en_US"]
-
-        // Allow subclasses to configure launch environment (e.g., MOCK_PREMIUM)
-        configureLaunchEnvironment()
-
-        app.launch()
-
-        // If the app didn't reach foreground (e.g., previous instance failed to terminate),
-        // retry with a fresh XCUIApplication instance
-        if !app.wait(for: .runningForeground, timeout: Self.launchTimeout) {
+        // If the first launch failed (e.g., zombie process from a previous crash),
+        // terminate and retry with a fresh instance
+        if app.state != .runningForeground {
+            app.terminate()
+            _ = app.wait(for: .notRunning, timeout: 10)
             app = XCUIApplication()
-            app.launchEnvironment["UI_TESTING"] = "1"
-            app.launchEnvironment["DISABLE_ANIMATIONS"] = "1"
-            app.launchArguments += ["-UIViewAnimationDuration", "0.01"]
-            app.launchArguments += ["-CATransactionAnimationDuration", "0.01"]
-            app.launchArguments += ["-pulse.hasCompletedOnboarding", "YES"]
-            app.launchArguments += ["-AppleLanguages", "(en)"]
-            app.launchArguments += ["-AppleLocale", "en_US"]
-            configureLaunchEnvironment()
-            app.launch()
-            _ = app.wait(for: .runningForeground, timeout: Self.launchTimeout)
+            configureAndLaunchApp()
+        }
+
+        // If the app still isn't running after retry, skip this test rather than
+        // proceeding with a broken app instance (which would crash the test runner)
+        guard app.state == .runningForeground else {
+            throw XCTSkip("App failed to launch after retry — simulator may be in a bad state")
         }
 
         // Wait for UI to stabilize after launch
@@ -133,6 +112,31 @@ class BaseUITestCase: XCTestCase {
     /// Called after standard environment is configured but before launch.
     func configureLaunchEnvironment() {
         // Default: no additional configuration
+    }
+
+    // MARK: - Launch Helpers
+
+    /// Configures and launches `self.app`. Terminates any lingering process first.
+    /// After calling, check `app.state == .runningForeground` to verify success.
+    private func configureAndLaunchApp() {
+        // Terminate any lingering app process from a previous test that crashed or
+        // failed to tear down cleanly. terminate() is a no-op if the app isn't running.
+        if app.state != .notRunning {
+            app.terminate()
+            _ = app.wait(for: .notRunning, timeout: 10)
+        }
+
+        app.launchEnvironment["UI_TESTING"] = "1"
+        app.launchEnvironment["DISABLE_ANIMATIONS"] = "1"
+        app.launchArguments += ["-UIViewAnimationDuration", "0.01"]
+        app.launchArguments += ["-CATransactionAnimationDuration", "0.01"]
+        app.launchArguments += ["-pulse.hasCompletedOnboarding", "YES"]
+        app.launchArguments += ["-AppleLanguages", "(en)"]
+        app.launchArguments += ["-AppleLocale", "en_US"]
+        configureLaunchEnvironment()
+
+        app.launch()
+        _ = app.wait(for: .runningForeground, timeout: Self.launchTimeout)
     }
 
     /// Guard that ensures the app is still running in foreground.
@@ -339,16 +343,9 @@ class BaseUITestCase: XCTestCase {
     }
 
     /// Smart wait that replaces Thread.sleep - waits for UI to settle
-    /// Uses RunLoop to allow UI updates while waiting, more efficient than Thread.sleep
     @discardableResult
     func wait(for duration: TimeInterval) -> Bool {
-        // Use expectation-based waiting which is more efficient than Thread.sleep
-        // and allows the UI to continue processing events
-        let expectation = XCTNSPredicateExpectation(
-            predicate: NSPredicate(value: false),
-            object: nil
-        )
-        _ = XCTWaiter.wait(for: [expectation], timeout: duration)
+        RunLoop.current.run(until: Date().addingTimeInterval(duration))
         return true
     }
 

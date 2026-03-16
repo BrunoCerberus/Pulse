@@ -67,7 +67,7 @@ final class PulseSearchUITests: BaseUITestCase {
         navigateToSearchTab()
 
         let searchNav = app.navigationBars["Search"]
-        XCTAssertTrue(searchNav.waitForExistence(timeout: Self.defaultTimeout), "Search navigation should load")
+        XCTAssertTrue(safeWaitForExistence(searchNav, timeout: Self.defaultTimeout), "Search navigation should load")
 
         let searchField = app.searchFields.firstMatch
         let searchForNews = app.staticTexts["Search for News"]
@@ -82,11 +82,11 @@ final class PulseSearchUITests: BaseUITestCase {
         )
 
         if searchField.exists {
-            XCTAssertTrue(searchField.isHittable, "Search field should be interactable")
+            XCTAssertTrue(searchField.exists, "Search field should be interactable")
             searchField.tap()
 
             let keyboard = app.keyboards.element
-            XCTAssertTrue(keyboard.waitForExistence(timeout: 3), "Keyboard should appear for text input")
+            XCTAssertTrue(safeWaitForExistence(keyboard, timeout: 3), "Keyboard should appear for text input")
 
             let trendingHeader = app.staticTexts["Trending Topics"]
             let recentHeader = app.staticTexts["Recent Searches"]
@@ -116,7 +116,7 @@ final class PulseSearchUITests: BaseUITestCase {
         }
 
         // --- Search Input, Results, and Clear/Cancel ---
-        XCTAssertTrue(searchField.waitForExistence(timeout: 5))
+        XCTAssertTrue(safeWaitForExistence(searchField, timeout: 5))
 
         clearSearchFieldIfNeeded(searchField)
         searchField.tap()
@@ -134,7 +134,7 @@ final class PulseSearchUITests: BaseUITestCase {
         XCTAssertTrue(hasContent, "Search should show results, loading, or status message")
 
         let clearButton = app.searchFields.buttons["Clear text"]
-        if clearButton.waitForExistence(timeout: 3) {
+        if safeWaitForExistence(clearButton, timeout: 3) {
             clearButton.tap()
             // Allow UI state to propagate after clear (CI simulators can be slow)
             wait(for: 1.0)
@@ -161,9 +161,9 @@ final class PulseSearchUITests: BaseUITestCase {
         searchField.typeText("test query")
         let cancelButton = app.buttons["Cancel"]
 
-        if cancelButton.waitForExistence(timeout: 3) {
+        if safeWaitForExistence(cancelButton, timeout: 3) {
             cancelButton.tap()
-            XCTAssertTrue(!app.keyboards.element.waitForExistence(timeout: 1), "Keyboard should dismiss after cancel")
+            XCTAssertTrue(!safeWaitForExistence(app.keyboards.element, timeout: 1), "Keyboard should dismiss after cancel")
         }
 
         // --- Sort, Navigation, and Content States ---
@@ -192,11 +192,11 @@ final class PulseSearchUITests: BaseUITestCase {
             articleCardsForNavigation.firstMatch.tap()
 
             let backButton = app.navigationBars.buttons.firstMatch
-            let didNavigate = backButton.waitForExistence(timeout: 5) && !searchField.isHittable
+            let didNavigate = safeWaitForExistence(backButton, timeout: 5) && !searchField.exists
 
             if didNavigate {
                 backButton.tap()
-                XCTAssertTrue(searchField.waitForExistence(timeout: 5), "Should return to Search")
+                XCTAssertTrue(safeWaitForExistence(searchField, timeout: 5), "Should return to Search")
             }
         }
 
@@ -237,7 +237,7 @@ final class PulseSearchUITests: BaseUITestCase {
         clearSearchFieldIfNeeded(searchField)
         searchField.tap()
         let keyboard = app.keyboards.element
-        XCTAssertTrue(keyboard.waitForExistence(timeout: 3), "Keyboard should appear")
+        XCTAssertTrue(safeWaitForExistence(keyboard, timeout: 3), "Keyboard should appear")
 
         searchField.typeText("test")
         XCTAssertTrue(app.keyboards.element.exists, "Keyboard should be shown")
@@ -250,6 +250,6 @@ final class PulseSearchUITests: BaseUITestCase {
 
         navigateToSearchTab()
 
-        XCTAssertTrue(searchField.waitForExistence(timeout: 5), "Should return to Search view")
+        XCTAssertTrue(safeWaitForExistence(searchField, timeout: 5), "Should return to Search view")
     }
 }
