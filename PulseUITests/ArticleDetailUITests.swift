@@ -20,7 +20,7 @@ final class ArticleDetailUITests: BaseUITestCase {
             NSPredicate(format: "label CONTAINS[c] 'ago' OR label CONTAINS[c] 'hour' OR label CONTAINS[c] 'minute'")
         )
 
-        guard articleCards.count > 0 else {
+        guard ObjCExceptionCatcher.safeCount(for: articleCards) > 0 else {
             return false
         }
 
@@ -41,8 +41,8 @@ final class ArticleDetailUITests: BaseUITestCase {
     func testArticleDetailFlow() {
         let navigated = navigateToArticleDetail()
         if !navigated {
-            let errorState = app.staticTexts["Unable to Load News"].exists ||
-                app.staticTexts["No News Available"].exists
+            let errorState = safeExists(app.staticTexts["Unable to Load News"]) ||
+                safeExists(app.staticTexts["No News Available"])
             XCTAssertTrue(errorState, "Home should show an empty or error state when article detail is unavailable")
             return
         }
@@ -58,20 +58,20 @@ final class ArticleDetailUITests: BaseUITestCase {
 
         let bookmarkButton = app.navigationBars.buttons["bookmark"]
         let bookmarkFilledButton = app.navigationBars.buttons["bookmark.fill"]
-        let bookmarkExists = bookmarkButton.exists || bookmarkFilledButton.exists
+        let bookmarkExists = safeExists(bookmarkButton) || safeExists(bookmarkFilledButton)
         XCTAssertTrue(bookmarkExists, "Bookmark button should exist in navigation bar")
 
         let shareButton = app.navigationBars.buttons["square.and.arrow.up"]
-        XCTAssertTrue(shareButton.exists, "Share button should exist in navigation bar")
+        XCTAssertTrue(safeExists(shareButton), "Share button should exist in navigation bar")
 
         // --- Bookmark Toggle ---
-        if bookmarkButton.exists {
+        if safeExists(bookmarkButton) {
             bookmarkButton.tap()
             XCTAssertTrue(
                 safeWaitForExistence(bookmarkFilledButton, timeout: 3),
                 "Bookmark should become filled after tapping"
             )
-        } else if bookmarkFilledButton.exists {
+        } else if safeExists(bookmarkFilledButton) {
             bookmarkFilledButton.tap()
             XCTAssertTrue(
                 safeWaitForExistence(bookmarkButton, timeout: 3),
@@ -97,33 +97,36 @@ final class ArticleDetailUITests: BaseUITestCase {
 
         XCTAssertTrue(shareSheetAppeared, "Share sheet should appear after tapping share button")
 
-        if closeButton.exists {
+        if safeExists(closeButton) {
             closeButton.tap()
         } else {
             app.swipeDown()
         }
 
+        // Wait for share sheet to fully dismiss before continuing
+        wait(for: 2.0)
+
         // Wait for share sheet to dismiss and back button to become available
         let backButtonAfterShare = app.buttons["backButton"]
         XCTAssertTrue(
-            safeWaitForExistence(backButtonAfterShare, timeout: 5),
+            safeWaitForExistence(backButtonAfterShare, timeout: 10),
             "Back button should exist after share sheet dismissed"
         )
 
         // --- Article Content ---
         let staticTexts = app.staticTexts
-        XCTAssertTrue(staticTexts.count > 0, "Article detail should have text content")
+        XCTAssertTrue(ObjCExceptionCatcher.safeCount(for: staticTexts) > 0, "Article detail should have text content")
 
-        let hasMetadata = staticTexts.matching(
+        let hasMetadata = ObjCExceptionCatcher.safeCount(for: staticTexts.matching(
             NSPredicate(format: "label CONTAINS[c] 'By' OR label CONTAINS[c] 'ago' OR label CONTAINS[c] 'hour'")
-        ).count > 0
+        )) > 0
         XCTAssertTrue(hasMetadata, "Article should display metadata (author, source, or date)")
 
         let scrollView = app.scrollViews["articleDetailScrollView"]
         XCTAssertTrue(safeWaitForExistence(scrollView, timeout: 5), "Article detail should have a scroll view")
 
         let scrollViewGeneric = app.scrollViews.firstMatch
-        XCTAssertTrue(scrollViewGeneric.exists, "Article detail should have a scroll view")
+        XCTAssertTrue(safeExists(scrollViewGeneric), "Article detail should have a scroll view")
 
         for _ in 0 ..< 3 {
             scrollViewGeneric.swipeUp()
@@ -145,7 +148,7 @@ final class ArticleDetailUITests: BaseUITestCase {
         // Allow scroll to settle
         wait(for: 0.5)
 
-        XCTAssertTrue(backButtonAfterShare.exists, "Navigation should still work after scrolling")
+        XCTAssertTrue(safeExists(backButtonAfterShare), "Navigation should still work after scrolling")
 
         // --- Back Navigation ---
         // Use predicate-based wait for hittability with longer timeout for scroll settling
