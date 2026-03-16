@@ -9,7 +9,6 @@ class BaseUITestCase: XCTestCase {
 
     /// Timeout for app launch verification - requires more time than element checks
     /// CI machines are significantly slower than local, especially on shared runners
-    /// Use 60 seconds to handle worst-case CI initialization times
     static let launchTimeout: TimeInterval = 60
 
     /// Default timeout for element existence checks
@@ -33,41 +32,21 @@ class BaseUITestCase: XCTestCase {
         XCUIDevice.shared.orientation = .portrait
 
         app = XCUIApplication()
+        configureAndLaunchApp()
 
-        // Speed optimizations
-        app.launchEnvironment["UI_TESTING"] = "1"
-        app.launchEnvironment["DISABLE_ANIMATIONS"] = "1"
-
-        // Launch arguments to speed up tests
-        app.launchArguments += ["-UIViewAnimationDuration", "0.01"]
-        app.launchArguments += ["-CATransactionAnimationDuration", "0.01"]
-
-        // Skip onboarding flow in UI tests (sets UserDefaults via argument domain)
-        app.launchArguments += ["-pulse.hasCompletedOnboarding", "YES"]
-
-        // Force English locale for deterministic behavior across CI environments
-        app.launchArguments += ["-AppleLanguages", "(en)"]
-        app.launchArguments += ["-AppleLocale", "en_US"]
-
-        // Allow subclasses to configure launch environment (e.g., MOCK_PREMIUM)
-        configureLaunchEnvironment()
-
-        app.launch()
-
-        // If the app didn't reach foreground (e.g., previous instance failed to terminate),
-        // retry with a fresh XCUIApplication instance
-        if !app.wait(for: .runningForeground, timeout: Self.launchTimeout) {
+        // If the first launch failed (e.g., zombie process from a previous crash),
+        // terminate and retry with a fresh instance
+        if app.state != .runningForeground {
+            app.terminate()
+            _ = app.wait(for: .notRunning, timeout: 10)
             app = XCUIApplication()
-            app.launchEnvironment["UI_TESTING"] = "1"
-            app.launchEnvironment["DISABLE_ANIMATIONS"] = "1"
-            app.launchArguments += ["-UIViewAnimationDuration", "0.01"]
-            app.launchArguments += ["-CATransactionAnimationDuration", "0.01"]
-            app.launchArguments += ["-pulse.hasCompletedOnboarding", "YES"]
-            app.launchArguments += ["-AppleLanguages", "(en)"]
-            app.launchArguments += ["-AppleLocale", "en_US"]
-            configureLaunchEnvironment()
-            app.launch()
-            _ = app.wait(for: .runningForeground, timeout: Self.launchTimeout)
+            configureAndLaunchApp()
+        }
+
+        // If the app still isn't running after retry, skip this test rather than
+        // proceeding with a broken app instance (which would crash the test runner)
+        guard app.state == .runningForeground else {
+            throw XCTSkip("App failed to launch after retry — simulator may be in a bad state")
         }
 
         // Wait for UI to stabilize after launch
@@ -103,7 +82,7 @@ class BaseUITestCase: XCTestCase {
         }
 
         // Only reset to home tab if authenticated (tab bar was found)
-        if tabBar.exists {
+        if safeExists(tabBar) {
             resetToHomeTab()
         }
     }
@@ -121,7 +100,11 @@ class BaseUITestCase: XCTestCase {
             // Wait for termination to complete before next test starts.
             // "Failed to terminate" errors in CI happen when the next test's launch()
             // runs before the previous instance fully exits.
-            _ = app.wait(for: .notRunning, timeout: 10)
+            if !app.wait(for: .notRunning, timeout: 10) {
+                // Retry termination — CI shared runners can be slow to release processes
+                app.terminate()
+                _ = app.wait(for: .notRunning, timeout: 10)
+            }
         }
     }
 
@@ -131,6 +114,31 @@ class BaseUITestCase: XCTestCase {
     /// Called after standard environment is configured but before launch.
     func configureLaunchEnvironment() {
         // Default: no additional configuration
+    }
+
+    // MARK: - Launch Helpers
+
+    /// Configures and launches `self.app`. Terminates any lingering process first.
+    /// After calling, check `app.state == .runningForeground` to verify success.
+    private func configureAndLaunchApp() {
+        // Terminate any lingering app process from a previous test that crashed or
+        // failed to tear down cleanly. terminate() is a no-op if the app isn't running.
+        if app.state != .notRunning {
+            app.terminate()
+            _ = app.wait(for: .notRunning, timeout: 10)
+        }
+
+        app.launchEnvironment["UI_TESTING"] = "1"
+        app.launchEnvironment["DISABLE_ANIMATIONS"] = "1"
+        app.launchArguments += ["-UIViewAnimationDuration", "0.01"]
+        app.launchArguments += ["-CATransactionAnimationDuration", "0.01"]
+        app.launchArguments += ["-pulse.hasCompletedOnboarding", "YES"]
+        app.launchArguments += ["-AppleLanguages", "(en)"]
+        app.launchArguments += ["-AppleLocale", "en_US"]
+        configureLaunchEnvironment()
+
+        app.launch()
+        _ = app.wait(for: .runningForeground, timeout: Self.launchTimeout)
     }
 
     /// Guard that ensures the app is still running in foreground.
@@ -158,39 +166,32 @@ class BaseUITestCase: XCTestCase {
         // Quick check - if tab bar not visible, try recovery
         if !safeWaitForExistence(tabBar, timeout: Self.shortTimeout) {
             let backButton = app.buttons["backButton"]
-            if backButton.exists { backButton.tap() }
-            // Don't fail if tabBar query fails - try direct button access as fallback
+            if safeExists(backButton) { safeTap(backButton) }
         }
 
         // Select Home tab - use coordinate-based taps for iOS 26 Liquid Glass reliability
         let homeTab = tabBar.buttons["Home"]
-        if homeTab.exists, !homeTab.isSelected {
+        if safeExists(homeTab) {
             wait(for: 0.3)
-            let center = homeTab.coordinate(withNormalizedOffset: CGVector(dx: 0.5, dy: 0.5))
-            center.tap()
-        } else if !homeTab.exists {
+            safeTap(homeTab)
+        } else {
             // Fallback: try finding Home button directly (handles tabBar query issues on CI)
             let homeButton = app.buttons["Home"]
-            if safeWaitForExistence(homeButton, timeout: 2), !homeButton.isSelected {
-                homeButton.tap()
-            } else if tabBar.exists {
+            if safeWaitForExistence(homeButton, timeout: 2) {
+                safeTap(homeButton)
+            } else if safeExists(tabBar) {
                 // Last resort: tap first tab (Home is always first)
                 let firstTab = tabBar.buttons.element(boundBy: 0)
-                if firstTab.exists {
-                    let center = firstTab.coordinate(withNormalizedOffset: CGVector(dx: 0.5, dy: 0.5))
-                    center.tap()
-                }
+                if safeExists(firstTab) { safeTap(firstTab) }
             }
         }
 
         // Pop all navigation stack levels (handles deep navigation states)
-        // Avoid .isHittable checks which can time out on iOS 26 Liquid Glass
         for _ in 0 ..< 3 {
             let backButton = app.buttons["backButton"]
-            guard backButton.exists else { break }
-            let center = backButton.coordinate(withNormalizedOffset: CGVector(dx: 0.5, dy: 0.5))
-            center.tap()
-            wait(for: 0.2) // Allow navigation animation to settle
+            guard safeExists(backButton) else { break }
+            safeTap(backButton)
+            wait(for: 0.2)
         }
     }
 
@@ -200,33 +201,18 @@ class BaseUITestCase: XCTestCase {
     /// crashes. The tab bar is already verified in setUp, so we use synchronous `.exists`
     /// checks (single accessibility snapshot) and coordinate-based taps instead.
     func navigateToTab(_ tabName: String) {
-        // Guard against interacting with a crashed/terminated app
         guard app.state == .runningForeground else { return }
 
         let tab = app.tabBars.buttons[tabName]
-
-        // Use synchronous .exists (single snapshot) instead of waitForExistence
-        // (polling loop) to avoid repeated accessibility hierarchy queries that
-        // can trigger Xcode 26 C++ exception crashes
-        if tab.exists {
-            guard !tab.isSelected else { return }
+        if safeExists(tab) {
             wait(for: 0.3)
-            // Always use coordinate-based tap to bypass hittability evaluation
-            // which can also crash on iOS 26 Liquid Glass tab bar
-            let center = tab.coordinate(withNormalizedOffset: CGVector(dx: 0.5, dy: 0.5))
-            center.tap()
+            safeTap(tab)
         } else {
-            // Fallback: try finding the button directly (outside tab bar query)
             let tabButton = app.buttons[tabName]
-            if tabButton.exists, !tabButton.isSelected {
-                tabButton.tap()
-            }
+            if safeExists(tabButton) { safeTap(tabButton) }
         }
 
-        // Wait for UI to settle on CI
         wait(for: 0.5)
-
-        // Verify navigation - Home tab nav bar is titled "News", not "Home"
         let navBarTitle = tabName == "Home" ? "News" : tabName
         _ = safeWaitForExistence(app.navigationBars[navBarTitle], timeout: Self.shortTimeout)
     }
@@ -235,19 +221,12 @@ class BaseUITestCase: XCTestCase {
     func navigateToSearchTab() {
         guard app.state == .runningForeground else { return }
         let searchTab = app.tabBars.buttons["Search"]
-        if searchTab.exists {
-            guard !searchTab.isSelected else {
-                _ = safeWaitForExistence(app.navigationBars["Search"], timeout: Self.defaultTimeout)
-                return
-            }
+        if safeExists(searchTab) {
             wait(for: 0.3)
-            let center = searchTab.coordinate(withNormalizedOffset: CGVector(dx: 0.5, dy: 0.5))
-            center.tap()
+            safeTap(searchTab)
         } else {
             let searchButton = app.buttons["Search"]
-            if searchButton.exists, !searchButton.isSelected {
-                searchButton.tap()
-            }
+            if safeExists(searchButton) { safeTap(searchButton) }
         }
         _ = safeWaitForExistence(app.navigationBars["Search"], timeout: Self.defaultTimeout)
     }
@@ -256,26 +235,17 @@ class BaseUITestCase: XCTestCase {
     func navigateToFeedTab() {
         guard app.state == .runningForeground else { return }
         let feedTab = app.tabBars.buttons["Feed"]
-        if feedTab.exists {
-            guard !feedTab.isSelected else {
-                _ = safeWaitForExistence(app.navigationBars["Daily Digest"], timeout: Self.defaultTimeout)
-                return
-            }
+        if safeExists(feedTab) {
             wait(for: 0.3)
-            let center = feedTab.coordinate(withNormalizedOffset: CGVector(dx: 0.5, dy: 0.5))
-            center.tap()
+            safeTap(feedTab)
         } else {
-            // Fallback for iOS 26+: try finding by image name "text.document"
             let feedByImage = app.tabBars.buttons["text.document"]
-            if feedByImage.exists, !feedByImage.isSelected {
+            if safeExists(feedByImage) {
                 wait(for: 0.3)
-                let center = feedByImage.coordinate(withNormalizedOffset: CGVector(dx: 0.5, dy: 0.5))
-                center.tap()
+                safeTap(feedByImage)
             } else {
                 let feedButton = app.buttons["Feed"]
-                if feedButton.exists, !feedButton.isSelected {
-                    feedButton.tap()
-                }
+                if safeExists(feedButton) { safeTap(feedButton) }
             }
         }
         _ = safeWaitForExistence(app.navigationBars["Daily Digest"], timeout: Self.defaultTimeout)
@@ -286,40 +256,27 @@ class BaseUITestCase: XCTestCase {
         guard app.state == .runningForeground else { return }
         let mediaTab = app.tabBars.buttons["Media"]
 
-        if mediaTab.exists {
-            guard !mediaTab.isSelected else {
-                wait(for: 0.5)
-                return
-            }
+        if safeExists(mediaTab) {
             wait(for: 0.3)
-            let center = mediaTab.coordinate(withNormalizedOffset: CGVector(dx: 0.5, dy: 0.5))
-            center.tap()
+            safeTap(mediaTab)
         } else {
-            // Fallback for iOS 26+: try finding by image name "play.tv"
             let mediaByImage = app.tabBars.buttons["play.tv"]
-            if mediaByImage.exists, !mediaByImage.isSelected {
+            if safeExists(mediaByImage) {
                 wait(for: 0.3)
-                let center = mediaByImage.coordinate(withNormalizedOffset: CGVector(dx: 0.5, dy: 0.5))
-                center.tap()
+                safeTap(mediaByImage)
             } else {
                 let mediaButton = app.buttons["Media"]
-                if mediaButton.exists, !mediaButton.isSelected {
-                    mediaButton.tap()
-                }
+                if safeExists(mediaButton) { safeTap(mediaButton) }
             }
         }
 
-        // Wait for UI to settle on CI
         wait(for: 0.5)
 
-        // Verify with recovery
         var navBarVisible = safeWaitForExistence(app.navigationBars["Media"], timeout: Self.defaultTimeout)
         if !navBarVisible {
-            // Recovery: tap again with coordinate-based approach
-            let retryTab = mediaTab.exists ? mediaTab : app.tabBars.buttons["play.tv"]
-            if retryTab.exists {
-                let center = retryTab.coordinate(withNormalizedOffset: CGVector(dx: 0.5, dy: 0.5))
-                center.tap()
+            let retryTab = safeExists(mediaTab) ? mediaTab : app.tabBars.buttons["play.tv"]
+            if safeExists(retryTab) {
+                safeTap(retryTab)
                 wait(for: 1.0)
                 navBarVisible = safeWaitForExistence(app.navigationBars["Media"], timeout: Self.defaultTimeout)
             }
@@ -330,19 +287,12 @@ class BaseUITestCase: XCTestCase {
     func navigateToBookmarksTab() {
         guard app.state == .runningForeground else { return }
         let bookmarksTab = app.tabBars.buttons["Bookmarks"]
-        if bookmarksTab.exists {
-            guard !bookmarksTab.isSelected else {
-                _ = safeWaitForExistence(app.navigationBars["Bookmarks"], timeout: Self.defaultTimeout)
-                return
-            }
+        if safeExists(bookmarksTab) {
             wait(for: 0.3)
-            let center = bookmarksTab.coordinate(withNormalizedOffset: CGVector(dx: 0.5, dy: 0.5))
-            center.tap()
+            safeTap(bookmarksTab)
         } else {
             let bookmarksButton = app.buttons["Bookmarks"]
-            if bookmarksButton.exists, !bookmarksButton.isSelected {
-                bookmarksButton.tap()
-            }
+            if safeExists(bookmarksButton) { safeTap(bookmarksButton) }
         }
         _ = safeWaitForExistence(app.navigationBars["Bookmarks"], timeout: Self.defaultTimeout)
     }
@@ -352,68 +302,62 @@ class BaseUITestCase: XCTestCase {
         guard app.state == .runningForeground else { return }
         navigateToTab("Home")
 
-        // Try multiple strategies to find the gear button
         var gearButton = app.navigationBars.buttons["Settings"]
-        if !gearButton.exists {
-            // Toolbar items may not be in navBar on iOS 26
+        if !safeExists(gearButton) {
             gearButton = app.buttons["Settings"]
         }
 
-        if gearButton.exists {
+        if safeExists(gearButton) {
             wait(for: 0.3)
-            let center = gearButton.coordinate(withNormalizedOffset: CGVector(dx: 0.5, dy: 0.5))
-            center.tap()
+            safeTap(gearButton)
             _ = safeWaitForExistence(app.navigationBars["Settings"], timeout: Self.defaultTimeout)
         }
+    }
+
+    // MARK: - Exception-Safe Element Helpers
+
+    /// Checks `.exists` via ObjC++ @try/@catch to prevent C++ exception crashes.
+    /// The actual `.exists` call happens in ObjC++ code, NOT in a Swift closure,
+    /// so the C++ exception is caught before it reaches the Swift runtime.
+    func safeExists(_ element: XCUIElement) -> Bool {
+        ObjCExceptionCatcher.safeExists(for: element)
+    }
+
+    /// Taps an element using coordinate-based tap via ObjC++ @try/@catch.
+    func safeTap(_ element: XCUIElement) {
+        ObjCExceptionCatcher.safeTap(element)
     }
 
     // MARK: - Wait Helpers
 
     /// Safe alternative to XCTest's `waitForExistence` that avoids Xcode 26 C++ exception crashes.
-    ///
-    /// `waitForExistence(timeout:)` uses XCTest's internal snapshot comparison loop which can
-    /// throw an uncatchable C++ exception ("C++ exception handling detected but the Swift runtime
-    /// was compiled with exceptions disabled") when a snapshot evaluation times out. This crashes
-    /// the test runner with SIGABRT.
-    ///
-    /// This method polls `.exists` (single snapshot per iteration) with RunLoop-based delays,
-    /// which avoids the internal snapshot loop that triggers the crash.
+    /// All `.exists` calls are wrapped in ObjC `@try/@catch` to catch C++ exceptions
+    /// that would otherwise SIGABRT the test runner.
     @discardableResult
     func safeWaitForExistence(_ element: XCUIElement, timeout: TimeInterval) -> Bool {
-        if element.exists { return true }
+        if safeExists(element) { return true }
         let deadline = Date().addingTimeInterval(timeout)
         while Date() < deadline {
-            RunLoop.current.run(until: Date().addingTimeInterval(0.25))
-            if element.exists { return true }
+            RunLoop.current.run(until: Date().addingTimeInterval(0.5))
+            if safeExists(element) { return true }
         }
         return false
     }
 
     /// Smart wait that replaces Thread.sleep - waits for UI to settle
-    /// Uses RunLoop to allow UI updates while waiting, more efficient than Thread.sleep
     @discardableResult
     func wait(for duration: TimeInterval) -> Bool {
-        // Use expectation-based waiting which is more efficient than Thread.sleep
-        // and allows the UI to continue processing events
-        let expectation = XCTNSPredicateExpectation(
-            predicate: NSPredicate(value: false),
-            object: nil
-        )
-        _ = XCTWaiter.wait(for: [expectation], timeout: duration)
+        RunLoop.current.run(until: Date().addingTimeInterval(duration))
         return true
     }
 
     /// Wait for any of the provided elements to exist.
-    /// Uses 0.5s polling interval to reduce UI query pressure on CI shared runners,
-    /// where rapid .exists calls can trigger Xcode 26 C++ exception crashes
-    /// ("Timed out while evaluating UI query").
     func waitForAny(_ elements: [XCUIElement], timeout: TimeInterval = 10) -> Bool {
-        // Check immediately before entering the polling loop
-        if elements.contains(where: { $0.exists }) { return true }
+        if elements.contains(where: { safeExists($0) }) { return true }
         let deadline = Date().addingTimeInterval(timeout)
         while Date() < deadline {
             RunLoop.current.run(until: Date().addingTimeInterval(0.5))
-            if elements.contains(where: { $0.exists }) {
+            if elements.contains(where: { safeExists($0) }) {
                 return true
             }
         }
@@ -422,22 +366,24 @@ class BaseUITestCase: XCTestCase {
 
     /// Wait for any element matching query to exist
     func waitForAnyMatch(_ query: XCUIElementQuery, timeout: TimeInterval = 10) -> Bool {
-        if query.count > 0 { return true }
+        if ObjCExceptionCatcher.safeCount(for: query) > 0 { return true }
         let deadline = Date().addingTimeInterval(timeout)
         while Date() < deadline {
             RunLoop.current.run(until: Date().addingTimeInterval(0.5))
-            if query.count > 0 {
-                return true
-            }
+            if ObjCExceptionCatcher.safeCount(for: query) > 0 { return true }
         }
         return false
     }
 
-    /// Wait for an element to disappear
+    /// Wait for an element to disappear.
     func waitForElementToDisappear(_ element: XCUIElement, timeout: TimeInterval = 10) -> Bool {
-        let predicate = NSPredicate { _, _ in !element.exists }
-        let expectation = XCTNSPredicateExpectation(predicate: predicate, object: nil)
-        return XCTWaiter.wait(for: [expectation], timeout: timeout) == .completed
+        if !safeExists(element) { return true }
+        let deadline = Date().addingTimeInterval(timeout)
+        while Date() < deadline {
+            RunLoop.current.run(until: Date().addingTimeInterval(0.5))
+            if !safeExists(element) { return true }
+        }
+        return false
     }
 
     /// Wait for content to load (articles, error, or empty state)
@@ -470,24 +416,19 @@ class BaseUITestCase: XCTestCase {
     /// Navigate back from current view with post-navigation wait for CI stability
     func navigateBack(waitForNavBar navBarTitle: String? = nil, timeout: TimeInterval = 15) {
         let backButton = app.buttons["backButton"]
-        if backButton.exists {
-            let center = backButton.coordinate(withNormalizedOffset: CGVector(dx: 0.5, dy: 0.5))
-            center.tap()
+        if safeExists(backButton) {
+            safeTap(backButton)
         } else {
             app.swipeRight()
         }
 
-        // Wait for navigation animation to settle (critical on slow CI runners)
         wait(for: 0.5)
 
-        // If a target nav bar was specified, wait for it to appear with retry
         if let navBarTitle {
             if !safeWaitForExistence(app.navigationBars[navBarTitle], timeout: timeout) {
-                // Recovery: try navigating back again (tap may have been swallowed)
                 let retryBack = app.buttons["backButton"]
-                if retryBack.exists {
-                    let center = retryBack.coordinate(withNormalizedOffset: CGVector(dx: 0.5, dy: 0.5))
-                    center.tap()
+                if safeExists(retryBack) {
+                    safeTap(retryBack)
                     wait(for: 0.5)
                 } else {
                     app.swipeRight()
@@ -506,7 +447,7 @@ class BaseUITestCase: XCTestCase {
 
     /// Check if element is visible in the viewport
     func isElementVisible(_ element: XCUIElement) -> Bool {
-        guard element.exists else { return false }
+        guard safeExists(element) else { return false }
         let frame = element.frame
         guard !frame.isEmpty else { return false }
         return app.windows.element(boundBy: 0).frame.intersects(frame)
@@ -514,18 +455,14 @@ class BaseUITestCase: XCTestCase {
 
     /// Scroll to find an element
     func scrollToElement(_ element: XCUIElement, in scrollView: XCUIElement? = nil, maxSwipes: Int = 5) -> Bool {
-        if element.exists {
-            return true
-        }
+        if safeExists(element) { return true }
 
         let container = scrollView ?? app.scrollViews.firstMatch
-        guard container.exists else { return false }
+        guard safeExists(container) else { return false }
 
         for _ in 0 ..< maxSwipes {
             container.swipeUp()
-            if element.exists {
-                return true
-            }
+            if safeExists(element) { return true }
         }
         return false
     }

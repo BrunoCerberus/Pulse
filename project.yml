@@ -212,6 +212,7 @@ targets:
         CODE_SIGN_STYLE: Automatic
         DEVELOPMENT_TEAM: RDTR6557FX
         SWIFT_OBJC_INTEROP_MODE: objcxx
+        SWIFT_OBJC_BRIDGING_HEADER: PulseUITests/PulseUITests-Bridging-Header.h
     dependencies:
       - target: Pulse
       - sdk: XCTest.framework
