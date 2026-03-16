@@ -304,7 +304,7 @@ final class MediaUITests: BaseUITestCase {
             // Try Again button should exist
             let tryAgainButton = app.buttons["Try Again"]
             if safeWaitForExistence(tryAgainButton, timeout: 3) {
-                XCTAssertTrue(tryAgainButton.exists)
+                XCTAssertTrue(safeExists(tryAgainButton))
             }
         }
 
