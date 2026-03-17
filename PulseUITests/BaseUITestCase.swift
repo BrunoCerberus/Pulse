@@ -87,7 +87,9 @@ class BaseUITestCase: XCTestCase {
 
     override func tearDown() {
         defer { app = nil }
-        XCUIDevice.shared.orientation = .portrait
+        // Use ObjC++ wrapper — setting orientation can throw a C++ exception when the
+        // test runner is in a bad state after a UI query timeout, crashing tearDown.
+        ObjCExceptionCatcher.safeSetDeviceOrientation(.portrait)
         // Terminate the app using ObjC++ @try/@catch to prevent C++ exception crashes.
         // Xcode 26 throws C++ exceptions during terminate() ("Failed to terminate")
         // which crash the Swift runtime. Wrapping in ObjC++ catches these safely.

@@ -58,4 +58,12 @@
     }
 }
 
++ (void)safeSetDeviceOrientation:(UIDeviceOrientation)orientation {
+    @try {
+        XCUIDevice.sharedDevice.orientation = orientation;
+    } @catch (...) {
+        // Orientation reset failed — runner may be in a bad state after a C++ exception
+    }
+}
+
 @end
