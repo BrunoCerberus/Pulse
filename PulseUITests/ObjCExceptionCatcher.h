@@ -23,6 +23,12 @@ NS_ASSUME_NONNULL_BEGIN
 /// Returns query.count, catching any C++ exception. Returns 0 on exception.
 + (NSInteger)safeCountForQuery:(XCUIElementQuery *)query;
 
+/// Terminates an application, catching any C++ exception from "Failed to terminate".
++ (void)safeTerminateApp:(XCUIApplication *)app;
+
+/// Waits for app to reach a given state, catching any C++ exception. Returns NO on exception.
++ (BOOL)safeWaitForApp:(XCUIApplication *)app state:(XCUIApplicationState)state timeout:(NSTimeInterval)timeout;
+
 @end
 
 NS_ASSUME_NONNULL_END

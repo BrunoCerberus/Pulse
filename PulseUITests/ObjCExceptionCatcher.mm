@@ -42,4 +42,20 @@
     }
 }
 
++ (void)safeTerminateApp:(XCUIApplication *)app {
+    @try {
+        [app terminate];
+    } @catch (...) {
+        // "Failed to terminate" throws C++ exception — swallow it
+    }
+}
+
++ (BOOL)safeWaitForApp:(XCUIApplication *)app state:(XCUIApplicationState)state timeout:(NSTimeInterval)timeout {
+    @try {
+        return [app waitForState:state timeout:timeout];
+    } @catch (...) {
+        return NO;
+    }
+}
+
 @end
