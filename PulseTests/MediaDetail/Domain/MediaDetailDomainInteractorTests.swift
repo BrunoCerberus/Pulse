@@ -63,7 +63,8 @@ struct MediaDetailDomainInteractorTests {
     @Test("onAppear checks bookmark status")
     func testOnAppear() async throws {
         // Pre-bookmark the article
-        try await mockStorageService.saveArticle(testArticle)
+        nonisolated(unsafe) let storage = mockStorageService
+        try await storage.saveArticle(testArticle)
 
         sut.dispatch(action: .onAppear)
 
@@ -232,14 +233,16 @@ struct MediaDetailDomainInteractorTests {
         try await Task.sleep(nanoseconds: 200_000_000)
 
         // Verify persisted
-        let isBookmarked = await mockStorageService.isBookmarked(testArticle.id)
+        nonisolated(unsafe) let storage1 = mockStorageService
+        let isBookmarked = await storage1.isBookmarked(testArticle.id)
         #expect(isBookmarked)
     }
 
     @Test("Toggle bookmark removes bookmark when bookmarked")
     func toggleBookmarkRemove() async throws {
         // Pre-bookmark
-        try await mockStorageService.saveArticle(testArticle)
+        nonisolated(unsafe) let storage2 = mockStorageService
+        try await storage2.saveArticle(testArticle)
         sut.dispatch(action: .bookmarkStatusLoaded(true))
         #expect(sut.currentState.isBookmarked)
 
@@ -252,7 +255,8 @@ struct MediaDetailDomainInteractorTests {
         try await Task.sleep(nanoseconds: 200_000_000)
 
         // Verify removed
-        let isBookmarked = await mockStorageService.isBookmarked(testArticle.id)
+        nonisolated(unsafe) let storage3 = mockStorageService
+        let isBookmarked = await storage3.isBookmarked(testArticle.id)
         #expect(!isBookmarked)
     }
 

@@ -1,7 +1,7 @@
 import Combine
 import Foundation
 
-final class MockFeedService: FeedService {
+final class MockFeedService: FeedService, @unchecked Sendable {
     // MARK: - Configuration
 
     var shouldFail = false
@@ -23,7 +23,7 @@ final class MockFeedService: FeedService {
     /// Custom tokens to stream during generation (if set, overrides default summary)
     var streamTokens: [String]?
 
-    private let modelStatusSubject = CurrentValueSubject<LLMModelStatus, Never>(.notLoaded)
+    private nonisolated(unsafe) let modelStatusSubject = CurrentValueSubject<LLMModelStatus, Never>(.notLoaded)
 
     /// Simulate a model status change for testing
     func simulateModelStatus(_ status: LLMModelStatus) {
@@ -45,17 +45,17 @@ final class MockFeedService: FeedService {
         guard !isModelReady else { return }
 
         if shouldFail {
-            modelStatusSubject.send(.error("Mock error: Model load failed"))
+            await MainActor.run { modelStatusSubject.send(.error("Mock error: Model load failed")) }
             throw FeedServiceError.modelNotReady
         }
 
         // Simulate loading progress
         for progress in stride(from: 0.0, through: 1.0, by: 0.2) {
-            modelStatusSubject.send(.loading(progress: progress))
+            await MainActor.run { modelStatusSubject.send(.loading(progress: progress)) }
             try await Task.sleep(for: .milliseconds(Int(loadDelay * 200)))
         }
 
-        modelStatusSubject.send(.ready)
+        await MainActor.run { modelStatusSubject.send(.ready) }
     }
 
     func fetchTodaysDigest() -> DailyDigest? {
@@ -63,16 +63,20 @@ final class MockFeedService: FeedService {
     }
 
     func generateDigest(from articles: [Article]) -> AsyncThrowingStream<String, Error> {
-        AsyncThrowingStream { continuation in
+        let shouldFail = shouldFail
+        let streamTokens = streamTokens
+        let generateDelay = generateDelay
+
+        return AsyncThrowingStream { continuation in
             let generationTask = Task {
-                if self.shouldFail {
+                if shouldFail {
                     continuation.finish(throwing: FeedServiceError.generationFailed("Mock generation failed"))
                     return
                 }
 
                 // Use custom tokens if set, otherwise generate from articles
                 let tokens: [String]
-                if let customTokens = self.streamTokens {
+                if let customTokens = streamTokens {
                     tokens = customTokens
                 } else {
                     let mockSummary = Self.generateMockSummary(for: articles)
@@ -84,7 +88,7 @@ final class MockFeedService: FeedService {
                         continuation.finish()
                         return
                     }
-                    try await Task.sleep(for: .milliseconds(Int(self.generateDelay * 1000)))
+                    try await Task.sleep(for: .milliseconds(Int(generateDelay * 1000)))
                     continuation.yield(token)
                 }
 

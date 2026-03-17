@@ -67,7 +67,7 @@ final class PulseSceneDelegate: UIResponder, UIWindowSceneDelegate {
 
     private func configureAuthenticationManager() {
         do {
-            let authService = try serviceLocator.retrieve(AuthService.self)
+            nonisolated(unsafe) let authService = try serviceLocator.retrieve(AuthService.self)
             MainActor.assumeIsolated {
                 AuthenticationManager.shared.configure(with: authService)
             }
@@ -80,14 +80,15 @@ final class PulseSceneDelegate: UIResponder, UIWindowSceneDelegate {
     private func configureAnalyticsUserID() {
         guard let analyticsService = try? serviceLocator.retrieve(AnalyticsService.self) else { return }
 
+        nonisolated(unsafe) let service = analyticsService
         MainActor.assumeIsolated {
             AuthenticationManager.shared.$authState
                 .sink { state in
                     switch state {
                     case let .authenticated(user):
-                        analyticsService.setUserID(user.uid)
+                        service.setUserID(user.uid)
                     case .unauthenticated:
-                        analyticsService.setUserID(nil)
+                        service.setUserID(nil)
                     case .loading:
                         break
                     }
@@ -98,7 +99,7 @@ final class PulseSceneDelegate: UIResponder, UIWindowSceneDelegate {
 
     private func configureAppLockManager() {
         do {
-            let appLockService = try serviceLocator.retrieve(AppLockService.self)
+            nonisolated(unsafe) let appLockService = try serviceLocator.retrieve(AppLockService.self)
             MainActor.assumeIsolated {
                 AppLockManager.shared.configure(with: appLockService)
             }
@@ -258,10 +259,12 @@ final class PulseSceneDelegate: UIResponder, UIWindowSceneDelegate {
     }
 
     private func syncLanguagePreference() {
-        Task { [serviceLocator] in
+        let locator = UncheckedSendableBox(value: serviceLocator)
+        Task {
             do {
-                let storageService = try serviceLocator.retrieve(StorageService.self)
-                let preferences = try await storageService.fetchUserPreferences()
+                let retrieved = try locator.value.retrieve(StorageService.self)
+                let storageService = UncheckedSendableBox(value: retrieved)
+                let preferences = try await storageService.value.fetchUserPreferences()
                 let language = preferences?.preferredLanguage
                     ?? (Locale.current.language.languageCode?.identifier ?? "en")
                 await MainActor.run {

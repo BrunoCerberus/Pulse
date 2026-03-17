@@ -244,12 +244,13 @@ struct ArticleDetailVMBookmarkTests {
         sut.handle(event: .onBookmarkTapped)
 
         // Wait for bookmark state to update
-        let bookmarked = await waitForCondition(timeout: 500_000_000) { [sut] in
+        let bookmarked = await waitForCondition(timeout: 500_000_000) { @MainActor [sut] in
             sut.viewState.isBookmarked
         }
         #expect(bookmarked)
 
-        let isBookmarked = await mockStorageService.isBookmarked(testArticle.id)
+        nonisolated(unsafe) let storage = mockStorageService
+        let isBookmarked = await storage.isBookmarked(testArticle.id)
         #expect(isBookmarked)
     }
 
@@ -257,12 +258,13 @@ struct ArticleDetailVMBookmarkTests {
     func toggleBookmarkRemovesFromBookmarks() async throws {
         let (serviceLocator, mockStorageService) = createTestServiceLocator()
         let testArticle = createTestArticle()
-        try await mockStorageService.saveArticle(testArticle)
+        nonisolated(unsafe) let storage = mockStorageService
+        try await storage.saveArticle(testArticle)
         let sut = ArticleDetailViewModel(article: testArticle, serviceLocator: serviceLocator)
         sut.handle(event: .onAppear)
 
         // Wait for bookmark status to be loaded (1 second timeout for CI reliability)
-        let initiallyBookmarked = await waitForCondition(timeout: 1_000_000_000) { [sut] in
+        let initiallyBookmarked = await waitForCondition(timeout: 1_000_000_000) { @MainActor [sut] in
             sut.viewState.isBookmarked
         }
         #expect(initiallyBookmarked)
@@ -270,7 +272,7 @@ struct ArticleDetailVMBookmarkTests {
         sut.handle(event: .onBookmarkTapped)
 
         // Wait for bookmark to be removed (1 second timeout for CI reliability)
-        let unbookmarked = await waitForCondition(timeout: 1_000_000_000) { [sut] in
+        let unbookmarked = await waitForCondition(timeout: 1_000_000_000) { @MainActor [sut] in
             !sut.viewState.isBookmarked
         }
         #expect(unbookmarked)
@@ -280,13 +282,14 @@ struct ArticleDetailVMBookmarkTests {
     func onAppearChecksBookmarkStatus() async throws {
         let (serviceLocator, mockStorageService) = createTestServiceLocator()
         let testArticle = createTestArticle()
-        try await mockStorageService.saveArticle(testArticle)
+        nonisolated(unsafe) let storage = mockStorageService
+        try await storage.saveArticle(testArticle)
         let sut = ArticleDetailViewModel(article: testArticle, serviceLocator: serviceLocator)
         #expect(!sut.viewState.isBookmarked)
         sut.handle(event: .onAppear)
 
         // Wait for bookmark status to be checked (1 second timeout for CI reliability)
-        let bookmarked = await waitForCondition(timeout: 1_000_000_000) { [sut] in
+        let bookmarked = await waitForCondition(timeout: 1_000_000_000) { @MainActor [sut] in
             sut.viewState.isBookmarked
         }
         #expect(bookmarked)
@@ -301,7 +304,7 @@ struct ArticleDetailVMBookmarkTests {
         sut.handle(event: .onShareTapped)
 
         // Wait for share sheet state to update
-        let showingSheet = await waitForCondition(timeout: 500_000_000) { [sut] in
+        let showingSheet = await waitForCondition(timeout: 500_000_000) { @MainActor [sut] in
             sut.viewState.showShareSheet
         }
         #expect(showingSheet)

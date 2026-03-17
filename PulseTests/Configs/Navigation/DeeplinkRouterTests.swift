@@ -86,7 +86,7 @@ struct DeeplinkRouterTests {
         #expect(coordinator.selectedTab == .search)
 
         // Use condition-based wait for more reliable state verification
-        let success = await waitForCondition { [coordinator] in
+        let success = await waitForCondition { @MainActor [coordinator] in
             coordinator.searchViewModel.viewState.query == "technology"
         }
         #expect(success, "Query should be 'technology' after routing")
@@ -141,7 +141,7 @@ struct DeeplinkRouterTests {
         #expect(coordinator.selectedTab == .home)
 
         // Wait for async article fetch and navigation (3 seconds for CI reliability)
-        let navigated = await waitForCondition(timeout: 3_000_000_000) { [coordinator] in
+        let navigated = await waitForCondition(timeout: 3_000_000_000) { @MainActor [coordinator] in
             coordinator.homePath.count == 1
         }
 
@@ -252,7 +252,7 @@ struct DeeplinkRouterTests {
         DeeplinkManager.shared.handle(deeplink: .bookmarks)
 
         // Wait for Combine publisher to propagate (3 seconds for CI reliability)
-        let routed = await waitForCondition(timeout: 3_000_000_000) { [coordinator] in
+        let routed = await waitForCondition(timeout: 3_000_000_000) { @MainActor [coordinator] in
             coordinator.selectedTab == .bookmarks
         }
 

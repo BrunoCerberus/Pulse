@@ -97,14 +97,14 @@ struct GuardianArticleDTO: Codable {
     }
 
     /// ISO 8601 formatter with fractional seconds support.
-    private static let dateFormatterWithFractional: ISO8601DateFormatter = {
+    private nonisolated(unsafe) static let dateFormatterWithFractional: ISO8601DateFormatter = {
         let formatter = ISO8601DateFormatter()
         formatter.formatOptions = [.withInternetDateTime, .withFractionalSeconds]
         return formatter
     }()
 
     /// ISO 8601 formatter without fractional seconds (fallback).
-    private static let dateFormatterBasic: ISO8601DateFormatter = {
+    private nonisolated(unsafe) static let dateFormatterBasic: ISO8601DateFormatter = {
         let formatter = ISO8601DateFormatter()
         formatter.formatOptions = [.withInternetDateTime]
         return formatter

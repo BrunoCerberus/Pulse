@@ -39,10 +39,26 @@ func waitForStateUpdate(duration: UInt64 = TestWaitDuration.standard) async thro
 ///   - interval: Check interval in nanoseconds (default 10ms)
 ///   - condition: Closure that returns true when desired state is reached
 /// - Returns: True if condition was met within timeout
+@MainActor
 func waitForCondition(
     timeout: UInt64 = 500_000_000,
     interval: UInt64 = 10_000_000,
-    condition: @escaping () -> Bool
+    condition: @escaping @MainActor () -> Bool
+) async -> Bool {
+    let deadline = DispatchTime.now().uptimeNanoseconds + timeout
+    while DispatchTime.now().uptimeNanoseconds < deadline {
+        if condition() {
+            return true
+        }
+        try? await Task.sleep(nanoseconds: interval)
+    }
+    return condition()
+}
+
+func waitForCondition(
+    timeout: UInt64 = 500_000_000,
+    interval: UInt64 = 10_000_000,
+    condition: sending @escaping () -> Bool
 ) async -> Bool {
     let deadline = DispatchTime.now().uptimeNanoseconds + timeout
     while DispatchTime.now().uptimeNanoseconds < deadline {
@@ -64,7 +80,8 @@ enum PublisherError: Error {
 /// Uses `.first()` to take the first emitted value. If the publisher
 /// completes without emitting, throws `PublisherError.finishedWithoutValue`.
 func awaitPublisher<T>(_ publisher: AnyPublisher<T, Error>) async throws -> T {
-    try await withCheckedThrowingContinuation { continuation in
+    try await withCheckedThrowingContinuation { (continuation: CheckedContinuation<T, Error>) in
+        nonisolated(unsafe) let continuation = continuation
         var resumed = false
         var cancellable: AnyCancellable?
         cancellable = publisher
@@ -88,6 +105,7 @@ func awaitPublisher<T>(_ publisher: AnyPublisher<T, Error>) async throws -> T {
                 receiveValue: { value in
                     guard !resumed else { return }
                     resumed = true
+                    nonisolated(unsafe) let value = value
                     continuation.resume(returning: value)
                 }
             )

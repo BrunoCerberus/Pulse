@@ -1,7 +1,6 @@
 import XCTest
 
 /// Base class for UI tests that standardizes launch configuration and isolation.
-@MainActor
 // swiftlint:disable:next type_body_length
 class BaseUITestCase: XCTestCase {
     /// App instance - launched per test for isolation
@@ -37,8 +36,8 @@ class BaseUITestCase: XCTestCase {
         // If the first launch failed (e.g., zombie process from a previous crash),
         // terminate and retry with a fresh instance
         if app.state != .runningForeground {
-            app.terminate()
-            _ = app.wait(for: .notRunning, timeout: 10)
+            ObjCExceptionCatcher.safeTerminateApp(app)
+            _ = ObjCExceptionCatcher.safeWait(forApp: app, state: .notRunning, timeout: 10)
             app = XCUIApplication()
             configureAndLaunchApp()
         }
@@ -70,13 +69,12 @@ class BaseUITestCase: XCTestCase {
 
         guard appReady else {
             // Debug: log what's visible to help diagnose CI failures
-            let hasActivityIndicator = app.activityIndicators.count > 0
-            let hasButtons = app.buttons.count > 0
-            let hasStaticTexts = app.staticTexts.count > 0
-            let allButtonLabels = app.buttons.allElementsBoundByIndex.prefix(10).map { $0.label }
+            let hasActivityIndicator = ObjCExceptionCatcher.safeCount(for: app.activityIndicators) > 0
+            let hasButtons = ObjCExceptionCatcher.safeCount(for: app.buttons) > 0
+            let hasStaticTexts = ObjCExceptionCatcher.safeCount(for: app.staticTexts) > 0
             let debugInfo = "App did not reach ready state - neither tab bar nor sign-in view appeared. " +
                 "Debug: hasActivityIndicator=\(hasActivityIndicator), buttons=\(hasButtons), " +
-                "texts=\(hasStaticTexts), buttonLabels=\(allButtonLabels)"
+                "texts=\(hasStaticTexts)"
             print(debugInfo)
             throw XCTSkip("App not ready: \(debugInfo)")
         }
@@ -89,21 +87,19 @@ class BaseUITestCase: XCTestCase {
 
     override func tearDown() {
         defer { app = nil }
-        XCUIDevice.shared.orientation = .portrait
-        // Terminate the app explicitly to prevent "Failed to terminate" errors
-        // in the next test's setUp when app.launch() tries to kill a lingering instance.
-        // With continueAfterFailure = true, any C++ exception from Xcode 26's
-        // accessibility queries during termination is recorded as a non-fatal issue
-        // rather than crashing the test runner.
+        // Use ObjC++ wrapper — setting orientation can throw a C++ exception when the
+        // test runner is in a bad state after a UI query timeout, crashing tearDown.
+        ObjCExceptionCatcher.safeSetDeviceOrientation(.portrait)
+        // Terminate the app using ObjC++ @try/@catch to prevent C++ exception crashes.
+        // Xcode 26 throws C++ exceptions during terminate() ("Failed to terminate")
+        // which crash the Swift runtime. Wrapping in ObjC++ catches these safely.
         if let app, app.state != .notRunning {
-            app.terminate()
+            ObjCExceptionCatcher.safeTerminateApp(app)
             // Wait for termination to complete before next test starts.
-            // "Failed to terminate" errors in CI happen when the next test's launch()
-            // runs before the previous instance fully exits.
-            if !app.wait(for: .notRunning, timeout: 10) {
+            if !ObjCExceptionCatcher.safeWait(forApp: app, state: .notRunning, timeout: 10) {
                 // Retry termination — CI shared runners can be slow to release processes
-                app.terminate()
-                _ = app.wait(for: .notRunning, timeout: 10)
+                ObjCExceptionCatcher.safeTerminateApp(app)
+                _ = ObjCExceptionCatcher.safeWait(forApp: app, state: .notRunning, timeout: 10)
             }
         }
     }
@@ -124,8 +120,8 @@ class BaseUITestCase: XCTestCase {
         // Terminate any lingering app process from a previous test that crashed or
         // failed to tear down cleanly. terminate() is a no-op if the app isn't running.
         if app.state != .notRunning {
-            app.terminate()
-            _ = app.wait(for: .notRunning, timeout: 10)
+            ObjCExceptionCatcher.safeTerminateApp(app)
+            _ = ObjCExceptionCatcher.safeWait(forApp: app, state: .notRunning, timeout: 10)
         }
 
         app.launchEnvironment["UI_TESTING"] = "1"
@@ -138,7 +134,7 @@ class BaseUITestCase: XCTestCase {
         configureLaunchEnvironment()
 
         app.launch()
-        _ = app.wait(for: .runningForeground, timeout: Self.launchTimeout)
+        _ = ObjCExceptionCatcher.safeWait(forApp: app, state: .runningForeground, timeout: Self.launchTimeout)
     }
 
     /// Guard that ensures the app is still running in foreground.
@@ -198,8 +194,8 @@ class BaseUITestCase: XCTestCase {
     /// Navigate to a specific tab with recovery
     ///
     /// Avoids `waitForExistence` on tab bar buttons to prevent Xcode 26 C++ exception
-    /// crashes. The tab bar is already verified in setUp, so we use synchronous `.exists`
-    /// checks (single accessibility snapshot) and coordinate-based taps instead.
+    /// crashes. The tab bar is already verified in setUp, so we use ObjC-wrapped `.exists`
+    /// checks and coordinate-based taps instead.
     func navigateToTab(_ tabName: String) {
         guard app.state == .runningForeground else { return }
 
@@ -352,6 +348,7 @@ class BaseUITestCase: XCTestCase {
     }
 
     /// Wait for any of the provided elements to exist.
+    /// Uses 0.5s polling interval to reduce UI query pressure on CI shared runners.
     func waitForAny(_ elements: [XCUIElement], timeout: TimeInterval = 10) -> Bool {
         if elements.contains(where: { safeExists($0) }) { return true }
         let deadline = Date().addingTimeInterval(timeout)

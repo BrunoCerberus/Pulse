@@ -99,7 +99,7 @@ struct SearchViewModelTests {
         sut.handle(event: .onQueryChanged("technology"))
 
         // Wait for debounce (300ms) + processing with condition-based waiting
-        let searched = await waitForCondition(timeout: 1_000_000_000) { [sut] in
+        let searched = await waitForCondition(timeout: 1_000_000_000) { @MainActor [sut] in
             sut.viewState.hasSearched && !sut.viewState.results.isEmpty
         }
 

@@ -53,7 +53,7 @@ struct SummarizationViewModelTests {
         sut.handle(event: .onSummarizationStarted)
 
         // Wait for summarization to complete with longer timeout
-        let completed = await waitForCondition(timeout: 3_000_000_000) { [sut] in
+        let completed = await waitForCondition(timeout: 3_000_000_000) { @MainActor [sut] in
             sut.viewState.summarizationState == .completed
         }
 
@@ -71,7 +71,7 @@ struct SummarizationViewModelTests {
         sut.handle(event: .onSummarizationStarted)
 
         // Wait for it to start (not idle anymore)
-        let started = await waitForCondition(timeout: 500_000_000) { [sut] in
+        let started = await waitForCondition(timeout: 500_000_000) { @MainActor [sut] in
             sut.viewState.summarizationState != .idle
         }
         #expect(started, "Summarization should have started")
@@ -80,7 +80,7 @@ struct SummarizationViewModelTests {
         sut.handle(event: .onSummarizationCancelled)
 
         // Wait for state to reset to idle
-        let cancelled = await waitForCondition(timeout: 500_000_000) { [sut] in
+        let cancelled = await waitForCondition(timeout: 500_000_000) { @MainActor [sut] in
             sut.viewState.summarizationState == .idle
         }
         #expect(cancelled, "Summarization should be cancelled")
@@ -99,7 +99,7 @@ struct SummarizationViewModelTests {
         sut.handle(event: .onSummarizationStarted)
 
         // Wait for summarization to complete with longer timeout
-        let completed = await waitForCondition(timeout: 3_000_000_000) { [sut] in
+        let completed = await waitForCondition(timeout: 3_000_000_000) { @MainActor [sut] in
             sut.viewState.summarizationState == .completed
         }
 
@@ -117,7 +117,7 @@ struct SummarizationViewModelTests {
         sut.handle(event: .onSummarizationStarted)
 
         // Wait for error state with longer timeout
-        let hasError = await waitForCondition(timeout: 3_000_000_000) { [sut] in
+        let hasError = await waitForCondition(timeout: 3_000_000_000) { @MainActor [sut] in
             if case .error = sut.viewState.summarizationState { return true }
             return false
         }
@@ -159,7 +159,7 @@ struct SummarizationViewModelTests {
         sut.handle(event: .onSummarizationStarted)
 
         // Wait for summarization to complete with longer timeout
-        let completed = await waitForCondition(timeout: 3_000_000_000) { [sut] in
+        let completed = await waitForCondition(timeout: 3_000_000_000) { @MainActor [sut] in
             sut.viewState.summarizationState == .completed
         }
         #expect(completed, "Summarization should complete")

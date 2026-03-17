@@ -154,9 +154,10 @@ final class SettingsViewModel: CombineViewModel, ObservableObject {
     private func clearUserDataOnSignOut() {
         // 1. Clear SwiftData (bookmarks, preferences, reading history)
         if let storageService = try? serviceLocator.retrieve(StorageService.self) {
+            let service = UncheckedSendableBox(value: storageService)
             Task {
                 do {
-                    try await storageService.clearAllUserData()
+                    try await service.value.clearAllUserData()
                 } catch {
                     Logger.shared.service("Failed to clear user data on sign-out: \(error)", level: .error)
                 }

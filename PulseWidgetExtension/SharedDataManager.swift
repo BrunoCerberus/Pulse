@@ -1,6 +1,6 @@
 import Foundation
 
-final class SharedDataManager {
+final class SharedDataManager: Sendable {
     static let shared = SharedDataManager()
 
     private let appGroupIdentifier = "group.com.bruno.Pulse-News"

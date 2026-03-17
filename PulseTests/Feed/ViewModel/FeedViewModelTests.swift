@@ -44,7 +44,7 @@ struct FeedViewModelTests {
         sut.handle(event: .onAppear)
 
         // Wait for source articles to be loaded
-        let success = await waitForCondition(timeout: 2_000_000_000) { [sut] in
+        let success = await waitForCondition(timeout: 2_000_000_000) { @MainActor [sut] in
             !sut.viewState.sourceArticles.isEmpty
         }
         #expect(success)
@@ -60,7 +60,7 @@ struct FeedViewModelTests {
         sut.handle(event: .onAppear)
 
         // Wait for articles to load
-        let articlesLoaded = await waitForCondition(timeout: 2_000_000_000) { [sut] in
+        let articlesLoaded = await waitForCondition(timeout: 2_000_000_000) { @MainActor [sut] in
             !sut.viewState.sourceArticles.isEmpty
         }
         #expect(articlesLoaded)
@@ -69,7 +69,7 @@ struct FeedViewModelTests {
         sut.handle(event: .onRetryTapped)
 
         // Wait for generation to be in progress or completed
-        let success = await waitForCondition(timeout: 2_000_000_000) { [sut] in
+        let success = await waitForCondition(timeout: 2_000_000_000) { @MainActor [sut] in
             let state = sut.viewState.displayState
             if case .processing = state { return true }
             if case .completed = state { return true }
@@ -85,7 +85,7 @@ struct FeedViewModelTests {
         sut.handle(event: .onAppear)
 
         // Wait for articles to load
-        let articlesLoaded = await waitForCondition(timeout: 2_000_000_000) { [sut] in
+        let articlesLoaded = await waitForCondition(timeout: 2_000_000_000) { @MainActor [sut] in
             !sut.viewState.sourceArticles.isEmpty
         }
         #expect(articlesLoaded)
@@ -108,7 +108,7 @@ struct FeedViewModelTests {
         sut.handle(event: .onAppear)
 
         // Wait for articles to load
-        let articlesLoaded = await waitForCondition(timeout: 2_000_000_000) { [sut] in
+        let articlesLoaded = await waitForCondition(timeout: 2_000_000_000) { @MainActor [sut] in
             !sut.viewState.sourceArticles.isEmpty
         }
         #expect(articlesLoaded)
@@ -133,7 +133,7 @@ struct FeedViewModelTests {
         sut.handle(event: .onAppear)
 
         // Wait for display state to become empty or error (due to no articles)
-        let success = await waitForCondition(timeout: 2_000_000_000) { [sut] in
+        let success = await waitForCondition(timeout: 2_000_000_000) { @MainActor [sut] in
             sut.viewState.displayState == .empty || sut.viewState.displayState == .error
         }
         #expect(success)
@@ -153,7 +153,7 @@ struct FeedViewModelTests {
         sut.handle(event: .onAppear)
 
         // Wait for completed state (includes 300ms animation delay)
-        let success = await waitForCondition(timeout: 2_000_000_000) { [sut] in
+        let success = await waitForCondition(timeout: 2_000_000_000) { @MainActor [sut] in
             sut.viewState.displayState == .completed
         }
         #expect(success, "Should show completed state after animation delay")
@@ -176,7 +176,7 @@ struct FeedViewModelTests {
         sut.handle(event: .onAppear)
 
         // Wait for state updates
-        let success = await waitForCondition(timeout: 2_000_000_000) { states.count > 1 }
+        let success = await waitForCondition(timeout: 2_000_000_000) { @MainActor in states.count > 1 }
 
         #expect(success, "View state should update multiple times")
     }

@@ -42,4 +42,28 @@
     }
 }
 
++ (void)safeTerminateApp:(XCUIApplication *)app {
+    @try {
+        [app terminate];
+    } @catch (...) {
+        // "Failed to terminate" throws C++ exception — swallow it
+    }
+}
+
++ (BOOL)safeWaitForApp:(XCUIApplication *)app state:(XCUIApplicationState)state timeout:(NSTimeInterval)timeout {
+    @try {
+        return [app waitForState:state timeout:timeout];
+    } @catch (...) {
+        return NO;
+    }
+}
+
++ (void)safeSetDeviceOrientation:(UIDeviceOrientation)orientation {
+    @try {
+        XCUIDevice.sharedDevice.orientation = orientation;
+    } @catch (...) {
+        // Orientation reset failed — runner may be in a bad state after a C++ exception
+    }
+}
+
 @end

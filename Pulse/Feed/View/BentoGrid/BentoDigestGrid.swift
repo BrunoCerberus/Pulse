@@ -10,7 +10,7 @@ private enum Constants {
 // MARK: - Height Preference Key
 
 private struct CardHeightPreferenceKey: PreferenceKey {
-    static var defaultValue: CGFloat = 0
+    nonisolated(unsafe) static var defaultValue: CGFloat = 0
 
     static func reduce(value: inout CGFloat, nextValue: () -> CGFloat) {
         value = max(value, nextValue())

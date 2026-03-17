@@ -129,9 +129,10 @@ final class ArticleDetailDomainInteractor: CombineInteractor {
 
     private func markAsRead() {
         let article = currentState.article
+        let service = UncheckedSendableBox(value: storageService)
         let task = Task { [weak self] in
-            guard let self else { return }
-            try? await self.storageService.markArticleAsRead(article)
+            guard self != nil else { return }
+            try? await service.value.markArticleAsRead(article)
         }
         trackBackgroundTask(task)
     }
@@ -146,13 +147,14 @@ final class ArticleDetailDomainInteractor: CombineInteractor {
         updateState { $0.isBookmarked = !wasBookmarked }
         analyticsService?.logEvent(wasBookmarked ? .articleUnbookmarked : .articleBookmarked)
 
+        let service = UncheckedSendableBox(value: storageService)
         let task = Task { [weak self] in
             guard let self else { return }
             do {
                 if wasBookmarked {
-                    try await storageService.deleteArticle(article)
+                    try await service.value.deleteArticle(article)
                 } else {
-                    try await storageService.saveArticle(article)
+                    try await service.value.saveArticle(article)
                 }
             } catch {
                 // Revert on error
@@ -166,9 +168,10 @@ final class ArticleDetailDomainInteractor: CombineInteractor {
 
     private func checkBookmarkStatus() {
         let articleId = currentState.article.id
+        let service = UncheckedSendableBox(value: storageService)
         let task = Task { [weak self] in
             guard let self else { return }
-            let isBookmarked = await storageService.isBookmarked(articleId)
+            let isBookmarked = await service.value.isBookmarked(articleId)
             await MainActor.run { [weak self] in
                 self?.dispatch(action: .bookmarkStatusLoaded(isBookmarked))
             }
