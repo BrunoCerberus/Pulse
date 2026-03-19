@@ -341,18 +341,9 @@ private extension HomeDomainInteractor {
                 await MainActor.run { self.analyticsService?.logEvent(.articleBookmarked) }
             }
         }
-    }
-
-    /// Safely tracks and auto-removes background tasks with proper cleanup on deinit.
-    func trackBackgroundTask(_ operation: @escaping @Sendable () async -> Void) {
-        let task = Task {
+    nonisolated func trackBackgroundTask(_ operation: @escaping @Sendable () async -> Void) {
+        Task.detached {
             await operation()
-        }
-        backgroundTasks.insert(task)
-
-        Task { [weak self] in
-            _ = await task.result
-            self?.backgroundTasks.remove(task)
         }
     }
 }
