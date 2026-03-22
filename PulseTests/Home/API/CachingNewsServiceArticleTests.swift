@@ -12,7 +12,9 @@ struct CachingNewsServiceArticleTests {
     init() {
         mockNewsService = MockNewsService()
         mockCacheStore = MockNewsCacheStore()
-        sut = CachingNewsService(wrapping: mockNewsService, cacheStore: mockCacheStore, diskCacheStore: nil, networkResilienceEnabled: false)
+        sut = CachingNewsService(
+            wrapping: mockNewsService, cacheStore: mockCacheStore, diskCacheStore: nil, networkResilienceEnabled: false
+        )
     }
 
     @Test("fetchArticle returns cached article when available")

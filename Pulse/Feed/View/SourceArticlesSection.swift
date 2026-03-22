@@ -119,7 +119,9 @@ private struct SourceArticleRow: View {
         .buttonStyle(.plain)
         .pressEffect()
         .accessibilityElement(children: .combine)
-        .accessibilityLabel(String(format: SourceArticlesSection.Constants.articleAccessibilityLabel, article.title, article.source, ""))
+        .accessibilityLabel(
+            String(format: SourceArticlesSection.Constants.articleAccessibilityLabel, article.title, article.source, "")
+        )
         .accessibilityHint(SourceArticlesSection.Constants.readArticleHint)
     }
 
