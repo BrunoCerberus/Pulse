@@ -266,6 +266,17 @@ struct SupabaseAPIContractTests {
         #expect(article.description == nil)
         #expect(article.content == "Only summary text")
     }
+}
+
+// MARK: - Supabase Article Source Mapping Tests
+
+@Suite("Supabase Article Source Mapping Tests")
+struct SupabaseArticleSourceMappingTests {
+    private let decoder: JSONDecoder = {
+        let decoder = JSONDecoder()
+        decoder.keyDecodingStrategy = .convertFromSnakeCase
+        return decoder
+    }()
 
     @Test("toArticle maps source fields correctly")
     func toArticleMapsSourceFields() throws {

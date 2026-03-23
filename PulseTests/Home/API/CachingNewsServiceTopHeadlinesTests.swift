@@ -12,7 +12,9 @@ struct CachingNewsServiceTopHeadlinesTests {
     init() {
         mockNewsService = MockNewsService()
         mockCacheStore = MockNewsCacheStore()
-        sut = CachingNewsService(wrapping: mockNewsService, cacheStore: mockCacheStore, diskCacheStore: nil, networkResilienceEnabled: false)
+        sut = CachingNewsService(
+            wrapping: mockNewsService, cacheStore: mockCacheStore, diskCacheStore: nil, networkResilienceEnabled: false
+        )
     }
 
     @Test("fetchTopHeadlines returns cached data when available and not expired")

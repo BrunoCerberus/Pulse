@@ -392,7 +392,6 @@ extension ArticleDetailDomainInteractorTests {
         let sut = createSUT()
         sut.dispatch(action: .toggleBookmark)
         try await Task.sleep(nanoseconds: 300_000_000)
-
         let bookmarkEvents = mockAnalyticsService.loggedEvents.filter {
             $0.name == "article_bookmarked" || $0.name == "article_unbookmarked"
         }

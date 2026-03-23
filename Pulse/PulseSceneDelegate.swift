@@ -49,8 +49,8 @@ final class PulseSceneDelegate: UIResponder, UIWindowSceneDelegate {
         self.window = window
 
         // Skip splash screen during UI tests for faster test execution
-        if isRunningUITests() {
-            showMainApp(in: window)
+        if isRunningUITests {
+            window.rootViewController = makeRootViewController()
         } else {
             // Show splash screen first, then transition to main app
             showSplashScreen(in: window)
@@ -108,17 +108,15 @@ final class PulseSceneDelegate: UIResponder, UIWindowSceneDelegate {
         }
     }
 
-    private func isRunningUITests() -> Bool {
-        let environment = ProcessInfo.processInfo.environment
-        return environment["UI_TESTING"] == "1" || environment["XCTestConfigurationFilePath"] == "UI"
+    private var isRunningUITests: Bool {
+        let env = ProcessInfo.processInfo.environment
+        return env["UI_TESTING"] == "1" || env["XCTestConfigurationFilePath"] == "UI"
     }
 
-    private func showMainApp(in window: UIWindow) {
-        let rootView = UIHostingController(
-            rootView: RootView(serviceLocator: serviceLocator)
-        )
-        rootView.overrideUserInterfaceStyle = uiUserInterfaceStyle(from: ThemeManager.shared.colorScheme)
-        window.rootViewController = rootView
+    private func makeRootViewController() -> UIHostingController<RootView> {
+        let controller = UIHostingController(rootView: RootView(serviceLocator: serviceLocator))
+        controller.overrideUserInterfaceStyle = uiUserInterfaceStyle(from: ThemeManager.shared.colorScheme)
+        return controller
     }
 
     private func showSplashScreen(in window: UIWindow) {
@@ -132,15 +130,9 @@ final class PulseSceneDelegate: UIResponder, UIWindowSceneDelegate {
     }
 
     private func transitionToMainApp(in window: UIWindow) {
-        let rootView = UIHostingController(
-            rootView: RootView(serviceLocator: serviceLocator)
-        )
-        rootView.overrideUserInterfaceStyle = uiUserInterfaceStyle(from: ThemeManager.shared.colorScheme)
+        let rootView = makeRootViewController()
 
-        // Animate transition from splash to main app, respecting reduce motion preference
-        let shouldReduceMotion = UIAccessibility.isReduceMotionEnabled
-        if shouldReduceMotion {
-            // No animation for reduce motion
+        if UIAccessibility.isReduceMotionEnabled {
             window.rootViewController = rootView
         } else {
             UIView.transition(
@@ -239,22 +231,11 @@ final class PulseSceneDelegate: UIResponder, UIWindowSceneDelegate {
         serviceLocator.register(BookmarksService.self, instance: LiveBookmarksService(storageService: storageService))
         serviceLocator.register(SettingsService.self, instance: LiveSettingsService(storageService: storageService))
 
-        // Register authentication service
         serviceLocator.register(AuthService.self, instance: LiveAuthService())
-
-        // Register app lock service
         serviceLocator.register(AppLockService.self, instance: LiveAppLockService())
-
-        // Register analytics service
         serviceLocator.register(AnalyticsService.self, instance: LiveAnalyticsService())
-
-        // Register onboarding service
         serviceLocator.register(OnboardingService.self, instance: LiveOnboardingService())
-
-        // Register text-to-speech service
         serviceLocator.register(TextToSpeechService.self, instance: LiveTextToSpeechService())
-
-        // Register notification service
         serviceLocator.register(NotificationService.self, instance: LiveNotificationService.shared)
     }
 

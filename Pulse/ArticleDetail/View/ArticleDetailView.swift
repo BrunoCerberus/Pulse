@@ -1,4 +1,3 @@
-// swiftlint:disable file_length
 import Combine
 import EntropyCore
 import SwiftUI

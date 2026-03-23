@@ -395,7 +395,10 @@ private struct TypingIndicator: View {
             ForEach(0 ..< 3) { index in
                 Circle()
                     .fill(Color.Accent.primary)
-                    .frame(width: SummarizationSheet.AnimationConstants.typingDotSize, height: SummarizationSheet.AnimationConstants.typingDotSize)
+                    .frame(
+                        width: SummarizationSheet.AnimationConstants.typingDotSize,
+                        height: SummarizationSheet.AnimationConstants.typingDotSize
+                    )
                     .scaleEffect(animatingDot == index ? 1.3 : 0.8)
                     .opacity(animatingDot == index ? 1 : 0.5)
             }

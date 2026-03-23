@@ -130,13 +130,17 @@ final class HomeDomainInteractor: CombineInteractor {
         case .clearArticleToShare:
             clearArticleToShare()
         case let .selectRecentlyRead(articleId):
-            if let article = currentState.recentlyRead.first(where: { $0.id == articleId }) {
-                selectArticle(article)
-            }
+            selectRecentlyReadArticle(articleId)
         default:
             return false
         }
         return true
+    }
+
+    private func selectRecentlyReadArticle(_ articleId: String) {
+        if let article = currentState.recentlyRead.first(where: { $0.id == articleId }) {
+            selectArticle(article)
+        }
     }
 
     private func handlePreferenceActions(_ action: HomeDomainAction) {

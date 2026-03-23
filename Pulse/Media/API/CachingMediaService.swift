@@ -117,23 +117,7 @@ final class CachingMediaService: MediaService {
 
         // 3. If offline: serve stale data or fail
         if networkMonitor?.isConnected == false {
-            // Try stale L1
-            if let staleL1: CacheEntry<T> = memoryCacheStore.get(for: key) {
-                Logger.shared.service("Offline: serving stale L1 for \(label)", level: .debug)
-                return Just(staleL1.data)
-                    .setFailureType(to: Error.self)
-                    .eraseToAnyPublisher()
-            }
-            // Try stale L2 (expired but better than nothing)
-            if let staleL2: CacheEntry<T> = diskCacheStore?.get(for: key) {
-                Logger.shared.service("Offline: serving stale L2 for \(label)", level: .debug)
-                return Just(staleL2.data)
-                    .setFailureType(to: Error.self)
-                    .eraseToAnyPublisher()
-            }
-            Logger.shared.service("Offline: no cache for \(label)", level: .debug)
-            return Fail(error: PulseError.offlineNoCache)
-                .eraseToAnyPublisher()
+            return serveStaleOrFail(key: key, label: label)
         }
 
         // 4. Online: fetch from network, write-through to both caches
@@ -160,5 +144,18 @@ final class CachingMediaService: MediaService {
                     .eraseToAnyPublisher()
             }
             .eraseToAnyPublisher()
+    }
+
+    private func serveStaleOrFail<T>(key: NewsCacheKey, label: String) -> AnyPublisher<T, Error> {
+        if let staleL1: CacheEntry<T> = memoryCacheStore.get(for: key) {
+            Logger.shared.service("Offline: serving stale L1 for \(label)", level: .debug)
+            return Just(staleL1.data).setFailureType(to: Error.self).eraseToAnyPublisher()
+        }
+        if let staleL2: CacheEntry<T> = diskCacheStore?.get(for: key) {
+            Logger.shared.service("Offline: serving stale L2 for \(label)", level: .debug)
+            return Just(staleL2.data).setFailureType(to: Error.self).eraseToAnyPublisher()
+        }
+        Logger.shared.service("Offline: no cache for \(label)", level: .debug)
+        return Fail(error: PulseError.offlineNoCache).eraseToAnyPublisher()
     }
 }
