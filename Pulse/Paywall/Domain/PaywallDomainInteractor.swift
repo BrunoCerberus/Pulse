@@ -87,6 +87,7 @@ final class PaywallDomainInteractor: CombineInteractor {
         updateState(currentState.copy(isLoadingProducts: true, error: nil))
 
         storeKitService.fetchProducts()
+            .receive(on: DispatchQueue.main)
             .sink(
                 receiveCompletion: { [weak self] completion in
                     guard let self else { return }
@@ -117,6 +118,7 @@ final class PaywallDomainInteractor: CombineInteractor {
         updateState(currentState.copy(isPurchasing: true, error: nil))
 
         storeKitService.purchase(product)
+            .receive(on: DispatchQueue.main)
             .sink(
                 receiveCompletion: { [weak self] completion in
                     guard let self else { return }
@@ -150,6 +152,7 @@ final class PaywallDomainInteractor: CombineInteractor {
         updateState(currentState.copy(isRestoring: true, error: nil))
 
         storeKitService.restorePurchases()
+            .receive(on: DispatchQueue.main)
             .sink(
                 receiveCompletion: { [weak self] completion in
                     guard let self else { return }
@@ -179,6 +182,7 @@ final class PaywallDomainInteractor: CombineInteractor {
 
     private func handleCheckSubscriptionStatus() {
         storeKitService.checkSubscriptionStatus()
+            .receive(on: DispatchQueue.main)
             .sink { [weak self] isPremium in
                 guard let self else { return }
                 updateState(currentState.copy(
@@ -193,6 +197,7 @@ final class PaywallDomainInteractor: CombineInteractor {
 
     private func observeSubscriptionStatus() {
         storeKitService.subscriptionStatusPublisher
+            .receive(on: DispatchQueue.main)
             .sink { [weak self] isPremium in
                 guard let self else { return }
                 updateState(currentState.copy(isPremium: isPremium))

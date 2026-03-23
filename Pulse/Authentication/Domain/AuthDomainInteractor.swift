@@ -68,6 +68,7 @@ final class AuthDomainInteractor: CombineInteractor {
         }
 
         authService.signInWithGoogle(presenting: viewController)
+            .receive(on: DispatchQueue.main)
             .sink { [weak self] completion in
                 if case let .failure(error) = completion {
                     if case AuthError.signInCancelled = error {
@@ -102,6 +103,7 @@ final class AuthDomainInteractor: CombineInteractor {
         }
 
         authService.signInWithApple()
+            .receive(on: DispatchQueue.main)
             .sink { [weak self] completion in
                 if case let .failure(error) = completion {
                     if case AuthError.signInCancelled = error {
@@ -135,6 +137,7 @@ final class AuthDomainInteractor: CombineInteractor {
         }
 
         authService.signOut()
+            .receive(on: DispatchQueue.main)
             .sink { [weak self] completion in
                 if case let .failure(error) = completion {
                     self?.updateState { state in

@@ -85,6 +85,7 @@ final class SearchDomainInteractor: CombineInteractor {
 
     private func fetchSuggestions(for query: String) {
         searchService.getSuggestions(for: query)
+            .receive(on: DispatchQueue.main)
             .sink { [weak self] suggestions in
                 self?.updateState { state in
                     state.suggestions = suggestions
@@ -169,6 +170,7 @@ final class SearchDomainInteractor: CombineInteractor {
             page: 1,
             sortBy: currentState.sortBy.rawValue
         )
+        .receive(on: DispatchQueue.main)
         .sink { [weak self] completion in
             if case let .failure(error) = completion {
                 self?.analyticsService?.recordError(error)
@@ -203,6 +205,7 @@ final class SearchDomainInteractor: CombineInteractor {
             page: nextPage,
             sortBy: currentState.sortBy.rawValue
         )
+        .receive(on: DispatchQueue.main)
         .sink { [weak self] completion in
             if case .failure = completion {
                 self?.updateState { state in

@@ -117,6 +117,7 @@ final class SettingsDomainInteractor: CombineInteractor {
         }
 
         settingsService.fetchPreferences()
+            .receive(on: DispatchQueue.main)
             .sink { [weak self] completion in
                 if case let .failure(error) = completion {
                     self?.analyticsService?.recordError(error)
@@ -240,6 +241,7 @@ final class SettingsDomainInteractor: CombineInteractor {
         }
 
         settingsService.savePreferences(preferences)
+            .receive(on: DispatchQueue.main)
             .sink { [weak self] completion in
                 if case let .failure(error) = completion {
                     self?.analyticsService?.recordError(error)
