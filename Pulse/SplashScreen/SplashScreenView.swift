@@ -93,8 +93,8 @@ struct SplashScreenView: View {
         VStack(spacing: Spacing.md) {
             ZStack {
                 Circle()
-                    .fill(.ultraThinMaterial)
                     .frame(width: 80, height: 80)
+                    .glassEffect(.regular, in: .circle)
 
                 Image(systemName: "newspaper.fill")
                     .font(.system(size: IconSize.xxl))

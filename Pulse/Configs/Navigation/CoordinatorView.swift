@@ -30,7 +30,6 @@ struct CoordinatorView: View {
     init(serviceLocator: ServiceLocator) {
         _coordinator = StateObject(wrappedValue: Coordinator(serviceLocator: serviceLocator))
         networkMonitor = try? serviceLocator.retrieve(NetworkMonitorService.self)
-        configureTabBarAppearance()
     }
 
     var body: some View {
@@ -140,17 +139,6 @@ struct CoordinatorView: View {
             name: .coordinatorDidBecomeAvailable,
             object: coordinator
         )
-    }
-
-    /// Configures the tab bar appearance for glass morphism styling.
-    private func configureTabBarAppearance() {
-        let appearance = UITabBarAppearance()
-        appearance.configureWithDefaultBackground()
-        appearance.backgroundEffect = UIBlurEffect(style: .systemThinMaterial)
-        appearance.backgroundColor = UIColor.systemBackground.withAlphaComponent(0.1)
-
-        UITabBar.appearance().standardAppearance = appearance
-        UITabBar.appearance().scrollEdgeAppearance = appearance
     }
 }
 

@@ -61,25 +61,20 @@ struct GlassTabBar: View {
     @Binding var selectedTab: AppTab
     var items: [GlassTabItem] = GlassTabItem.items
 
-    @Environment(\.colorScheme) private var colorScheme
     @Environment(\.accessibilityReduceMotion) private var reduceMotion
     @Namespace private var tabAnimation
 
     var body: some View {
-        HStack(spacing: 0) {
-            ForEach(items) { item in
-                tabButton(for: item)
+        GlassEffectContainer(spacing: 0) {
+            HStack(spacing: 0) {
+                ForEach(items) { item in
+                    tabButton(for: item)
+                }
             }
+            .padding(.horizontal, Spacing.sm)
+            .padding(.vertical, Spacing.xs)
+            .glassEffect(.regular, in: .capsule)
         }
-        .padding(.horizontal, Spacing.sm)
-        .padding(.vertical, Spacing.xs)
-        .background(.ultraThinMaterial)
-        .clipShape(Capsule())
-        .overlay {
-            Capsule()
-                .stroke(Color.Border.adaptive(for: colorScheme), lineWidth: 0.5)
-        }
-        .depthShadow(.floating)
         .padding(.horizontal, Spacing.md)
         .padding(.bottom, Spacing.xs)
     }
@@ -101,9 +96,12 @@ struct GlassTabBar: View {
                 ZStack {
                     if isSelected {
                         Circle()
-                            .fill(Color.Accent.primary.opacity(0.15))
                             .frame(width: 48, height: 32)
-                            .matchedGeometryEffect(id: "tabIndicator", in: tabAnimation)
+                            .glassEffect(
+                                .regular.tint(Color.Accent.primary).interactive(),
+                                in: .circle
+                            )
+                            .glassEffectID("tabIndicator", in: tabAnimation)
                     }
 
                     Image(systemName: isSelected ? item.selectedIcon : item.icon)

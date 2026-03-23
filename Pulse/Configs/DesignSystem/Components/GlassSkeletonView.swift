@@ -64,7 +64,7 @@ struct GlassHeroSkeleton: View {
             }
             .padding(Spacing.md)
             .frame(maxWidth: .infinity, alignment: .leading)
-            .background(.ultraThinMaterial.opacity(0.5))
+            .glassEffect(.regular, in: .rect)
         }
         .frame(width: 300)
         .frame(maxHeight: .infinity)
