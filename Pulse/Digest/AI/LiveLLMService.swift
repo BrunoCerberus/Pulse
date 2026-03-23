@@ -42,22 +42,32 @@ final class LiveLLMService: LLMService, @unchecked Sendable {
     }
 
     func loadModel() async throws {
-        modelStatusSubject.send(.loading(progress: 0.0))
+        sendStatus(.loading(progress: 0.0))
 
         do {
             try await modelManager.loadModel { [weak self] progress in
-                self?.modelStatusSubject.send(.loading(progress: progress))
+                self?.sendStatus(.loading(progress: progress))
             }
-            modelStatusSubject.send(.ready)
+            sendStatus(.ready)
         } catch {
-            modelStatusSubject.send(.error(error.localizedDescription))
+            sendStatus(.error(error.localizedDescription))
             throw error
         }
     }
 
     func unloadModel() async {
         await modelManager.unloadModel()
-        modelStatusSubject.send(.notLoaded)
+        sendStatus(.notLoaded)
+    }
+
+    private func sendStatus(_ status: LLMModelStatus) {
+        if Thread.isMainThread {
+            modelStatusSubject.send(status)
+        } else {
+            DispatchQueue.main.async { [weak self] in
+                self?.modelStatusSubject.send(status)
+            }
+        }
     }
 
     func generate(
