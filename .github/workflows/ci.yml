@@ -152,7 +152,7 @@ jobs:
         path: |
           Pulse.xcodeproj/project.xcworkspace/xcshareddata/swiftpm
           ~/Library/Caches/org.swift.swiftpm
-        key: ${{ runner.os }}-spm-v7
+        key: ${{ runner.os }}-spm-v8
 
     - name: Install XcodeGen
       run: |
@@ -282,7 +282,7 @@ jobs:
         path: |
           Pulse.xcodeproj/project.xcworkspace/xcshareddata/swiftpm
           ~/Library/Caches/org.swift.swiftpm
-        key: ${{ runner.os }}-spm-v7
+        key: ${{ runner.os }}-spm-v8
 
     - name: Install XcodeGen
       run: |
