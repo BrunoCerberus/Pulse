@@ -29,7 +29,7 @@ final class ArticleDetailDomainInteractor: CombineInteractor {
     private let newsService: NewsService?
     private let ttsService: TextToSpeechService?
     private let analyticsService: AnalyticsService?
-    private let stateSubject: CurrentValueSubject<ArticleDetailDomainState, Never>
+    private let stateSubject: CurrentValueSubject<DomainState, Never>
     private var cancellables = Set<AnyCancellable>()
     private var ttsCancellables = Set<AnyCancellable>()
     private var backgroundTasks = Set<Task<Void, Never>>()
@@ -38,11 +38,11 @@ final class ArticleDetailDomainInteractor: CombineInteractor {
     /// Incremented on every speed-change restart; callbacks from previous generations are discarded.
     private var ttsGeneration = 0
 
-    var statePublisher: AnyPublisher<ArticleDetailDomainState, Never> {
+    var statePublisher: AnyPublisher<DomainState, Never> {
         stateSubject.eraseToAnyPublisher()
     }
 
-    var currentState: ArticleDetailDomainState {
+    var currentState: DomainState {
         stateSubject.value
     }
 
@@ -67,7 +67,7 @@ final class ArticleDetailDomainInteractor: CombineInteractor {
     }
 
     // swiftlint:disable:next cyclomatic_complexity
-    func dispatch(action: ArticleDetailDomainAction) {
+    func dispatch(action: DomainAction) {
         switch action {
         case .onAppear:
             onAppear()
@@ -474,7 +474,7 @@ final class ArticleDetailDomainInteractor: CombineInteractor {
         }
     }
 
-    private func updateState(_ transform: (inout ArticleDetailDomainState) -> Void) {
+    private func updateState(_ transform: (inout DomainState) -> Void) {
         var state = stateSubject.value
         transform(&state)
         stateSubject.send(state)

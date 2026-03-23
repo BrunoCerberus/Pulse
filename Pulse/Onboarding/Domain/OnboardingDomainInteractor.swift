@@ -7,17 +7,17 @@ final class OnboardingDomainInteractor: CombineInteractor {
     typealias DomainState = OnboardingDomainState
     typealias DomainAction = OnboardingDomainAction
 
-    private let stateSubject = CurrentValueSubject<OnboardingDomainState, Never>(.initial)
+    private let stateSubject = CurrentValueSubject<DomainState, Never>(.initial)
     private var cancellables = Set<AnyCancellable>()
 
     private var onboardingService: OnboardingService
     private let analyticsService: AnalyticsService?
 
-    var statePublisher: AnyPublisher<OnboardingDomainState, Never> {
+    var statePublisher: AnyPublisher<DomainState, Never> {
         stateSubject.eraseToAnyPublisher()
     }
 
-    var currentState: OnboardingDomainState {
+    var currentState: DomainState {
         stateSubject.value
     }
 
@@ -26,7 +26,7 @@ final class OnboardingDomainInteractor: CombineInteractor {
         analyticsService = try? serviceLocator.retrieve(AnalyticsService.self)
     }
 
-    func dispatch(action: OnboardingDomainAction) {
+    func dispatch(action: DomainAction) {
         switch action {
         case .nextPage:
             handleNextPage()
@@ -65,7 +65,7 @@ final class OnboardingDomainInteractor: CombineInteractor {
         updateState { $0.isCompleted = true }
     }
 
-    private func updateState(_ transform: (inout OnboardingDomainState) -> Void) {
+    private func updateState(_ transform: (inout DomainState) -> Void) {
         var state = stateSubject.value
         transform(&state)
         stateSubject.send(state)

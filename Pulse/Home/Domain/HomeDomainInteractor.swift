@@ -27,17 +27,17 @@ final class HomeDomainInteractor: CombineInteractor {
     private let storageService: StorageService
     let settingsService: SettingsService
     let analyticsService: AnalyticsService?
-    let stateSubject = CurrentValueSubject<HomeDomainState, Never>(.initial)
+    let stateSubject = CurrentValueSubject<DomainState, Never>(.initial)
     var cancellables = Set<AnyCancellable>()
     private var backgroundTasks = Set<Task<Void, Never>>()
     var isLocalPreferenceChange = false
     var preferredLanguage: String = "en"
 
-    var statePublisher: AnyPublisher<HomeDomainState, Never> {
+    var statePublisher: AnyPublisher<DomainState, Never> {
         stateSubject.eraseToAnyPublisher()
     }
 
-    var currentState: HomeDomainState {
+    var currentState: DomainState {
         stateSubject.value
     }
 
@@ -91,7 +91,7 @@ final class HomeDomainInteractor: CombineInteractor {
             .store(in: &cancellables)
     }
 
-    func dispatch(action: HomeDomainAction) {
+    func dispatch(action: DomainAction) {
         if handleLoadingActions(action) {
             return
         }
@@ -101,7 +101,7 @@ final class HomeDomainInteractor: CombineInteractor {
         handlePreferenceActions(action)
     }
 
-    private func handleLoadingActions(_ action: HomeDomainAction) -> Bool {
+    private func handleLoadingActions(_ action: DomainAction) -> Bool {
         switch action {
         case .loadInitialData:
             loadInitialData()
@@ -117,7 +117,7 @@ final class HomeDomainInteractor: CombineInteractor {
         return true
     }
 
-    private func handleArticleActions(_ action: HomeDomainAction) -> Bool {
+    private func handleArticleActions(_ action: DomainAction) -> Bool {
         switch action {
         case let .selectArticle(articleId):
             if let article = findArticle(by: articleId) { selectArticle(article) }
@@ -143,7 +143,7 @@ final class HomeDomainInteractor: CombineInteractor {
         }
     }
 
-    private func handlePreferenceActions(_ action: HomeDomainAction) {
+    private func handlePreferenceActions(_ action: DomainAction) {
         switch action {
         case let .toggleTopic(topic):
             toggleTopic(topic)

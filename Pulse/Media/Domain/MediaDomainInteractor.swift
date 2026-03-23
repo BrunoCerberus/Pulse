@@ -27,15 +27,15 @@ final class MediaDomainInteractor: CombineInteractor {
     let mediaService: MediaService
     let settingsService: SettingsService
     let analyticsService: AnalyticsService?
-    let stateSubject = CurrentValueSubject<MediaDomainState, Never>(.initial)
+    let stateSubject = CurrentValueSubject<DomainState, Never>(.initial)
     var cancellables = Set<AnyCancellable>()
     var preferredLanguage: String = "en"
 
-    var statePublisher: AnyPublisher<MediaDomainState, Never> {
+    var statePublisher: AnyPublisher<DomainState, Never> {
         stateSubject.eraseToAnyPublisher()
     }
 
-    var currentState: MediaDomainState {
+    var currentState: DomainState {
         stateSubject.value
     }
 
@@ -66,7 +66,7 @@ final class MediaDomainInteractor: CombineInteractor {
             .store(in: &cancellables)
     }
 
-    func dispatch(action: MediaDomainAction) {
+    func dispatch(action: DomainAction) {
         switch action {
         case .loadInitialData:
             loadInitialData()
