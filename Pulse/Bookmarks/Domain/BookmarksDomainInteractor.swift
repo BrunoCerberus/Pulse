@@ -24,14 +24,14 @@ final class BookmarksDomainInteractor: CombineInteractor {
 
     private let bookmarksService: BookmarksService
     private let analyticsService: AnalyticsService?
-    private let stateSubject = CurrentValueSubject<BookmarksDomainState, Never>(.initial)
+    private let stateSubject = CurrentValueSubject<DomainState, Never>(.initial)
     private var cancellables = Set<AnyCancellable>()
 
-    var statePublisher: AnyPublisher<BookmarksDomainState, Never> {
+    var statePublisher: AnyPublisher<DomainState, Never> {
         stateSubject.eraseToAnyPublisher()
     }
 
-    var currentState: BookmarksDomainState {
+    var currentState: DomainState {
         stateSubject.value
     }
 
@@ -46,7 +46,7 @@ final class BookmarksDomainInteractor: CombineInteractor {
         analyticsService = try? serviceLocator.retrieve(AnalyticsService.self)
     }
 
-    func dispatch(action: BookmarksDomainAction) {
+    func dispatch(action: DomainAction) {
         switch action {
         case .loadBookmarks:
             loadBookmarks()
@@ -162,7 +162,7 @@ final class BookmarksDomainInteractor: CombineInteractor {
         }
     }
 
-    private func updateState(_ transform: (inout BookmarksDomainState) -> Void) {
+    private func updateState(_ transform: (inout DomainState) -> Void) {
         var state = stateSubject.value
         transform(&state)
         stateSubject.send(state)

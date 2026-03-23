@@ -15,14 +15,14 @@ final class ReadingHistoryDomainInteractor: CombineInteractor {
 
     private let storageService: StorageService
     private let analyticsService: AnalyticsService?
-    private let stateSubject = CurrentValueSubject<ReadingHistoryDomainState, Never>(.initial)
+    private let stateSubject = CurrentValueSubject<DomainState, Never>(.initial)
     private var backgroundTasks = Set<Task<Void, Never>>()
 
-    var statePublisher: AnyPublisher<ReadingHistoryDomainState, Never> {
+    var statePublisher: AnyPublisher<DomainState, Never> {
         stateSubject.eraseToAnyPublisher()
     }
 
-    var currentState: ReadingHistoryDomainState {
+    var currentState: DomainState {
         stateSubject.value
     }
 
@@ -37,7 +37,7 @@ final class ReadingHistoryDomainInteractor: CombineInteractor {
         analyticsService = try? serviceLocator.retrieve(AnalyticsService.self)
     }
 
-    func dispatch(action: ReadingHistoryDomainAction) {
+    func dispatch(action: DomainAction) {
         switch action {
         case .loadHistory:
             loadHistory()
@@ -158,7 +158,7 @@ final class ReadingHistoryDomainInteractor: CombineInteractor {
         trackBackgroundTask(task)
     }
 
-    private func updateState(_ transform: (inout ReadingHistoryDomainState) -> Void) {
+    private func updateState(_ transform: (inout DomainState) -> Void) {
         var state = stateSubject.value
         transform(&state)
         stateSubject.send(state)

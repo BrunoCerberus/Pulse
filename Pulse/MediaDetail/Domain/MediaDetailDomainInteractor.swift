@@ -25,15 +25,15 @@ final class MediaDetailDomainInteractor: CombineInteractor {
 
     private let storageService: StorageService
     private let analyticsService: AnalyticsService?
-    private let stateSubject: CurrentValueSubject<MediaDetailDomainState, Never>
+    private let stateSubject: CurrentValueSubject<DomainState, Never>
     private var cancellables = Set<AnyCancellable>()
     private var backgroundTasks = Set<Task<Void, Never>>()
 
-    var statePublisher: AnyPublisher<MediaDetailDomainState, Never> {
+    var statePublisher: AnyPublisher<DomainState, Never> {
         stateSubject.eraseToAnyPublisher()
     }
 
-    var currentState: MediaDetailDomainState {
+    var currentState: DomainState {
         stateSubject.value
     }
 
@@ -50,7 +50,7 @@ final class MediaDetailDomainInteractor: CombineInteractor {
         analyticsService = try? serviceLocator.retrieve(AnalyticsService.self)
     }
 
-    func dispatch(action: MediaDetailDomainAction) {
+    func dispatch(action: DomainAction) {
         if handleLifecycle(action) { return }
         if handlePlaybackControl(action) { return }
         if handlePlaybackEvents(action) { return }
@@ -59,7 +59,7 @@ final class MediaDetailDomainInteractor: CombineInteractor {
         if handleBrowser(action) { return }
     }
 
-    private func handleLifecycle(_ action: MediaDetailDomainAction) -> Bool {
+    private func handleLifecycle(_ action: DomainAction) -> Bool {
         switch action {
         case .onAppear:
             onAppear()
@@ -69,7 +69,7 @@ final class MediaDetailDomainInteractor: CombineInteractor {
         }
     }
 
-    private func handlePlaybackControl(_ action: MediaDetailDomainAction) -> Bool {
+    private func handlePlaybackControl(_ action: DomainAction) -> Bool {
         switch action {
         case .play:
             let mediaType = currentState.article.mediaType == .video ? "video" : "podcast"
@@ -107,7 +107,7 @@ final class MediaDetailDomainInteractor: CombineInteractor {
         }
     }
 
-    private func handlePlaybackEvents(_ action: MediaDetailDomainAction) -> Bool {
+    private func handlePlaybackEvents(_ action: DomainAction) -> Bool {
         switch action {
         case let .playbackProgressUpdated(progress, currentTime):
             updateState {
@@ -139,7 +139,7 @@ final class MediaDetailDomainInteractor: CombineInteractor {
         }
     }
 
-    private func handleShareSheet(_ action: MediaDetailDomainAction) -> Bool {
+    private func handleShareSheet(_ action: DomainAction) -> Bool {
         switch action {
         case .showShareSheet:
             updateState { $0.showShareSheet = true }
@@ -152,7 +152,7 @@ final class MediaDetailDomainInteractor: CombineInteractor {
         }
     }
 
-    private func handleBookmark(_ action: MediaDetailDomainAction) -> Bool {
+    private func handleBookmark(_ action: DomainAction) -> Bool {
         switch action {
         case .toggleBookmark:
             toggleBookmark()
@@ -165,7 +165,7 @@ final class MediaDetailDomainInteractor: CombineInteractor {
         }
     }
 
-    private func handleBrowser(_ action: MediaDetailDomainAction) -> Bool {
+    private func handleBrowser(_ action: DomainAction) -> Bool {
         switch action {
         case .openInBrowser:
             openInBrowser()
@@ -250,7 +250,7 @@ final class MediaDetailDomainInteractor: CombineInteractor {
         }
     }
 
-    private func updateState(_ transform: (inout MediaDetailDomainState) -> Void) {
+    private func updateState(_ transform: (inout DomainState) -> Void) {
         var state = stateSubject.value
         transform(&state)
         stateSubject.send(state)

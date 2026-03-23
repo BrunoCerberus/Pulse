@@ -27,17 +27,17 @@ final class SearchDomainInteractor: CombineInteractor {
     private let searchService: SearchService
     private let storageService: StorageService
     private let analyticsService: AnalyticsService?
-    private let stateSubject = CurrentValueSubject<SearchDomainState, Never>(.initial)
+    private let stateSubject = CurrentValueSubject<DomainState, Never>(.initial)
     private let suggestionQuerySubject = PassthroughSubject<String, Never>()
     private var cancellables = Set<AnyCancellable>()
     private var searchCancellable: AnyCancellable?
     private var backgroundTasks = Set<Task<Void, Never>>()
 
-    var statePublisher: AnyPublisher<SearchDomainState, Never> {
+    var statePublisher: AnyPublisher<DomainState, Never> {
         stateSubject.eraseToAnyPublisher()
     }
 
-    var currentState: SearchDomainState {
+    var currentState: DomainState {
         stateSubject.value
     }
 
@@ -94,7 +94,7 @@ final class SearchDomainInteractor: CombineInteractor {
     }
 
     // swiftlint:disable:next cyclomatic_complexity
-    func dispatch(action: SearchDomainAction) {
+    func dispatch(action: DomainAction) {
         switch action {
         case let .updateQuery(query):
             updateQuery(query)
@@ -337,7 +337,7 @@ final class SearchDomainInteractor: CombineInteractor {
         backgroundTasks.insert(task)
     }
 
-    private func updateState(_ transform: (inout SearchDomainState) -> Void) {
+    private func updateState(_ transform: (inout DomainState) -> Void) {
         var state = stateSubject.value
         transform(&state)
         stateSubject.send(state)

@@ -21,18 +21,18 @@ final class PaywallDomainInteractor: CombineInteractor {
     typealias DomainState = PaywallDomainState
     typealias DomainAction = PaywallDomainAction
 
-    var statePublisher: AnyPublisher<PaywallDomainState, Never> {
+    var statePublisher: AnyPublisher<DomainState, Never> {
         currentStateSubject.eraseToAnyPublisher()
     }
 
     // MARK: - Properties
 
-    private let currentStateSubject: CurrentValueSubject<PaywallDomainState, Never>
+    private let currentStateSubject: CurrentValueSubject<DomainState, Never>
     private let storeKitService: StoreKitService
     private let analyticsService: AnalyticsService?
     private var cancellables: Set<AnyCancellable> = []
 
-    var currentState: PaywallDomainState {
+    var currentState: DomainState {
         currentStateSubject.value
     }
 
@@ -40,7 +40,7 @@ final class PaywallDomainInteractor: CombineInteractor {
 
     init(
         serviceLocator: ServiceLocator,
-        initialState: PaywallDomainState = .initial
+        initialState: DomainState = .initial
     ) {
         currentStateSubject = CurrentValueSubject(initialState)
 
@@ -58,7 +58,7 @@ final class PaywallDomainInteractor: CombineInteractor {
 
     // MARK: - CombineInteractor Implementation
 
-    func dispatch(action: PaywallDomainAction) {
+    func dispatch(action: DomainAction) {
         switch action {
         case .loadProducts:
             handleLoadProducts()
@@ -200,7 +200,7 @@ final class PaywallDomainInteractor: CombineInteractor {
             .store(in: &cancellables)
     }
 
-    private func updateState(_ newState: PaywallDomainState) {
+    private func updateState(_ newState: DomainState) {
         currentStateSubject.send(newState)
     }
 }

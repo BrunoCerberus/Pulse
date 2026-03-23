@@ -156,7 +156,7 @@ extension HomeDomainInteractor {
     }
 
     /// Updates state using a transform closure.
-    func updateState(_ transform: (inout HomeDomainState) -> Void) {
+    func updateState(_ transform: (inout DomainState) -> Void) {
         var state = stateSubject.value
         transform(&state)
         stateSubject.send(state)

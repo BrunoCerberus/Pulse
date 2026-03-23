@@ -11,7 +11,7 @@ extension MediaDomainInteractor {
         return media.filter { !excludeIDs.contains($0.id) }
     }
 
-    func updateState(_ transform: (inout MediaDomainState) -> Void) {
+    func updateState(_ transform: (inout DomainState) -> Void) {
         var state = stateSubject.value
         transform(&state)
         stateSubject.send(state)

@@ -24,14 +24,14 @@ final class AuthDomainInteractor: CombineInteractor {
 
     private let authService: AuthService
     private let analyticsService: AnalyticsService?
-    private let stateSubject = CurrentValueSubject<AuthDomainState, Never>(.initial)
+    private let stateSubject = CurrentValueSubject<DomainState, Never>(.initial)
     private var cancellables = Set<AnyCancellable>()
 
-    var statePublisher: AnyPublisher<AuthDomainState, Never> {
+    var statePublisher: AnyPublisher<DomainState, Never> {
         stateSubject.eraseToAnyPublisher()
     }
 
-    var currentState: AuthDomainState {
+    var currentState: DomainState {
         stateSubject.value
     }
 
@@ -46,7 +46,7 @@ final class AuthDomainInteractor: CombineInteractor {
         analyticsService = try? serviceLocator.retrieve(AnalyticsService.self)
     }
 
-    func dispatch(action: AuthDomainAction) {
+    func dispatch(action: DomainAction) {
         switch action {
         case let .signInWithGoogle(viewController):
             signInWithGoogle(presenting: viewController)
@@ -152,7 +152,7 @@ final class AuthDomainInteractor: CombineInteractor {
             .store(in: &cancellables)
     }
 
-    private func updateState(_ transform: (inout AuthDomainState) -> Void) {
+    private func updateState(_ transform: (inout DomainState) -> Void) {
         var state = stateSubject.value
         transform(&state)
         stateSubject.send(state)

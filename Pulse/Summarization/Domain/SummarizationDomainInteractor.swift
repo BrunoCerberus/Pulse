@@ -25,15 +25,15 @@ final class SummarizationDomainInteractor: CombineInteractor {
 
     private let summarizationService: SummarizationService
     private let analyticsService: AnalyticsService?
-    private let stateSubject: CurrentValueSubject<SummarizationDomainState, Never>
+    private let stateSubject: CurrentValueSubject<DomainState, Never>
     private var cancellables = Set<AnyCancellable>()
     private var summarizationTask: Task<Void, Never>?
 
-    var statePublisher: AnyPublisher<SummarizationDomainState, Never> {
+    var statePublisher: AnyPublisher<DomainState, Never> {
         stateSubject.eraseToAnyPublisher()
     }
 
-    var currentState: SummarizationDomainState {
+    var currentState: DomainState {
         stateSubject.value
     }
 
@@ -60,7 +60,7 @@ final class SummarizationDomainInteractor: CombineInteractor {
             .store(in: &cancellables)
     }
 
-    func dispatch(action: SummarizationDomainAction) {
+    func dispatch(action: DomainAction) {
         switch action {
         case .startSummarization:
             startSummarization()
@@ -184,7 +184,7 @@ final class SummarizationDomainInteractor: CombineInteractor {
         return cleaned.trimmingCharacters(in: .whitespacesAndNewlines)
     }
 
-    private func updateState(_ transform: (inout SummarizationDomainState) -> Void) {
+    private func updateState(_ transform: (inout DomainState) -> Void) {
         var state = stateSubject.value
         transform(&state)
         stateSubject.send(state)

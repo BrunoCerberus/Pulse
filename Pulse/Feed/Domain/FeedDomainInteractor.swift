@@ -29,17 +29,17 @@ final class FeedDomainInteractor: CombineInteractor {
     private let newsService: NewsService
     private let networkMonitor: NetworkMonitorService?
     private let analyticsService: AnalyticsService?
-    private let stateSubject = CurrentValueSubject<FeedDomainState, Never>(.initial)
+    private let stateSubject = CurrentValueSubject<DomainState, Never>(.initial)
     private var cancellables = Set<AnyCancellable>()
     private var generationTask: Task<Void, Never>?
     private var preloadTask: Task<Void, Never>?
     private var fetchArticlesTask: Task<Void, Never>?
 
-    var statePublisher: AnyPublisher<FeedDomainState, Never> {
+    var statePublisher: AnyPublisher<DomainState, Never> {
         stateSubject.eraseToAnyPublisher()
     }
 
-    var currentState: FeedDomainState {
+    var currentState: DomainState {
         stateSubject.value
     }
 
@@ -58,7 +58,7 @@ final class FeedDomainInteractor: CombineInteractor {
     }
 
     // swiftlint:disable:next cyclomatic_complexity
-    func dispatch(action: FeedDomainAction) {
+    func dispatch(action: DomainAction) {
         switch action {
         case .loadInitialData:
             loadInitialData()
@@ -119,7 +119,7 @@ final class FeedDomainInteractor: CombineInteractor {
             .store(in: &cancellables)
     }
 
-    private func updateState(_ transform: (inout FeedDomainState) -> Void) {
+    private func updateState(_ transform: (inout DomainState) -> Void) {
         var state = stateSubject.value
         transform(&state)
         stateSubject.send(state)

@@ -31,14 +31,14 @@ final class SettingsDomainInteractor: CombineInteractor {
     private let settingsService: SettingsService
     private let notificationService: NotificationService
     private let analyticsService: AnalyticsService?
-    private let stateSubject = CurrentValueSubject<SettingsDomainState, Never>(.initial)
+    private let stateSubject = CurrentValueSubject<DomainState, Never>(.initial)
     private var cancellables = Set<AnyCancellable>()
 
-    var statePublisher: AnyPublisher<SettingsDomainState, Never> {
+    var statePublisher: AnyPublisher<DomainState, Never> {
         stateSubject.eraseToAnyPublisher()
     }
 
-    var currentState: SettingsDomainState {
+    var currentState: DomainState {
         stateSubject.value
     }
 
@@ -55,7 +55,7 @@ final class SettingsDomainInteractor: CombineInteractor {
         analyticsService = try? serviceLocator.retrieve(AnalyticsService.self)
     }
 
-    func dispatch(action: SettingsDomainAction) {
+    func dispatch(action: DomainAction) {
         switch action {
         case .loadPreferences:
             loadPreferences()
@@ -78,7 +78,7 @@ final class SettingsDomainInteractor: CombineInteractor {
         }
     }
 
-    private func handleMutedContentAction(_ action: SettingsDomainAction) {
+    private func handleMutedContentAction(_ action: DomainAction) {
         switch action {
         case let .addMutedSource(source):
             addMutedSource(source)
@@ -93,7 +93,7 @@ final class SettingsDomainInteractor: CombineInteractor {
         }
     }
 
-    private func handleUIStateAction(_ action: SettingsDomainAction) {
+    private func handleUIStateAction(_ action: DomainAction) {
         updateState { state in
             switch action {
             case let .setShowSignOutConfirmation(show):
@@ -258,7 +258,7 @@ final class SettingsDomainInteractor: CombineInteractor {
             .store(in: &cancellables)
     }
 
-    private func updateState(_ transform: (inout SettingsDomainState) -> Void) {
+    private func updateState(_ transform: (inout DomainState) -> Void) {
         var state = stateSubject.value
         transform(&state)
         stateSubject.send(state)
