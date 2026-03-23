@@ -73,6 +73,7 @@ extension MediaDomainInteractor {
             mediaService.fetchFeaturedMedia(type: selectedType, language: language),
             mediaService.fetchMedia(type: selectedType, language: language, page: 1)
         )
+        .receive(on: DispatchQueue.main)
         .sink { [weak self] completion in
             if case let .failure(error) = completion {
                 self?.analyticsService?.recordError(error)
