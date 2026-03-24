@@ -424,7 +424,7 @@ final class MockNewsCacheStore: NewsCacheStore {
     }
 }
 
-final class MockRemoteConfigService: RemoteConfigService {
+final class MockRemoteConfigService: RemoteConfigService, @unchecked Sendable {
     var guardianAPIKeyValue: String?
     var newsAPIKeyValue: String?
     var gnewsAPIKeyValue: String?

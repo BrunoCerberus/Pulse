@@ -10,7 +10,7 @@ enum RemoteConfigKey: String {
 }
 
 /// Protocol for Remote Config operations.
-protocol RemoteConfigService {
+protocol RemoteConfigService: Sendable {
     /// Fetches and activates remote config values.
     func fetchAndActivate() async throws
 
