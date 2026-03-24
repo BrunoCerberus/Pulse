@@ -131,7 +131,7 @@
       "kind" : "remoteSourceControl",
       "location" : "https://github.com/BrunoCerberus/leap-ios.git",
       "state" : {
-        "revision" : "c6d3045e0551a58a0f16698a9c17fc3f15fed419"
+        "revision" : "a5b11d125ab20c2d6d00efda2e81e04455c3736e"
       }
     },
     {
