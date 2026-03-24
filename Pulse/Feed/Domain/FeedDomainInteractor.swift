@@ -113,6 +113,7 @@ final class FeedDomainInteractor: CombineInteractor {
 
     private func setupModelStatusBinding() {
         feedService.modelStatusPublisher
+            .receive(on: DispatchQueue.main)
             .sink { [weak self] status in
                 self?.dispatch(action: .modelStatusChanged(status))
             }

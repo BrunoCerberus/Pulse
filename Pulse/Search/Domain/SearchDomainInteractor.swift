@@ -261,6 +261,7 @@ final class SearchDomainInteractor: CombineInteractor {
             page: 1,
             sortBy: currentState.sortBy.rawValue
         )
+        .receive(on: DispatchQueue.main)
         .sink { [weak self] completion in
             if case let .failure(error) = completion {
                 self?.updateState { state in

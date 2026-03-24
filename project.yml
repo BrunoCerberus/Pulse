@@ -32,7 +32,6 @@ packages:
   LeapSDK:
     url: https://github.com/BrunoCerberus/leap-ios.git
     revision: a5b11d125ab20c2d6d00efda2e81e04455c3736e
-    branch: swift6.2-compat
 
 settings:
   base:
