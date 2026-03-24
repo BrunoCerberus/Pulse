@@ -241,7 +241,16 @@ class BaseUITestCase: XCTestCase {
                 safeTap(feedByImage)
             } else {
                 let feedButton = app.buttons["Feed"]
-                if safeExists(feedButton) { safeTap(feedButton) }
+                if safeExists(feedButton) {
+                    safeTap(feedButton)
+                } else {
+                    // Last resort: tap Feed by position (index 2, always Feed)
+                    let tabBar = app.tabBars.firstMatch
+                    if safeExists(tabBar) {
+                        let feedTabByIndex = tabBar.buttons.element(boundBy: 2)
+                        if safeExists(feedTabByIndex) { safeTap(feedTabByIndex) }
+                    }
+                }
             }
         }
         _ = safeWaitForExistence(app.navigationBars["Daily Digest"], timeout: Self.defaultTimeout)

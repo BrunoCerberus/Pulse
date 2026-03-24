@@ -49,8 +49,7 @@ final class FeedUITests: BaseUITestCase {
 
         // iOS 26+ occasionally reports stale tab selection accessibility state in CI.
         // Navigation/title presence is the reliable indicator that Feed is active.
-        let feedIsSelected = feedTab.isSelected || feedTabBySymbol.isSelected
-        XCTAssertTrue(feedIsSelected || navTitle.exists, "Feed should be active after navigation")
+        XCTAssertTrue(safeExists(navTitle), "Feed should be active after navigation")
 
         // --- Content Loading ---
         let headerText = app.staticTexts["Your Daily Digest"]
@@ -61,35 +60,35 @@ final class FeedUITests: BaseUITestCase {
         XCTAssertTrue(contentLoaded, "Feed should show content (digest, empty, or error state)")
 
         // --- Empty State ---
-        if emptyText.exists {
+        if safeExists(emptyText) {
             let emptyMessage = app.staticTexts["Read some articles to get your personalized daily digest."]
-            XCTAssertTrue(emptyMessage.exists || emptyText.exists, "Empty state should show helpful message")
+            XCTAssertTrue(safeExists(emptyMessage) || safeExists(emptyText), "Empty state should show helpful message")
         }
 
         // --- Error State ---
-        if errorText.exists {
+        if safeExists(errorText) {
             let tryAgainButton = app.buttons["Try Again"]
-            XCTAssertTrue(tryAgainButton.exists, "Error state should have 'Try Again' button")
+            XCTAssertTrue(safeExists(tryAgainButton), "Error state should have 'Try Again' button")
         }
 
         // --- Digest Content ---
-        if headerText.exists {
+        if safeExists(headerText) {
             // Verify digest card is visible
             let scrollView = app.scrollViews.firstMatch
-            XCTAssertTrue(scrollView.exists, "Scroll view should exist when digest is shown")
+            XCTAssertTrue(safeExists(scrollView), "Scroll view should exist when digest is shown")
 
             // Look for source articles section
             let sourceArticlesText = app.staticTexts["Source Articles"]
-            if sourceArticlesText.exists {
+            if safeExists(sourceArticlesText) {
                 // Tap to expand source articles
-                sourceArticlesText.tap()
+                safeTap(sourceArticlesText)
             }
         }
 
         // --- Tab Switching ---
         let homeTab = app.tabBars.buttons["Home"]
         XCTAssertTrue(safeWaitForExistence(homeTab, timeout: Self.shortTimeout), "Home tab should exist")
-        homeTab.tap()
+        safeTap(homeTab)
 
         let homeNav = app.navigationBars["News"]
         XCTAssertTrue(safeWaitForExistence(homeNav, timeout: Self.defaultTimeout), "Home should load")
@@ -102,7 +101,7 @@ final class FeedUITests: BaseUITestCase {
 
         // --- Pull to Refresh ---
         let scrollView = app.scrollViews.firstMatch
-        if scrollView.exists {
+        if safeExists(scrollView) {
             scrollView.swipeDown()
             _ = safeWaitForExistence(navTitle, timeout: Self.shortTimeout)
         }
