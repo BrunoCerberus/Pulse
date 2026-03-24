@@ -169,7 +169,7 @@ final class PaywallDomainInteractor: CombineInteractor {
                         isPremium: hasPurchases,
                         isRestoring: false,
                         restoreSuccessful: true,
-                        shouldDismiss: hasPurchases
+                        shouldDismiss: currentState.shouldDismiss || hasPurchases
                     ))
                 }
             )
@@ -187,7 +187,7 @@ final class PaywallDomainInteractor: CombineInteractor {
                 guard let self else { return }
                 updateState(currentState.copy(
                     isPremium: isPremium,
-                    shouldDismiss: isPremium
+                    shouldDismiss: currentState.shouldDismiss || isPremium
                 ))
             }
             .store(in: &cancellables)
