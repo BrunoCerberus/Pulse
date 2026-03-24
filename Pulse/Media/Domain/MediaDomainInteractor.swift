@@ -138,6 +138,7 @@ final class MediaDomainInteractor: CombineInteractor {
             mediaService.fetchFeaturedMedia(type: selectedType, language: language),
             mediaService.fetchMedia(type: selectedType, language: language, page: 1)
         )
+        .receive(on: DispatchQueue.main)
         .sink { [weak self] completion in
             if case let .failure(error) = completion {
                 self?.analyticsService?.recordError(error)
@@ -173,6 +174,7 @@ final class MediaDomainInteractor: CombineInteractor {
         let language = preferredLanguage
 
         mediaService.fetchMedia(type: selectedType, language: language, page: nextPage)
+            .receive(on: DispatchQueue.main)
             .sink { [weak self] completion in
                 if case let .failure(error) = completion {
                     self?.analyticsService?.recordError(error)
@@ -215,6 +217,7 @@ final class MediaDomainInteractor: CombineInteractor {
             mediaService.fetchFeaturedMedia(type: selectedType, language: language),
             mediaService.fetchMedia(type: selectedType, language: language, page: 1)
         )
+        .receive(on: DispatchQueue.main)
         .sink { [weak self] completion in
             if case let .failure(error) = completion {
                 self?.analyticsService?.recordError(error)
@@ -259,6 +262,7 @@ final class MediaDomainInteractor: CombineInteractor {
             mediaService.fetchFeaturedMedia(type: type, language: language),
             mediaService.fetchMedia(type: type, language: language, page: 1)
         )
+        .receive(on: DispatchQueue.main)
         .sink { [weak self] completion in
             if case let .failure(error) = completion {
                 self?.analyticsService?.recordError(error)

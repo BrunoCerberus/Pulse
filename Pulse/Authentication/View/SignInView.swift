@@ -67,8 +67,8 @@ struct SignInView: View {
         VStack(spacing: Spacing.lg) {
             ZStack {
                 Circle()
-                    .fill(.ultraThinMaterial)
                     .frame(width: 100, height: 100)
+                    .glassEffect(.regular, in: .circle)
 
                 Image(systemName: "newspaper.fill")
                     .font(.title)
@@ -177,8 +177,7 @@ struct SignInView: View {
                     .foregroundStyle(.white)
             }
             .padding(Spacing.xl)
-            .background(.ultraThinMaterial)
-            .clipShape(RoundedRectangle(cornerRadius: CornerRadius.lg))
+            .glassEffect(.regular, in: .rect(cornerRadius: CornerRadius.lg))
             .accessibilityElement(children: .combine)
             .accessibilityLabel(Constants.signingIn)
         }

@@ -27,8 +27,8 @@ struct AppLockOverlayView: View {
     var body: some View {
         ZStack {
             Rectangle()
-                .fill(.ultraThinMaterial)
                 .ignoresSafeArea()
+                .glassEffect(.regular)
 
             VStack(spacing: Spacing.lg) {
                 Image(systemName: "lock.fill")
@@ -47,9 +47,8 @@ struct AppLockOverlayView: View {
                         .font(Typography.headlineMedium)
                         .padding(.horizontal, Spacing.xl)
                         .padding(.vertical, Spacing.md)
-                        .background(.tint, in: RoundedRectangle(cornerRadius: CornerRadius.md))
-                        .foregroundStyle(.white)
                 }
+                .buttonStyle(.glassProminent)
                 .accessibilityLabel(Constants.unlock)
                 .accessibilityHint(Constants.unlockHint)
                 .accessibilityFocused($isUnlockFocused)

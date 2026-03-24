@@ -78,15 +78,9 @@ struct GlassCategoryChip: View {
             if isSelected {
                 Capsule()
                     .fill(category.color)
-            } else {
-                Capsule()
-                    .fill(category.color.opacity(0.15))
-                    .overlay {
-                        Capsule()
-                            .stroke(category.color.opacity(0.3), lineWidth: 0.5)
-                    }
             }
         }
+        .glassEffect(.regular.tint(category.color), in: .capsule)
         .glowEffect(color: isSelected ? category.color : .clear, radius: 6)
     }
 }
@@ -119,8 +113,12 @@ struct GlassCategoryButton: View {
             VStack(spacing: Spacing.xs) {
                 ZStack {
                     RoundedRectangle(cornerRadius: CornerRadius.md, style: .continuous)
-                        .fill(isSelected ? category.color : category.color.opacity(0.15))
+                        .fill(isSelected ? category.color : .clear)
                         .frame(width: 56, height: 56)
+                        .glassEffect(
+                            .regular.tint(category.color),
+                            in: .rect(cornerRadius: CornerRadius.md)
+                        )
 
                     Image(systemName: category.icon)
                         .font(.system(size: IconSize.lg))
@@ -136,10 +134,9 @@ struct GlassCategoryButton: View {
             }
             .frame(minWidth: dynamicTypeSize.isAccessibilitySize ? nil : 90)
             .padding(Spacing.sm)
-            .glassBackground(
-                style: isSelected ? .regular : .ultraThin,
-                cornerRadius: CornerRadius.lg,
-                showBorder: true
+            .glassEffect(
+                isSelected ? .regular.tint(category.color).interactive() : .regular.interactive(),
+                in: .rect(cornerRadius: CornerRadius.lg)
             )
         }
         .pressEffect(scale: 0.95)
@@ -182,15 +179,9 @@ struct GlassTopicChip: View {
                     if isSelected {
                         Capsule()
                             .fill(color)
-                    } else {
-                        Capsule()
-                            .fill(.ultraThinMaterial)
-                            .overlay {
-                                Capsule()
-                                    .stroke(color.opacity(0.3), lineWidth: 0.5)
-                            }
                     }
                 }
+                .glassEffect(.regular, in: .capsule)
                 .glowEffect(color: isSelected ? color : .clear, radius: 6)
         }
         .pressEffect(scale: 0.95)

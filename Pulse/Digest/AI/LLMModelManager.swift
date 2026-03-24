@@ -91,7 +91,11 @@ final class LLMModelManager: @unchecked Sendable {
 
         do {
             progressHandler(0.5)
-            let options = LiquidInferenceEngineOptions(bundlePath: modelURL.path)
+            #if targetEnvironment(simulator)
+                let options = LiquidInferenceEngineOptions(bundlePath: modelURL.path, nGpuLayers: 0)
+            #else
+                let options = LiquidInferenceEngineOptions(bundlePath: modelURL.path)
+            #endif
             let runner = try Leap.load(options: options)
             progressHandler(0.8)
 

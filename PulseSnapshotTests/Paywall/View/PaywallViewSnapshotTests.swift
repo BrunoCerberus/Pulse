@@ -55,9 +55,12 @@ final class PaywallViewSnapshotTests: XCTestCase {
         // Wait for state transition or timeout
         wait(for: [expectation], timeout: 5.0)
 
+        // Force re-render after state settles
+        controller.view.layoutIfNeeded()
+
         assertSnapshot(
             of: controller,
-            as: .image(on: SnapshotConfig.iPhoneAir, precision: SnapshotConfig.standardPrecision),
+            as: SnapshotConfig.snapshotting(on: SnapshotConfig.iPhoneAir),
             record: false
         )
     }

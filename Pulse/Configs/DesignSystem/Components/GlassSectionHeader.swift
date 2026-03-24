@@ -57,7 +57,7 @@ struct GlassSectionHeader: View {
         .padding(.horizontal, Spacing.md)
         .padding(.vertical, Spacing.sm)
         .frame(maxWidth: .infinity, alignment: .leading)
-        .background(style.material)
+        .glassEffect(.regular, in: .rect)
         .overlay(alignment: .bottom) {
             Rectangle()
                 .frame(height: 0.5)
@@ -87,7 +87,12 @@ struct StickySectionHeader: View {
             .padding(.horizontal, Spacing.md)
             .padding(.vertical, Spacing.sm)
             .frame(maxWidth: .infinity, alignment: .leading)
-            .background(showBackground ? AnyShapeStyle(GlassStyle.ultraThin.material) : AnyShapeStyle(.clear))
+            .background {
+                if showBackground {
+                    Rectangle()
+                        .glassEffect(.regular, in: .rect)
+                }
+            }
             .accessibilityAddTraits(.isHeader)
     }
 }

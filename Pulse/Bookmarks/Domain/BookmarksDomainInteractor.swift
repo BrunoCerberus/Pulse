@@ -84,6 +84,7 @@ final class BookmarksDomainInteractor: CombineInteractor {
         }
 
         bookmarksService.fetchBookmarks()
+            .receive(on: DispatchQueue.main)
             .sink { [weak self] completion in
                 if case let .failure(error) = completion {
                     self?.analyticsService?.recordError(error)
@@ -109,6 +110,7 @@ final class BookmarksDomainInteractor: CombineInteractor {
         }
 
         bookmarksService.fetchBookmarks()
+            .receive(on: DispatchQueue.main)
             .sink { [weak self] completion in
                 if case let .failure(error) = completion {
                     self?.analyticsService?.recordError(error)
@@ -128,6 +130,7 @@ final class BookmarksDomainInteractor: CombineInteractor {
 
     private func removeBookmark(_ article: Article) {
         bookmarksService.removeBookmark(article)
+            .receive(on: DispatchQueue.main)
             .sink { _ in } receiveValue: { [weak self] in
                 self?.updateState { state in
                     state.bookmarks.removeAll { $0.id == article.id }

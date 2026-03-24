@@ -24,7 +24,7 @@ struct OfflineBannerView: View {
         .foregroundStyle(.white)
         .frame(maxWidth: .infinity)
         .padding(.vertical, Spacing.xs)
-        .background(Color.orange)
+        .glassEffect(.regular.tint(.orange), in: .rect)
         .transition(.move(edge: .top).combined(with: .opacity))
         .accessibilityElement(children: .combine)
         .accessibilityLabel(Constants.banner)
