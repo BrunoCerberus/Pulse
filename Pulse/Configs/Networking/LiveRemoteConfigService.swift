@@ -8,7 +8,7 @@ import Foundation
 /// - `guardian_api_key`: Guardian API key
 /// - `news_api_key`: NewsAPI.org key
 /// - `gnews_api_key`: GNews API key
-final class LiveRemoteConfigService: RemoteConfigService {
+final class LiveRemoteConfigService: RemoteConfigService, @unchecked Sendable {
     // MARK: - Properties
 
     private let remoteConfig: RemoteConfig
