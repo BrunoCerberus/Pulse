@@ -136,24 +136,26 @@ final class MediaUITests: BaseUITestCase {
 
         // Wait for content to load
         let contentLoaded = waitForMediaContent(timeout: 30)
+        guard contentLoaded else { return }
 
-        if contentLoaded {
-            let mediaCards = app.buttons.matching(identifier: "mediaCard")
-            let firstCard = mediaCards.firstMatch
+        // Bail out if only error state loaded — no cards to interact with.
+        // Querying .matching(identifier:) on a view with no matching elements can cause
+        // Xcode 26's accessibility framework to hang indefinitely on CI.
+        guard !isMediaErrorState() else { return }
 
-            if safeWaitForExistence(firstCard, timeout: Self.shortTimeout) {
-                let center = firstCard.coordinate(withNormalizedOffset: CGVector(dx: 0.5, dy: 0.5))
-                center.tap()
+        let mediaCards = app.buttons.matching(identifier: "mediaCard")
+        guard ObjCExceptionCatcher.safeCount(for: mediaCards) > 0 else { return }
 
-                // Should navigate to media detail
-                let detailViewExists = waitForMediaDetail(timeout: Self.defaultTimeout)
+        let firstCard = mediaCards.firstMatch
+        guard safeExists(firstCard) else { return }
 
-                if detailViewExists {
-                    // Navigate back
-                    navigateBack()
-                    XCTAssertTrue(safeWaitForExistence(app.navigationBars["Media"], timeout: Self.shortTimeout))
-                }
-            }
+        safeTap(firstCard)
+
+        // Should navigate to media detail
+        let detailViewExists = waitForMediaDetail(timeout: Self.defaultTimeout)
+        if detailViewExists {
+            navigateBack()
+            XCTAssertTrue(safeWaitForExistence(app.navigationBars["Media"], timeout: Self.shortTimeout))
         }
     }
 
@@ -161,24 +163,25 @@ final class MediaUITests: BaseUITestCase {
         navigateToMediaTab()
 
         let contentLoaded = waitForMediaContent(timeout: 30)
+        guard contentLoaded else { return }
 
-        if contentLoaded {
-            let mediaCards = app.buttons.matching(identifier: "mediaCard")
-            let firstCard = mediaCards.firstMatch
+        // Bail out if only error state loaded — no cards to interact with.
+        guard !isMediaErrorState() else { return }
 
-            if safeWaitForExistence(firstCard, timeout: Self.shortTimeout) {
-                // Long press to show context menu
-                firstCard.press(forDuration: 0.5)
+        let mediaCards = app.buttons.matching(identifier: "mediaCard")
+        guard ObjCExceptionCatcher.safeCount(for: mediaCards) > 0 else { return }
 
-                // Check for context menu items
-                let shareButton = app.buttons["Share"]
-                let contextMenuAppeared = safeWaitForExistence(shareButton, timeout: Self.shortTimeout)
+        let firstCard = mediaCards.firstMatch
+        guard safeExists(firstCard) else { return }
 
-                if contextMenuAppeared {
-                    // Dismiss context menu
-                    app.tap()
-                }
-            }
+        // Long press to show context menu — use ObjC wrapper to catch C++ exceptions
+        ObjCExceptionCatcher.safeLongPress(firstCard, duration: 0.5)
+
+        // Check for context menu items
+        let shareButton = app.buttons["Share"]
+        if safeWaitForExistence(shareButton, timeout: Self.shortTimeout) {
+            // Dismiss context menu by tapping empty area
+            app.coordinate(withNormalizedOffset: CGVector(dx: 0.5, dy: 0.1)).tap()
         }
     }
 
@@ -327,6 +330,12 @@ final class MediaUITests: BaseUITestCase {
     }
 
     // MARK: - Helper Methods
+
+    /// Returns true if the Media tab is showing an error state (no cards to interact with).
+    private func isMediaErrorState() -> Bool {
+        safeExists(app.staticTexts["Unable to Load Media"]) ||
+            safeExists(app.staticTexts["No Media Available"])
+    }
 
     @discardableResult
     private func waitForMediaContent(timeout: TimeInterval = 30) -> Bool {

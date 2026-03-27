@@ -64,7 +64,7 @@ Pulse/
 │   ├── SplashScreen/           # App launch animation
 │   └── Configs/
 │       ├── Navigation/         # Coordinator, Page, CoordinatorView, DeeplinkRouter, AnimatedTabView
-│       ├── DesignSystem/       # ColorSystem, Typography, Components, DynamicTypeHelpers, Haptics
+│       ├── DesignSystem/       # ColorSystem, Typography, Components, DynamicTypeHelpers, Haptics, Liquid Glass components
 │       ├── Models/             # Article, NewsCategory, UserPreferences, ContentLanguage, AppLocalization
 │       ├── Networking/         # API keys, base URLs, SupabaseConfig, RemoteConfig, NetworkMonitorService, NetworkResilience
 │       ├── Storage/            # StorageService (SwiftData)
@@ -242,6 +242,9 @@ struct HomeDomainInteractorTests {
 19. **Input validation at boundaries** - Validate YouTube video IDs with strict regex before HTML interpolation. Sanitize deeplink IDs with character allowlists and path traversal rejection. Allowlist URL schemes (HTTPS only) before `UIApplication.shared.open()`. Sanitize disk cache filenames. Limit search queries to 256 characters.
 20. **Sign-out clears all user data** - On sign-out, `SettingsViewModel.clearUserDataOnSignOut()` wipes SwiftData (bookmarks, preferences, reading history), L1+L2 caches, app lock keychain, recent searches, UserDefaults, ThemeManager, and widget shared data. Never leave stale user data after sign-out.
 21. **Environment variable fallbacks are DEBUG-only** - API key fallbacks via `ProcessInfo.processInfo.environment` are wrapped in `#if DEBUG`. Release builds only use Remote Config and Keychain. Remote Config values are validated for minimum length (10+ chars).
+22. **Main thread for Combine sinks in @MainActor interactors** - Every `.sink` in a `@MainActor` interactor that mutates state **must** include `.receive(on: DispatchQueue.main)` before the sink. Combine publishers from services (network, storage) deliver on background queues; without `.receive(on:)`, `stateSubject.value` mutations crash with `_dispatch_assert_queue_fail`. This applies to all interactors.
+23. **Swift 6.2 Sendable compliance** - The project uses Swift 6.2 with strict concurrency checking. Use `UncheckedSendableBox` (in `CombineAsyncBridge.swift`) to wrap non-Sendable values captured in `Task` closures. Use `WeakRef` instead of `[weak self]` in `sending` closures. Mark static formatters and globals as `nonisolated(unsafe)`. Service protocols that cross isolation boundaries must conform to `Sendable`.
+24. **Liquid Glass UI** - All surfaces and materials use iOS 26 Liquid Glass APIs (`.glassEffect`, `GlassEffectContainer`, `.buttonStyle(.glassProminent)`) instead of legacy `.ultraThinMaterial`/`.regularMaterial`. Key components: `GlassTabBar`, `GlassCategoryChip`, `GlassSectionHeader`, `GlassHeroSkeleton`, `SpeechPlayerBarView`, `OfflineBannerView`, `SignInView`, `AppLockOverlayView`, `SplashScreenView`.
 
 ## Data Source Architecture
 
@@ -272,6 +275,8 @@ The app uses a tiered cache with offline resilience:
 | `NetworkMonitorService` | Protocol + Live (`NWPathMonitor`) + Mock for connectivity tracking |
 | `PulseError` | Typed error enum with `.offlineNoCache` case |
 | `OfflineBannerView` | Animated banner in `CoordinatorView` shown when offline |
+| **Swift 6.2 Concurrency** | |
+| `CombineAsyncBridge` | `UncheckedSendableBox` (wraps non-Sendable values for `Task` capture) and `WeakRef` (avoids `[weak self]` issues with strict `sending` checks) |
 | **Localization** | |
 | `AppLocalization` | `@MainActor` singleton with `@Published language`; `nonisolated func localized(_:)` for cross-thread access; loads from `.lproj` bundles matching `ContentLanguage` |
 | `ContentLanguage` | Enum (en/pt/es) with display names and flags for language picker |
