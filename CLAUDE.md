@@ -187,7 +187,7 @@ Pulse/
 │   ├── SplashScreen/           # App launch animation
 │   └── Configs/
 │       ├── Navigation/         # Coordinator, Page, CoordinatorView, DeeplinkRouter, AnimatedTabView
-│       ├── DesignSystem/       # ColorSystem, Typography, Components, DynamicTypeHelpers
+│       ├── DesignSystem/       # ColorSystem, Typography, Components, DynamicTypeHelpers, Liquid Glass components
 │       ├── Models/             # Article, NewsCategory, UserPreferences, ContentLanguage, AppLocalization
 │       ├── Networking/         # API keys, base URLs, SupabaseConfig, RemoteConfig, NetworkMonitorService, NetworkResilience
 │       ├── Storage/            # StorageService (SwiftData)
@@ -442,6 +442,46 @@ if let cachingService = newsService as? CachingNewsService {
 - Domain states expose `isOfflineError: Bool` for offline-specific error views
 - Failed refreshes preserve existing cached content (headlines, breaking news, media) instead of clearing
 
+## Swift 6.2 Concurrency
+
+The project uses **Swift 6.2** with strict concurrency checking. Key patterns:
+
+### Main Thread Dispatch in Interactors
+
+Every `.sink` inside a `@MainActor` interactor that mutates `stateSubject.value` **must** include `.receive(on: DispatchQueue.main)` before the sink. Combine publishers from services deliver on background queues; without this, state mutations crash with `_dispatch_assert_queue_fail`.
+
+```swift
+// CORRECT - all interactors follow this pattern
+someService.fetchData()
+    .receive(on: DispatchQueue.main)  // Required before any state mutation
+    .sink(receiveCompletion: { ... },
+          receiveValue: { [weak self] data in
+              self?.updateState { $0.items = data }
+          })
+    .store(in: &cancellables)
+```
+
+### Sendable Compliance
+
+- **`UncheckedSendableBox<T>`** — wraps non-Sendable values (e.g., `Future` promise closures) for `Task` capture
+- **`WeakRef<T>`** — replaces `[weak self]` in `sending` closures (compiler rejects mutable `Optional` in sending context)
+- **`nonisolated(unsafe)`** — used for static formatters and global constants
+- **Service protocols** crossing isolation boundaries conform to `Sendable`
+
+Both utilities live in `Configs/Networking/CombineAsyncBridge.swift`.
+
+## Liquid Glass UI
+
+All surfaces and materials use iOS 26 Liquid Glass APIs instead of legacy `Material` modifiers:
+
+| API | Replaces |
+|-----|----------|
+| `.glassEffect` | `.ultraThinMaterial`, `.regularMaterial` |
+| `GlassEffectContainer` | Manual blur stacks |
+| `.buttonStyle(.glassProminent)` | Custom material button styles |
+
+Key components: `GlassTabBar`, `GlassCategoryChip`, `GlassSectionHeader`, `GlassHeroSkeleton`, `SpeechPlayerBarView`, `OfflineBannerView`, `SignInView`, `AppLockOverlayView`, `SplashScreenView`.
+
 ## Testing Strategy
 
 ### Unit Tests (Swift Testing)
@@ -503,6 +543,8 @@ if let cachingService = newsService as? CachingNewsService {
 | `NetworkMonitorService.swift` | Protocol + Live (NWPathMonitor) + Mock for connectivity monitoring |
 | `PulseError.swift` | Typed error enum distinguishing offline from server errors |
 | `OfflineBannerView.swift` | Animated offline banner shown at top of app when disconnected |
+| **Swift 6.2 Concurrency** | |
+| `CombineAsyncBridge.swift` | `UncheckedSendableBox` (wraps non-Sendable values for `Task` capture) and `WeakRef` (avoids `[weak self]` issues with strict `sending` checks) |
 | **Localization** | |
 | `AppLocalization.swift` | `@MainActor` singleton managing in-app language; `nonisolated func localized(_:)` for cross-thread access |
 | `ContentLanguage.swift` | Enum (en/pt/es) with display names and flag emojis for language picker |
