@@ -66,4 +66,13 @@
     }
 }
 
++ (void)safeLongPressElement:(XCUIElement *)element duration:(NSTimeInterval)duration {
+    @try {
+        XCUICoordinate *center = [element coordinateWithNormalizedOffset:CGVectorMake(0.5, 0.5)];
+        [center pressForDuration:duration];
+    } @catch (...) {
+        // Long press failed due to C++ exception — element may not be interactive
+    }
+}
+
 @end

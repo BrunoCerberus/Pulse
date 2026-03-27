@@ -32,6 +32,9 @@ NS_ASSUME_NONNULL_BEGIN
 /// Sets device orientation, catching any C++ exception that may occur when the runner is in a bad state.
 + (void)safeSetDeviceOrientation:(UIDeviceOrientation)orientation;
 
+/// Long-presses an element for a given duration, catching any C++ exception.
++ (void)safeLongPressElement:(XCUIElement *)element duration:(NSTimeInterval)duration;
+
 @end
 
 NS_ASSUME_NONNULL_END
