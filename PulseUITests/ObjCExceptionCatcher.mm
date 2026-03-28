@@ -75,4 +75,17 @@
     }
 }
 
++ (void)safeSwipeLeftEdge:(XCUIApplication *)app {
+    // Use coordinate-based drag from left edge to trigger back navigation.
+    // Unlike app.swipeRight(), this does NOT evaluate the full accessibility tree,
+    // so it cannot hang when the accessibility framework is degraded on Xcode 26.
+    @try {
+        XCUICoordinate *start = [app coordinateWithNormalizedOffset:CGVectorMake(0.01, 0.5)];
+        XCUICoordinate *end = [app coordinateWithNormalizedOffset:CGVectorMake(0.6, 0.5)];
+        [start pressForDuration:0 thenDragToCoordinate:end];
+    } @catch (...) {
+        // Swipe gesture failed due to C++ exception — skip back navigation
+    }
+}
+
 @end

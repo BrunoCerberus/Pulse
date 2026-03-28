@@ -35,6 +35,12 @@ NS_ASSUME_NONNULL_BEGIN
 /// Long-presses an element for a given duration, catching any C++ exception.
 + (void)safeLongPressElement:(XCUIElement *)element duration:(NSTimeInterval)duration;
 
+/// Performs a left-edge swipe-back gesture using normalized coordinates, catching any C++ exception.
+/// Use this instead of app.swipeRight() to avoid Xcode 26 accessibility query hangs.
+/// app.swipeRight() evaluates the full accessibility tree and can hang for 30+ minutes
+/// when the accessibility framework is degraded. Coordinate-based gestures bypass this.
++ (void)safeSwipeLeftEdge:(XCUIApplication *)app;
+
 @end
 
 NS_ASSUME_NONNULL_END
