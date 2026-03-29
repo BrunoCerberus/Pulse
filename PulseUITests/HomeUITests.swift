@@ -208,7 +208,10 @@ final class HomeUITests: BaseUITestCase {
             let center = settingsBackButton.coordinate(withNormalizedOffset: CGVector(dx: 0.5, dy: 0.5))
             center.tap()
         } else {
-            app.swipeRight()
+            // Use coordinate-based left-edge swipe instead of app.swipeRight().
+            // app.swipeRight() evaluates the full accessibility tree and hangs for 30+
+            // minutes when Xcode 26's accessibility framework is degraded.
+            ObjCExceptionCatcher.safeSwipeLeftEdge(app)
         }
 
         // Wait for navigation animation to settle on CI (shared runners are significantly slower)

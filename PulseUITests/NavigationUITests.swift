@@ -23,8 +23,9 @@ final class NavigationUITests: BaseUITestCase {
 
         // --- Navigate to Each Tab and Verify (except Search - tested in PulseSearchUITests) ---
 
-        // Home
-        navigateToTab("Home")
+        // Home — setUp already lands on Home tab; check nav bar directly without re-tapping.
+        // Tapping the already-active Home tab triggers iOS scroll-to-top which briefly
+        // interrupts the navigation bar accessibility element, causing intermittent failures.
         XCTAssertTrue(
             safeWaitForExistence(app.navigationBars["News"], timeout: Self.defaultTimeout),
             "Home tab should display News navigation bar"

@@ -160,8 +160,11 @@ final class ArticleDetailUITests: BaseUITestCase {
         if isHittable {
             backButtonAfterShare.tap()
         } else {
-            // Use swipe gesture to go back - swipe from left edge
-            app.swipeRight()
+            // Use coordinate-based left-edge swipe instead of app.swipeRight().
+            // app.swipeRight() evaluates the full accessibility tree and hangs for 30+
+            // minutes when Xcode 26's accessibility framework is degraded, causing
+            // multi-hour test runs. Coordinate-based gestures bypass tree evaluation.
+            ObjCExceptionCatcher.safeSwipeLeftEdge(app)
         }
 
         // Wait for navigation to complete
