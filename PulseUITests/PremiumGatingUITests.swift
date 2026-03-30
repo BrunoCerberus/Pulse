@@ -102,12 +102,11 @@ final class PremiumGatingNonPremiumUITests: BaseUITestCase {
             return false
         }
 
-        // Find and tap first article card
-        let articleCardsQuery = app.buttons.matching(
-            NSPredicate(format: "label CONTAINS[c] 'ago' OR label CONTAINS[c] 'hour' OR label CONTAINS[c] 'minute'")
-        )
+        // Find and tap first article card using accessibility identifier to avoid
+        // complex label predicate queries that can cause Xcode 26 accessibility timeouts.
+        let articleCardsQuery = articleCards()
 
-        guard articleCardsQuery.count > 0 else {
+        guard ObjCExceptionCatcher.safeCount(for: articleCardsQuery) > 0 else {
             return false
         }
 
@@ -116,7 +115,7 @@ final class PremiumGatingNonPremiumUITests: BaseUITestCase {
             return false
         }
 
-        firstCard.tap()
+        safeTap(firstCard)
 
         return waitForArticleDetail()
     }

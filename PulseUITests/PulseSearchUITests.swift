@@ -200,24 +200,29 @@ final class PulseSearchUITests: BaseUITestCase {
             }
         }
 
-        let scrollView = app.scrollViews.firstMatch
-        if scrollView.exists {
-            // Consolidated swipe with content check - more efficient than 3 separate swipes
-            for _ in 0 ..< 2 {
-                scrollView.swipeUp()
-            }
-        }
+        // Use coordinate-based drag instead of scrollView.swipeUp() to avoid Xcode 26
+        // accessibility tree evaluation that can cause the search field to disappear
+        // or trigger C++ exceptions that crash the test runner (SIGABRT).
+        let scrollStart = app.coordinate(withNormalizedOffset: CGVector(dx: 0.5, dy: 0.7))
+        let scrollEnd = app.coordinate(withNormalizedOffset: CGVector(dx: 0.5, dy: 0.3))
+        scrollStart.press(forDuration: 0, thenDragTo: scrollEnd)
+        wait(for: 0.3)
+        scrollStart.press(forDuration: 0, thenDragTo: scrollEnd)
+        wait(for: 0.3)
 
-        XCTAssertTrue(searchField.exists, "Search should remain functional after scrolling")
+        XCTAssertTrue(safeExists(searchField), "Search should remain functional after scrolling")
 
         let clearButtonForNoResults = app.searchFields.buttons["Clear text"]
-        if clearButtonForNoResults.exists {
-            clearButtonForNoResults.tap()
+        if safeExists(clearButtonForNoResults) {
+            safeTap(clearButtonForNoResults)
         }
 
-        searchField.tap()
-        searchField.typeText("xyzqwerty123456789unlikely")
-        submitSearch()
+        // Use safeTap to prevent SIGABRT when element is missing in Xcode 26
+        safeTap(searchField)
+        if safeExists(searchField) {
+            searchField.typeText("xyzqwerty123456789unlikely")
+            submitSearch()
+        }
 
         let noResultsTextAfter = app.staticTexts["No Results Found"]
         let errorTextAfter = app.staticTexts["Search Failed"]
