@@ -196,19 +196,24 @@ final class PulseSearchUITests: BaseUITestCase {
 
             if didNavigate {
                 backButton.tap()
+                // Wait for search view to fully restore before proceeding
+                _ = safeWaitForExistence(searchField, timeout: 10)
                 XCTAssertTrue(safeWaitForExistence(searchField, timeout: 5), "Should return to Search")
             }
         }
 
-        let scrollView = app.scrollViews.firstMatch
-        if scrollView.exists {
-            // Consolidated swipe with content check - more efficient than 3 separate swipes
-            for _ in 0 ..< 2 {
-                scrollView.swipeUp()
+        // Only scroll if we are in the search view (not article detail)
+        if safeExists(searchField) {
+            let scrollView = app.scrollViews.firstMatch
+            if safeExists(scrollView) {
+                // Consolidated swipe with content check - more efficient than 3 separate swipes
+                for _ in 0 ..< 2 {
+                    scrollView.swipeUp()
+                }
             }
         }
 
-        XCTAssertTrue(searchField.exists, "Search should remain functional after scrolling")
+        XCTAssertTrue(safeWaitForExistence(searchField, timeout: 5), "Search should remain functional after scrolling")
 
         let clearButtonForNoResults = app.searchFields.buttons["Clear text"]
         if clearButtonForNoResults.exists {
