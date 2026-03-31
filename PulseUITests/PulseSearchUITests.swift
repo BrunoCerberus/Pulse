@@ -206,9 +206,13 @@ final class PulseSearchUITests: BaseUITestCase {
             for _ in 0 ..< 2 {
                 scrollView.swipeUp()
             }
+            // Scroll back up so the search field is visible again before asserting
+            for _ in 0 ..< 2 {
+                scrollView.swipeDown()
+            }
         }
 
-        XCTAssertTrue(searchField.exists, "Search should remain functional after scrolling")
+        XCTAssertTrue(safeWaitForExistence(searchField, timeout: 5), "Search should remain functional after scrolling")
 
         let clearButtonForNoResults = app.searchFields.buttons["Clear text"]
         if clearButtonForNoResults.exists {
