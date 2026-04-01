@@ -131,6 +131,41 @@ struct ArticleViewItemTests {
         #expect(item1 != item2)
     }
 
+    @Test("ArticleViewItem strips HTML from description")
+    func stripsHTMLFromDescription() {
+        let article = Article(
+            id: "html-test",
+            title: "Test Article",
+            description: "<p>Breaking <strong>news</strong>: market &amp; economy</p>",
+            source: ArticleSource(id: "test", name: "Test"),
+            url: "https://example.com",
+            publishedAt: Date()
+        )
+        let viewItem = ArticleViewItem(from: article)
+
+        #expect(viewItem.description != nil)
+        #expect(!viewItem.description!.contains("<p>"))
+        #expect(!viewItem.description!.contains("<strong>"))
+        #expect(!viewItem.description!.contains("&amp;"))
+        #expect(viewItem.description!.contains("Breaking"))
+        #expect(viewItem.description!.contains("news"))
+        #expect(viewItem.description!.contains("market & economy"))
+    }
+
+    @Test("ArticleViewItem handles nil description")
+    func handlesNilDescription() {
+        let article = Article(
+            title: "Test",
+            description: nil,
+            source: ArticleSource(id: nil, name: "Test"),
+            url: "https://example.com",
+            publishedAt: Date()
+        )
+        let viewItem = ArticleViewItem(from: article)
+
+        #expect(viewItem.description == nil)
+    }
+
     @Test("ArticleViewItem maps multiple articles correctly")
     func mapsMultipleArticles() {
         let articles = Article.mockArticles

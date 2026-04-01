@@ -104,6 +104,30 @@ struct SearchDomainInteractorTests {
         #expect(state.suggestions.isEmpty)
     }
 
+    @Test("Empty query clears results and resets hasSearched")
+    func emptyQueryClearsResults() async throws {
+        mockSearchService.searchResult = .success(Article.mockArticles)
+
+        // First perform a search so we have results
+        sut.dispatch(action: .updateQuery("swift"))
+        sut.dispatch(action: .search)
+        try await Task.sleep(nanoseconds: 500_000_000)
+
+        // Verify results exist
+        #expect(!sut.currentState.results.isEmpty)
+        #expect(sut.currentState.hasSearched)
+
+        // Now clear the query
+        sut.dispatch(action: .updateQuery(""))
+        try await Task.sleep(nanoseconds: 100_000_000)
+
+        let state = sut.currentState
+        #expect(state.results.isEmpty, "Results should be cleared when query is emptied")
+        #expect(!state.hasSearched, "hasSearched should be reset when query is emptied")
+        #expect(state.error == nil, "Error should be cleared when query is emptied")
+        #expect(!state.isOfflineError, "isOfflineError should be reset when query is emptied")
+    }
+
     @Test("Update query truncates to max length")
     func updateQueryTruncatesToMaxLength() async throws {
         let oversizedQuery = String(repeating: "a", count: 300)

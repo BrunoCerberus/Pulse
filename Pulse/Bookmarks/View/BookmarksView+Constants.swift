@@ -31,5 +31,14 @@ extension BookmarksView {
         static var savedCount: String {
             AppLocalization.localized("bookmarks.saved_count")
         }
+
+        static var savedCountSingular: String {
+            AppLocalization.localized("bookmarks.saved_count_singular")
+        }
+
+        /// Returns the appropriate singular or plural format string for the given count.
+        static func savedCountFormat(for count: Int) -> String {
+            count == 1 ? savedCountSingular : savedCount
+        }
     }
 }

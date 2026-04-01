@@ -159,7 +159,7 @@ struct BookmarksView<R: BookmarksNavigationRouter>: View {
         HStack {
             Image(systemName: "bookmark.fill")
                 .foregroundStyle(Color.Accent.primary)
-            Text(String(format: Constants.savedCount, viewModel.viewState.bookmarks.count))
+            Text(String(format: Constants.savedCountFormat(for: viewModel.viewState.bookmarks.count), viewModel.viewState.bookmarks.count))
                 .font(Typography.captionLarge)
                 .foregroundStyle(.secondary)
             Spacer()

@@ -95,8 +95,7 @@ struct CoordinatorView: View {
                 Tab(
                     appLocalization.localized("tab.search"),
                     systemImage: AppTab.search.symbolImage,
-                    value: .search,
-                    role: .search
+                    value: .search
                 ) {
                     NavigationStack(path: $coordinator.searchPath) {
                         SearchView(
