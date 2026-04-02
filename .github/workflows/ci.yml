@@ -117,7 +117,6 @@ jobs:
 
     permissions:
       contents: read
-      security-events: write
 
     steps:
     - name: Harden runner
@@ -130,7 +129,10 @@ jobs:
       with:
         fetch-depth: 0
 
+    # Requires GitHub Advanced Security on private repos — skipped gracefully if unavailable
     - name: Dependency review
+      id: dependency-review
+      continue-on-error: true
       uses: actions/dependency-review-action@38ecb5b593bf0eb19e335c03f97670f792489a8b # v4.7.0
       with:
         fail-on-severity: critical
@@ -150,11 +152,11 @@ jobs:
         echo "  Gitleaks Secret Scanning (150+ patterns)"
         echo "============================================"
         echo ""
-        gitleaks detect --source . --redact --verbose --no-banner
+        gitleaks detect --source . --redact --verbose --no-banner --config .gitleaks.toml
 
     # mobsfscan: iOS/Swift-specific SAST (OWASP MASTG patterns)
     - name: Install mobsfscan
-      run: pip install mobsfscan
+      run: pip install 'mobsfscan>=0.3,<1.0'
 
     - name: Run mobsfscan iOS security analysis
       id: mobsfscan
@@ -220,7 +222,7 @@ jobs:
         done
 
         # Verify API type entries have reason codes
-        API_TYPES=$(grep -c "NSPrivacyAccessedAPIType" Pulse/PrivacyInfo.xcprivacy || echo "0")
+        API_TYPES=$(grep -c "<key>NSPrivacyAccessedAPIType</key>" Pulse/PrivacyInfo.xcprivacy || echo "0")
         REASONS=$(grep -c "NSPrivacyAccessedAPITypeReasons" Pulse/PrivacyInfo.xcprivacy || echo "0")
         echo "API type declarations: $API_TYPES, Reason code declarations: $REASONS"
         if [ "$API_TYPES" -gt 0 ] && [ "$REASONS" -eq 0 ]; then
@@ -289,6 +291,40 @@ jobs:
         done
 
         [ $FOUND -eq 0 ] && echo "No sensitive entitlements found"
+        [ $FOUND -gt 0 ] && exit 1
+        true
+
+    - name: Audit file permissions
+      id: file-perms
+      continue-on-error: true
+      run: |
+        echo "============================================"
+        echo "  File Permission Audit"
+        echo "============================================"
+        echo ""
+
+        ISSUES=0
+
+        UNSAFE=$(find Pulse/ -type f -perm -o+w 2>/dev/null || true)
+        if [ -n "$UNSAFE" ]; then
+          echo "::warning::World-writable files found:"
+          echo "$UNSAFE"
+          ISSUES=$((ISSUES + 1))
+        else
+          echo "No world-writable files found"
+        fi
+
+        EXEC=$(find Pulse/ -name "*.swift" -type f -executable 2>/dev/null || true)
+        if [ -n "$EXEC" ]; then
+          echo "::warning::Executable Swift files found (unusual):"
+          echo "$EXEC"
+          ISSUES=$((ISSUES + 1))
+        else
+          echo "No executable Swift files"
+        fi
+
+        [ $ISSUES -gt 0 ] && exit 1
+        true
 
     - name: Security audit summary
       if: always()
@@ -299,6 +335,7 @@ jobs:
         PRIVACY: ${{ steps.privacy-manifest.outcome }}
         ATS: ${{ steps.ats-check.outcome }}
         ENTITLEMENTS: ${{ steps.entitlements.outcome }}
+        FILE_PERMS: ${{ steps.file-perms.outcome }}
       run: |
         echo ""
         echo "============================================"
@@ -311,7 +348,7 @@ jobs:
         echo "|-------|--------|" >> "$GITHUB_STEP_SUMMARY"
 
         FAILURES=0
-        for check in "Gitleaks:$GITLEAKS" "mobsfscan:$MOBSFSCAN" "HTTPS Enforcement:$HTTPS_CHECK" "Privacy Manifest:$PRIVACY" "ATS Exceptions:$ATS" "Entitlements:$ENTITLEMENTS"; do
+        for check in "Gitleaks:$GITLEAKS" "mobsfscan:$MOBSFSCAN" "HTTPS Enforcement:$HTTPS_CHECK" "Privacy Manifest:$PRIVACY" "ATS Exceptions:$ATS" "Entitlements:$ENTITLEMENTS" "File Permissions:$FILE_PERMS"; do
           name="${check%%:*}"
           result="${check##*:}"
           if [ "$result" = "failure" ]; then

@@ -131,7 +131,6 @@ jobs:
 
     permissions:
       contents: read
-      security-events: write
 
     steps:
     - name: Harden runner
@@ -159,11 +158,11 @@ jobs:
         echo "  Gitleaks Secret Scanning (150+ patterns)"
         echo "============================================"
         echo ""
-        gitleaks detect --source . --redact --verbose --no-banner
+        gitleaks detect --source . --redact --verbose --no-banner --config .gitleaks.toml
 
     # mobsfscan: iOS/Swift-specific SAST (OWASP MASTG patterns)
     - name: Install mobsfscan
-      run: pip install mobsfscan
+      run: pip install 'mobsfscan>=0.3,<1.0'
 
     - name: Run mobsfscan iOS security analysis
       id: mobsfscan
@@ -229,7 +228,7 @@ jobs:
         done
 
         # Verify API type entries have reason codes
-        API_TYPES=$(grep -c "NSPrivacyAccessedAPIType" Pulse/PrivacyInfo.xcprivacy || echo "0")
+        API_TYPES=$(grep -c "<key>NSPrivacyAccessedAPIType</key>" Pulse/PrivacyInfo.xcprivacy || echo "0")
         REASONS=$(grep -c "NSPrivacyAccessedAPITypeReasons" Pulse/PrivacyInfo.xcprivacy || echo "0")
         echo "API type declarations: $API_TYPES, Reason code declarations: $REASONS"
         if [ "$API_TYPES" -gt 0 ] && [ "$REASONS" -eq 0 ]; then
@@ -298,6 +297,8 @@ jobs:
         done
 
         [ $FOUND -eq 0 ] && echo "No sensitive entitlements found"
+        [ $FOUND -gt 0 ] && exit 1
+        true
 
     - name: Audit file permissions
       id: file-perms
@@ -896,7 +897,7 @@ jobs:
           - Stage all changes with git add
           - Do NOT commit - the workflow will handle that
         # Restricted tool access — no arbitrary command execution
-        claude_args: '--allowedTools "Read,Edit,Write,Glob,Grep,Bash(git add:*),Bash(git status:*),Bash(git diff:*),Bash(ls:*),Bash(cat:*),Bash(head:*),Bash(tail:*),Bash(find:*),Bash(make:*)"'
+        claude_args: '--allowedTools "Read,Edit,Write,Glob,Grep,Bash(git add:*),Bash(git status:*),Bash(git diff:*),Bash(ls:*),Bash(cat:*),Bash(head:*),Bash(tail:*),Bash(find:*),Bash(make generate)"'
 
     - name: Check for changes
       id: check-changes
