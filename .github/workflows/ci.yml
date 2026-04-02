@@ -206,12 +206,13 @@ jobs:
           exit 1
         fi
 
-        if xmllint --noout Pulse/PrivacyInfo.xcprivacy 2>/dev/null; then
-          echo "Valid XML structure"
+        # xmllint may not be available on ubuntu-latest — fall back to Python
+        if command -v xmllint &>/dev/null; then
+          xmllint --noout Pulse/PrivacyInfo.xcprivacy || { echo "::error::Privacy manifest has invalid XML"; exit 1; }
         else
-          echo "::error::Privacy manifest has invalid XML"
-          exit 1
+          python3 -c "import xml.etree.ElementTree as ET; ET.parse('Pulse/PrivacyInfo.xcprivacy')" || { echo "::error::Privacy manifest has invalid XML"; exit 1; }
         fi
+        echo "Valid XML structure"
 
         for KEY in NSPrivacyAccessedAPITypes NSPrivacyCollectedDataTypes NSPrivacyTracking; do
           if grep -q "$KEY" Pulse/PrivacyInfo.xcprivacy; then
