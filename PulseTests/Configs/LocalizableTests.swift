@@ -3,10 +3,20 @@ import Foundation
 @testable import Pulse
 import Testing
 
+/// Forces English locale so localization tests don't fail on non-English CI runners.
+@MainActor
+private func forceEnglishLocale() {
+    AppLocalization.shared.updateLanguage("en")
+}
+
 // MARK: - Common Strings Tests
 
 @Suite("Common Localization Tests")
 struct CommonLocalizableTests {
+    init() async {
+        await MainActor.run { forceEnglishLocale() }
+    }
+
     @Test("App name is not empty")
     func appNameIsNotEmpty() {
         let value = String(localized: "app.name")
@@ -68,6 +78,10 @@ struct CommonLocalizableTests {
 
 @Suite("Tab Bar Localization Tests")
 struct TabBarLocalizableTests {
+    init() async {
+        await MainActor.run { forceEnglishLocale() }
+    }
+
     @Test("Home tab is not empty")
     func homeTabIsNotEmpty() {
         let value = String(localized: "tab.home")
@@ -94,6 +108,10 @@ struct TabBarLocalizableTests {
 
 @Suite("Category Names Localization Tests")
 struct CategoryNamesLocalizableTests {
+    init() async {
+        await MainActor.run { forceEnglishLocale() }
+    }
+
     @Test("World category is not empty")
     func worldCategoryIsNotEmpty() {
         let value = String(localized: "category.world")
@@ -148,6 +166,10 @@ struct CategoryNamesLocalizableTests {
 
 @Suite("Home Screen Localization Tests")
 struct HomeLocalizableTests {
+    init() async {
+        await MainActor.run { forceEnglishLocale() }
+    }
+
     @Test("Home title is not empty")
     func homeTitleIsNotEmpty() {
         let value = String(localized: "home.title")
@@ -187,6 +209,10 @@ struct HomeLocalizableTests {
 
 @Suite("Search Screen Localization Tests")
 struct SearchLocalizableTests {
+    init() async {
+        await MainActor.run { forceEnglishLocale() }
+    }
+
     @Test("Search title is not empty")
     func searchTitleIsNotEmpty() {
         let value = String(localized: "search.title")
@@ -233,6 +259,10 @@ struct SearchLocalizableTests {
 
 @Suite("Bookmarks Screen Localization Tests")
 struct BookmarksLocalizableTests {
+    init() async {
+        await MainActor.run { forceEnglishLocale() }
+    }
+
     @Test("Bookmarks title is not empty")
     func bookmarksTitleIsNotEmpty() {
         let value = String(localized: "bookmarks.title")
@@ -271,6 +301,10 @@ struct BookmarksLocalizableTests {
 
 @Suite("Article Screen Localization Tests")
 struct ArticleLocalizableTests {
+    init() async {
+        await MainActor.run { forceEnglishLocale() }
+    }
+
     @Test("Read full article button is not empty")
     func readFullArticleButtonIsNotEmpty() {
         let value = String(localized: "article.read_full")
@@ -297,6 +331,10 @@ struct ArticleLocalizableTests {
 
 @Suite("Settings Screen Localization Tests")
 struct SettingsLocalizableTests {
+    init() async {
+        await MainActor.run { forceEnglishLocale() }
+    }
+
     @Test("Settings title is not empty")
     func settingsTitleIsNotEmpty() {
         let value = String(localized: "settings.title")
@@ -349,6 +387,10 @@ struct SettingsLocalizableTests {
 
 @Suite("Account Localization Tests")
 struct AccountLocalizableTests {
+    init() async {
+        await MainActor.run { forceEnglishLocale() }
+    }
+
     @Test("Account title is not empty")
     func accountTitleIsNotEmpty() {
         let value = String(localized: "account.title")
@@ -374,6 +416,10 @@ struct AccountLocalizableTests {
 
 @Suite("Auth Screen Localization Tests")
 struct AuthLocalizableTests {
+    init() async {
+        await MainActor.run { forceEnglishLocale() }
+    }
+
     @Test("Auth tagline is not empty")
     func authTaglineIsNotEmpty() {
         let value = String(localized: "auth.tagline")
@@ -414,10 +460,7 @@ struct AuthLocalizableTests {
 @Suite("Paywall Localization Tests")
 struct PaywallLocalizableTests {
     init() async {
-        // Force English so tests don't fail when CI runs with a non-English system locale
-        await MainActor.run {
-            AppLocalization.shared.updateLanguage("en")
-        }
+        await MainActor.run { forceEnglishLocale() }
     }
 
     @Test("Loading string is not empty")
