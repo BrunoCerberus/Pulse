@@ -2,7 +2,7 @@ import Foundation
 @testable import Pulse
 import Testing
 
-// Type alias for convenience since BookmarksView has a generic parameter
+/// Type alias for convenience since BookmarksView has a generic parameter.
 private typealias Constants = BookmarksView<BookmarksNavigationRouter>.Constants
 
 @Suite("BookmarksView Constants Tests")

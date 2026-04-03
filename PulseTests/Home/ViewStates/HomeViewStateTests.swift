@@ -132,7 +132,7 @@ struct ArticleViewItemTests {
     }
 
     @Test("ArticleViewItem strips HTML from description")
-    func stripsHTMLFromDescription() {
+    func stripsHTMLFromDescription() throws {
         let article = Article(
             id: "html-test",
             title: "Test Article",
@@ -143,13 +143,13 @@ struct ArticleViewItemTests {
         )
         let viewItem = ArticleViewItem(from: article)
 
-        #expect(viewItem.description != nil)
-        #expect(!viewItem.description!.contains("<p>"))
-        #expect(!viewItem.description!.contains("<strong>"))
-        #expect(!viewItem.description!.contains("&amp;"))
-        #expect(viewItem.description!.contains("Breaking"))
-        #expect(viewItem.description!.contains("news"))
-        #expect(viewItem.description!.contains("market & economy"))
+        let description = try #require(viewItem.description)
+        #expect(!description.contains("<p>"))
+        #expect(!description.contains("<strong>"))
+        #expect(!description.contains("&amp;"))
+        #expect(description.contains("Breaking"))
+        #expect(description.contains("news"))
+        #expect(description.contains("market & economy"))
     }
 
     @Test("ArticleViewItem handles nil description")
