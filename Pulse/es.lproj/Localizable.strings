@@ -106,6 +106,7 @@
 "bookmarks.empty.title" = "Sin Guardados";
 "bookmarks.empty.message" = "Los artículos que guardes aparecerán aquí para lectura sin conexión.";
 "bookmarks.saved_count" = "%d artículos guardados";
+"bookmarks.saved_count_singular" = "%d artículo guardado";
 
 /* ==================== */
 /* MARK: - Article      */

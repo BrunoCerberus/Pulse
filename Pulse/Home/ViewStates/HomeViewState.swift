@@ -119,7 +119,7 @@ struct ArticleViewItem: Identifiable, Equatable {
     init(from article: Article, index: Int = 0, isRead: Bool = false) {
         id = article.id
         title = article.title
-        description = article.description
+        description = article.description?.strippingHTML()
         sourceName = article.source.name
         imageURL = article.displayImageURL.flatMap { URL(string: $0) }
         heroImageURL = article.heroImageURL.flatMap { URL(string: $0) }
@@ -127,5 +127,25 @@ struct ArticleViewItem: Identifiable, Equatable {
         category = article.category
         animationIndex = index
         self.isRead = isRead
+    }
+}
+
+// MARK: - String HTML Stripping
+
+extension String {
+    /// Removes HTML tags and common HTML entities, returning plain text.
+    ///
+    /// Uses regex replacement to strip `<tag>` patterns and decodes
+    /// common entities like `&nbsp;`. Consecutive whitespace is collapsed.
+    func strippingHTML() -> String {
+        replacingOccurrences(of: #"<[^>]+>"#, with: " ", options: .regularExpression)
+            .replacingOccurrences(of: "&nbsp;", with: " ")
+            .replacingOccurrences(of: "&amp;", with: "&")
+            .replacingOccurrences(of: "&lt;", with: "<")
+            .replacingOccurrences(of: "&gt;", with: ">")
+            .replacingOccurrences(of: "&quot;", with: "\"")
+            .replacingOccurrences(of: "&#39;", with: "'")
+            .replacingOccurrences(of: #"\s{2,}"#, with: " ", options: .regularExpression)
+            .trimmingCharacters(in: .whitespacesAndNewlines)
     }
 }

@@ -144,6 +144,10 @@ final class SearchDomainInteractor: CombineInteractor {
         guard !trimmedQuery.isEmpty else {
             updateState { state in
                 state.suggestions = []
+                state.results = []
+                state.error = nil
+                state.hasSearched = false
+                state.isOfflineError = false
             }
             return
         }

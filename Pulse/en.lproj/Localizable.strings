@@ -106,6 +106,7 @@
 "bookmarks.empty.title" = "No Bookmarks";
 "bookmarks.empty.message" = "Articles you bookmark will appear here for offline reading.";
 "bookmarks.saved_count" = "%d saved articles";
+"bookmarks.saved_count_singular" = "%d saved article";
 
 /* ==================== */
 /* MARK: - Article      */
