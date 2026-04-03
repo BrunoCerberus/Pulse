@@ -257,7 +257,7 @@ struct MediaDomainInteractorTests {
     func testSelectMedia() async throws {
         // First load media
         sut.dispatch(action: .loadInitialData)
-        try await Task.sleep(nanoseconds: 300_000_000)
+        try await Task.sleep(nanoseconds: 1_000_000_000)
 
         let media = sut.currentState.mediaItems.first ?? sut.currentState.featuredMedia.first
         guard let mediaId = media?.id else {

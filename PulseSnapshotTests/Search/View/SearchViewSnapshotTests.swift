@@ -20,6 +20,8 @@ final class SearchViewSnapshotTests: XCTestCase {
 
     override func setUp() {
         super.setUp()
+        // Force English so snapshots don't fail when CI runs with a non-English system locale
+        AppLocalization.shared.updateLanguage("en")
         serviceLocator = ServiceLocator()
         serviceLocator.register(SearchService.self, instance: MockSearchService())
         serviceLocator.register(StorageService.self, instance: MockStorageService())

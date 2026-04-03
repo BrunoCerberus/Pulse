@@ -413,6 +413,13 @@ struct AuthLocalizableTests {
 
 @Suite("Paywall Localization Tests")
 struct PaywallLocalizableTests {
+    init() async {
+        // Force English so tests don't fail when CI runs with a non-English system locale
+        await MainActor.run {
+            AppLocalization.shared.updateLanguage("en")
+        }
+    }
+
     @Test("Loading string is not empty")
     func loadingStringIsNotEmpty() {
         #expect(!Localizable.paywall.loading.isEmpty)
