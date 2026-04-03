@@ -103,9 +103,10 @@ final class BookmarksDomainInteractor: CombineInteractor {
     }
 
     private func refresh() {
+        // Preserve existing bookmarks during refresh so users retain access to
+        // their saved articles while the fetch is in progress (important for offline UX).
         updateState { state in
             state.isRefreshing = true
-            state.bookmarks = []
             state.error = nil
         }
 
@@ -131,7 +132,14 @@ final class BookmarksDomainInteractor: CombineInteractor {
     private func removeBookmark(_ article: Article) {
         bookmarksService.removeBookmark(article)
             .receive(on: DispatchQueue.main)
-            .sink { _ in } receiveValue: { [weak self] in
+            .sink { [weak self] completion in
+                if case let .failure(error) = completion {
+                    self?.analyticsService?.recordError(error)
+                    self?.updateState { state in
+                        state.error = error.localizedDescription
+                    }
+                }
+            } receiveValue: { [weak self] in
                 self?.updateState { state in
                     state.bookmarks.removeAll { $0.id == article.id }
                 }

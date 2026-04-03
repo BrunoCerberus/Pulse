@@ -99,16 +99,17 @@ struct BookmarksDomainInteractorTests {
         #expect(state.bookmarks.count == Article.mockArticles.count)
     }
 
-    @Test("Refresh clears existing bookmarks first")
-    func refreshClearsExistingBookmarks() async throws {
+    @Test("Refresh preserves existing bookmarks during fetch")
+    func refreshPreservesExistingBookmarks() async throws {
         // First load some bookmarks
         mockBookmarksService.bookmarks = Article.mockArticles
         sut.dispatch(action: .loadBookmarks)
         try await Task.sleep(nanoseconds: 300_000_000)
 
         #expect(!sut.currentState.bookmarks.isEmpty)
+        let preRefreshCount = sut.currentState.bookmarks.count
 
-        // Track states during refresh
+        // Track bookmark counts during refresh
         var cancellables = Set<AnyCancellable>()
         var bookmarkCounts: [Int] = []
 
@@ -123,8 +124,45 @@ struct BookmarksDomainInteractorTests {
 
         try await Task.sleep(nanoseconds: 300_000_000)
 
-        // Should have cleared to 0 then reloaded
-        #expect(bookmarkCounts.contains(0))
+        // Bookmarks count should never drop to 0 during refresh (offline UX preservation)
+        #expect(!bookmarkCounts.contains(0))
+        // Final count should equal the pre-refresh count (same data reloaded)
+        #expect(sut.currentState.bookmarks.count == preRefreshCount)
+    }
+
+    @Test("Remove bookmark shows error state on service failure")
+    func removeBookmarkShowsErrorOnFailure() async throws {
+        mockBookmarksService.bookmarks = Article.mockArticles
+        sut.dispatch(action: .loadBookmarks)
+        try await Task.sleep(nanoseconds: 300_000_000)
+
+        let initialCount = sut.currentState.bookmarks.count
+        let articleToRemove = Article.mockArticles[0]
+
+        // Configure mock to fail on remove
+        mockBookmarksService.shouldFailRemove = true
+
+        sut.dispatch(action: .removeBookmark(articleId: articleToRemove.id))
+        try await Task.sleep(nanoseconds: 300_000_000)
+
+        // Error state should be set
+        #expect(sut.currentState.error != nil)
+        // Bookmark should NOT be removed from UI state when service fails
+        #expect(sut.currentState.bookmarks.count == initialCount)
+        #expect(sut.currentState.bookmarks.contains(where: { $0.id == articleToRemove.id }))
+    }
+
+    @Test("Load bookmarks shows error state on service failure")
+    func loadBookmarksShowsErrorOnFailure() async throws {
+        mockBookmarksService.shouldFailFetch = true
+
+        sut.dispatch(action: .loadBookmarks)
+        try await Task.sleep(nanoseconds: 300_000_000)
+
+        let state = sut.currentState
+        #expect(!state.isLoading)
+        #expect(state.error != nil)
+        #expect(state.bookmarks.isEmpty)
     }
 
     @Test("Refresh sets refreshing state")
