@@ -157,7 +157,9 @@ struct SettingsView: View {
             )
 
             Toggle(Constants.breakingNewsAlerts, isOn: Binding(
-                get: { viewModel.viewState.breakingNewsEnabled },
+                // Show as OFF when parent notifications toggle is disabled, preserving
+                // the underlying preference so it restores when notifications are re-enabled.
+                get: { viewModel.viewState.notificationsEnabled && viewModel.viewState.breakingNewsEnabled },
                 set: { viewModel.handle(event: .onToggleBreakingNews($0)) }
             ))
             .disabled(!viewModel.viewState.notificationsEnabled)
