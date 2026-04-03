@@ -39,7 +39,7 @@ final class SearchViewSnapshotTests: XCTestCase {
         assertSnapshot(
             of: controller,
             as: SnapshotConfig.snapshotting(on: iPhoneAirConfig),
-            record: true
+            record: false
         )
     }
 
@@ -54,7 +54,7 @@ final class SearchViewSnapshotTests: XCTestCase {
         assertSnapshot(
             of: controller,
             as: SnapshotConfig.snapshotting(on: iPhoneAirConfig),
-            record: true
+            record: false
         )
     }
 
@@ -69,7 +69,7 @@ final class SearchViewSnapshotTests: XCTestCase {
         assertSnapshot(
             of: controller,
             as: SnapshotConfig.snapshotting(on: iPhoneAirConfig),
-            record: true
+            record: false
         )
     }
 
@@ -84,7 +84,7 @@ final class SearchViewSnapshotTests: XCTestCase {
         assertSnapshot(
             of: controller,
             as: SnapshotConfig.snapshotting(on: iPhoneAirConfig),
-            record: true
+            record: false
         )
     }
 
@@ -99,7 +99,7 @@ final class SearchViewSnapshotTests: XCTestCase {
         assertSnapshot(
             of: controller,
             as: SnapshotConfig.snapshotting(on: iPhoneAirConfig),
-            record: true
+            record: false
         )
     }
 
@@ -114,7 +114,7 @@ final class SearchViewSnapshotTests: XCTestCase {
         assertSnapshot(
             of: controller,
             as: SnapshotConfig.snapshotting(on: iPhoneAirConfig),
-            record: true
+            record: false
         )
     }
 }
