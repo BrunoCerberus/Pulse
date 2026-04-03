@@ -257,7 +257,14 @@ struct MediaDomainInteractorTests {
     func testSelectMedia() async throws {
         // First load media
         sut.dispatch(action: .loadInitialData)
-        try await Task.sleep(nanoseconds: 300_000_000)
+
+        let loaded = await waitForCondition(timeout: 500_000_000) { @MainActor in
+            let state = self.sut.currentState
+            guard state.hasLoadedInitialData else { return false }
+            if !state.mediaItems.isEmpty { return true }
+            return !state.featuredMedia.isEmpty
+        }
+        #expect(loaded, "Media should have loaded within timeout")
 
         let media = sut.currentState.mediaItems.first ?? sut.currentState.featuredMedia.first
         guard let mediaId = media?.id else {

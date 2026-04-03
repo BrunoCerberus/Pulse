@@ -92,6 +92,13 @@ struct SearchDomainStateTests {
 
 @Suite("SearchSortOption Tests")
 struct SearchSortOptionTests {
+    init() async {
+        // Force English so tests don't fail when CI runs with a non-English system locale
+        await MainActor.run {
+            AppLocalization.shared.updateLanguage("en")
+        }
+    }
+
     @Test("All cases exist")
     func allCases() {
         let allCases = SearchSortOption.allCases
