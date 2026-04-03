@@ -9,14 +9,20 @@ concurrency:
   group: ${{ github.workflow }}-${{ github.ref }}
   cancel-in-progress: true
 
+# Deny all permissions by default — each job grants only what it needs
+permissions: {}
+
 jobs:
   code-quality:
     name: Code Quality
     runs-on: macos-26
 
+    permissions:
+      contents: read
+
     steps:
     - name: Checkout code
-      uses: actions/checkout@v4
+      uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4.2.2
 
     - name: Setup Xcode
       uses: maxim-lobanov/setup-xcode@60606e260d2fc5762a71e64e74b2174e8ea3c8bd # v1
@@ -26,7 +32,7 @@ jobs:
     # Cache Homebrew packages
     # Note: Static version key (brew-v1) - increment manually when brew dependencies change
     - name: Cache Homebrew packages
-      uses: actions/cache@v4
+      uses: actions/cache@d4323d4df104b026a6aa633fdb11d772146be0bf # v4.2.2
       with:
         path: |
           ~/Library/Caches/Homebrew
@@ -38,7 +44,7 @@ jobs:
     # Cache Mint packages
     # Note: Static version key (mint-v1) - increment manually when mint dependencies change
     - name: Cache Mint packages
-      uses: actions/cache@v4
+      uses: actions/cache@d4323d4df104b026a6aa633fdb11d772146be0bf # v4.2.2
       with:
         path: ~/.mint
         key: ${{ runner.os }}-mint-v1
@@ -105,14 +111,276 @@ jobs:
           echo "No FIXME comments found"
         fi
 
+  security-audit:
+    name: Security Audit
+    runs-on: ubuntu-latest
+
+    permissions:
+      contents: read
+
+    steps:
+    - name: Harden runner
+      uses: step-security/harden-runner@0634a2670c59f64b4a01f0f96f84700a4088b9f0 # v2.12.0
+      with:
+        egress-policy: audit
+
+    - name: Checkout code
+      uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4.2.2
+      with:
+        fetch-depth: 0
+
+    # Requires GitHub Advanced Security on private repos — skipped gracefully if unavailable
+    - name: Dependency review
+      id: dependency-review
+      continue-on-error: true
+      uses: actions/dependency-review-action@38ecb5b593bf0eb19e335c03f97670f792489a8b # v4.7.0
+      with:
+        fail-on-severity: critical
+
+    # Gitleaks: 150+ secret patterns vs our previous 3-pattern grep scan
+    - name: Install Gitleaks
+      run: |
+        GITLEAKS_VERSION="8.22.1"
+        curl -sSfL "https://github.com/gitleaks/gitleaks/releases/download/v${GITLEAKS_VERSION}/gitleaks_${GITLEAKS_VERSION}_linux_x64.tar.gz" | tar xz
+        sudo mv gitleaks /usr/local/bin/
+
+    - name: Run Gitleaks secret scanning
+      id: gitleaks
+      continue-on-error: true
+      run: |
+        echo "============================================"
+        echo "  Gitleaks Secret Scanning (150+ patterns)"
+        echo "============================================"
+        echo ""
+        gitleaks detect --source . --redact --verbose --no-banner --config .gitleaks.toml
+
+    # mobsfscan: iOS/Swift-specific SAST (OWASP MASTG patterns)
+    - name: Install mobsfscan
+      run: pip install 'mobsfscan>=0.3,<1.0'
+
+    - name: Run mobsfscan iOS security analysis
+      id: mobsfscan
+      continue-on-error: true
+      run: |
+        echo "============================================"
+        echo "  MobSF Static Analysis (iOS/Swift SAST)"
+        echo "============================================"
+        echo ""
+        mobsfscan Pulse/
+
+    - name: Verify HTTPS-only network calls
+      id: https-check
+      continue-on-error: true
+      run: |
+        echo "============================================"
+        echo "  HTTPS Enforcement Check"
+        echo "============================================"
+        echo ""
+
+        INSECURE=$(grep -rn --include="*.swift" 'http://' Pulse/ 2>/dev/null \
+          | grep -v 'localhost' \
+          | grep -v '127\.0\.0\.1' \
+          | grep -v '// .*http://' \
+          | grep -v 'NSAppTransportSecurity' \
+          | grep -v '"http"' \
+          || true)
+
+        if [ -n "$INSECURE" ]; then
+          echo "::error::Insecure HTTP URLs found:"
+          echo "$INSECURE"
+          exit 1
+        fi
+        echo "All URLs use HTTPS"
+
+    - name: Validate privacy manifest
+      id: privacy-manifest
+      continue-on-error: true
+      run: |
+        echo "============================================"
+        echo "  Privacy Manifest Validation"
+        echo "============================================"
+        echo ""
+
+        if [ ! -f "Pulse/PrivacyInfo.xcprivacy" ]; then
+          echo "::error::PrivacyInfo.xcprivacy not found"
+          exit 1
+        fi
+
+        # xmllint may not be available on ubuntu-latest — fall back to Python
+        if command -v xmllint &>/dev/null; then
+          xmllint --noout Pulse/PrivacyInfo.xcprivacy || { echo "::error::Privacy manifest has invalid XML"; exit 1; }
+        else
+          python3 -c "import xml.etree.ElementTree as ET; ET.parse('Pulse/PrivacyInfo.xcprivacy')" || { echo "::error::Privacy manifest has invalid XML"; exit 1; }
+        fi
+        echo "Valid XML structure"
+
+        for KEY in NSPrivacyAccessedAPITypes NSPrivacyCollectedDataTypes NSPrivacyTracking; do
+          if grep -q "$KEY" Pulse/PrivacyInfo.xcprivacy; then
+            echo "$KEY: declared"
+          else
+            echo "::warning::$KEY not found in privacy manifest"
+          fi
+        done
+
+        # Verify API type entries have reason codes
+        API_TYPES=$(grep -c "<key>NSPrivacyAccessedAPIType</key>" Pulse/PrivacyInfo.xcprivacy || echo "0")
+        REASONS=$(grep -c "NSPrivacyAccessedAPITypeReasons" Pulse/PrivacyInfo.xcprivacy || echo "0")
+        echo "API type declarations: $API_TYPES, Reason code declarations: $REASONS"
+        if [ "$API_TYPES" -gt 0 ] && [ "$REASONS" -eq 0 ]; then
+          echo "::error::API types declared without reason codes — will be rejected by App Store"
+          exit 1
+        fi
+
+    - name: Check App Transport Security exceptions
+      id: ats-check
+      continue-on-error: true
+      run: |
+        echo "============================================"
+        echo "  ATS Exception Check"
+        echo "============================================"
+        echo ""
+
+        FOUND=0
+        for plist in $(find . -name "Info.plist" -not -path "*/DerivedData/*" -not -path "*/.build/*" 2>/dev/null); do
+          if grep -q "NSAllowsArbitraryLoads" "$plist" 2>/dev/null; then
+            echo "::error::NSAllowsArbitraryLoads found in $plist"
+            FOUND=1
+          fi
+          if grep -q "NSAllowsArbitraryLoadsInWebContent" "$plist" 2>/dev/null; then
+            echo "::warning::NSAllowsArbitraryLoadsInWebContent found in $plist"
+          fi
+          if grep -q "NSExceptionDomains" "$plist" 2>/dev/null; then
+            echo "::warning::NSExceptionDomains found in $plist — verify domains are necessary:"
+            grep -A 5 "NSExceptionDomains" "$plist"
+          fi
+        done
+
+        if [ -f "project.yml" ] && grep -q "NSAllowsArbitraryLoads" project.yml 2>/dev/null; then
+          echo "::error::NSAllowsArbitraryLoads declared in project.yml"
+          FOUND=1
+        fi
+
+        [ $FOUND -eq 0 ] && echo "No ATS exceptions found"
+        [ $FOUND -gt 0 ] && exit 1
+        true
+
+    - name: Audit entitlements
+      id: entitlements
+      continue-on-error: true
+      run: |
+        echo "============================================"
+        echo "  Entitlements Audit"
+        echo "============================================"
+        echo ""
+
+        SENSITIVE_ENTITLEMENTS=(
+          "com.apple.security.get-task-allow"
+          "com.apple.security.cs.disable-library-validation"
+          "com.apple.security.cs.allow-dyld-environment-variables"
+          "com.apple.security.cs.allow-unsigned-executable-memory"
+        )
+
+        FOUND=0
+        for ent_file in $(find . -name "*.entitlements" -not -path "*/DerivedData/*" 2>/dev/null); do
+          echo "Checking $ent_file..."
+          for ent in "${SENSITIVE_ENTITLEMENTS[@]}"; do
+            if grep -q "$ent" "$ent_file" 2>/dev/null; then
+              echo "::warning::Sensitive entitlement '$ent' found in $ent_file"
+              FOUND=1
+            fi
+          done
+        done
+
+        [ $FOUND -eq 0 ] && echo "No sensitive entitlements found"
+        [ $FOUND -gt 0 ] && exit 1
+        true
+
+    - name: Audit file permissions
+      id: file-perms
+      continue-on-error: true
+      run: |
+        echo "============================================"
+        echo "  File Permission Audit"
+        echo "============================================"
+        echo ""
+
+        ISSUES=0
+
+        UNSAFE=$(find Pulse/ -type f -perm -o+w 2>/dev/null || true)
+        if [ -n "$UNSAFE" ]; then
+          echo "::warning::World-writable files found:"
+          echo "$UNSAFE"
+          ISSUES=$((ISSUES + 1))
+        else
+          echo "No world-writable files found"
+        fi
+
+        EXEC=$(find Pulse/ -name "*.swift" -type f -executable 2>/dev/null || true)
+        if [ -n "$EXEC" ]; then
+          echo "::warning::Executable Swift files found (unusual):"
+          echo "$EXEC"
+          ISSUES=$((ISSUES + 1))
+        else
+          echo "No executable Swift files"
+        fi
+
+        [ $ISSUES -gt 0 ] && exit 1
+        true
+
+    - name: Security audit summary
+      if: always()
+      env:
+        GITLEAKS: ${{ steps.gitleaks.outcome }}
+        MOBSFSCAN: ${{ steps.mobsfscan.outcome }}
+        HTTPS_CHECK: ${{ steps.https-check.outcome }}
+        PRIVACY: ${{ steps.privacy-manifest.outcome }}
+        ATS: ${{ steps.ats-check.outcome }}
+        ENTITLEMENTS: ${{ steps.entitlements.outcome }}
+        FILE_PERMS: ${{ steps.file-perms.outcome }}
+      run: |
+        echo ""
+        echo "============================================"
+        echo "  Security Audit Summary"
+        echo "============================================"
+
+        echo "## Security Audit Results" >> "$GITHUB_STEP_SUMMARY"
+        echo "" >> "$GITHUB_STEP_SUMMARY"
+        echo "| Check | Result |" >> "$GITHUB_STEP_SUMMARY"
+        echo "|-------|--------|" >> "$GITHUB_STEP_SUMMARY"
+
+        FAILURES=0
+        for check in "Gitleaks:$GITLEAKS" "mobsfscan:$MOBSFSCAN" "HTTPS Enforcement:$HTTPS_CHECK" "Privacy Manifest:$PRIVACY" "ATS Exceptions:$ATS" "Entitlements:$ENTITLEMENTS" "File Permissions:$FILE_PERMS"; do
+          name="${check%%:*}"
+          result="${check##*:}"
+          if [ "$result" = "failure" ]; then
+            FAILURES=$((FAILURES + 1))
+            echo "| $name | FAILED |" >> "$GITHUB_STEP_SUMMARY"
+          else
+            echo "| $name | Passed |" >> "$GITHUB_STEP_SUMMARY"
+          fi
+          echo "$name: $result"
+        done
+
+        if [ $FAILURES -gt 0 ]; then
+          echo ""
+          echo "::error::$FAILURES security check(s) failed — review findings above"
+          exit 1
+        fi
+
+        echo ""
+        echo "All security checks passed"
+
   build:
     name: Build Project
     runs-on: macos-26
     needs: code-quality
 
+    permissions:
+      contents: read
+
     steps:
     - name: Checkout code
-      uses: actions/checkout@v4
+      uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4.2.2
 
     - name: Setup Xcode
       uses: maxim-lobanov/setup-xcode@60606e260d2fc5762a71e64e74b2174e8ea3c8bd # v1
@@ -132,7 +400,7 @@ jobs:
     # Cache Homebrew packages
     # Note: Static version key (brew-v1) - increment manually when brew dependencies change
     - name: Cache Homebrew packages
-      uses: actions/cache@v4
+      uses: actions/cache@d4323d4df104b026a6aa633fdb11d772146be0bf # v4.2.2
       with:
         path: |
           ~/Library/Caches/Homebrew
@@ -147,7 +415,7 @@ jobs:
     # IMPORTANT: Do NOT use broad restore-keys fallback - it can restore stale package versions
     # v6: Added ~/Library/Caches/org.swift.swiftpm to cache binary artifacts (LeapSDK)
     - name: Cache SPM dependencies
-      uses: actions/cache@v4
+      uses: actions/cache@d4323d4df104b026a6aa633fdb11d772146be0bf # v4.2.2
       with:
         path: |
           Pulse.xcodeproj/project.xcworkspace/xcshareddata/swiftpm
@@ -210,7 +478,7 @@ jobs:
           ENABLE_ONLY_ACTIVE_RESOURCES=NO
 
     - name: Upload build artifacts
-      uses: actions/upload-artifact@v4
+      uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4.6.2
       with:
         name: build-products
         path: ./DerivedData
@@ -220,6 +488,10 @@ jobs:
     name: ${{ matrix.test-name }}
     runs-on: macos-26
     needs: build
+
+    permissions:
+      contents: read
+
     strategy:
       fail-fast: false
       matrix:
@@ -242,7 +514,7 @@ jobs:
 
     steps:
     - name: Checkout code
-      uses: actions/checkout@v4
+      uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4.2.2
 
     - name: Setup Xcode
       uses: maxim-lobanov/setup-xcode@60606e260d2fc5762a71e64e74b2174e8ea3c8bd # v1
@@ -262,7 +534,7 @@ jobs:
     # Cache Homebrew packages
     # Note: Static version key (brew-v1) - increment manually when brew dependencies change
     - name: Cache Homebrew packages
-      uses: actions/cache@v4
+      uses: actions/cache@d4323d4df104b026a6aa633fdb11d772146be0bf # v4.2.2
       with:
         path: |
           ~/Library/Caches/Homebrew
@@ -277,7 +549,7 @@ jobs:
     # IMPORTANT: Do NOT use broad restore-keys fallback - it can restore stale package versions
     # v6: Added ~/Library/Caches/org.swift.swiftpm to cache binary artifacts (LeapSDK)
     - name: Cache SPM dependencies
-      uses: actions/cache@v4
+      uses: actions/cache@d4323d4df104b026a6aa633fdb11d772146be0bf # v4.2.2
       with:
         path: |
           Pulse.xcodeproj/project.xcworkspace/xcshareddata/swiftpm
@@ -293,7 +565,7 @@ jobs:
         make generate
 
     - name: Download build artifacts
-      uses: actions/download-artifact@v4
+      uses: actions/download-artifact@95815c38cf2ff2164869cbab79da8d1f422bc89e # v4.2.1
       with:
         name: build-products
         path: ./DerivedData
@@ -305,17 +577,22 @@ jobs:
 
     - name: Run ${{ matrix.test-name }}
       timeout-minutes: ${{ matrix.timeout }}
+      env:
+        SCHEME: ${{ matrix.scheme }}
+        TEST_TARGET: ${{ matrix.test-target }}
+        ARTIFACT_NAME: ${{ matrix.artifact-name }}
+        TEST_NAME: ${{ matrix.test-name }}
       run: |
         mkdir -p test-results
         set -o pipefail
 
         xcodebuild test-without-building \
           -project Pulse.xcodeproj \
-          -scheme ${{ matrix.scheme }} \
-          -only-testing:${{ matrix.test-target }} \
+          -scheme "$SCHEME" \
+          -only-testing:"$TEST_TARGET" \
           -destination 'platform=iOS Simulator,name=iPhone Air,OS=latest' \
           -derivedDataPath ./DerivedData \
-          -resultBundlePath test-results/${{ matrix.artifact-name }}.xcresult \
+          -resultBundlePath "test-results/${ARTIFACT_NAME}.xcresult" \
           -disableAutomaticPackageResolution \
           -retry-tests-on-failure \
           2>&1 | tee /tmp/test_output.log
@@ -326,15 +603,13 @@ jobs:
         echo "============================================"
         echo "              TEST SUMMARY"
         echo "============================================"
-        grep -E "(Test Suite.*started|Test Suite.*passed|Test Suite.*failed|Executed [0-9]+ test)" /tmp/test_output.log | tail -10 || echo "${{ matrix.test-name }} completed"
+        grep -E "(Test Suite.*started|Test Suite.*passed|Test Suite.*failed|Executed [0-9]+ test)" /tmp/test_output.log | tail -10 || echo "$TEST_NAME completed"
 
         exit $TEST_EXIT_CODE
 
     - name: Extract and display test failures
       if: failure()
       run: |
-        RESULT_BUNDLE="test-results/${{ matrix.artifact-name }}.xcresult"
-
         echo ""
         echo "============================================"
         echo "          FAILED TESTS SUMMARY"
@@ -351,7 +626,7 @@ jobs:
         fi
 
         # Write header to job summary
-        echo "## ❌ ${{ matrix.test-name }} Failures" >> $GITHUB_STEP_SUMMARY
+        echo "## Failed: ${TEST_NAME}" >> $GITHUB_STEP_SUMMARY
         echo "" >> $GITHUB_STEP_SUMMARY
 
         # Extract test failures using xcresulttool (requires --legacy flag on newer Xcode)
@@ -430,9 +705,10 @@ jobs:
         PYTHON_SCRIPT
       env:
         RESULT_BUNDLE: test-results/${{ matrix.artifact-name }}.xcresult
+        TEST_NAME: ${{ matrix.test-name }}
 
     - name: Upload test results
-      uses: actions/upload-artifact@v4
+      uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4.6.2
       if: always()
       with:
         name: ${{ matrix.artifact-name }}
@@ -440,7 +716,7 @@ jobs:
         if-no-files-found: warn
 
     - name: Upload recorded snapshots
-      uses: actions/upload-artifact@v4
+      uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4.6.2
       if: always() && matrix.test-target == 'PulseSnapshotTests'
       with:
         name: recorded-snapshots
@@ -453,26 +729,29 @@ jobs:
     needs: [tests]
     if: always()
 
+    permissions:
+      contents: read
+
     steps:
     - name: Checkout code
-      uses: actions/checkout@v4
+      uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4.2.2
 
     - name: Download unit test results
-      uses: actions/download-artifact@v4
+      uses: actions/download-artifact@95815c38cf2ff2164869cbab79da8d1f422bc89e # v4.2.1
       continue-on-error: true
       with:
         name: unit-test-results
         path: unit-test-results
 
     - name: Download UI test results
-      uses: actions/download-artifact@v4
+      uses: actions/download-artifact@95815c38cf2ff2164869cbab79da8d1f422bc89e # v4.2.1
       continue-on-error: true
       with:
         name: ui-test-results
         path: ui-test-results
 
     - name: Download snapshot test results
-      uses: actions/download-artifact@v4
+      uses: actions/download-artifact@95815c38cf2ff2164869cbab79da8d1f422bc89e # v4.2.1
       continue-on-error: true
       with:
         name: snapshot-test-results

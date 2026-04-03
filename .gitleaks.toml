@@ -1,0 +1,11 @@
+# Gitleaks configuration — manage false positives
+# https://github.com/gitleaks/gitleaks#configuration
+
+[allowlist]
+  description = "Pulse false positive allowlist"
+  paths = [
+    '''PulseTests/.*''',
+    '''PulseSnapshotTests/.*''',
+    '''.*\.xcresult/.*''',
+    '''.*__Snapshots__/.*''',
+  ]
