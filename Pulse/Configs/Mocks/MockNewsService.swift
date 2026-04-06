@@ -110,14 +110,30 @@ final class MockSearchService: SearchService {
 
 final class MockBookmarksService: BookmarksService {
     var bookmarks: [Article] = []
+    var shouldFailFetch: Bool = false
+    var shouldFailRemove: Bool = false
+    var fetchError: Error = NSError(
+        domain: "MockBookmarksService", code: 1,
+        userInfo: [NSLocalizedDescriptionKey: "Fetch failed"]
+    )
+    var removeError: Error = NSError(
+        domain: "MockBookmarksService", code: 2,
+        userInfo: [NSLocalizedDescriptionKey: "Remove failed"]
+    )
 
     func fetchBookmarks() -> AnyPublisher<[Article], Error> {
-        Just(bookmarks)
+        if shouldFailFetch {
+            return Fail(error: fetchError).eraseToAnyPublisher()
+        }
+        return Just(bookmarks)
             .setFailureType(to: Error.self)
             .eraseToAnyPublisher()
     }
 
     func removeBookmark(_ article: Article) -> AnyPublisher<Void, Error> {
+        if shouldFailRemove {
+            return Fail(error: removeError).eraseToAnyPublisher()
+        }
         bookmarks.removeAll { $0.id == article.id }
         return Just(())
             .setFailureType(to: Error.self)

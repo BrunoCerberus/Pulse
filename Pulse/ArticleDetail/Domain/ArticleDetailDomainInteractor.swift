@@ -253,7 +253,10 @@ final class ArticleDetailDomainInteractor: CombineInteractor {
 
         guard !plainContent.isEmpty else { return nil }
 
-        let formattedText = formatIntoParagraphs(plainContent)
+        let filteredContent = filterKnownErrorContent(from: plainContent)
+        guard let filteredContent else { return nil }
+
+        let formattedText = formatIntoParagraphs(filteredContent)
         var attributedString = AttributedString(formattedText)
         attributedString.font = .system(.body, design: .serif)
 
@@ -328,6 +331,35 @@ final class ArticleDetailDomainInteractor: CombineInteractor {
     private nonisolated func stripTruncationMarker(from content: String) -> String {
         let pattern = #"\s*\[\+\d+ chars\]"#
         return content.replacingOccurrences(of: pattern, with: "", options: .regularExpression)
+    }
+
+    /// Known scraper-injected error phrases from The Guardian and similar sites.
+    private nonisolated static let knownErrorPhrases: [String] = [
+        "A required part of this site couldn't load.",
+        "This may be due to a browser extension, network issues, or browser settings.",
+        "Please check your connection, disable any ad blockers, or try a different browser.",
+        "Please check your connection, disable any ad blockers",
+        "We noticed you're using an ad blocker",
+        "Please disable your ad blocker",
+        "JavaScript must be enabled",
+        "You need to enable JavaScript to run this app",
+        "This content is only available with JavaScript",
+        "Please enable JavaScript",
+        "Your browser does not support JavaScript",
+    ]
+
+    /// Filters out known error/noise patterns injected by content scrapers (e.g. go-readability
+    /// picking up Guardian anti-adblock banners). Returns the cleaned content, or `nil` if the
+    /// entire content is noise and nothing useful remains.
+    private nonisolated func filterKnownErrorContent(from content: String) -> String? {
+        var cleaned = content
+
+        for phrase in Self.knownErrorPhrases {
+            cleaned = cleaned.replacingOccurrences(of: phrase, with: "", options: .caseInsensitive)
+        }
+
+        let result = cleaned.trimmingCharacters(in: .whitespacesAndNewlines)
+        return result.isEmpty ? nil : result
     }
 
     // MARK: - Text-to-Speech
@@ -446,8 +478,8 @@ final class ArticleDetailDomainInteractor: CombineInteractor {
         if let content = article.content {
             let clean = stripHTML(from: stripTruncationMarker(from: content))
                 .trimmingCharacters(in: .whitespacesAndNewlines)
-            if !clean.isEmpty {
-                parts.append(clean)
+            if let filtered = filterKnownErrorContent(from: clean), !filtered.isEmpty {
+                parts.append(filtered)
             }
         }
 

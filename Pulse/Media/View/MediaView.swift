@@ -45,7 +45,7 @@ struct MediaView<R: MediaNavigationRouter>: View {
             get: { viewModel.viewState.mediaToShare },
             set: { _ in viewModel.handle(event: .onShareDismissed) }
         )) { article in
-            ShareSheet(activityItems: [URL(string: article.url) ?? article.title])
+            ShareSheet(activityItems: ShareItemsBuilder.activityItems(for: article))
         }
         .task {
             viewModel.handle(event: .onAppear)
