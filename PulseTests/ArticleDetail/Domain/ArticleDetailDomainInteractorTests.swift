@@ -262,7 +262,10 @@ struct ArticleDetailDomainInteractorTests {
     @Test("Content containing only known error phrases produces nil processed content")
     func contentFilterStripsAllNoisePhrases() async {
         // Content that is purely a Guardian anti-adblock/scraper error message
-        let errorOnlyContent = "A required part of this site couldn't load. This may be due to a browser extension, network issues, or browser settings. Please check your connection, disable any ad blockers, or try a different browser."
+        let errorOnlyContent =
+            "A required part of this site couldn't load. "
+                + "This may be due to a browser extension, network issues, or browser settings. "
+                + "Please check your connection, disable any ad blockers, or try a different browser."
 
         let articleWithErrorContent = Article(
             id: "filter-test-1",
@@ -289,7 +292,9 @@ struct ArticleDetailDomainInteractorTests {
 
     @Test("Valid article content passes through content filter unchanged")
     func contentFilterPreservesRealContent() async {
-        let realContent = "<p>This is a genuine news article paragraph with substantive content about world events. It contains multiple sentences and real information that readers would want to read.</p>"
+        let realContent =
+            "<p>This is a genuine news article paragraph with substantive content about world events. "
+                + "It contains multiple sentences and real information that readers would want to read.</p>"
 
         let articleWithRealContent = Article(
             id: "filter-test-2",
@@ -316,7 +321,9 @@ struct ArticleDetailDomainInteractorTests {
     @Test("Content filter strips JavaScript error phrase from mixed content")
     func contentFilterStripsJsErrorFromMixedContent() async {
         // Content that starts with a JS error phrase but has real content after
-        let mixedContent = "You need to enable JavaScript to run this app\n\nThis is the real article content that should be preserved after the error phrase is stripped."
+        let mixedContent =
+            "You need to enable JavaScript to run this app\n\n"
+                + "This is the real article content that should be preserved after the error phrase is stripped."
 
         let articleWithMixedContent = Article(
             id: "filter-test-3",

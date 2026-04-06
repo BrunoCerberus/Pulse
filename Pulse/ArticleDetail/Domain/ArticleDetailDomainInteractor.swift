@@ -333,38 +333,29 @@ final class ArticleDetailDomainInteractor: CombineInteractor {
         return content.replacingOccurrences(of: pattern, with: "", options: .regularExpression)
     }
 
+    /// Known scraper-injected error phrases from The Guardian and similar sites.
+    private nonisolated static let knownErrorPhrases: [String] = [
+        "A required part of this site couldn't load.",
+        "This may be due to a browser extension, network issues, or browser settings.",
+        "Please check your connection, disable any ad blockers, or try a different browser.",
+        "Please check your connection, disable any ad blockers",
+        "We noticed you're using an ad blocker",
+        "Please disable your ad blocker",
+        "JavaScript must be enabled",
+        "You need to enable JavaScript to run this app",
+        "This content is only available with JavaScript",
+        "Please enable JavaScript",
+        "Your browser does not support JavaScript",
+    ]
+
     /// Filters out known error/noise patterns injected by content scrapers (e.g. go-readability
     /// picking up Guardian anti-adblock banners). Returns the cleaned content, or `nil` if the
     /// entire content is noise and nothing useful remains.
     private nonisolated func filterKnownErrorContent(from content: String) -> String? {
-        // Known scraper-injected error phrases from The Guardian and similar sites
-        let knownErrorPhrases: [String] = [
-            "A required part of this site couldn't load.",
-            "This may be due to a browser extension, network issues, or browser settings.",
-            "Please check your connection, disable any ad blockers",
-            "We noticed you're using an ad blocker",
-            "Please disable your ad blocker",
-            "JavaScript must be enabled",
-            "You need to enable JavaScript to run this app",
-            "This content is only available with JavaScript",
-            "Please enable JavaScript",
-            "Your browser does not support JavaScript",
-        ]
-
         var cleaned = content
 
-        // Remove known error phrases and the sentences that follow them
-        for phrase in knownErrorPhrases {
-            if let range = cleaned.range(of: phrase, options: .caseInsensitive) {
-                // Remove everything from the error phrase to the next paragraph break or end
-                let afterPhrase = cleaned[range.upperBound...]
-                if let paragraphBreak = afterPhrase.range(of: "\n\n") {
-                    cleaned = String(cleaned[..<range.lowerBound]) + String(afterPhrase[paragraphBreak.upperBound...])
-                } else {
-                    // The whole remaining content is the error block — truncate before it
-                    cleaned = String(cleaned[..<range.lowerBound])
-                }
-            }
+        for phrase in Self.knownErrorPhrases {
+            cleaned = cleaned.replacingOccurrences(of: phrase, with: "", options: .caseInsensitive)
         }
 
         let result = cleaned.trimmingCharacters(in: .whitespacesAndNewlines)

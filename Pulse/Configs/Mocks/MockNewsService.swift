@@ -112,8 +112,14 @@ final class MockBookmarksService: BookmarksService {
     var bookmarks: [Article] = []
     var shouldFailFetch: Bool = false
     var shouldFailRemove: Bool = false
-    var fetchError: Error = NSError(domain: "MockBookmarksService", code: 1, userInfo: [NSLocalizedDescriptionKey: "Fetch failed"])
-    var removeError: Error = NSError(domain: "MockBookmarksService", code: 2, userInfo: [NSLocalizedDescriptionKey: "Remove failed"])
+    var fetchError: Error = NSError(
+        domain: "MockBookmarksService", code: 1,
+        userInfo: [NSLocalizedDescriptionKey: "Fetch failed"]
+    )
+    var removeError: Error = NSError(
+        domain: "MockBookmarksService", code: 2,
+        userInfo: [NSLocalizedDescriptionKey: "Remove failed"]
+    )
 
     func fetchBookmarks() -> AnyPublisher<[Article], Error> {
         if shouldFailFetch {
