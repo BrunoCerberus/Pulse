@@ -29,9 +29,9 @@ packages:
   GoogleSignIn:
     url: https://github.com/google/GoogleSignIn-iOS.git
     from: 8.0.0
-  LeapSDK:
-    url: https://github.com/BrunoCerberus/leap-ios.git
-    revision: a5b11d125ab20c2d6d00efda2e81e04455c3736e
+  swift-llama-cpp:
+    url: https://github.com/pgorzelany/swift-llama-cpp.git
+    from: 1.2.0
 
 settings:
   base:
@@ -154,8 +154,8 @@ targets:
       - package: firebase-ios-sdk
         product: FirebaseCrashlytics
       - package: GoogleSignIn
-      - package: LeapSDK
-        product: LeapSDK
+      - package: swift-llama-cpp
+        product: SwiftLlama
       - target: PulseWidgetExtension
         embed: true
     postBuildScripts:
