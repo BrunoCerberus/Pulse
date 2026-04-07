@@ -103,7 +103,7 @@ extension DigestViewItem {
     /// IMPORTANT: Order matters - most specific patterns first to avoid content leakage
     static func categoryPatterns(for category: String) -> [(pattern: String, markerLength: Int)] {
         [
-            // 1. Numbered list with bold (LFM 2.5) - MUST be before plain bold
+            // 1. Numbered list with bold (Gemma 4) - MUST be before plain bold
             //    Captures the \n so previous category content ends cleanly
             ("\n1. **\(category)**", 7 + category.count),
             ("\n2. **\(category)**", 7 + category.count),

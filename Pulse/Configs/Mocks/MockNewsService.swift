@@ -441,7 +441,6 @@ final class MockNewsCacheStore: NewsCacheStore {
 }
 
 final class MockRemoteConfigService: RemoteConfigService, @unchecked Sendable {
-    var guardianAPIKeyValue: String?
     var newsAPIKeyValue: String?
     var gnewsAPIKeyValue: String?
     var supabaseURLValue: String?
@@ -456,16 +455,11 @@ final class MockRemoteConfigService: RemoteConfigService, @unchecked Sendable {
 
     func getStringOrNil(forKey key: RemoteConfigKey) -> String? {
         switch key {
-        case .guardianAPIKey: guardianAPIKeyValue
         case .newsAPIKey: newsAPIKeyValue
         case .gnewsAPIKey: gnewsAPIKeyValue
         case .supabaseURL: supabaseURLValue
         case .supabaseAnonKey: supabaseAnonKeyValue
         }
-    }
-
-    var guardianAPIKey: String? {
-        guardianAPIKeyValue
     }
 
     var newsAPIKey: String? {

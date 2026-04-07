@@ -4,17 +4,18 @@ This directory contains the GGUF model files required for on-device AI features 
 
 ## Required Model
 
-**LFM 2.5 1.2B Instruct (Q4_K_M quantization)**
+**Gemma 4 E2B Instruct (Q4_K_M quantization)**
 
-- **Filename**: `LFM2.5-1.2B-Instruct-Q4_K_M.gguf`
-- **Size**: ~731 MB
-- **Source**: [Hugging Face](https://huggingface.co/LiquidAI/LFM2.5-1.2B-Instruct-GGUF)
+- **Filename**: `gemma-4-E2B-it-Q4_K_M.gguf`
+- **Size**: ~3.1 GB
+- **Source**: [Hugging Face](https://huggingface.co/unsloth/gemma-4-E2B-it-GGUF)
 
 ## Download
 
 ```bash
-curl -L -o Pulse/Resources/Models/LFM2.5-1.2B-Instruct-Q4_K_M.gguf \
-  "https://huggingface.co/LiquidAI/LFM2.5-1.2B-Instruct-GGUF/resolve/main/LFM2.5-1.2B-Instruct-Q4_K_M.gguf"
+huggingface-cli download unsloth/gemma-4-E2B-it-GGUF \
+  --include "gemma-4-E2B-it-Q4_K_M.gguf" \
+  --local-dir Pulse/Resources/Models/
 ```
 
 Or download manually from the Hugging Face link above and place the file in this directory.

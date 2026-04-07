@@ -208,7 +208,7 @@ Pulse/
 | **Authentication** | Firebase Auth with Google and Apple Sign-In (required before accessing app) |
 | **Home** | Breaking news carousel, recently read section, top headlines with infinite scroll, category tabs for filtering by followed topics, settings access via gear icon |
 | **Media** | Browse and play Videos and Podcasts with in-app playback (YouTube videos open in YouTube app, podcasts use native AVPlayer) |
-| **Feed** | AI-powered Daily Digest summarizing latest news articles from the API using on-device LLM (Llama 3.2-1B) (**Premium**) |
+| **Feed** | AI-powered Daily Digest summarizing latest news articles from the API using on-device LLM (Gemma 4 E2B) (**Premium**) |
 | **Article Summarization** | On-device AI article summarization via sparkles button (**Premium**) |
 | **Text-to-Speech** | Listen to articles read aloud using native `AVSpeechSynthesizer` with play/pause, speed presets (1x/1.25x/1.5x/2x), language-aware voices, and floating mini-player bar |
 | **Search** | Full-text search with 300ms debounce, suggestions, and sort options (last tab with liquid glass style) |
@@ -572,7 +572,7 @@ Key components: `GlassTabBar`, `GlassCategoryChip`, `GlassSectionHeader`, `Glass
 | `AudioPlayerManager.swift` | AVPlayer wrapper managing playback state and time observation |
 | **AI/LLM** | |
 | `LLMService.swift` | Protocol for LLM operations (load, generate, cancel) |
-| `LiveLLMService.swift` | LEAP SDK implementation for on-device LLM inference |
+| `LiveLLMService.swift` | LEAP SDK implementation for on-device LLM inference (Gemma 4 E2B) |
 | `LLMModelManager.swift` | Model lifecycle (load/unload, memory checks) |
 | `LLMConfiguration.swift` | Model paths, inference parameters (context size, batch size) |
 | **LLM Performance** | Metal acceleration on device, flash attention, mmap loading, model preloading |

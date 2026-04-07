@@ -34,9 +34,9 @@ enum MemoryTier: String {
 /// Configuration for the bundled LLM model
 enum LLMConfiguration {
     /// Model file name without extension
-    /// Note: Download from https://huggingface.co/LiquidAI/LFM2.5-1.2B-Instruct-GGUF
+    /// Note: Download from https://huggingface.co/unsloth/gemma-4-E2B-it-GGUF
     static var modelFileName: String {
-        "LFM2.5-1.2B-Instruct-Q4_K_M"
+        "gemma-4-E2B-it-Q4_K_M"
     }
 
     /// Model file extension
@@ -55,9 +55,9 @@ enum LLMConfiguration {
     }
 
     /// Context window size (tokens) - memory-adaptive for device safety
-    /// - Constrained: 4096 (conservative use of 32K to balance speed)
+    /// - Constrained: 4096 (conservative to balance speed and memory)
     /// - Standard/High: 8192 (balanced performance vs speed)
-    /// Note: LFM 2.5 supports up to 32K context but we cap for inference speed
+    /// Note: Gemma 4 supports up to 256K context but we cap for on-device inference speed
     static var contextSize: Int {
         switch MemoryTier.current {
         case .constrained: return 4096
@@ -126,7 +126,7 @@ enum LLMConfiguration {
     }
 
     /// Maximum output tokens for generation
-    /// LFM 2.5 handles longer outputs well with its 32K context window
+    /// Gemma 4 E2B handles longer outputs well with its 256K context window
     static var maxOutputTokens: Int {
         switch MemoryTier.current {
         case .constrained: return 1024

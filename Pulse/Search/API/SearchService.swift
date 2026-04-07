@@ -7,7 +7,7 @@ import Foundation
 /// and query suggestions for autocomplete functionality.
 ///
 /// The default implementation (`LiveSearchService`) uses Supabase full-text
-/// search with Guardian API fallback.
+/// search.
 protocol SearchService {
     /// Searches for articles matching the given query.
     /// - Parameters:

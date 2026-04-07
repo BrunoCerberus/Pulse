@@ -45,7 +45,7 @@ struct LLMConfigurationTests {
 
     @Test("LLMConfiguration modelFileName returns correct value")
     func modelFileNameReturnsCorrectValue() {
-        #expect(LLMConfiguration.modelFileName == "LFM2.5-1.2B-Instruct-Q4_K_M")
+        #expect(LLMConfiguration.modelFileName == "gemma-4-E2B-it-Q4_K_M")
     }
 
     @Test("LLMConfiguration modelExtension returns correct value")

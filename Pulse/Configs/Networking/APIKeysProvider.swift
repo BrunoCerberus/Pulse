@@ -24,7 +24,7 @@ import Foundation
  * APIKeysProvider.configure(with: remoteConfigService)
  *
  * // Then access keys as needed
- * let apiKey = APIKeysProvider.guardianAPIKey
+ * let apiKey = APIKeysProvider.newsAPIKey
  * ```
  */
 enum APIKeysProvider {
@@ -35,7 +35,6 @@ enum APIKeysProvider {
 
     /// Key identifiers for keychain storage
     private static let newsAPIKeyKey: String = "NewsAPIKey"
-    private static let guardianAPIKeyKey: String = "GuardianAPIKey"
     private static let gnewsAPIKeyKey: String = "GNewsAPIKey"
 
     // MARK: - Dependencies
@@ -87,33 +86,6 @@ enum APIKeysProvider {
             return try keychainManager.retrieve(for: newsAPIKeyKey)
         } catch {
             logAPIKeyError(keyName: "NEWS_API_KEY")
-            return ""
-        }
-    }
-
-    /**
-     * Guardian API key.
-     *
-     * The key is read from Remote Config first, then falls back to
-     * environment variables and keychain.
-     */
-    static var guardianAPIKey: String {
-        // 1. Try Remote Config (primary source)
-        if let apiKey = remoteConfigService?.guardianAPIKey, apiKey.count >= 10 {
-            return apiKey
-        }
-
-        // 2. Fallback to environment variable (for CI/CD and debugging only)
-        #if DEBUG
-            if let apiKey = ProcessInfo.processInfo.environment["GUARDIAN_API_KEY"], !apiKey.isEmpty {
-                return apiKey
-            }
-        #endif
-
-        // 3. Fallback to keychain
-        do {
-            return try keychainManager.retrieve(for: guardianAPIKeyKey)
-        } catch {
             return ""
         }
     }
@@ -229,13 +201,11 @@ enum APIKeysProvider {
 
 enum APIKeyType {
     case newsAPI
-    case guardianAPI
     case gnewsAPI
 
     var keychainKey: String {
         switch self {
         case .newsAPI: "NewsAPIKey"
-        case .guardianAPI: "GuardianAPIKey"
         case .gnewsAPI: "GNewsAPIKey"
         }
     }

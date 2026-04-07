@@ -18,28 +18,26 @@ struct NewsCategoryTests {
     // MARK: - Category Properties Tests (Consolidated)
 
     @Test(
-        "Each category has correct icon, color, API parameter, and guardian section",
+        "Each category has correct icon, color, and API parameter",
         arguments: [
-            (NewsCategory.world, "globe", Color.blue, "general", "world"),
-            (NewsCategory.business, "chart.line.uptrend.xyaxis", Color.green, "business", "business"),
-            (NewsCategory.technology, "cpu", Color.purple, "technology", "technology"),
-            (NewsCategory.science, "atom", Color.orange, "science", "science"),
-            (NewsCategory.health, "heart.text.square", Color.red, "health", "society"),
-            (NewsCategory.sports, "sportscourt", Color.cyan, "sports", "sport"),
-            (NewsCategory.entertainment, "film", Color.pink, "entertainment", "culture"),
+            (NewsCategory.world, "globe", Color.blue, "general"),
+            (NewsCategory.business, "chart.line.uptrend.xyaxis", Color.green, "business"),
+            (NewsCategory.technology, "cpu", Color.purple, "technology"),
+            (NewsCategory.science, "atom", Color.orange, "science"),
+            (NewsCategory.health, "heart.text.square", Color.red, "health"),
+            (NewsCategory.sports, "sportscourt", Color.cyan, "sports"),
+            (NewsCategory.entertainment, "film", Color.pink, "entertainment"),
         ]
     )
     func categoryPropertiesAreCorrect(
         category: NewsCategory,
         expectedIcon: String,
         expectedColor: Color,
-        expectedApiParam: String,
-        expectedGuardianSection: String
+        expectedApiParam: String
     ) {
         #expect(category.icon == expectedIcon)
         #expect(category.color == expectedColor)
         #expect(category.apiParameter == expectedApiParam)
-        #expect(category.guardianSection == expectedGuardianSection)
     }
 
     @Test("All categories have unique icons")
@@ -47,63 +45,6 @@ struct NewsCategoryTests {
         let icons = NewsCategory.allCases.map { $0.icon }
         let uniqueIcons = Set(icons)
         #expect(icons.count == uniqueIcons.count)
-    }
-
-    // MARK: - fromGuardianSection Tests (Consolidated)
-
-    @Test(
-        "Guardian section maps to correct category",
-        arguments: [
-            // World mappings
-            ("world", NewsCategory.world),
-            ("uk-news", NewsCategory.world),
-            ("us-news", NewsCategory.world),
-            ("australia-news", NewsCategory.world),
-            // Business mappings
-            ("business", NewsCategory.business),
-            ("money", NewsCategory.business),
-            // Technology
-            ("technology", NewsCategory.technology),
-            // Science
-            ("science", NewsCategory.science),
-            // Health mappings
-            ("society", NewsCategory.health),
-            ("healthcare-network", NewsCategory.health),
-            // Sports mappings
-            ("sport", NewsCategory.sports),
-            ("football", NewsCategory.sports),
-            // Entertainment mappings
-            ("culture", NewsCategory.entertainment),
-            ("film", NewsCategory.entertainment),
-            ("music", NewsCategory.entertainment),
-            ("books", NewsCategory.entertainment),
-            ("tv-and-radio", NewsCategory.entertainment),
-            ("stage", NewsCategory.entertainment),
-        ]
-    )
-    func guardianSectionMapsToCategory(section: String, expectedCategory: NewsCategory) {
-        #expect(NewsCategory.fromGuardianSection(section) == expectedCategory)
-    }
-
-    @Test(
-        "Unknown guardian section defaults to world",
-        arguments: ["unknown-section", "", "environment", "politics", "opinion"]
-    )
-    func unknownGuardianSectionDefaultsToWorld(section: String) {
-        #expect(NewsCategory.fromGuardianSection(section) == .world)
-    }
-
-    @Test(
-        "Guardian section matching is case insensitive",
-        arguments: [
-            ("WORLD", NewsCategory.world),
-            ("World", NewsCategory.world),
-            ("TECHNOLOGY", NewsCategory.technology),
-            ("Sport", NewsCategory.sports),
-        ]
-    )
-    func caseInsensitiveSectionMatching(section: String, expectedCategory: NewsCategory) {
-        #expect(NewsCategory.fromGuardianSection(section) == expectedCategory)
     }
 
     // MARK: - Display Name & Identifiable Tests

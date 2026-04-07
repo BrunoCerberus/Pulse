@@ -164,10 +164,12 @@ final class SummarizationDomainInteractor: CombineInteractor {
     private nonisolated func cleanLLMOutput(_ text: String) -> String {
         var cleaned = text
 
-        // Remove chat template markers (ChatML + general)
+        // Remove chat template markers (ChatML + Gemma 4)
         let markers = [
             "<|system|>", "<|user|>", "<|assistant|>", "<|end|>",
             "<|im_start|>", "<|im_end|>", "</s>", "<s>",
+            "<|turn>system", "<|turn>user", "<|turn>model", "<turn|>",
+            "<|think|>", "<|channel>thought", "<channel|>",
         ]
         for marker in markers {
             cleaned = cleaned.replacing(marker, with: "")
