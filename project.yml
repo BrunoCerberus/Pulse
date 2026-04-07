@@ -30,8 +30,8 @@ packages:
     url: https://github.com/google/GoogleSignIn-iOS.git
     from: 8.0.0
   swift-llama-cpp:
-    url: https://github.com/pgorzelany/swift-llama-cpp.git
-    from: 1.2.0
+    url: https://github.com/BrunoCerberus/swift-llama-cpp.git
+    branch: main
 
 settings:
   base:
