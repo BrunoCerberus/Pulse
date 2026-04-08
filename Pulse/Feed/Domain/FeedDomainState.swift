@@ -28,7 +28,7 @@ enum FeedGenerationState: Equatable {
 /// Represents the domain state for the Feed (AI Daily Digest) feature.
 ///
 /// This state is owned by `FeedDomainInteractor` and published via `statePublisher`.
-/// The Feed feature uses on-device LLM (Llama 3.2-1B) to generate personalized
+/// The Feed feature uses on-device LLM (Gemma 3 1B) to generate personalized
 /// daily digests based on the latest news articles from the API.
 ///
 /// - Note: This is a **Premium** feature.

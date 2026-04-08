@@ -210,9 +210,8 @@ final class PulseSceneDelegate: UIResponder, UIWindowSceneDelegate {
         let networkMonitor = LiveNetworkMonitorService()
         serviceLocator.register(NetworkMonitorService.self, instance: networkMonitor)
 
-        // All Live services use Supabase backend with Guardian API fallback
+        // All Live services use Supabase backend
         // Supabase backend provides RSS-aggregated articles with high-res images and full content
-        // Falls back to Guardian API if Supabase is not configured or on error
         serviceLocator.register(
             NewsService.self,
             instance: CachingNewsService(wrapping: LiveNewsService(), networkMonitor: networkMonitor)

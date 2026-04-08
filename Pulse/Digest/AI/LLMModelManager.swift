@@ -1,7 +1,7 @@
 import EntropyCore
 import Foundation
-import LeapSDK
 import os
+import SwiftLlama
 #if canImport(UIKit)
     import UIKit
 #endif
@@ -10,8 +10,8 @@ import os
 
 /// Manages the lifecycle of the LLM model (loading, inference, unloading)
 ///
-/// Uses LEAP SDK's ModelRunner for on-device inference with GGUF models.
-/// This class is thread-safe using OSAllocatedUnfairLock for modelRunner access.
+/// Uses SwiftLlama (llama.cpp) for on-device inference with GGUF models.
+/// This class is thread-safe using OSAllocatedUnfairLock for service access.
 final class LLMModelManager: @unchecked Sendable {
     static let shared = LLMModelManager()
 
@@ -21,25 +21,21 @@ final class LLMModelManager: @unchecked Sendable {
     private let logger = Logger.shared
     private let logCategory = "LLMModelManager"
 
-    /// LEAP ModelRunner instance
-    private var modelRunner: ModelRunner?
+    /// SwiftLlama service instance
+    private var llamaService: LlamaService?
     private var generationTask: Task<Void, Never>?
     private var memoryWarningObserverToken: NSObjectProtocol?
 
-    /// Async-safe lock for protecting modelRunner reference changes
+    /// Async-safe lock for protecting llamaService reference changes
     private let lock = OSAllocatedUnfairLock()
 
     // MARK: - Simulator Warning State
 
     /// Reference type wrapper for simulator warning state.
-    /// Required because OSAllocatedUnfairLock needs a reference type to properly
-    /// synchronize mutable state across threads.
     private final class SimulatorWarningState: @unchecked Sendable {
         var hasLogged = false
     }
 
-    /// Thread-safe static lock for one-time simulator warning log.
-    /// Using a lock ensures the warning is logged exactly once even under concurrent access.
     private static let simulatorWarningLock = OSAllocatedUnfairLock(initialState: SimulatorWarningState())
 
     private init() {
@@ -47,8 +43,6 @@ final class LLMModelManager: @unchecked Sendable {
     }
 
     deinit {
-        // Note: As a singleton, this deinit is only called at app termination.
-        // The memory warning observer is properly cleaned up to avoid dangling references.
         #if canImport(UIKit)
             if let token = memoryWarningObserverToken {
                 NotificationCenter.default.removeObserver(token)
@@ -61,12 +55,12 @@ final class LLMModelManager: @unchecked Sendable {
 
     /// Check if model is currently loaded
     var modelIsLoaded: Bool {
-        lock.withLock { modelRunner != nil }
+        lock.withLock { llamaService != nil }
     }
 
     /// Load the GGUF model into memory
     func loadModel(progressHandler: @escaping @Sendable (Double) -> Void) async throws {
-        let alreadyLoaded = lock.withLock { modelRunner != nil }
+        let alreadyLoaded = lock.withLock { llamaService != nil }
         if alreadyLoaded { return }
 
         let memoryTier = MemoryTier.current
@@ -91,27 +85,38 @@ final class LLMModelManager: @unchecked Sendable {
 
         do {
             progressHandler(0.5)
+
+            let useGPU: Bool
             #if targetEnvironment(simulator)
-                let options = LiquidInferenceEngineOptions(bundlePath: modelURL.path, nGpuLayers: 0)
+                useGPU = false
             #else
-                let options = LiquidInferenceEngineOptions(bundlePath: modelURL.path)
+                useGPU = true
             #endif
-            let runner = try Leap.load(options: options)
+
+            let config = LlamaConfig(
+                batchSize: 512,
+                maxTokenCount: UInt32(LLMConfiguration.contextSize),
+                useGPU: useGPU
+            )
+
+            let service = LlamaService(modelUrl: modelURL, config: config)
             progressHandler(0.8)
 
-            // Only lock when setting the shared state
-            // Double-check: another caller may have loaded while we were initializing
-            let boxedRunner = UncheckedSendableBox(value: runner)
+            // Warm up the service by processing an empty message to trigger lazy model load
+            let warmupMessages = [LlamaChatMessage(role: .system, content: "You are a helpful assistant.")]
+            try await service.processMessages(warmupMessages)
+
+            let boxedService = UncheckedSendableBox(value: service)
             let wasAlreadyLoaded = lock.withLock {
-                if modelRunner != nil {
+                if llamaService != nil {
                     return true
                 }
-                modelRunner = boxedRunner.value
+                llamaService = boxedService.value
                 return false
             }
             if wasAlreadyLoaded {
-                // Another thread loaded first, discard our instance
-                await boxedRunner.value.unload()
+                // Another thread loaded first — discard our instance
+                // LlamaService cleans up via deinit when it goes out of scope
                 return
             }
 
@@ -125,12 +130,10 @@ final class LLMModelManager: @unchecked Sendable {
 
     /// Unload model and free memory
     func unloadModel() async {
-        let boxed: UncheckedSendableBox<(any ModelRunner)?> = lock.withLock {
-            let current = modelRunner
-            modelRunner = nil
-            return UncheckedSendableBox(value: current)
+        cancelGeneration()
+        lock.withLock {
+            llamaService = nil
         }
-        await boxed.value?.unload()
         logger.info("Model unloaded", category: logCategory)
     }
 
@@ -141,11 +144,6 @@ final class LLMModelManager: @unchecked Sendable {
     }
 
     /// Generate text from prompt
-    /// - Parameters:
-    ///   - prompt: The user prompt/message to generate from
-    ///   - systemPrompt: System prompt defining assistant behavior
-    ///   - maxTokens: Maximum tokens to generate
-    ///   - stopSequences: Sequences that stop generation when encountered
     func generate(
         prompt: String,
         systemPrompt: String = LLMModelManager.defaultSystemPrompt,
@@ -179,7 +177,6 @@ final class LLMModelManager: @unchecked Sendable {
 
     /// Checks if the device has adequate memory for the specified operation.
     private func hasAdequateMemory(for operation: MemoryOperation) -> Bool {
-        // Check system memory pressure first (available on iOS 13+)
         if isUnderMemoryPressure() {
             logger.warning("System is under memory pressure", category: logCategory)
             return false
@@ -214,8 +211,6 @@ final class LLMModelManager: @unchecked Sendable {
         return hasEnough
     }
 
-    /// Checks if the system is under memory pressure using `os_proc_available_memory`.
-    /// Memory pressure detection is disabled in simulator - test on physical devices.
     private func isUnderMemoryPressure() -> Bool {
         #if targetEnvironment(simulator)
             #if DEBUG
@@ -235,14 +230,8 @@ final class LLMModelManager: @unchecked Sendable {
         #endif
     }
 
-    /// Performs the actual memory pressure check using os_proc_available_memory.
-    /// Extracted to allow testing via FORCE_MEMORY_PRESSURE_CHECK environment variable.
     private func checkActualMemoryPressure() -> Bool {
-        // Use os_proc_available_memory (iOS 13+)
-        // This is more accurate than calculating from task_info
         let availableMemory = os_proc_available_memory()
-        // Consider system under pressure if less than 200MB available at OS level
-        // This is a conservative threshold that catches critical states before OOM killer acts
         let criticalThreshold = 200 * 1024 * 1024 // 200MB
         return availableMemory < criticalThreshold
     }
@@ -275,16 +264,14 @@ private extension LLMModelManager {
         stopSequences: [String],
         continuation: AsyncThrowingStream<String, Error>.Continuation
     ) async {
-        let boxedRunner: UncheckedSendableBox<(any ModelRunner)?> = lock.withLock {
-            UncheckedSendableBox(value: modelRunner)
+        let boxedService: UncheckedSendableBox<LlamaService?> = lock.withLock {
+            UncheckedSendableBox(value: llamaService)
         }
-        guard let rawRunner = boxedRunner.value else {
+        guard let service = boxedService.value else {
             continuation.finish(throwing: LLMError.modelNotLoaded)
             return
         }
-        let runner = UncheckedSendableBox(value: rawRunner)
 
-        // Pre-inference memory check to prevent crashes during generation
         guard hasAdequateMemory(for: .inference) else {
             let tier = MemoryTier.current.rawValue
             logger.warning("Insufficient memory for inference (tier: \(tier))", category: logCategory)
@@ -292,14 +279,12 @@ private extension LLMModelManager {
             return
         }
 
-        // Log prompt size for debugging context overflow issues
         let estimatedPromptTokens = (systemPrompt.count + prompt.count) / 4
         logger.info(
             "Starting inference... (estimated prompt tokens: \(estimatedPromptTokens))",
             category: logCategory
         )
 
-        // Warn if prompt might be too large for context window
         if estimatedPromptTokens > LLMConfiguration.contextSize - LLMConfiguration.reservedContextTokens {
             logger.warning(
                 // swiftlint:disable:next line_length
@@ -309,78 +294,68 @@ private extension LLMModelManager {
         }
 
         do {
-            // Create conversation with system prompt using LEAP SDK
-            let conversation = runner.value.createConversation(systemPrompt: systemPrompt)
+            let messages = [
+                LlamaChatMessage(role: .system, content: systemPrompt),
+                LlamaChatMessage(role: .user, content: prompt),
+            ]
 
-            // Send user message and stream response
-            let userMessage = ChatMessage(role: .user, content: [.text(prompt)])
-            let responseStream = conversation.generateResponse(message: userMessage)
+            let samplingConfig = LlamaSamplingConfig(
+                temperature: LLMConfiguration.temperature,
+                seed: UInt32.random(in: 0 ..< UInt32.max)
+            )
+
+            let boxedService = UncheckedSendableBox(value: service)
+            let responseStream = try await boxedService.value.streamCompletion(
+                of: messages,
+                samplingConfig: samplingConfig
+            )
 
             var totalCharacters = 0
             var stopDetected = false
 
-            for try await response in responseStream {
+            for try await text in responseStream {
                 if Task.isCancelled {
                     logger.info("Generation cancelled by user", category: logCategory)
+                    await boxedService.value.stopCompletion()
                     continuation.finish(throwing: LLMError.generationCancelled)
                     return
                 }
 
-                switch response {
-                case let .chunk(text):
-                    // Check for stop sequences in the accumulated text
-                    for stop in stopSequences where text.contains(stop) {
-                        // Yield text up to the stop sequence
-                        if let range = text.range(of: stop) {
-                            let prefix = String(text[..<range.lowerBound])
-                            if !prefix.isEmpty {
-                                continuation.yield(prefix)
-                            }
+                // Check for stop sequences
+                for stop in stopSequences where text.contains(stop) {
+                    if let range = text.range(of: stop) {
+                        let prefix = String(text[..<range.lowerBound])
+                        if !prefix.isEmpty {
+                            continuation.yield(prefix)
                         }
-                        stopDetected = true
-                        break
                     }
-
-                    if stopDetected { break }
-
-                    // Check max tokens (approximate by characters / 4)
-                    totalCharacters += text.count
-                    if totalCharacters > maxTokens * 4 {
-                        break
-                    }
-
-                    continuation.yield(text)
-
-                case .complete:
-                    break
-
-                default:
+                    stopDetected = true
                     break
                 }
 
-                if stopDetected || totalCharacters > maxTokens * 4 {
+                if stopDetected { break }
+
+                totalCharacters += text.count
+                if totalCharacters > maxTokens * 4 {
                     break
                 }
+
+                continuation.yield(text)
+            }
+
+            if !Task.isCancelled {
+                await boxedService.value.stopCompletion()
             }
 
             continuation.finish()
             logger.info("Inference completed, generated \(totalCharacters) characters", category: logCategory)
 
-        } catch let error as LeapError {
-            logger.error("LEAP inference failed: \(error)", category: logCategory)
-
-            switch error {
-            case .promptExceedContextLengthFailure:
-                continuation.finish(throwing: LLMError.generationFailed("Prompt exceeds context window"))
-            default:
-                continuation.finish(throwing: LLMError.generationFailed(error.localizedDescription))
-            }
         } catch {
             if Task.isCancelled {
                 logger.info("Generation cancelled", category: logCategory)
                 continuation.finish(throwing: LLMError.generationCancelled)
             } else {
-                logger.error("Inference failed with unexpected error: \(error)", category: logCategory)
+                logger.error("Inference failed: \(error)", category: logCategory)
                 continuation.finish(throwing: LLMError.generationFailed(error.localizedDescription))
             }
         }

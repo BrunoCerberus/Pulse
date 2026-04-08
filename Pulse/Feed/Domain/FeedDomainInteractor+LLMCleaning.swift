@@ -7,10 +7,11 @@ extension FeedDomainInteractor {
         // Remove null characters (LLM sometimes outputs these between tokens)
         cleaned = cleaned.replacing("\0", with: "")
 
-        // Remove chat template markers (ChatML + general)
+        // Remove chat template markers (ChatML + Gemma 3)
         let markers = [
             "<|system|>", "<|user|>", "<|assistant|>", "<|end|>",
             "<|im_start|>", "<|im_end|>", "</s>", "<s>",
+            "<start_of_turn>user", "<start_of_turn>model", "<end_of_turn>",
         ]
         for marker in markers {
             cleaned = cleaned.replacing(marker, with: "")

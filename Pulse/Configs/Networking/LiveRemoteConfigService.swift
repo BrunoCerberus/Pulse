@@ -5,7 +5,6 @@ import Foundation
 /// Live implementation of RemoteConfigService using Firebase Remote Config.
 ///
 /// Remote Config Keys (set in Firebase Console):
-/// - `guardian_api_key`: Guardian API key
 /// - `news_api_key`: NewsAPI.org key
 /// - `gnews_api_key`: GNews API key
 final class LiveRemoteConfigService: RemoteConfigService, @unchecked Sendable {
@@ -38,7 +37,6 @@ final class LiveRemoteConfigService: RemoteConfigService, @unchecked Sendable {
     private func setDefaults() {
         // Set empty defaults - actual keys come from Firebase Console
         remoteConfig.setDefaults([
-            RemoteConfigKey.guardianAPIKey.rawValue: "" as NSString,
             RemoteConfigKey.newsAPIKey.rawValue: "" as NSString,
             RemoteConfigKey.gnewsAPIKey.rawValue: "" as NSString,
             RemoteConfigKey.supabaseURL.rawValue: "" as NSString,
@@ -67,10 +65,6 @@ final class LiveRemoteConfigService: RemoteConfigService, @unchecked Sendable {
     func getStringOrNil(forKey key: RemoteConfigKey) -> String? {
         let value = remoteConfig.configValue(forKey: key.rawValue).stringValue
         return value.isEmpty ? nil : value
-    }
-
-    var guardianAPIKey: String? {
-        getStringOrNil(forKey: .guardianAPIKey)
     }
 
     var newsAPIKey: String? {

@@ -1,24 +1,14 @@
 import Combine
 import EntropyCore
 import Foundation
-import LeapSDK
 
-/// Live implementation of LLMService using LEAP SDK for on-device LLM inference.
+/// Live implementation of LLMService using SwiftLlama (llama.cpp) for on-device LLM inference.
 ///
 /// This service manages the lifecycle of on-device LLM inference, including:
 /// - Model loading with progress tracking
 /// - Streaming text generation via `AsyncThrowingStream`
 /// - Generation cancellation
 /// - Model unloading for memory management
-///
-/// ## Usage
-/// ```swift
-/// let service = LiveLLMService()
-/// try await service.loadModel()
-/// for try await token in service.generateStream(prompt: "Hello", systemPrompt: nil, config: .default) {
-///     print(token)
-/// }
-/// ```
 ///
 /// ## Thread Safety
 /// All operations are designed to be called from the main actor context.

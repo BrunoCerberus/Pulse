@@ -6,8 +6,7 @@ import Foundation
 /// This protocol abstracts the news data layer and provides a clean interface
 /// for fetching headlines, breaking news, and individual articles.
 ///
-/// The default implementation (`LiveNewsService`) uses Supabase as the primary
-/// backend with automatic fallback to the Guardian API if Supabase is unavailable.
+/// The default implementation (`LiveNewsService`) uses the Supabase backend.
 ///
 /// ## Caching
 /// Use `CachingNewsService` to wrap any `NewsService` implementation with
@@ -43,7 +42,7 @@ protocol NewsService {
     func fetchBreakingNews(language: String, country: String) -> AnyPublisher<[Article], Error>
 
     /// Fetches a single article by its unique identifier.
-    /// - Parameter id: The article's unique identifier (Guardian content ID or Supabase UUID).
+    /// - Parameter id: The article's unique identifier (Supabase UUID).
     /// - Returns: Publisher emitting the article or an error if not found.
     func fetchArticle(id: String) -> AnyPublisher<Article, Error>
 }

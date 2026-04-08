@@ -2,40 +2,34 @@ import Combine
 import EntropyCore
 import Foundation
 
-/// Search service that searches articles from Supabase backend with Guardian API fallback.
+/// Search service that searches articles from the Supabase backend.
 ///
-/// When Supabase is configured, searches are performed against the RSS aggregator database
-/// using PostgreSQL text search. Falls back to Guardian API when Supabase is not configured.
+/// Searches are performed against the RSS aggregator database
+/// using PostgreSQL text search.
 final class LiveSearchService: APIRequest, SearchService {
     private let recentSearchesKey = "pulse.recentSearches"
     private let maxRecentSearches = 10
-    private let useSupabase: Bool
+    private let isConfigured: Bool
 
     override init() {
-        useSupabase = SupabaseConfig.isConfigured
+        isConfigured = SupabaseConfig.isConfigured
         super.init()
 
-        if useSupabase {
+        if isConfigured {
             Logger.shared.service("LiveSearchService: using Supabase backend", level: .info)
         } else {
-            Logger.shared.service("LiveSearchService: Supabase not configured, using Guardian API", level: .warning)
+            Logger.shared.service("LiveSearchService: Supabase not configured", level: .error)
         }
     }
 
     func search(query: String, page: Int, sortBy: String) -> AnyPublisher<[Article], Error> {
-        saveRecentSearch(query)
-
-        if useSupabase {
-            return searchSupabase(query: query, page: page, sortBy: sortBy)
-                .catch { [weak self] error -> AnyPublisher<[Article], Error> in
-                    let msg = "LiveSearchService: Supabase search failed, falling back to Guardian"
-                    Logger.shared.service("\(msg) - \(error.localizedDescription)", level: .warning)
-                    return self?.searchGuardian(query: query, page: page, sortBy: sortBy)
-                        ?? Fail(error: error).eraseToAnyPublisher()
-                }
-                .eraseToAnyPublisher()
+        guard isConfigured else {
+            return Fail(error: URLError(.badURL, userInfo: [
+                NSLocalizedDescriptionKey: "Supabase backend not configured",
+            ])).eraseToAnyPublisher()
         }
-        return searchGuardian(query: query, page: page, sortBy: sortBy)
+        saveRecentSearch(query)
+        return searchSupabase(query: query, page: page, sortBy: sortBy)
     }
 
     func getSuggestions(for query: String) -> AnyPublisher<[String], Never> {
@@ -49,7 +43,6 @@ final class LiveSearchService: APIRequest, SearchService {
     // MARK: - Supabase Search
 
     private func searchSupabase(query: String, page: Int, sortBy _: String) -> AnyPublisher<[Article], Error> {
-        // Edge Functions search endpoint uses full-text search with proper pagination
         let pageSize = 20
         return fetchRequest(
             target: SupabaseAPI.search(query: query, page: page, pageSize: pageSize),
@@ -66,42 +59,7 @@ final class LiveSearchService: APIRequest, SearchService {
         .eraseToAnyPublisher()
     }
 
-    // MARK: - Guardian Search (Fallback)
-
-    private func searchGuardian(query: String, page: Int, sortBy: String) -> AnyPublisher<[Article], Error> {
-        let guardianOrderBy = mapSortOrder(sortBy)
-
-        return fetchRequest(
-            target: GuardianAPI.search(
-                query: query,
-                section: nil,
-                page: page,
-                pageSize: 20,
-                orderBy: guardianOrderBy
-            ),
-            dataType: GuardianResponse.self
-        )
-        .map { response in
-            response.response.results.compactMap { $0.toArticle() }
-        }
-        .receive(on: DispatchQueue.main)
-        .eraseToAnyPublisher()
-    }
-
-    // MARK: - Helpers
-
-    private func mapSortOrder(_ newsAPISortBy: String) -> String {
-        switch newsAPISortBy.lowercased() {
-        case "relevancy":
-            return "relevance"
-        case "popularity":
-            return "relevance"
-        case "publishedat":
-            return "newest"
-        default:
-            return "relevance"
-        }
-    }
+    // MARK: - Recent Searches
 
     private func saveRecentSearch(_ query: String) {
         var searches = getRecentSearches()

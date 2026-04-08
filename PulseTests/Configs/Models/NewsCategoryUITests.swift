@@ -60,11 +60,4 @@ struct NewsCategoryUITests {
             #expect(!category.apiParameter.isEmpty, "Category \(category) should have an API parameter")
         }
     }
-
-    @Test("All categories have valid Guardian sections")
-    func allCategoriesHaveGuardianSections() {
-        for category in NewsCategory.allCases {
-            #expect(!category.guardianSection.isEmpty, "Category \(category) should have a Guardian section")
-        }
-    }
 }

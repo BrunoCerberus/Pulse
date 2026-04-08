@@ -4,7 +4,7 @@ A modern iOS news aggregation app built with Unidirectional Data Flow Architectu
 
 ## Overview
 
-Pulse fetches news from a Supabase backend (with Guardian API fallback) and presents
+Pulse fetches news from a Supabase backend and presents
 articles in a clean SwiftUI interface. Premium features include AI-powered summaries
 and personalized feeds using on-device LLM inference.
 

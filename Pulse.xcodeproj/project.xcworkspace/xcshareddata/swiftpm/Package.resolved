@@ -1,5 +1,5 @@
 {
-  "originHash" : "c8a5f267bd80641949152974ee9e0862b2b93fec60105e996a05f113a9393e9a",
+  "originHash" : "9355f2772737f22c02067301c7225da384b97a44d2dd02997eb3f02c25ffba8a",
   "pins" : [
     {
       "identity" : "abseil-cpp-binary",
@@ -127,14 +127,6 @@
       }
     },
     {
-      "identity" : "leap-ios",
-      "kind" : "remoteSourceControl",
-      "location" : "https://github.com/BrunoCerberus/leap-ios.git",
-      "state" : {
-        "revision" : "a5b11d125ab20c2d6d00efda2e81e04455c3736e"
-      }
-    },
-    {
       "identity" : "leveldb",
       "kind" : "remoteSourceControl",
       "location" : "https://github.com/firebase/leveldb.git",
@@ -177,6 +169,15 @@
       "state" : {
         "revision" : "06c57924455064182d6b217f06ebc05d00cb2990",
         "version" : "1.5.0"
+      }
+    },
+    {
+      "identity" : "swift-llama-cpp",
+      "kind" : "remoteSourceControl",
+      "location" : "https://github.com/BrunoCerberus/swift-llama-cpp.git",
+      "state" : {
+        "branch" : "main",
+        "revision" : "7c1b13e18bbb913198153ff49602f28a333e14c7"
       }
     },
     {

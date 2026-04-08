@@ -31,12 +31,12 @@ enum MemoryTier: String {
 
 // MARK: - LLM Configuration
 
-/// Configuration for the bundled LLM model
+/// Configuration for the on-device LLM model
 enum LLMConfiguration {
     /// Model file name without extension
-    /// Note: Download from https://huggingface.co/LiquidAI/LFM2.5-1.2B-Instruct-GGUF
+    /// Note: Download from https://huggingface.co/bartowski/google_gemma-3-1b-it-GGUF
     static var modelFileName: String {
-        "LFM2.5-1.2B-Instruct-Q4_K_M"
+        "gemma-3-1b-it-Q4_K_M"
     }
 
     /// Model file extension
@@ -49,15 +49,10 @@ enum LLMConfiguration {
         Bundle.main.url(forResource: modelFileName, withExtension: modelExtension)
     }
 
-    /// Model file path
-    static var modelPath: String {
-        modelURL?.path ?? ""
-    }
-
     /// Context window size (tokens) - memory-adaptive for device safety
-    /// - Constrained: 4096 (conservative use of 32K to balance speed)
+    /// - Constrained: 4096 (conservative to balance speed and memory)
     /// - Standard/High: 8192 (balanced performance vs speed)
-    /// Note: LFM 2.5 supports up to 32K context but we cap for inference speed
+    /// Note: Gemma 3 supports up to 32K context but we cap for on-device inference speed
     static var contextSize: Int {
         switch MemoryTier.current {
         case .constrained: return 4096
@@ -95,6 +90,13 @@ enum LLMConfiguration {
         }
     }
 
+    /// Sampling temperature for inference
+    /// Lower values (0.3-0.5) produce more factual/consistent output for summarization
+    /// Higher values (0.7-0.9) produce more creative/varied output
+    static var temperature: Float {
+        0.5
+    }
+
     /// Generation timeout in seconds
     static var generationTimeout: TimeInterval {
         120.0
@@ -126,7 +128,7 @@ enum LLMConfiguration {
     }
 
     /// Maximum output tokens for generation
-    /// LFM 2.5 handles longer outputs well with its 32K context window
+    /// Gemma 3 1B handles longer outputs well with its 32K context window
     static var maxOutputTokens: Int {
         switch MemoryTier.current {
         case .constrained: return 1024

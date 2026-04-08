@@ -16,7 +16,7 @@ import Foundation
 /// 3. State changes are published via `statePublisher`
 ///
 /// ## Dependencies
-/// - `NewsService`: Fetches articles from Supabase/Guardian API
+/// - `NewsService`: Fetches articles from Supabase backend
 /// - `StorageService`: Persists reading history and bookmarks
 @MainActor
 final class HomeDomainInteractor: CombineInteractor {
