@@ -2,8 +2,8 @@ name: Pulse
 options:
   bundleIdPrefix: com.bruno
   deploymentTarget:
-    iOS: "26.3"
-  xcodeVersion: "26.3"
+    iOS: "26.4"
+  xcodeVersion: "26.4"
   groupSortPosition: top
   generateEmptyDirectories: true
   fileTypes:
@@ -40,7 +40,7 @@ settings:
     CURRENT_PROJECT_VERSION: "1"
     DEVELOPMENT_TEAM: RDTR6557FX
     CODE_SIGN_STYLE: Automatic
-    IPHONEOS_DEPLOYMENT_TARGET: 26.3
+    IPHONEOS_DEPLOYMENT_TARGET: 26.4
     SWIFT_VERSION: 6.2
     TARGETED_DEVICE_FAMILY: 1,2
     SUPPORTED_PLATFORMS: iphoneos iphonesimulator
@@ -76,7 +76,7 @@ targets:
   Pulse:
     type: application
     platform: iOS
-    deploymentTarget: "26.3"
+    deploymentTarget: "26.4"
     sources:
       - path: Pulse
         excludes:
@@ -175,7 +175,7 @@ targets:
   PulseTests:
     type: bundle.unit-test
     platform: iOS
-    deploymentTarget: "26.3"
+    deploymentTarget: "26.4"
     sources:
       - path: PulseTests
     settings:
@@ -202,7 +202,7 @@ targets:
   PulseUITests:
     type: bundle.ui-testing
     platform: iOS
-    deploymentTarget: "26.3"
+    deploymentTarget: "26.4"
     sources:
       - path: PulseUITests
     settings:
@@ -228,7 +228,7 @@ targets:
   PulseSnapshotTests:
     type: bundle.unit-test
     platform: iOS
-    deploymentTarget: "26.3"
+    deploymentTarget: "26.4"
     sources:
       - path: PulseSnapshotTests
     settings:
@@ -255,7 +255,7 @@ targets:
   PulseWidgetExtensionTests:
     type: bundle.unit-test
     platform: iOS
-    deploymentTarget: "26.3"
+    deploymentTarget: "26.4"
     sources:
       - path: PulseWidgetExtensionTests
       - path: PulseWidgetExtension
@@ -286,7 +286,7 @@ targets:
   PulseWidgetExtension:
     type: app-extension
     platform: iOS
-    deploymentTarget: "26.3"
+    deploymentTarget: "26.4"
     settings:
       base:
         PRODUCT_BUNDLE_IDENTIFIER: com.bruno.Pulse-News.widget
