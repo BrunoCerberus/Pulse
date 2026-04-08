@@ -28,7 +28,7 @@ jobs:
     - name: Setup Xcode
       uses: maxim-lobanov/setup-xcode@ed7a3b1fda3918c0306d1b724322adc0b8cc0a90 # v1
       with:
-        xcode-version: '26.3'
+        xcode-version: '26.4'
 
     - name: Install iOS Simulator Runtime
       run: |
@@ -92,11 +92,6 @@ jobs:
           -scheme PulseDev \
           -onlyUsePackageVersionsFromResolvedFile
         echo "Package dependencies resolved successfully"
-
-    - name: Pre-boot simulator
-      run: |
-        chmod +x scripts/boot-simulator.sh
-        ./scripts/boot-simulator.sh "iPhone Air" 30
 
     - name: Build for testing (PulseDev)
       run: |
@@ -411,7 +406,7 @@ jobs:
     - name: Setup Xcode
       uses: maxim-lobanov/setup-xcode@ed7a3b1fda3918c0306d1b724322adc0b8cc0a90 # v1
       with:
-        xcode-version: '26.3'
+        xcode-version: '26.4'
 
     - name: Install iOS Simulator Runtime
       run: |
@@ -461,11 +456,6 @@ jobs:
       with:
         name: scheduled-build-products
         path: ./DerivedData
-
-    - name: Pre-boot simulator
-      run: |
-        chmod +x scripts/boot-simulator.sh
-        ./scripts/boot-simulator.sh "iPhone Air" 30
 
     - name: Run ${{ matrix.test-name }}
       timeout-minutes: ${{ matrix.timeout }}
@@ -738,7 +728,7 @@ jobs:
     - name: Setup Xcode
       uses: maxim-lobanov/setup-xcode@ed7a3b1fda3918c0306d1b724322adc0b8cc0a90 # v1
       with:
-        xcode-version: '26.3'
+        xcode-version: '26.4'
 
     - name: Install iOS Simulator Runtime
       run: |

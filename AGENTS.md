@@ -2,7 +2,7 @@
 
 ## Repository Overview
 
-Pulse is an iOS news aggregation app built with **Unidirectional Data Flow Architecture** based on Clean Architecture principles, using **Combine** for reactive data binding. The app fetches news from a **Supabase backend** (primary) with **Guardian API** fallback. This document provides guidelines for AI agents and contributors working on the codebase.
+Pulse is an iOS news aggregation app built with **Unidirectional Data Flow Architecture** based on Clean Architecture principles, using **Combine** for reactive data binding. The app fetches news from a **Supabase backend** powered by a Go RSS worker. This document provides guidelines for AI agents and contributors working on the codebase.
 
 ## Project Structure
 
@@ -39,7 +39,7 @@ Pulse/
 │   │   └── Models/             # DailyDigest, FeedDigestPromptBuilder
 │   ├── Digest/                 # On-device LLM infra (LLMService, LLMModelManager, prompts)
 │   │   ├── API/                # SummarizationService protocol + Live/Mock
-│   │   ├── AI/                 # LLMService, LLMModelManager (llama.cpp via LocalLlama)
+│   │   ├── AI/                 # LLMService, LLMModelManager (llama.cpp via SwiftLlama)
 │   │   └── Models/             # Prompt builders and LLM helpers
 │   ├── Summarization/          # Article summarization (Premium)
 │   ├── ArticleDetail/          # Article view + summarization + text-to-speech + related articles
@@ -232,7 +232,7 @@ struct HomeDomainInteractorTests {
 9. **Onboarding is shown once** - After first sign-in, a 4-page onboarding flow is shown; completion is persisted via `@AppStorage("pulse.hasCompletedOnboarding")` + `OnboardingService`
 10. **Premium features are gated** - AI features require subscription (checked via StoreKitService)
 11. **Service decorators for cross-cutting concerns** - Use Decorator Pattern for caching, logging (e.g., `CachingNewsService` wraps `LiveNewsService`)
-12. **Graceful fallback for data sources** - Live services (NewsService, SearchService) use Supabase as primary and fall back to Guardian API when not configured or on error
+12. **Single data source** - All Live services (NewsService, SearchService, MediaService) use the Supabase backend exclusively. The backend aggregates RSS feeds from multiple publishers (Guardian, BBC, TechCrunch, etc.) and exposes them via REST.
 13. **Offline resilience** - Tiered cache (L1 memory + L2 disk) preserves content when offline; `NetworkMonitorService` tracks connectivity; failed refreshes keep existing data visible
 14. **Analytics is optional** - `try? serviceLocator.retrieve(AnalyticsService.self)` ensures missing analytics never crashes the app; every analytics event doubles as a Crashlytics breadcrumb
 15. **Language parameter threading** - All service protocols, cache keys, and interactors accept a `language` parameter (from `UserPreferences.preferredLanguage`). Supabase queries filter with `?language=eq.<lang>`. Cache keys include language prefix to prevent cross-language pollution. Interactors listen for `.userPreferencesDidChange` to reload on language switch.
@@ -248,12 +248,11 @@ struct HomeDomainInteractorTests {
 
 ## Data Source Architecture
 
-The app uses a two-tier data source strategy:
+The app fetches all article data from a single backend:
 
-| Source | Type | Description |
-|--------|------|-------------|
-| Supabase Backend | Primary | Self-hosted RSS aggregator with og:image and content extraction |
-| Guardian API | Fallback | Direct API access when Supabase is not configured |
+| Source | Description |
+|--------|-------------|
+| Supabase Backend | Self-hosted RSS aggregator with og:image and content extraction (powered by `pulse-backend` Go worker) |
 
 ## Caching & Offline Architecture
 
@@ -394,7 +393,7 @@ The Digest feature uses **Gemma 3 1B Instruct** (Q4_K_M quantization, ~3.1GB GGU
 
 | Component | Purpose |
 |-----------|---------|
-| `LocalLlama` | Local Swift package wrapping llama.cpp b5046 XCFramework |
+| `swift-llama-cpp` | SPM package wrapping llama.cpp (provides `SwiftLlama` product) |
 | `SwiftLlama` | Thread-safe wrapper using dedicated pinned Thread + CFRunLoop |
 | `LlamaModel` | Low-level llama.cpp bindings with vocab-based API |
 | `LLMService` | Protocol for model load/unload/generate operations |
@@ -489,7 +488,7 @@ final class HomeNavigationRouter: NavigationRouter {
 | `pulse://search` | Open search tab | ✅ Full |
 | `pulse://search?q=query` | Search with query | ✅ Full |
 | `pulse://settings` | Open settings (pushes onto Home) | ✅ Full |
-| `pulse://article?id=path/to/article` | Open specific article by Guardian content ID | ✅ Full |
+| `pulse://article?id=path/to/article` | Open specific article by article ID | ✅ Full |
 
 ## Unidirectional Data Flow
 
@@ -596,14 +595,11 @@ API keys are managed via **Firebase Remote Config** (primary) with fallbacks:
 
 ```bash
 # Environment variable fallback (DEBUG builds only)
-GUARDIAN_API_KEY      # Guardian API key (fallback data source)
-NEWS_API_KEY          # NewsAPI.org key (wired in APIKeysProvider)
-GNEWS_API_KEY         # GNews API key (wired in APIKeysProvider)
-SUPABASE_URL          # Supabase project URL (primary data source)
+SUPABASE_URL          # Supabase project URL
 SUPABASE_ANON_KEY     # Supabase anonymous key
 ```
 
-See `Configs/Networking/APIKeysProvider.swift` and `SupabaseConfig.swift` for implementation. Environment variable fallbacks are gated behind `#if DEBUG`. If Supabase is not configured, the app automatically falls back to the Guardian API.
+See `Configs/Networking/APIKeysProvider.swift` and `SupabaseConfig.swift` for implementation. Environment variable fallbacks are gated behind `#if DEBUG`.
 
 ## Troubleshooting
 
