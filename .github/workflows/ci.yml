@@ -450,11 +450,6 @@ jobs:
           -onlyUsePackageVersionsFromResolvedFile
         echo "Package dependencies resolved successfully"
 
-    - name: Pre-boot simulator
-      run: |
-        chmod +x scripts/boot-simulator.sh
-        ./scripts/boot-simulator.sh "iPhone Air" 30
-
     - name: Build for testing (PulseDev)
       run: |
         echo "Building PulseDev scheme for testing..."
@@ -569,11 +564,6 @@ jobs:
       with:
         name: build-products
         path: ./DerivedData
-
-    - name: Pre-boot simulator
-      run: |
-        chmod +x scripts/boot-simulator.sh
-        ./scripts/boot-simulator.sh "iPhone Air" 30
 
     - name: Run ${{ matrix.test-name }}
       timeout-minutes: ${{ matrix.timeout }}
