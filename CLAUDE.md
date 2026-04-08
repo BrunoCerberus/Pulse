@@ -2,7 +2,7 @@
 
 ## Project Overview
 
-Pulse is an iOS news aggregation app built with **Unidirectional Data Flow Architecture** based on Clean Architecture principles, using **Combine** for reactive data binding. The app fetches news from a **Supabase backend** (primary) powered by a Go RSS worker, with **Guardian API** fallback.
+Pulse is an iOS news aggregation app built with **Unidirectional Data Flow Architecture** based on Clean Architecture principles, using **Combine** for reactive data binding. The app fetches news from a **Supabase backend** powered by a Go RSS worker.
 
 ## Architecture
 
@@ -243,7 +243,7 @@ The app uses StoreKit 2 for subscription management. Two AI-powered features are
 | `MockStoreKitService` | Mock for testing (supports `MOCK_PREMIUM` env var in UI tests) |
 | `PremiumFeature` | Enum defining gated features with icons, colors, titles, descriptions |
 | `PremiumGateView` | Reusable upsell component shown to non-premium users |
-| `PaywallView` | Native StoreKit subscription UI (iOS 17+) |
+| `PaywallView` | Native StoreKit subscription UI |
 
 ### Premium Status Flow
 
@@ -324,9 +324,9 @@ make docs               # Generate DocC documentation
 
 ## Network Layer (EntropyCore)
 
-All Live services (LiveNewsService, LiveSearchService) use Supabase as the primary backend with Guardian API fallback.
+All Live services (LiveNewsService, LiveSearchService) use the Supabase backend exclusively.
 
-### Supabase Backend (Primary)
+### Supabase Backend
 
 ```swift
 enum SupabaseAPI: APIFetcher {
@@ -343,27 +343,6 @@ enum SupabaseAPI: APIFetcher {
     var path: String { ... }  // language cases append ?language=eq.<lang>
     var method: HTTPMethod { .GET }
 }
-
-final class LiveNewsService: APIRequest, NewsService {
-    private let useSupabase: Bool
-
-    override init() {
-        self.useSupabase = SupabaseConfig.isConfigured
-        super.init()
-    }
-
-    func fetchTopHeadlines(language: String, country: String, page: Int) -> AnyPublisher<[Article], Error> {
-        if useSupabase {
-            return fetchFromSupabase(language: language, page: page)
-                .catch { [weak self] error -> AnyPublisher<[Article], Error> in
-                    // Automatic fallback to Guardian on Supabase error
-                    return self?.fetchFromGuardian(page: page) ?? Fail(error: error).eraseToAnyPublisher()
-                }
-                .eraseToAnyPublisher()
-        }
-        return fetchFromGuardian(page: page)
-    }
-}
 ```
 
 The Supabase backend is powered by a Go RSS worker (`pulse-backend`) that:
@@ -371,22 +350,6 @@ The Supabase backend is powered by a Go RSS worker (`pulse-backend`) that:
 - Extracts `og:image` from article pages for high-resolution hero images
 - Extracts full article content using go-readability (Mozilla Readability port)
 - Stores in Supabase with automatic article cleanup
-
-### Guardian API (Fallback)
-
-```swift
-enum GuardianAPI: APIFetcher {
-    case search(query: String?, section: String?, page: Int, pageSize: Int, orderBy: String)
-    case sections
-
-    var path: String { ... }
-    var method: HTTPMethod { .GET }
-}
-```
-
-Guardian API is used as fallback when:
-- Supabase is not configured (missing URL or API key)
-- Supabase API returns an error
 
 ## Caching & Offline Layer
 
@@ -493,7 +456,7 @@ Key components: `GlassTabBar`, `GlassCategoryChip`, `GlassSectionHeader`, `Glass
 - Navigation flows
 - Tab bar interactions
 - Search functionality
-- iOS 17+ accessibility audits (`performAccessibilityAudit()`) on all main screens
+- Accessibility audits (`performAccessibilityAudit()`) on all main screens
 
 ### Snapshot Tests (SnapshotTesting)
 - View components
@@ -527,8 +490,6 @@ Key components: `GlassTabBar`, `GlassCategoryChip`, `GlassSectionHeader`, `Glass
 | `DeeplinkManager.swift` | URL scheme handling |
 | `ThemeManager.swift` | Dark/light mode management |
 | `StorageService.swift` | SwiftData persistence |
-| `GuardianAPI.swift` | Guardian API endpoint definitions (fallback) |
-| `NewsAPI.swift` | NewsAPI.org endpoint definitions (wired in APIKeysProvider) |
 | `GoogleService-Info.plist` | Firebase configuration |
 | **Supabase Backend** | |
 | `SupabaseConfig.swift` | Supabase URL and API key configuration |
@@ -572,7 +533,7 @@ Key components: `GlassTabBar`, `GlassCategoryChip`, `GlassSectionHeader`, `Glass
 | `AudioPlayerManager.swift` | AVPlayer wrapper managing playback state and time observation |
 | **AI/LLM** | |
 | `LLMService.swift` | Protocol for LLM operations (load, generate, cancel) |
-| `LiveLLMService.swift` | LEAP SDK implementation for on-device LLM inference (Gemma 3 1B) |
+| `LiveLLMService.swift` | SwiftLlama (llama.cpp) implementation for on-device LLM inference (Gemma 3 1B) |
 | `LLMModelManager.swift` | Model lifecycle (load/unload, memory checks) |
 | `LLMConfiguration.swift` | Model paths, inference parameters (context size, batch size) |
 | **LLM Performance** | Metal acceleration on device, flash attention, mmap loading, model preloading |
@@ -629,17 +590,12 @@ API keys are managed via **Firebase Remote Config** (primary) with fallbacks:
 3. **Keychain** - Runtime storage for user-provided keys
 
 ```bash
-# For local development without Remote Config (DEBUG builds only)
-export GUARDIAN_API_KEY="your_key"
-export NEWS_API_KEY="your_key"
-export GNEWS_API_KEY="your_key"
-
-# Supabase backend configuration (optional)
+# Supabase backend configuration (DEBUG builds only)
 export SUPABASE_URL="https://your-project.supabase.co"
 export SUPABASE_ANON_KEY="your_anon_key"
 ```
 
-See `APIKeysProvider.swift` and `SupabaseConfig.swift` for implementation details. Environment variable fallbacks are unavailable in release builds. If Supabase is not configured, the app automatically falls back to the Guardian API.
+See `APIKeysProvider.swift` and `SupabaseConfig.swift` for implementation details. Environment variable fallbacks are unavailable in release builds.
 
 ## Deeplinks
 
@@ -652,7 +608,7 @@ See `APIKeysProvider.swift` and `SupabaseConfig.swift` for implementation detail
 | `pulse://search` | Open search tab | ✅ Full |
 | `pulse://search?q=query` | Search with query | ✅ Full |
 | `pulse://settings` | Open settings (pushes onto Home) | ✅ Full |
-| `pulse://article?id=path/to/article` | Open specific article by Guardian content ID | ✅ Full |
+| `pulse://article?id=path/to/article` | Open specific article by article ID | ✅ Full |
 
 ### Push Notification Deeplinks
 

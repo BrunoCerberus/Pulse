@@ -1,7 +1,7 @@
 #!/bin/bash
 # boot-simulator.sh
 # Reliably boot and warm up an iOS simulator for CI.
-# Addresses "Host is down" / "system shell crashed" flakiness on iOS 26.3.
+# Addresses "Host is down" / "system shell crashed" flakiness seen on iOS 26 simulators in CI.
 #
 # Usage: ./scripts/boot-simulator.sh [device_name] [warmup_seconds]
 #   device_name    - Simulator name (default: "iPhone Air")
@@ -81,7 +81,7 @@ if [ "$ELAPSED" -ge "$BOOT_TIMEOUT" ]; then
     exit 1
 fi
 
-# 6. Extra warmup time — iOS 26.3 simulators on CI need this to stabilise
+# 6. Extra warmup time — iOS 26 simulators on CI need this to stabilise
 echo "Warming up simulator (${WARMUP_SECONDS}s)..."
 sleep "$WARMUP_SECONDS"
 

@@ -1,6 +1,6 @@
 # Pulse
 
-A modern iOS news aggregation app built with Clean Architecture, SwiftUI, and Combine. Powered by a self-hosted RSS feed aggregator backend with Guardian API fallback.
+A modern iOS news aggregation app built with Clean Architecture, SwiftUI, and Combine. Powered by a self-hosted Supabase RSS feed aggregator backend.
 
 ## Features
 
@@ -328,17 +328,12 @@ open Pulse.xcodeproj
 API keys are managed via **Firebase Remote Config** (primary) with environment variable fallback for **DEBUG builds only**:
 
 ```bash
-# For local development without Remote Config (DEBUG builds only)
-export GUARDIAN_API_KEY="your_guardian_key"
-export NEWS_API_KEY="your_newsapi_key"
-export GNEWS_API_KEY="your_gnews_key"
-
-# Supabase backend configuration (optional - falls back to Guardian API)
+# Supabase backend configuration (DEBUG builds only)
 export SUPABASE_URL="https://your-project.supabase.co"
 export SUPABASE_ANON_KEY="your_anon_key"
 ```
 
-The app fetches keys from Remote Config on launch. Environment variable fallbacks are gated behind `#if DEBUG` and unavailable in release builds. Remote Config keys are validated for minimum length (10+ characters). If Supabase is not configured, the app automatically falls back to the Guardian API.
+The app fetches keys from Remote Config on launch. Environment variable fallbacks are gated behind `#if DEBUG` and unavailable in release builds. Remote Config keys are validated for minimum length (10+ characters).
 
 ## Commands
 
@@ -422,7 +417,7 @@ Pulse/
 | [GoogleSignIn](https://github.com/google/GoogleSignIn-iOS) | Google Sign-In SDK |
 | [SnapshotTesting](https://github.com/pointfreeco/swift-snapshot-testing) | Snapshot testing |
 | [Lottie](https://github.com/airbnb/lottie-ios) | Animations |
-| LocalLlama (local package) | On-device LLM inference via [llama.cpp](https://github.com/ggml-org/llama.cpp) |
+| [swift-llama-cpp](https://github.com/BrunoCerberus/swift-llama-cpp) | On-device LLM inference (SwiftLlama wrapper around [llama.cpp](https://github.com/ggml-org/llama.cpp)) |
 
 ## CI/CD
 
@@ -454,7 +449,7 @@ GitHub Actions workflows:
 | `pulse://search` | Open search tab |
 | `pulse://search?q=query` | Search with query |
 | `pulse://settings` | Open settings (pushes onto Home) |
-| `pulse://article?id=path/to/article` | Open specific article by Guardian content ID |
+| `pulse://article?id=path/to/article` | Open specific article by article ID |
 
 ## Testing
 
@@ -462,7 +457,7 @@ GitHub Actions workflows:
 Tests for ViewModels, Interactors, and business logic using Swift Testing framework.
 
 ### UI Tests
-End-to-end tests for navigation and user flows using XCTest, plus iOS 17+ accessibility audits (`performAccessibilityAudit()`) on all main screens.
+End-to-end tests for navigation and user flows using XCTest, plus accessibility audits (`performAccessibilityAudit()`) on all main screens.
 
 ### Snapshot Tests
 Visual regression tests for UI components using SnapshotTesting, including Dynamic Type accessibility snapshot tests validating layout adaptation at large text sizes.
@@ -481,7 +476,7 @@ MIT License - see [LICENSE](LICENSE) for details.
 
 ## Data Sources
 
-### Supabase Backend (Primary)
+### Supabase Backend
 
 The app fetches articles from a self-hosted RSS feed aggregator backend that:
 
@@ -490,11 +485,6 @@ The app fetches articles from a self-hosted RSS feed aggregator backend that:
 - Extracts full article content using go-readability (Mozilla Readability port)
 - Stores articles in Supabase database with automatic cleanup
 
-### Guardian API (Fallback)
-
-When Supabase is not configured, the app falls back to the Guardian API directly.
-
 ## Acknowledgments
 
 - [Supabase](https://supabase.com) - Backend database and REST API
-- [Guardian API](https://open-platform.theguardian.com) - Fallback news data provider
