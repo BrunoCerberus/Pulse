@@ -390,7 +390,7 @@ struct FeedView<R: FeedNavigationRouter>: View {
 
 ## On-Device AI (Digest + Summarization)
 
-The Digest feature uses **Gemma 4 E2B Instruct** (Q4_K_M quantization, ~3.1GB GGUF) for on-device inference:
+The Digest feature uses **Gemma 3 1B Instruct** (Q4_K_M quantization, ~3.1GB GGUF) for on-device inference:
 
 | Component | Purpose |
 |-----------|---------|

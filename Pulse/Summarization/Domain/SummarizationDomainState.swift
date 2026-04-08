@@ -29,7 +29,7 @@ enum SummarizationState: Equatable {
 /// Represents the domain state for the Article Summarization feature.
 ///
 /// This state is owned by `SummarizationDomainInteractor` and published via `statePublisher`.
-/// The feature uses on-device LLM (Gemma 4 E2B) to generate article summaries.
+/// The feature uses on-device LLM (Gemma 3 1B) to generate article summaries.
 ///
 /// - Note: This is a **Premium** feature.
 struct SummarizationDomainState: Equatable {

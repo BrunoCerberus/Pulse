@@ -31,12 +31,12 @@ enum MemoryTier: String {
 
 // MARK: - LLM Configuration
 
-/// Configuration for the bundled LLM model
+/// Configuration for the on-device LLM model
 enum LLMConfiguration {
     /// Model file name without extension
-    /// Note: Download from https://huggingface.co/unsloth/gemma-4-E2B-it-GGUF
+    /// Note: Download from https://huggingface.co/bartowski/google_gemma-3-1b-it-GGUF
     static var modelFileName: String {
-        "gemma-4-E2B-it-Q4_K_M"
+        "gemma-3-1b-it-Q4_K_M"
     }
 
     /// Model file extension
@@ -49,15 +49,10 @@ enum LLMConfiguration {
         Bundle.main.url(forResource: modelFileName, withExtension: modelExtension)
     }
 
-    /// Model file path
-    static var modelPath: String {
-        modelURL?.path ?? ""
-    }
-
     /// Context window size (tokens) - memory-adaptive for device safety
     /// - Constrained: 4096 (conservative to balance speed and memory)
     /// - Standard/High: 8192 (balanced performance vs speed)
-    /// Note: Gemma 4 supports up to 256K context but we cap for on-device inference speed
+    /// Note: Gemma 3 supports up to 32K context but we cap for on-device inference speed
     static var contextSize: Int {
         switch MemoryTier.current {
         case .constrained: return 4096
@@ -126,7 +121,7 @@ enum LLMConfiguration {
     }
 
     /// Maximum output tokens for generation
-    /// Gemma 4 E2B handles longer outputs well with its 256K context window
+    /// Gemma 3 1B handles longer outputs well with its 32K context window
     static var maxOutputTokens: Int {
         switch MemoryTier.current {
         case .constrained: return 1024

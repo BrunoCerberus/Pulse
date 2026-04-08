@@ -75,7 +75,7 @@ extension DigestViewItem {
                 "\n**\(cat)**",
                 "* **\(cat)**",
                 "- **\(cat)**",
-                // Numbered list with bold (Gemma 4)
+                // Numbered list with bold (Gemma 3)
                 "\n1. **\(cat)**",
                 "\n2. **\(cat)**",
                 "\n3. **\(cat)**",

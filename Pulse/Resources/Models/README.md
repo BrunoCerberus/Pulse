@@ -4,17 +4,17 @@ This directory contains the GGUF model files required for on-device AI features 
 
 ## Required Model
 
-**Gemma 4 E2B Instruct (Q4_K_M quantization)**
+**Gemma 3 1B Instruct (Q4_K_M quantization)**
 
-- **Filename**: `gemma-4-E2B-it-Q4_K_M.gguf`
-- **Size**: ~3.1 GB
-- **Source**: [Hugging Face](https://huggingface.co/unsloth/gemma-4-E2B-it-GGUF)
+- **Filename**: `gemma-3-1b-it-Q4_K_M.gguf`
+- **Size**: ~756 MB
+- **Source**: [Hugging Face](https://huggingface.co/bartowski/google_gemma-3-1b-it-GGUF)
 
 ## Download
 
 ```bash
-huggingface-cli download unsloth/gemma-4-E2B-it-GGUF \
-  --include "gemma-4-E2B-it-Q4_K_M.gguf" \
+huggingface-cli download bartowski/google_gemma-3-1b-it-GGUF \
+  --include "gemma-3-1b-it-Q4_K_M.gguf" \
   --local-dir Pulse/Resources/Models/
 ```
 

@@ -7,7 +7,7 @@ A modern iOS news aggregation app built with Clean Architecture, SwiftUI, and Co
 - **Authentication**: Firebase Auth with Google and Apple Sign-In (required before accessing app)
 - **Home Feed**: Breaking news carousel, recently read section for quick access to previous articles, top headlines with infinite scrolling, and category tabs for filtering by followed topics (settings accessible via gear icon)
 - **Media**: Browse and play Videos and Podcasts with in-app playback (YouTube videos open in YouTube app, podcasts use native AVPlayer)
-- **Feed**: AI-powered Daily Digest summarizing latest news articles from the API using on-device LLM (Gemma 4 E2B) (**Premium**)
+- **Feed**: AI-powered Daily Digest summarizing latest news articles from the API using on-device LLM (Gemma 3 1B) (**Premium**)
 - **Article Summarization**: On-device AI article summarization via sparkles button (**Premium**)
 - **Text-to-Speech**: Listen to articles read aloud using native `AVSpeechSynthesizer` with play/pause controls, speed presets (1x/1.25x/1.5x/2x), language-aware voices, and a floating mini-player bar
 - **Offline Experience**: Tiered cache (in-memory L1 + persistent disk L2), automatic retry with exponential backoff for transient failures, network monitoring via NWPathMonitor, offline banner, and graceful degradation preserving cached content
