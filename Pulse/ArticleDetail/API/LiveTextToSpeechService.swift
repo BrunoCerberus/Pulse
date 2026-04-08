@@ -1,6 +1,7 @@
 import AVFoundation
 import Combine
 import Foundation
+import MediaPlayer
 
 /// Live implementation of `TextToSpeechService` using `AVSpeechSynthesizer`.
 final class LiveTextToSpeechService: NSObject, TextToSpeechService {
@@ -8,6 +9,7 @@ final class LiveTextToSpeechService: NSObject, TextToSpeechService {
     private let playbackStateSubject = CurrentValueSubject<TTSPlaybackState, Never>(.idle)
     private let progressSubject = CurrentValueSubject<Double, Never>(0.0)
     private var totalTextLength: Int = 0
+    private var remoteCommandsRegistered = false
 
     /// Thread-safe reference to the utterance currently being spoken.
     /// Delegate callbacks for any other utterance are silently discarded.
@@ -43,18 +45,23 @@ final class LiveTextToSpeechService: NSObject, TextToSpeechService {
         configureAudioSession()
         synthesizer.speak(utterance)
         playbackStateSubject.send(.playing)
+
+        configureNowPlayingInfo(for: text)
+        registerRemoteCommandsIfNeeded()
     }
 
     func pause() {
         guard synthesizer.isSpeaking else { return }
         synthesizer.pauseSpeaking(at: .word)
         playbackStateSubject.send(.paused)
+        updateNowPlayingPlaybackRate(0.0)
     }
 
     func resume() {
         guard synthesizer.isPaused else { return }
         synthesizer.continueSpeaking()
         playbackStateSubject.send(.playing)
+        updateNowPlayingPlaybackRate(1.0)
     }
 
     func stop() {
@@ -64,6 +71,7 @@ final class LiveTextToSpeechService: NSObject, TextToSpeechService {
         playbackStateSubject.send(.idle)
         progressSubject.send(0.0)
         deactivateAudioSession()
+        clearNowPlayingInfo()
     }
 
     // MARK: - Private
@@ -113,6 +121,86 @@ final class LiveTextToSpeechService: NSObject, TextToSpeechService {
             // Non-fatal
         }
     }
+
+    // MARK: - MPNowPlayingInfoCenter
+
+    /// Populates `MPNowPlayingInfoCenter.default()` so the system media controls
+    /// (Lock Screen, Control Center, Dynamic Island media chip) reflect the
+    /// currently-playing TTS session. Failures are silently swallowed.
+    private func configureNowPlayingInfo(for text: String) {
+        let titlePreview = String(text.prefix(80))
+        var info: [String: Any] = [:]
+        info[MPMediaItemPropertyTitle] = titlePreview
+        info[MPMediaItemPropertyArtist] = "Pulse"
+        info[MPNowPlayingInfoPropertyPlaybackRate] = 1.0
+        MPNowPlayingInfoCenter.default().nowPlayingInfo = info
+    }
+
+    private func updateNowPlayingPlaybackRate(_ rate: Double) {
+        var info = MPNowPlayingInfoCenter.default().nowPlayingInfo ?? [:]
+        info[MPNowPlayingInfoPropertyPlaybackRate] = rate
+        MPNowPlayingInfoCenter.default().nowPlayingInfo = info
+    }
+
+    private func clearNowPlayingInfo() {
+        MPNowPlayingInfoCenter.default().nowPlayingInfo = nil
+        unregisterRemoteCommands()
+    }
+
+    /// Registers remote command handlers exactly once. Subsequent invocations
+    /// are no-ops, so command targets aren't registered multiple times.
+    private func registerRemoteCommandsIfNeeded() {
+        guard !remoteCommandsRegistered else { return }
+        remoteCommandsRegistered = true
+
+        let center = MPRemoteCommandCenter.shared()
+
+        center.playCommand.isEnabled = true
+        center.playCommand.addTarget { [weak self] _ in
+            guard let self else { return .commandFailed }
+            self.resume()
+            return .success
+        }
+
+        center.pauseCommand.isEnabled = true
+        center.pauseCommand.addTarget { [weak self] _ in
+            guard let self else { return .commandFailed }
+            self.pause()
+            return .success
+        }
+
+        center.stopCommand.isEnabled = true
+        center.stopCommand.addTarget { [weak self] _ in
+            guard let self else { return .commandFailed }
+            self.stop()
+            return .success
+        }
+
+        center.togglePlayPauseCommand.isEnabled = true
+        center.togglePlayPauseCommand.addTarget { [weak self] _ in
+            guard let self else { return .commandFailed }
+            if self.synthesizer.isSpeaking, !self.synthesizer.isPaused {
+                self.pause()
+            } else {
+                self.resume()
+            }
+            return .success
+        }
+    }
+
+    private func unregisterRemoteCommands() {
+        guard remoteCommandsRegistered else { return }
+        let center = MPRemoteCommandCenter.shared()
+        center.playCommand.isEnabled = false
+        center.pauseCommand.isEnabled = false
+        center.stopCommand.isEnabled = false
+        center.togglePlayPauseCommand.isEnabled = false
+        center.playCommand.removeTarget(nil)
+        center.pauseCommand.removeTarget(nil)
+        center.stopCommand.removeTarget(nil)
+        center.togglePlayPauseCommand.removeTarget(nil)
+        remoteCommandsRegistered = false
+    }
 }
 
 // MARK: - AVSpeechSynthesizerDelegate
@@ -134,6 +222,7 @@ extension LiveTextToSpeechService: AVSpeechSynthesizerDelegate {
         progressSubject.send(1.0)
         playbackStateSubject.send(.idle)
         deactivateAudioSession()
+        clearNowPlayingInfo()
     }
 
     func speechSynthesizer(_: AVSpeechSynthesizer, didCancel utterance: AVSpeechUtterance) {
@@ -142,5 +231,6 @@ extension LiveTextToSpeechService: AVSpeechSynthesizerDelegate {
         progressSubject.send(0.0)
         playbackStateSubject.send(.idle)
         deactivateAudioSession()
+        clearNowPlayingInfo()
     }
 }

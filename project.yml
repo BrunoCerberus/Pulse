@@ -81,6 +81,7 @@ targets:
       - path: Pulse
         excludes:
           - "**/__Snapshots__/**"
+      - path: PulseShareExtension/SharedURLQueue.swift
     settings:
       base:
         INFOPLIST_FILE: Pulse/Info.plist
@@ -130,6 +131,7 @@ targets:
           - UIInterfaceOrientationLandscapeLeft
           - UIInterfaceOrientationLandscapeRight
         NSFaceIDUsageDescription: "Pulse uses Face ID to protect your app content."
+        NSSupportsLiveActivities: true
         CFBundleURLTypes:
           - CFBundleURLName: com.bruno.Pulse
             CFBundleURLSchemes:
@@ -143,6 +145,9 @@ targets:
       - sdk: Combine.framework
       - sdk: AuthenticationServices.framework
       - sdk: LocalAuthentication.framework
+      - sdk: ActivityKit.framework
+      - sdk: MediaPlayer.framework
+      - sdk: AppIntents.framework
       - package: EntropyCore
       - package: Lottie
       - package: firebase-ios-sdk
@@ -157,6 +162,8 @@ targets:
       - package: swift-llama-cpp
         product: SwiftLlama
       - target: PulseWidgetExtension
+        embed: true
+      - target: PulseShareExtension
         embed: true
     postBuildScripts:
       - name: "Upload dSYMs to Crashlytics"
@@ -261,6 +268,7 @@ targets:
       - path: PulseWidgetExtension
         excludes:
           - "PulseWidgetBundle.swift"
+          - "LiveActivities/TTSLiveActivity.swift"
           - "Info.plist"
           - "*.entitlements"
     settings:
@@ -273,6 +281,7 @@ targets:
       - sdk: UIKit.framework
       - sdk: WidgetKit.framework
       - sdk: SwiftUI.framework
+      - sdk: ActivityKit.framework
       - sdk: XCTest.framework
     info:
       path: PulseWidgetExtensionTests/Info.plist
@@ -308,11 +317,14 @@ targets:
         Release: {}
     sources:
       - path: PulseWidgetExtension
+      - path: Pulse/ArticleDetail/LiveActivities/TTSActivityAttributes.swift
+      - path: Pulse/ArticleDetail/LiveActivities/TTSLockScreenView.swift
     dependencies:
       - sdk: Foundation.framework
       - sdk: UIKit.framework
       - sdk: WidgetKit.framework
       - sdk: SwiftUI.framework
+      - sdk: ActivityKit.framework
     info:
       path: PulseWidgetExtension/Info.plist
       properties:
@@ -324,7 +336,54 @@ targets:
         CFBundleVersion: "1"
         NSExtension:
           NSExtensionPointIdentifier: com.apple.widgetkit-extension
-        NSSupportsLiveActivities: false
+        NSSupportsLiveActivities: true
+
+  PulseShareExtension:
+    type: app-extension
+    platform: iOS
+    deploymentTarget: "26.4"
+    settings:
+      base:
+        PRODUCT_BUNDLE_IDENTIFIER: com.bruno.Pulse-News.share
+        PRODUCT_NAME: PulseShareExtension
+        CODE_SIGN_STYLE: Automatic
+        DEVELOPMENT_TEAM: RDTR6557FX
+        TARGETED_DEVICE_FAMILY: 1,2
+        SUPPORTED_PLATFORMS: iphoneos iphonesimulator
+        SKIP_INSTALL: YES
+        SWIFT_VERSION: 6.2
+        INFOPLIST_FILE: PulseShareExtension/Info.plist
+        CODE_SIGN_ENTITLEMENTS: PulseShareExtension/PulseShareExtension.entitlements
+        CODE_SIGN_ALLOW_ENTITLEMENTS_MODIFICATION: YES
+      configs:
+        Debug:
+          ENABLE_TESTABILITY: YES
+        Release: {}
+    sources:
+      - path: PulseShareExtension
+        excludes:
+          - "Info.plist"
+          - "*.entitlements"
+    dependencies:
+      - sdk: Foundation.framework
+      - sdk: UIKit.framework
+      - sdk: SwiftUI.framework
+      - sdk: UniformTypeIdentifiers.framework
+    info:
+      path: PulseShareExtension/Info.plist
+      properties:
+        CFBundleDisplayName: Pulse
+        CFBundleName: PulseShareExtension
+        CFBundleIdentifier: com.bruno.Pulse-News.share
+        CFBundlePackageType: XPC!
+        CFBundleShortVersionString: "1.0.0"
+        CFBundleVersion: "1"
+        NSExtension:
+          NSExtensionPointIdentifier: com.apple.share-services
+          NSExtensionPrincipalClass: $(PRODUCT_MODULE_NAME).ShareViewController
+          NSExtensionAttributes:
+            NSExtensionActivationRule:
+              NSExtensionActivationSupportsWebURLWithMaxCount: 1
 
 schemes:
   PulseDev:
@@ -332,6 +391,7 @@ schemes:
       targets:
         Pulse: all
         PulseWidgetExtension: all
+        PulseShareExtension: all
       buildSettings:
         COMPILER_INDEX_STORE_ENABLE: NO
         ENABLE_BITCODE: NO
@@ -377,6 +437,7 @@ schemes:
       targets:
         Pulse: all
         PulseWidgetExtension: all
+        PulseShareExtension: all
     run:
       config: Release
       storeKitConfiguration: Pulse/StoreKit.storekit

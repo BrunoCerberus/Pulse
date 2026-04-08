@@ -5,5 +5,6 @@ import WidgetKit
 struct PulseWidgetBundle: WidgetBundle {
     var body: some Widget {
         PulseNewsWidget()
+        TTSLiveActivity()
     }
 }

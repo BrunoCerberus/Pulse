@@ -59,6 +59,15 @@ final class PulseSceneDelegate: UIResponder, UIWindowSceneDelegate {
         // Make the window visible and set it as the key window
         window.makeKeyAndVisible()
 
+        // Register Home Screen Quick Actions dynamically so localized titles can follow
+        // the user's language preference
+        QuickActionHandler.shared.registerShortcutItems()
+
+        // Handle a quick action used to launch the app, if present
+        if let shortcutItem = connectionOptions.shortcutItem {
+            QuickActionHandler.shared.handle(shortcutItem: shortcutItem)
+        }
+
         // Handle any deeplinks from launch
         if let urlContext = connectionOptions.urlContexts.first {
             handleDeeplink(urlContext.url)
@@ -291,6 +300,15 @@ final class PulseSceneDelegate: UIResponder, UIWindowSceneDelegate {
         MainActor.assumeIsolated {
             AppLockManager.shared.handleSceneDidBecomeActive()
         }
+    }
+
+    func windowScene(
+        _: UIWindowScene,
+        performActionFor shortcutItem: UIApplicationShortcutItem,
+        completionHandler: @escaping (Bool) -> Void
+    ) {
+        let handled = QuickActionHandler.shared.handle(shortcutItem: shortcutItem)
+        completionHandler(handled)
     }
 
     func sceneDidEnterBackground(_: UIScene) {
