@@ -72,8 +72,13 @@ final class TTSLiveActivityController {
 
     /// Updates the active activity's `ContentState`. No-op if there is no
     /// active activity.
-    func update(isPlaying: Bool, progress: Double, speedLabel: String) {
-        guard currentActivity != nil else { return }
+    ///
+    /// `update` is `async` so callers on the main actor can `await` directly
+    /// without each invocation paying for a fresh `Task` allocation. The TTS
+    /// progress publisher fires on every character range from
+    /// `AVSpeechSynthesizerDelegate`, so this is a hot path.
+    func update(isPlaying: Bool, progress: Double, speedLabel: String) async {
+        guard let activity = currentActivity else { return }
 
         let clampedProgress = min(max(progress, 0.0), 1.0)
         let newState = TTSActivityAttributes.ContentState(
@@ -82,13 +87,7 @@ final class TTSLiveActivityController {
             speedLabel: speedLabel
         )
 
-        // Read `currentActivity` inside the main-actor task so we don't send
-        // the `Activity` reference across isolation boundaries. The Task
-        // inherits `@MainActor` from the enclosing type so the read is safe.
-        Task { @MainActor in
-            guard let activity = self.currentActivity else { return }
-            await activity.update(ActivityContent(state: newState, staleDate: nil))
-        }
+        await activity.update(ActivityContent(state: newState, staleDate: nil))
     }
 
     /// Ends the current activity, if any. Safe to call when no activity exists.

@@ -29,6 +29,13 @@ struct SharedURLQueue: @unchecked Sendable {
     /// `UserDefaults` key under which the encoded queue is stored.
     static let queueKey = "pulse.pendingSharedURLs"
 
+    /// Hard cap on the number of items kept in the queue. The Share Extension can run
+    /// before the main app has registered a drain handler for `pulse://shared`, so a
+    /// runaway producer (e.g. user shares 1000 articles in a row) must not be allowed
+    /// to bloat App Group `UserDefaults`. When the cap is exceeded, the oldest entries
+    /// are dropped (FIFO eviction).
+    static let maxQueueSize = 50
+
     /// Backing defaults store. Optional to allow safe handling of a
     /// missing/misconfigured App Group at runtime.
     let defaults: UserDefaults?
@@ -38,12 +45,20 @@ struct SharedURLQueue: @unchecked Sendable {
     }
 
     /// Append an item to the tail of the queue.
+    ///
+    /// If the queue would exceed `maxQueueSize` after the append, the oldest entries are
+    /// dropped first (FIFO eviction). This protects App Group `UserDefaults` from
+    /// unbounded growth when the main app is not yet draining the queue.
+    ///
     /// - Returns: `true` if persistence succeeded, `false` otherwise.
     @discardableResult
     func enqueue(_ item: SharedURLItem) -> Bool {
         guard defaults != nil else { return false }
         var current = readQueue()
         current.append(item)
+        if current.count > Self.maxQueueSize {
+            current.removeFirst(current.count - Self.maxQueueSize)
+        }
         return writeQueue(current)
     }
 

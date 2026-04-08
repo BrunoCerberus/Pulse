@@ -55,12 +55,12 @@ struct TTSLiveActivityControllerTests {
     // MARK: - update safety
 
     @Test("update is a no-op when no activity is running")
-    func updateIsNoOpWhenInactive() {
+    func updateIsNoOpWhenInactive() async {
         let controller = TTSLiveActivityController.shared
         controller.end()
 
-        controller.update(isPlaying: true, progress: 0.5, speedLabel: "1x")
-        controller.update(isPlaying: false, progress: 1.0, speedLabel: "2x")
+        await controller.update(isPlaying: true, progress: 0.5, speedLabel: "1x")
+        await controller.update(isPlaying: false, progress: 1.0, speedLabel: "2x")
 
         #expect(controller.isActive == false)
     }

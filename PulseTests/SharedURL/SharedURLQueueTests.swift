@@ -117,6 +117,27 @@ struct SharedURLQueueTests {
         #expect(nilQueue.drain().isEmpty)
         nilQueue.clear()
     }
+
+    // MARK: - Size cap
+
+    @Test("Enqueue beyond maxQueueSize evicts oldest entries (FIFO)")
+    func enqueueEvictsOldestWhenOverCapacity() {
+        // Push exactly maxQueueSize + 5 items so we can verify the first 5 are dropped.
+        let overflow = 5
+        let total = SharedURLQueue.maxQueueSize + overflow
+        for index in 0 ..< total {
+            sut.enqueue(SharedURLItem(
+                url: "https://example.com/\(index)",
+                sharedAt: Date(timeIntervalSince1970: TimeInterval(index))
+            ))
+        }
+
+        let snapshot = sut.peekAll()
+        #expect(snapshot.count == SharedURLQueue.maxQueueSize)
+        // The first `overflow` items should be evicted, so the new head is item #5.
+        #expect(snapshot.first?.url == "https://example.com/\(overflow)")
+        #expect(snapshot.last?.url == "https://example.com/\(total - 1)")
+    }
 }
 
 private extension SharedURLQueue {

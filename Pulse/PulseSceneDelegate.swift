@@ -15,6 +15,12 @@ final class PulseSceneDelegate: UIResponder, UIWindowSceneDelegate {
     /// Cancellables for Combine subscriptions
     private var cancellables = Set<AnyCancellable>()
 
+    /// Owns the deeplink router so it stays alive for the scene's lifetime.
+    /// Created during `scene(_:willConnectTo:options:)` so it can subscribe to
+    /// `DeeplinkManager.shared.deeplinkPublisher` *before* `QuickActionHandler`
+    /// or any launch-time deeplinks fire.
+    private var deeplinkRouter: DeeplinkRouter?
+
     func scene(
         _ scene: UIScene,
         willConnectTo _: UISceneSession,
@@ -25,6 +31,12 @@ final class PulseSceneDelegate: UIResponder, UIWindowSceneDelegate {
 
         // Initialize services in ServiceLocator
         setupServices()
+
+        // Wire the deeplink router *before* anything that publishes to
+        // `DeeplinkManager.shared` (Quick Actions, launch URLs, push payloads).
+        // The router subscribes immediately and queues deeplinks until the
+        // CoordinatorView posts `coordinatorDidBecomeAvailable` on appear.
+        deeplinkRouter = DeeplinkRouter()
 
         // Configure authentication manager with auth service
         configureAuthenticationManager()
@@ -186,6 +198,7 @@ final class PulseSceneDelegate: UIResponder, UIWindowSceneDelegate {
                 serviceLocator.register(AnalyticsService.self, instance: MockAnalyticsService())
                 serviceLocator.register(TextToSpeechService.self, instance: MockTextToSpeechService())
                 serviceLocator.register(NotificationService.self, instance: MockNotificationService())
+                serviceLocator.register(SharedURLImportService.self, instance: MockSharedURLImportService())
                 let mockOnboarding = MockOnboardingService(hasCompletedOnboarding: true)
                 serviceLocator.register(OnboardingService.self, instance: mockOnboarding)
 
@@ -245,6 +258,7 @@ final class PulseSceneDelegate: UIResponder, UIWindowSceneDelegate {
         serviceLocator.register(OnboardingService.self, instance: LiveOnboardingService())
         serviceLocator.register(TextToSpeechService.self, instance: LiveTextToSpeechService())
         serviceLocator.register(NotificationService.self, instance: LiveNotificationService.shared)
+        serviceLocator.register(SharedURLImportService.self, instance: LiveSharedURLImportService())
     }
 
     private func syncLanguagePreference() {

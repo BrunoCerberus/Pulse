@@ -18,18 +18,21 @@ final class QuickActionHandler {
 
     /// Registers all static quick actions on the application (idempotent).
     ///
-    /// When the `PULSE_SIMULATE_QUICK_ACTION` environment variable is set (UI tests only),
-    /// this method also synthesizes a shortcut item matching that raw value and routes it
-    /// through `handle(shortcutItem:)` so UI tests can verify the quick-action flow without
-    /// a real Home Screen long-press.
+    /// In DEBUG builds, when the `PULSE_SIMULATE_QUICK_ACTION` environment variable is set
+    /// (UI tests only), this method also synthesizes a shortcut item matching that raw value
+    /// and routes it through `handle(shortcutItem:)` so UI tests can verify the quick-action
+    /// flow without a real Home Screen long-press. The simulation hook is compiled out of
+    /// release builds so it never ships to production.
     func registerShortcutItems(on application: UIApplication = .shared) {
         application.shortcutItems = QuickActionType.allCases.map { $0.shortcutItem() }
 
-        if let simulated = ProcessInfo.processInfo.environment["PULSE_SIMULATE_QUICK_ACTION"],
-           let type = QuickActionType(rawValue: simulated)
-        {
-            handle(shortcutItem: type.shortcutItem())
-        }
+        #if DEBUG
+            if let simulated = ProcessInfo.processInfo.environment["PULSE_SIMULATE_QUICK_ACTION"],
+               let type = QuickActionType(rawValue: simulated)
+            {
+                handle(shortcutItem: type.shortcutItem())
+            }
+        #endif
     }
 
     /// Handles a shortcut item tap. If the coordinator isn't ready yet, stores the pending

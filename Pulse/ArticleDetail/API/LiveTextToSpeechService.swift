@@ -65,9 +65,14 @@ final class LiveTextToSpeechService: NSObject, TextToSpeechService {
     }
 
     func stop() {
-        guard synthesizer.isSpeaking || synthesizer.isPaused else { return }
-        setActiveUtterance(nil)
-        synthesizer.stopSpeaking(at: .immediate)
+        // Clean-up must be idempotent: if `speak()` configured Now Playing / remote commands
+        // but the synthesizer never reached a speaking state (rare race), an early-return
+        // here would leave the Lock Screen entry orphaned. Always tear down session/state.
+        let wasActive = synthesizer.isSpeaking || synthesizer.isPaused
+        if wasActive {
+            setActiveUtterance(nil)
+            synthesizer.stopSpeaking(at: .immediate)
+        }
         playbackStateSubject.send(.idle)
         progressSubject.send(0.0)
         deactivateAudioSession()

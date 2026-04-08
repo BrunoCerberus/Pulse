@@ -380,11 +380,23 @@ final class ArticleDetailDomainInteractor: CombineInteractor {
             }
             .store(in: &ttsCancellables)
 
+        // Dispatch UI updates immediately so the in-app progress bar stays smooth.
         ttsService.progressPublisher
             .receive(on: DispatchQueue.main)
             .sink { [weak self] progress in
                 guard let self, self.ttsGeneration == generation else { return }
                 self.dispatch(action: .ttsProgressUpdated(progress))
+            }
+            .store(in: &ttsCancellables)
+
+        // `willSpeakRangeOfSpeechString` fires per character (~100Hz). Each Live
+        // Activity update spawns a `Task` and an actor-isolated call into ActivityKit,
+        // which is wasteful at that rate. Throttle the *Live Activity* path only —
+        // the UI dispatch path above stays unthrottled for smoothness.
+        ttsService.progressPublisher
+            .throttle(for: .milliseconds(200), scheduler: DispatchQueue.main, latest: true)
+            .sink { [weak self] _ in
+                guard let self, self.ttsGeneration == generation else { return }
                 self.syncLiveActivity()
             }
             .store(in: &ttsCancellables)
@@ -394,11 +406,13 @@ final class ArticleDetailDomainInteractor: CombineInteractor {
     /// Calling this when no activity is running is a safe no-op.
     private func syncLiveActivity() {
         let state = currentState
-        TTSLiveActivityController.shared.update(
-            isPlaying: state.ttsPlaybackState == .playing,
-            progress: state.ttsProgress,
-            speedLabel: state.ttsSpeedPreset.label
-        )
+        Task { @MainActor in
+            await TTSLiveActivityController.shared.update(
+                isPlaying: state.ttsPlaybackState == .playing,
+                progress: state.ttsProgress,
+                speedLabel: state.ttsSpeedPreset.label
+            )
+        }
     }
 
     private func startTTS() {
@@ -471,11 +485,16 @@ final class ArticleDetailDomainInteractor: CombineInteractor {
 
         analyticsService?.logEvent(.ttsSpeedChanged(speed: nextPreset.label))
 
-        TTSLiveActivityController.shared.update(
-            isPlaying: currentState.ttsPlaybackState == .playing,
-            progress: currentState.ttsProgress,
-            speedLabel: nextPreset.label
-        )
+        let isPlaying = currentState.ttsPlaybackState == .playing
+        let progress = currentState.ttsProgress
+        let speedLabel = nextPreset.label
+        Task { @MainActor in
+            await TTSLiveActivityController.shared.update(
+                isPlaying: isPlaying,
+                progress: progress,
+                speedLabel: speedLabel
+            )
+        }
     }
 
     private func handleTTSPlaybackStateChanged(_ state: TTSPlaybackState) {

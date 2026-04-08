@@ -103,10 +103,30 @@ final class DeeplinkRouter {
             // Categories feature has been removed
             // Category deeplinks now navigate to home tab
             coordinator.switchTab(to: .home, popToRoot: true)
+
+        case .sharedURLs:
+            // The Share Extension has queued URLs in the App Group container.
+            // Ask the import service to drain them so any subscribers (e.g. the
+            // ArticleDetail summarization flow) can react.
+            drainSharedURLQueue(coordinator: coordinator)
         }
 
         // Clear the deeplink after processing
         DeeplinkManager.shared.clearDeeplink()
+    }
+
+    /// Triggers the registered `SharedURLImportService` to drain its queue.
+    /// Logs and silently no-ops if the service isn't registered (e.g. early
+    /// debug builds before the import service shipped).
+    private func drainSharedURLQueue(coordinator: Coordinator) {
+        guard let importService = try? coordinator.serviceLocator.retrieve(SharedURLImportService.self) else {
+            Logger.shared.warning(
+                "SharedURLImportService not registered — pulse://shared dropped",
+                category: "Navigation"
+            )
+            return
+        }
+        importService.processPendingItems()
     }
 
     private func routeToMedia(type: MediaType?, coordinator: Coordinator) {

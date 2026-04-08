@@ -57,7 +57,14 @@ final class ShareViewController: UIViewController {
         }
         let item = SharedURLItem(url: sharedURL.absoluteString, sharedAt: Date())
         let queue = SharedURLQueue()
-        queue.enqueue(item)
+        // If the App Group is misconfigured (e.g. entitlement mismatch on a sideloaded
+        // build), `enqueue` returns false rather than throwing. Bail out instead of
+        // signalling success to the host — otherwise the user sees the share complete
+        // but the main app has nothing to drain.
+        guard queue.enqueue(item) else {
+            dismissWithError()
+            return
+        }
 
         extensionContext?.completeRequest(returningItems: []) { [weak self] _ in
             guard let self else { return }

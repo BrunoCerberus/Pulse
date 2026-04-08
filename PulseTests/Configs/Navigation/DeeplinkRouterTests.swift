@@ -324,4 +324,20 @@ struct DeeplinkRouterTests {
         // Should still be home since no new deeplink was queued
         #expect(coordinator.selectedTab == .home)
     }
+
+    // MARK: - Shared URL Drain Tests
+
+    @Test("Routing .sharedURLs asks SharedURLImportService to drain")
+    func sharedURLsTriggersDrain() throws {
+        sut.setCoordinator(coordinator)
+
+        let importService = try #require(
+            try? serviceLocator.retrieve(SharedURLImportService.self) as? MockSharedURLImportService
+        )
+        let initialCount = importService.processCallCount
+
+        sut.route(deeplink: .sharedURLs)
+
+        #expect(importService.processCallCount == initialCount + 1)
+    }
 }
