@@ -115,6 +115,8 @@ final class LLMModelManager: @unchecked Sendable {
                 return false
             }
             if wasAlreadyLoaded {
+                // Another thread loaded first — discard our instance
+                // LlamaService cleans up via deinit when it goes out of scope
                 return
             }
 
@@ -128,6 +130,7 @@ final class LLMModelManager: @unchecked Sendable {
 
     /// Unload model and free memory
     func unloadModel() async {
+        cancelGeneration()
         lock.withLock {
             llamaService = nil
         }
@@ -296,7 +299,10 @@ private extension LLMModelManager {
                 LlamaChatMessage(role: .user, content: prompt),
             ]
 
-            let samplingConfig = LlamaSamplingConfig(temperature: 0.7, seed: UInt32.random(in: 0 ..< UInt32.max))
+            let samplingConfig = LlamaSamplingConfig(
+                temperature: LLMConfiguration.temperature,
+                seed: UInt32.random(in: 0 ..< UInt32.max)
+            )
 
             let boxedService = UncheckedSendableBox(value: service)
             let responseStream = try await boxedService.value.streamCompletion(
@@ -335,10 +341,6 @@ private extension LLMModelManager {
                 }
 
                 continuation.yield(text)
-
-                if stopDetected || totalCharacters > maxTokens * 4 {
-                    break
-                }
             }
 
             if !Task.isCancelled {

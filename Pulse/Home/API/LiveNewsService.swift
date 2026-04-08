@@ -7,18 +7,22 @@ import Foundation
 /// Articles are fetched from the RSS aggregator backend which provides
 /// high-resolution images and full article content from multiple sources.
 final class LiveNewsService: APIRequest, NewsService {
+    private let isConfigured: Bool
+
     override init() {
+        isConfigured = SupabaseConfig.isConfigured
         super.init()
 
-        guard SupabaseConfig.isConfigured else {
+        if isConfigured {
+            Logger.shared.service("LiveNewsService: using Supabase backend", level: .info)
+        } else {
             Logger.shared.service("LiveNewsService: Supabase not configured", level: .error)
-            return
         }
-        Logger.shared.service("LiveNewsService: using Supabase backend", level: .info)
     }
 
     func fetchTopHeadlines(language: String, country _: String, page: Int) -> AnyPublisher<[Article], Error> {
-        fetchFromSupabase(language: language, page: page)
+        guard isConfigured else { return backendNotConfigured() }
+        return fetchFromSupabase(language: language, page: page)
     }
 
     func fetchTopHeadlines(
@@ -27,15 +31,24 @@ final class LiveNewsService: APIRequest, NewsService {
         country _: String,
         page: Int
     ) -> AnyPublisher<[Article], Error> {
-        fetchFromSupabase(language: language, category: category, page: page)
+        guard isConfigured else { return backendNotConfigured() }
+        return fetchFromSupabase(language: language, category: category, page: page)
     }
 
     func fetchBreakingNews(language: String, country _: String) -> AnyPublisher<[Article], Error> {
-        fetchBreakingFromSupabase(language: language)
+        guard isConfigured else { return backendNotConfigured() }
+        return fetchBreakingFromSupabase(language: language)
     }
 
     func fetchArticle(id: String) -> AnyPublisher<Article, Error> {
-        fetchArticleFromSupabase(id: id)
+        guard isConfigured else { return backendNotConfigured() }
+        return fetchArticleFromSupabase(id: id)
+    }
+
+    private func backendNotConfigured<T>() -> AnyPublisher<T, Error> {
+        Fail(error: URLError(.badURL, userInfo: [
+            NSLocalizedDescriptionKey: "Supabase backend not configured",
+        ])).eraseToAnyPublisher()
     }
 
     // MARK: - Supabase Fetchers

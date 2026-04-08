@@ -90,6 +90,13 @@ enum LLMConfiguration {
         }
     }
 
+    /// Sampling temperature for inference
+    /// Lower values (0.3-0.5) produce more factual/consistent output for summarization
+    /// Higher values (0.7-0.9) produce more creative/varied output
+    static var temperature: Float {
+        0.5
+    }
+
     /// Generation timeout in seconds
     static var generationTimeout: TimeInterval {
         120.0
