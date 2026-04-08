@@ -12,6 +12,7 @@ import Foundation
 /// - `pulse://settings` - Navigate to Settings
 /// - `pulse://article?id=123` - Open specific article detail
 /// - `pulse://category?name=technology` - Filter by category
+/// - `pulse://shared` - Drain pending URLs queued by the Share Extension
 enum Deeplink: Equatable {
     /// Navigate to the Home tab.
     case home
@@ -36,6 +37,10 @@ enum Deeplink: Equatable {
 
     /// Filter articles by category name.
     case category(name: String)
+
+    /// Signal that the main app should drain any URLs the Share Extension has
+    /// queued in the App Group container.
+    case sharedURLs
 
     /// Maximum allowed length for article IDs.
     private static let maxArticleIDLength = 512
@@ -125,6 +130,8 @@ final class DeeplinkManager: ObservableObject {
                 return
             }
             deeplink = .category(name: categoryName)
+        case "shared":
+            deeplink = .sharedURLs
         default:
             return
         }

@@ -26,6 +26,7 @@ struct DeeplinkManagerTests {
             ("pulse://search?q=swift", Deeplink.search(query: "swift")),
             ("pulse://article?id=123", Deeplink.article(id: "123")),
             ("pulse://category?name=technology", Deeplink.category(name: "technology")),
+            ("pulse://shared", Deeplink.sharedURLs),
         ]
     )
     func parseDeeplinkCorrectly(urlString: String, expectedDeeplink: Deeplink) throws {

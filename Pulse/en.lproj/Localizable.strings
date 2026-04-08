@@ -440,3 +440,12 @@
 "paywall.period.months" = "every %d months";
 "paywall.period.year" = "per year";
 "paywall.period.years" = "every %d years";
+
+/* ==================== */
+/* MARK: - Quick Actions */
+/* ==================== */
+
+"quick_action.search.title" = "Search News";
+"quick_action.daily_digest.title" = "Daily Digest";
+"quick_action.bookmarks.title" = "Bookmarks";
+"quick_action.breaking_news.title" = "Breaking News";
