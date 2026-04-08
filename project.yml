@@ -31,7 +31,7 @@ packages:
     from: 8.0.0
   swift-llama-cpp:
     url: https://github.com/BrunoCerberus/swift-llama-cpp.git
-    branch: main
+    revision: 7c1b13e18bbb913198153ff49602f28a333e14c7
 
 settings:
   base:
