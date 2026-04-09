@@ -23,6 +23,10 @@ A modern iOS news aggregation app built with Clean Architecture, SwiftUI, and Co
 - **Onboarding**: 4-page first-launch experience shown once after sign-in, highlighting key features before entering the app
 - **Analytics & Crash Reporting**: Firebase Analytics (21 type-safe events) and Crashlytics for crash/non-fatal error tracking
 - **Widget**: Home screen widget showing recent headlines (WidgetKit extension)
+- **App Intents & Siri Shortcuts**: Five `AppIntent` types (`OpenPulseIntent`, `OpenDailyDigestIntent`, `OpenBookmarksIntent`, `SearchPulseIntent`, `OpenPulseSettingsIntent`) exposed to Siri, Spotlight, and the Shortcuts app via `PulseAppShortcuts`, with natural-language phrases (e.g., *"Show my Daily Digest in Pulse"*). All intents dispatch via `DeeplinkManager` to reuse in-app navigation
+- **Live Activities**: TTS playback surfaces on the Lock Screen and Dynamic Island via ActivityKit — `TTSActivityAttributes` (shared between app + widget extension), `TTSLiveActivityController` (`@MainActor` singleton) wired into `ArticleDetailDomainInteractor`, and `TTSLockScreenView` / `TTSLiveActivity` rendering expanded/compact/minimal presentations. `LiveTextToSpeechService` integrates `MPNowPlayingInfoCenter` + `MPRemoteCommandCenter` so AirPods, CarPlay, and Lock Screen media controls drive TTS
+- **Share Extension**: `PulseShareExtension` accepts a `public.url` from Safari/any iOS share sheet and offers *Summarize with AI in Pulse*. Because Gemma 3 1B exceeds the extension's ~120 MB memory budget, the extension serializes a `SharedURLItem` into an App Group JSON-backed queue (`SharedURLQueue`) and opens the host app via `pulse://shared`; the main app drains the queue on foreground via `SharedURLImportService`
+- **Home Screen Quick Actions**: Four long-press shortcuts (Search, Daily Digest, Bookmarks, Breaking News) registered dynamically at scene-connect time so titles localize per the in-app `AppLocalization` setting. `QuickActionHandler` routes each through `DeeplinkManager` (en/pt/es)
 
 The app uses iOS 26's liquid glass TabView style with tabs: Home, Media, Feed, Bookmarks, and Search. Users must sign in with Google or Apple before accessing the main app. A 4-page onboarding flow is shown once after first sign-in.
 
@@ -387,6 +391,10 @@ Pulse/
 │   ├── Settings/           # User preferences + account/logout
 │   ├── Notifications/      # Push notification permission and registration
 │   ├── ArticleDetail/      # Article view + TTS (AVSpeechSynthesizer)
+│   │   └── LiveActivities/ # TTSActivityAttributes, TTSLiveActivityController, TTSLockScreenView
+│   ├── Intents/            # AppIntents for Siri / Spotlight / Shortcuts (OpenPulse, OpenDailyDigest, SearchPulse, etc.)
+│   ├── QuickActions/       # Home screen quick actions (QuickActionType, QuickActionHandler)
+│   ├── SharedURL/          # SharedURLImportService (drains Share Extension queue on foreground)
 │   ├── AppLock/            # Biometric/passcode app lock
 │   ├── Onboarding/         # First-launch onboarding flow
 │   ├── Paywall/            # StoreKit paywall UI
@@ -400,7 +408,8 @@ Pulse/
 │       ├── Analytics/      # AnalyticsService protocol + LiveAnalyticsService
 │       ├── Mocks/          # Mock services for testing
 │       └── Widget/         # WidgetDataManager
-├── PulseWidgetExtension/   # WidgetKit extension
+├── PulseWidgetExtension/   # WidgetKit extension + TTS Live Activity (TTSLiveActivity.swift)
+├── PulseShareExtension/    # Share extension (accepts URLs, enqueues to App Group for main app summarization)
 ├── PulseTests/             # Unit tests (Swift Testing)
 ├── PulseUITests/           # UI tests (XCTest)
 ├── PulseSnapshotTests/     # Snapshot tests (SnapshotTesting)

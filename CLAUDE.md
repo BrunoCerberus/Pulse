@@ -175,6 +175,10 @@ Pulse/
 │   ├── Digest/                 # On-device LLM infra (LLMService, LLMModelManager, prompts)
 │   ├── Summarization/          # Article summarization (Premium)
 │   ├── ArticleDetail/          # Article view + summarization + text-to-speech
+│   │   └── LiveActivities/     # TTSActivityAttributes, TTSLiveActivityController, TTSLockScreenView
+│   ├── Intents/                # AppIntents (Open/Search/Settings/Bookmarks/DailyDigest) + PulseAppShortcuts provider
+│   ├── QuickActions/           # QuickActionType + QuickActionHandler (home screen long-press shortcuts)
+│   ├── SharedURL/              # SharedURLImportService + Live impl (drains App Group queue on foreground)
 │   ├── Bookmarks/              # Offline reading
 │   ├── ReadingHistory/         # Reading history tracking (SwiftData)
 │   ├── Search/                 # Search feature
@@ -195,6 +199,8 @@ Pulse/
 │       ├── Mocks/              # Mock services for testing
 │       └── Widget/             # WidgetDataManager + shared widget models
 ├── PulseWidgetExtension/       # WidgetKit extension
+│   └── LiveActivities/         # TTSLiveActivity (ActivityConfiguration for Lock Screen + Dynamic Island)
+├── PulseShareExtension/        # Share extension target (ShareViewController, ShareRootView, SharedURLQueue)
 ├── PulseTests/                 # Unit tests (Swift Testing)
 ├── PulseUITests/               # UI tests (XCTest)
 ├── PulseSnapshotTests/         # Snapshot tests (SnapshotTesting)
@@ -224,6 +230,10 @@ Pulse/
 | **Onboarding** | 4-page first-launch experience (welcome, AI features, offline/bookmarks, get started) shown once after sign-in |
 | **Analytics & Crashlytics** | Firebase Analytics (21 type-safe events) and Crashlytics for crash/non-fatal error tracking at DomainInteractor level |
 | **Widget** | Home screen widget showing recent headlines (WidgetKit extension) |
+| **App Intents & Siri Shortcuts** | Five `AppIntent` types (`OpenPulseIntent`, `OpenDailyDigestIntent`, `OpenBookmarksIntent`, `SearchPulseIntent`, `OpenPulseSettingsIntent`) exposed via `PulseAppShortcuts` provider. All intents set `openAppWhenRun = true` and dispatch via `DeeplinkManager.shared.handle(deeplink:)` to reuse the in-app navigation pipeline |
+| **Live Activities** | TTS playback surfaces on Lock Screen and Dynamic Island. `TTSActivityAttributes` (shared between main app + widget extension targets) + `TTSLiveActivityController` (`@MainActor` singleton) wired into `ArticleDetailDomainInteractor` to start/update/end in lockstep with `LiveTextToSpeechService`. `TTSLockScreenView` + `TTSLiveActivity` render expanded/compact/minimal presentations. `LiveTextToSpeechService` integrates `MPNowPlayingInfoCenter` + `MPRemoteCommandCenter` (play/pause/stop/togglePlayPause) for AirPods, CarPlay, and Lock Screen media control |
+| **Share Extension** | `PulseShareExtension` target accepts `public.url` from Safari/iOS share sheet and presents `ShareRootView` with *Summarize with AI in Pulse*. Because Gemma 3 1B (~600 MB resident) exceeds the extension's ~120 MB budget, the extension serializes `SharedURLItem { url, sharedAt }` into a JSON-backed App Group queue (`SharedURLQueue`), completes the request, and opens the host app via `pulse://shared`. The main app drains the queue on foreground via `SharedURLImportService` |
+| **Home Screen Quick Actions** | Four long-press shortcuts (Search, Daily Digest, Bookmarks, Breaking News) registered dynamically at scene-connect time (no `Info.plist` shortcut entries) so titles localize per `AppLocalization`. `QuickActionHandler` routes each through `DeeplinkManager`. Localized in en/pt/es. `PulseSceneDelegate` handles `windowScene(_:performActionFor:completionHandler:)` plus launch-time `connectionOptions.shortcutItem` check |
 
 ## Premium Features
 
@@ -550,9 +560,31 @@ Key components: `GlassTabBar`, `GlassCategoryChip`, `GlassSectionHeader`, `Glass
 | `MockNotificationService.swift` | Configurable mock with call counters for test assertions |
 | **Text-to-Speech** | |
 | `TextToSpeechService.swift` | Protocol + `TTSPlaybackState` enum + `TTSSpeedPreset` enum (1x/1.25x/1.5x/2x) |
-| `LiveTextToSpeechService.swift` | `AVSpeechSynthesizer` wrapper with delegate-based progress tracking and language-aware voices |
+| `LiveTextToSpeechService.swift` | `AVSpeechSynthesizer` wrapper with delegate-based progress tracking and language-aware voices. Integrates `MPNowPlayingInfoCenter` + `MPRemoteCommandCenter` (play/pause/stop/togglePlayPause) for AirPods, CarPlay, and Lock Screen control |
 | `MockTextToSpeechService.swift` | Mock with call tracking (`speakCallCount`, `lastSpokenText`, etc.) and test helpers (`simulateProgress`, `simulateFinished`) |
 | `SpeechPlayerBarView.swift` | Floating mini-player bar with progress, play/pause, speed preset, and close buttons |
+| **App Intents & Siri Shortcuts** | |
+| `OpenPulseIntent.swift` | AppIntent opening the app (`pulse://home`) |
+| `OpenDailyDigestIntent.swift` | AppIntent opening the AI Daily Digest tab (`pulse://feed`) |
+| `OpenBookmarksIntent.swift` | AppIntent opening bookmarks (`pulse://bookmarks`) |
+| `SearchPulseIntent.swift` | AppIntent with parameterized query (`pulse://search?q=...`) |
+| `OpenPulseSettingsIntent.swift` | AppIntent opening Settings (`pulse://settings`) |
+| `PulseAppShortcuts.swift` | `AppShortcutsProvider` exposing all intents to Siri / Spotlight / Shortcuts app with natural-language phrases |
+| **Live Activities (TTS)** | |
+| `TTSActivityAttributes.swift` | `ActivityAttributes` with `articleTitle`, `sourceName`, and `ContentState { isPlaying, progress, speedLabel }` — shared between Pulse + PulseWidgetExtension targets |
+| `TTSLiveActivityController.swift` | `@MainActor` singleton wrapping `Activity<TTSActivityAttributes>` lifecycle (start/update/end); called from `ArticleDetailDomainInteractor` in lockstep with `LiveTextToSpeechService` |
+| `TTSLockScreenView.swift` | Pure SwiftUI Lock Screen banner (shared between targets) |
+| `TTSLiveActivity.swift` | `ActivityConfiguration` in `PulseWidgetExtension` rendering Dynamic Island expanded/compact/minimal presentations |
+| **Share Extension** | |
+| `PulseShareExtension/ShareViewController.swift` | `UIViewController` hosting `ShareRootView`; extracts `public.url`, enqueues to `SharedURLQueue`, walks responder chain to open host app via `pulse://shared` |
+| `PulseShareExtension/ShareRootView.swift` | SwiftUI view with *Summarize with AI in Pulse* / *Cancel* buttons |
+| `PulseShareExtension/SharedURLQueue.swift` | JSON-backed App Group queue storing `SharedURLItem { url, sharedAt }`; thread-safe, FIFO, corrupted-payload resilient (included in main app target for draining) |
+| `SharedURLImportService.swift` | Protocol exposing `pendingURLPublisher` and `drain()` — main app consumer of `SharedURLQueue` |
+| `LiveSharedURLImportService.swift` | Live impl that reads and drains the App Group queue on foreground |
+| `MockSharedURLImportService.swift` | Mock with publisher stub for tests |
+| **Home Screen Quick Actions** | |
+| `QuickActionType.swift` | Enum with 4 cases (search, dailyDigest, bookmarks, breakingNews) + localized titles, SF Symbol icons, `UIApplicationShortcutItem` conversion |
+| `QuickActionHandler.swift` | Routes quick actions through `DeeplinkManager`; tracks `pendingType` for launch-from-cold-start flow |
 | **Onboarding** | |
 | `OnboardingService.swift` | Protocol with `hasCompletedOnboarding: Bool` |
 | `LiveOnboardingService.swift` | UserDefaults-backed implementation (key: `pulse.hasCompletedOnboarding`) |
