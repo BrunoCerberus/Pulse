@@ -43,11 +43,25 @@ Pulse/
 │   │   └── Models/             # Prompt builders and LLM helpers
 │   ├── Summarization/          # Article summarization (Premium)
 │   ├── ArticleDetail/          # Article view + summarization + text-to-speech + related articles
-│   │   ├── API/                # TextToSpeechService protocol + Live/Mock implementations
-│   │   ├── Domain/             # ArticleDetailDomainInteractor, State, Action, Reducer, EventActionMap
+│   │   ├── API/                # TextToSpeechService protocol + Live/Mock implementations (with MPNowPlayingInfoCenter + MPRemoteCommandCenter)
+│   │   ├── Domain/             # ArticleDetailDomainInteractor, State, Action, Reducer, EventActionMap (wires TTSLiveActivityController)
 │   │   ├── ViewModel/          # ArticleDetailViewModel
 │   │   ├── View/               # ArticleDetailView, SpeechPlayerBarView
-│   │   └── ViewStates/         # ArticleDetailViewState
+│   │   ├── ViewStates/         # ArticleDetailViewState
+│   │   └── LiveActivities/     # TTSActivityAttributes, TTSLiveActivityController (@MainActor singleton), TTSLockScreenView
+│   ├── Intents/                # AppIntents + PulseAppShortcuts (Siri / Spotlight / Shortcuts integration)
+│   │   ├── OpenPulseIntent.swift
+│   │   ├── OpenDailyDigestIntent.swift
+│   │   ├── OpenBookmarksIntent.swift
+│   │   ├── OpenPulseSettingsIntent.swift
+│   │   ├── SearchPulseIntent.swift
+│   │   └── PulseAppShortcuts.swift
+│   ├── QuickActions/           # Home screen long-press shortcuts
+│   │   ├── QuickActionType.swift       # Enum: search, dailyDigest, bookmarks, breakingNews
+│   │   └── QuickActionHandler.swift    # Routes quick actions through DeeplinkManager
+│   ├── SharedURL/              # Share Extension consumer on main app side
+│   │   ├── SharedURLImportService.swift       # Protocol with pendingURLPublisher + drain()
+│   │   └── LiveSharedURLImportService.swift   # Drains App Group SharedURLQueue on foreground
 │   ├── Bookmarks/              # Offline reading
 │   ├── ReadingHistory/         # Reading history tracking (SwiftData)
 │   │   ├── Domain/             # ReadingHistoryDomainInteractor, State, Action
@@ -72,6 +86,13 @@ Pulse/
 │       ├── Mocks/              # Mock services for testing
 │       └── Widget/             # WidgetDataManager + shared widget models
 ├── PulseWidgetExtension/       # WidgetKit extension
+│   └── LiveActivities/         # TTSLiveActivity (ActivityConfiguration: Lock Screen banner + Dynamic Island expanded/compact/minimal)
+├── PulseShareExtension/        # Share extension target (public.url acceptor)
+│   ├── Info.plist
+│   ├── PulseShareExtension.entitlements
+│   ├── ShareViewController.swift   # UIViewController host, extracts URL, enqueues, walks responder chain
+│   ├── ShareRootView.swift         # SwiftUI: Summarize with AI / Cancel buttons
+│   └── SharedURLQueue.swift        # JSON-backed App Group FIFO queue (also compiled into main app target)
 ├── PulseTests/                 # Unit tests (Swift Testing)
 ├── PulseUITests/               # UI tests (XCTest)
 ├── PulseSnapshotTests/         # Snapshot tests (SnapshotTesting)
@@ -245,6 +266,10 @@ struct HomeDomainInteractorTests {
 22. **Main thread for Combine sinks in @MainActor interactors** - Every `.sink` in a `@MainActor` interactor that mutates state **must** include `.receive(on: DispatchQueue.main)` before the sink. Combine publishers from services (network, storage) deliver on background queues; without `.receive(on:)`, `stateSubject.value` mutations crash with `_dispatch_assert_queue_fail`. This applies to all interactors.
 23. **Swift 6.2 Sendable compliance** - The project uses Swift 6.2 with strict concurrency checking. Use `UncheckedSendableBox` (in `CombineAsyncBridge.swift`) to wrap non-Sendable values captured in `Task` closures. Use `WeakRef` instead of `[weak self]` in `sending` closures. Mark static formatters and globals as `nonisolated(unsafe)`. Service protocols that cross isolation boundaries must conform to `Sendable`.
 24. **Liquid Glass UI** - All surfaces and materials use iOS 26 Liquid Glass APIs (`.glassEffect`, `GlassEffectContainer`, `.buttonStyle(.glassProminent)`) instead of legacy `.ultraThinMaterial`/`.regularMaterial`. Key components: `GlassTabBar`, `GlassCategoryChip`, `GlassSectionHeader`, `GlassHeroSkeleton`, `SpeechPlayerBarView`, `OfflineBannerView`, `SignInView`, `AppLockOverlayView`, `SplashScreenView`.
+25. **System integrations funnel through DeeplinkManager** — App Intents (`Pulse/Intents/`), Home Screen Quick Actions (`Pulse/QuickActions/`), Share Extension (`PulseShareExtension/`), and push-notification handlers must route through `DeeplinkManager.shared.handle(deeplink:)` rather than mutating navigation state directly. This keeps a single source of truth for cross-entry navigation and avoids duplicating the `Coordinator` routing logic per entry point. All `AppIntent` types set `openAppWhenRun = true`.
+26. **Share Extension cannot run LLM in-process** — Gemma 3 1B (~600 MB resident) exceeds an app extension's ~120 MB memory budget. The Share Extension writes a `SharedURLItem` to an App Group JSON queue (`SharedURLQueue`) and hands control to the host app via `pulse://shared`; summarization runs in the main app. Never attempt to load `LLMModelManager` from inside `PulseShareExtension`.
+27. **Live Activities lifecycle is owned by the Interactor** — `TTSLiveActivityController` (`@MainActor` singleton) is started/updated/ended from `ArticleDetailDomainInteractor` in lockstep with `LiveTextToSpeechService`. Do not call the controller from views. Interactive Live Activity buttons (pause/resume from Lock Screen) are not yet wired — visual presentation is in place but would require adding `AppIntent`s into `ActivityConfiguration`.
+28. **Quick Action titles are registered dynamically** — Quick actions are registered at scene-connect time (not via `Info.plist` `UIApplicationShortcutItems`) so their titles localize per the in-app `AppLocalization` setting. When adding a new quick action, extend `QuickActionType`, update localized strings in en/pt/es, and handle routing in `QuickActionHandler`.
 
 ## Data Source Architecture
 
