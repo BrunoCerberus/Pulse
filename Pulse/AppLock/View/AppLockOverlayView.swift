@@ -26,9 +26,12 @@ struct AppLockOverlayView: View {
 
     var body: some View {
         ZStack {
+            // Full-screen privacy backdrop — heavy blur hides app content when locked.
+            // `glassEffect` defaults to a Capsule shape, so use Material directly for
+            // a proper full-bleed backdrop.
             Rectangle()
+                .fill(.ultraThickMaterial)
                 .ignoresSafeArea()
-                .glassEffect(.regular)
 
             VStack(spacing: Spacing.lg) {
                 Image(systemName: "lock.fill")
@@ -53,6 +56,8 @@ struct AppLockOverlayView: View {
                 .accessibilityHint(Constants.unlockHint)
                 .accessibilityFocused($isUnlockFocused)
             }
+            .padding(Spacing.xl)
+            .glassEffect(.regular, in: .rect(cornerRadius: CornerRadius.lg))
         }
         .onAppear {
             isUnlockFocused = true
