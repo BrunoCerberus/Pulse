@@ -862,10 +862,16 @@ jobs:
 
     - name: Run Claude to analyze and fix tests
       uses: anthropics/claude-code-action@686da461dadac38c2bde9089909de4042a75ebf0 # v1
+      env:
+        # Max reasoning effort — Opus 4.6's highest adaptive thinking tier with no token constraints.
+        # Matches the convention already used in .github/workflows/claude-code-review.yml.
+        CLAUDE_CODE_EFFORT_LEVEL: max
       with:
         claude_code_oauth_token: ${{ secrets.CLAUDE_CODE_OAUTH_TOKEN }}
-        model: claude-opus-4-5-20251101
+        model: claude-opus-4-6
         prompt: |
+          ultrathink
+
           You are analyzing failing tests in a scheduled CI run for the Pulse iOS app.
 
           ## Test Failure Details
