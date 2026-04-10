@@ -84,8 +84,8 @@ final class MediaDetailViewSnapshotTests: XCTestCase {
         )
     }
 
-    override func setUp() {
-        super.setUp()
+    override func setUp() async throws {
+        try await super.setUp()
         serviceLocator = ServiceLocator()
         serviceLocator.register(MediaService.self, instance: MockMediaService())
         serviceLocator.register(StorageService.self, instance: MockStorageService())

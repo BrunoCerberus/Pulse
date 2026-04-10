@@ -81,7 +81,7 @@ protocol NewsCacheStore: AnyObject {
 // MARK: - Live Cache Store Implementation
 
 /// NSCache-based implementation of NewsCacheStore with memory-aware limits.
-final class LiveNewsCacheStore: NewsCacheStore {
+final class LiveNewsCacheStore: NewsCacheStore, @unchecked Sendable {
     /// Internal wrapper to allow storing any type in NSCache
     private final class CacheEntryWrapper: NSObject {
         let entry: Any

@@ -109,7 +109,7 @@ struct SharedURLQueueTests {
 
     @Test("Queue with nil defaults degrades gracefully")
     func nilDefaultsDegradesGracefully() {
-        var nilQueue = SharedURLQueue(defaults: nil)
+        let nilQueue = SharedURLQueue(defaults: nil)
 
         #expect(nilQueue.enqueue(SharedURLItem(url: "https://example.com", sharedAt: Date())) == false)
         #expect(nilQueue.peekAll().isEmpty)

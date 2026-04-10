@@ -10,9 +10,9 @@ import XCTest
 final class PaywallViewSnapshotTests: XCTestCase {
     private var cancellables = Set<AnyCancellable>()
 
-    override func tearDown() {
+    override func tearDown() async throws {
         cancellables.removeAll()
-        super.tearDown()
+        try await super.tearDown()
     }
 
     func testPaywallViewLoading() {

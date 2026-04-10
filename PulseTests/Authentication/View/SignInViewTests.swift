@@ -5,6 +5,7 @@ import SwiftUI
 import Testing
 
 @Suite("SignInView Tests")
+@MainActor
 struct SignInViewTests {
     @Test("SignInView can be instantiated")
     func canBeInstantiated() {

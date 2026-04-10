@@ -91,8 +91,8 @@ final class MediaViewSnapshotTests: XCTestCase {
         )
     }
 
-    override func setUp() {
-        super.setUp()
+    override func setUp() async throws {
+        try await super.setUp()
         // Force English locale for deterministic snapshot strings
         AppLocalization.shared.updateLanguage("en")
         serviceLocator = ServiceLocator()

@@ -18,8 +18,8 @@ final class SearchViewSnapshotTests: XCTestCase {
     /// Fixed date for snapshot stability
     private let fixedDate = Date(timeIntervalSince1970: 1_672_531_200) // Jan 1, 2023 00:00:00 UTC
 
-    override func setUp() {
-        super.setUp()
+    override func setUp() async throws {
+        try await super.setUp()
         // Force English so snapshots don't fail when CI runs with a non-English system locale
         AppLocalization.shared.updateLanguage("en")
         serviceLocator = ServiceLocator()
