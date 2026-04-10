@@ -33,9 +33,12 @@ jobs:
 
       - name: Run Claude Code Review
         id: claude-review
-        uses: anthropics/claude-code-action@v1
+        uses: anthropics/claude-code-action@686da461dadac38c2bde9089909de4042a75ebf0 # v1
+        env:
+          CLAUDE_CODE_EFFORT_LEVEL: max
         with:
           claude_code_oauth_token: ${{ secrets.CLAUDE_CODE_OAUTH_TOKEN }}
+          model: claude-opus-4-6
           track_progress: true
           allowed_bots: "dependabot[bot]"
           prompt: |
@@ -56,8 +59,5 @@ jobs:
 
             If the PR looks good with no significant issues, approve it using `gh pr review --approve`.
             If there are significant issues, request changes using `gh pr review --request-changes`.
-          claude_args: |
-            --model claude-opus-4-6 --allowedTools "mcp__github_inline_comment__create_inline_comment,Bash(gh pr comment:*),Bash(gh pr diff:*),Bash(gh pr view:*),Bash(gh pr review:*)"
-        env:
-          CLAUDE_CODE_EFFORT_LEVEL: high
+          claude_args: '--allowedTools "mcp__github_inline_comment__create_inline_comment,Bash(gh pr comment:*),Bash(gh pr diff:*),Bash(gh pr view:*),Bash(gh pr review:*)"'
 
