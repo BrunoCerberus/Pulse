@@ -94,8 +94,8 @@ final class HomeViewSnapshotTests: XCTestCase {
         )
     }
 
-    override func setUp() {
-        super.setUp()
+    override func setUp() async throws {
+        try await super.setUp()
         serviceLocator = ServiceLocator()
         serviceLocator.register(NewsService.self, instance: MockNewsService())
         serviceLocator.register(StorageService.self, instance: MockStorageService())

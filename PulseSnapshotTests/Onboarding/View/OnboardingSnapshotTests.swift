@@ -8,8 +8,8 @@ import XCTest
 final class OnboardingSnapshotTests: XCTestCase {
     private var serviceLocator: ServiceLocator!
 
-    override func setUp() {
-        super.setUp()
+    override func setUp() async throws {
+        try await super.setUp()
         serviceLocator = ServiceLocator()
         serviceLocator.register(OnboardingService.self, instance: MockOnboardingService())
         serviceLocator.register(AnalyticsService.self, instance: MockAnalyticsService())

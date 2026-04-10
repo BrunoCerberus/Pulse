@@ -81,7 +81,7 @@ enum PublisherError: Error {
 /// completes without emitting, throws `PublisherError.finishedWithoutValue`.
 func awaitPublisher<T>(_ publisher: AnyPublisher<T, Error>) async throws -> T {
     try await withCheckedThrowingContinuation { (continuation: CheckedContinuation<T, Error>) in
-        nonisolated(unsafe) let continuation = continuation
+        let continuation = continuation
         var resumed = false
         var cancellable: AnyCancellable?
         cancellable = publisher

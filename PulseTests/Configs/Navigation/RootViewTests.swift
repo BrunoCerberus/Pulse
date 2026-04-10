@@ -5,6 +5,7 @@ import Foundation
 import Testing
 
 @Suite("RootView Tests")
+@MainActor
 struct RootViewTests {
     @Test("RootView can be instantiated")
     func canBeInstantiated() {

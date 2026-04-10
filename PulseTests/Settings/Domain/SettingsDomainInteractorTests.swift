@@ -447,7 +447,7 @@ struct SettingsInteractorPublisherTests {
         sut.dispatch(action: .loadPreferences)
         try await Task.sleep(nanoseconds: 300_000_000)
 
-        var notificationReceived = false
+        nonisolated(unsafe) var notificationReceived = false
         let token = NotificationCenter.default.addObserver(
             forName: .userPreferencesDidChange,
             object: nil,
