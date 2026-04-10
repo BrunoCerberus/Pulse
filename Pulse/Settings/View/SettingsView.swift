@@ -237,7 +237,7 @@ struct SettingsView: View {
 
 @MainActor
 enum SettingsCoordinator {
-    static func start(serviceLocator: ServiceLocator) -> some View {
+    @MainActor static func start(serviceLocator: ServiceLocator) -> some View {
         SettingsView(serviceLocator: serviceLocator)
     }
 }
