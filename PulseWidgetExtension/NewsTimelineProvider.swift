@@ -95,7 +95,8 @@ struct NewsTimelineProvider: TimelineProvider {
                 }
 
                 lock.lock()
-                imageDataDict[article.id] = data
+                let dataToStore = data
+                imageDataDict[article.id] = dataToStore
                 lock.unlock()
             }
             task.resume()
