@@ -43,7 +43,7 @@ jobs:
     # Cache Homebrew packages
     # Note: Static version key (brew-v1) - increment manually when brew dependencies change
     - name: Cache Homebrew packages
-      uses: actions/cache@d4323d4df104b026a6aa633fdb11d772146be0bf # v4.2.2
+      uses: actions/cache@668228422ae6a00e4ad889ee87cd7109ec5666a7 # v5.0.4
       with:
         path: |
           ~/Library/Caches/Homebrew
@@ -58,7 +58,7 @@ jobs:
     # IMPORTANT: Do NOT use broad restore-keys fallback - it can restore stale package versions
     # v6: Added ~/Library/Caches/org.swift.swiftpm to cache binary artifacts
     - name: Cache SPM dependencies
-      uses: actions/cache@d4323d4df104b026a6aa633fdb11d772146be0bf # v4.2.2
+      uses: actions/cache@668228422ae6a00e4ad889ee87cd7109ec5666a7 # v5.0.4
       with:
         path: |
           Pulse.xcodeproj/project.xcworkspace/xcshareddata/swiftpm
@@ -114,7 +114,7 @@ jobs:
           -skipMacroValidation
 
     - name: Upload build artifacts
-      uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4.6.2
+      uses: actions/upload-artifact@bbbca2ddaa5d8feaa63e36b76fdaad77386f024f # v7.0.0
       with:
         name: scheduled-build-products
         path: ./DerivedData
@@ -129,7 +129,7 @@ jobs:
 
     steps:
     - name: Harden runner
-      uses: step-security/harden-runner@0634a2670c59f64b4a01f0f96f84700a4088b9f0 # v2.12.0
+      uses: step-security/harden-runner@f808768d1510423e83855289c910610ca9b43176 # v2.17.0
       with:
         egress-policy: audit
 
@@ -421,7 +421,7 @@ jobs:
     # Cache Homebrew packages
     # Note: Static version key (brew-v1) - increment manually when brew dependencies change
     - name: Cache Homebrew packages
-      uses: actions/cache@d4323d4df104b026a6aa633fdb11d772146be0bf # v4.2.2
+      uses: actions/cache@668228422ae6a00e4ad889ee87cd7109ec5666a7 # v5.0.4
       with:
         path: |
           ~/Library/Caches/Homebrew
@@ -436,7 +436,7 @@ jobs:
     # IMPORTANT: Do NOT use broad restore-keys fallback - it can restore stale package versions
     # v6: Added ~/Library/Caches/org.swift.swiftpm to cache binary artifacts
     - name: Cache SPM dependencies
-      uses: actions/cache@d4323d4df104b026a6aa633fdb11d772146be0bf # v4.2.2
+      uses: actions/cache@668228422ae6a00e4ad889ee87cd7109ec5666a7 # v5.0.4
       with:
         path: |
           Pulse.xcodeproj/project.xcworkspace/xcshareddata/swiftpm
@@ -590,7 +590,7 @@ jobs:
         TEST_NAME: ${{ matrix.test-name }}
 
     - name: Upload test results
-      uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4.6.2
+      uses: actions/upload-artifact@bbbca2ddaa5d8feaa63e36b76fdaad77386f024f # v7.0.0
       if: always()
       with:
         name: ${{ matrix.artifact-name }}
@@ -599,7 +599,7 @@ jobs:
         retention-days: 5
 
     - name: Upload recorded snapshots
-      uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4.6.2
+      uses: actions/upload-artifact@bbbca2ddaa5d8feaa63e36b76fdaad77386f024f # v7.0.0
       if: always() && matrix.test-target == 'PulseSnapshotTests'
       with:
         name: scheduled-recorded-snapshots
@@ -741,7 +741,7 @@ jobs:
         xcrun simctl list runtimes | grep iOS
 
     - name: Cache Homebrew packages
-      uses: actions/cache@d4323d4df104b026a6aa633fdb11d772146be0bf # v4.2.2
+      uses: actions/cache@668228422ae6a00e4ad889ee87cd7109ec5666a7 # v5.0.4
       with:
         path: |
           ~/Library/Caches/Homebrew
@@ -751,7 +751,7 @@ jobs:
           ${{ runner.os }}-brew-
 
     - name: Cache SPM dependencies
-      uses: actions/cache@d4323d4df104b026a6aa633fdb11d772146be0bf # v4.2.2
+      uses: actions/cache@668228422ae6a00e4ad889ee87cd7109ec5666a7 # v5.0.4
       with:
         path: |
           Pulse.xcodeproj/project.xcworkspace/xcshareddata/swiftpm

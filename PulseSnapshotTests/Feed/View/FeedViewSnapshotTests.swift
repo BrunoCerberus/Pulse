@@ -51,8 +51,8 @@ final class FeedViewSnapshotTests: XCTestCase {
         ]
     }
 
-    override func setUp() {
-        super.setUp()
+    override func setUp() async throws {
+        try await super.setUp()
         mockFeedService = MockFeedService()
         mockNewsService = MockNewsService()
         serviceLocator = ServiceLocator()

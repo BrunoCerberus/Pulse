@@ -145,7 +145,7 @@ struct ReadingHistoryDomainInteractorExtendedTests {
         sut.dispatch(action: .loadHistory)
         try await waitForStateUpdate(duration: TestWaitDuration.long)
 
-        var notificationReceived = false
+        nonisolated(unsafe) var notificationReceived = false
         let observer = NotificationCenter.default.addObserver(
             forName: .readingHistoryDidClear,
             object: nil,

@@ -2,6 +2,7 @@ import XCTest
 
 /// Base class for UI tests that standardizes launch configuration and isolation.
 // swiftlint:disable:next type_body_length
+@MainActor
 class BaseUITestCase: XCTestCase {
     /// App instance - launched per test for isolation
     var app: XCUIApplication!
@@ -20,7 +21,7 @@ class BaseUITestCase: XCTestCase {
 
     // MARK: - Instance-level Setup (runs before each test)
 
-    override func setUpWithError() throws {
+    override func setUp() async throws {
         // Use continueAfterFailure = true to prevent Xcode 26 C++ exception crashes.
         // When set to false, XCTest throws a C++ exception on assertion failure, but
         // the Swift runtime is compiled without C++ exception support, causing SIGABRT
@@ -85,7 +86,7 @@ class BaseUITestCase: XCTestCase {
         }
     }
 
-    override func tearDown() {
+    override func tearDown() async throws {
         defer { app = nil }
         // Use ObjC++ wrapper — setting orientation can throw a C++ exception when the
         // test runner is in a bad state after a UI query timeout, crashing tearDown.

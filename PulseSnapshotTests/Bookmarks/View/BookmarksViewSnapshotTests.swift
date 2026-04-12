@@ -18,8 +18,8 @@ final class BookmarksViewSnapshotTests: XCTestCase {
     /// Fixed date for snapshot stability
     private let fixedDate = Date(timeIntervalSince1970: 1_672_531_200) // Jan 1, 2023 00:00:00 UTC
 
-    override func setUp() {
-        super.setUp()
+    override func setUp() async throws {
+        try await super.setUp()
         serviceLocator = ServiceLocator()
         serviceLocator.register(BookmarksService.self, instance: MockBookmarksService())
         serviceLocator.register(StorageService.self, instance: MockStorageService())

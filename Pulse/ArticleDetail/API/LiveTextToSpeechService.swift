@@ -1,15 +1,15 @@
 import AVFoundation
-import Combine
+@preconcurrency import Combine
 import Foundation
 import MediaPlayer
 
 /// Live implementation of `TextToSpeechService` using `AVSpeechSynthesizer`.
-final class LiveTextToSpeechService: NSObject, TextToSpeechService {
+final class LiveTextToSpeechService: NSObject, TextToSpeechService, @unchecked Sendable {
     private nonisolated(unsafe) let synthesizer = AVSpeechSynthesizer()
-    private let playbackStateSubject = CurrentValueSubject<TTSPlaybackState, Never>(.idle)
-    private let progressSubject = CurrentValueSubject<Double, Never>(0.0)
-    private var totalTextLength: Int = 0
-    private var remoteCommandsRegistered = false
+    private nonisolated(unsafe) let playbackStateSubject = CurrentValueSubject<TTSPlaybackState, Never>(.idle)
+    private nonisolated(unsafe) let progressSubject = CurrentValueSubject<Double, Never>(0.0)
+    private nonisolated(unsafe) var totalTextLength: Int = 0
+    private nonisolated(unsafe) var remoteCommandsRegistered = false
 
     /// Thread-safe reference to the utterance currently being spoken.
     /// Delegate callbacks for any other utterance are silently discarded.

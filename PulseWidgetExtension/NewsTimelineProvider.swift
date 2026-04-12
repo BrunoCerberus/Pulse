@@ -72,8 +72,7 @@ struct NewsTimelineProvider: TimelineProvider {
 
     private func downloadImages(for articles: [SharedArticle], completion: @escaping ([WidgetArticle]) -> Void) {
         let group = DispatchGroup()
-        var imageDataDict: [String: Data] = [:]
-        let lock = NSLock()
+        let protectedDict = LockedImageDataDict()
 
         for article in articles {
             guard let urlString = article.imageURL,
@@ -94,24 +93,41 @@ struct NewsTimelineProvider: TimelineProvider {
                     return
                 }
 
-                lock.lock()
-                let dataToStore = data
-                imageDataDict[article.id] = dataToStore
-                lock.unlock()
+                protectedDict.set(data, for: article.id)
             }
             task.resume()
         }
 
         group.notify(queue: .main) {
+            let snapshot = protectedDict.snapshot()
             let widgetArticles = articles.map { article in
                 WidgetArticle(
                     id: article.id,
                     title: article.title,
                     source: article.source,
-                    imageData: imageDataDict[article.id]
+                    imageData: snapshot[article.id]
                 )
             }
             completion(widgetArticles)
         }
+    }
+}
+
+/// Thread-safe dictionary wrapper for image downloads to avoid
+/// mutation of captured vars in `@Sendable` closures.
+private final class LockedImageDataDict: Sendable {
+    private let lock = NSLock()
+    private nonisolated(unsafe) var dict: [String: Data] = [:]
+
+    func set(_ data: Data, for key: String) {
+        lock.lock()
+        dict[key] = data
+        lock.unlock()
+    }
+
+    func snapshot() -> [String: Data] {
+        lock.lock()
+        defer { lock.unlock() }
+        return dict
     }
 }

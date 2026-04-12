@@ -4,6 +4,7 @@ import SwiftUI
 import Testing
 
 @Suite("PremiumGateView Tests")
+@MainActor
 struct PremiumGateViewTests {
     @Test("PremiumGateView can be instantiated")
     func canBeInstantiated() {

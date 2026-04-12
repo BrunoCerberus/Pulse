@@ -8,8 +8,8 @@ import XCTest
 final class PremiumGateViewSnapshotTests: XCTestCase {
     private var serviceLocator: ServiceLocator!
 
-    override func setUp() {
-        super.setUp()
+    override func setUp() async throws {
+        try await super.setUp()
         serviceLocator = ServiceLocator()
 
         // Register required services for PremiumGateView
@@ -17,9 +17,9 @@ final class PremiumGateViewSnapshotTests: XCTestCase {
         serviceLocator.register(StoreKitService.self, instance: mockStoreKitService)
     }
 
-    override func tearDown() {
+    override func tearDown() async throws {
         serviceLocator = nil
-        super.tearDown()
+        try await super.tearDown()
     }
 
     // MARK: - Daily Digest Feature Gate
