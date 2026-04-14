@@ -31,6 +31,13 @@ final class AccessibilityAuditTests: BaseUITestCase {
 
     private static let totalTabs = 5
 
+    /// Skip setUp's activity-indicator disappear wait: each `safeExists` on the
+    /// spinner can block for 30–90s inside XCTest's internal query retries on
+    /// degraded CI simulators, and `setUp` already hits a 302s hard failure before
+    /// the test body runs (GitHub Actions run 24403500495). Each audit test waits
+    /// for its own terminal-state indicator via `waitForStableState`.
+    override var shouldWaitForLoadingIndicator: Bool { false }
+
     /// Common audit handler that filters out system component issues we don't control
     private func auditIssueHandler(_ issue: XCUIAccessibilityAuditIssue) -> Bool {
         let description = issue.debugDescription

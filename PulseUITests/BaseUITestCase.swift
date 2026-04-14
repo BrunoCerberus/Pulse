@@ -53,12 +53,14 @@ class BaseUITestCase: XCTestCase {
         // CI cold starts need more time for accessibility services to be ready
         wait(for: 2.0)
 
-        // Wait for loading state to clear if present
-        // Use shorter detection timeout — don't wait long if no spinner appears
-        let loadingIndicator = app.activityIndicators.firstMatch
-        if safeWaitForExistence(loadingIndicator, timeout: 5) {
-            // Wait for loading to complete (app initializing auth state)
-            _ = waitForElementToDisappear(loadingIndicator, timeout: Self.launchTimeout)
+        if shouldWaitForLoadingIndicator {
+            // Wait for loading state to clear if present
+            // Use shorter detection timeout — don't wait long if no spinner appears
+            let loadingIndicator = app.activityIndicators.firstMatch
+            if safeWaitForExistence(loadingIndicator, timeout: 5) {
+                // Wait for loading to complete (app initializing auth state)
+                _ = waitForElementToDisappear(loadingIndicator, timeout: Self.launchTimeout)
+            }
         }
 
         // Wait for either tab bar (authenticated) or sign-in view (not authenticated)
@@ -112,6 +114,15 @@ class BaseUITestCase: XCTestCase {
     func configureLaunchEnvironment() {
         // Default: no additional configuration
     }
+
+    /// Override to skip setUp's activity-indicator disappear wait. On degraded CI
+    /// simulators (Xcode 26 + iOS 26 on macOS-26-arm64 runners) each `safeExists`
+    /// on the spinner can block 30–90s inside XCTest's internal query retries,
+    /// consuming 200+s before the test body even runs. Tests that rely on their
+    /// own terminal-state waits (e.g. `AccessibilityAuditTests.waitForStableState`)
+    /// can safely skip this phase — the `waitForAny` below still waits for the
+    /// tab bar or sign-in view to appear.
+    var shouldWaitForLoadingIndicator: Bool { true }
 
     // MARK: - Launch Helpers
 
