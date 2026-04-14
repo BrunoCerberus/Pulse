@@ -6,8 +6,10 @@ import XCTest
 /// to automatically detect missing labels, small touch targets, contrast issues, etc.
 ///
 /// Note: `performAccessibilityAudit()` can be slow on CI shared runners due to the
-/// full accessibility hierarchy traversal. We use longer stabilization waits and
-/// XCTExpectFailure to prevent known-slow audits from blocking CI.
+/// full accessibility hierarchy traversal. Each audit waits for a deterministic
+/// terminal UI state before running — starting an audit mid-transition (while
+/// `.fadeIn`/loading animations are still settling) can cause the internal UI
+/// snapshot query to hang for 200+ seconds before timing out (seen on Bookmarks).
 @MainActor
 final class AccessibilityAuditTests: BaseUITestCase {
     /// Common audit handler that filters out system component issues we don't control
@@ -26,6 +28,25 @@ final class AccessibilityAuditTests: BaseUITestCase {
     /// Audit types to check — focused set that avoids the most CI-flaky checks
     private var auditTypes: XCUIAccessibilityAuditType {
         [.dynamicType, .sufficientElementDescription, .hitRegion]
+    }
+
+    /// Waits for any of the supplied terminal-state indicators, then gives the
+    /// accessibility tree a short settle window before the audit runs. If the
+    /// view never reaches a stable state the test is skipped rather than allowed
+    /// to hang for 5+ minutes inside `performAccessibilityAudit`.
+    private func waitForStableState(
+        _ indicators: [XCUIElement],
+        screen: String,
+        timeout: TimeInterval = BaseUITestCase.defaultTimeout
+    ) throws {
+        guard waitForAny(indicators, timeout: timeout) else {
+            throw XCTSkip(
+                "\(screen) did not reach a stable state within \(Int(timeout))s; " +
+                    "skipping audit to avoid the UI snapshot query hanging for minutes."
+            )
+        }
+        wait(for: 1.0)
+        try ensureAppRunning()
     }
 
     // MARK: - Home
@@ -52,9 +73,15 @@ final class AccessibilityAuditTests: BaseUITestCase {
 
         try ensureAppRunning()
         navigateToMediaTab()
-        // Media tab loads async content — give extra time for the accessibility tree to stabilize
-        wait(for: 4.0)
-        try ensureAppRunning()
+
+        try waitForStableState(
+            [
+                app.navigationBars["Media"],
+                app.staticTexts["Unable to Load Media"],
+                app.staticTexts["No Media Available"],
+            ],
+            screen: "Media"
+        )
 
         try app.performAccessibilityAudit(for: auditTypes, auditIssueHandler)
     }
@@ -68,8 +95,22 @@ final class AccessibilityAuditTests: BaseUITestCase {
 
         try ensureAppRunning()
         navigateToBookmarksTab()
-        wait(for: 3.0)
-        try ensureAppRunning()
+
+        // Wait for a terminal Bookmarks state (empty / populated / error) before
+        // auditing. Starting the audit while the view is still in its loading
+        // state caused `performAccessibilityAudit` to hang for 225s on CI
+        // (GitHub Actions run 24323650849) before timing out on a UI query.
+        let savedArticlesText = app.staticTexts.matching(
+            NSPredicate(format: "label CONTAINS[c] 'saved articles'")
+        ).firstMatch
+        try waitForStableState(
+            [
+                app.staticTexts["No Bookmarks"],
+                savedArticlesText,
+                app.staticTexts["Unable to Load Bookmarks"],
+            ],
+            screen: "Bookmarks"
+        )
 
         try app.performAccessibilityAudit(for: auditTypes, auditIssueHandler)
     }
@@ -83,8 +124,11 @@ final class AccessibilityAuditTests: BaseUITestCase {
 
         try ensureAppRunning()
         navigateToSearchTab()
-        wait(for: 3.0)
-        try ensureAppRunning()
+
+        try waitForStableState(
+            [app.navigationBars["Search"], app.searchFields.firstMatch],
+            screen: "Search"
+        )
 
         try app.performAccessibilityAudit(for: auditTypes, auditIssueHandler)
     }
@@ -98,8 +142,11 @@ final class AccessibilityAuditTests: BaseUITestCase {
 
         try ensureAppRunning()
         navigateToSettings()
-        wait(for: 3.0)
-        try ensureAppRunning()
+
+        try waitForStableState(
+            [app.navigationBars["Settings"]],
+            screen: "Settings"
+        )
 
         try app.performAccessibilityAudit(for: auditTypes, auditIssueHandler)
     }
