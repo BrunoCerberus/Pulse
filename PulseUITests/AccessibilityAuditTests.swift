@@ -38,6 +38,12 @@ final class AccessibilityAuditTests: BaseUITestCase {
     /// for its own terminal-state indicator via `waitForStableState`.
     override var shouldWaitForLoadingIndicator: Bool { false }
 
+    /// Skip the orientation setter in setUp: on cold CI boot it can block 8+s
+    /// waiting for confirmation and record a `Failed to set device orientation`
+    /// failure that bypasses the test body (GitHub Actions run 24419133870).
+    /// The simulator boots in portrait; audit tests never rotate the device.
+    override var shouldSetDeviceOrientation: Bool { false }
+
     /// Common audit handler that filters out system component issues we don't control
     private func auditIssueHandler(_ issue: XCUIAccessibilityAuditIssue) -> Bool {
         let description = issue.debugDescription

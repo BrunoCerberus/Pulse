@@ -29,7 +29,9 @@ class BaseUITestCase: XCTestCase {
         // exceptions disabled"). This crashes the test runner and cascades to all
         // subsequent tests. With true, failures are recorded without crashing.
         continueAfterFailure = true
-        XCUIDevice.shared.orientation = .portrait
+        if shouldSetDeviceOrientation {
+            XCUIDevice.shared.orientation = .portrait
+        }
 
         app = XCUIApplication()
         configureAndLaunchApp()
@@ -123,6 +125,15 @@ class BaseUITestCase: XCTestCase {
     /// can safely skip this phase — the `waitForAny` below still waits for the
     /// tab bar or sign-in view to appear.
     var shouldWaitForLoadingIndicator: Bool { true }
+
+    /// Override to skip setUp's `XCUIDevice.orientation = .portrait` call. The
+    /// setter blocks until the simulator confirms the orientation change; on cold
+    /// CI boot the confirmation can take 8s+ and XCTest records a
+    /// `Failed to set device orientation` test failure that bypasses the test
+    /// body even with `continueAfterFailure = true` (GitHub Actions run
+    /// 24419133870). The simulator boots in portrait by default so this call is
+    /// only needed for tests that rotate the device mid-test.
+    var shouldSetDeviceOrientation: Bool { true }
 
     // MARK: - Launch Helpers
 
