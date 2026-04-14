@@ -92,8 +92,12 @@ final class AccessibilityAuditTests: BaseUITestCase {
         }
 
         try ensureAppRunning()
-        waitForHomeContent()
-        wait(for: 3.0) // Extra stabilization for CI accessibility tree
+        // Use a fixed sleep instead of `waitForHomeContent()` — element-based waits
+        // trigger XCTest internal query retries (30s each, up to 2 retries = 90s per
+        // call) that get recorded as test failures before we can XCTSkip. A blind
+        // wait avoids the query layer entirely; the app is on Home by default
+        // (setUp ends with resetToHomeTab) so we just need content to render.
+        wait(for: 8.0)
         try ensureAppRunning()
 
         try app.performAccessibilityAudit(for: auditTypes, auditIssueHandler)
