@@ -88,4 +88,13 @@
     }
 }
 
++ (void)safeTapAppAtNormalizedX:(CGFloat)x y:(CGFloat)y app:(XCUIApplication *)app {
+    @try {
+        XCUICoordinate *target = [app coordinateWithNormalizedOffset:CGVectorMake(x, y)];
+        [target tap];
+    } @catch (...) {
+        // Tap failed due to C++ exception
+    }
+}
+
 @end

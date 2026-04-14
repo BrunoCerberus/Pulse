@@ -41,6 +41,14 @@ NS_ASSUME_NONNULL_BEGIN
 /// when the accessibility framework is degraded. Coordinate-based gestures bypass this.
 + (void)safeSwipeLeftEdge:(XCUIApplication *)app;
 
+/// Taps the app at a normalized window position, catching any C++ exception.
+/// Unlike safeTapElement, this does NOT call coordinateWithNormalizedOffset on a child
+/// XCUIElement, so it cannot trigger accessibility tree resolution. Use this for tab bar
+/// taps when the simulator's accessibility framework is degraded — element-based taps
+/// can hang inside `Find the "X" Button` retries for 130+ seconds before timing out
+/// (seen on GitHub Actions macos-26-arm64 runners with Xcode 26 + iOS 26).
++ (void)safeTapAppAtNormalizedX:(CGFloat)x y:(CGFloat)y app:(XCUIApplication *)app;
+
 @end
 
 NS_ASSUME_NONNULL_END

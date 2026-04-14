@@ -10,8 +10,27 @@ import XCTest
 /// terminal UI state before running — starting an audit mid-transition (while
 /// `.fadeIn`/loading animations are still settling) can cause the internal UI
 /// snapshot query to hang for 200+ seconds before timing out (seen on Bookmarks).
+///
+/// Tab navigation uses coordinate-based taps via `tapTabAt(_:)` instead of
+/// `navigateToBookmarksTab()` / `navigateToMediaTab()`. Element-based taps call
+/// `XCUIElement.coordinateWithNormalizedOffset(_:)`, which lazily resolves the
+/// element's frame via an accessibility query. On Xcode 26 + iOS 26 simulator on
+/// macOS-26-arm64 GitHub Actions runners, that query can stall the tap synthesis
+/// for 130+ seconds inside `Find the "X" Button` retries before timing out (seen
+/// on GitHub Actions run 24383814898). App-relative coordinates skip this.
 @MainActor
 final class AccessibilityAuditTests: BaseUITestCase {
+    /// Tab order matches `AppTab` enum (`Pulse/Configs/Navigation/Coordinator.swift`).
+    private enum TabIndex: Int {
+        case home = 0
+        case media = 1
+        case feed = 2
+        case bookmarks = 3
+        case search = 4
+    }
+
+    private static let totalTabs = 5
+
     /// Common audit handler that filters out system component issues we don't control
     private func auditIssueHandler(_ issue: XCUIAccessibilityAuditIssue) -> Bool {
         let description = issue.debugDescription
@@ -28,6 +47,15 @@ final class AccessibilityAuditTests: BaseUITestCase {
     /// Audit types to check — focused set that avoids the most CI-flaky checks
     private var auditTypes: XCUIAccessibilityAuditType {
         [.dynamicType, .sufficientElementDescription, .hitRegion]
+    }
+
+    /// Coordinate-based tab tap that bypasses XCTest's accessibility query layer.
+    /// Computes the tab's screen position from its index and taps the app window
+    /// directly, avoiding the `Find the "X" Button` retries that hang for 130+s on
+    /// degraded CI simulators. `y = 0.96` lands inside the bottom tab bar safe area.
+    private func tapTabAt(_ tab: TabIndex) {
+        let normalizedX = (Double(tab.rawValue) + 0.5) / Double(Self.totalTabs)
+        ObjCExceptionCatcher.safeTapApp(atNormalizedX: normalizedX, y: 0.96, app: app)
     }
 
     /// Waits for any of the supplied terminal-state indicators, then gives the
@@ -72,7 +100,7 @@ final class AccessibilityAuditTests: BaseUITestCase {
         }
 
         try ensureAppRunning()
-        navigateToMediaTab()
+        tapTabAt(.media)
 
         try waitForStableState(
             [
@@ -94,7 +122,7 @@ final class AccessibilityAuditTests: BaseUITestCase {
         }
 
         try ensureAppRunning()
-        navigateToBookmarksTab()
+        tapTabAt(.bookmarks)
 
         // Wait for a terminal Bookmarks state (empty / populated / error) before
         // auditing. Starting the audit while the view is still in its loading
@@ -123,7 +151,7 @@ final class AccessibilityAuditTests: BaseUITestCase {
         }
 
         try ensureAppRunning()
-        navigateToSearchTab()
+        tapTabAt(.search)
 
         try waitForStableState(
             [app.navigationBars["Search"], app.searchFields.firstMatch],
@@ -141,7 +169,20 @@ final class AccessibilityAuditTests: BaseUITestCase {
         }
 
         try ensureAppRunning()
-        navigateToSettings()
+        // Coordinate-tap Home first so the gear button is on screen, then use the
+        // element-based gear tap (no coordinate fallback for nav-bar buttons).
+        tapTabAt(.home)
+        wait(for: 0.5)
+        try ensureAppRunning()
+
+        var gearButton = app.navigationBars.buttons["Settings"]
+        if !safeExists(gearButton) {
+            gearButton = app.buttons["Settings"]
+        }
+        guard safeExists(gearButton) else {
+            throw XCTSkip("Settings gear button not visible after Home tab activation")
+        }
+        safeTap(gearButton)
 
         try waitForStableState(
             [app.navigationBars["Settings"]],
