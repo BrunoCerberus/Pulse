@@ -139,6 +139,16 @@ final class AccessibilityAuditTests: BaseUITestCase {
         }
 
         try ensureAppRunning()
+        // Cold-start warmup. This is the alphabetically-first audit and runs
+        // against a freshly-booted simulator. On Xcode 26 + iOS 26 macOS-26-arm64
+        // GitHub Actions runners, the accessibility framework is degraded for the
+        // first ~60s after boot — even `XCUICoordinate.tap` triggers a
+        // `Find the Target Application` query that hangs 90+s in retries (run
+        // 24422577444). Sleeping here lets the framework settle before any
+        // XCTest API call is made, instead of having those calls block while we
+        // wait. No accessibility queries during the sleep.
+        wait(for: 45.0)
+        try ensureAppRunning()
         tapTabAt(.bookmarks)
 
         // Wait for a terminal Bookmarks state (empty / populated / error) before
