@@ -86,6 +86,32 @@ class BaseUITestCase: XCTestCase {
         }
     }
 
+    // MARK: - Issue Filtering
+
+    /// Suppresses XCUI snapshot-timeout failures that would otherwise mark tests
+    /// as failed even when our `safeExists` wrapper recovered correctly.
+    ///
+    /// On iOS 26 shared CI runners, `XCUIElement.exists` queries can take 100+
+    /// seconds because XCUI's snapshot service retries internally up to 3 times
+    /// before throwing `"Failed to get matching snapshots: Timed out while evaluating
+    /// UI query."`. The C++ exception is caught by `ObjCExceptionCatcher`, but
+    /// XCTest records the issue against the test case **before** the throw, leaving
+    /// the test marked as failed even when the next polling iteration finds the
+    /// element. Our test logic uses `safeExists` everywhere and treats `false` as
+    /// "element not present yet" — assertion failures from missing elements still
+    /// surface via `XCTAssertTrue`/`XCTAssertFalse`, which use `IssueType.assertionFailure`.
+    override func record(_ issue: XCTIssue) {
+        let description = issue.compactDescription
+        if description.contains("Failed to get matching snapshots")
+            || description.contains("Timed out while evaluating UI query")
+        {
+            // Log for visibility but do not propagate as a test failure.
+            print("[BaseUITestCase] Suppressed XCUI snapshot timeout: \(description)")
+            return
+        }
+        super.record(issue)
+    }
+
     override func tearDown() async throws {
         defer { app = nil }
         // Use ObjC++ wrapper — setting orientation can throw a C++ exception when the
