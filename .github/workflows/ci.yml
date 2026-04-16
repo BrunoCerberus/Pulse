@@ -458,6 +458,7 @@ jobs:
           -scheme PulseDev \
           -destination 'platform=iOS Simulator,name=iPhone Air,OS=latest' \
           -derivedDataPath ./DerivedData \
+          -enableCodeCoverage YES \
           -skipMacroValidation \
           ENABLE_ONLY_ACTIVE_RESOURCES=NO
 
@@ -469,6 +470,7 @@ jobs:
           -scheme PulseSnapshotTests \
           -destination 'platform=iOS Simulator,name=iPhone Air,OS=latest' \
           -derivedDataPath ./DerivedData \
+          -enableCodeCoverage YES \
           -skipMacroValidation \
           ENABLE_ONLY_ACTIVE_RESOURCES=NO
 
@@ -583,6 +585,7 @@ jobs:
           -destination 'platform=iOS Simulator,name=iPhone Air,OS=latest' \
           -derivedDataPath ./DerivedData \
           -resultBundlePath "test-results/${ARTIFACT_NAME}.xcresult" \
+          -enableCodeCoverage YES \
           -disableAutomaticPackageResolution \
           -retry-tests-on-failure \
           2>&1 | tee /tmp/test_output.log
@@ -712,6 +715,94 @@ jobs:
         name: recorded-snapshots
         path: PulseSnapshotTests/**/__Snapshots__/**/*.png
         if-no-files-found: ignore
+
+  patch-coverage:
+    name: Patch Coverage
+    runs-on: macos-26
+    needs: tests
+    if: github.event_name == 'pull_request'
+    timeout-minutes: 15
+
+    permissions:
+      contents: read
+
+    env:
+      BASE_SHA: ${{ github.event.pull_request.base.sha }}
+      THRESHOLD: '75'
+
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
+      with:
+        fetch-depth: 0
+
+    - name: Ensure base ref is present
+      run: git fetch --no-tags --depth=200 origin "$BASE_SHA" || true
+
+    - name: Setup Xcode
+      uses: maxim-lobanov/setup-xcode@ed7a3b1fda3918c0306d1b724322adc0b8cc0a90 # v1
+      with:
+        xcode-version: '26.4'
+
+    - name: Download unit test results
+      uses: actions/download-artifact@3e5f45b2cfb9172054b4087a40e8e0b5a5461e7c # v8.0.1
+      with:
+        name: unit-test-results
+        path: artifacts/unit
+
+    - name: Download snapshot test results
+      uses: actions/download-artifact@3e5f45b2cfb9172054b4087a40e8e0b5a5461e7c # v8.0.1
+      with:
+        name: snapshot-test-results
+        path: artifacts/snap
+
+    - name: Install diff-cover
+      run: |
+        pipx install diff-cover
+        pipx ensurepath || true
+
+    # actions/upload-artifact uploads a directory's *contents* (not the directory
+    # itself), so the downloaded artifacts land directly inside artifacts/unit
+    # and artifacts/snap — those paths are the xcresult bundles.
+    - name: Convert xcresult bundles to Cobertura
+      run: |
+        python3 scripts/xcresult-to-cobertura.py artifacts/unit \
+          --project-root "$PWD" -o unit-coverage.xml
+        python3 scripts/xcresult-to-cobertura.py artifacts/snap \
+          --project-root "$PWD" -o snap-coverage.xml
+
+    # diff-cover uses Python fnmatch where `*` already spans `/`, so `Pulse/*.swift`
+    # matches both `Pulse/Foo.swift` and `Pulse/Home/Foo.swift`. `Pulse/**/*.swift`
+    # would compile to a regex that *requires* an intermediate directory, silently
+    # dropping app/extension entry points from the gate.
+    # The `|| RESULT=$?` dance ensures the markdown report always lands in the job
+    # summary, not just on the happy path — `bash -e` would otherwise skip it.
+    - name: Enforce patch coverage threshold
+      run: |
+        RESULT=0
+        diff-cover unit-coverage.xml snap-coverage.xml \
+          --compare-branch "$BASE_SHA" \
+          --fail-under "$THRESHOLD" \
+          --include 'Pulse/*.swift' \
+          --include 'PulseShareExtension/*.swift' \
+          --include 'PulseWidgetExtension/*.swift' \
+          --exclude '*+Preview.swift' \
+          --exclude '*Preview Content/*' \
+          --markdown-report patch-coverage.md || RESULT=$?
+        {
+          echo "## Patch Coverage Report"
+          echo ""
+          cat patch-coverage.md
+        } >> "$GITHUB_STEP_SUMMARY"
+        exit $RESULT
+
+    - name: Upload patch coverage report
+      uses: actions/upload-artifact@bbbca2ddaa5d8feaa63e36b76fdaad77386f024f # v7.0.0
+      if: always()
+      with:
+        name: patch-coverage-report
+        path: patch-coverage.md
+        if-no-files-found: warn
 
   test-results:
     name: Test Results Summary
