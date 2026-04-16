@@ -775,23 +775,25 @@ jobs:
         python3 scripts/xcresult-to-cobertura.py artifacts/snap \
           --project-root "$PWD" -o snap-coverage.xml
 
-    # diff-cover uses Python fnmatch where `*` already spans `/`, so `Pulse/*.swift`
-    # matches both `Pulse/Foo.swift` and `Pulse/Home/Foo.swift`. `Pulse/**/*.swift`
-    # would compile to a regex that *requires* an intermediate directory, silently
-    # dropping app/extension entry points from the gate.
-    # The `|| RESULT=$?` dance ensures the markdown report always lands in the job
-    # summary, not just on the happy path — `bash -e` would otherwise skip it.
+    # diff-cover's --include/--exclude use argparse nargs='+' and internally
+    # resolve patterns via glob.glob(recursive=True), NOT fnmatch. Two
+    # consequences:
+    #   1. Repeating `--include` only keeps the last value — all patterns must
+    #      follow a single --include flag.
+    #   2. `**/` is required to recurse; `Pulse/*.swift` only matches files
+    #      directly inside `Pulse/`, so nested files (Pulse/Home/Foo.swift)
+    #      get silently dropped without `**`.
+    # The `|| RESULT=$?` dance ensures the markdown report always lands in the
+    # job summary, not just on the happy path — `bash -e` would otherwise skip
+    # it when diff-cover exits non-zero on a threshold failure.
     - name: Enforce patch coverage threshold
       run: |
         RESULT=0
         diff-cover unit-coverage.xml snap-coverage.xml \
           --compare-branch "$BASE_SHA" \
           --fail-under "$THRESHOLD" \
-          --include 'Pulse/*.swift' \
-          --include 'PulseShareExtension/*.swift' \
-          --include 'PulseWidgetExtension/*.swift' \
-          --exclude '*+Preview.swift' \
-          --exclude '*Preview Content/*' \
+          --include 'Pulse/**/*.swift' 'PulseShareExtension/**/*.swift' 'PulseWidgetExtension/**/*.swift' \
+          --exclude '**/*+Preview.swift' '**/Preview Content/**' \
           --markdown-report patch-coverage.md || RESULT=$?
         {
           echo "## Patch Coverage Report"
