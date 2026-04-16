@@ -10,10 +10,10 @@ final class PulseSceneDelegate: UIResponder, UIWindowSceneDelegate {
     var window: UIWindow?
 
     /// Service locator for dependency injection
-    private let serviceLocator: ServiceLocator = .init()
+    let serviceLocator: ServiceLocator = .init()
 
     /// Cancellables for Combine subscriptions
-    private var cancellables = Set<AnyCancellable>()
+    var cancellables = Set<AnyCancellable>()
 
     /// Owns the deeplink router so it stays alive for the scene's lifetime.
     /// Created during `scene(_:willConnectTo:options:)` so it can subscribe to
@@ -86,7 +86,53 @@ final class PulseSceneDelegate: UIResponder, UIWindowSceneDelegate {
         }
     }
 
-    private func configureAuthenticationManager() {
+    func sceneDidBecomeActive(_: UIScene) {
+        MainActor.assumeIsolated {
+            AppLockManager.shared.handleSceneDidBecomeActive()
+        }
+    }
+
+    func windowScene(
+        _: UIWindowScene,
+        performActionFor shortcutItem: UIApplicationShortcutItem,
+        completionHandler: @escaping (Bool) -> Void
+    ) {
+        let handled = QuickActionHandler.shared.handle(shortcutItem: shortcutItem)
+        completionHandler(handled)
+    }
+
+    func sceneDidEnterBackground(_: UIScene) {
+        MainActor.assumeIsolated {
+            AppLockManager.shared.handleSceneDidEnterBackground()
+        }
+    }
+
+    func scene(_: UIScene, openURLContexts URLContexts: Set<UIOpenURLContext>) {
+        guard let url = URLContexts.first?.url else { return }
+
+        // Handle Google Sign-In callback
+        if GIDSignIn.sharedInstance.handle(url) {
+            return
+        }
+
+        handleDeeplink(url)
+    }
+
+    func scene(_: UIScene, continue userActivity: NSUserActivity) {
+        guard userActivity.activityType == NSUserActivityTypeBrowsingWeb,
+              let url = userActivity.webpageURL
+        else {
+            return
+        }
+
+        handleDeeplink(url)
+    }
+}
+
+// MARK: - Service Configuration
+
+private extension PulseSceneDelegate {
+    func configureAuthenticationManager() {
         do {
             nonisolated(unsafe) let authService = try serviceLocator.retrieve(AuthService.self)
             MainActor.assumeIsolated {
@@ -98,7 +144,7 @@ final class PulseSceneDelegate: UIResponder, UIWindowSceneDelegate {
     }
 
     /// Sync analytics user ID with authentication state changes.
-    private func configureAnalyticsUserID() {
+    func configureAnalyticsUserID() {
         guard let analyticsService = try? serviceLocator.retrieve(AnalyticsService.self) else { return }
 
         nonisolated(unsafe) let service = analyticsService
@@ -118,7 +164,7 @@ final class PulseSceneDelegate: UIResponder, UIWindowSceneDelegate {
         }
     }
 
-    private func configureAppLockManager() {
+    func configureAppLockManager() {
         do {
             nonisolated(unsafe) let appLockService = try serviceLocator.retrieve(AppLockService.self)
             MainActor.assumeIsolated {
@@ -129,46 +175,60 @@ final class PulseSceneDelegate: UIResponder, UIWindowSceneDelegate {
         }
     }
 
-    private var isRunningUITests: Bool {
-        let env = ProcessInfo.processInfo.environment
-        return env["UI_TESTING"] == "1" || env["XCTestConfigurationFilePath"] == "UI"
-    }
-
-    private func makeRootViewController() -> UIHostingController<RootView> {
-        let controller = UIHostingController(rootView: RootView(serviceLocator: serviceLocator))
-        controller.overrideUserInterfaceStyle = uiUserInterfaceStyle(from: ThemeManager.shared.colorScheme)
-        return controller
-    }
-
-    private func showSplashScreen(in window: UIWindow) {
-        let splashView = SplashScreenView { [weak self] in
-            self?.transitionToMainApp(in: window)
-        }
-
-        let splashViewController = UIHostingController(rootView: splashView)
-        splashViewController.overrideUserInterfaceStyle = uiUserInterfaceStyle(from: ThemeManager.shared.colorScheme)
-        window.rootViewController = splashViewController
-    }
-
-    private func transitionToMainApp(in window: UIWindow) {
-        let rootView = makeRootViewController()
-
-        if UIAccessibility.isReduceMotionEnabled {
-            window.rootViewController = rootView
-        } else {
-            UIView.transition(
-                with: window,
-                duration: 0.3,
-                options: .transitionCrossDissolve,
-                animations: {
-                    window.rootViewController = rootView
-                },
-                completion: nil
-            )
+    func syncLanguagePreference() {
+        let locator = UncheckedSendableBox(value: serviceLocator)
+        Task {
+            do {
+                let retrieved = try locator.value.retrieve(StorageService.self)
+                let storageService = UncheckedSendableBox(value: retrieved)
+                let preferences = try await storageService.value.fetchUserPreferences()
+                let language = preferences?.preferredLanguage
+                    ?? (Locale.current.language.languageCode?.identifier ?? "en")
+                await MainActor.run {
+                    AppLocalization.shared.updateLanguage(language)
+                }
+            } catch {
+                Logger.shared.service("Language preference sync failed: \(error)", level: .debug)
+            }
         }
     }
 
-    private func setupServices() {
+    func preloadLLMModelIfPremium() {
+        Task.detached(priority: .utility) { [serviceLocator] in
+            do {
+                // Check if user is premium before preloading
+                let storeKitService = try serviceLocator.retrieve(StoreKitService.self)
+                guard storeKitService.isPremium else {
+                    Logger.shared.service("Skipping LLM preload - not premium user")
+                    return
+                }
+
+                // Preload the model in background
+                let llmService = try serviceLocator.retrieve(LLMService.self)
+                try await llmService.loadModel()
+                Logger.shared.service("LLM model preloaded successfully")
+            } catch {
+                // Preload failure is non-critical - model will load on-demand
+                Logger.shared.service("LLM preload skipped: \(error)", level: .debug)
+            }
+        }
+    }
+
+    func fetchRemoteConfig(_ service: RemoteConfigService) {
+        Task {
+            do {
+                try await service.fetchAndActivate()
+            } catch {
+                Logger.shared.service("Remote Config fetch failed: \(error)", level: .warning)
+            }
+        }
+    }
+}
+
+// MARK: - Service Registration
+
+private extension PulseSceneDelegate {
+    func setupServices() {
         #if DEBUG
             // Check if running in test environment (unit tests or UI tests)
             // XCTestConfigurationFilePath is set for unit tests
@@ -177,33 +237,7 @@ final class PulseSceneDelegate: UIResponder, UIWindowSceneDelegate {
             let isUITesting = ProcessInfo.processInfo.environment["UI_TESTING"] == "1"
 
             if isUnitTesting || isUITesting {
-                // Use mock services for tests
-                serviceLocator.register(StorageService.self, instance: MockStorageService())
-                serviceLocator.register(NewsService.self, instance: MockNewsService())
-                serviceLocator.register(SearchService.self, instance: MockSearchService())
-                serviceLocator.register(BookmarksService.self, instance: MockBookmarksService())
-                serviceLocator.register(SettingsService.self, instance: MockSettingsService())
-                serviceLocator.register(LLMService.self, instance: MockLLMService())
-                serviceLocator.register(SummarizationService.self, instance: MockSummarizationService())
-                serviceLocator.register(FeedService.self, instance: MockFeedService.withSampleData())
-                serviceLocator.register(MediaService.self, instance: MockMediaService())
-
-                // Check for MOCK_PREMIUM environment variable to control premium status in UI tests
-                let isPremium = ProcessInfo.processInfo.environment["MOCK_PREMIUM"] == "1"
-                serviceLocator.register(StoreKitService.self, instance: MockStoreKitService(isPremium: isPremium))
-
-                serviceLocator.register(RemoteConfigService.self, instance: MockRemoteConfigService())
-                serviceLocator.register(AuthService.self, instance: MockAuthService())
-                serviceLocator.register(AppLockService.self, instance: MockAppLockService())
-                serviceLocator.register(AnalyticsService.self, instance: MockAnalyticsService())
-                serviceLocator.register(TextToSpeechService.self, instance: MockTextToSpeechService())
-                serviceLocator.register(NotificationService.self, instance: MockNotificationService())
-                serviceLocator.register(SharedURLImportService.self, instance: MockSharedURLImportService())
-                let mockOnboarding = MockOnboardingService(hasCompletedOnboarding: true)
-                serviceLocator.register(OnboardingService.self, instance: mockOnboarding)
-
-                // Configure APIKeysProvider with mock service
-                APIKeysProvider.configure(with: MockRemoteConfigService())
+                registerMockServices()
             } else {
                 // Use real services for debug builds
                 registerLiveServices()
@@ -214,7 +248,38 @@ final class PulseSceneDelegate: UIResponder, UIWindowSceneDelegate {
         #endif
     }
 
-    private func registerLiveServices() {
+    #if DEBUG
+        func registerMockServices() {
+            serviceLocator.register(StorageService.self, instance: MockStorageService())
+            serviceLocator.register(NewsService.self, instance: MockNewsService())
+            serviceLocator.register(SearchService.self, instance: MockSearchService())
+            serviceLocator.register(BookmarksService.self, instance: MockBookmarksService())
+            serviceLocator.register(SettingsService.self, instance: MockSettingsService())
+            serviceLocator.register(LLMService.self, instance: MockLLMService())
+            serviceLocator.register(SummarizationService.self, instance: MockSummarizationService())
+            serviceLocator.register(FeedService.self, instance: MockFeedService.withSampleData())
+            serviceLocator.register(MediaService.self, instance: MockMediaService())
+
+            // Check for MOCK_PREMIUM environment variable to control premium status in UI tests
+            let isPremium = ProcessInfo.processInfo.environment["MOCK_PREMIUM"] == "1"
+            serviceLocator.register(StoreKitService.self, instance: MockStoreKitService(isPremium: isPremium))
+
+            serviceLocator.register(RemoteConfigService.self, instance: MockRemoteConfigService())
+            serviceLocator.register(AuthService.self, instance: MockAuthService())
+            serviceLocator.register(AppLockService.self, instance: MockAppLockService())
+            serviceLocator.register(AnalyticsService.self, instance: MockAnalyticsService())
+            serviceLocator.register(TextToSpeechService.self, instance: MockTextToSpeechService())
+            serviceLocator.register(NotificationService.self, instance: MockNotificationService())
+            serviceLocator.register(SharedURLImportService.self, instance: MockSharedURLImportService())
+            let mockOnboarding = MockOnboardingService(hasCompletedOnboarding: true)
+            serviceLocator.register(OnboardingService.self, instance: mockOnboarding)
+
+            // Configure APIKeysProvider with mock service
+            APIKeysProvider.configure(with: MockRemoteConfigService())
+        }
+    #endif
+
+    func registerLiveServices() {
         // Register and configure Remote Config service first
         let remoteConfigService = LiveRemoteConfigService()
         serviceLocator.register(RemoteConfigService.self, instance: remoteConfigService)
@@ -260,103 +325,55 @@ final class PulseSceneDelegate: UIResponder, UIWindowSceneDelegate {
         serviceLocator.register(NotificationService.self, instance: LiveNotificationService.shared)
         serviceLocator.register(SharedURLImportService.self, instance: LiveSharedURLImportService())
     }
+}
 
-    private func syncLanguagePreference() {
-        let locator = UncheckedSendableBox(value: serviceLocator)
-        Task {
-            do {
-                let retrieved = try locator.value.retrieve(StorageService.self)
-                let storageService = UncheckedSendableBox(value: retrieved)
-                let preferences = try await storageService.value.fetchUserPreferences()
-                let language = preferences?.preferredLanguage
-                    ?? (Locale.current.language.languageCode?.identifier ?? "en")
-                await MainActor.run {
-                    AppLocalization.shared.updateLanguage(language)
-                }
-            } catch {
-                Logger.shared.service("Language preference sync failed: \(error)", level: .debug)
-            }
+// MARK: - Window / UI Helpers
+
+private extension PulseSceneDelegate {
+    var isRunningUITests: Bool {
+        let env = ProcessInfo.processInfo.environment
+        return env["UI_TESTING"] == "1" || env["XCTestConfigurationFilePath"] == "UI"
+    }
+
+    func makeRootViewController() -> UIHostingController<RootView> {
+        let controller = UIHostingController(rootView: RootView(serviceLocator: serviceLocator))
+        controller.overrideUserInterfaceStyle = uiUserInterfaceStyle(from: ThemeManager.shared.colorScheme)
+        return controller
+    }
+
+    func showSplashScreen(in window: UIWindow) {
+        let splashView = SplashScreenView { [weak self] in
+            self?.transitionToMainApp(in: window)
+        }
+
+        let splashViewController = UIHostingController(rootView: splashView)
+        splashViewController.overrideUserInterfaceStyle = uiUserInterfaceStyle(from: ThemeManager.shared.colorScheme)
+        window.rootViewController = splashViewController
+    }
+
+    func transitionToMainApp(in window: UIWindow) {
+        let rootView = makeRootViewController()
+
+        if UIAccessibility.isReduceMotionEnabled {
+            window.rootViewController = rootView
+        } else {
+            UIView.transition(
+                with: window,
+                duration: 0.3,
+                options: .transitionCrossDissolve,
+                animations: {
+                    window.rootViewController = rootView
+                },
+                completion: nil
+            )
         }
     }
 
-    private func preloadLLMModelIfPremium() {
-        Task.detached(priority: .utility) { [serviceLocator] in
-            do {
-                // Check if user is premium before preloading
-                let storeKitService = try serviceLocator.retrieve(StoreKitService.self)
-                guard storeKitService.isPremium else {
-                    Logger.shared.service("Skipping LLM preload - not premium user")
-                    return
-                }
-
-                // Preload the model in background
-                let llmService = try serviceLocator.retrieve(LLMService.self)
-                try await llmService.loadModel()
-                Logger.shared.service("LLM model preloaded successfully")
-            } catch {
-                // Preload failure is non-critical - model will load on-demand
-                Logger.shared.service("LLM preload skipped: \(error)", level: .debug)
-            }
-        }
-    }
-
-    private func fetchRemoteConfig(_ service: RemoteConfigService) {
-        Task {
-            do {
-                try await service.fetchAndActivate()
-            } catch {
-                Logger.shared.service("Remote Config fetch failed: \(error)", level: .warning)
-            }
-        }
-    }
-
-    func sceneDidBecomeActive(_: UIScene) {
-        MainActor.assumeIsolated {
-            AppLockManager.shared.handleSceneDidBecomeActive()
-        }
-    }
-
-    func windowScene(
-        _: UIWindowScene,
-        performActionFor shortcutItem: UIApplicationShortcutItem,
-        completionHandler: @escaping (Bool) -> Void
-    ) {
-        let handled = QuickActionHandler.shared.handle(shortcutItem: shortcutItem)
-        completionHandler(handled)
-    }
-
-    func sceneDidEnterBackground(_: UIScene) {
-        MainActor.assumeIsolated {
-            AppLockManager.shared.handleSceneDidEnterBackground()
-        }
-    }
-
-    func scene(_: UIScene, openURLContexts URLContexts: Set<UIOpenURLContext>) {
-        guard let url = URLContexts.first?.url else { return }
-
-        // Handle Google Sign-In callback
-        if GIDSignIn.sharedInstance.handle(url) {
-            return
-        }
-
-        handleDeeplink(url)
-    }
-
-    func scene(_: UIScene, continue userActivity: NSUserActivity) {
-        guard userActivity.activityType == NSUserActivityTypeBrowsingWeb,
-              let url = userActivity.webpageURL
-        else {
-            return
-        }
-
-        handleDeeplink(url)
-    }
-
-    private func handleDeeplink(_ url: URL) {
+    func handleDeeplink(_ url: URL) {
         DeeplinkManager.shared.parse(url: url)
     }
 
-    private func uiUserInterfaceStyle(from colorScheme: ColorScheme?) -> UIUserInterfaceStyle {
+    func uiUserInterfaceStyle(from colorScheme: ColorScheme?) -> UIUserInterfaceStyle {
         switch colorScheme {
         case .dark:
             return .dark

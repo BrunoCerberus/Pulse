@@ -84,28 +84,7 @@ final class LLMModelManager: @unchecked Sendable {
         progressHandler(0.3)
 
         do {
-            progressHandler(0.5)
-
-            let useGPU: Bool
-            #if targetEnvironment(simulator)
-                useGPU = false
-            #else
-                useGPU = true
-            #endif
-
-            let config = LlamaConfig(
-                batchSize: 512,
-                maxTokenCount: UInt32(LLMConfiguration.contextSize),
-                useGPU: useGPU
-            )
-
-            let service = LlamaService(modelUrl: modelURL, config: config)
-            progressHandler(0.8)
-
-            // Warm up the service by processing an empty message to trigger lazy model load
-            let warmupMessages = [LlamaChatMessage(role: .system, content: "You are a helpful assistant.")]
-            try await service.processMessages(warmupMessages)
-
+            let service = try await createAndWarmUpService(modelURL: modelURL, progressHandler: progressHandler)
             let boxedService = UncheckedSendableBox(value: service)
             let wasAlreadyLoaded = lock.withLock {
                 if llamaService != nil {
@@ -115,8 +94,7 @@ final class LLMModelManager: @unchecked Sendable {
                 return false
             }
             if wasAlreadyLoaded {
-                // Another thread loaded first — discard our instance
-                // LlamaService cleans up via deinit when it goes out of scope
+                // Another thread loaded first — discard our instance; LlamaService cleans up via deinit
                 return
             }
 
@@ -126,6 +104,35 @@ final class LLMModelManager: @unchecked Sendable {
             logger.error("Failed to load model: \(error)", category: logCategory)
             throw LLMError.modelLoadFailed(error.localizedDescription)
         }
+    }
+
+    private func createAndWarmUpService(
+        modelURL: URL,
+        progressHandler: @escaping @Sendable (Double) -> Void
+    ) async throws -> LlamaService {
+        progressHandler(0.5)
+
+        let useGPU: Bool
+        #if targetEnvironment(simulator)
+            useGPU = false
+        #else
+            useGPU = true
+        #endif
+
+        let config = LlamaConfig(
+            batchSize: 512,
+            maxTokenCount: UInt32(LLMConfiguration.contextSize),
+            useGPU: useGPU
+        )
+
+        let service = LlamaService(modelUrl: modelURL, config: config)
+        progressHandler(0.8)
+
+        // Warm up the service to trigger lazy model load
+        let warmupMessages = [LlamaChatMessage(role: .system, content: "You are a helpful assistant.")]
+        try await service.processMessages(warmupMessages)
+
+        return service
     }
 
     /// Unload model and free memory
