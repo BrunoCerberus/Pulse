@@ -755,17 +755,18 @@ jobs:
         name: snapshot-test-results
         path: artifacts/snap
 
-    - name: Install xcresultparser and diff-cover
-      run: |
-        brew install xcresultparser
-        pipx install diff-cover
+    - name: Install diff-cover
+      run: pipx install diff-cover
 
+    # actions/upload-artifact uploads a directory's *contents* (not the directory
+    # itself), so the downloaded artifacts land directly inside artifacts/unit
+    # and artifacts/snap — those paths are the xcresult bundles.
     - name: Convert xcresult bundles to Cobertura
       run: |
-        xcresultparser -o cobertura --project-root "$PWD" \
-          artifacts/unit/unit-test-results.xcresult > unit-coverage.xml
-        xcresultparser -o cobertura --project-root "$PWD" \
-          artifacts/snap/snapshot-test-results.xcresult > snap-coverage.xml
+        python3 scripts/xcresult-to-cobertura.py artifacts/unit \
+          --project-root "$PWD" -o unit-coverage.xml
+        python3 scripts/xcresult-to-cobertura.py artifacts/snap \
+          --project-root "$PWD" -o snap-coverage.xml
 
     - name: Enforce patch coverage threshold
       run: |
