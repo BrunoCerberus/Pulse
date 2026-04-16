@@ -78,13 +78,19 @@ def build_cobertura(
     ET.SubElement(sources, "source").text = root_abs.rstrip("/")
     packages = ET.SubElement(coverage, "packages")
 
+    # File paths in the xcresult are absolute, so --project-root must match the
+    # directory the tests were built from. On GitHub-hosted macOS runners that
+    # is /Users/runner/work/<repo>/<repo>; local or self-hosted runs need to
+    # pass a matching --project-root or everything filters out silently.
+    matched_files = 0
     for target in report_json.get("targets", []):
         kept_files = [f for f in target.get("files", []) if in_project(f.get("path", ""))]
         if not kept_files:
             continue
+        matched_files += len(kept_files)
 
-        covered = sum(f["coveredLines"] for f in kept_files)
-        executable = sum(f["executableLines"] for f in kept_files)
+        covered = sum(f.get("coveredLines", 0) for f in kept_files)
+        executable = sum(f.get("executableLines", 0) for f in kept_files)
         pkg_rate = covered / executable if executable else 0.0
         package = ET.SubElement(packages, "package", {
             "name": target["name"],
@@ -113,6 +119,15 @@ def build_cobertura(
                     "number": str(entry["line"]),
                     "hits": str(entry.get("executionCount", 0)),
                 })
+
+    if matched_files == 0:
+        print(
+            f"warning: no files in the coverage report matched --project-root "
+            f"{root_abs} — Cobertura output will be empty and diff-cover will "
+            f"report 0 patch lines. Check that --project-root points at the "
+            f"directory the xcresult was built from.",
+            file=sys.stderr,
+        )
 
     return coverage
 

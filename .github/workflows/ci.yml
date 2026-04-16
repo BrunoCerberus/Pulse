@@ -721,6 +721,7 @@ jobs:
     runs-on: macos-26
     needs: tests
     if: github.event_name == 'pull_request'
+    timeout-minutes: 15
 
     permissions:
       contents: read
@@ -756,7 +757,9 @@ jobs:
         path: artifacts/snap
 
     - name: Install diff-cover
-      run: pipx install diff-cover
+      run: |
+        pipx install diff-cover
+        pipx ensurepath || true
 
     # actions/upload-artifact uploads a directory's *contents* (not the directory
     # itself), so the downloaded artifacts land directly inside artifacts/unit
@@ -768,22 +771,30 @@ jobs:
         python3 scripts/xcresult-to-cobertura.py artifacts/snap \
           --project-root "$PWD" -o snap-coverage.xml
 
+    # diff-cover uses Python fnmatch where `*` already spans `/`, so `Pulse/*.swift`
+    # matches both `Pulse/Foo.swift` and `Pulse/Home/Foo.swift`. `Pulse/**/*.swift`
+    # would compile to a regex that *requires* an intermediate directory, silently
+    # dropping app/extension entry points from the gate.
+    # The `|| RESULT=$?` dance ensures the markdown report always lands in the job
+    # summary, not just on the happy path — `bash -e` would otherwise skip it.
     - name: Enforce patch coverage threshold
       run: |
+        RESULT=0
         diff-cover unit-coverage.xml snap-coverage.xml \
           --compare-branch "$BASE_SHA" \
           --fail-under "$THRESHOLD" \
-          --include 'Pulse/**/*.swift' \
-          --include 'PulseShareExtension/**/*.swift' \
-          --include 'PulseWidgetExtension/**/*.swift' \
-          --exclude '**/*+Preview.swift' \
-          --exclude '**/Preview Content/**' \
-          --markdown-report patch-coverage.md
+          --include 'Pulse/*.swift' \
+          --include 'PulseShareExtension/*.swift' \
+          --include 'PulseWidgetExtension/*.swift' \
+          --exclude '*+Preview.swift' \
+          --exclude '*Preview Content/*' \
+          --markdown-report patch-coverage.md || RESULT=$?
         {
           echo "## Patch Coverage Report"
           echo ""
           cat patch-coverage.md
         } >> "$GITHUB_STEP_SUMMARY"
+        exit $RESULT
 
     - name: Upload patch coverage report
       uses: actions/upload-artifact@bbbca2ddaa5d8feaa63e36b76fdaad77386f024f # v7.0.0
