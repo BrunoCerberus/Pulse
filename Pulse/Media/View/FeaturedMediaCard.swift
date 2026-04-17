@@ -23,20 +23,13 @@ private enum Constants {
 /// - Duration display
 struct FeaturedMediaCard: View {
     let item: MediaViewItem
+    var cardWidth: CGFloat = 280
     let onTap: () -> Void
 
     @Environment(\.colorScheme) private var colorScheme
     @Environment(\.dynamicTypeSize) private var dynamicTypeSize
 
-    private let cardWidth: CGFloat = 280
     private let cardHeight: CGFloat = 180
-
-    private var effectiveCardWidth: CGFloat {
-        let screenWidth = UIApplication.shared.connectedScenes
-            .compactMap { $0 as? UIWindowScene }
-            .first?.screen.bounds.width ?? cardWidth
-        return dynamicTypeSize.isAccessibilitySize ? screenWidth - Spacing.lg * 2 : cardWidth
-    }
 
     private var effectiveCardHeight: CGFloat {
         dynamicTypeSize.isAccessibilitySize ? 220 : cardHeight
@@ -69,7 +62,7 @@ struct FeaturedMediaCard: View {
 
                 contentOverlay
             }
-            .frame(width: effectiveCardWidth, height: effectiveCardHeight)
+            .frame(width: cardWidth, height: effectiveCardHeight)
             .clipShape(RoundedRectangle(cornerRadius: CornerRadius.lg, style: .continuous))
             .overlay {
                 RoundedRectangle(cornerRadius: CornerRadius.lg, style: .continuous)
@@ -92,7 +85,7 @@ struct FeaturedMediaCard: View {
                 image
                     .resizable()
                     .aspectRatio(contentMode: .fill)
-                    .frame(width: effectiveCardWidth, height: effectiveCardHeight)
+                    .frame(width: cardWidth, height: effectiveCardHeight)
                     .clipped()
             } placeholder: {
                 placeholderBackground

@@ -21,6 +21,7 @@ struct CoordinatorView: View {
     @StateObject private var coordinator: Coordinator
     @StateObject private var themeManager = ThemeManager.shared
     @ObservedObject private var appLocalization = AppLocalization.shared
+    @Environment(\.horizontalSizeClass) private var horizontalSizeClass
     @State private var isOffline = false
 
     private let networkMonitor: NetworkMonitorService?
@@ -38,84 +39,10 @@ struct CoordinatorView: View {
                 OfflineBannerView()
             }
 
-            AnimatedTabView(selection: $coordinator.selectedTab) {
-                Tab(appLocalization.localized("tab.home"), systemImage: AppTab.home.symbolImage, value: .home) {
-                    NavigationStack(path: $coordinator.homePath) {
-                        HomeView(
-                            router: HomeNavigationRouter(coordinator: coordinator),
-                            viewModel: coordinator.homeViewModel
-                        )
-                        .navigationDestination(for: Page.self) { page in
-                            coordinator.build(page: page)
-                        }
-                    }
-                }
-
-                Tab(appLocalization.localized("tab.media"), systemImage: AppTab.media.symbolImage, value: .media) {
-                    NavigationStack(path: $coordinator.mediaPath) {
-                        MediaView(
-                            router: MediaNavigationRouter(coordinator: coordinator),
-                            viewModel: coordinator.mediaViewModel
-                        )
-                        .navigationDestination(for: Page.self) { page in
-                            coordinator.build(page: page)
-                        }
-                    }
-                }
-
-                Tab(appLocalization.localized("tab.feed"), systemImage: AppTab.feed.symbolImage, value: .feed) {
-                    NavigationStack(path: $coordinator.feedPath) {
-                        FeedView(
-                            router: FeedNavigationRouter(coordinator: coordinator),
-                            viewModel: coordinator.feedViewModel,
-                            serviceLocator: coordinator.serviceLocator
-                        )
-                        .navigationDestination(for: Page.self) { page in
-                            coordinator.build(page: page)
-                        }
-                    }
-                }
-
-                Tab(
-                    appLocalization.localized("tab.bookmarks"),
-                    systemImage: AppTab.bookmarks.symbolImage,
-                    value: .bookmarks
-                ) {
-                    NavigationStack(path: $coordinator.bookmarksPath) {
-                        BookmarksView(
-                            router: BookmarksNavigationRouter(coordinator: coordinator),
-                            viewModel: coordinator.bookmarksViewModel
-                        )
-                        .navigationDestination(for: Page.self) { page in
-                            coordinator.build(page: page)
-                        }
-                    }
-                }
-
-                Tab(
-                    appLocalization.localized("tab.search"),
-                    systemImage: AppTab.search.symbolImage,
-                    value: .search
-                ) {
-                    NavigationStack(path: $coordinator.searchPath) {
-                        SearchView(
-                            router: SearchNavigationRouter(coordinator: coordinator),
-                            viewModel: coordinator.searchViewModel
-                        )
-                        .navigationDestination(for: Page.self) { page in
-                            coordinator.build(page: page)
-                        }
-                    }
-                }
-            } effects: { tab in
-                tab.symbolEffect
-            }
-            .preferredColorScheme(themeManager.colorScheme)
-            .onChange(of: coordinator.selectedTab) { _, _ in
-                HapticManager.shared.tabChange()
-            }
-            .onAppear {
-                setupDeeplinkRouter()
+            if horizontalSizeClass == .regular {
+                regularLayout
+            } else {
+                compactLayout
             }
         }
         .animation(.easeInOut(duration: 0.3), value: isOffline)
@@ -129,6 +56,103 @@ struct CoordinatorView: View {
             } else if connected, wasOffline {
                 AccessibilityNotification.Announcement(Constants.online).post()
             }
+        }
+    }
+
+    private var compactLayout: some View {
+        AnimatedTabView(selection: $coordinator.selectedTab) {
+            Tab(appLocalization.localized("tab.home"), systemImage: AppTab.home.symbolImage, value: .home) {
+                NavigationStack(path: $coordinator.homePath) {
+                    HomeView(
+                        router: HomeNavigationRouter(coordinator: coordinator),
+                        viewModel: coordinator.homeViewModel
+                    )
+                    .navigationDestination(for: Page.self) { page in
+                        coordinator.build(page: page)
+                    }
+                }
+            }
+
+            Tab(appLocalization.localized("tab.media"), systemImage: AppTab.media.symbolImage, value: .media) {
+                NavigationStack(path: $coordinator.mediaPath) {
+                    MediaView(
+                        router: MediaNavigationRouter(coordinator: coordinator),
+                        viewModel: coordinator.mediaViewModel
+                    )
+                    .navigationDestination(for: Page.self) { page in
+                        coordinator.build(page: page)
+                    }
+                }
+            }
+
+            Tab(appLocalization.localized("tab.feed"), systemImage: AppTab.feed.symbolImage, value: .feed) {
+                NavigationStack(path: $coordinator.feedPath) {
+                    FeedView(
+                        router: FeedNavigationRouter(coordinator: coordinator),
+                        viewModel: coordinator.feedViewModel,
+                        serviceLocator: coordinator.serviceLocator
+                    )
+                    .navigationDestination(for: Page.self) { page in
+                        coordinator.build(page: page)
+                    }
+                }
+            }
+
+            Tab(
+                appLocalization.localized("tab.bookmarks"),
+                systemImage: AppTab.bookmarks.symbolImage,
+                value: .bookmarks
+            ) {
+                NavigationStack(path: $coordinator.bookmarksPath) {
+                    BookmarksView(
+                        router: BookmarksNavigationRouter(coordinator: coordinator),
+                        viewModel: coordinator.bookmarksViewModel
+                    )
+                    .navigationDestination(for: Page.self) { page in
+                        coordinator.build(page: page)
+                    }
+                }
+            }
+
+            Tab(
+                appLocalization.localized("tab.search"),
+                systemImage: AppTab.search.symbolImage,
+                value: .search
+            ) {
+                NavigationStack(path: $coordinator.searchPath) {
+                    SearchView(
+                        router: SearchNavigationRouter(coordinator: coordinator),
+                        viewModel: coordinator.searchViewModel
+                    )
+                    .navigationDestination(for: Page.self) { page in
+                        coordinator.build(page: page)
+                    }
+                }
+            }
+        } effects: { tab in
+            tab.symbolEffect
+        }
+        .preferredColorScheme(themeManager.colorScheme)
+        .onChange(of: coordinator.selectedTab) { _, _ in
+            HapticManager.shared.tabChange()
+        }
+        .onAppear {
+            setupDeeplinkRouter()
+        }
+    }
+
+    private var regularLayout: some View {
+        NavigationSplitView {
+            SidebarContentView(selectedTab: $coordinator.selectedTab)
+        } detail: {
+            AdaptiveDetailStack(coordinator: coordinator)
+        }
+        .preferredColorScheme(themeManager.colorScheme)
+        .onChange(of: coordinator.selectedTab) { _, _ in
+            HapticManager.shared.tabChange()
+        }
+        .onAppear {
+            setupDeeplinkRouter()
         }
     }
 

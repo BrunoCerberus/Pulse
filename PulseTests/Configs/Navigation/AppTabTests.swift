@@ -48,4 +48,17 @@ struct AppTabTests {
         }
         #expect(tabs.count == AppTab.allCases.count)
     }
+
+    @Test("all cases produce a non-empty localized title")
+    func allCasesHaveLocalizedTitle() {
+        for tab in AppTab.allCases {
+            #expect(!tab.title.isEmpty)
+        }
+    }
+
+    @Test("titles are distinct per tab")
+    func titlesAreDistinct() {
+        let titles = AppTab.allCases.map(\.title)
+        #expect(Set(titles).count == AppTab.allCases.count)
+    }
 }

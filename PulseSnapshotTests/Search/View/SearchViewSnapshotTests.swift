@@ -45,6 +45,32 @@ final class SearchViewSnapshotTests: XCTestCase {
         )
     }
 
+    /// Exercises the iPad regular-width adaptive branch: LazyVGrid search
+    /// results invoked via `resultsContainer(...)` / `resultCard(...)` helpers.
+    func testSearchViewRegularWidth() {
+        let mockSearchService = MockSearchService()
+        mockSearchService.searchResult = .success(Array(Article.mockArticles.prefix(6)))
+
+        let locator = ServiceLocator()
+        locator.register(SearchService.self, instance: mockSearchService)
+        locator.register(StorageService.self, instance: MockStorageService())
+
+        let viewModel = SearchViewModel(serviceLocator: locator)
+        viewModel.handle(event: .onQueryChanged("swift"))
+        viewModel.handle(event: .onSearch)
+
+        let view = NavigationStack {
+            SearchView(router: SearchNavigationRouter(), viewModel: viewModel)
+        }
+        let controller = UIHostingController(rootView: view)
+
+        assertSnapshot(
+            of: controller,
+            as: SnapshotConfig.snapshotting(on: SnapshotConfig.iPad),
+            record: false
+        )
+    }
+
     // MARK: - Loading State
 
     func testSearchViewLoading() {

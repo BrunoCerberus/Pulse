@@ -92,4 +92,84 @@ final class RootViewSnapshotTests: XCTestCase {
             record: false
         )
     }
+
+    // MARK: - CoordinatorView Adaptive Shell
+
+    /// Exercises the compact-width branch of CoordinatorView (AnimatedTabView).
+    func testCoordinatorViewCompact() {
+        let view = CoordinatorView(serviceLocator: .preview)
+        let controller = UIHostingController(rootView: view)
+
+        assertSnapshot(
+            of: controller,
+            as: SnapshotConfig.snapshotting(on: iPhoneAirConfig),
+            record: false
+        )
+    }
+
+    /// Exercises the regular-width branch of CoordinatorView:
+    /// NavigationSplitView + SidebarContentView + AdaptiveDetailStack.
+    func testCoordinatorViewRegularWidth() {
+        let view = CoordinatorView(serviceLocator: .preview)
+        let controller = UIHostingController(rootView: view)
+
+        assertSnapshot(
+            of: controller,
+            as: SnapshotConfig.snapshotting(on: SnapshotConfig.iPad),
+            record: false
+        )
+    }
+
+    // MARK: - AdaptiveDetailStack (one per tab to cover each switch case)
+
+    private func renderAdaptiveDetailStack(selectedTab: AppTab) -> UIHostingController<some View> {
+        let coordinator = Coordinator(serviceLocator: .preview)
+        coordinator.selectedTab = selectedTab
+        let view = NavigationSplitView {
+            Text("sidebar").frame(minWidth: 200)
+        } detail: {
+            AdaptiveDetailStack(coordinator: coordinator)
+        }
+        return UIHostingController(rootView: view)
+    }
+
+    func testAdaptiveDetailStackHome() {
+        assertSnapshot(
+            of: renderAdaptiveDetailStack(selectedTab: .home),
+            as: SnapshotConfig.snapshotting(on: SnapshotConfig.iPad),
+            record: false
+        )
+    }
+
+    func testAdaptiveDetailStackMedia() {
+        assertSnapshot(
+            of: renderAdaptiveDetailStack(selectedTab: .media),
+            as: SnapshotConfig.snapshotting(on: SnapshotConfig.iPad),
+            record: false
+        )
+    }
+
+    func testAdaptiveDetailStackFeed() {
+        assertSnapshot(
+            of: renderAdaptiveDetailStack(selectedTab: .feed),
+            as: SnapshotConfig.snapshotting(on: SnapshotConfig.iPad),
+            record: false
+        )
+    }
+
+    func testAdaptiveDetailStackBookmarks() {
+        assertSnapshot(
+            of: renderAdaptiveDetailStack(selectedTab: .bookmarks),
+            as: SnapshotConfig.snapshotting(on: SnapshotConfig.iPad),
+            record: false
+        )
+    }
+
+    func testAdaptiveDetailStackSearch() {
+        assertSnapshot(
+            of: renderAdaptiveDetailStack(selectedTab: .search),
+            as: SnapshotConfig.snapshotting(on: SnapshotConfig.iPad),
+            record: false
+        )
+    }
 }

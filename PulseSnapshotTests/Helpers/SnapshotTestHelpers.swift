@@ -17,12 +17,36 @@ enum SnapshotConfig {
         traits: UITraitCollection(userInterfaceStyle: .light)
     )
 
-    /// iPad configuration for tablet testing.
-    static let iPad = ViewImageConfig(
-        safeArea: UIEdgeInsets(top: 24, left: 0, bottom: 20, right: 0),
-        size: CGSize(width: 1024, height: 768),
-        traits: UITraitCollection(userInterfaceStyle: .dark)
-    )
+    /// iPad configuration for tablet testing (landscape, 1024x768).
+    @MainActor static let iPad: ViewImageConfig = {
+        let traits = UITraitCollection { mutableTraits in
+            mutableTraits.userInterfaceStyle = .dark
+            mutableTraits.horizontalSizeClass = .regular
+            mutableTraits.verticalSizeClass = .regular
+            mutableTraits.userInterfaceIdiom = .pad
+        }
+        return ViewImageConfig(
+            safeArea: UIEdgeInsets(top: 24, left: 0, bottom: 20, right: 0),
+            size: CGSize(width: 1024, height: 768),
+            traits: traits
+        )
+    }()
+
+    /// iPad Pro 13" portrait configuration — validates adaptive layouts on the
+    /// widest canvas (grids, split view detail column, capped reading width).
+    @MainActor static let iPadPro13: ViewImageConfig = {
+        let traits = UITraitCollection { mutableTraits in
+            mutableTraits.userInterfaceStyle = .dark
+            mutableTraits.horizontalSizeClass = .regular
+            mutableTraits.verticalSizeClass = .regular
+            mutableTraits.userInterfaceIdiom = .pad
+        }
+        return ViewImageConfig(
+            safeArea: UIEdgeInsets(top: 24, left: 0, bottom: 20, right: 0),
+            size: CGSize(width: 1032, height: 1376),
+            traits: traits
+        )
+    }()
 
     /// iPhone Air with accessibility extra-large content size category (dark mode).
     @MainActor static let iPhoneAirAccessibility: ViewImageConfig = {

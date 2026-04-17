@@ -124,6 +124,36 @@ final class BookmarksViewSnapshotTests: XCTestCase {
         )
     }
 
+    // MARK: - iPad Regular Width (Adaptive Grid)
+
+    /// Exercises the iPad regular-width adaptive branch: LazyVGrid bookmark
+    /// cards invoked via `bookmarkCards(_:)` / `bookmarkCard(_:)` helpers.
+    func testBookmarksViewRegularWidth() {
+        let mockBookmarks = Array(Article.mockArticles.prefix(6))
+        let mockBookmarksService = MockBookmarksService()
+        mockBookmarksService.bookmarks = mockBookmarks
+        let mockStorage = MockStorageService()
+        mockStorage.bookmarkedArticles = mockBookmarks
+
+        let locator = ServiceLocator()
+        locator.register(BookmarksService.self, instance: mockBookmarksService)
+        locator.register(StorageService.self, instance: mockStorage)
+
+        let viewModel = BookmarksViewModel(serviceLocator: locator)
+        viewModel.handle(event: .onAppear)
+
+        let view = NavigationStack {
+            BookmarksView(router: BookmarksNavigationRouter(), viewModel: viewModel)
+        }
+        let controller = UIHostingController(rootView: view)
+
+        assertSnapshot(
+            of: controller,
+            as: SnapshotConfig.snapshotting(on: SnapshotConfig.iPad),
+            record: false
+        )
+    }
+
     // MARK: - Empty State View Only
 
     func testBookmarksViewEmptyState() {

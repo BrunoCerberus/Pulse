@@ -12,6 +12,7 @@ struct SearchView<R: SearchNavigationRouter>: View {
     @ObservedObject var viewModel: SearchViewModel
 
     @Environment(\.dynamicTypeSize) private var dynamicTypeSize
+    @Environment(\.horizontalSizeClass) private var horizontalSizeClass
 
     @AccessibilityFocusState private var isFirstResultFocused: Bool
 
@@ -268,41 +269,18 @@ struct SearchView<R: SearchNavigationRouter>: View {
                     .padding(.horizontal, Spacing.md)
                     .disabled(viewModel.viewState.isSorting)
 
-                LazyVStack(spacing: Spacing.sm) {
-                    ForEach(results) { item in
-                        GlassArticleCard(
-                            item: item,
-                            onTap: {
-                                viewModel.handle(event: .onArticleTapped(articleId: item.id))
-                            },
-                            onBookmark: {
-                                HapticManager.shared.notification(.success)
-                                viewModel.handle(event: .onBookmarkTapped(articleId: item.id))
-                            },
-                            onShare: {
-                                viewModel.handle(event: .onShareTapped(articleId: item.id))
-                            }
-                        )
-                        .fadeIn(delay: Double(item.animationIndex) * 0.03)
-                        .onAppear {
-                            // Pre-computed lastItemId avoids recalculating .last on every appear
-                            if item.id == lastItemId {
-                                viewModel.handle(event: .onLoadMore)
-                            }
+                resultsContainer(results: results, lastItemId: lastItemId)
+                    .padding(.horizontal, Spacing.md)
+                    .accessibilityFocused($isFirstResultFocused)
+                    .allowsHitTesting(!viewModel.viewState.isSorting)
+                    .overlay {
+                        if viewModel.viewState.isSorting {
+                            ProgressView()
+                                .scaleEffect(1.2)
+                                .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .center)
+                                .background(.ultraThinMaterial.opacity(0.5))
                         }
                     }
-                }
-                .padding(.horizontal, Spacing.md)
-                .accessibilityFocused($isFirstResultFocused)
-                .allowsHitTesting(!viewModel.viewState.isSorting)
-                .overlay {
-                    if viewModel.viewState.isSorting {
-                        ProgressView()
-                            .scaleEffect(1.2)
-                            .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .center)
-                            .background(.ultraThinMaterial.opacity(0.5))
-                    }
-                }
 
                 if viewModel.viewState.isLoadingMore {
                     HStack {
@@ -316,6 +294,52 @@ struct SearchView<R: SearchNavigationRouter>: View {
                 }
             }
             .padding(.top, Spacing.sm)
+        }
+    }
+}
+
+// MARK: - Results Container
+
+private extension SearchView {
+    @ViewBuilder
+    func resultsContainer(results: [ArticleViewItem], lastItemId: String?) -> some View {
+        if horizontalSizeClass == .regular {
+            LazyVGrid(
+                columns: [GridItem(.adaptive(minimum: 360), spacing: Spacing.md)],
+                spacing: Spacing.md
+            ) {
+                ForEach(results) { item in
+                    resultCard(item, lastItemId: lastItemId)
+                }
+            }
+        } else {
+            LazyVStack(spacing: Spacing.sm) {
+                ForEach(results) { item in
+                    resultCard(item, lastItemId: lastItemId)
+                }
+            }
+        }
+    }
+
+    func resultCard(_ item: ArticleViewItem, lastItemId: String?) -> some View {
+        GlassArticleCard(
+            item: item,
+            onTap: {
+                viewModel.handle(event: .onArticleTapped(articleId: item.id))
+            },
+            onBookmark: {
+                HapticManager.shared.notification(.success)
+                viewModel.handle(event: .onBookmarkTapped(articleId: item.id))
+            },
+            onShare: {
+                viewModel.handle(event: .onShareTapped(articleId: item.id))
+            }
+        )
+        .fadeIn(delay: Double(item.animationIndex) * 0.03)
+        .onAppear {
+            if item.id == lastItemId {
+                viewModel.handle(event: .onLoadMore)
+            }
         }
     }
 }

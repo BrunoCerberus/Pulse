@@ -21,6 +21,12 @@ struct MediaView<R: MediaNavigationRouter>: View {
     /// Backing ViewModel managing data and actions.
     @ObservedObject var viewModel: MediaViewModel
 
+    @Environment(\.horizontalSizeClass) private var horizontalSizeClass
+
+    private var featuredCardWidth: CGFloat {
+        horizontalSizeClass == .regular ? 360 : 280
+    }
+
     /// Creates the view with a router and ViewModel.
     init(router: R, viewModel: MediaViewModel) {
         self.router = router
@@ -175,30 +181,9 @@ struct MediaView<R: MediaNavigationRouter>: View {
                 }
 
                 Section {
-                    LazyVStack(spacing: Spacing.sm) {
-                        ForEach(mediaItems) { item in
-                            MediaCard(
-                                item: item,
-                                onTap: {
-                                    viewModel.handle(event: .onMediaTapped(mediaId: item.id))
-                                },
-                                onPlay: {
-                                    viewModel.handle(event: .onPlayTapped(mediaId: item.id))
-                                },
-                                onShare: {
-                                    viewModel.handle(event: .onShareTapped(mediaId: item.id))
-                                }
-                            )
-                            .fadeIn(delay: Double(item.animationIndex) * 0.03)
-                            .onAppear {
-                                if item.id == lastItemId {
-                                    viewModel.handle(event: .onLoadMore)
-                                }
-                            }
-                        }
-                    }
-                    .padding(.horizontal, Spacing.md)
-                    .padding(.top, Spacing.sm)
+                    mediaItemsContainer(mediaItems: mediaItems, lastItemId: lastItemId)
+                        .padding(.horizontal, Spacing.md)
+                        .padding(.top, Spacing.sm)
 
                     if viewModel.viewState.isLoadingMore {
                         HStack {
@@ -238,7 +223,7 @@ struct MediaView<R: MediaNavigationRouter>: View {
         ScrollView(.horizontal) {
             LazyHStack(spacing: Spacing.md) {
                 ForEach(viewModel.viewState.featuredMedia) { item in
-                    FeaturedMediaCard(item: item) {
+                    FeaturedMediaCard(item: item, cardWidth: featuredCardWidth) {
                         viewModel.handle(event: .onMediaTapped(mediaId: item.id))
                     }
                     .fadeIn(delay: Double(item.animationIndex) * 0.1)
@@ -248,6 +233,52 @@ struct MediaView<R: MediaNavigationRouter>: View {
             .padding(.vertical, Spacing.sm)
         }
         .scrollIndicators(.hidden)
+    }
+
+    // MARK: - Media Items Container
+
+    @ViewBuilder
+    private func mediaItemsContainer(
+        mediaItems: [MediaViewItem],
+        lastItemId: String?
+    ) -> some View {
+        if horizontalSizeClass == .regular {
+            LazyVGrid(
+                columns: [GridItem(.adaptive(minimum: 360), spacing: Spacing.md)],
+                spacing: Spacing.md
+            ) {
+                ForEach(mediaItems) { item in
+                    mediaItemCard(item, lastItemId: lastItemId)
+                }
+            }
+        } else {
+            LazyVStack(spacing: Spacing.sm) {
+                ForEach(mediaItems) { item in
+                    mediaItemCard(item, lastItemId: lastItemId)
+                }
+            }
+        }
+    }
+
+    private func mediaItemCard(_ item: MediaViewItem, lastItemId: String?) -> some View {
+        MediaCard(
+            item: item,
+            onTap: {
+                viewModel.handle(event: .onMediaTapped(mediaId: item.id))
+            },
+            onPlay: {
+                viewModel.handle(event: .onPlayTapped(mediaId: item.id))
+            },
+            onShare: {
+                viewModel.handle(event: .onShareTapped(mediaId: item.id))
+            }
+        )
+        .fadeIn(delay: Double(item.animationIndex) * 0.03)
+        .onAppear {
+            if item.id == lastItemId {
+                viewModel.handle(event: .onLoadMore)
+            }
+        }
     }
 
     // MARK: - Media Playback

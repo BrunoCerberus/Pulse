@@ -33,6 +33,18 @@ struct HomeView<R: HomeNavigationRouter>: View {
     @Namespace private var categoryAnimation
 
     @Environment(\.dynamicTypeSize) var dynamicTypeSize
+    @Environment(\.horizontalSizeClass) var horizontalSizeClass
+
+    /// Hero card width adapts to size class: wider on iPad regular width
+    /// so the breaking-news carousel fills the available canvas.
+    var heroCardWidth: CGFloat {
+        horizontalSizeClass == .regular ? 380 : 300
+    }
+
+    /// Recently-read card width matches the hero card cadence on regular width.
+    var recentlyReadCardWidth: CGFloat {
+        horizontalSizeClass == .regular ? 320 : 260
+    }
 
     /// Creates the view with a router and ViewModel.
     /// - Parameters:
@@ -256,39 +268,9 @@ struct HomeView<R: HomeNavigationRouter>: View {
                 }
 
                 Section {
-                    LazyVStack(spacing: Spacing.sm) {
-                        ForEach(headlines) { item in
-                            GlassArticleCard(
-                                item: item,
-                                onTap: {
-                                    viewModel.handle(event: .onArticleTapped(articleId: item.id))
-                                },
-                                onBookmark: {
-                                    viewModel.handle(event: .onBookmarkTapped(articleId: item.id))
-                                },
-                                onShare: {
-                                    viewModel.handle(event: .onShareTapped(articleId: item.id))
-                                }
-                            )
-                            .fadeIn(delay: Double(item.animationIndex) * 0.03)
-                            .onAppear {
-                                if item.id == lastItemId {
-                                    viewModel.handle(event: .onLoadMore)
-                                }
-                                prefetchUpcomingImages(from: item.animationIndex, in: headlines)
-                            }
-                            .onDisappear {
-                                // Cancel prefetch for scrolled-past items to free resources
-                                if let url = item.imageURL {
-                                    Task {
-                                        await ImagePrefetcher.shared.cancelPrefetch(for: [url])
-                                    }
-                                }
-                            }
-                        }
-                    }
-                    .padding(.horizontal, Spacing.md)
-                    .padding(.top, Spacing.sm)
+                    headlinesContainer(headlines: headlines, lastItemId: lastItemId)
+                        .padding(.horizontal, Spacing.md)
+                        .padding(.top, Spacing.sm)
 
                     if viewModel.viewState.isLoadingMore {
                         HStack {
@@ -309,6 +291,61 @@ struct HomeView<R: HomeNavigationRouter>: View {
     }
 
     // prefetchUpcomingImages, breakingNewsCarousel moved to HomeView+Subviews.swift
+
+    // MARK: - Headlines Container
+
+    @ViewBuilder
+    private func headlinesContainer(headlines: [ArticleViewItem], lastItemId: String?) -> some View {
+        if horizontalSizeClass == .regular {
+            LazyVGrid(
+                columns: [GridItem(.adaptive(minimum: 360), spacing: Spacing.md)],
+                spacing: Spacing.md
+            ) {
+                ForEach(headlines) { item in
+                    headlineCard(for: item, lastItemId: lastItemId, headlines: headlines)
+                }
+            }
+        } else {
+            LazyVStack(spacing: Spacing.sm) {
+                ForEach(headlines) { item in
+                    headlineCard(for: item, lastItemId: lastItemId, headlines: headlines)
+                }
+            }
+        }
+    }
+
+    private func headlineCard(
+        for item: ArticleViewItem,
+        lastItemId: String?,
+        headlines: [ArticleViewItem]
+    ) -> some View {
+        GlassArticleCard(
+            item: item,
+            onTap: {
+                viewModel.handle(event: .onArticleTapped(articleId: item.id))
+            },
+            onBookmark: {
+                viewModel.handle(event: .onBookmarkTapped(articleId: item.id))
+            },
+            onShare: {
+                viewModel.handle(event: .onShareTapped(articleId: item.id))
+            }
+        )
+        .fadeIn(delay: Double(item.animationIndex) * 0.03)
+        .onAppear {
+            if item.id == lastItemId {
+                viewModel.handle(event: .onLoadMore)
+            }
+            prefetchUpcomingImages(from: item.animationIndex, in: headlines)
+        }
+        .onDisappear {
+            if let url = item.imageURL {
+                Task {
+                    await ImagePrefetcher.shared.cancelPrefetch(for: [url])
+                }
+            }
+        }
+    }
 }
 
 #Preview {

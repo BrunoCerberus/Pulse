@@ -11,7 +11,9 @@ struct ArticleDetailView: View {
     @Environment(\.dismiss) private var dismiss
     @Environment(\.colorScheme) private var colorScheme
     @Environment(\.dynamicTypeSize) private var dynamicTypeSize
+    @Environment(\.horizontalSizeClass) private var horizontalSizeClass
     private let heroBaseHeight: CGFloat = 280
+    private let readingMaxWidth: CGFloat = 720
     private let serviceLocator: ServiceLocator
     private let onRelatedArticleTapped: ((Article) -> Void)?
 
@@ -48,7 +50,12 @@ struct ArticleDetailView: View {
                             )
                         }
 
-                        contentCard
+                        HStack(spacing: 0) {
+                            Spacer(minLength: 0)
+                            contentCard
+                                .frame(maxWidth: horizontalSizeClass == .regular ? readingMaxWidth : .infinity)
+                            Spacer(minLength: 0)
+                        }
                     }
                 }
                 .accessibilityIdentifier("articleDetailScrollView")
@@ -64,6 +71,7 @@ struct ArticleDetailView: View {
                     onStop: { viewModel.handle(event: .onTTSStopTapped) },
                     onSpeedTap: { viewModel.handle(event: .onTTSSpeedTapped) }
                 )
+                .frame(maxWidth: horizontalSizeClass == .regular ? readingMaxWidth : .infinity)
                 .padding(.horizontal, Spacing.sm)
                 .padding(.bottom, Spacing.sm)
                 .transition(.move(edge: .bottom).combined(with: .opacity))

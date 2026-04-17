@@ -25,6 +25,16 @@ enum AppTab: String, CaseIterable, AnimatedTabSelectable {
         }
     }
 
+    var title: String {
+        switch self {
+        case .home: AppLocalization.localized("tab.home")
+        case .media: AppLocalization.localized("tab.media")
+        case .feed: AppLocalization.localized("tab.feed")
+        case .bookmarks: AppLocalization.localized("tab.bookmarks")
+        case .search: AppLocalization.localized("tab.search")
+        }
+    }
+
     var symbolEffect: any DiscreteSymbolEffect & SymbolEffect {
         switch self {
         case .home: .bounce
