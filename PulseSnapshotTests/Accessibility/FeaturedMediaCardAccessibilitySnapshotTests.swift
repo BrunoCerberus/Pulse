@@ -27,9 +27,10 @@ final class FeaturedMediaCardAccessibilitySnapshotTests: XCTestCase {
     }
 
     func testFeaturedMediaCardAccessibilitySize() {
-        // Pass explicit expanded width mirroring how MediaView wraps the card
-        // at accessibility sizes (the card's previous UIApplication-based probe
-        // was removed in favor of caller-driven sizing).
+        // Fill the 375pt outer frame. The component's accessibility-size probe
+        // used to auto-expand to ~345pt (screenWidth - Spacing.lg * 2); match
+        // that geometry by passing an explicit cardWidth so the snapshot
+        // validates the same visual contract under the new caller-driven API.
         let view = FeaturedMediaCard(
             item: snapshotMediaItem,
             cardWidth: 345,

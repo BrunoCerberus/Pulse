@@ -21,13 +21,19 @@ final class HeroNewsCardAccessibilitySnapshotTests: XCTestCase {
     }
 
     func testHeroNewsCardAccessibilitySize() {
-        // Pass explicit expanded width mirroring how HomeView wraps the card
-        // in a GeometryReader at accessibility sizes.
-        let view = HeroNewsCard(
-            item: snapshotArticle,
-            cardWidth: 345,
-            onTap: {}
-        )
+        // Mirror HomeView's accessibility-size layout: the card is wrapped in
+        // a GeometryReader + aspectRatio so it fills the container's width.
+        // The component previously auto-expanded via UIApplication screen probe;
+        // that behavior was moved to the caller, so the test must reproduce it.
+        let article = snapshotArticle
+        let view = GeometryReader { proxy in
+            HeroNewsCard(
+                item: article,
+                cardWidth: proxy.size.width,
+                onTap: {}
+            )
+        }
+        .aspectRatio(300.0 / 200.0, contentMode: .fit)
         .padding()
         .background(LinearGradient.meshFallback)
 
