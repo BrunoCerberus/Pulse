@@ -9,6 +9,7 @@ struct OnboardingDomainStateTests {
         let state = OnboardingDomainState.initial
 
         #expect(state.currentPage == .welcome)
+        #expect(state.selectedTopics.isEmpty)
         #expect(state.isCompleted == false)
     }
 
@@ -22,8 +23,14 @@ struct OnboardingDomainStateTests {
         state.currentPage = .stayConnected
         #expect(state.currentPage == .stayConnected)
 
+        state.currentPage = .chooseTopics
+        #expect(state.currentPage == .chooseTopics)
+
         state.currentPage = .getStarted
         #expect(state.currentPage == .getStarted)
+
+        state.selectedTopics = [.technology, .science]
+        #expect(state.selectedTopics == [.technology, .science])
 
         state.isCompleted = true
         #expect(state.isCompleted == true)
@@ -42,6 +49,15 @@ struct OnboardingDomainStateTests {
         let state1 = OnboardingDomainState.initial
         var state2 = OnboardingDomainState.initial
         state2.currentPage = .getStarted
+
+        #expect(state1 != state2)
+    }
+
+    @Test("States with different selectedTopics are not equal")
+    func differentSelectedTopics() {
+        let state1 = OnboardingDomainState.initial
+        var state2 = OnboardingDomainState.initial
+        state2.selectedTopics = [.technology]
 
         #expect(state1 != state2)
     }

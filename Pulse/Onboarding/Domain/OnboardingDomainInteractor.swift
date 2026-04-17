@@ -12,6 +12,9 @@ final class OnboardingDomainInteractor: CombineInteractor {
 
     private var onboardingService: OnboardingService
     private let analyticsService: AnalyticsService?
+    private let settingsService: SettingsService?
+    private var loadedPreferences: UserPreferences?
+    private var userHasTouchedTopics = false
 
     var statePublisher: AnyPublisher<DomainState, Never> {
         stateSubject.eraseToAnyPublisher()
@@ -24,6 +27,9 @@ final class OnboardingDomainInteractor: CombineInteractor {
     init(serviceLocator: ServiceLocator) {
         onboardingService = (try? serviceLocator.retrieve(OnboardingService.self)) ?? MockOnboardingService()
         analyticsService = try? serviceLocator.retrieve(AnalyticsService.self)
+        settingsService = try? serviceLocator.retrieve(SettingsService.self)
+
+        loadPreferences()
     }
 
     func dispatch(action: DomainAction) {
@@ -32,11 +38,32 @@ final class OnboardingDomainInteractor: CombineInteractor {
             handleNextPage()
         case let .goToPage(page):
             updateState { $0.currentPage = page }
+        case let .toggleTopic(category):
+            handleToggleTopic(category)
         case .skip:
             handleSkip()
         case .complete:
             handleComplete()
         }
+    }
+
+    private func loadPreferences() {
+        guard let settingsService else { return }
+        settingsService.fetchPreferences()
+            .receive(on: DispatchQueue.main)
+            .sink(
+                receiveCompletion: { _ in },
+                receiveValue: { [weak self] preferences in
+                    guard let self else { return }
+                    loadedPreferences = preferences
+                    // Pre-populate selections from existing prefs (e.g. CloudKit-restored account)
+                    // unless the user has already started making choices on this run.
+                    if !userHasTouchedTopics, !preferences.followedTopics.isEmpty {
+                        updateState { $0.selectedTopics = Set(preferences.followedTopics) }
+                    }
+                }
+            )
+            .store(in: &cancellables)
     }
 
     private func handleNextPage() {
@@ -50,14 +77,55 @@ final class OnboardingDomainInteractor: CombineInteractor {
         }
     }
 
+    private func handleToggleTopic(_ category: NewsCategory) {
+        userHasTouchedTopics = true
+        updateState { state in
+            if state.selectedTopics.contains(category) {
+                state.selectedTopics.remove(category)
+            } else {
+                state.selectedTopics.insert(category)
+            }
+        }
+    }
+
     private func handleSkip() {
         analyticsService?.logEvent(.onboardingSkipped(page: currentState.currentPage.rawValue))
         markCompleted()
     }
 
     private func handleComplete() {
+        let selected = currentState.selectedTopics
+        if !selected.isEmpty {
+            persistSelectedTopics(selected)
+            analyticsService?.logEvent(
+                .onboardingTopicsSelected(
+                    count: selected.count,
+                    topics: selected.map(\.rawValue).sorted()
+                )
+            )
+        }
         analyticsService?.logEvent(.onboardingCompleted(page: currentState.currentPage.rawValue))
         markCompleted()
+    }
+
+    private func persistSelectedTopics(_ topics: Set<NewsCategory>) {
+        guard let settingsService else { return }
+        var preferences = loadedPreferences ?? .default
+        // Preserve the input order stability by sorting by declaration order.
+        preferences.followedTopics = NewsCategory.allCases.filter { topics.contains($0) }
+        settingsService.savePreferences(preferences)
+            .sink(
+                receiveCompletion: { completion in
+                    if case let .failure(error) = completion {
+                        Logger.shared.service(
+                            "Failed to persist onboarding topic selection: \(error)",
+                            level: .warning
+                        )
+                    }
+                },
+                receiveValue: { _ in }
+            )
+            .store(in: &cancellables)
     }
 
     private func markCompleted() {

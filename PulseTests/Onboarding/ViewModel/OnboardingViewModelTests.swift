@@ -13,6 +13,7 @@ struct OnboardingViewModelTests {
         let serviceLocator = ServiceLocator()
         serviceLocator.register(OnboardingService.self, instance: MockOnboardingService())
         serviceLocator.register(AnalyticsService.self, instance: MockAnalyticsService())
+        serviceLocator.register(SettingsService.self, instance: MockSettingsService())
 
         sut = OnboardingViewModel(serviceLocator: serviceLocator)
     }
@@ -23,6 +24,7 @@ struct OnboardingViewModelTests {
 
         #expect(sut.viewState.currentPage == .welcome)
         #expect(sut.viewState.isLastPage == false)
+        #expect(sut.viewState.selectedTopics.isEmpty)
         #expect(sut.viewState.isCompleted == false)
     }
 
@@ -57,5 +59,13 @@ struct OnboardingViewModelTests {
         try await waitForStateUpdate(duration: TestWaitDuration.short)
 
         #expect(sut.viewState.currentPage == .stayConnected)
+    }
+
+    @Test("onToggleTopic updates selected topics")
+    func onToggleTopic() async throws {
+        sut.handle(event: .onToggleTopic(.technology))
+        try await waitForStateUpdate(duration: TestWaitDuration.short)
+
+        #expect(sut.viewState.selectedTopics == [.technology])
     }
 }

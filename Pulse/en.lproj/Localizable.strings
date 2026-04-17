@@ -266,6 +266,8 @@
 "onboarding.ai_powered.subtitle" = "AI-powered daily digest and article summaries help you stay informed faster.";
 "onboarding.stay_connected.title" = "Never Miss a Story";
 "onboarding.stay_connected.subtitle" = "Save articles for offline reading, bookmark your favorites, and search anything.";
+"onboarding.choose_topics.title" = "Pick Your Topics";
+"onboarding.choose_topics.subtitle" = "Choose a few to personalize your feed. You can always change them later in Settings.";
 "onboarding.get_started.title" = "Ready to Explore?";
 "onboarding.get_started.subtitle" = "Your news journey starts now.";
 
