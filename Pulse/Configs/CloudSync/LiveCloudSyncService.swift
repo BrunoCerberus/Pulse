@@ -121,7 +121,7 @@ final class LiveCloudSyncService: CloudSyncService, @unchecked Sendable {
     /// without fabricating an `NSPersistentCloudKitContainer.Event` instance
     /// (that class cannot be subclassed or constructed from outside Core Data).
     func applyEvent(endDate: Date?, error: Error?, succeeded: Bool) {
-        if endDate == nil {
+        guard let endDate else {
             syncStateSubject.send(.syncing)
             return
         }
@@ -129,7 +129,7 @@ final class LiveCloudSyncService: CloudSyncService, @unchecked Sendable {
         if let error {
             syncStateSubject.send(.failed(error.localizedDescription))
         } else if succeeded {
-            syncStateSubject.send(.succeeded(endDate ?? Date()))
+            syncStateSubject.send(.succeeded(endDate))
         } else {
             syncStateSubject.send(.failed("CloudKit sync finished without success"))
         }
