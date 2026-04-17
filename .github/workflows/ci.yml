@@ -32,7 +32,7 @@ jobs:
     # Cache Homebrew packages
     # Note: Static version key (brew-v1) - increment manually when brew dependencies change
     - name: Cache Homebrew packages
-      uses: actions/cache@668228422ae6a00e4ad889ee87cd7109ec5666a7 # v5.0.4
+      uses: actions/cache@27d5ce7f107fe9357f9df03efb73ab90386fccae # v5.0.5
       with:
         path: |
           ~/Library/Caches/Homebrew
@@ -44,7 +44,7 @@ jobs:
     # Cache Mint packages
     # Note: Static version key (mint-v1) - increment manually when mint dependencies change
     - name: Cache Mint packages
-      uses: actions/cache@668228422ae6a00e4ad889ee87cd7109ec5666a7 # v5.0.4
+      uses: actions/cache@27d5ce7f107fe9357f9df03efb73ab90386fccae # v5.0.5
       with:
         path: ~/.mint
         key: ${{ runner.os }}-mint-v1
@@ -404,7 +404,7 @@ jobs:
     # Cache Homebrew packages
     # Note: Static version key (brew-v1) - increment manually when brew dependencies change
     - name: Cache Homebrew packages
-      uses: actions/cache@668228422ae6a00e4ad889ee87cd7109ec5666a7 # v5.0.4
+      uses: actions/cache@27d5ce7f107fe9357f9df03efb73ab90386fccae # v5.0.5
       with:
         path: |
           ~/Library/Caches/Homebrew
@@ -419,7 +419,7 @@ jobs:
     # IMPORTANT: Do NOT use broad restore-keys fallback - it can restore stale package versions
     # v6: Added ~/Library/Caches/org.swift.swiftpm to cache binary artifacts
     - name: Cache SPM dependencies
-      uses: actions/cache@668228422ae6a00e4ad889ee87cd7109ec5666a7 # v5.0.4
+      uses: actions/cache@27d5ce7f107fe9357f9df03efb73ab90386fccae # v5.0.5
       with:
         path: |
           Pulse.xcodeproj/project.xcworkspace/xcshareddata/swiftpm
@@ -535,7 +535,7 @@ jobs:
     # Cache Homebrew packages
     # Note: Static version key (brew-v1) - increment manually when brew dependencies change
     - name: Cache Homebrew packages
-      uses: actions/cache@668228422ae6a00e4ad889ee87cd7109ec5666a7 # v5.0.4
+      uses: actions/cache@27d5ce7f107fe9357f9df03efb73ab90386fccae # v5.0.5
       with:
         path: |
           ~/Library/Caches/Homebrew
@@ -550,7 +550,7 @@ jobs:
     # IMPORTANT: Do NOT use broad restore-keys fallback - it can restore stale package versions
     # v6: Added ~/Library/Caches/org.swift.swiftpm to cache binary artifacts
     - name: Cache SPM dependencies
-      uses: actions/cache@668228422ae6a00e4ad889ee87cd7109ec5666a7 # v5.0.4
+      uses: actions/cache@27d5ce7f107fe9357f9df03efb73ab90386fccae # v5.0.5
       with:
         path: |
           Pulse.xcodeproj/project.xcworkspace/xcshareddata/swiftpm
