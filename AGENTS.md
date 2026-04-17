@@ -68,6 +68,8 @@ Pulse/
 │   │   ├── ViewModel/          # ReadingHistoryViewModel
 │   │   ├── View/               # ReadingHistoryView
 │   │   └── Router/             # ReadingHistoryNavigationRouter
+│   ├── CloudSync/              # CloudKit cross-device sync lifecycle (always-on, no UI)
+│   │   └── Domain/             # CloudSyncDomainState, Action, Interactor, Notifications (.cloudSyncDidComplete)
 │   ├── Search/                 # Search feature
 │   ├── Settings/               # User preferences (includes account/logout)
 │   ├── Notifications/          # Push notification permission and registration
@@ -81,7 +83,8 @@ Pulse/
 │       ├── DesignSystem/       # ColorSystem, Typography, Components, DynamicTypeHelpers, Haptics, Liquid Glass components
 │       ├── Models/             # Article, NewsCategory, UserPreferences, ContentLanguage, AppLocalization
 │       ├── Networking/         # API keys, base URLs, SupabaseConfig, RemoteConfig, NetworkMonitorService, NetworkResilience
-│       ├── Storage/            # StorageService (SwiftData)
+│       ├── Storage/            # StorageService (SwiftData + CloudKit private database)
+│       ├── CloudSync/          # CloudSyncService protocol + LiveCloudSyncService (NSPersistentCloudKitContainer observer)
 │       ├── Analytics/          # AnalyticsService protocol + Live implementation
 │       ├── Mocks/              # Mock services for testing
 │       └── Widget/             # WidgetDataManager + shared widget models
@@ -270,6 +273,7 @@ struct HomeDomainInteractorTests {
 26. **Share Extension cannot run LLM in-process** — Gemma 3 1B (~600 MB resident) exceeds an app extension's ~120 MB memory budget. The Share Extension writes a `SharedURLItem` to an App Group JSON queue (`SharedURLQueue`) and hands control to the host app via `pulse://shared`; summarization runs in the main app. Never attempt to load `LLMModelManager` from inside `PulseShareExtension`.
 27. **Live Activities lifecycle is owned by the Interactor** — `TTSLiveActivityController` (`@MainActor` singleton) is started/updated/ended from `ArticleDetailDomainInteractor` in lockstep with `LiveTextToSpeechService`. Do not call the controller from views. Interactive Live Activity buttons (pause/resume from Lock Screen) are not yet wired — visual presentation is in place but would require adding `AppIntent`s into `ActivityConfiguration`.
 28. **Quick Action titles are registered dynamically** — Quick actions are registered at scene-connect time (not via `Info.plist` `UIApplicationShortcutItems`) so their titles localize per the in-app `AppLocalization` setting. When adding a new quick action, extend `QuickActionType`, update localized strings in en/pt/es, and handle routing in `QuickActionHandler`.
+29. **CloudKit sync is always on, zero-UI** — `LiveStorageService` configures `ModelConfiguration(cloudKitDatabase: .private("iCloud.com.bruno.Pulse-News"))` for production; tests pass `inMemory: true` (which forces CloudKit off). Three models sync: `BookmarkedArticle`, `ReadArticle`, `UserPreferencesModel`. CloudKit requires every `@Model` property to have a default and disallows `@Attribute(.unique)` — uniqueness for `articleID` is enforced at the service layer (fetch-before-insert). The `CloudSyncDomainInteractor` (instantiated by `PulseSceneDelegate` and retained for the scene's lifetime) subscribes to `CloudSyncService` publishers and posts `.cloudSyncDidComplete` on every successful sync; feature interactors (Bookmarks, ReadingHistory, Settings, Home) subscribe to that notification to reload from storage. App-lock credentials, onboarding state, theme, push tokens, and caches are intentionally NOT synced.
 
 ## Data Source Architecture
 
@@ -299,6 +303,12 @@ The app uses a tiered cache with offline resilience:
 | `NetworkMonitorService` | Protocol + Live (`NWPathMonitor`) + Mock for connectivity tracking |
 | `PulseError` | Typed error enum with `.offlineNoCache` case |
 | `OfflineBannerView` | Animated banner in `CoordinatorView` shown when offline |
+| **CloudKit Sync** | |
+| `CloudSyncService` | Protocol exposing `accountStatusPublisher`, `syncStatePublisher`, `isAvailable`, and `startObserving()` / `stopObserving()` / `refreshAccountStatus()` |
+| `LiveCloudSyncService` | Bridges `NSPersistentCloudKitContainer.eventChangedNotification` + `CKAccountChanged` into Combine publishers. `@unchecked Sendable` with a main-thread contract; mutable fields are only touched from the main actor |
+| `MockCloudSyncService` | Configurable mock with `emit(accountStatus:)` / `emit(syncState:)` helpers and call counters for tests |
+| `CloudSyncDomainInteractor` | `@MainActor` interactor retained by `PulseSceneDelegate`; logs analytics on each transition and posts `.cloudSyncDidComplete` on successful sync |
+| `.cloudSyncDidComplete` | `Notification.Name` consumed by `BookmarksDomainInteractor`, `ReadingHistoryDomainInteractor`, `SettingsDomainInteractor`, and `HomeDomainInteractor` to reload from storage after remote merges |
 | **Swift 6.2 Concurrency** | |
 | `CombineAsyncBridge` | `UncheckedSendableBox` (wraps non-Sendable values for `Task` capture) and `WeakRef` (avoids `[weak self]` issues with strict `sending` checks) |
 | **Localization** | |
@@ -306,7 +316,7 @@ The app uses a tiered cache with offline resilience:
 | `ContentLanguage` | Enum (en/pt/es) with display names and flags for language picker |
 | `Localizable.strings` | UI strings in `en.lproj/`, `pt.lproj/`, `es.lproj/` (90+ keys including accessibility announcements) |
 | **Reading History** | |
-| `ReadArticle` | SwiftData `@Model` with `@Attribute(.unique)` on `articleID`; stores title, URL, image, `readAt` timestamp |
+| `ReadArticle` | SwiftData `@Model` synced via CloudKit; every property has a default (CloudKit requirement). Uniqueness on `articleID` is enforced in `LiveStorageService.markArticleAsRead` via fetch-before-upsert. Stores title, URL, image, `readAt` timestamp |
 | `ReadingHistoryDomainInteractor` | Loads/clears history via `StorageService`, publishes `.readingHistoryDidClear` notification |
 | **Engagement** | |
 | `ShareItemsBuilder` | Utility formatting share content as `[title — source, URL]` for richer social previews |
@@ -318,7 +328,7 @@ The app uses a tiered cache with offline resilience:
 | `KeychainStore` | Protocol for Keychain access; production uses `KeychainManager`, tests use in-memory implementation |
 | **Analytics & Crashlytics** | |
 | `AnalyticsService` | Protocol with `logEvent`, `setUserID`, `recordError`, `log` |
-| `AnalyticsEvent` | Type-safe enum with 21 events (screen views, article actions, TTS, purchases, auth, onboarding, etc.) |
+| `AnalyticsEvent` | Type-safe enum with 25 events (screen views, article actions, TTS, purchases, auth, onboarding, 4 CloudKit sync events, etc.) |
 | `LiveAnalyticsService` | Firebase Analytics + Crashlytics (events + breadcrumbs, disabled in DEBUG) |
 | `MockAnalyticsService` | Records all events/errors in arrays for test assertions |
 | **Notifications** | |

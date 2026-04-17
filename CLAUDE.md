@@ -181,6 +181,8 @@ Pulse/
 │   ├── SharedURL/              # SharedURLImportService + Live impl (drains App Group queue on foreground)
 │   ├── Bookmarks/              # Offline reading
 │   ├── ReadingHistory/         # Reading history tracking (SwiftData)
+│   ├── CloudSync/              # CloudKit cross-device sync (always-on, no UI entry point)
+│   │   └── Domain/             # CloudSyncDomainState, Action, Interactor, Notifications
 │   ├── Search/                 # Search feature
 │   ├── Settings/               # User preferences (includes account/logout)
 │   ├── Notifications/          # Push notification permission and registration
@@ -194,9 +196,10 @@ Pulse/
 │       ├── DesignSystem/       # ColorSystem, Typography, Components, DynamicTypeHelpers, Liquid Glass components
 │       ├── Models/             # Article, NewsCategory, UserPreferences, ContentLanguage, AppLocalization
 │       ├── Networking/         # API keys, base URLs, SupabaseConfig, RemoteConfig, NetworkMonitorService, NetworkResilience
-│       ├── Storage/            # StorageService (SwiftData)
+│       ├── Storage/            # StorageService (SwiftData + CloudKit private database)
+│       ├── CloudSync/          # CloudSyncService protocol + LiveCloudSyncService
 │       ├── Analytics/          # AnalyticsService protocol + Live implementation
-│       ├── Mocks/              # Mock services for testing
+│       ├── Mocks/              # Mock services for testing (includes MockCloudSyncService)
 │       └── Widget/             # WidgetDataManager + shared widget models
 ├── PulseWidgetExtension/       # WidgetKit extension
 │   └── LiveActivities/         # TTSLiveActivity (ActivityConfiguration for Lock Screen + Dynamic Island)
@@ -228,12 +231,13 @@ Pulse/
 | **Security** | YouTube video ID regex validation, HTTPS-only URL allowlisting, deeplink ID sanitization (character allowlist + path traversal rejection), disk cache filename sanitization + file protection, search query length limit (256 chars), sign-out data cleanup (clears all caches, bookmarks, preferences, keychain, widget data), privacy manifest (`PrivacyInfo.xcprivacy`), Keychain-based app lock with biometric + passcode fallback |
 | **Settings** | Topics, notifications, theme, content language, muted content, reading history, account/logout (accessed from Home navigation bar) |
 | **Onboarding** | 4-page first-launch experience (welcome, AI features, offline/bookmarks, get started) shown once after sign-in |
-| **Analytics & Crashlytics** | Firebase Analytics (21 type-safe events) and Crashlytics for crash/non-fatal error tracking at DomainInteractor level |
+| **Analytics & Crashlytics** | Firebase Analytics (25 type-safe events, including 4 CloudKit sync events) and Crashlytics for crash/non-fatal error tracking at DomainInteractor level |
 | **Widget** | Home screen widget showing recent headlines (WidgetKit extension) |
 | **App Intents & Siri Shortcuts** | Five `AppIntent` types (`OpenPulseIntent`, `OpenDailyDigestIntent`, `OpenBookmarksIntent`, `SearchPulseIntent`, `OpenPulseSettingsIntent`) exposed via `PulseAppShortcuts` provider. All intents set `openAppWhenRun = true` and dispatch via `DeeplinkManager.shared.handle(deeplink:)` to reuse the in-app navigation pipeline |
 | **Live Activities** | TTS playback surfaces on Lock Screen and Dynamic Island. `TTSActivityAttributes` (shared between main app + widget extension targets) + `TTSLiveActivityController` (`@MainActor` singleton) wired into `ArticleDetailDomainInteractor` to start/update/end in lockstep with `LiveTextToSpeechService`. `TTSLockScreenView` + `TTSLiveActivity` render expanded/compact/minimal presentations. `LiveTextToSpeechService` integrates `MPNowPlayingInfoCenter` + `MPRemoteCommandCenter` (play/pause/stop/togglePlayPause) for AirPods, CarPlay, and Lock Screen media control |
 | **Share Extension** | `PulseShareExtension` target accepts `public.url` from Safari/iOS share sheet and presents `ShareRootView` with *Summarize with AI in Pulse*. Because Gemma 3 1B (~600 MB resident) exceeds the extension's ~120 MB budget, the extension serializes `SharedURLItem { url, sharedAt }` into a JSON-backed App Group queue (`SharedURLQueue`), completes the request, and opens the host app via `pulse://shared`. The main app drains the queue on foreground via `SharedURLImportService` |
 | **Home Screen Quick Actions** | Four long-press shortcuts (Search, Daily Digest, Bookmarks, Breaking News) registered dynamically at scene-connect time (no `Info.plist` shortcut entries) so titles localize per `AppLocalization`. `QuickActionHandler` routes each through `DeeplinkManager`. Localized in en/pt/es. `PulseSceneDelegate` handles `windowScene(_:performActionFor:completionHandler:)` plus launch-time `connectionOptions.shortcutItem` check |
+| **iCloud Cross-Device Sync** | Bookmarks (`BookmarkedArticle`), reading history (`ReadArticle`), and user preferences (`UserPreferencesModel`) sync across a user's iOS devices via SwiftData's native CloudKit integration (`ModelConfiguration(cloudKitDatabase: .private("iCloud.com.bruno.Pulse-News"))`). `LiveCloudSyncService` observes `NSPersistentCloudKitContainer.eventChangedNotification` + `CKAccountChanged` and exposes Combine publishers. `CloudSyncDomainInteractor` (retained for the scene's lifetime) logs analytics and posts `.cloudSyncDidComplete` so Bookmarks / ReadingHistory / Settings / Home interactors reload from storage after remote merges. Always-on, no UI entry point. App lock, onboarding state, theme, push tokens, and caches are intentionally not synced |
 
 ## Premium Features
 
@@ -523,7 +527,7 @@ Key components: `GlassTabBar`, `GlassCategoryChip`, `GlassSectionHeader`, `Glass
 | `pt.lproj/Localizable.strings` | Portuguese UI translations |
 | `es.lproj/Localizable.strings` | Spanish UI translations |
 | **Reading History** | |
-| `ReadArticle.swift` | SwiftData `@Model` with `@Attribute(.unique)` on `articleID`, stores read timestamp |
+| `ReadArticle.swift` | SwiftData `@Model` synced via CloudKit; every property has a default (CloudKit requirement). Uniqueness on `articleID` enforced at the service layer via fetch-before-upsert in `LiveStorageService.markArticleAsRead`. Stores read timestamp |
 | `ReadingHistoryDomainInteractor.swift` | Loads/clears history via `StorageService`, publishes `.readingHistoryDidClear` notification |
 | `ReadingHistoryView.swift` | History list with article cards, empty state, clear confirmation dialog |
 | **Accessibility** | |
@@ -585,6 +589,13 @@ Key components: `GlassTabBar`, `GlassCategoryChip`, `GlassSectionHeader`, `Glass
 | **Home Screen Quick Actions** | |
 | `QuickActionType.swift` | Enum with 4 cases (search, dailyDigest, bookmarks, breakingNews) + localized titles, SF Symbol icons, `UIApplicationShortcutItem` conversion |
 | `QuickActionHandler.swift` | Routes quick actions through `DeeplinkManager`; tracks `pendingType` for launch-from-cold-start flow |
+| **CloudKit Sync** | |
+| `CloudSyncService.swift` | Protocol exposing `accountStatusPublisher`, `syncStatePublisher`, `isAvailable`, and `startObserving()` / `stopObserving()` / `refreshAccountStatus()`; plus `CloudSyncAccountStatus` and `CloudSyncState` enums |
+| `LiveCloudSyncService.swift` | Bridges `NSPersistentCloudKitContainer.eventChangedNotification` and `CKAccountChanged` into Combine publishers. `@unchecked Sendable` with a documented main-thread contract (only called from `@MainActor CloudSyncDomainInteractor`). Container ID: `iCloud.com.bruno.Pulse-News` |
+| `MockCloudSyncService.swift` | Configurable mock with `emit(accountStatus:)` / `emit(syncState:)` helpers and call counters for tests |
+| `CloudSyncDomainInteractor.swift` | `@MainActor` interactor retained by `PulseSceneDelegate`. Subscribes to service publishers, logs `.cloudSyncStarted` / `.cloudSyncSucceeded` / `.cloudSyncFailed` / `.cloudSyncAccountUnavailable`, and posts `.cloudSyncDidComplete` on successful sync |
+| `CloudSyncDomainState.swift` / `CloudSyncDomainAction.swift` | UDF state/actions (startObserving, stopObserving, refreshAccountStatus) |
+| `CloudSyncNotifications.swift` | `.cloudSyncDidComplete` `Notification.Name` consumed by Bookmarks / ReadingHistory / Settings / Home interactors to reload from storage |
 | **Onboarding** | |
 | `OnboardingService.swift` | Protocol with `hasCompletedOnboarding: Bool` |
 | `LiveOnboardingService.swift` | UserDefaults-backed implementation (key: `pulse.hasCompletedOnboarding`) |
@@ -592,7 +603,7 @@ Key components: `GlassTabBar`, `GlassCategoryChip`, `GlassSectionHeader`, `Glass
 | `OnboardingDomainInteractor.swift` | Page navigation, completion persistence, analytics logging |
 | `OnboardingView.swift` | Main view with TabView(.page), custom dots, Skip/Next buttons |
 | **Analytics & Crashlytics** | |
-| `AnalyticsService.swift` | Protocol + `AnalyticsEvent` enum (21 events) + `AnalyticsScreen`/`AnalyticsSource` enums |
+| `AnalyticsService.swift` | Protocol + `AnalyticsEvent` enum (25 events, including `cloudSyncStarted` / `cloudSyncSucceeded` / `cloudSyncFailed(error:)` / `cloudSyncAccountUnavailable(status:)`) + `AnalyticsScreen`/`AnalyticsSource` enums |
 | `LiveAnalyticsService.swift` | Firebase Analytics + Crashlytics implementation (events + breadcrumbs) |
 | `MockAnalyticsService.swift` | Test implementation recording all events/errors for assertions |
 
