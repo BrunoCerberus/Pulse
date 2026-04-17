@@ -119,4 +119,57 @@ final class RootViewSnapshotTests: XCTestCase {
             record: false
         )
     }
+
+    // MARK: - AdaptiveDetailStack (one per tab to cover each switch case)
+
+    private func renderAdaptiveDetailStack(selectedTab: AppTab) -> UIHostingController<some View> {
+        let coordinator = Coordinator(serviceLocator: .preview)
+        coordinator.selectedTab = selectedTab
+        let view = NavigationSplitView {
+            Text("sidebar").frame(minWidth: 200)
+        } detail: {
+            AdaptiveDetailStack(coordinator: coordinator)
+        }
+        return UIHostingController(rootView: view)
+    }
+
+    func testAdaptiveDetailStackHome() {
+        assertSnapshot(
+            of: renderAdaptiveDetailStack(selectedTab: .home),
+            as: SnapshotConfig.snapshotting(on: SnapshotConfig.iPad),
+            record: false
+        )
+    }
+
+    func testAdaptiveDetailStackMedia() {
+        assertSnapshot(
+            of: renderAdaptiveDetailStack(selectedTab: .media),
+            as: SnapshotConfig.snapshotting(on: SnapshotConfig.iPad),
+            record: false
+        )
+    }
+
+    func testAdaptiveDetailStackFeed() {
+        assertSnapshot(
+            of: renderAdaptiveDetailStack(selectedTab: .feed),
+            as: SnapshotConfig.snapshotting(on: SnapshotConfig.iPad),
+            record: false
+        )
+    }
+
+    func testAdaptiveDetailStackBookmarks() {
+        assertSnapshot(
+            of: renderAdaptiveDetailStack(selectedTab: .bookmarks),
+            as: SnapshotConfig.snapshotting(on: SnapshotConfig.iPad),
+            record: false
+        )
+    }
+
+    func testAdaptiveDetailStackSearch() {
+        assertSnapshot(
+            of: renderAdaptiveDetailStack(selectedTab: .search),
+            as: SnapshotConfig.snapshotting(on: SnapshotConfig.iPad),
+            record: false
+        )
+    }
 }
