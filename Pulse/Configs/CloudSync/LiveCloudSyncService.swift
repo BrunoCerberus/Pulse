@@ -15,6 +15,16 @@ import Foundation
 /// only reports what's happening so the domain layer can log analytics and
 /// fan out a `.cloudSyncDidComplete` notification that feature interactors
 /// subscribe to.
+///
+/// ## Threading Contract
+/// `@unchecked Sendable` is claimed because the mutable fields (`cancellables`,
+/// `isObserving`) are only mutated from the main thread. Callers **must**
+/// invoke `startObserving()`, `stopObserving()`, `refreshAccountStatus()`, and
+/// `applyEvent(...)` from the main actor. The only production caller is
+/// `CloudSyncDomainInteractor`, which is `@MainActor`. Combine sinks use
+/// `.receive(on: DispatchQueue.main)` and the `CKContainer.accountStatus`
+/// completion hops back to main via `DispatchQueue.main.async` before mutating
+/// the subjects.
 final class LiveCloudSyncService: CloudSyncService, @unchecked Sendable {
     private let containerIdentifier: String
     private let notificationCenter: NotificationCenter
@@ -50,6 +60,7 @@ final class LiveCloudSyncService: CloudSyncService, @unchecked Sendable {
         self.notificationCenter = notificationCenter
     }
 
+    /// - Important: Must be called from the main thread.
     func startObserving() {
         guard !isObserving else { return }
         isObserving = true
@@ -71,6 +82,7 @@ final class LiveCloudSyncService: CloudSyncService, @unchecked Sendable {
         refreshAccountStatus()
     }
 
+    /// - Important: Must be called from the main thread.
     func stopObserving() {
         cancellables.removeAll()
         isObserving = false

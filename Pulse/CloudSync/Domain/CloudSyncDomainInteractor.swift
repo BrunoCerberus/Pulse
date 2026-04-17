@@ -86,7 +86,9 @@ final class CloudSyncDomainInteractor: CombineInteractor {
             state.accountStatus = status
         }
 
-        if status != previousAccountStatus, !isAvailableNow, wasAvailable || previousAccountStatus == .couldNotDetermine {
+        let wasIndeterminate = previousAccountStatus == .couldNotDetermine
+        let isNewTransition = status != previousAccountStatus
+        if isNewTransition, !isAvailableNow, wasAvailable || wasIndeterminate {
             analyticsService?.logEvent(.cloudSyncAccountUnavailable(status: status.analyticsValue))
         }
 
