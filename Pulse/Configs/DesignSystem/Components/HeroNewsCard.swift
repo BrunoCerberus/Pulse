@@ -28,15 +28,8 @@ struct HeroNewsCard: View {
     @Environment(\.accessibilityReduceMotion) private var reduceMotion
     @Environment(\.dynamicTypeSize) private var dynamicTypeSize
 
-    private var effectiveCardWidth: CGFloat {
-        let screenWidth = UIApplication.shared.connectedScenes
-            .compactMap { $0 as? UIWindowScene }
-            .first?.screen.bounds.width ?? cardWidth
-        return dynamicTypeSize.isAccessibilitySize ? screenWidth - Spacing.lg * 2 : cardWidth
-    }
-
     private var cardHeight: CGFloat {
-        effectiveCardWidth * (200.0 / 300.0)
+        cardWidth * (200.0 / 300.0)
     }
 
     var body: some View {
@@ -51,7 +44,7 @@ struct HeroNewsCard: View {
 
                 contentOverlay
             }
-            .frame(width: effectiveCardWidth, height: cardHeight)
+            .frame(width: cardWidth, height: cardHeight)
             .clipShape(RoundedRectangle(cornerRadius: CornerRadius.lg, style: .continuous))
             .overlay {
                 RoundedRectangle(cornerRadius: CornerRadius.lg, style: .continuous)
@@ -82,7 +75,7 @@ struct HeroNewsCard: View {
                 image
                     .resizable()
                     .aspectRatio(contentMode: .fill)
-                    .frame(width: effectiveCardWidth, height: cardHeight)
+                    .frame(width: cardWidth, height: cardHeight)
                     .clipped()
             } placeholder: {
                 placeholderBackground

@@ -24,8 +24,8 @@
       "kind" : "remoteSourceControl",
       "location" : "https://github.com/openid/AppAuth-iOS.git",
       "state" : {
-        "revision" : "145104f5ea9d58ae21b60add007c33c1cc0c948e",
-        "version" : "2.0.0"
+        "revision" : "2781038865a80e2c425a1da12cc1327bcd56501f",
+        "version" : "1.7.6"
       }
     },
     {
@@ -41,8 +41,8 @@
       "kind" : "remoteSourceControl",
       "location" : "https://github.com/firebase/firebase-ios-sdk.git",
       "state" : {
-        "revision" : "d47760f97a853808be6a045d278fbd12abf546b6",
-        "version" : "12.12.0"
+        "revision" : "fdc352fabaf5916e7faa1f96ad02b1957e93e5a5",
+        "version" : "11.15.0"
       }
     },
     {
@@ -77,8 +77,8 @@
       "kind" : "remoteSourceControl",
       "location" : "https://github.com/google/GoogleSignIn-iOS.git",
       "state" : {
-        "revision" : "913b4005ea26aebe1c97d54e35ad82a515924c71",
-        "version" : "9.1.0"
+        "revision" : "65fb3f1aa6ffbfdc79c4e22178a55cd91561f5e9",
+        "version" : "8.0.0"
       }
     },
     {
@@ -176,7 +176,6 @@
       "kind" : "remoteSourceControl",
       "location" : "https://github.com/BrunoCerberus/swift-llama-cpp.git",
       "state" : {
-        "branch" : "main",
         "revision" : "7c1b13e18bbb913198153ff49602f28a333e14c7"
       }
     },

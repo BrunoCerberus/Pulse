@@ -44,6 +44,7 @@ struct ReadingHistoryView<R: ReadingHistoryNavigationRouter>: View {
 
     @ObservedObject var viewModel: ReadingHistoryViewModel
     @State private var showClearConfirmation = false
+    @Environment(\.horizontalSizeClass) private var horizontalSizeClass
 
     init(router: R, viewModel: ReadingHistoryViewModel) {
         self.router = router
@@ -170,26 +171,43 @@ struct ReadingHistoryView<R: ReadingHistoryNavigationRouter>: View {
 
     private var historyList: some View {
         ScrollView {
-            LazyVStack(spacing: Spacing.sm) {
-                ForEach(viewModel.viewState.articles) { item in
-                    GlassArticleCard(
-                        item: item,
-                        onTap: {
-                            viewModel.handle(event: .onArticleTapped(articleId: item.id))
-                        },
-                        onBookmark: {
-                            HapticManager.shared.notification(.success)
-                            viewModel.handle(event: .onBookmarkTapped(articleId: item.id))
-                        },
-                        onShare: {
-                            viewModel.handle(event: .onShareTapped(articleId: item.id))
+            Group {
+                if horizontalSizeClass == .regular {
+                    LazyVGrid(
+                        columns: [GridItem(.adaptive(minimum: 360), spacing: Spacing.md)],
+                        spacing: Spacing.md
+                    ) {
+                        ForEach(viewModel.viewState.articles) { item in
+                            historyCard(item)
                         }
-                    )
-                    .fadeIn(delay: Double(item.animationIndex) * 0.03)
+                    }
+                } else {
+                    LazyVStack(spacing: Spacing.sm) {
+                        ForEach(viewModel.viewState.articles) { item in
+                            historyCard(item)
+                        }
+                    }
                 }
             }
             .padding(.horizontal, Spacing.md)
             .padding(.top, Spacing.sm)
         }
+    }
+
+    private func historyCard(_ item: ArticleViewItem) -> some View {
+        GlassArticleCard(
+            item: item,
+            onTap: {
+                viewModel.handle(event: .onArticleTapped(articleId: item.id))
+            },
+            onBookmark: {
+                HapticManager.shared.notification(.success)
+                viewModel.handle(event: .onBookmarkTapped(articleId: item.id))
+            },
+            onShare: {
+                viewModel.handle(event: .onShareTapped(articleId: item.id))
+            }
+        )
+        .fadeIn(delay: Double(item.animationIndex) * 0.03)
     }
 }

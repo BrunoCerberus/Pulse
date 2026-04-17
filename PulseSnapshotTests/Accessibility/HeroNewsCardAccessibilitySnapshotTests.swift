@@ -21,8 +21,11 @@ final class HeroNewsCardAccessibilitySnapshotTests: XCTestCase {
     }
 
     func testHeroNewsCardAccessibilitySize() {
+        // Pass explicit expanded width mirroring how HomeView wraps the card
+        // in a GeometryReader at accessibility sizes.
         let view = HeroNewsCard(
             item: snapshotArticle,
+            cardWidth: 345,
             onTap: {}
         )
         .padding()

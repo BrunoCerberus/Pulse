@@ -98,9 +98,12 @@ extension HomeView {
         if dynamicTypeSize.isAccessibilitySize {
             VStack(spacing: Spacing.md) {
                 ForEach(viewModel.viewState.breakingNews) { item in
-                    HeroNewsCard(item: item) {
-                        viewModel.handle(event: .onArticleTapped(articleId: item.id))
+                    GeometryReader { proxy in
+                        HeroNewsCard(item: item, cardWidth: proxy.size.width) {
+                            viewModel.handle(event: .onArticleTapped(articleId: item.id))
+                        }
                     }
+                    .aspectRatio(300.0 / 200.0, contentMode: .fit)
                     .fadeIn(delay: Double(item.animationIndex) * 0.1)
                 }
             }
@@ -110,7 +113,7 @@ extension HomeView {
             ScrollView(.horizontal) {
                 LazyHStack(spacing: Spacing.md) {
                     ForEach(viewModel.viewState.breakingNews) { item in
-                        HeroNewsCard(item: item) {
+                        HeroNewsCard(item: item, cardWidth: heroCardWidth) {
                             viewModel.handle(event: .onArticleTapped(articleId: item.id))
                         }
                         .fadeIn(delay: Double(item.animationIndex) * 0.1)
@@ -155,7 +158,7 @@ extension HomeView {
                                 viewModel.handle(event: .onRecentlyReadTapped(articleId: item.id))
                             }
                         )
-                        .frame(width: 260)
+                        .frame(width: recentlyReadCardWidth)
                         .fadeIn(delay: Double(item.animationIndex) * 0.05)
                     }
                 }

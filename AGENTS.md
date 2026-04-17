@@ -274,6 +274,9 @@ struct HomeDomainInteractorTests {
 27. **Live Activities lifecycle is owned by the Interactor** — `TTSLiveActivityController` (`@MainActor` singleton) is started/updated/ended from `ArticleDetailDomainInteractor` in lockstep with `LiveTextToSpeechService`. Do not call the controller from views. Interactive Live Activity buttons (pause/resume from Lock Screen) are not yet wired — visual presentation is in place but would require adding `AppIntent`s into `ActivityConfiguration`.
 28. **Quick Action titles are registered dynamically** — Quick actions are registered at scene-connect time (not via `Info.plist` `UIApplicationShortcutItems`) so their titles localize per the in-app `AppLocalization` setting. When adding a new quick action, extend `QuickActionType`, update localized strings in en/pt/es, and handle routing in `QuickActionHandler`.
 29. **CloudKit sync is always on, zero-UI** — `LiveStorageService` configures `ModelConfiguration(cloudKitDatabase: .private("iCloud.com.bruno.Pulse-News"))` for production; tests pass `inMemory: true` (which forces CloudKit off). Three models sync: `BookmarkedArticle`, `ReadArticle`, `UserPreferencesModel`. CloudKit requires every `@Model` property to have a default and disallows `@Attribute(.unique)` — uniqueness for `articleID` is enforced at the service layer (fetch-before-insert). The `CloudSyncDomainInteractor` (instantiated by `PulseSceneDelegate` and retained for the scene's lifetime) subscribes to `CloudSyncService` publishers and posts `.cloudSyncDidComplete` on every successful sync; feature interactors (Bookmarks, ReadingHistory, Settings, Home) subscribe to that notification to reload from storage. App-lock credentials, onboarding state, theme, push tokens, and caches are intentionally NOT synced.
+30. **iPad adaptive layouts via size class, not idiom** — Every list-of-articles view observes `@Environment(\.horizontalSizeClass)` and branches: compact renders `LazyVStack`, regular renders `LazyVGrid(columns: [GridItem(.adaptive(minimum: 360), spacing: Spacing.md)])`. Applied in `HomeView` (top headlines), `BookmarksView`, `SearchView`, `ReadingHistoryView`, `MediaView`. `ArticleDetailView` wraps `contentCard` + `SpeechPlayerBarView` in `.frame(maxWidth: horizontalSizeClass == .regular ? 720 : .infinity)` (centered via `HStack { Spacer; content; Spacer }`) so prose stays comfortable on iPad Pro. The root `CoordinatorView` swaps `AnimatedTabView` (compact) for `NavigationSplitView { SidebarContentView } detail: { AdaptiveDetailStack }` (regular). Size-class is preferred over `UIDevice.current.userInterfaceIdiom` because iPad Slide Over reports compact width and should render the tab bar.
+31. **Card components expect caller-driven widths** — `HeroNewsCard` and `FeaturedMediaCard` no longer auto-expand via `UIApplication.shared.connectedScenes.windowScene.screen.bounds.width`. Callers pass `cardWidth` directly (defaults: 300pt and 280pt). On iPad regular width, `HomeView`/`MediaView` pass wider values (`heroCardWidth` = 380, `featuredCardWidth` = 360). At accessibility Dynamic Type sizes, the carousel caller wraps the card in `GeometryReader { proxy in HeroNewsCard(cardWidth: proxy.size.width, ...) }.aspectRatio(300/200, contentMode: .fit)` to fill the container. Never reintroduce a `UIApplication`-based screen-width probe inside these components — it breaks on split-view, Catalyst, and iPad multitasking.
+32. **Mac Catalyst groundwork is in place but disabled** — `SUPPORTS_MACCATALYST: false` in `project.yml`. The blocker is the vendored `swift-llama-cpp` xcframework, which has no Catalyst slice — SPM fails to link it for Catalyst at the package level, so source-level `#if` guards aren't sufficient. `LLMModelManager` is wrapped in `#if !targetEnvironment(macCatalyst)` / `#else` with a stub that returns `LLMError.serviceUnavailable`, ready for when the flag flips. To actually enable Catalyst: (1) rebuild `BrunoCerberus/swift-llama-cpp` with a `maccatalyst` xcframework slice (or fork the Package.swift to exclude Catalyst), (2) flip `SUPPORTS_MACCATALYST: true`, (3) add `#if !targetEnvironment(macCatalyst)` guards around `ActivityKit` usage (`TTSLiveActivityController`, `TTSActivityAttributes`) and `UIApplicationShortcutItem` registration in `QuickActionHandler` — these APIs are iOS-only. Do NOT use the deprecated `DERIVE_MACCATALYST_PRODUCT_BUNDLE_IDENTIFIER`; conditionalize `PRODUCT_BUNDLE_IDENTIFIER` with `[sdk=macosx*]` instead.
 
 ## Data Source Architecture
 
@@ -450,21 +453,24 @@ All llama.cpp operations run on a **dedicated pinned thread** (not just serializ
 
 ## Navigation Architecture
 
-Pulse uses a **Coordinator + Router** pattern with per-tab NavigationPaths:
+Pulse uses a **Coordinator + Router** pattern with per-tab NavigationPaths, size-class adaptive:
 
 ```
 CoordinatorView (@StateObject Coordinator)
        │
-   TabView (selection: $coordinator.selectedTab)
+       ├─ horizontalSizeClass == .compact (iPhone, iPad Slide Over)
+       │     └─ AnimatedTabView (5 Tabs, selection: $coordinator.selectedTab)
        │
-   ┌───┴───┬──────┬──────┬─────────┬───────┐
- Home   Media   Feed   Bookmarks  Search
-   │        │       │           │         │
-NavigationStack(path: $coordinator.homePath)
+       └─ horizontalSizeClass == .regular (iPad, future Catalyst)
+             └─ NavigationSplitView
+                ├─ SidebarContentView (List(selection:) over AppTab.allCases)
+                └─ AdaptiveDetailStack (switch on coordinator.selectedTab)
        │
-.navigationDestination(for: Page.self)
+   NavigationStack(path: $coordinator.<tab>Path)
        │
-coordinator.build(page:)
+   .navigationDestination(for: Page.self)
+       │
+   coordinator.build(page:)
 ```
 
 ### Key Components
@@ -475,8 +481,10 @@ coordinator.build(page:)
 | `AuthenticationManager` | Global singleton observing Firebase auth state |
 | `AuthService` | Protocol for sign-in/sign-out operations |
 | `Page` | Enum of all navigable destinations |
-| `Coordinator` | Central navigation manager with per-tab paths |
-| `CoordinatorView` | Root view hosting TabView + NavigationStacks |
+| `Coordinator` | Central navigation manager with per-tab paths; exposes `AppTab.title` (localized) for both tab bar and sidebar labels |
+| `CoordinatorView` | Root view — swaps on `@Environment(\.horizontalSizeClass)`: compact uses `AnimatedTabView`, regular uses `NavigationSplitView` |
+| `SidebarContentView` | Sidebar `List(selection:)` for regular width. Reuses `$coordinator.selectedTab` via an `Optional<AppTab>` binding wrapper (iOS `List(selection:)` requires an optional selection type) |
+| `AdaptiveDetailStack` | Detail column for the regular-width split view. Switches on `coordinator.selectedTab` to render the matching feature root inside its own `NavigationStack(path:)` with `.navigationDestination(for: Page.self)` |
 | `DeeplinkRouter` | Routes deeplinks to coordinator actions |
 | `*NavigationRouter` | Feature-specific routers conforming to `NavigationRouter` |
 

@@ -10,6 +10,8 @@ struct BookmarksView<R: BookmarksNavigationRouter>: View {
     /// Backing ViewModel managing data and actions
     @ObservedObject var viewModel: BookmarksViewModel
 
+    @Environment(\.horizontalSizeClass) private var horizontalSizeClass
+
     /// Creates the view with a router and ViewModel.
     /// - Parameters:
     ///   - router: Navigation router for routing actions
@@ -132,27 +134,47 @@ struct BookmarksView<R: BookmarksNavigationRouter>: View {
             LazyVStack(spacing: Spacing.sm) {
                 bookmarkCountHeader
 
-                ForEach(bookmarks) { item in
-                    GlassArticleCard(
-                        item: item,
-                        isBookmarked: true,
-                        onTap: {
-                            viewModel.handle(event: .onArticleTapped(articleId: item.id))
-                        },
-                        onBookmark: {
-                            HapticManager.shared.notification(.warning)
-                            viewModel.handle(event: .onRemoveBookmark(articleId: item.id))
-                        },
-                        onShare: {
-                            viewModel.handle(event: .onShareTapped(articleId: item.id))
-                        }
-                    )
-                    .fadeIn(delay: Double(item.animationIndex) * 0.03)
-                }
+                bookmarkCards(bookmarks)
             }
             .padding(.horizontal, Spacing.md)
             .padding(.top, Spacing.sm)
         }
+    }
+
+    @ViewBuilder
+    private func bookmarkCards(_ bookmarks: [ArticleViewItem]) -> some View {
+        if horizontalSizeClass == .regular {
+            LazyVGrid(
+                columns: [GridItem(.adaptive(minimum: 360), spacing: Spacing.md)],
+                spacing: Spacing.md
+            ) {
+                ForEach(bookmarks) { item in
+                    bookmarkCard(item)
+                }
+            }
+        } else {
+            ForEach(bookmarks) { item in
+                bookmarkCard(item)
+            }
+        }
+    }
+
+    private func bookmarkCard(_ item: ArticleViewItem) -> some View {
+        GlassArticleCard(
+            item: item,
+            isBookmarked: true,
+            onTap: {
+                viewModel.handle(event: .onArticleTapped(articleId: item.id))
+            },
+            onBookmark: {
+                HapticManager.shared.notification(.warning)
+                viewModel.handle(event: .onRemoveBookmark(articleId: item.id))
+            },
+            onShare: {
+                viewModel.handle(event: .onShareTapped(articleId: item.id))
+            }
+        )
+        .fadeIn(delay: Double(item.animationIndex) * 0.03)
     }
 
     private var bookmarkCountHeader: some View {

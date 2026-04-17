@@ -108,21 +108,24 @@ Pulse is an iOS news aggregation app built with **Unidirectional Data Flow Archi
    - **Easy Testing**: Mock services automatically injected in test environments
    - **Type Safety**: Compile-time service resolution with proper error handling
 
-4. **Coordinator + Router Navigation**: Centralized navigation with per-tab paths
+4. **Coordinator + Router Navigation**: Centralized navigation with per-tab paths, size-class adaptive
 
    ```
    CoordinatorView (@StateObject Coordinator)
           │
-      TabView (selection: $coordinator.selectedTab)
+          ├─ horizontalSizeClass == .compact (iPhone)
+          │     └─ AnimatedTabView (5 Tabs, selection: $coordinator.selectedTab)
           │
-      ┌───┴───┬──────┬──────┬─────────┬───────┐
-    Home   Media   Feed   Bookmarks  Search
-      │        │       │           │         │
-   NavigationStack(path: $coordinator.homePath)
+          └─ horizontalSizeClass == .regular (iPad)
+                └─ NavigationSplitView
+                   ├─ SidebarContentView (List(selection:) over AppTab.allCases)
+                   └─ AdaptiveDetailStack (switch on coordinator.selectedTab)
           │
-   .navigationDestination(for: Page.self)
+      NavigationStack(path: $coordinator.<tab>Path)
           │
-   coordinator.build(page:)
+      .navigationDestination(for: Page.self)
+          │
+      coordinator.build(page:)
    ```
 
    ```swift
@@ -477,6 +480,7 @@ Key components: `GlassTabBar`, `GlassCategoryChip`, `GlassSectionHeader`, `Glass
 - Loading states
 - Empty states
 - Dynamic Type accessibility snapshots (`iPhoneAirAccessibility`, `iPhoneAirExtraExtraLarge` configs)
+- iPad adaptive layouts (`iPad` 1024×768, `iPadPro13` 1032×1376 — both with `horizontalSizeClass: .regular` + `userInterfaceIdiom: .pad` traits)
 
 ## Key Files
 
@@ -495,8 +499,10 @@ Key components: `GlassTabBar`, `GlassCategoryChip`, `GlassSectionHeader`, `Glass
 | `RootView.swift` | Auth-gated root view (SignIn vs Onboarding vs CoordinatorView) |
 | `SignInView.swift` | Sign-in UI with Google/Apple buttons |
 | **Navigation** | |
-| `Coordinator.swift` | Central navigation manager with per-tab paths |
-| `CoordinatorView.swift` | Root TabView with NavigationStacks |
+| `Coordinator.swift` | Central navigation manager with per-tab paths; `AppTab.title` computed property provides localized labels for both the tab bar and the sidebar |
+| `CoordinatorView.swift` | Root view — swaps on `@Environment(\.horizontalSizeClass)`: compact uses `AnimatedTabView`, regular uses `NavigationSplitView` (sidebar + detail) |
+| `SidebarContentView.swift` | Sidebar `List(selection:)` for iPad / regular width. Reuses `$coordinator.selectedTab` via an `Optional<AppTab>` binding wrapper (iOS `List(selection:)` requires optional). Rows are `Label(tab.title, systemImage: tab.symbolImage)` |
+| `AdaptiveDetailStack.swift` | Detail column for the regular-width split view. Switches on `coordinator.selectedTab` to render the matching root view inside its own `NavigationStack(path:)` with `.navigationDestination(for: Page.self)` |
 | `Page.swift` | Enum of all navigable destinations |
 | `DeeplinkRouter.swift` | Routes deeplinks to coordinator |
 | `*NavigationRouter.swift` | Feature-specific navigation routers |
