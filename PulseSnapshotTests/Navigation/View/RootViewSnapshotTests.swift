@@ -92,4 +92,31 @@ final class RootViewSnapshotTests: XCTestCase {
             record: false
         )
     }
+
+    // MARK: - CoordinatorView Adaptive Shell
+
+    /// Exercises the compact-width branch of CoordinatorView (AnimatedTabView).
+    func testCoordinatorViewCompact() {
+        let view = CoordinatorView(serviceLocator: .preview)
+        let controller = UIHostingController(rootView: view)
+
+        assertSnapshot(
+            of: controller,
+            as: SnapshotConfig.snapshotting(on: iPhoneAirConfig),
+            record: false
+        )
+    }
+
+    /// Exercises the regular-width branch of CoordinatorView:
+    /// NavigationSplitView + SidebarContentView + AdaptiveDetailStack.
+    func testCoordinatorViewRegularWidth() {
+        let view = CoordinatorView(serviceLocator: .preview)
+        let controller = UIHostingController(rootView: view)
+
+        assertSnapshot(
+            of: controller,
+            as: SnapshotConfig.snapshotting(on: SnapshotConfig.iPad),
+            record: false
+        )
+    }
 }

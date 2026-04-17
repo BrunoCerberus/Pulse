@@ -51,6 +51,23 @@ final class ReadingHistoryViewSnapshotTests: XCTestCase {
         )
     }
 
+    /// Exercises the iPad regular-width adaptive branch: LazyVGrid history cards.
+    func testReadingHistoryViewRegularWidth() {
+        let view = NavigationStack {
+            ReadingHistoryView(
+                router: ReadingHistoryNavigationRouter(),
+                viewModel: ReadingHistoryViewModel(serviceLocator: serviceLocator)
+            )
+        }
+        let controller = UIHostingController(rootView: view)
+
+        assertSnapshot(
+            of: controller,
+            as: SnapshotConfig.snapshotting(on: SnapshotConfig.iPad),
+            record: false
+        )
+    }
+
     // MARK: - Loading State
 
     func testReadingHistoryViewLoading() {

@@ -102,6 +102,26 @@ final class MediaViewSnapshotTests: XCTestCase {
         serviceLocator.register(StorageService.self, instance: MockStorageService())
     }
 
+    // MARK: - iPad Regular Width (Adaptive Grid)
+
+    /// Exercises the iPad regular-width adaptive branch: LazyVGrid media items,
+    /// wider featured carousel cards.
+    func testMediaViewRegularWidth() {
+        let view = NavigationStack {
+            MediaView(
+                router: MediaNavigationRouter(),
+                viewModel: MediaViewModel(serviceLocator: serviceLocator)
+            )
+        }
+        let controller = UIHostingController(rootView: view)
+
+        assertSnapshot(
+            of: controller,
+            as: SnapshotConfig.snapshotting(on: SnapshotConfig.iPad),
+            record: false
+        )
+    }
+
     // MARK: - MediaCard Tests
 
     func testMediaCardVideo() {
