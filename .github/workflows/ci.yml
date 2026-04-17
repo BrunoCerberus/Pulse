@@ -32,7 +32,7 @@ jobs:
     # Cache Homebrew packages
     # Note: Static version key (brew-v1) - increment manually when brew dependencies change
     - name: Cache Homebrew packages
-      uses: actions/cache@668228422ae6a00e4ad889ee87cd7109ec5666a7 # v5.0.4
+      uses: actions/cache@27d5ce7f107fe9357f9df03efb73ab90386fccae # v5.0.5
       with:
         path: |
           ~/Library/Caches/Homebrew
@@ -44,7 +44,7 @@ jobs:
     # Cache Mint packages
     # Note: Static version key (mint-v1) - increment manually when mint dependencies change
     - name: Cache Mint packages
-      uses: actions/cache@668228422ae6a00e4ad889ee87cd7109ec5666a7 # v5.0.4
+      uses: actions/cache@27d5ce7f107fe9357f9df03efb73ab90386fccae # v5.0.5
       with:
         path: ~/.mint
         key: ${{ runner.os }}-mint-v1
@@ -120,7 +120,7 @@ jobs:
 
     steps:
     - name: Harden runner
-      uses: step-security/harden-runner@f808768d1510423e83855289c910610ca9b43176 # v2.17.0
+      uses: step-security/harden-runner@6c3c2f2c1c457b00c10c4848d6f5491db3b629df # v2.18.0
       with:
         egress-policy: audit
 
@@ -404,7 +404,7 @@ jobs:
     # Cache Homebrew packages
     # Note: Static version key (brew-v1) - increment manually when brew dependencies change
     - name: Cache Homebrew packages
-      uses: actions/cache@668228422ae6a00e4ad889ee87cd7109ec5666a7 # v5.0.4
+      uses: actions/cache@27d5ce7f107fe9357f9df03efb73ab90386fccae # v5.0.5
       with:
         path: |
           ~/Library/Caches/Homebrew
@@ -419,7 +419,7 @@ jobs:
     # IMPORTANT: Do NOT use broad restore-keys fallback - it can restore stale package versions
     # v6: Added ~/Library/Caches/org.swift.swiftpm to cache binary artifacts
     - name: Cache SPM dependencies
-      uses: actions/cache@668228422ae6a00e4ad889ee87cd7109ec5666a7 # v5.0.4
+      uses: actions/cache@27d5ce7f107fe9357f9df03efb73ab90386fccae # v5.0.5
       with:
         path: |
           Pulse.xcodeproj/project.xcworkspace/xcshareddata/swiftpm
@@ -479,7 +479,7 @@ jobs:
           ENABLE_ONLY_ACTIVE_RESOURCES=NO
 
     - name: Upload build artifacts
-      uses: actions/upload-artifact@bbbca2ddaa5d8feaa63e36b76fdaad77386f024f # v7.0.0
+      uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
       with:
         name: build-products
         path: ./DerivedData
@@ -535,7 +535,7 @@ jobs:
     # Cache Homebrew packages
     # Note: Static version key (brew-v1) - increment manually when brew dependencies change
     - name: Cache Homebrew packages
-      uses: actions/cache@668228422ae6a00e4ad889ee87cd7109ec5666a7 # v5.0.4
+      uses: actions/cache@27d5ce7f107fe9357f9df03efb73ab90386fccae # v5.0.5
       with:
         path: |
           ~/Library/Caches/Homebrew
@@ -550,7 +550,7 @@ jobs:
     # IMPORTANT: Do NOT use broad restore-keys fallback - it can restore stale package versions
     # v6: Added ~/Library/Caches/org.swift.swiftpm to cache binary artifacts
     - name: Cache SPM dependencies
-      uses: actions/cache@668228422ae6a00e4ad889ee87cd7109ec5666a7 # v5.0.4
+      uses: actions/cache@27d5ce7f107fe9357f9df03efb73ab90386fccae # v5.0.5
       with:
         path: |
           Pulse.xcodeproj/project.xcworkspace/xcshareddata/swiftpm
@@ -705,7 +705,7 @@ jobs:
         TEST_NAME: ${{ matrix.test-name }}
 
     - name: Upload test results
-      uses: actions/upload-artifact@bbbca2ddaa5d8feaa63e36b76fdaad77386f024f # v7.0.0
+      uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
       if: always()
       with:
         name: ${{ matrix.artifact-name }}
@@ -713,7 +713,7 @@ jobs:
         if-no-files-found: warn
 
     - name: Upload recorded snapshots
-      uses: actions/upload-artifact@bbbca2ddaa5d8feaa63e36b76fdaad77386f024f # v7.0.0
+      uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
       if: always() && matrix.test-target == 'PulseSnapshotTests'
       with:
         name: recorded-snapshots
@@ -803,7 +803,7 @@ jobs:
         exit $RESULT
 
     - name: Upload patch coverage report
-      uses: actions/upload-artifact@bbbca2ddaa5d8feaa63e36b76fdaad77386f024f # v7.0.0
+      uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
       if: always()
       with:
         name: patch-coverage-report
