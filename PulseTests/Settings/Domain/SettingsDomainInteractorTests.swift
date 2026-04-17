@@ -66,6 +66,34 @@ struct SettingsInteractorStateTests {
         #expect(loadingStates.contains(true))
         #expect(loadingStates.last == false)
     }
+
+    @Test("cloudSyncDidComplete notification triggers preferences reload + broadcasts change")
+    func cloudSyncDidCompleteReloadsPreferences() async throws {
+        let (sut, mock, _, _) = createSUT()
+        try await Task.sleep(nanoseconds: 100_000_000)
+
+        mock.preferences = UserPreferences(
+            followedTopics: [.business],
+            mutedSources: ["SpamCo"],
+            mutedKeywords: [],
+            preferredLanguage: "pt",
+            notificationsEnabled: false,
+            breakingNewsNotifications: false
+        )
+
+        var cancellables = Set<AnyCancellable>()
+        var broadcastReceived = false
+        NotificationCenter.default.publisher(for: .userPreferencesDidChange)
+            .sink { _ in broadcastReceived = true }
+            .store(in: &cancellables)
+
+        NotificationCenter.default.post(name: .cloudSyncDidComplete, object: nil)
+        try await Task.sleep(nanoseconds: 300_000_000)
+
+        #expect(sut.currentState.preferences.preferredLanguage == "pt")
+        #expect(sut.currentState.preferences.mutedSources.contains("SpamCo"))
+        #expect(broadcastReceived)
+    }
 }
 
 // MARK: - Notification Tests

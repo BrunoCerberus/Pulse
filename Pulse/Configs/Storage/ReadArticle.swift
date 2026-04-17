@@ -3,15 +3,16 @@ import SwiftData
 
 /// SwiftData model for persisting reading history.
 ///
-/// This model stores a flattened copy of article data in the local database,
-/// tracking which articles the user has opened. The model uses
-/// `@Attribute(.unique)` on `articleID` to prevent duplicate entries.
+/// Every property has a default value so the model is compatible with
+/// CloudKit sync via `NSPersistentCloudKitContainer`. Duplicate prevention is
+/// enforced at the service layer (`LiveStorageService.markArticleAsRead`
+/// upserts by `articleID`).
 @Model
 final class ReadArticle {
-    /// Unique identifier for the article (Guardian content ID or URL).
-    @Attribute(.unique) var articleID: String
+    /// Identifier for the article (Guardian content ID or URL).
+    var articleID: String = ""
     /// Article headline text.
-    var title: String
+    var title: String = ""
     /// Short description or trail text for the article.
     var articleDescription: String?
     /// Full article body content (HTML or plain text).
@@ -19,17 +20,17 @@ final class ReadArticle {
     /// Article author or byline.
     var author: String?
     /// Display name of the article's source publication.
-    var sourceName: String
+    var sourceName: String = ""
     /// Machine identifier for the source (e.g., "guardian", "bbc-news").
     var sourceID: String?
     /// Original web URL for the article.
-    var url: String
+    var url: String = ""
     /// URL for the article's hero/thumbnail image.
     var imageURL: String?
     /// Original publication timestamp.
-    var publishedAt: Date
+    var publishedAt: Date = Date.distantPast
     /// Timestamp when the user read this article.
-    var readAt: Date
+    var readAt: Date = Date()
     /// News category as raw string value (stored for SwiftData compatibility).
     var category: String?
 

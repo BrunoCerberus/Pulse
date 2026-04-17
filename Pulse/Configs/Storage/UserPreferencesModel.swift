@@ -3,23 +3,22 @@ import SwiftData
 
 /// SwiftData model for persisting user preferences locally.
 ///
-/// This model stores user settings including followed topics, muted content,
-/// and notification preferences. Raw string values are used for enums to ensure
-/// SwiftData compatibility while maintaining type safety through conversion methods.
+/// Every property has a default value so the model is compatible with
+/// CloudKit sync via `NSPersistentCloudKitContainer`.
 @Model
 final class UserPreferencesModel {
     /// News categories the user follows (stored as raw string values).
-    var followedTopics: [String]
+    var followedTopics: [String] = []
     /// News source identifiers the user has muted (hidden from feeds).
-    var mutedSources: [String]
+    var mutedSources: [String] = []
     /// Keywords to filter out from article titles and content.
-    var mutedKeywords: [String]
+    var mutedKeywords: [String] = []
     /// ISO 639-1 language code for preferred content language.
-    var preferredLanguage: String
+    var preferredLanguage: String = "en"
     /// Whether push notifications are enabled for this user.
-    var notificationsEnabled: Bool
+    var notificationsEnabled: Bool = false
     /// Whether breaking news alerts are enabled (requires notificationsEnabled).
-    var breakingNewsNotifications: Bool
+    var breakingNewsNotifications: Bool = false
 
     /// Creates a persistence model from domain preferences.
     /// - Parameter preferences: The domain preferences to persist.

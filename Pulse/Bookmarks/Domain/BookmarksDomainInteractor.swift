@@ -44,6 +44,13 @@ final class BookmarksDomainInteractor: CombineInteractor {
         }
 
         analyticsService = try? serviceLocator.retrieve(AnalyticsService.self)
+
+        NotificationCenter.default.publisher(for: .cloudSyncDidComplete)
+            .receive(on: DispatchQueue.main)
+            .sink { [weak self] _ in
+                self?.loadBookmarks()
+            }
+            .store(in: &cancellables)
     }
 
     func dispatch(action: DomainAction) {

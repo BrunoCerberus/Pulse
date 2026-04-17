@@ -132,6 +132,8 @@ targets:
           - UIInterfaceOrientationLandscapeRight
         NSFaceIDUsageDescription: "Pulse uses Face ID to protect your app content."
         NSSupportsLiveActivities: true
+        UIBackgroundModes:
+          - remote-notification
         CFBundleURLTypes:
           - CFBundleURLName: com.bruno.Pulse
             CFBundleURLSchemes:

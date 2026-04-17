@@ -113,4 +113,21 @@ struct ReadingHistoryDomainInteractorTests {
         sut.dispatch(action: .clearSelectedArticle)
         #expect(sut.currentState.selectedArticle == nil)
     }
+
+    // MARK: - CloudSync Integration
+
+    @Test("cloudSyncDidComplete notification triggers history reload")
+    func cloudSyncDidCompleteReloadsHistory() async throws {
+        let sut = createSUT()
+        try await waitForStateUpdate(duration: TestWaitDuration.short)
+        #expect(sut.currentState.articles.isEmpty)
+
+        // Seed the mock AFTER the SUT is constructed, then post the
+        // notification. The observer wired in init should reload.
+        mockStorageService.readArticles = Array(Article.mockArticles.prefix(2))
+        NotificationCenter.default.post(name: .cloudSyncDidComplete, object: nil)
+        try await waitForStateUpdate(duration: TestWaitDuration.long)
+
+        #expect(sut.currentState.articles.count == 2)
+    }
 }

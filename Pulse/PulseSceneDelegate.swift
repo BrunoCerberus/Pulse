@@ -21,6 +21,11 @@ final class PulseSceneDelegate: UIResponder, UIWindowSceneDelegate {
     /// or any launch-time deeplinks fire.
     private var deeplinkRouter: DeeplinkRouter?
 
+    /// Always-on CloudKit sync observer retained for the scene's lifetime.
+    /// Logs analytics and fans out `.cloudSyncDidComplete` notifications so
+    /// feature interactors reload from storage when remote changes merge in.
+    private var cloudSyncInteractor: CloudSyncDomainInteractor?
+
     func scene(
         _ scene: UIScene,
         willConnectTo _: UISceneSession,
@@ -49,6 +54,9 @@ final class PulseSceneDelegate: UIResponder, UIWindowSceneDelegate {
 
         // Sync language preference from SwiftData to AppLocalization
         syncLanguagePreference()
+
+        // Start CloudKit sync observation (always enabled; no UI entry point)
+        startCloudSyncObservation()
 
         // Preload LLM model in background for faster digest generation
         preloadLLMModelIfPremium()
@@ -193,6 +201,12 @@ private extension PulseSceneDelegate {
         }
     }
 
+    func startCloudSyncObservation() {
+        let interactor = CloudSyncDomainInteractor(serviceLocator: serviceLocator)
+        interactor.dispatch(action: .startObserving)
+        cloudSyncInteractor = interactor
+    }
+
     func preloadLLMModelIfPremium() {
         Task.detached(priority: .utility) { [serviceLocator] in
             do {
@@ -271,6 +285,7 @@ private extension PulseSceneDelegate {
             serviceLocator.register(TextToSpeechService.self, instance: MockTextToSpeechService())
             serviceLocator.register(NotificationService.self, instance: MockNotificationService())
             serviceLocator.register(SharedURLImportService.self, instance: MockSharedURLImportService())
+            serviceLocator.register(CloudSyncService.self, instance: MockCloudSyncService())
             let mockOnboarding = MockOnboardingService(hasCompletedOnboarding: true)
             serviceLocator.register(OnboardingService.self, instance: mockOnboarding)
 
@@ -292,6 +307,10 @@ private extension PulseSceneDelegate {
         // Register base services first
         let storageService = LiveStorageService()
         serviceLocator.register(StorageService.self, instance: storageService)
+
+        // CloudKit sync observer wrapping SwiftData's private-database sync
+        let cloudSyncService = LiveCloudSyncService()
+        serviceLocator.register(CloudSyncService.self, instance: cloudSyncService)
 
         // Network monitor for offline detection
         let networkMonitor = LiveNetworkMonitorService()
