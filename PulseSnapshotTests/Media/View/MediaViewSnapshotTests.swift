@@ -104,14 +104,15 @@ final class MediaViewSnapshotTests: XCTestCase {
 
     // MARK: - iPad Regular Width (Adaptive Grid)
 
-    /// Exercises the iPad regular-width adaptive branch: LazyVGrid media items,
-    /// wider featured carousel cards.
+    /// Exercises the iPad regular-width adaptive branch: LazyVGrid media items
+    /// invoked via `mediaItemsContainer(...)` / `mediaItemCard(...)` helpers
+    /// plus the wider featured carousel card width.
     func testMediaViewRegularWidth() {
+        let viewModel = MediaViewModel(serviceLocator: serviceLocator)
+        viewModel.handle(event: .onAppear)
+
         let view = NavigationStack {
-            MediaView(
-                router: MediaNavigationRouter(),
-                viewModel: MediaViewModel(serviceLocator: serviceLocator)
-            )
+            MediaView(router: MediaNavigationRouter(), viewModel: viewModel)
         }
         let controller = UIHostingController(rootView: view)
 

@@ -117,14 +117,15 @@ final class HomeViewSnapshotTests: XCTestCase {
         )
     }
 
-    /// Exercises the iPad regular-width adaptive branch: LazyVGrid headlines,
-    /// wider hero/recently-read cards, size-class computed widths.
+    /// Exercises the iPad regular-width adaptive branch: LazyVGrid headlines
+    /// via `headlinesContainer(...)` / `headlineCard(...)`, plus the wider
+    /// hero/recently-read card widths driven by `horizontalSizeClass`.
     func testHomeViewLoadingRegularWidth() {
+        let viewModel = HomeViewModel(serviceLocator: serviceLocator)
+        viewModel.handle(event: .onAppear)
+
         let view = NavigationStack {
-            HomeView(
-                router: HomeNavigationRouter(),
-                viewModel: HomeViewModel(serviceLocator: serviceLocator)
-            )
+            HomeView(router: HomeNavigationRouter(), viewModel: viewModel)
         }
         let controller = UIHostingController(rootView: view)
 
