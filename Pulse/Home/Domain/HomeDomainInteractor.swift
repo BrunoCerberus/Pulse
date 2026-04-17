@@ -89,6 +89,16 @@ final class HomeDomainInteractor: CombineInteractor {
                 }
             }
             .store(in: &cancellables)
+
+        // Refresh read indicators + recently-read list when CloudKit merges
+        // remote bookmarks/history into the local store.
+        NotificationCenter.default.publisher(for: .cloudSyncDidComplete)
+            .receive(on: DispatchQueue.main)
+            .sink { [weak self] _ in
+                self?.loadReadArticleIDs()
+                self?.loadRecentlyRead()
+            }
+            .store(in: &cancellables)
     }
 
     func dispatch(action: DomainAction) {

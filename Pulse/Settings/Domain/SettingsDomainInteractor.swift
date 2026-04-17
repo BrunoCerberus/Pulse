@@ -53,6 +53,13 @@ final class SettingsDomainInteractor: CombineInteractor {
         notificationService = (try? serviceLocator.retrieve(NotificationService.self))
             ?? LiveNotificationService.shared
         analyticsService = try? serviceLocator.retrieve(AnalyticsService.self)
+
+        NotificationCenter.default.publisher(for: .cloudSyncDidComplete)
+            .receive(on: DispatchQueue.main)
+            .sink { [weak self] _ in
+                self?.handleCloudSyncCompletion()
+            }
+            .store(in: &cancellables)
     }
 
     func dispatch(action: DomainAction) {
@@ -106,6 +113,22 @@ final class SettingsDomainInteractor: CombineInteractor {
                 break
             }
         }
+    }
+
+    private func handleCloudSyncCompletion() {
+        settingsService.fetchPreferences()
+            .receive(on: DispatchQueue.main)
+            .sink { [weak self] completion in
+                if case let .failure(error) = completion {
+                    self?.analyticsService?.recordError(error)
+                }
+            } receiveValue: { [weak self] preferences in
+                self?.updateState { state in
+                    state.preferences = preferences
+                }
+                NotificationCenter.default.post(name: .userPreferencesDidChange, object: nil)
+            }
+            .store(in: &cancellables)
     }
 
     private func loadPreferences() {

@@ -336,6 +336,26 @@ struct BookmarksDomainInteractorTests {
     }
 }
 
+// MARK: - CloudSync Integration Tests
+
+extension BookmarksDomainInteractorTests {
+    @Test("cloudSyncDidComplete notification triggers bookmark reload")
+    func cloudSyncDidCompleteReloadsBookmarks() async throws {
+        // Seed the mock with bookmarks and verify initial state is empty.
+        #expect(sut.currentState.bookmarks.isEmpty)
+
+        mockBookmarksService.bookmarks = Article.mockArticles
+
+        // Posting the notification should cause the interactor to reload via
+        // the observer wired in init, populating state without an explicit
+        // dispatch.
+        NotificationCenter.default.post(name: .cloudSyncDidComplete, object: nil)
+        try await Task.sleep(nanoseconds: 300_000_000)
+
+        #expect(sut.currentState.bookmarks.count == Article.mockArticles.count)
+    }
+}
+
 // MARK: - Analytics Tests
 
 extension BookmarksDomainInteractorTests {

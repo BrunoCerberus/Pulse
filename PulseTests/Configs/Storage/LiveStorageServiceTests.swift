@@ -60,6 +60,16 @@ struct LiveStorageServiceTests {
         #expect(bookmarks.count == 1)
     }
 
+    @Test("Save article repeated many times stays a single record")
+    func saveArticleManyTimesStaysSingle() async throws {
+        for _ in 0 ..< 5 {
+            try await sut.saveArticle(testArticle)
+        }
+        let bookmarks = try await sut.fetchBookmarkedArticles()
+        #expect(bookmarks.count == 1)
+        #expect(bookmarks.first?.id == testArticle.id)
+    }
+
     @Test("Delete article removes bookmark")
     func deleteArticleRemovesBookmark() async throws {
         try await sut.saveArticle(testArticle)

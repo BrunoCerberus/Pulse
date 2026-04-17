@@ -17,6 +17,7 @@ final class ReadingHistoryDomainInteractor: CombineInteractor {
     private let analyticsService: AnalyticsService?
     private let stateSubject = CurrentValueSubject<DomainState, Never>(.initial)
     private var backgroundTasks = Set<Task<Void, Never>>()
+    private var cancellables = Set<AnyCancellable>()
 
     var statePublisher: AnyPublisher<DomainState, Never> {
         stateSubject.eraseToAnyPublisher()
@@ -35,6 +36,13 @@ final class ReadingHistoryDomainInteractor: CombineInteractor {
         }
 
         analyticsService = try? serviceLocator.retrieve(AnalyticsService.self)
+
+        NotificationCenter.default.publisher(for: .cloudSyncDidComplete)
+            .receive(on: DispatchQueue.main)
+            .sink { [weak self] _ in
+                self?.loadHistory()
+            }
+            .store(in: &cancellables)
     }
 
     func dispatch(action: DomainAction) {

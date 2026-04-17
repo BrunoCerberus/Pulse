@@ -6,16 +6,33 @@ import SwiftData
 // MARK: - Live Storage Service
 
 final class LiveStorageService: StorageService {
+    /// iCloud container backing CloudKit-synced SwiftData.
+    /// Must match the `com.apple.developer.icloud-container-identifiers` entitlement.
+    static let cloudKitContainerIdentifier = "iCloud.com.bruno.Pulse-News"
+
     private let modelContainer: ModelContainer
 
-    init(inMemory: Bool = false) {
+    /// - Parameters:
+    ///   - inMemory: When `true`, uses an in-memory store (for tests). Forces
+    ///     CloudKit off regardless of `enableCloudKit`.
+    ///   - enableCloudKit: When `true` (and not `inMemory`), mirrors the store
+    ///     to the private CloudKit database at `cloudKitContainerIdentifier`.
+    init(inMemory: Bool = false, enableCloudKit: Bool = true) {
         do {
             let schema = Schema([
                 BookmarkedArticle.self,
                 UserPreferencesModel.self,
                 ReadArticle.self,
             ])
-            let modelConfiguration = ModelConfiguration(schema: schema, isStoredInMemoryOnly: inMemory)
+            let modelConfiguration: ModelConfiguration
+            if inMemory || !enableCloudKit {
+                modelConfiguration = ModelConfiguration(schema: schema, isStoredInMemoryOnly: inMemory)
+            } else {
+                modelConfiguration = ModelConfiguration(
+                    schema: schema,
+                    cloudKitDatabase: .private(Self.cloudKitContainerIdentifier)
+                )
+            }
             let container = try ModelContainer(for: schema, configurations: [modelConfiguration])
             modelContainer = container
         } catch {
@@ -26,6 +43,13 @@ final class LiveStorageService: StorageService {
     @MainActor
     func saveArticle(_ article: Article) async throws {
         let context = modelContainer.mainContext
+        let articleID = article.id
+        let descriptor = FetchDescriptor<BookmarkedArticle>(
+            predicate: #Predicate { $0.articleID == articleID }
+        )
+        if try context.fetch(descriptor).first != nil {
+            return
+        }
         let bookmarked = BookmarkedArticle(from: article)
         context.insert(bookmarked)
         try context.save()

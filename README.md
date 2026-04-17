@@ -21,12 +21,13 @@ A modern iOS news aggregation app built with Clean Architecture, SwiftUI, and Co
 - **Accessibility**: Dynamic Type layout adaptation (HStack-to-VStack at accessibility sizes), VoiceOver heading hierarchy, focus management, and live announcements for async state changes
 - **Security**: Input validation (deeplink sanitization, YouTube URL allowlisting, search query length limit), sign-out data cleanup (clears all caches, bookmarks, preferences, keychain, widget data), file-protected disk cache, privacy manifest (`PrivacyInfo.xcprivacy`), and Keychain-based app lock with biometric + passcode fallback
 - **Onboarding**: 4-page first-launch experience shown once after sign-in, highlighting key features before entering the app
-- **Analytics & Crash Reporting**: Firebase Analytics (21 type-safe events) and Crashlytics for crash/non-fatal error tracking
+- **Analytics & Crash Reporting**: Firebase Analytics (25 type-safe events, including 4 CloudKit sync events) and Crashlytics for crash/non-fatal error tracking
 - **Widget**: Home screen widget showing recent headlines (WidgetKit extension)
 - **App Intents & Siri Shortcuts**: Five `AppIntent` types (`OpenPulseIntent`, `OpenDailyDigestIntent`, `OpenBookmarksIntent`, `SearchPulseIntent`, `OpenPulseSettingsIntent`) exposed to Siri, Spotlight, and the Shortcuts app via `PulseAppShortcuts`, with natural-language phrases (e.g., *"Show my Daily Digest in Pulse"*). All intents dispatch via `DeeplinkManager` to reuse in-app navigation
 - **Live Activities**: TTS playback surfaces on the Lock Screen and Dynamic Island via ActivityKit — `TTSActivityAttributes` (shared between app + widget extension), `TTSLiveActivityController` (`@MainActor` singleton) wired into `ArticleDetailDomainInteractor`, and `TTSLockScreenView` / `TTSLiveActivity` rendering expanded/compact/minimal presentations. `LiveTextToSpeechService` integrates `MPNowPlayingInfoCenter` + `MPRemoteCommandCenter` so AirPods, CarPlay, and Lock Screen media controls drive TTS
 - **Share Extension**: `PulseShareExtension` accepts a `public.url` from Safari/any iOS share sheet and offers *Summarize with AI in Pulse*. Because Gemma 3 1B exceeds the extension's ~120 MB memory budget, the extension serializes a `SharedURLItem` into an App Group JSON-backed queue (`SharedURLQueue`) and opens the host app via `pulse://shared`; the main app drains the queue on foreground via `SharedURLImportService`
 - **Home Screen Quick Actions**: Four long-press shortcuts (Search, Daily Digest, Bookmarks, Breaking News) registered dynamically at scene-connect time so titles localize per the in-app `AppLocalization` setting. `QuickActionHandler` routes each through `DeeplinkManager` (en/pt/es)
+- **iCloud Cross-Device Sync**: Bookmarks, reading history, and user preferences sync across a user's iOS devices via SwiftData's native CloudKit integration (`NSPersistentCloudKitContainer`). Always-on, zero-UI — the `CloudSyncService` + `CloudSyncDomainInteractor` pair surfaces sync state via Combine publishers and posts `.cloudSyncDidComplete` so Bookmarks, Reading History, Settings, and Home interactors reload from storage after remote merges
 
 The app uses iOS 26's liquid glass TabView style with tabs: Home, Media, Feed, Bookmarks, and Search. Users must sign in with Google or Apple before accessing the main app. A 4-page onboarding flow is shown once after first sign-in.
 
@@ -388,6 +389,8 @@ Pulse/
 │   ├── Search/             # Search functionality
 │   ├── Bookmarks/          # Saved articles
 │   ├── ReadingHistory/     # Reading history tracking (SwiftData)
+│   ├── CloudSync/          # CloudKit sync lifecycle (domain interactor + notifications)
+│   │   └── Domain/         # CloudSyncDomainState, Action, Interactor, Notifications
 │   ├── Settings/           # User preferences + account/logout
 │   ├── Notifications/      # Push notification permission and registration
 │   ├── ArticleDetail/      # Article view + TTS (AVSpeechSynthesizer)
@@ -404,7 +407,8 @@ Pulse/
 │       ├── DesignSystem/   # ColorSystem, Typography, Components, DynamicTypeHelpers, HapticManager
 │       ├── Models/         # Article, NewsCategory, UserPreferences, AppLocalization
 │       ├── Networking/     # APIKeysProvider, BaseURLs, SupabaseConfig, RemoteConfig, NetworkMonitorService, NetworkResilience
-│       ├── Storage/        # StorageService (SwiftData)
+│       ├── Storage/        # StorageService (SwiftData + CloudKit private DB)
+│       ├── CloudSync/      # CloudSyncService protocol + LiveCloudSyncService
 │       ├── Analytics/      # AnalyticsService protocol + LiveAnalyticsService
 │       ├── Mocks/          # Mock services for testing
 │       └── Widget/         # WidgetDataManager

@@ -47,6 +47,10 @@ enum AnalyticsEvent {
     case ttsStarted
     case ttsStopped
     case ttsSpeedChanged(speed: String)
+    case cloudSyncStarted
+    case cloudSyncSucceeded
+    case cloudSyncFailed(error: String)
+    case cloudSyncAccountUnavailable(status: String)
 
     var name: String {
         switch self {
@@ -71,6 +75,10 @@ enum AnalyticsEvent {
         case .ttsStarted: "tts_started"
         case .ttsStopped: "tts_stopped"
         case .ttsSpeedChanged: "tts_speed_changed"
+        case .cloudSyncStarted: "cloud_sync_started"
+        case .cloudSyncSucceeded: "cloud_sync_succeeded"
+        case .cloudSyncFailed: "cloud_sync_failed"
+        case .cloudSyncAccountUnavailable: "cloud_sync_account_unavailable"
         }
     }
 
@@ -80,7 +88,14 @@ enum AnalyticsEvent {
             ["screen_name": screen.rawValue]
         case let .articleOpened(source):
             ["source": source.rawValue]
-        case .articleBookmarked, .articleUnbookmarked, .articleShared, .signOut, .ttsStarted, .ttsStopped:
+        case .articleBookmarked,
+             .articleUnbookmarked,
+             .articleShared,
+             .signOut,
+             .ttsStarted,
+             .ttsStopped,
+             .cloudSyncStarted,
+             .cloudSyncSucceeded:
             nil
         case let .searchPerformed(queryLength, resultCount):
             ["query_length": queryLength, "result_count": resultCount]
@@ -108,6 +123,10 @@ enum AnalyticsEvent {
             ["page": page]
         case let .ttsSpeedChanged(speed):
             ["speed": speed]
+        case let .cloudSyncFailed(error):
+            ["error": error]
+        case let .cloudSyncAccountUnavailable(status):
+            ["status": status]
         }
     }
 }
