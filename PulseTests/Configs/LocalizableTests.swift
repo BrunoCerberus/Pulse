@@ -483,7 +483,7 @@ struct PaywallLocalizableTests {
     @Test("Feature 1 title is not empty")
     func feature1TitleIsNotEmpty() {
         #expect(!Localizable.paywall.feature1Title.isEmpty)
-        #expect(Localizable.paywall.feature1Title == "Unlimited Articles")
+        #expect(Localizable.paywall.feature1Title == "AI Daily Digest")
     }
 
     @Test("Feature 1 description is not empty")
@@ -494,7 +494,7 @@ struct PaywallLocalizableTests {
     @Test("Feature 2 title is not empty")
     func feature2TitleIsNotEmpty() {
         #expect(!Localizable.paywall.feature2Title.isEmpty)
-        #expect(Localizable.paywall.feature2Title == "Offline Reading")
+        #expect(Localizable.paywall.feature2Title == "AI Article Summaries")
     }
 
     @Test("Feature 2 description is not empty")
@@ -505,7 +505,7 @@ struct PaywallLocalizableTests {
     @Test("Feature 3 title is not empty")
     func feature3TitleIsNotEmpty() {
         #expect(!Localizable.paywall.feature3Title.isEmpty)
-        #expect(Localizable.paywall.feature3Title == "Ad-Free Experience")
+        #expect(Localizable.paywall.feature3Title == "Private by Design")
     }
 
     @Test("Feature 3 description is not empty")
