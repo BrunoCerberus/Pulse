@@ -266,6 +266,8 @@
 "onboarding.ai_powered.subtitle" = "Resumen diario y resúmenes de artículos con IA te ayudan a mantenerte informado más rápido.";
 "onboarding.stay_connected.title" = "Nunca Te Pierdas una Noticia";
 "onboarding.stay_connected.subtitle" = "Guarda artículos para lectura sin conexión, marca tus favoritos y busca cualquier cosa.";
+"onboarding.choose_topics.title" = "Elige Tus Temas";
+"onboarding.choose_topics.subtitle" = "Selecciona algunos para personalizar tu feed. Puedes cambiarlos cuando quieras en Ajustes.";
 "onboarding.get_started.title" = "¿Listo para Explorar?";
 "onboarding.get_started.subtitle" = "Tu viaje de noticias comienza ahora.";
 

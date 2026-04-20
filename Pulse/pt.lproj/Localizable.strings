@@ -266,6 +266,8 @@
 "onboarding.ai_powered.subtitle" = "Resumo diário e resumos de artigos por IA ajudam você a se manter informado mais rápido.";
 "onboarding.stay_connected.title" = "Nunca Perca uma Notícia";
 "onboarding.stay_connected.subtitle" = "Salve artigos para leitura offline, marque seus favoritos e busque qualquer coisa.";
+"onboarding.choose_topics.title" = "Escolha Seus Tópicos";
+"onboarding.choose_topics.subtitle" = "Selecione alguns para personalizar seu feed. Você pode alterá-los a qualquer momento nas Configurações.";
 "onboarding.get_started.title" = "Pronto para Explorar?";
 "onboarding.get_started.subtitle" = "Sua jornada de notícias começa agora.";
 

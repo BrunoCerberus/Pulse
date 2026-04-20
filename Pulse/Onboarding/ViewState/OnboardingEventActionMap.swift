@@ -10,6 +10,8 @@ struct OnboardingEventActionMap: DomainEventActionMap {
             return .skip
         case let .onPageChanged(page):
             return .goToPage(page)
+        case let .onToggleTopic(category):
+            return .toggleTopic(category)
         }
     }
 }

@@ -44,6 +44,7 @@ enum AnalyticsEvent {
     case signOut
     case onboardingCompleted(page: Int)
     case onboardingSkipped(page: Int)
+    case onboardingTopicsSelected(count: Int, topics: [String])
     case ttsStarted
     case ttsStopped
     case ttsSpeedChanged(speed: String)
@@ -72,6 +73,7 @@ enum AnalyticsEvent {
         case .signOut: "sign_out"
         case .onboardingCompleted: "onboarding_completed"
         case .onboardingSkipped: "onboarding_skipped"
+        case .onboardingTopicsSelected: "onboarding_topics_selected"
         case .ttsStarted: "tts_started"
         case .ttsStopped: "tts_stopped"
         case .ttsSpeedChanged: "tts_speed_changed"
@@ -121,6 +123,10 @@ enum AnalyticsEvent {
             ["page": page]
         case let .onboardingSkipped(page):
             ["page": page]
+        case let .onboardingTopicsSelected(count, topics):
+            // Firebase caps string param values at 100 chars; truncate defensively
+            // so the full list isn't silently cut mid-token server-side.
+            ["count": count, "topics": String(topics.joined(separator: ",").prefix(100))]
         case let .ttsSpeedChanged(speed):
             ["speed": speed]
         case let .cloudSyncFailed(error):

@@ -23,4 +23,10 @@ struct OnboardingEventActionMapTests {
         let action = sut.map(event: .onPageChanged(.stayConnected))
         #expect(action == .goToPage(.stayConnected))
     }
+
+    @Test("onToggleTopic maps to toggleTopic")
+    func mapToggleTopic() {
+        let action = sut.map(event: .onToggleTopic(.technology))
+        #expect(action == .toggleTopic(.technology))
+    }
 }

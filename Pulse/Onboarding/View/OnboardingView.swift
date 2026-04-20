@@ -28,8 +28,19 @@ struct OnboardingView: View {
 
                 TabView(selection: pageBinding) {
                     ForEach(OnboardingPage.allCases) { page in
-                        OnboardingPageView(page: page)
-                            .tag(page)
+                        Group {
+                            if page == .chooseTopics {
+                                OnboardingTopicsPageView(
+                                    selectedTopics: viewModel.viewState.selectedTopics,
+                                    onToggle: { category in
+                                        viewModel.handle(event: .onToggleTopic(category))
+                                    }
+                                )
+                            } else {
+                                OnboardingPageView(page: page)
+                            }
+                        }
+                        .tag(page)
                     }
                 }
                 .tabViewStyle(.page(indexDisplayMode: .never))

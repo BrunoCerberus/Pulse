@@ -20,17 +20,25 @@ struct OnboardingViewEventTests {
         #expect(event == .onPageChanged(.aiPowered))
     }
 
+    @Test("onToggleTopic event exists")
+    func onToggleTopic() {
+        let event = OnboardingViewEvent.onToggleTopic(.technology)
+        #expect(event == .onToggleTopic(.technology))
+    }
+
     @Test("Same events are equal")
     func sameEventsAreEqual() {
         #expect(OnboardingViewEvent.onNextTapped == OnboardingViewEvent.onNextTapped)
         #expect(OnboardingViewEvent.onSkipTapped == OnboardingViewEvent.onSkipTapped)
         #expect(OnboardingViewEvent.onPageChanged(.welcome) == OnboardingViewEvent.onPageChanged(.welcome))
+        #expect(OnboardingViewEvent.onToggleTopic(.science) == OnboardingViewEvent.onToggleTopic(.science))
     }
 
     @Test("Different events are not equal")
     func differentEventsAreNotEqual() {
         #expect(OnboardingViewEvent.onNextTapped != OnboardingViewEvent.onSkipTapped)
         #expect(OnboardingViewEvent.onNextTapped != OnboardingViewEvent.onPageChanged(.welcome))
+        #expect(OnboardingViewEvent.onToggleTopic(.technology) != OnboardingViewEvent.onToggleTopic(.health))
     }
 
     @Test("onPageChanged with different pages are not equal")

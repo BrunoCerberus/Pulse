@@ -28,12 +28,19 @@ struct OnboardingDomainActionTests {
         #expect(action == .goToPage(.aiPowered))
     }
 
+    @Test("toggleTopic action exists")
+    func toggleTopic() {
+        let action = OnboardingDomainAction.toggleTopic(.technology)
+        #expect(action == .toggleTopic(.technology))
+    }
+
     @Test("Same actions are equal")
     func sameActionsAreEqual() {
         #expect(OnboardingDomainAction.nextPage == OnboardingDomainAction.nextPage)
         #expect(OnboardingDomainAction.skip == OnboardingDomainAction.skip)
         #expect(OnboardingDomainAction.complete == OnboardingDomainAction.complete)
         #expect(OnboardingDomainAction.goToPage(.welcome) == OnboardingDomainAction.goToPage(.welcome))
+        #expect(OnboardingDomainAction.toggleTopic(.science) == OnboardingDomainAction.toggleTopic(.science))
     }
 
     @Test("Different actions are not equal")
@@ -41,11 +48,13 @@ struct OnboardingDomainActionTests {
         #expect(OnboardingDomainAction.nextPage != OnboardingDomainAction.skip)
         #expect(OnboardingDomainAction.skip != OnboardingDomainAction.complete)
         #expect(OnboardingDomainAction.nextPage != OnboardingDomainAction.goToPage(.welcome))
+        #expect(OnboardingDomainAction.toggleTopic(.technology) != OnboardingDomainAction.toggleTopic(.science))
     }
 
     @Test("goToPage with different pages are not equal")
     func goToPageDifferentPages() {
         #expect(OnboardingDomainAction.goToPage(.welcome) != OnboardingDomainAction.goToPage(.getStarted))
         #expect(OnboardingDomainAction.goToPage(.aiPowered) != OnboardingDomainAction.goToPage(.stayConnected))
+        #expect(OnboardingDomainAction.goToPage(.chooseTopics) != OnboardingDomainAction.goToPage(.getStarted))
     }
 }
