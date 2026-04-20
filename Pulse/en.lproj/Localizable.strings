@@ -117,6 +117,7 @@
 "article.bookmark" = "Bookmark";
 "article.share" = "Share";
 "article.remove_bookmark" = "Remove Bookmark";
+"article_detail.content_attribution" = "Content from %@. Tap below to read the full article on the publisher's site.";
 
 /* ==================== */
 /* MARK: - Settings     */
@@ -172,6 +173,10 @@
 "auth.sign_in_apple" = "Sign in with Apple";
 "auth.sign_in_google" = "Sign in with Google";
 "auth.terms" = "By signing in, you agree to our Terms of Service and Privacy Policy";
+"auth.terms.prefix" = "By signing in, you agree to our ";
+"auth.terms.link" = "Terms of Service";
+"auth.terms.and" = " and ";
+"auth.privacy.link" = "Privacy Policy";
 "auth.signing_in" = "Signing in...";
 
 /* ==================== */
@@ -180,13 +185,13 @@
 
 "paywall.loading" = "Loading...";
 "paywall.title" = "Unlock Premium";
-"paywall.subtitle" = "Get the full Pulse experience with unlimited access";
-"paywall.feature1.title" = "Unlimited Articles";
-"paywall.feature1.description" = "Read as many articles as you want without limits";
-"paywall.feature2.title" = "Offline Reading";
-"paywall.feature2.description" = "Save unlimited articles for offline access";
-"paywall.feature3.title" = "Ad-Free Experience";
-"paywall.feature3.description" = "Enjoy a clean, distraction-free reading experience";
+"paywall.subtitle" = "Power up Pulse with on-device AI features";
+"paywall.feature1.title" = "AI Daily Digest";
+"paywall.feature1.description" = "A personalized, on-device AI summary of the day's top articles";
+"paywall.feature2.title" = "AI Article Summaries";
+"paywall.feature2.description" = "Summarize any article instantly with our on-device AI";
+"paywall.feature3.title" = "Private by Design";
+"paywall.feature3.description" = "All AI runs on your device — your reading never leaves your phone";
 "paywall.error.title" = "Error";
 "paywall.retry" = "Retry";
 "paywall.restore_purchases" = "Restore Purchases";
@@ -194,6 +199,22 @@
 "paywall.unlock_features" = "Unlock all premium features";
 "paywall.premium_active" = "Premium Active";
 "paywall.full_access" = "You have full access to all features";
+"paywall.disclaimer" = "Subscription renews automatically. Cancel anytime in the App Store.";
+
+/* ==================== */
+/* MARK: - Legal        */
+/* ==================== */
+
+"legal.section" = "Legal";
+"legal.privacy_policy" = "Privacy Policy";
+"legal.terms_of_service" = "Terms of Service";
+"legal.content_attribution" = "Content provided by third-party publishers. Tap \"Read Full Article\" to view the original on the publisher's site.";
+
+/* ==================== */
+/* MARK: - AI Disclaimer*/
+/* ==================== */
+
+"ai.disclaimer" = "AI-generated content may be inaccurate. Verify important details with the original article.";
 
 /* ==================== */
 /* MARK: - Premium Gate */

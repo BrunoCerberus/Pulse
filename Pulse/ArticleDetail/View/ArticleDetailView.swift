@@ -1,3 +1,4 @@
+// swiftlint:disable file_length
 import Combine
 import EntropyCore
 import SwiftUI
@@ -262,6 +263,8 @@ struct ArticleDetailView: View {
                 .fill(Color.Border.adaptive(for: colorScheme))
                 .frame(height: 0.5)
 
+            contentAttribution
+
             readFullArticleButton
 
             if !viewModel.viewState.relatedArticles.isEmpty {
@@ -373,6 +376,23 @@ struct ArticleDetailView: View {
                 }
             }
         )
+    }
+
+    private var contentAttribution: some View {
+        HStack(alignment: .top, spacing: Spacing.xs) {
+            Image(systemName: "link")
+                .font(.system(size: IconSize.xs))
+                .foregroundStyle(.secondary)
+                .accessibilityHidden(true)
+
+            Text(String(
+                format: Constants.contentAttributionFormat,
+                viewModel.viewState.article.source.name
+            ))
+            .font(Typography.captionSmall)
+            .foregroundStyle(.secondary)
+            .fixedSize(horizontal: false, vertical: true)
+        }
     }
 
     private var readFullArticleButton: some View {

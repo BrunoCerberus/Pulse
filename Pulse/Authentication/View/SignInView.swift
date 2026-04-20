@@ -156,10 +156,27 @@ struct SignInView: View {
     }
 
     private var termsSection: some View {
-        Text(Constants.terms)
+        VStack(spacing: Spacing.xxs) {
+            Text(Constants.termsPrefix)
+                .font(Typography.captionMedium)
+                .foregroundStyle(.white.opacity(0.5))
+
+            HStack(spacing: 0) {
+                Link(destination: LegalURLs.termsOfService) {
+                    Text(Constants.termsLink)
+                        .underline()
+                }
+                Text(Constants.termsAnd)
+                Link(destination: LegalURLs.privacyPolicy) {
+                    Text(Constants.privacyLink)
+                        .underline()
+                }
+            }
             .font(Typography.captionMedium)
-            .foregroundStyle(.white.opacity(0.5))
-            .multilineTextAlignment(.center)
+            .foregroundStyle(.white.opacity(0.7))
+        }
+        .multilineTextAlignment(.center)
+        .accessibilityElement(children: .contain)
     }
 
     private var loadingOverlay: some View {

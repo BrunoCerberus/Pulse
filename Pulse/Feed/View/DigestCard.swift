@@ -25,6 +25,8 @@ struct DigestCard: View {
             header
 
             summaryContent
+
+            aiDisclaimer
         }
         .frame(maxWidth: .infinity, alignment: .leading)
         .padding(Spacing.md)
@@ -41,6 +43,23 @@ struct DigestCard: View {
                     lineWidth: 1
                 )
         )
+    }
+
+    // MARK: - AI Disclaimer
+
+    private var aiDisclaimer: some View {
+        HStack(alignment: .top, spacing: Spacing.xs) {
+            Image(systemName: "info.circle")
+                .font(.system(size: IconSize.xs))
+                .foregroundStyle(.secondary)
+                .accessibilityHidden(true)
+
+            Text(Localizable.legal.aiDisclaimer)
+                .font(Typography.captionSmall)
+                .foregroundStyle(.secondary)
+                .fixedSize(horizontal: false, vertical: true)
+        }
+        .padding(.top, Spacing.xs)
     }
 
     // MARK: - Gradient Overlay

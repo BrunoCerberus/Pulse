@@ -186,29 +186,52 @@ struct PaywallView: View {
             // Features List
             VStack(alignment: .leading, spacing: Spacing.md) {
                 FeatureRow(
-                    icon: "newspaper.fill",
-                    iconColor: .blue,
+                    icon: "sparkles",
+                    iconColor: .purple,
                     title: Localizable.paywall.feature1Title,
                     description: Localizable.paywall.feature1Description
                 )
 
                 FeatureRow(
-                    icon: "bookmark.fill",
-                    iconColor: .orange,
+                    icon: "wand.and.stars",
+                    iconColor: .blue,
                     title: Localizable.paywall.feature2Title,
                     description: Localizable.paywall.feature2Description
                 )
 
                 FeatureRow(
-                    icon: "sparkles",
-                    iconColor: .purple,
+                    icon: "lock.shield.fill",
+                    iconColor: .green,
                     title: Localizable.paywall.feature3Title,
                     description: Localizable.paywall.feature3Description
                 )
             }
             .padding(.horizontal, Spacing.lg)
             .padding(.vertical, Spacing.sm)
+
+            legalFooter
+                .padding(.horizontal, Spacing.lg)
         }
+    }
+
+    private var legalFooter: some View {
+        VStack(spacing: Spacing.sm) {
+            Text(Localizable.paywall.disclaimer)
+                .font(Typography.captionSmall)
+                .foregroundStyle(.secondary)
+                .multilineTextAlignment(.center)
+
+            HStack(spacing: Spacing.md) {
+                Link(Localizable.legal.termsOfService, destination: LegalURLs.termsOfService)
+                Text("·")
+                    .foregroundStyle(.secondary)
+                    .accessibilityHidden(true)
+                Link(Localizable.legal.privacyPolicy, destination: LegalURLs.privacyPolicy)
+            }
+            .font(Typography.captionMedium)
+            .tint(Color.Accent.primary)
+        }
+        .accessibilityElement(children: .contain)
     }
 
     private var fallbackPaywallView: some View {
