@@ -13,6 +13,7 @@ final class OnboardingSnapshotTests: XCTestCase {
         serviceLocator = ServiceLocator()
         serviceLocator.register(OnboardingService.self, instance: MockOnboardingService())
         serviceLocator.register(AnalyticsService.self, instance: MockAnalyticsService())
+        serviceLocator.register(SettingsService.self, instance: MockSettingsService())
     }
 
     func testOnboardingWelcomePageDark() {
@@ -49,6 +50,37 @@ final class OnboardingSnapshotTests: XCTestCase {
         assertSnapshot(
             of: controller,
             as: SnapshotConfig.snapshotting(on: SnapshotConfig.iPhoneAirLight),
+            record: false
+        )
+    }
+
+    func testOnboardingChooseTopicsPageEmpty() {
+        let viewModel = OnboardingViewModel(serviceLocator: serviceLocator)
+        viewModel.handle(event: .onPageChanged(.chooseTopics))
+
+        let view = OnboardingView(viewModel: viewModel)
+        let controller = UIHostingController(rootView: view)
+
+        assertSnapshot(
+            of: controller,
+            as: SnapshotConfig.snapshotting(on: SnapshotConfig.iPhoneAir),
+            record: false
+        )
+    }
+
+    func testOnboardingChooseTopicsPageSomeSelected() {
+        let viewModel = OnboardingViewModel(serviceLocator: serviceLocator)
+        viewModel.handle(event: .onPageChanged(.chooseTopics))
+        viewModel.handle(event: .onToggleTopic(.technology))
+        viewModel.handle(event: .onToggleTopic(.science))
+        viewModel.handle(event: .onToggleTopic(.business))
+
+        let view = OnboardingView(viewModel: viewModel)
+        let controller = UIHostingController(rootView: view)
+
+        assertSnapshot(
+            of: controller,
+            as: SnapshotConfig.snapshotting(on: SnapshotConfig.iPhoneAir),
             record: false
         )
     }
