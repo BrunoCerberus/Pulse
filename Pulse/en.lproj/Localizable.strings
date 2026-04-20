@@ -173,10 +173,7 @@
 "auth.sign_in_apple" = "Sign in with Apple";
 "auth.sign_in_google" = "Sign in with Google";
 "auth.terms" = "By signing in, you agree to our Terms of Service and Privacy Policy";
-"auth.terms.prefix" = "By signing in, you agree to our ";
-"auth.terms.link" = "Terms of Service";
-"auth.terms.and" = " and ";
-"auth.privacy.link" = "Privacy Policy";
+"auth.terms.markdown" = "By signing in, you agree to our [Terms of Service](%1$@) and [Privacy Policy](%2$@).";
 "auth.signing_in" = "Signing in...";
 
 /* ==================== */
@@ -199,7 +196,7 @@
 "paywall.unlock_features" = "Unlock all premium features";
 "paywall.premium_active" = "Premium Active";
 "paywall.full_access" = "You have full access to all features";
-"paywall.disclaimer" = "Subscription renews automatically. Cancel anytime in the App Store.";
+"paywall.disclaimer" = "Payment will be charged to your Apple ID at confirmation of purchase. Subscriptions auto-renew at the same price and duration unless cancelled at least 24 hours before the end of the current period. Manage or cancel in App Store settings.";
 
 /* ==================== */
 /* MARK: - Legal        */
@@ -451,9 +448,9 @@
 "accessibility.tts_started" = "Reading aloud";
 "accessibility.tts_paused" = "Reading paused";
 
-/* ==================== */
-/* MARK: - Paywall      */
-/* ==================== */
+/* ============================ */
+/* MARK: - Paywall Periods      */
+/* ============================ */
 
 "paywall.period.day" = "per day";
 "paywall.period.days" = "every %d days";

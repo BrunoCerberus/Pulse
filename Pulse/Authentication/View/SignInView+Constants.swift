@@ -24,20 +24,8 @@ extension SignInView {
             AppLocalization.localized("auth.terms")
         }
 
-        static var termsPrefix: String {
-            AppLocalization.localized("auth.terms.prefix")
-        }
-
-        static var termsLink: String {
-            AppLocalization.localized("auth.terms.link")
-        }
-
-        static var termsAnd: String {
-            AppLocalization.localized("auth.terms.and")
-        }
-
-        static var privacyLink: String {
-            AppLocalization.localized("auth.privacy.link")
+        static var termsMarkdownFormat: String {
+            AppLocalization.localized("auth.terms.markdown")
         }
 
         static var signingIn: String {

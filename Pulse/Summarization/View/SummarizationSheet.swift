@@ -216,6 +216,8 @@ struct SummarizationSheet: View {
                     .glassBackground(style: .thin, cornerRadius: CornerRadius.md)
             }
 
+            aiDisclaimer
+
             Button {
                 HapticManager.shared.tap()
                 viewModel.handle(event: .onSummarizationCancelled)
