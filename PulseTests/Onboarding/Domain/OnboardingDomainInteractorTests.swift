@@ -291,4 +291,40 @@ struct OnboardingDomainInteractorTests {
 
         #expect(freshSut.currentState.selectedTopics == [.health])
     }
+
+    @Test("complete preserves existing fields when initial fetch is still in flight")
+    func completeMergesAgainstFreshPrefsDuringInitialFetchRace() async throws {
+        // Seed non-default fields in stored prefs so we can detect clobbering.
+        mockSettingsService.preferences = UserPreferences(
+            followedTopics: [],
+            mutedSources: ["source1"],
+            mutedKeywords: ["keyword1"],
+            preferredLanguage: "pt",
+            notificationsEnabled: false,
+            breakingNewsNotifications: false
+        )
+        // Keep the initial fetchPreferences in flight when user taps Get Started.
+        mockSettingsService.fetchPreferencesDelay = 0.15
+
+        let serviceLocator = ServiceLocator()
+        serviceLocator.register(OnboardingService.self, instance: mockOnboardingService)
+        serviceLocator.register(AnalyticsService.self, instance: mockAnalyticsService)
+        serviceLocator.register(SettingsService.self, instance: mockSettingsService)
+        let freshSut = OnboardingDomainInteractor(serviceLocator: serviceLocator)
+
+        // User selects and completes before the initial fetch resolves.
+        freshSut.dispatch(action: .toggleTopic(.technology))
+        freshSut.dispatch(action: .goToPage(.getStarted))
+        freshSut.dispatch(action: .nextPage)
+
+        // Wait for both the delayed fetch(es) and the subsequent save to settle.
+        try await Task.sleep(nanoseconds: 500_000_000)
+
+        #expect(mockSettingsService.preferences.followedTopics == [.technology])
+        #expect(mockSettingsService.preferences.mutedSources == ["source1"])
+        #expect(mockSettingsService.preferences.mutedKeywords == ["keyword1"])
+        #expect(mockSettingsService.preferences.preferredLanguage == "pt")
+        #expect(mockSettingsService.preferences.notificationsEnabled == false)
+        #expect(mockSettingsService.preferences.breakingNewsNotifications == false)
+    }
 }

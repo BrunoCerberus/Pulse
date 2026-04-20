@@ -124,7 +124,9 @@ enum AnalyticsEvent {
         case let .onboardingSkipped(page):
             ["page": page]
         case let .onboardingTopicsSelected(count, topics):
-            ["count": count, "topics": topics.joined(separator: ",")]
+            // Firebase caps string param values at 100 chars; truncate defensively
+            // so the full list isn't silently cut mid-token server-side.
+            ["count": count, "topics": String(topics.joined(separator: ",").prefix(100))]
         case let .ttsSpeedChanged(speed):
             ["speed": speed]
         case let .cloudSyncFailed(error):

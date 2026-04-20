@@ -68,7 +68,7 @@ final class OnboardingDomainInteractor: CombineInteractor {
 
     private func handleNextPage() {
         let pages = OnboardingPage.allCases
-        let currentIndex = currentState.currentPage.rawValue
+        let currentIndex = pages.firstIndex(of: currentState.currentPage) ?? 0
 
         if currentIndex < pages.count - 1 {
             updateState { $0.currentPage = pages[currentIndex + 1] }
@@ -110,13 +110,25 @@ final class OnboardingDomainInteractor: CombineInteractor {
 
     private func persistSelectedTopics(_ topics: Set<NewsCategory>) {
         guard let settingsService else { return }
-        var preferences = loadedPreferences ?? .default
-        // Preserve the input order stability by sorting by declaration order.
-        preferences.followedTopics = NewsCategory.allCases.filter { topics.contains($0) }
-        settingsService.savePreferences(preferences)
+        // Preserve input-order stability by sorting by declaration order.
+        let orderedTopics = NewsCategory.allCases.filter { topics.contains($0) }
+        // Re-fetch preferences before saving so we merge against the freshest
+        // stored value. Without this, if "Get Started" fires before the initial
+        // fetchPreferences() resolves (e.g. slow CloudKit cold read), we'd fall
+        // back to UserPreferences.default and wipe mutedSources, mutedKeywords,
+        // preferredLanguage, notificationsEnabled, and breakingNewsNotifications.
+        let fallback: UserPreferences = loadedPreferences ?? .default
+        settingsService.fetchPreferences()
+            .catch { _ in Just(fallback).setFailureType(to: Error.self) }
+            .flatMap { preferences -> AnyPublisher<Void, Error> in
+                var updated = preferences
+                updated.followedTopics = orderedTopics
+                return settingsService.savePreferences(updated)
+            }
             .sink(
-                receiveCompletion: { completion in
+                receiveCompletion: { [weak self] completion in
                     if case let .failure(error) = completion {
+                        self?.analyticsService?.recordError(error)
                         Logger.shared.service(
                             "Failed to persist onboarding topic selection: \(error)",
                             level: .warning
