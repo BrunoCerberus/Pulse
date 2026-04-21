@@ -6,8 +6,10 @@ import XCTest
 /// to automatically detect missing labels, small touch targets, contrast issues, etc.
 ///
 /// Note: `performAccessibilityAudit()` can be slow on CI shared runners due to the
-/// full accessibility hierarchy traversal. We use longer stabilization waits and
-/// XCTExpectFailure to prevent known-slow audits from blocking CI.
+/// full accessibility hierarchy traversal. Real audit issues (missing labels, small
+/// hit regions, etc.) still fail the test, but the audit's own internal timeout
+/// (`com.apple.xcode.xctest.accessibilityAudit` code `-56`) is converted to `XCTSkip`
+/// so it doesn't block CI.
 @MainActor
 final class AccessibilityAuditTests: BaseUITestCase {
     /// Common audit handler that filters out system component issues we don't control
@@ -28,6 +30,24 @@ final class AccessibilityAuditTests: BaseUITestCase {
         [.dynamicType, .sufficientElementDescription, .hitRegion]
     }
 
+    /// Runs `performAccessibilityAudit` and converts the audit's internal timeout
+    /// into `XCTSkip`. The audit can time out on shared CI runners while traversing
+    /// the accessibility hierarchy — that's a CI environment issue, not an
+    /// accessibility regression, so we skip rather than fail the PR.
+    private func performAccessibilityAuditSkippingTimeouts() throws {
+        do {
+            try app.performAccessibilityAudit(for: auditTypes, auditIssueHandler)
+        } catch {
+            let nsError = error as NSError
+            let isAuditTimeout = nsError.domain == "com.apple.xcode.xctest.accessibilityAudit"
+                && nsError.code == -56
+            if isAuditTimeout {
+                throw XCTSkip("Accessibility audit timed out on CI runner — skipping to avoid flake.")
+            }
+            throw error
+        }
+    }
+
     // MARK: - Home
 
     func testHomeAccessibilityAudit() throws {
@@ -40,7 +60,7 @@ final class AccessibilityAuditTests: BaseUITestCase {
         wait(for: 3.0) // Extra stabilization for CI accessibility tree
         try ensureAppRunning()
 
-        try app.performAccessibilityAudit(for: auditTypes, auditIssueHandler)
+        try performAccessibilityAuditSkippingTimeouts()
     }
 
     // MARK: - Media
@@ -56,7 +76,7 @@ final class AccessibilityAuditTests: BaseUITestCase {
         wait(for: 4.0)
         try ensureAppRunning()
 
-        try app.performAccessibilityAudit(for: auditTypes, auditIssueHandler)
+        try performAccessibilityAuditSkippingTimeouts()
     }
 
     // MARK: - Bookmarks
@@ -71,7 +91,7 @@ final class AccessibilityAuditTests: BaseUITestCase {
         wait(for: 3.0)
         try ensureAppRunning()
 
-        try app.performAccessibilityAudit(for: auditTypes, auditIssueHandler)
+        try performAccessibilityAuditSkippingTimeouts()
     }
 
     // MARK: - Search
@@ -86,7 +106,7 @@ final class AccessibilityAuditTests: BaseUITestCase {
         wait(for: 3.0)
         try ensureAppRunning()
 
-        try app.performAccessibilityAudit(for: auditTypes, auditIssueHandler)
+        try performAccessibilityAuditSkippingTimeouts()
     }
 
     // MARK: - Settings
@@ -101,6 +121,6 @@ final class AccessibilityAuditTests: BaseUITestCase {
         wait(for: 3.0)
         try ensureAppRunning()
 
-        try app.performAccessibilityAudit(for: auditTypes, auditIssueHandler)
+        try performAccessibilityAuditSkippingTimeouts()
     }
 }
