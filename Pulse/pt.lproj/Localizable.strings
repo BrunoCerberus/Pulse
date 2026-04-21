@@ -117,6 +117,7 @@
 "article.bookmark" = "Salvar";
 "article.share" = "Compartilhar";
 "article.remove_bookmark" = "Remover Favorito";
+"article_detail.content_attribution" = "Conteúdo de %@. Toque abaixo para ler o artigo completo no site do editor.";
 
 /* ==================== */
 /* MARK: - Settings     */
@@ -172,6 +173,7 @@
 "auth.sign_in_apple" = "Entrar com Apple";
 "auth.sign_in_google" = "Entrar com Google";
 "auth.terms" = "Ao entrar, você concorda com nossos Termos de Serviço e Política de Privacidade";
+"auth.terms.markdown" = "Ao entrar, você concorda com nossos [Termos de Serviço](%1$@) e [Política de Privacidade](%2$@).";
 "auth.signing_in" = "Entrando...";
 
 /* ==================== */
@@ -180,13 +182,13 @@
 
 "paywall.loading" = "Carregando...";
 "paywall.title" = "Desbloquear Premium";
-"paywall.subtitle" = "Tenha a experiência completa do Pulse com acesso ilimitado";
-"paywall.feature1.title" = "Artigos Ilimitados";
-"paywall.feature1.description" = "Leia quantos artigos quiser sem limites";
-"paywall.feature2.title" = "Leitura Offline";
-"paywall.feature2.description" = "Salve artigos ilimitados para acesso offline";
-"paywall.feature3.title" = "Sem Anúncios";
-"paywall.feature3.description" = "Aproveite uma experiência de leitura limpa e sem distrações";
+"paywall.subtitle" = "Turbine o Pulse com recursos de IA no dispositivo";
+"paywall.feature1.title" = "Resumo Diário por IA";
+"paywall.feature1.description" = "Um resumo personalizado das principais notícias do dia, gerado no seu dispositivo";
+"paywall.feature2.title" = "Resumos de Artigos por IA";
+"paywall.feature2.description" = "Resuma qualquer artigo instantaneamente com IA no dispositivo";
+"paywall.feature3.title" = "Privado por Design";
+"paywall.feature3.description" = "Toda a IA roda no seu dispositivo — suas leituras não saem do seu celular";
 "paywall.error.title" = "Erro";
 "paywall.retry" = "Tentar Novamente";
 "paywall.restore_purchases" = "Restaurar Compras";
@@ -194,6 +196,22 @@
 "paywall.unlock_features" = "Desbloqueie todos os recursos premium";
 "paywall.premium_active" = "Premium Ativo";
 "paywall.full_access" = "Você tem acesso completo a todos os recursos";
+"paywall.disclaimer" = "O pagamento será cobrado do seu Apple ID ao confirmar a compra. As assinaturas são renovadas automaticamente pelo mesmo preço e duração, a menos que sejam canceladas pelo menos 24 horas antes do fim do período atual. Gerencie ou cancele nas configurações da App Store.";
+
+/* ==================== */
+/* MARK: - Legal        */
+/* ==================== */
+
+"legal.section" = "Legal";
+"legal.privacy_policy" = "Política de Privacidade";
+"legal.terms_of_service" = "Termos de Serviço";
+"legal.content_attribution" = "Conteúdo fornecido por editores terceiros. Toque em \"Ler Artigo Completo\" para ver o original no site do editor.";
+
+/* ==================== */
+/* MARK: - AI Disclaimer*/
+/* ==================== */
+
+"ai.disclaimer" = "O conteúdo gerado por IA pode conter imprecisões. Verifique detalhes importantes com o artigo original.";
 
 /* ==================== */
 /* MARK: - Premium Gate */
@@ -430,9 +448,9 @@
 "accessibility.tts_started" = "Lendo em voz alta";
 "accessibility.tts_paused" = "Leitura pausada";
 
-/* ==================== */
-/* MARK: - Paywall      */
-/* ==================== */
+/* ============================ */
+/* MARK: - Paywall Periods      */
+/* ============================ */
 
 "paywall.period.day" = "por dia";
 "paywall.period.days" = "a cada %d dias";

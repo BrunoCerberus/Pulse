@@ -61,6 +61,7 @@ struct SettingsView: View {
                     onRemoveMutedKeyword: { viewModel.handle(event: .onRemoveMutedKeyword($0)) }
                 )
 
+                legalSection
                 aboutSection
             }
             .scrollContentBackground(.hidden)
@@ -223,6 +224,17 @@ struct SettingsView: View {
                 Link(destination: githubURL) {
                     Label(Constants.viewGithub, systemImage: "link")
                 }
+            }
+        }
+    }
+
+    private var legalSection: some View {
+        Section(Constants.legal) {
+            Link(destination: LegalURLs.privacyPolicy) {
+                Label(Constants.privacyPolicy, systemImage: "hand.raised.fill")
+            }
+            Link(destination: LegalURLs.termsOfService) {
+                Label(Constants.termsOfService, systemImage: "doc.text.fill")
             }
         }
     }

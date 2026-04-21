@@ -24,6 +24,10 @@ extension SignInView {
             AppLocalization.localized("auth.terms")
         }
 
+        static var termsMarkdownFormat: String {
+            AppLocalization.localized("auth.terms.markdown")
+        }
+
         static var signingIn: String {
             AppLocalization.localized("auth.signing_in")
         }

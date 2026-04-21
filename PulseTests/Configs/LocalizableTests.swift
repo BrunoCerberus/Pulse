@@ -483,7 +483,7 @@ struct PaywallLocalizableTests {
     @Test("Feature 1 title is not empty")
     func feature1TitleIsNotEmpty() {
         #expect(!Localizable.paywall.feature1Title.isEmpty)
-        #expect(Localizable.paywall.feature1Title == "Unlimited Articles")
+        #expect(Localizable.paywall.feature1Title == "AI Daily Digest")
     }
 
     @Test("Feature 1 description is not empty")
@@ -494,7 +494,7 @@ struct PaywallLocalizableTests {
     @Test("Feature 2 title is not empty")
     func feature2TitleIsNotEmpty() {
         #expect(!Localizable.paywall.feature2Title.isEmpty)
-        #expect(Localizable.paywall.feature2Title == "Offline Reading")
+        #expect(Localizable.paywall.feature2Title == "AI Article Summaries")
     }
 
     @Test("Feature 2 description is not empty")
@@ -505,7 +505,7 @@ struct PaywallLocalizableTests {
     @Test("Feature 3 title is not empty")
     func feature3TitleIsNotEmpty() {
         #expect(!Localizable.paywall.feature3Title.isEmpty)
-        #expect(Localizable.paywall.feature3Title == "Ad-Free Experience")
+        #expect(Localizable.paywall.feature3Title == "Private by Design")
     }
 
     @Test("Feature 3 description is not empty")
@@ -823,6 +823,40 @@ struct LocalizationKeysExistenceTests {
         #expect(!value.isEmpty, "Key '\(key)' should have a non-empty value")
         // Check that value is not the same as the key (which would indicate missing translation)
         #expect(value != key, "Key '\(key)' appears to be missing a translation")
+    }
+}
+
+// MARK: - Legal & AI Disclosure Tests
+
+@Suite("Legal & AI Disclosure Localization Tests")
+struct LegalLocalizableTests {
+    init() async {
+        await MainActor.run { forceEnglishLocale() }
+    }
+
+    @Test("Legal section header is not empty")
+    func legalSectionIsNotEmpty() {
+        #expect(!Localizable.legal.section.isEmpty)
+    }
+
+    @Test("Privacy Policy label is not empty")
+    func privacyPolicyIsNotEmpty() {
+        #expect(!Localizable.legal.privacyPolicy.isEmpty)
+    }
+
+    @Test("Terms of Service label is not empty")
+    func termsOfServiceIsNotEmpty() {
+        #expect(!Localizable.legal.termsOfService.isEmpty)
+    }
+
+    @Test("Content attribution string is not empty")
+    func contentAttributionIsNotEmpty() {
+        #expect(!Localizable.legal.contentAttribution.isEmpty)
+    }
+
+    @Test("AI disclaimer string is not empty")
+    func aiDisclaimerIsNotEmpty() {
+        #expect(!Localizable.legal.aiDisclaimer.isEmpty)
     }
 }
 

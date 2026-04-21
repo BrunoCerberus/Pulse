@@ -108,10 +108,50 @@ struct Localizable {
         static var fullAccess: String {
             AppLocalization.localized("paywall.full_access")
         }
+
+        /// Auto-renewal disclaimer required by App Review Guideline 3.1.2
+        static var disclaimer: String {
+            AppLocalization.localized("paywall.disclaimer")
+        }
+    }
+
+    // MARK: - Legal
+
+    /// Legal and AI-disclosure related localized strings
+    struct Legal {
+        private init() {}
+
+        /// "Legal" section header
+        static var section: String {
+            AppLocalization.localized("legal.section")
+        }
+
+        /// "Privacy Policy" link label
+        static var privacyPolicy: String {
+            AppLocalization.localized("legal.privacy_policy")
+        }
+
+        /// "Terms of Service" link label
+        static var termsOfService: String {
+            AppLocalization.localized("legal.terms_of_service")
+        }
+
+        /// Attribution note shown near third-party article content
+        static var contentAttribution: String {
+            AppLocalization.localized("legal.content_attribution")
+        }
+
+        /// AI accuracy disclaimer shown near AI-generated content
+        static var aiDisclaimer: String {
+            AppLocalization.localized("ai.disclaimer")
+        }
     }
 
     // MARK: - Convenience Access
 
     /// Convenience access to paywall strings
     static let paywall = Paywall.self
+
+    /// Convenience access to legal strings
+    static let legal = Legal.self
 }

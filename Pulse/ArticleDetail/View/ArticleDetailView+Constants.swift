@@ -79,5 +79,9 @@ extension ArticleDetailView {
         static var relatedArticles: String {
             AppLocalization.localized("article_detail.related_articles")
         }
+
+        static var contentAttributionFormat: String {
+            AppLocalization.localized("article_detail.content_attribution")
+        }
     }
 }

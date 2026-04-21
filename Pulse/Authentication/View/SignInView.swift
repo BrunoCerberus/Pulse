@@ -156,10 +156,24 @@ struct SignInView: View {
     }
 
     private var termsSection: some View {
-        Text(Constants.terms)
+        Text(termsAttributedString)
             .font(Typography.captionMedium)
-            .foregroundStyle(.white.opacity(0.5))
+            .foregroundStyle(.white.opacity(0.7))
             .multilineTextAlignment(.center)
+            .tint(.white)
+            .accessibilityElement(children: .contain)
+    }
+
+    private var termsAttributedString: AttributedString {
+        let formatted = String(
+            format: Constants.termsMarkdownFormat,
+            LegalURLs.termsOfService.absoluteString,
+            LegalURLs.privacyPolicy.absoluteString
+        )
+        if let attributed = try? AttributedString(markdown: formatted) {
+            return attributed
+        }
+        return AttributedString(Constants.terms)
     }
 
     private var loadingOverlay: some View {

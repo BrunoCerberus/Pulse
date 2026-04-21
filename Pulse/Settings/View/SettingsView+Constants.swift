@@ -71,5 +71,17 @@ extension SettingsView {
         static var about: String {
             AppLocalization.localized("settings.about")
         }
+
+        static var legal: String {
+            AppLocalization.localized("legal.section")
+        }
+
+        static var privacyPolicy: String {
+            AppLocalization.localized("legal.privacy_policy")
+        }
+
+        static var termsOfService: String {
+            AppLocalization.localized("legal.terms_of_service")
+        }
     }
 }
