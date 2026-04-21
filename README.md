@@ -4,7 +4,7 @@ A modern iOS news aggregation app built with Clean Architecture, SwiftUI, and Co
 
 ## Features
 
-- **Authentication**: Firebase Auth with Google and Apple Sign-In (required before accessing app)
+- **Authentication**: Firebase Auth with Google and Apple Sign-In (required before accessing app), with in-app account deletion (Apple Guideline 5.1.1(v) compliance) that handles Firebase's `requiresRecentLogin` by transparently re-authenticating with the original provider
 - **Home Feed**: Breaking news carousel, recently read section for quick access to previous articles, top headlines with infinite scrolling, and category tabs for filtering by followed topics (settings accessible via gear icon)
 - **Media**: Browse and play Videos and Podcasts with in-app playback (YouTube videos open in YouTube app, podcasts use native AVPlayer)
 - **Feed**: AI-powered Daily Digest summarizing latest news articles from the API using on-device LLM (Gemma 3 1B) (**Premium**)
@@ -17,9 +17,9 @@ A modern iOS news aggregation app built with Clean Architecture, SwiftUI, and Co
 - **Enhanced Sharing**: Share articles with rich context — shared content includes the article title and source name alongside the URL for better social previews
 - **Search**: Full-text search with 300ms debounce, suggestions, recent searches, and sort options
 - **Localization**: Full multi-language support (English, Portuguese, Spanish) — both UI labels and content filtering follow the in-app language preference (via `AppLocalization` singleton), no app restart required
-- **Settings**: Customize topics, notifications, theme, content language, content filters, and account/logout (accessed from Home navigation bar)
+- **Settings**: Customize topics, notifications, theme, content language, content filters, account/logout, and permanent account deletion (accessed from Home navigation bar)
 - **Accessibility**: Dynamic Type layout adaptation (HStack-to-VStack at accessibility sizes), VoiceOver heading hierarchy, focus management, and live announcements for async state changes
-- **Security**: Input validation (deeplink sanitization, YouTube URL allowlisting, search query length limit), sign-out data cleanup (clears all caches, bookmarks, preferences, keychain, widget data), file-protected disk cache, privacy manifest (`PrivacyInfo.xcprivacy`), and Keychain-based app lock with biometric + passcode fallback
+- **Security**: Input validation (deeplink sanitization, YouTube URL allowlisting, search query length limit), sign-out / account-deletion data cleanup (clears all caches, bookmarks, preferences, keychain, widget data), file-protected disk cache, privacy manifest (`PrivacyInfo.xcprivacy`), and Keychain-based app lock with biometric + passcode fallback
 - **Onboarding**: 4-page first-launch experience shown once after sign-in, highlighting key features before entering the app
 - **Analytics & Crash Reporting**: Firebase Analytics (25 type-safe events, including 4 CloudKit sync events) and Crashlytics for crash/non-fatal error tracking
 - **Widget**: Home screen widget showing recent headlines (WidgetKit extension)

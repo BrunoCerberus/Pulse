@@ -20,6 +20,18 @@ extension SettingsView {
             AppLocalization.localized("account.sign_out.confirm")
         }
 
+        static var deleteAccountTitle: String {
+            AppLocalization.localized("account.delete.title")
+        }
+
+        static var deleteAccountMessage: String {
+            AppLocalization.localized("account.delete.message")
+        }
+
+        static var deleteAccountConfirm: String {
+            AppLocalization.localized("account.delete.confirm")
+        }
+
         static var cancel: String {
             AppLocalization.localized("common.cancel")
         }

@@ -12,6 +12,10 @@ private enum Constants {
         AppLocalization.localized("account.sign_out")
     }
 
+    static var deleteAccount: String {
+        AppLocalization.localized("account.delete")
+    }
+
     static var profilePhoto: String {
         AppLocalization.localized("account.profile_photo")
     }
@@ -25,7 +29,9 @@ private enum Constants {
 
 struct SettingsAccountSection: View {
     let currentUser: AuthUser?
+    let isDeletingAccount: Bool
     let onSignOutTapped: () -> Void
+    let onDeleteAccountTapped: () -> Void
 
     @Environment(\.dynamicTypeSize) private var dynamicTypeSize
 
@@ -41,6 +47,22 @@ struct SettingsAccountSection: View {
                 } label: {
                     Label(Constants.signOut, systemImage: "rectangle.portrait.and.arrow.right")
                 }
+                .disabled(isDeletingAccount)
+
+                Button(role: .destructive) {
+                    HapticManager.shared.buttonPress()
+                    onDeleteAccountTapped()
+                } label: {
+                    if isDeletingAccount {
+                        HStack(spacing: Spacing.sm) {
+                            ProgressView()
+                            Text(Constants.deleteAccount)
+                        }
+                    } else {
+                        Label(Constants.deleteAccount, systemImage: "trash.fill")
+                    }
+                }
+                .disabled(isDeletingAccount)
             }
         } header: {
             Text(Constants.title)
@@ -146,11 +168,21 @@ private struct InitialPlaceholderView: View {
 }
 
 #Preview {
-    SettingsAccountSection(currentUser: AuthUser.mock, onSignOutTapped: {})
-        .preferredColorScheme(.dark)
+    SettingsAccountSection(
+        currentUser: AuthUser.mock,
+        isDeletingAccount: false,
+        onSignOutTapped: {},
+        onDeleteAccountTapped: {}
+    )
+    .preferredColorScheme(.dark)
 }
 
 #Preview("No User") {
-    SettingsAccountSection(currentUser: nil, onSignOutTapped: {})
-        .preferredColorScheme(.dark)
+    SettingsAccountSection(
+        currentUser: nil,
+        isDeletingAccount: false,
+        onSignOutTapped: {},
+        onDeleteAccountTapped: {}
+    )
+    .preferredColorScheme(.dark)
 }

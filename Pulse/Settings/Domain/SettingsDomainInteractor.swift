@@ -74,7 +74,11 @@ final class SettingsDomainInteractor: CombineInteractor {
             changeLanguage(language)
         case .addMutedSource, .removeMutedSource, .addMutedKeyword, .removeMutedKeyword:
             handleMutedContentAction(action)
-        case .setShowSignOutConfirmation, .setNewMutedSource, .setNewMutedKeyword:
+        case .setShowSignOutConfirmation,
+             .setShowDeleteAccountConfirmation,
+             .setIsDeletingAccount,
+             .setNewMutedSource,
+             .setNewMutedKeyword:
             handleUIStateAction(action)
         case .dismissError:
             updateState { state in state.error = nil }
@@ -105,6 +109,10 @@ final class SettingsDomainInteractor: CombineInteractor {
             switch action {
             case let .setShowSignOutConfirmation(show):
                 state.showSignOutConfirmation = show
+            case let .setShowDeleteAccountConfirmation(show):
+                state.showDeleteAccountConfirmation = show
+            case let .setIsDeletingAccount(isDeleting):
+                state.isDeletingAccount = isDeleting
             case let .setNewMutedSource(source):
                 state.newMutedSource = source
             case let .setNewMutedKeyword(keyword):
@@ -300,6 +308,8 @@ enum SettingsDomainAction: Equatable {
     case addMutedKeyword(String)
     case removeMutedKeyword(String)
     case setShowSignOutConfirmation(Bool)
+    case setShowDeleteAccountConfirmation(Bool)
+    case setIsDeletingAccount(Bool)
     case setNewMutedSource(String)
     case setNewMutedKeyword(String)
     case dismissError

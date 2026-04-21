@@ -42,6 +42,7 @@ enum AnalyticsEvent {
     case purchaseFailed(productId: String, error: String)
     case signIn(provider: String, success: Bool)
     case signOut
+    case deleteAccount
     case onboardingCompleted(page: Int)
     case onboardingSkipped(page: Int)
     case onboardingTopicsSelected(count: Int, topics: [String])
@@ -71,6 +72,7 @@ enum AnalyticsEvent {
         case .purchaseFailed: "purchase_failed"
         case .signIn: "sign_in"
         case .signOut: "sign_out"
+        case .deleteAccount: "delete_account"
         case .onboardingCompleted: "onboarding_completed"
         case .onboardingSkipped: "onboarding_skipped"
         case .onboardingTopicsSelected: "onboarding_topics_selected"
@@ -94,6 +96,7 @@ enum AnalyticsEvent {
              .articleUnbookmarked,
              .articleShared,
              .signOut,
+             .deleteAccount,
              .ttsStarted,
              .ttsStopped,
              .cloudSyncStarted,

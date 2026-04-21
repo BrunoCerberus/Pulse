@@ -28,7 +28,9 @@ struct SettingsView: View {
             List {
                 SettingsAccountSection(
                     currentUser: viewModel.viewState.currentUser,
-                    onSignOutTapped: { viewModel.handle(event: .onSignOutTapped) }
+                    isDeletingAccount: viewModel.viewState.isDeletingAccount,
+                    onSignOutTapped: { viewModel.handle(event: .onSignOutTapped) },
+                    onDeleteAccountTapped: { viewModel.handle(event: .onDeleteAccountTapped) }
                 )
 
                 SettingsPremiumSection(
@@ -82,6 +84,21 @@ struct SettingsView: View {
             }
         } message: {
             Text(Constants.signOutConfirm)
+        }
+        .alert(Constants.deleteAccountTitle, isPresented: Binding(
+            get: { viewModel.viewState.showDeleteAccountConfirmation },
+            set: { _ in viewModel.handle(event: .onCancelDeleteAccount) }
+        )) {
+            Button(Constants.cancel, role: .cancel) {
+                HapticManager.shared.tap()
+                viewModel.handle(event: .onCancelDeleteAccount)
+            }
+            Button(Constants.deleteAccountConfirm, role: .destructive) {
+                HapticManager.shared.notification(.warning)
+                viewModel.handle(event: .onConfirmDeleteAccount)
+            }
+        } message: {
+            Text(Constants.deleteAccountMessage)
         }
         .alert(
             AppLocalization.localized("common.error"),

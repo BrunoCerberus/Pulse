@@ -13,7 +13,9 @@ final class SettingsAccountSectionAccessibilitySnapshotTests: XCTestCase {
         let view = List {
             SettingsAccountSection(
                 currentUser: AuthUser.mock,
-                onSignOutTapped: {}
+                isDeletingAccount: false,
+                onSignOutTapped: {},
+                onDeleteAccountTapped: {}
             )
         }
         .frame(width: 375)
@@ -33,7 +35,9 @@ final class SettingsAccountSectionAccessibilitySnapshotTests: XCTestCase {
         let view = List {
             SettingsAccountSection(
                 currentUser: AuthUser.mock,
-                onSignOutTapped: {}
+                isDeletingAccount: false,
+                onSignOutTapped: {},
+                onDeleteAccountTapped: {}
             )
         }
         .frame(width: 375)
