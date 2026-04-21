@@ -826,6 +826,40 @@ struct LocalizationKeysExistenceTests {
     }
 }
 
+// MARK: - Legal & AI Disclosure Tests
+
+@Suite("Legal & AI Disclosure Localization Tests")
+struct LegalLocalizableTests {
+    init() async {
+        await MainActor.run { forceEnglishLocale() }
+    }
+
+    @Test("Legal section header is not empty")
+    func legalSectionIsNotEmpty() {
+        #expect(!Localizable.legal.section.isEmpty)
+    }
+
+    @Test("Privacy Policy label is not empty")
+    func privacyPolicyIsNotEmpty() {
+        #expect(!Localizable.legal.privacyPolicy.isEmpty)
+    }
+
+    @Test("Terms of Service label is not empty")
+    func termsOfServiceIsNotEmpty() {
+        #expect(!Localizable.legal.termsOfService.isEmpty)
+    }
+
+    @Test("Content attribution string is not empty")
+    func contentAttributionIsNotEmpty() {
+        #expect(!Localizable.legal.contentAttribution.isEmpty)
+    }
+
+    @Test("AI disclaimer string is not empty")
+    func aiDisclaimerIsNotEmpty() {
+        #expect(!Localizable.legal.aiDisclaimer.isEmpty)
+    }
+}
+
 @Suite("Accessibility Announcement Localization Tests")
 struct AccessibilityLocalizationTests {
     private let accessibilityAnnouncementKeys = [
