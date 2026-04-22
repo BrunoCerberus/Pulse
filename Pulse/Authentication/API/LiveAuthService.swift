@@ -11,7 +11,11 @@ final class LiveAuthService: NSObject, AuthService {
     private let authStateSubject = CurrentValueSubject<AuthUser?, Never>(nil)
     private var authStateHandle: AuthStateDidChangeListenerHandle?
     private var currentNonce: String?
-    private var appleCredentialContinuation: CheckedContinuation<AuthCredential, Error>?
+    private var appleSignInContinuation: CheckedContinuation<AuthUser, Error>?
+    /// Set during the Apple re-authentication step of `deleteAccount`. When non-nil,
+    /// the `ASAuthorizationControllerDelegate` returns the raw `AuthCredential` instead
+    /// of completing a Firebase sign-in.
+    private var appleReauthCredentialContinuation: CheckedContinuation<AuthCredential, Error>?
 
     var authStatePublisher: AnyPublisher<AuthUser?, Never> {
         authStateSubject.eraseToAnyPublisher()
@@ -39,28 +43,35 @@ final class LiveAuthService: NSObject, AuthService {
     }
 
     func signInWithGoogle(presenting viewController: UIViewController) -> AnyPublisher<AuthUser, Error> {
-        Future { [weak self] promise in
-            guard let self else {
-                promise(.failure(AuthError.unknown("Service deallocated")))
-                return
-            }
+        Future { promise in
             let promise = UncheckedSendableBox(value: promise)
-            let weakSelf = WeakRef(self)
             Task { @MainActor in
-                guard let service = weakSelf.object else {
-                    promise.value(.failure(AuthError.unknown("Service deallocated")))
-                    return
-                }
                 do {
-                    let credential = try await service.obtainGoogleCredential(presenting: viewController)
+                    guard let clientID = FirebaseApp.app()?.options.clientID else {
+                        promise.value(.failure(AuthError.unknown("Missing Firebase client ID")))
+                        return
+                    }
+
+                    let config = GIDConfiguration(clientID: clientID)
+                    GIDSignIn.sharedInstance.configuration = config
+
+                    let result = try await GIDSignIn.sharedInstance.signIn(withPresenting: viewController)
+                    guard let idToken = result.user.idToken?.tokenString else {
+                        promise.value(.failure(AuthError.invalidCredential))
+                        return
+                    }
+
+                    let credential = GoogleAuthProvider.credential(
+                        withIDToken: idToken,
+                        accessToken: result.user.accessToken.tokenString
+                    )
+
                     let authResult = try await Auth.auth().signIn(with: credential)
                     if let user = authResult.user.toAuthUser() {
                         promise.value(.success(user))
                     } else {
                         promise.value(.failure(AuthError.unknown("Failed to create user")))
                     }
-                } catch let error as AuthError {
-                    promise.value(.failure(error))
                 } catch let error as GIDSignInError where error.code == .canceled {
                     promise.value(.failure(AuthError.signInCancelled))
                 } catch {
@@ -88,25 +99,36 @@ final class LiveAuthService: NSObject, AuthService {
                 promise(.failure(AuthError.unknown("Service deallocated")))
                 return
             }
+
+            let nonce: String
+            do {
+                nonce = try self.randomNonceString()
+            } catch {
+                promise(.failure(error))
+                return
+            }
+            self.currentNonce = nonce
+
+            let provider = ASAuthorizationAppleIDProvider()
+            let request = provider.createRequest()
+            request.requestedScopes = [.email, .fullName]
+            request.nonce = self.sha256(nonce)
+
+            let controller = ASAuthorizationController(authorizationRequests: [request])
+            controller.delegate = self
+            controller.performRequests()
+
+            // Store continuation for async handling
             let promise = UncheckedSendableBox(value: promise)
             let weakSelf = WeakRef(self)
-            Task { @MainActor in
-                guard let service = weakSelf.object else {
-                    promise.value(.failure(AuthError.unknown("Service deallocated")))
-                    return
-                }
+            Task {
                 do {
-                    let credential = try await service.obtainAppleCredential()
-                    let authResult = try await Auth.auth().signIn(with: credential)
-                    if let user = authResult.user.toAuthUser() {
-                        promise.value(.success(user))
-                    } else {
-                        promise.value(.failure(AuthError.unknown("Failed to create user")))
+                    let user = try await withCheckedThrowingContinuation { continuation in
+                        weakSelf.object?.appleSignInContinuation = continuation
                     }
-                } catch let error as AuthError {
-                    promise.value(.failure(error))
+                    promise.value(.success(user))
                 } catch {
-                    promise.value(.failure(AuthError.unknown(error.localizedDescription)))
+                    promise.value(.failure(error))
                 }
             }
         }
@@ -124,6 +146,8 @@ final class LiveAuthService: NSObject, AuthService {
         }
         .eraseToAnyPublisher()
     }
+
+    // MARK: - Account Deletion
 
     func deleteAccount(presenting viewController: UIViewController) -> AnyPublisher<Void, Error> {
         Future { [weak self] promise in
@@ -152,47 +176,6 @@ final class LiveAuthService: NSObject, AuthService {
         }
         .eraseToAnyPublisher()
     }
-
-    // MARK: - Credential Helpers
-
-    @MainActor
-    private func obtainGoogleCredential(presenting viewController: UIViewController) async throws -> AuthCredential {
-        guard let clientID = FirebaseApp.app()?.options.clientID else {
-            throw AuthError.unknown("Missing Firebase client ID")
-        }
-        let config = GIDConfiguration(clientID: clientID)
-        GIDSignIn.sharedInstance.configuration = config
-
-        let result = try await GIDSignIn.sharedInstance.signIn(withPresenting: viewController)
-        guard let idToken = result.user.idToken?.tokenString else {
-            throw AuthError.invalidCredential
-        }
-        return GoogleAuthProvider.credential(
-            withIDToken: idToken,
-            accessToken: result.user.accessToken.tokenString
-        )
-    }
-
-    @MainActor
-    private func obtainAppleCredential() async throws -> AuthCredential {
-        let nonce = try randomNonceString()
-        currentNonce = nonce
-
-        let provider = ASAuthorizationAppleIDProvider()
-        let request = provider.createRequest()
-        request.requestedScopes = [.email, .fullName]
-        request.nonce = sha256(nonce)
-
-        let controller = ASAuthorizationController(authorizationRequests: [request])
-        controller.delegate = self
-        controller.performRequests()
-
-        return try await withCheckedThrowingContinuation { continuation in
-            appleCredentialContinuation = continuation
-        }
-    }
-
-    // MARK: - Delete Flow
 
     @MainActor
     private func performDelete(presenting viewController: UIViewController) async throws {
@@ -260,12 +243,49 @@ final class LiveAuthService: NSObject, AuthService {
         let isGoogle = user.providerData.contains(where: { $0.providerID == "google.com" })
         let isApple = user.providerData.contains(where: { $0.providerID == "apple.com" })
         if isGoogle {
-            return try await obtainGoogleCredential(presenting: viewController)
+            return try await obtainGoogleCredentialForReauth(presenting: viewController)
         }
         if isApple {
-            return try await obtainAppleCredential()
+            return try await obtainAppleCredentialForReauth()
         }
         throw AuthError.unknown("Unknown auth provider for re-authentication")
+    }
+
+    @MainActor
+    private func obtainGoogleCredentialForReauth(presenting viewController: UIViewController) async throws -> AuthCredential {
+        guard let clientID = FirebaseApp.app()?.options.clientID else {
+            throw AuthError.unknown("Missing Firebase client ID")
+        }
+        let config = GIDConfiguration(clientID: clientID)
+        GIDSignIn.sharedInstance.configuration = config
+
+        let result = try await GIDSignIn.sharedInstance.signIn(withPresenting: viewController)
+        guard let idToken = result.user.idToken?.tokenString else {
+            throw AuthError.invalidCredential
+        }
+        return GoogleAuthProvider.credential(
+            withIDToken: idToken,
+            accessToken: result.user.accessToken.tokenString
+        )
+    }
+
+    @MainActor
+    private func obtainAppleCredentialForReauth() async throws -> AuthCredential {
+        let nonce = try randomNonceString()
+        currentNonce = nonce
+
+        let provider = ASAuthorizationAppleIDProvider()
+        let request = provider.createRequest()
+        request.requestedScopes = [.email, .fullName]
+        request.nonce = sha256(nonce)
+
+        let controller = ASAuthorizationController(authorizationRequests: [request])
+        controller.delegate = self
+        controller.performRequests()
+
+        return try await withCheckedThrowingContinuation { continuation in
+            appleReauthCredentialContinuation = continuation
+        }
     }
 
     // MARK: - Apple Sign-In Helpers
@@ -299,7 +319,9 @@ extension LiveAuthService: ASAuthorizationControllerDelegate {
               let appleIDToken = appleCredential.identityToken,
               let idTokenString = String(data: appleIDToken, encoding: .utf8)
         else {
-            appleCredentialContinuation?.resume(throwing: AuthError.invalidCredential)
+            appleSignInContinuation?.resume(throwing: AuthError.invalidCredential)
+            appleReauthCredentialContinuation?.resume(throwing: AuthError.invalidCredential)
+            appleReauthCredentialContinuation = nil
             cleanupAppleSignInState()
             return
         }
@@ -310,22 +332,43 @@ extension LiveAuthService: ASAuthorizationControllerDelegate {
             fullName: appleCredential.fullName
         )
 
-        appleCredentialContinuation?.resume(returning: credential)
-        cleanupAppleSignInState()
+        // Re-authentication path (delete account): hand the raw credential back
+        // to the deletion flow without performing a Firebase sign-in.
+        if let reauthContinuation = appleReauthCredentialContinuation {
+            appleReauthCredentialContinuation = nil
+            cleanupAppleSignInState()
+            reauthContinuation.resume(returning: credential)
+            return
+        }
+
+        Task {
+            defer { cleanupAppleSignInState() }
+            do {
+                let authResult = try await Auth.auth().signIn(with: credential)
+                if let user = authResult.user.toAuthUser() {
+                    appleSignInContinuation?.resume(returning: user)
+                } else {
+                    appleSignInContinuation?.resume(throwing: AuthError.unknown("Failed to create user"))
+                }
+            } catch {
+                appleSignInContinuation?.resume(throwing: AuthError.unknown(error.localizedDescription))
+            }
+        }
     }
 
     func authorizationController(controller _: ASAuthorizationController, didCompleteWithError error: Error) {
-        if (error as NSError).code == ASAuthorizationError.canceled.rawValue {
-            appleCredentialContinuation?.resume(throwing: AuthError.signInCancelled)
-        } else {
-            appleCredentialContinuation?.resume(throwing: AuthError.unknown(error.localizedDescription))
-        }
+        let mapped: AuthError = (error as NSError).code == ASAuthorizationError.canceled.rawValue
+            ? .signInCancelled
+            : .unknown(error.localizedDescription)
+        appleSignInContinuation?.resume(throwing: mapped)
+        appleReauthCredentialContinuation?.resume(throwing: mapped)
+        appleReauthCredentialContinuation = nil
         cleanupAppleSignInState()
     }
 
     private func cleanupAppleSignInState() {
         currentNonce = nil
-        appleCredentialContinuation = nil
+        appleSignInContinuation = nil
     }
 }
 

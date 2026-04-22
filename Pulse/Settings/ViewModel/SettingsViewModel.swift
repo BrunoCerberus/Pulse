@@ -193,13 +193,9 @@ final class SettingsViewModel: CombineViewModel, ObservableObject {
     }
 
     private static func defaultViewControllerProvider() -> UIViewController? {
-        guard let windowScene = UIApplication.shared.connectedScenes
-            .compactMap({ $0 as? UIWindowScene })
-            .first(where: { $0.activationState == .foregroundActive })
-            ?? (UIApplication.shared.connectedScenes.first as? UIWindowScene)
-        else { return nil }
-        return windowScene.windows.first(where: \.isKeyWindow)?.rootViewController
-            ?? windowScene.windows.first?.rootViewController
+        UIApplication.shared.connectedScenes
+            .compactMap { $0 as? UIWindowScene }
+            .first?.windows.first(where: \.isKeyWindow)?.rootViewController
     }
 
     private func clearAllUserData() {
