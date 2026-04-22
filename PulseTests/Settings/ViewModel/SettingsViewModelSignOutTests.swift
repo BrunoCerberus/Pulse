@@ -3,12 +3,14 @@ import EntropyCore
 import Foundation
 @testable import Pulse
 import Testing
+import UIKit
 
 @Suite("SettingsViewModel SignOut Tests")
 @MainActor
 struct SettingsViewModelSignOutTests {
     let mockSettingsService: MockSettingsService
     let mockAuthService: MockAuthService
+    let mockAnalyticsService: MockAnalyticsService
     let mockStorageService: MockStorageService
     let mockSearchService: MockSearchService
     let mockAppLockService: MockAppLockService
@@ -18,6 +20,7 @@ struct SettingsViewModelSignOutTests {
     init() {
         mockSettingsService = MockSettingsService()
         mockAuthService = MockAuthService()
+        mockAnalyticsService = MockAnalyticsService()
         mockStorageService = MockStorageService()
         mockSearchService = MockSearchService()
         mockAppLockService = MockAppLockService()
@@ -26,6 +29,7 @@ struct SettingsViewModelSignOutTests {
 
         serviceLocator.register(SettingsService.self, instance: mockSettingsService)
         serviceLocator.register(AuthService.self, instance: mockAuthService)
+        serviceLocator.register(AnalyticsService.self, instance: mockAnalyticsService)
         serviceLocator.register(StorageService.self, instance: mockStorageService)
         serviceLocator.register(SearchService.self, instance: mockSearchService)
         serviceLocator.register(AppLockService.self, instance: mockAppLockService)
@@ -33,7 +37,10 @@ struct SettingsViewModelSignOutTests {
     }
 
     private func createSUT() -> SettingsViewModel {
-        SettingsViewModel(serviceLocator: serviceLocator)
+        SettingsViewModel(
+            serviceLocator: serviceLocator,
+            viewControllerProvider: { UIViewController() }
+        )
     }
 
     // MARK: - Sign Out Tests
@@ -113,6 +120,137 @@ struct SettingsViewModelSignOutTests {
         try await waitForStateUpdate(duration: TestWaitDuration.long)
 
         #expect(!sut.viewState.showSignOutConfirmation)
+    }
+
+    // MARK: - Delete Account Tests
+
+    @Test("Tapping delete account shows confirmation")
+    func tappingDeleteAccountShowsConfirmation() async throws {
+        let sut = createSUT()
+        sut.handle(event: .onAppear)
+        try await waitForStateUpdate(duration: TestWaitDuration.long)
+
+        sut.handle(event: .onDeleteAccountTapped)
+        try await waitForStateUpdate(duration: TestWaitDuration.long)
+
+        #expect(sut.viewState.showDeleteAccountConfirmation)
+    }
+
+    @Test("Cancelling delete account hides confirmation")
+    func cancellingDeleteAccountHidesConfirmation() async throws {
+        let sut = createSUT()
+        sut.handle(event: .onAppear)
+        try await waitForStateUpdate(duration: TestWaitDuration.long)
+
+        sut.handle(event: .onDeleteAccountTapped)
+        try await waitForStateUpdate(duration: TestWaitDuration.long)
+
+        sut.handle(event: .onCancelDeleteAccount)
+        try await waitForStateUpdate(duration: TestWaitDuration.long)
+
+        #expect(!sut.viewState.showDeleteAccountConfirmation)
+    }
+
+    @Test("Confirm delete account invokes auth service deleteAccount")
+    func confirmDeleteAccountCallsAuthService() async throws {
+        let sut = createSUT()
+        sut.handle(event: .onAppear)
+        try await waitForStateUpdate(duration: TestWaitDuration.long)
+
+        sut.handle(event: .onConfirmDeleteAccount)
+        try await waitForStateUpdate(duration: TestWaitDuration.long)
+
+        #expect(mockAuthService.deleteAccountCallCount == 1)
+        #expect(!sut.viewState.showDeleteAccountConfirmation)
+        #expect(!sut.viewState.isDeletingAccount)
+    }
+
+    @Test("Account deletion clears app lock settings")
+    func deleteAccountClearsAppLock() async throws {
+        mockAppLockService.isEnabled = true
+        mockAppLockService.hasPromptedFaceID = true
+
+        let sut = createSUT()
+        sut.handle(event: .onAppear)
+        try await waitForStateUpdate(duration: TestWaitDuration.long)
+
+        sut.handle(event: .onConfirmDeleteAccount)
+        try await waitForStateUpdate(duration: TestWaitDuration.long)
+
+        #expect(!mockAppLockService.isEnabled)
+        #expect(!mockAppLockService.hasPromptedFaceID)
+    }
+
+    @Test("Account deletion clears UserDefaults preferences")
+    func deleteAccountClearsUserDefaults() async throws {
+        let defaults = UserDefaults.standard
+        let keysToCheck = [
+            "pulse.hasCompletedOnboarding",
+            "pulse.preferredLanguage",
+            "pulse.notificationsEnabled",
+            "pulse.deviceToken",
+        ]
+        defer { keysToCheck.forEach { defaults.removeObject(forKey: $0) } }
+
+        defaults.set(true, forKey: "pulse.hasCompletedOnboarding")
+        defaults.set("pt", forKey: "pulse.preferredLanguage")
+        defaults.set(true, forKey: "pulse.notificationsEnabled")
+        defaults.set("token123", forKey: "pulse.deviceToken")
+
+        let sut = createSUT()
+        sut.handle(event: .onAppear)
+        try await waitForStateUpdate(duration: TestWaitDuration.long)
+
+        sut.handle(event: .onConfirmDeleteAccount)
+        try await waitForStateUpdate(duration: TestWaitDuration.long)
+
+        for key in keysToCheck {
+            #expect(defaults.object(forKey: key) == nil, "Key '\(key)' should be nil after account deletion")
+        }
+    }
+
+    @Test("Delete account failure clears loading state")
+    func deleteAccountFailureClearsLoadingState() async throws {
+        mockAuthService.deleteAccountResult = .failure(
+            NSError(domain: "test", code: 1, userInfo: [NSLocalizedDescriptionKey: "Delete failed"])
+        )
+
+        let sut = createSUT()
+        sut.handle(event: .onAppear)
+        try await waitForStateUpdate(duration: TestWaitDuration.long)
+
+        sut.handle(event: .onConfirmDeleteAccount)
+        try await waitForStateUpdate(duration: TestWaitDuration.long)
+
+        #expect(!sut.viewState.isDeletingAccount)
+    }
+
+    @Test("User-cancelled re-auth during deletion is not reported as error")
+    func deleteAccountCancelledReauthNotReportedAsError() async throws {
+        mockAuthService.deleteAccountResult = .failure(AuthError.signInCancelled)
+
+        let sut = createSUT()
+        sut.handle(event: .onAppear)
+        try await waitForStateUpdate(duration: TestWaitDuration.long)
+
+        sut.handle(event: .onConfirmDeleteAccount)
+        try await waitForStateUpdate(duration: TestWaitDuration.long)
+
+        #expect(!sut.viewState.isDeletingAccount)
+        #expect(mockAnalyticsService.recordedErrors.isEmpty)
+    }
+
+    @Test("Successful deletion logs delete_account analytics event")
+    func deleteAccountLogsAnalyticsOnSuccess() async throws {
+        let sut = createSUT()
+        sut.handle(event: .onAppear)
+        try await waitForStateUpdate(duration: TestWaitDuration.long)
+
+        sut.handle(event: .onConfirmDeleteAccount)
+        try await waitForStateUpdate(duration: TestWaitDuration.long)
+
+        let deleteEvents = mockAnalyticsService.loggedEvents.filter { $0.name == "delete_account" }
+        #expect(deleteEvents.count == 1)
     }
 
     // MARK: - Notification Events Tests

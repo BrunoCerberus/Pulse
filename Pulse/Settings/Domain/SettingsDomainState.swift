@@ -21,6 +21,12 @@ struct SettingsDomainState: Equatable {
     /// Whether to show the sign out confirmation dialog.
     var showSignOutConfirmation: Bool
 
+    /// Whether to show the delete account confirmation dialog.
+    var showDeleteAccountConfirmation: Bool
+
+    /// Whether an account deletion is in progress.
+    var isDeletingAccount: Bool
+
     /// Text field content for adding a new muted source.
     var newMutedSource: String
 
@@ -38,6 +44,8 @@ struct SettingsDomainState: Equatable {
             isSaving: false,
             error: nil,
             showSignOutConfirmation: false,
+            showDeleteAccountConfirmation: false,
+            isDeletingAccount: false,
             newMutedSource: "",
             newMutedKeyword: "",
             showNotificationsDeniedAlert: false

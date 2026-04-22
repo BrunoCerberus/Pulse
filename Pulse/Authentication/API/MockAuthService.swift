@@ -23,6 +23,8 @@ final class MockAuthService: AuthService {
 
     var signInWithAppleResult: Result<AuthUser, Error> = .success(AuthUser.mock)
     var signOutResult: Result<Void, Error> = .success(())
+    var deleteAccountResult: Result<Void, Error> = .success(())
+    private(set) var deleteAccountCallCount = 0
 
     var authStatePublisher: AnyPublisher<AuthUser?, Never> {
         authStateSubject.eraseToAnyPublisher()
@@ -50,6 +52,15 @@ final class MockAuthService: AuthService {
 
     func signOut() -> AnyPublisher<Void, Error> {
         signOutResult.publisher
+            .handleEvents(receiveOutput: { [weak self] _ in
+                self?.authStateSubject.send(nil)
+            })
+            .eraseToAnyPublisher()
+    }
+
+    func deleteAccount(presenting _: UIViewController) -> AnyPublisher<Void, Error> {
+        deleteAccountCallCount += 1
+        return deleteAccountResult.publisher
             .handleEvents(receiveOutput: { [weak self] _ in
                 self?.authStateSubject.send(nil)
             })

@@ -25,4 +25,19 @@ struct SettingsConstantsTests {
     func termsOfServiceLabelIsNotEmpty() {
         #expect(!Constants.termsOfService.isEmpty)
     }
+
+    @Test("deleteAccountTitle label is not empty")
+    func deleteAccountTitleIsNotEmpty() {
+        #expect(!Constants.deleteAccountTitle.isEmpty)
+    }
+
+    @Test("deleteAccountMessage label is not empty")
+    func deleteAccountMessageIsNotEmpty() {
+        #expect(!Constants.deleteAccountMessage.isEmpty)
+    }
+
+    @Test("deleteAccountConfirm label is not empty")
+    func deleteAccountConfirmIsNotEmpty() {
+        #expect(!Constants.deleteAccountConfirm.isEmpty)
+    }
 }

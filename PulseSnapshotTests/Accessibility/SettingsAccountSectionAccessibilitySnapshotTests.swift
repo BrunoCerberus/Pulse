@@ -13,7 +13,9 @@ final class SettingsAccountSectionAccessibilitySnapshotTests: XCTestCase {
         let view = List {
             SettingsAccountSection(
                 currentUser: AuthUser.mock,
-                onSignOutTapped: {}
+                isDeletingAccount: false,
+                onSignOutTapped: {},
+                onDeleteAccountTapped: {}
             )
         }
         .frame(width: 375)
@@ -33,7 +35,9 @@ final class SettingsAccountSectionAccessibilitySnapshotTests: XCTestCase {
         let view = List {
             SettingsAccountSection(
                 currentUser: AuthUser.mock,
-                onSignOutTapped: {}
+                isDeletingAccount: false,
+                onSignOutTapped: {},
+                onDeleteAccountTapped: {}
             )
         }
         .frame(width: 375)
@@ -45,6 +49,29 @@ final class SettingsAccountSectionAccessibilitySnapshotTests: XCTestCase {
         assertSnapshot(
             of: controller,
             as: SnapshotConfig.snapshotting(on: SnapshotConfig.iPhoneAirExtraExtraLarge),
+            record: false
+        )
+    }
+
+    /// Covers the in-progress branch of the Delete Account button (ProgressView + label).
+    func testSettingsAccountSectionWhileDeletingAccount() {
+        let view = List {
+            SettingsAccountSection(
+                currentUser: AuthUser.mock,
+                isDeletingAccount: true,
+                onSignOutTapped: {},
+                onDeleteAccountTapped: {}
+            )
+        }
+        .frame(width: 375)
+        .padding()
+        .background(LinearGradient.meshFallback)
+
+        let controller = UIHostingController(rootView: view)
+
+        assertSnapshot(
+            of: controller,
+            as: SnapshotConfig.snapshotting(on: SnapshotConfig.iPhoneAir),
             record: false
         )
     }

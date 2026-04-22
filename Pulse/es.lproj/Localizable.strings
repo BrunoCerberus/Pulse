@@ -164,6 +164,10 @@
 "account.sign_out.confirm" = "¿Estás seguro de que quieres cerrar sesión?";
 "account.profile_photo" = "Foto de perfil";
 "account.user_initial" = "Inicial del usuario";
+"account.delete" = "Eliminar Cuenta";
+"account.delete.title" = "¿Eliminar cuenta?";
+"account.delete.message" = "Esto elimina permanentemente tu cuenta y todos los datos asociados (marcadores, historial de lectura, preferencias). Esta acción no se puede deshacer.";
+"account.delete.confirm" = "Eliminar";
 
 /* ==================== */
 /* MARK: - Auth         */

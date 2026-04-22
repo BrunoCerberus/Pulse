@@ -1,6 +1,7 @@
 import Combine
 import EntropyCore
 import Foundation
+import UIKit
 
 /// ViewModel for the Settings screen.
 ///
@@ -24,19 +25,24 @@ final class SettingsViewModel: CombineViewModel, ObservableObject {
     private let interactor: SettingsDomainInteractor
     private let themeManager: ThemeManager
     private let authenticationManager: AuthenticationManager
+    private let viewControllerProvider: () -> UIViewController?
     private var authService: AuthService?
+    private var analyticsService: AnalyticsService?
     private var cancellables = Set<AnyCancellable>()
 
     init(
         serviceLocator: ServiceLocator,
         themeManager: ThemeManager? = nil,
-        authenticationManager: AuthenticationManager? = nil
+        authenticationManager: AuthenticationManager? = nil,
+        viewControllerProvider: (() -> UIViewController?)? = nil
     ) {
         self.serviceLocator = serviceLocator
         interactor = SettingsDomainInteractor(serviceLocator: serviceLocator)
         self.themeManager = themeManager ?? .shared
         self.authenticationManager = authenticationManager ?? .shared
+        self.viewControllerProvider = viewControllerProvider ?? Self.defaultViewControllerProvider
         authService = try? serviceLocator.retrieve(AuthService.self)
+        analyticsService = try? serviceLocator.retrieve(AnalyticsService.self)
         setupBindings()
     }
 
@@ -67,6 +73,12 @@ final class SettingsViewModel: CombineViewModel, ObservableObject {
             handleSignOut()
         case .onCancelSignOut:
             interactor.dispatch(action: .setShowSignOutConfirmation(false))
+        case .onDeleteAccountTapped:
+            interactor.dispatch(action: .setShowDeleteAccountConfirmation(true))
+        case .onConfirmDeleteAccount:
+            handleDeleteAccount()
+        case .onCancelDeleteAccount:
+            interactor.dispatch(action: .setShowDeleteAccountConfirmation(false))
         case .onDismissError:
             interactor.dispatch(action: .dismissError)
         case .onDismissNotificationsDeniedAlert:
@@ -145,13 +157,48 @@ final class SettingsViewModel: CombineViewModel, ObservableObject {
                     }
                 },
                 receiveValue: { [weak self] _ in
-                    self?.clearUserDataOnSignOut()
+                    self?.clearAllUserData()
                 }
             )
             .store(in: &cancellables)
     }
 
-    private func clearUserDataOnSignOut() {
+    private func handleDeleteAccount() {
+        guard let authService, let viewController = viewControllerProvider() else { return }
+        interactor.dispatch(action: .setShowDeleteAccountConfirmation(false))
+        interactor.dispatch(action: .setIsDeletingAccount(true))
+
+        authService.deleteAccount(presenting: viewController)
+            .receive(on: DispatchQueue.main)
+            .sink(
+                receiveCompletion: { [weak self] completion in
+                    self?.interactor.dispatch(action: .setIsDeletingAccount(false))
+                    if case let .failure(error) = completion {
+                        // Silently swallow user-cancelled re-auth; show everything else.
+                        if case AuthError.signInCancelled = error {
+                            Logger.shared.service("Account deletion cancelled by user", level: .info)
+                        } else {
+                            let message = "Account deletion failed: \(error.localizedDescription)"
+                            Logger.shared.service(message, level: .error)
+                            self?.analyticsService?.recordError(error)
+                        }
+                    }
+                },
+                receiveValue: { [weak self] _ in
+                    self?.analyticsService?.logEvent(.deleteAccount)
+                    self?.clearAllUserData()
+                }
+            )
+            .store(in: &cancellables)
+    }
+
+    private static func defaultViewControllerProvider() -> UIViewController? {
+        UIApplication.shared.connectedScenes
+            .compactMap { $0 as? UIWindowScene }
+            .first?.windows.first(where: \.isKeyWindow)?.rootViewController
+    }
+
+    private func clearAllUserData() {
         // 1. Clear SwiftData (bookmarks, preferences, reading history)
         if let storageService = try? serviceLocator.retrieve(StorageService.self) {
             let service = UncheckedSendableBox(value: storageService)
@@ -199,7 +246,7 @@ final class SettingsViewModel: CombineViewModel, ObservableObject {
         // 7. Clear widget shared data
         UserDefaults(suiteName: "group.com.bruno.Pulse-News")?.removeObject(forKey: "shared_articles")
 
-        Logger.shared.service("User data cleared on sign-out", level: .info)
+        Logger.shared.service("Cleared all local user data", level: .info)
     }
 
     private func setupBindings() {
@@ -228,6 +275,8 @@ final class SettingsViewModel: CombineViewModel, ObservableObject {
                 useSystemTheme: useSystemTheme,
                 isLoading: state.isLoading,
                 showSignOutConfirmation: state.showSignOutConfirmation,
+                showDeleteAccountConfirmation: state.showDeleteAccountConfirmation,
+                isDeletingAccount: state.isDeletingAccount,
                 currentUser: currentUser,
                 errorMessage: state.error,
                 showNotificationsDeniedAlert: state.showNotificationsDeniedAlert,
@@ -251,6 +300,8 @@ struct SettingsViewState: Equatable {
     var useSystemTheme: Bool
     var isLoading: Bool
     var showSignOutConfirmation: Bool
+    var showDeleteAccountConfirmation: Bool
+    var isDeletingAccount: Bool
     var currentUser: AuthUser?
     var errorMessage: String?
     var showNotificationsDeniedAlert: Bool
@@ -268,6 +319,8 @@ struct SettingsViewState: Equatable {
             useSystemTheme: true,
             isLoading: false,
             showSignOutConfirmation: false,
+            showDeleteAccountConfirmation: false,
+            isDeletingAccount: false,
             currentUser: nil,
             errorMessage: nil,
             showNotificationsDeniedAlert: false,
@@ -294,6 +347,9 @@ enum SettingsViewEvent: Equatable {
     case onSignOutTapped
     case onConfirmSignOut
     case onCancelSignOut
+    case onDeleteAccountTapped
+    case onConfirmDeleteAccount
+    case onCancelDeleteAccount
     case onDismissError
     case onDismissNotificationsDeniedAlert
 }

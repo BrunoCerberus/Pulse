@@ -217,7 +217,7 @@ Pulse/
 
 | Feature | Description |
 |---------|-------------|
-| **Authentication** | Firebase Auth with Google and Apple Sign-In (required before accessing app) |
+| **Authentication** | Firebase Auth with Google and Apple Sign-In (required before accessing app). Supports in-app account deletion (Apple Guideline 5.1.1(v)) — `AuthService.deleteAccount(presenting:)` calls `Auth.auth().currentUser?.delete()` and, on `requiresRecentLogin`, transparently re-authenticates via the original provider before retrying. Firebase `User` async methods are wrapped in `withCheckedThrowingContinuation` so the non-`Sendable` `User` reference never crosses an `await` (Swift 6.2 strict concurrency) |
 | **Home** | Breaking news carousel, recently read section, top headlines with infinite scroll, category tabs for filtering by followed topics, settings access via gear icon |
 | **Media** | Browse and play Videos and Podcasts with in-app playback (YouTube videos open in YouTube app, podcasts use native AVPlayer) |
 | **Feed** | AI-powered Daily Digest summarizing latest news articles from the API using on-device LLM (Gemma 3 1B) (**Premium**) |
@@ -231,8 +231,8 @@ Pulse/
 | **Enhanced Sharing** | Rich share content with article title and source name alongside URL via `ShareItemsBuilder` |
 | **Localization** | Multi-language support (English, Portuguese, Spanish) — both UI labels and content filtering follow in-app language preference via `AppLocalization` singleton (no app restart required) |
 | **Accessibility** | Dynamic Type layout adaptation (HStack-to-VStack at accessibility sizes), VoiceOver heading hierarchy, `@AccessibilityFocusState` management, live announcements for async state changes |
-| **Security** | YouTube video ID regex validation, HTTPS-only URL allowlisting, deeplink ID sanitization (character allowlist + path traversal rejection), disk cache filename sanitization + file protection, search query length limit (256 chars), sign-out data cleanup (clears all caches, bookmarks, preferences, keychain, widget data), privacy manifest (`PrivacyInfo.xcprivacy`), Keychain-based app lock with biometric + passcode fallback |
-| **Settings** | Topics, notifications, theme, content language, muted content, reading history, account/logout (accessed from Home navigation bar) |
+| **Security** | YouTube video ID regex validation, HTTPS-only URL allowlisting, deeplink ID sanitization (character allowlist + path traversal rejection), disk cache filename sanitization + file protection, search query length limit (256 chars), sign-out / account-deletion data cleanup via `SettingsViewModel.clearAllUserData()` (clears SwiftData, L1+L2 caches, app lock keychain, recent searches, UserDefaults, ThemeManager, widget shared data), privacy manifest (`PrivacyInfo.xcprivacy`), Keychain-based app lock with biometric + passcode fallback |
+| **Settings** | Topics, notifications, theme, content language, muted content, reading history, account/logout, permanent account deletion (accessed from Home navigation bar) |
 | **Onboarding** | 4-page first-launch experience (welcome, AI features, offline/bookmarks, get started) shown once after sign-in |
 | **Analytics & Crashlytics** | Firebase Analytics (25 type-safe events, including 4 CloudKit sync events) and Crashlytics for crash/non-fatal error tracking at DomainInteractor level |
 | **Widget** | Home screen widget showing recent headlines (WidgetKit extension) |
@@ -493,8 +493,8 @@ Key components: `GlassTabBar`, `GlassCategoryChip`, `GlassSectionHeader`, `Glass
 | `DomainEventActionMap` | Protocol for event-to-action mapping |
 | `ServiceLocator` | Dependency injection container |
 | **Authentication** | |
-| `AuthService.swift` | Protocol for authentication operations |
-| `LiveAuthService.swift` | Firebase Auth implementation (Google + Apple) |
+| `AuthService.swift` | Protocol for authentication operations (sign-in, sign-out, `deleteAccount(presenting:)`) |
+| `LiveAuthService.swift` | Firebase Auth implementation (Google + Apple). Sign-in and `deleteAccount(presenting:)` share `obtainGoogleCredential` / `obtainAppleCredential` helpers. On Firebase's `requiresRecentLogin` error, `deleteAccount` re-authenticates with the original provider before retrying. Calls to `User.delete()` / `User.reauthenticate(with:)` are wrapped in `withCheckedThrowingContinuation` so the non-`Sendable` `User` reference never crosses an `await` boundary (Swift 6.2 strict concurrency) |
 | `AuthenticationManager.swift` | Global auth state observer singleton |
 | `RootView.swift` | Auth-gated root view (SignIn vs Onboarding vs CoordinatorView) |
 | `SignInView.swift` | Sign-in UI with Google/Apple buttons |

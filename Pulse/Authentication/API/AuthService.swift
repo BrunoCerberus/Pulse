@@ -20,6 +20,7 @@ enum AuthError: Error, LocalizedError {
     case signInCancelled
     case invalidCredential
     case networkError
+    case noCurrentUser
     case unknown(String)
 
     var errorDescription: String? {
@@ -27,6 +28,7 @@ enum AuthError: Error, LocalizedError {
         case .signInCancelled: return "Sign in was cancelled"
         case .invalidCredential: return "Invalid credentials"
         case .networkError: return "Network error occurred"
+        case .noCurrentUser: return "No user is currently signed in"
         case let .unknown(message): return message
         }
     }
@@ -47,4 +49,11 @@ protocol AuthService {
 
     /// Sign out current user
     func signOut() -> AnyPublisher<Void, Error>
+
+    /// Permanently delete the signed-in account.
+    ///
+    /// If Firebase reports `requiresRecentLogin`, this transparently re-authenticates
+    /// the user with their original provider (Google/Apple) and retries the deletion.
+    /// - Parameter viewController: Presenter for the Google re-auth sheet (ignored for Apple).
+    func deleteAccount(presenting viewController: UIViewController) -> AnyPublisher<Void, Error>
 }

@@ -786,6 +786,14 @@ jobs:
     # The `|| RESULT=$?` dance ensures the markdown report always lands in the
     # job summary, not just on the happy path — `bash -e` would otherwise skip
     # it when diff-cover exits non-zero on a threshold failure.
+    # LiveAuthService is excluded because it is direct glue over the Firebase
+    # Auth, GoogleSignIn, and ASAuthorizationController singletons — none of
+    # which expose protocol seams for unit-test mocking, and instantiating
+    # `LiveAuthService` without `FirebaseApp.configure()` (not invoked by the
+    # test bundle) fatal-errors. PulseTests/Configs/LiveServicesBasicTests.swift
+    # documents the same constraint with `#expect(true)` placeholders.
+    # Auth business logic is exercised at the domain layer through the
+    # AuthService protocol + MockAuthService.
     - name: Enforce patch coverage threshold
       run: |
         RESULT=0
@@ -793,7 +801,7 @@ jobs:
           --compare-branch "$BASE_SHA" \
           --fail-under "$THRESHOLD" \
           --include 'Pulse/**/*.swift' 'PulseShareExtension/**/*.swift' 'PulseWidgetExtension/**/*.swift' \
-          --exclude '**/*+Preview.swift' '**/Preview Content/**' \
+          --exclude '**/*+Preview.swift' '**/Preview Content/**' '**/LiveAuthService.swift' \
           --markdown-report patch-coverage.md || RESULT=$?
         {
           echo "## Patch Coverage Report"

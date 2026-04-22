@@ -164,6 +164,10 @@
 "account.sign_out.confirm" = "Are you sure you want to sign out of your account?";
 "account.profile_photo" = "Profile photo";
 "account.user_initial" = "User initial";
+"account.delete" = "Delete Account";
+"account.delete.title" = "Delete account?";
+"account.delete.message" = "This permanently deletes your account and all associated data (bookmarks, reading history, preferences). This action cannot be undone.";
+"account.delete.confirm" = "Delete";
 
 /* ==================== */
 /* MARK: - Auth         */

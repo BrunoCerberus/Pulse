@@ -12,6 +12,10 @@ final class LiveAuthService: NSObject, AuthService {
     private var authStateHandle: AuthStateDidChangeListenerHandle?
     private var currentNonce: String?
     private var appleSignInContinuation: CheckedContinuation<AuthUser, Error>?
+    /// Set during the Apple re-authentication step of `deleteAccount`. When non-nil,
+    /// the `ASAuthorizationControllerDelegate` returns the raw `AuthCredential` instead
+    /// of completing a Firebase sign-in.
+    private var appleReauthCredentialContinuation: CheckedContinuation<AuthCredential, Error>?
 
     var authStatePublisher: AnyPublisher<AuthUser?, Never> {
         authStateSubject.eraseToAnyPublisher()
@@ -143,6 +147,147 @@ final class LiveAuthService: NSObject, AuthService {
         .eraseToAnyPublisher()
     }
 
+    // MARK: - Account Deletion
+
+    func deleteAccount(presenting viewController: UIViewController) -> AnyPublisher<Void, Error> {
+        Future { [weak self] promise in
+            guard let self else {
+                promise(.failure(AuthError.unknown("Service deallocated")))
+                return
+            }
+            let promise = UncheckedSendableBox(value: promise)
+            let weakSelf = WeakRef(self)
+            Task { @MainActor in
+                guard let service = weakSelf.object else {
+                    promise.value(.failure(AuthError.unknown("Service deallocated")))
+                    return
+                }
+                do {
+                    try await service.performDelete(presenting: viewController)
+                    promise.value(.success(()))
+                } catch let error as AuthError {
+                    promise.value(.failure(error))
+                } catch let error as GIDSignInError where error.code == .canceled {
+                    promise.value(.failure(AuthError.signInCancelled))
+                } catch {
+                    promise.value(.failure(AuthError.unknown(error.localizedDescription)))
+                }
+            }
+        }
+        .eraseToAnyPublisher()
+    }
+
+    @MainActor
+    private func performDelete(presenting viewController: UIViewController) async throws {
+        guard Auth.auth().currentUser != nil else {
+            throw AuthError.noCurrentUser
+        }
+
+        do {
+            try await deleteCurrentFirebaseUser()
+        } catch {
+            let nsError = error as NSError
+            guard AuthErrorCode(rawValue: nsError.code) == .requiresRecentLogin else {
+                throw error
+            }
+
+            let credential = try await freshCredentialForCurrentUser(presenting: viewController)
+            try await reauthenticateCurrentFirebaseUser(with: credential)
+            try await deleteCurrentFirebaseUser()
+        }
+    }
+
+    /// Wraps Firebase's callback-based `delete` so we never hold a non-Sendable `User`
+    /// reference across an `await`, which Swift 6.2 strict concurrency flags as a data race.
+    @MainActor
+    private func deleteCurrentFirebaseUser() async throws {
+        try await withCheckedThrowingContinuation { (continuation: CheckedContinuation<Void, Error>) in
+            guard let user = Auth.auth().currentUser else {
+                continuation.resume(throwing: AuthError.noCurrentUser)
+                return
+            }
+            user.delete { error in
+                if let error {
+                    continuation.resume(throwing: error)
+                } else {
+                    continuation.resume()
+                }
+            }
+        }
+    }
+
+    @MainActor
+    private func reauthenticateCurrentFirebaseUser(with credential: AuthCredential) async throws {
+        try await withCheckedThrowingContinuation { (continuation: CheckedContinuation<Void, Error>) in
+            guard let user = Auth.auth().currentUser else {
+                continuation.resume(throwing: AuthError.noCurrentUser)
+                return
+            }
+            user.reauthenticate(with: credential) { _, error in
+                if let error {
+                    continuation.resume(throwing: error)
+                } else {
+                    continuation.resume()
+                }
+            }
+        }
+    }
+
+    @MainActor
+    private func freshCredentialForCurrentUser(
+        presenting viewController: UIViewController
+    ) async throws -> AuthCredential {
+        guard let user = Auth.auth().currentUser else {
+            throw AuthError.noCurrentUser
+        }
+        let isGoogle = user.providerData.contains(where: { $0.providerID == "google.com" })
+        let isApple = user.providerData.contains(where: { $0.providerID == "apple.com" })
+        if isGoogle {
+            return try await obtainGoogleCredentialForReauth(presenting: viewController)
+        }
+        if isApple {
+            return try await obtainAppleCredentialForReauth()
+        }
+        throw AuthError.unknown("Unknown auth provider for re-authentication")
+    }
+
+    @MainActor
+    private func obtainGoogleCredentialForReauth(presenting viewController: UIViewController) async throws -> AuthCredential {
+        guard let clientID = FirebaseApp.app()?.options.clientID else {
+            throw AuthError.unknown("Missing Firebase client ID")
+        }
+        let config = GIDConfiguration(clientID: clientID)
+        GIDSignIn.sharedInstance.configuration = config
+
+        let result = try await GIDSignIn.sharedInstance.signIn(withPresenting: viewController)
+        guard let idToken = result.user.idToken?.tokenString else {
+            throw AuthError.invalidCredential
+        }
+        return GoogleAuthProvider.credential(
+            withIDToken: idToken,
+            accessToken: result.user.accessToken.tokenString
+        )
+    }
+
+    @MainActor
+    private func obtainAppleCredentialForReauth() async throws -> AuthCredential {
+        let nonce = try randomNonceString()
+        currentNonce = nonce
+
+        let provider = ASAuthorizationAppleIDProvider()
+        let request = provider.createRequest()
+        request.requestedScopes = [.email, .fullName]
+        request.nonce = sha256(nonce)
+
+        let controller = ASAuthorizationController(authorizationRequests: [request])
+        controller.delegate = self
+        controller.performRequests()
+
+        return try await withCheckedThrowingContinuation { continuation in
+            appleReauthCredentialContinuation = continuation
+        }
+    }
+
     // MARK: - Apple Sign-In Helpers
 
     private func randomNonceString(length: Int = 32) throws -> String {
@@ -175,6 +320,8 @@ extension LiveAuthService: ASAuthorizationControllerDelegate {
               let idTokenString = String(data: appleIDToken, encoding: .utf8)
         else {
             appleSignInContinuation?.resume(throwing: AuthError.invalidCredential)
+            appleReauthCredentialContinuation?.resume(throwing: AuthError.invalidCredential)
+            appleReauthCredentialContinuation = nil
             cleanupAppleSignInState()
             return
         }
@@ -184,6 +331,15 @@ extension LiveAuthService: ASAuthorizationControllerDelegate {
             rawNonce: nonce,
             fullName: appleCredential.fullName
         )
+
+        // Re-authentication path (delete account): hand the raw credential back
+        // to the deletion flow without performing a Firebase sign-in.
+        if let reauthContinuation = appleReauthCredentialContinuation {
+            appleReauthCredentialContinuation = nil
+            cleanupAppleSignInState()
+            reauthContinuation.resume(returning: credential)
+            return
+        }
 
         Task {
             defer { cleanupAppleSignInState() }
@@ -201,11 +357,12 @@ extension LiveAuthService: ASAuthorizationControllerDelegate {
     }
 
     func authorizationController(controller _: ASAuthorizationController, didCompleteWithError error: Error) {
-        if (error as NSError).code == ASAuthorizationError.canceled.rawValue {
-            appleSignInContinuation?.resume(throwing: AuthError.signInCancelled)
-        } else {
-            appleSignInContinuation?.resume(throwing: AuthError.unknown(error.localizedDescription))
-        }
+        let mapped: AuthError = (error as NSError).code == ASAuthorizationError.canceled.rawValue
+            ? .signInCancelled
+            : .unknown(error.localizedDescription)
+        appleSignInContinuation?.resume(throwing: mapped)
+        appleReauthCredentialContinuation?.resume(throwing: mapped)
+        appleReauthCredentialContinuation = nil
         cleanupAppleSignInState()
     }
 
