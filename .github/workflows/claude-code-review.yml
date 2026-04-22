@@ -44,7 +44,7 @@ jobs:
             REPO: ${{ github.repository }}
             PR NUMBER: ${{ github.event.pull_request.number }}
 
-            Please review this pull request with a focus on:
+            Review this PR for:
             - Code quality and best practices
             - Potential bugs or issues
             - Security implications
@@ -52,11 +52,19 @@ jobs:
 
             Note: The PR branch is already checked out in the current working directory.
 
-            Use `gh pr comment` for top-level feedback.
-            Use `mcp__github_inline_comment__create_inline_comment` to highlight specific code issues.
-            Only post GitHub comments - don't submit review text as messages.
+            STRICT OUTPUT RULES:
+            - Every finding tied to a specific file:line MUST be posted via
+              `mcp__github_inline_comment__create_inline_comment`. Do NOT embed
+              file:line findings in the top-level summary.
+            - Your progress/summary comment must contain only: a high-level verdict,
+              counts of findings by severity, and cross-cutting observations that
+              don't map to a single line.
+            - If you have zero line-level findings to leave, say so explicitly in
+              the summary — do not substitute prose for inline comments.
+            - Only post GitHub comments — don't submit review text as chat messages.
 
-            If the PR looks good with no significant issues, approve it using `gh pr review --approve`.
-            If there are significant issues, request changes using `gh pr review --request-changes`.
+            Approvals: if no significant issues, run `gh pr review --approve`.
+            If significant issues, run `gh pr review --request-changes`.
+            Never leave review verdicts only as prose.
           claude_args: '--model claude-opus-4-7 --allowedTools "mcp__github_inline_comment__create_inline_comment,Bash(gh pr comment:*),Bash(gh pr diff:*),Bash(gh pr view:*),Bash(gh pr review:*)"'
 
