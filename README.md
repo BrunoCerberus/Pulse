@@ -1,307 +1,56 @@
 # Pulse
 
-A modern iOS news aggregation app built with Clean Architecture, SwiftUI, and Combine. Powered by a self-hosted Supabase RSS feed aggregator backend.
+A modern iOS news aggregation app built with Clean Architecture, SwiftUI, and Combine. Powered by a self-hosted Supabase RSS aggregator backend.
 
 ## Features
 
-- **Authentication**: Firebase Auth with Google and Apple Sign-In (required before accessing app), with in-app account deletion (Apple Guideline 5.1.1(v) compliance) that handles Firebase's `requiresRecentLogin` by transparently re-authenticating with the original provider
-- **Home Feed**: Breaking news carousel, recently read section for quick access to previous articles, top headlines with infinite scrolling, and category tabs for filtering by followed topics (settings accessible via gear icon)
-- **Media**: Browse and play Videos and Podcasts with in-app playback (YouTube videos open in YouTube app, podcasts use native AVPlayer)
-- **Feed**: AI-powered Daily Digest summarizing latest news articles from the API using on-device LLM (Gemma 3 1B) (**Premium**)
-- **Article Summarization**: On-device AI article summarization via sparkles button (**Premium**)
-- **Text-to-Speech**: Listen to articles read aloud using native `AVSpeechSynthesizer` with play/pause controls, speed presets (1x/1.25x/1.5x/2x), language-aware voices, and a floating mini-player bar
-- **Offline Experience**: Tiered cache (in-memory L1 + persistent disk L2), automatic retry with exponential backoff for transient failures, network monitoring via NWPathMonitor, offline banner, and graceful degradation preserving cached content
-- **Bookmarks**: Save articles for offline reading with SwiftData persistence
-- **Reading History**: Automatic tracking of read articles with SwiftData persistence, visual indicators on cards, and a dedicated history view accessible from Settings
-- **Related Articles**: After reading an article, discover related articles from the same category displayed in a horizontal carousel below the content
-- **Enhanced Sharing**: Share articles with rich context — shared content includes the article title and source name alongside the URL for better social previews
-- **Search**: Full-text search with 300ms debounce, suggestions, recent searches, and sort options
-- **Localization**: Full multi-language support (English, Portuguese, Spanish) — both UI labels and content filtering follow the in-app language preference (via `AppLocalization` singleton), no app restart required
-- **Settings**: Customize topics, notifications, theme, content language, content filters, account/logout, and permanent account deletion (accessed from Home navigation bar)
-- **Accessibility**: Dynamic Type layout adaptation (HStack-to-VStack at accessibility sizes), VoiceOver heading hierarchy, focus management, and live announcements for async state changes
-- **Security**: Input validation (deeplink sanitization, YouTube URL allowlisting, search query length limit), sign-out / account-deletion data cleanup (clears all caches, bookmarks, preferences, keychain, widget data), file-protected disk cache, privacy manifest (`PrivacyInfo.xcprivacy`), and Keychain-based app lock with biometric + passcode fallback
-- **Onboarding**: 4-page first-launch experience shown once after sign-in, highlighting key features before entering the app
-- **Analytics & Crash Reporting**: Firebase Analytics (25 type-safe events, including 4 CloudKit sync events) and Crashlytics for crash/non-fatal error tracking
-- **Widget**: Home screen widget showing recent headlines (WidgetKit extension)
-- **App Intents & Siri Shortcuts**: Five `AppIntent` types (`OpenPulseIntent`, `OpenDailyDigestIntent`, `OpenBookmarksIntent`, `SearchPulseIntent`, `OpenPulseSettingsIntent`) exposed to Siri, Spotlight, and the Shortcuts app via `PulseAppShortcuts`, with natural-language phrases (e.g., *"Show my Daily Digest in Pulse"*). All intents dispatch via `DeeplinkManager` to reuse in-app navigation
-- **Live Activities**: TTS playback surfaces on the Lock Screen and Dynamic Island via ActivityKit — `TTSActivityAttributes` (shared between app + widget extension), `TTSLiveActivityController` (`@MainActor` singleton) wired into `ArticleDetailDomainInteractor`, and `TTSLockScreenView` / `TTSLiveActivity` rendering expanded/compact/minimal presentations. `LiveTextToSpeechService` integrates `MPNowPlayingInfoCenter` + `MPRemoteCommandCenter` so AirPods, CarPlay, and Lock Screen media controls drive TTS
-- **Share Extension**: `PulseShareExtension` accepts a `public.url` from Safari/any iOS share sheet and offers *Summarize with AI in Pulse*. Because Gemma 3 1B exceeds the extension's ~120 MB memory budget, the extension serializes a `SharedURLItem` into an App Group JSON-backed queue (`SharedURLQueue`) and opens the host app via `pulse://shared`; the main app drains the queue on foreground via `SharedURLImportService`
-- **Home Screen Quick Actions**: Four long-press shortcuts (Search, Daily Digest, Bookmarks, Breaking News) registered dynamically at scene-connect time so titles localize per the in-app `AppLocalization` setting. `QuickActionHandler` routes each through `DeeplinkManager` (en/pt/es)
-- **iCloud Cross-Device Sync**: Bookmarks, reading history, and user preferences sync across a user's iOS devices via SwiftData's native CloudKit integration (`NSPersistentCloudKitContainer`). Always-on, zero-UI — the `CloudSyncService` + `CloudSyncDomainInteractor` pair surfaces sync state via Combine publishers and posts `.cloudSyncDidComplete` so Bookmarks, Reading History, Settings, and Home interactors reload from storage after remote merges
-- **iPad Adaptive Layouts**: Root shell swaps on `@Environment(\.horizontalSizeClass)` — iPhone keeps the iOS 26 Liquid Glass `TabView`; iPad (regular width) renders a `NavigationSplitView` with a sidebar listing Home / Media / Feed / Bookmarks / Search. Article lists switch from `LazyVStack` to `LazyVGrid(.adaptive(minimum: 360))` on regular width; article detail caps content at 720pt for comfortable reading. Mac Catalyst groundwork is in place (stubs ready) but the flag is currently disabled pending a Catalyst slice for the vendored `swift-llama-cpp` xcframework
+- **Authentication** — Firebase Auth (Google + Apple Sign-In) with in-app account deletion (Apple Guideline 5.1.1(v)), including transparent reauthentication when Firebase requires it.
+- **Home / Media / Feed** — breaking news carousel, category filters, recently-read; Videos + Podcasts with in-app playback (YouTube opens externally, podcasts use `AVPlayer`); AI-powered Daily Digest (**Premium**).
+- **Article Summarization** — on-device summaries via Gemma 3 1B (**Premium**).
+- **Text-to-Speech** — `AVSpeechSynthesizer`, speed presets (1×/1.25×/1.5×/2×), language-aware voices, floating mini-player, AirPods/CarPlay/Lock Screen controls.
+- **Offline** — tiered L1 (memory) + L2 (disk) cache, retry with exponential backoff, `NWPathMonitor`, offline banner, graceful degradation.
+- **Bookmarks + Reading History** — SwiftData, read indicators, dedicated history view.
+- **Search** — full-text with 300ms debounce, suggestions, sort options.
+- **Related Articles** — horizontal carousel in ArticleDetail.
+- **Enhanced Sharing** — `ShareItemsBuilder` formats `[title — source, URL]`.
+- **Localization** — English, Portuguese, Spanish (UI + content), no app restart.
+- **Accessibility** — Dynamic Type layout adaptation, VoiceOver heading hierarchy, focus management, live announcements.
+- **Security** — input validation, sign-out / account-deletion data wipe, Keychain-backed app lock (biometric + passcode), privacy manifest.
+- **Widget + Live Activities** — home screen headlines; TTS on Lock Screen + Dynamic Island.
+- **App Intents / Siri / Spotlight** — five intents via `PulseAppShortcuts`.
+- **Share Extension** — `public.url` → App Group queue → summarize in the main app (Gemma 3 1B exceeds the extension memory budget).
+- **Home Screen Quick Actions** — Search, Daily Digest, Bookmarks, Breaking News (localized, registered dynamically).
+- **iCloud Cross-Device Sync** — bookmarks, reading history, and preferences via `NSPersistentCloudKitContainer` (always-on, zero-UI).
+- **iPad** — `NavigationSplitView` sidebar on regular width, `LazyVGrid(.adaptive)` article lists, 720pt reading cap.
+- **Analytics & Crashlytics** — type-safe Firebase events (incl. CloudKit sync lifecycle); Crashlytics breadcrumbs.
 
-The app uses iOS 26's Liquid Glass `TabView` style on iPhone with tabs: Home, Media, Feed, Bookmarks, and Search. On iPad, the same tabs render as a `NavigationSplitView` sidebar. Users must sign in with Google or Apple before accessing the main app. A 4-page onboarding flow is shown once after first sign-in.
+The app uses iOS 26 Liquid Glass on the root `TabView` (iPhone) and `NavigationSplitView` sidebar (iPad). Users must sign in with Google or Apple; a 4-page onboarding runs once after first sign-in.
 
-### Premium Features
+### Premium
 
-The app uses StoreKit 2 for subscription management. Two AI-powered features require a premium subscription:
-
-| Feature | Description |
-|---------|-------------|
-| AI Daily Digest | Summaries of the latest news across all categories |
-| Article Summarization | On-device AI summaries for any article |
-
-Non-premium users see a `PremiumGateView` on Feed or a paywall sheet when tapping the summarization button; both present the native StoreKit subscription UI.
+StoreKit 2. Two AI features require a subscription: **AI Daily Digest** and **Article Summarization**. Non-premium users see `PremiumGateView` on Feed or a native StoreKit paywall sheet when tapping the summarize button.
 
 ## Architecture
 
-Pulse implements a **Unidirectional Data Flow Architecture** based on Clean Architecture principles, using **Combine** for reactive data binding:
+Unidirectional Data Flow + Clean Architecture + Combine.
 
 ```
-┌─────────────────────────────────────────────────────────────┐
-│                         View Layer                          │
-│              (SwiftUI + @ObservedObject ViewModel)          │
-└─────────────────────────────────────────────────────────────┘
-         │ ViewEvent                    ↑ @Published ViewState
-         ↓                              │
-┌─────────────────────────────────────────────────────────────┐
-│                    Presentation Layer                       │
-│  ViewModel (CombineViewModel) + EventActionMap + Reducer    │
-└─────────────────────────────────────────────────────────────┘
-         │ DomainAction                 ↑ DomainState (Combine)
-         ↓                              │
-┌─────────────────────────────────────────────────────────────┐
-│                       Domain Layer                          │
-│         Interactor (CombineInteractor + statePublisher)     │
-└─────────────────────────────────────────────────────────────┘
-         │                              ↑
-         ↓                              │
-┌─────────────────────────────────────────────────────────────┐
-│                       Service Layer                         │
-│           (Protocol-based + Live/Mock implementations)      │
-└─────────────────────────────────────────────────────────────┘
-         │                              ↑
-         ↓                              │
-┌─────────────────────────────────────────────────────────────┐
-│                       Network Layer                         │
-│                   (EntropyCore + SwiftData)                 │
-└─────────────────────────────────────────────────────────────┘
+View (SwiftUI)
+  ↓ ViewEvent             ↑ @Published ViewState
+ViewModel (CombineViewModel + EventActionMap + Reducer)
+  ↓ DomainAction          ↑ DomainState (Combine)
+Interactor (CombineInteractor)
+  ↓                        ↑
+Service Layer (protocol-based, Live/Mock)
+  ↓                        ↑
+Network (EntropyCore) + Storage (SwiftData + CloudKit)
 ```
 
-### Key Protocols
+Core protocols (`EntropyCore`): `CombineViewModel`, `CombineInteractor`, `ViewStateReducing`, `DomainEventActionMap`, `ServiceLocator`.
 
-| Protocol | Purpose |
-|----------|---------|
-| `CombineViewModel` | Base protocol for ViewModels with `viewState` and `handle(event:)` |
-| `CombineInteractor` | Base protocol for domain layer with `statePublisher` and `dispatch(action:)` |
-| `ViewStateReducing` | Transforms DomainState → ViewState |
-| `DomainEventActionMap` | Maps ViewEvent → DomainAction |
+**Navigation** — Coordinator + per-tab `NavigationPath`, size-class adaptive: `AnimatedTabView` on iPhone, `NavigationSplitView` sidebar + detail on iPad. `DeeplinkRouter` routes URL schemes through the `Coordinator`. Views are generic over their router (`HomeView<R: HomeNavigationRouter>`) for testability.
 
-### Navigation
-
-The app uses a **Coordinator + Router** pattern with per-tab NavigationPaths:
-
-```
-CoordinatorView (@StateObject Coordinator)
-       │
-   TabView (selection: $coordinator.selectedTab)
-       │
-   ┌───┴───┬──────┬──────┬─────────┬───────┐
- Home   Media   Feed   Bookmarks  Search
-   │        │           │         │
-NavigationStack(path: $coordinator.homePath)
-       │
-.navigationDestination(for: Page.self)
-       │
-coordinator.build(page:)
-```
-
-- **Coordinator**: Central navigation manager owning all tab paths
-- **CoordinatorView**: Root TabView with NavigationStacks per tab
-- **Page**: Type-safe enum of all navigable destinations
-- **NavigationRouter**: Feature-specific routers (conforming to EntropyCore protocol)
-- **DeeplinkRouter**: Routes URL schemes through the Coordinator
-
-Views are generic over their router type (`HomeView<R: HomeNavigationRouter>`) for testability.
-
-## Quick Start: Adding a Feature
-
-Follow these steps to add a new feature module to Pulse:
-
-### 1. Create Feature Folder Structure
-
-```
-Pulse/
-└── MyFeature/
-    ├── API/
-    │   ├── MyFeatureService.swift       # Protocol
-    │   └── LiveMyFeatureService.swift   # Implementation
-    ├── Domain/
-    │   ├── MyFeatureDomainState.swift
-    │   ├── MyFeatureDomainAction.swift
-    │   ├── MyFeatureDomainInteractor.swift
-    │   ├── MyFeatureEventActionMap.swift
-    │   └── MyFeatureViewStateReducer.swift
-    ├── ViewModel/
-    │   └── MyFeatureViewModel.swift
-    ├── View/
-    │   └── MyFeatureView.swift
-    ├── ViewEvents/
-    │   └── MyFeatureViewEvent.swift
-    ├── ViewStates/
-    │   └── MyFeatureViewState.swift
-    └── Router/
-        └── MyFeatureNavigationRouter.swift
-```
-
-### 2. Define the Service Protocol
-
-```swift
-// API/MyFeatureService.swift
-protocol MyFeatureService {
-    func fetchData() -> AnyPublisher<[MyModel], Error>
-}
-```
-
-### 3. Create Domain State and Actions
-
-```swift
-// Domain/MyFeatureDomainState.swift
-struct MyFeatureDomainState: Equatable {
-    var items: [MyModel] = []
-    var isLoading: Bool = false
-    var error: String?
-}
-
-// Domain/MyFeatureDomainAction.swift
-enum MyFeatureDomainAction {
-    case loadData
-    case dataLoaded([MyModel])
-    case loadFailed(String)
-}
-```
-
-### 4. Implement the Interactor
-
-```swift
-// Domain/MyFeatureDomainInteractor.swift
-@MainActor
-final class MyFeatureDomainInteractor: CombineInteractor {
-    typealias DomainState = MyFeatureDomainState
-    typealias DomainAction = MyFeatureDomainAction
-
-    private let stateSubject = CurrentValueSubject<DomainState, Never>(.init())
-    var statePublisher: AnyPublisher<DomainState, Never> { stateSubject.eraseToAnyPublisher() }
-
-    private let myService: MyFeatureService
-
-    init(serviceLocator: ServiceLocator) {
-        self.myService = try! serviceLocator.retrieve(MyFeatureService.self)
-    }
-
-    func dispatch(action: DomainAction) {
-        switch action {
-        case .loadData:
-            loadData()
-        case .dataLoaded(let items):
-            stateSubject.value.items = items
-            stateSubject.value.isLoading = false
-        case .loadFailed(let error):
-            stateSubject.value.error = error
-            stateSubject.value.isLoading = false
-        }
-    }
-}
-```
-
-### 5. Register the Service
-
-In `PulseSceneDelegate.registerLiveServices()` (and add a mock in test setup if needed):
-
-```swift
-serviceLocator.register(MyFeatureService.self, instance: LiveMyFeatureService())
-```
-
-### 6. Add Navigation (if needed)
-
-Add a case to `Page.swift` and implement `build(page:)` in `Coordinator`.
-
-## Common Patterns
-
-### Event to Action Mapping
-
-```swift
-// Domain/MyFeatureEventActionMap.swift
-struct MyFeatureEventActionMap: DomainEventActionMap {
-    func map(event: MyFeatureViewEvent) -> MyFeatureDomainAction? {
-        switch event {
-        case .onAppear:
-            return .loadData
-        case .onRefresh:
-            return .loadData
-        case .onItemTapped(let id):
-            return .selectItem(id)
-        }
-    }
-}
-```
-
-### View State Reduction
-
-```swift
-// Domain/MyFeatureViewStateReducer.swift
-struct MyFeatureViewStateReducer: ViewStateReducing {
-    func reduce(domainState: MyFeatureDomainState) -> MyFeatureViewState {
-        MyFeatureViewState(
-            items: domainState.items.map { ItemViewItem(from: $0) },
-            isLoading: domainState.isLoading,
-            showEmptyState: domainState.items.isEmpty && !domainState.isLoading,
-            errorMessage: domainState.error
-        )
-    }
-}
-```
-
-### Generic Router Pattern
-
-```swift
-// Router/MyFeatureNavigationRouter.swift
-@MainActor
-protocol MyFeatureNavigationRouter: NavigationRouter where NavigationEvent == MyFeatureNavigationEvent {}
-
-enum MyFeatureNavigationEvent {
-    case itemDetail(MyModel)
-    case settings
-}
-
-@MainActor
-final class MyFeatureNavigationRouterImpl: MyFeatureNavigationRouter {
-    private weak var coordinator: Coordinator?
-
-    init(coordinator: Coordinator? = nil) {
-        self.coordinator = coordinator
-    }
-
-    func route(navigationEvent: MyFeatureNavigationEvent) {
-        switch navigationEvent {
-        case .itemDetail(let item):
-            coordinator?.push(page: .itemDetail(item))
-        case .settings:
-            coordinator?.push(page: .settings)
-        }
-    }
-}
-```
-
-### Testing with Mock Services
-
-```swift
-// In Tests
-func createTestServiceLocator() -> ServiceLocator {
-    let serviceLocator = ServiceLocator()
-    serviceLocator.register(MyFeatureService.self, instance: MockMyFeatureService())
-    return serviceLocator
-}
-
-@Test func testDataLoading() async {
-    let serviceLocator = createTestServiceLocator()
-    let interactor = MyFeatureDomainInteractor(serviceLocator: serviceLocator)
-
-    interactor.dispatch(action: .loadData)
-
-    // Assert state changes...
-}
-```
+See `CLAUDE.md` for key files and `AGENTS.md` for conventions and how to add a feature.
 
 ## Requirements
 
@@ -311,194 +60,96 @@ func createTestServiceLocator() -> ServiceLocator {
 
 ## Setup
 
-### 1. Install XcodeGen
-
 ```bash
 brew install xcodegen
-```
-
-### 2. Generate Project
-
-```bash
 make setup
-```
-
-### 3. Open in Xcode
-
-```bash
 open Pulse.xcodeproj
 ```
 
-### 4. API Keys
-
-API keys are managed via **Firebase Remote Config** (primary) with environment variable fallback for **DEBUG builds only**:
+API keys come from **Firebase Remote Config** (primary). For DEBUG builds you can override via env:
 
 ```bash
-# Supabase backend configuration (DEBUG builds only)
 export SUPABASE_URL="https://your-project.supabase.co"
 export SUPABASE_ANON_KEY="your_anon_key"
 ```
 
-The app fetches keys from Remote Config on launch. Environment variable fallbacks are gated behind `#if DEBUG` and unavailable in release builds. Remote Config keys are validated for minimum length (10+ characters).
+Release builds use Remote Config + Keychain only (env-var fallbacks are `#if DEBUG`-gated). Remote Config values are validated ≥10 chars. See `APIKeysProvider.swift`, `SupabaseConfig.swift`.
 
 ## Commands
 
-| Command | Description |
-|---------|-------------|
-| `make init` | Setup Mint, SwiftFormat, and SwiftLint |
-| `make install-xcodegen` | Install XcodeGen using Homebrew |
-| `make generate` | Generate project from project.yml |
-| `make setup` | install-xcodegen + generate |
-| `make xcode` | Generate project and open in Xcode |
-| `make build` | Build for development |
-| `make build-release` | Build for release |
-| `make bump-patch` | Increase patch version (0.0.x) |
-| `make bump-minor` | Increase minor version (0.x.0) |
-| `make bump-major` | Increase major version (x.0.0) |
-| `make test` | Run all tests |
-| `make test-unit` | Run unit tests only |
-| `make test-ui` | Run UI tests only |
-| `make test-snapshot` | Run snapshot tests only |
-| `make test-debug` | Verbose unit test output |
-| `make coverage` | Run tests with coverage report |
-| `make coverage-report` | Per-file coverage report |
-| `make coverage-badge` | Generate SVG coverage badge |
-| `make lint` | Run SwiftFormat and SwiftLint |
-| `make format` | Auto-format code |
-| `make deeplink-test` | Run deeplink tests |
-| `make clean` | Remove generated project |
-| `make clean-packages` | Clean SPM caches |
-| `make docs` | Generate DocC documentation |
+```bash
+make init                # install Mint + SwiftFormat + SwiftLint
+make setup | xcode       # xcodegen setup / open in Xcode
+make build | build-release
+make test | test-unit | test-ui | test-snapshot | test-debug
+make coverage | coverage-report | coverage-badge
+make lint | format
+make bump-{patch,minor,major}
+make deeplink-test | clean | clean-packages | docs
+```
 
 ## Project Structure
 
 ```
 Pulse/
-├── Pulse/
-│   ├── Authentication/     # Firebase Auth (Google + Apple Sign-In)
-│   │   ├── API/            # AuthService protocol + Live/Mock implementations
-│   │   ├── Domain/         # AuthDomainInteractor, State, Action
-│   │   ├── ViewModel/      # SignInViewModel
-│   │   ├── View/           # SignInView
-│   │   └── Manager/        # AuthenticationManager (global state)
-│   ├── Home/               # Home feed with category filtering
-│   ├── Media/              # Videos and Podcasts browsing
-│   ├── MediaDetail/        # Video/Podcast playback (AVPlayer, WKWebView)
-│   ├── Feed/               # AI-powered Daily Digest (Premium)
-│   ├── Digest/             # On-device LLM infra (LLMService, LLMModelManager, prompts)
-│   ├── Summarization/      # Article summarization (Premium)
-│   ├── Search/             # Search functionality
-│   ├── Bookmarks/          # Saved articles
-│   ├── ReadingHistory/     # Reading history tracking (SwiftData)
-│   ├── CloudSync/          # CloudKit sync lifecycle (domain interactor + notifications)
-│   │   └── Domain/         # CloudSyncDomainState, Action, Interactor, Notifications
-│   ├── Settings/           # User preferences + account/logout
-│   ├── Notifications/      # Push notification permission and registration
-│   ├── ArticleDetail/      # Article view + TTS (AVSpeechSynthesizer)
-│   │   └── LiveActivities/ # TTSActivityAttributes, TTSLiveActivityController, TTSLockScreenView
-│   ├── Intents/            # AppIntents for Siri / Spotlight / Shortcuts (OpenPulse, OpenDailyDigest, SearchPulse, etc.)
-│   ├── QuickActions/       # Home screen quick actions (QuickActionType, QuickActionHandler)
-│   ├── SharedURL/          # SharedURLImportService (drains Share Extension queue on foreground)
-│   ├── AppLock/            # Biometric/passcode app lock
-│   ├── Onboarding/         # First-launch onboarding flow
-│   ├── Paywall/            # StoreKit paywall UI
-│   ├── SplashScreen/       # Launch animation
-│   └── Configs/
-│       ├── Navigation/     # Coordinator, Page, CoordinatorView, DeeplinkRouter, AnimatedTabView
-│       ├── DesignSystem/   # ColorSystem, Typography, Components, DynamicTypeHelpers, HapticManager
-│       ├── Models/         # Article, NewsCategory, UserPreferences, AppLocalization
-│       ├── Networking/     # APIKeysProvider, BaseURLs, SupabaseConfig, RemoteConfig, NetworkMonitorService, NetworkResilience
-│       ├── Storage/        # StorageService (SwiftData + CloudKit private DB)
-│       ├── CloudSync/      # CloudSyncService protocol + LiveCloudSyncService
-│       ├── Analytics/      # AnalyticsService protocol + LiveAnalyticsService
-│       ├── Mocks/          # Mock services for testing
-│       └── Widget/         # WidgetDataManager
-├── PulseWidgetExtension/   # WidgetKit extension + TTS Live Activity (TTSLiveActivity.swift)
-├── PulseShareExtension/    # Share extension (accepts URLs, enqueues to App Group for main app summarization)
-├── PulseTests/             # Unit tests (Swift Testing)
-├── PulseUITests/           # UI tests (XCTest)
-├── PulseSnapshotTests/     # Snapshot tests (SnapshotTesting)
-├── .github/workflows/      # CI/CD
-└── .claude/commands/       # Claude Code integration
+├── Pulse/                    # app source
+│   ├── Authentication/ Home/ Media/ MediaDetail/ Feed/ Digest/
+│   ├── Summarization/ ArticleDetail/ Intents/ QuickActions/ SharedURL/
+│   ├── Bookmarks/ ReadingHistory/ CloudSync/ Search/ Settings/
+│   ├── Notifications/ AppLock/ Onboarding/ Paywall/ SplashScreen/
+│   └── Configs/              # Navigation, DesignSystem, Models, Networking,
+│                             # Storage, CloudSync, Analytics, Mocks, Widget
+├── PulseWidgetExtension/     # WidgetKit + TTS Live Activity
+├── PulseShareExtension/      # public.url → App Group queue
+├── PulseTests/               # Swift Testing
+├── PulseUITests/             # XCTest + accessibility audits
+├── PulseSnapshotTests/       # SnapshotTesting
+├── .github/workflows/        # CI/CD
+└── .claude/commands/         # Claude Code slash commands
 ```
 
 ## Dependencies
 
 | Package | Purpose |
 |---------|---------|
-| [EntropyCore](https://github.com/BrunoCerberus/EntropyCore) | UDF architecture protocols, networking, DI container |
-| [Firebase](https://github.com/firebase/firebase-ios-sdk) | Authentication, Analytics, Crashlytics |
-| [GoogleSignIn](https://github.com/google/GoogleSignIn-iOS) | Google Sign-In SDK |
-| [SnapshotTesting](https://github.com/pointfreeco/swift-snapshot-testing) | Snapshot testing |
+| [EntropyCore](https://github.com/BrunoCerberus/EntropyCore) | UDF protocols, networking, DI |
+| [Firebase](https://github.com/firebase/firebase-ios-sdk) | Auth, Analytics, Crashlytics |
+| [GoogleSignIn](https://github.com/google/GoogleSignIn-iOS) | Google Sign-In |
+| [SnapshotTesting](https://github.com/pointfreeco/swift-snapshot-testing) | Snapshot tests |
 | [Lottie](https://github.com/airbnb/lottie-ios) | Animations |
-| [swift-llama-cpp](https://github.com/BrunoCerberus/swift-llama-cpp) | On-device LLM inference (SwiftLlama wrapper around [llama.cpp](https://github.com/ggml-org/llama.cpp)) |
+| [swift-llama-cpp](https://github.com/BrunoCerberus/swift-llama-cpp) | On-device LLM (SwiftLlama + [llama.cpp](https://github.com/ggml-org/llama.cpp)) |
 
 ## CI/CD
 
-GitHub Actions workflows:
+- `ci.yml` — code quality + build + tests on PR
+- `claude.yml` — Claude Code on `@claude` mentions
+- `claude-code-review.yml` — Claude review on PR open/sync
+- `scheduled-tests.yml` — daily at 2 AM UTC
 
-- **ci.yml**: Runs on PRs - code quality, build, tests
-- **claude.yml**: Claude Code on @claude mentions (issues/PRs/comments)
-- **claude-code-review.yml**: Claude Code review on PR open/sync
-- **scheduled-tests.yml**: Daily test runs at 2 AM UTC
-
-## Schemes
-
-| Scheme | Purpose |
-|--------|---------|
-| `PulseDev` | Development with all tests |
-| `PulseProd` | Production release |
-| `PulseTests` | Unit tests only |
-| `PulseUITests` | UI tests only |
-| `PulseSnapshotTests` | Snapshot tests only |
+Schemes: `PulseDev`, `PulseProd`, `PulseTests`, `PulseUITests`, `PulseSnapshotTests`.
 
 ## Deeplinks
 
-| Deeplink | Description |
-|----------|-------------|
-| `pulse://home` | Open home tab |
-| `pulse://media` | Open Media tab (Videos & Podcasts) |
-| `pulse://feed` | Open Feed tab (AI Daily Digest) |
-| `pulse://bookmarks` | Open bookmarks tab |
-| `pulse://search` | Open search tab |
-| `pulse://search?q=query` | Search with query |
-| `pulse://settings` | Open settings (pushes onto Home) |
-| `pulse://article?id=path/to/article` | Open specific article by article ID |
+| URL | |
+|---|---|
+| `pulse://home` / `media` / `feed` / `bookmarks` / `search` / `settings` | tabs |
+| `pulse://search?q=query` | search with query |
+| `pulse://article?id=path/to/article` | specific article |
 
 ## Testing
 
-### Unit Tests
-Tests for ViewModels, Interactors, and business logic using Swift Testing framework.
+- **Unit** — Swift Testing: ViewModels, Interactors, Reducers with mocks.
+- **UI** — XCTest + `performAccessibilityAudit()` on every main screen.
+- **Snapshot** — SnapshotTesting; includes Dynamic Type accessibility and iPad (`iPad` 1024×768, `iPadPro13` 1032×1376) size classes.
 
-### UI Tests
-End-to-end tests for navigation and user flows using XCTest, plus accessibility audits (`performAccessibilityAudit()`) on all main screens.
+## Data Source
 
-### Snapshot Tests
-Visual regression tests for UI components using SnapshotTesting, including Dynamic Type accessibility snapshot tests validating layout adaptation at large text sizes.
+Self-hosted Supabase backend (`pulse-backend` Go RSS worker): aggregates Guardian, BBC, TechCrunch, Science Daily, etc.; extracts `og:image` hero images and full content via go-readability (Mozilla Readability port); automatic retention cleanup.
 
 ## Contributing
 
-1. Fork the repository
-2. Create a feature branch
-3. Make your changes
-4. Run `make lint` and `make test`
-5. Submit a pull request
+Fork → branch → changes → `make lint && make test` → PR.
 
 ## License
 
-MIT License - see [LICENSE](LICENSE) for details.
-
-## Data Sources
-
-### Supabase Backend
-
-The app fetches articles from a self-hosted RSS feed aggregator backend that:
-
-- Aggregates news from multiple RSS sources (Guardian, BBC, TechCrunch, Science Daily, etc.)
-- Extracts high-resolution `og:image` from article pages for hero images
-- Extracts full article content using go-readability (Mozilla Readability port)
-- Stores articles in Supabase database with automatic cleanup
-
-## Acknowledgments
-
-- [Supabase](https://supabase.com) - Backend database and REST API
+MIT — see [LICENSE](LICENSE).
