@@ -101,7 +101,7 @@ See **AGENTS.md** for the full rules list. The load-bearing ones:
 | **Live Activities** | `TTSActivityAttributes.swift`, `TTSLiveActivityController.swift`, `TTSLockScreenView.swift`, `PulseWidgetExtension/LiveActivities/TTSLiveActivity.swift` | Lock Screen + Dynamic Island; lifecycle driven by `ArticleDetailDomainInteractor` |
 | **Share Ext** | `PulseShareExtension/{ShareViewController,ShareRootView,SharedURLQueue}.swift`, `SharedURLImportService.swift`, `LiveSharedURLImportService.swift` | `public.url` → App Group queue → `pulse://shared` |
 | **Intents / QA** | `Pulse/Intents/*.swift`, `PulseAppShortcuts.swift`, `QuickActionType.swift`, `QuickActionHandler.swift` | All route via `DeeplinkManager`; QA titles localized (registered at scene-connect, not in `Info.plist`) |
-| **Analytics** | `AnalyticsService.swift`, `LiveAnalyticsService.swift`, `MockAnalyticsService.swift` | 25 events incl. 4 CloudKit; Crashlytics breadcrumbs |
+| **Analytics** | `AnalyticsService.swift`, `LiveAnalyticsService.swift`, `MockAnalyticsService.swift` | Type-safe Firebase events (incl. CloudKit sync lifecycle); Crashlytics breadcrumbs |
 | **Security** | `LiveAppLockService.swift`, `KeychainStore.swift`, `PrivacyInfo.xcprivacy` | Biometric + passcode app lock |
 
 ## Commands
