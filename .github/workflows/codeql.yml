@@ -42,8 +42,15 @@ jobs:
       with:
         languages: swift
 
-    - name: Autobuild
-      uses: github/codeql-action/autobuild@v3
+    - name: Build for CodeQL
+      run: |
+        xcodebuild build \
+          -project Pulse.xcodeproj \
+          -scheme PulseDev \
+          -destination 'generic/platform=iOS Simulator' \
+          -skipMacroValidation \
+          CODE_SIGNING_ALLOWED=NO \
+          CODE_SIGNING_REQUIRED=NO
 
     - name: Perform CodeQL Analysis
       uses: github/codeql-action/analyze@v3
