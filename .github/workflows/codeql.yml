@@ -17,7 +17,8 @@ permissions: {}
 jobs:
   analyze:
     name: Analyze
-    runs-on: macos-latest
+    runs-on: macos-26
+    timeout-minutes: 60
     permissions:
       security-events: write
       actions: read
@@ -29,7 +30,7 @@ jobs:
     - name: Setup Xcode
       uses: maxim-lobanov/setup-xcode@ed7a3b1fda3918c0306d1b724322adc0b8cc0a90 # v1
       with:
-        xcode-version: '26.3'
+        xcode-version: '26.4'
 
     - name: Install XcodeGen
       run: brew install xcodegen
@@ -38,7 +39,7 @@ jobs:
       run: make generate
 
     - name: Initialize CodeQL
-      uses: github/codeql-action/init@v3
+      uses: github/codeql-action/init@ce64ddcb0d8d890d2df4a9d1c04ff297367dea2a # v3.35.2
       with:
         languages: swift
 
@@ -53,4 +54,4 @@ jobs:
           CODE_SIGNING_REQUIRED=NO
 
     - name: Perform CodeQL Analysis
-      uses: github/codeql-action/analyze@v3
+      uses: github/codeql-action/analyze@ce64ddcb0d8d890d2df4a9d1c04ff297367dea2a # v3.35.2
