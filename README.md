@@ -22,7 +22,7 @@ A modern iOS news aggregation app built with Clean Architecture, SwiftUI, and Co
 - **Home Screen Quick Actions** — Search, Daily Digest, Bookmarks, Breaking News (localized, registered dynamically).
 - **iCloud Cross-Device Sync** — bookmarks, reading history, and preferences via `NSPersistentCloudKitContainer` (always-on, zero-UI).
 - **iPad** — `NavigationSplitView` sidebar on regular width, `LazyVGrid(.adaptive)` article lists, 720pt reading cap.
-- **Analytics & Crashlytics** — 25 type-safe Firebase events; Crashlytics breadcrumbs.
+- **Analytics & Crashlytics** — type-safe Firebase events (incl. CloudKit sync lifecycle); Crashlytics breadcrumbs.
 
 The app uses iOS 26 Liquid Glass on the root `TabView` (iPhone) and `NavigationSplitView` sidebar (iPad). Users must sign in with Google or Apple; a 4-page onboarding runs once after first sign-in.
 
