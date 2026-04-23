@@ -1,0 +1,132 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width,initial-scale=1" />
+<title>Privacy Policy — Pulse</title>
+<link rel="stylesheet" href="style.css" />
+</head>
+<body>
+<div class="container">
+  <header>
+    <a class="brand" href="./"><span class="dot"></span>Pulse</a>
+    <nav>
+      <a href="privacy-policy.html">Privacy Policy</a>
+      <a href="terms-of-service.html">Terms of Service</a>
+      <a href="support.html">Support</a>
+    </nav>
+  </header>
+
+  <h1>Privacy Policy</h1>
+  <p class="meta">Last updated: April 23, 2026 · Effective: April 23, 2026</p>
+
+  <p>This Privacy Policy describes how Pulse ("we", "our", or "the app") collects, uses, and protects information when you use the Pulse iOS application (the "Service"). By using Pulse, you agree to this policy.</p>
+
+  <div class="callout">
+    <strong>Summary.</strong> Pulse processes your preferences and history on your device and in your private iCloud container. We use third parties (Firebase, Supabase, Apple) to operate the service. We do not sell your data and we do not track you across other apps or websites.
+  </div>
+
+  <h2>1. Information We Collect</h2>
+
+  <h3>1.1 Account information</h3>
+  <p>When you sign in, we create an account tied to your authentication provider:</p>
+  <ul>
+    <li><strong>Sign in with Apple:</strong> We receive a private relay identifier and, optionally, your name. We never receive your real Apple ID email unless you choose to share it.</li>
+    <li><strong>Sign in with Google:</strong> We receive your Google account email, name, and profile photo URL.</li>
+  </ul>
+
+  <h3>1.2 Data you generate in the app</h3>
+  <p>The following is stored locally on your device and synchronized to your <em>private</em> iCloud database. Only you can access this data; Apple encrypts it and we cannot read it:</p>
+  <ul>
+    <li>Bookmarked articles</li>
+    <li>Reading history (articles you opened)</li>
+    <li>App preferences (language, theme, notification settings, topic selections)</li>
+  </ul>
+
+  <h3>1.3 Automatically collected data</h3>
+  <p>To operate the app and diagnose issues, we collect:</p>
+  <table>
+    <thead>
+      <tr><th>Category</th><th>Purpose</th><th>Linked to you?</th><th>Used for tracking?</th></tr>
+    </thead>
+    <tbody>
+      <tr><td>Device identifier</td><td>App functionality</td><td>No</td><td>No</td></tr>
+      <tr><td>Product interaction (taps, feature usage)</td><td>Analytics</td><td>No</td><td>No</td></tr>
+      <tr><td>Crash data</td><td>App functionality (stability)</td><td>No</td><td>No</td></tr>
+      <tr><td>User ID (anonymous analytics identifier)</td><td>Analytics</td><td>Yes</td><td>No</td></tr>
+      <tr><td>Search history (within the app)</td><td>App functionality</td><td>No</td><td>No</td></tr>
+      <tr><td>Browsing history (articles opened within the app)</td><td>App functionality</td><td>No</td><td>No</td></tr>
+    </tbody>
+  </table>
+  <p>These disclosures mirror the App Store privacy nutrition label and the <code>PrivacyInfo.xcprivacy</code> manifest bundled with the app.</p>
+
+  <h2>2. How We Use Information</h2>
+  <ul>
+    <li>To provide core features: headlines, search, bookmarks, reading history, AI summaries.</li>
+    <li>To synchronize your bookmarks and reading history across your Apple devices using your private iCloud container.</li>
+    <li>To measure aggregate feature usage and improve the app.</li>
+    <li>To diagnose crashes and stability issues.</li>
+    <li>To authenticate you and manage your subscription.</li>
+  </ul>
+
+  <h2>3. On-Device AI Processing</h2>
+  <p>Pulse performs article summarization and "Daily Digest" generation entirely on your device using a locally stored Gemma 3 1B model. Article text processed by the AI never leaves your device. AI-generated summaries may contain inaccuracies; always verify important information against the original source.</p>
+
+  <h2>4. Third-Party Services</h2>
+  <p>Pulse relies on the following third-party processors. Each operates under its own privacy policy:</p>
+  <table>
+    <thead>
+      <tr><th>Service</th><th>Purpose</th><th>Data shared</th></tr>
+    </thead>
+    <tbody>
+      <tr><td>Apple (Sign in with Apple, iCloud, StoreKit, Push)</td><td>Authentication, private sync, subscriptions, notifications</td><td>Apple account identifier, device tokens, purchase transactions</td></tr>
+      <tr><td>Google Firebase (Authentication, Analytics, Crashlytics, Remote Config)</td><td>Sign-in, usage analytics, crash reporting, feature flags</td><td>Anonymous analytics ID, device identifier, crash stack traces</td></tr>
+      <tr><td>Google Sign-In</td><td>Authentication</td><td>Google account identifier, name, email, photo URL</td></tr>
+      <tr><td>Supabase</td><td>News content delivery (read-only REST API)</td><td>Request metadata only (no user account identifiers are sent)</td></tr>
+    </tbody>
+  </table>
+
+  <h2>5. Data Retention</h2>
+  <ul>
+    <li><strong>Account data:</strong> retained until you delete your account.</li>
+    <li><strong>iCloud data (bookmarks, history, preferences):</strong> stored in your personal iCloud container; remove it by deleting your account in-app or by deleting the app and clearing its iCloud data in iOS Settings.</li>
+    <li><strong>Analytics and crash data:</strong> retained per Firebase's default retention (up to 14 months for analytics, 90 days for crash reports).</li>
+  </ul>
+
+  <h2>6. Your Rights</h2>
+  <p>Depending on your jurisdiction, you have the right to:</p>
+  <ul>
+    <li><strong>Access</strong> the personal data we hold about you.</li>
+    <li><strong>Correct</strong> inaccurate data.</li>
+    <li><strong>Delete</strong> your account and associated data — available in-app under Settings → Account → Delete Account.</li>
+    <li><strong>Object</strong> to processing based on legitimate interests.</li>
+    <li><strong>Port</strong> your data to another service.</li>
+    <li><strong>Lodge a complaint</strong> with your supervisory authority (EU/UK residents).</li>
+    <li><strong>Opt out</strong> of the sale of personal information (California residents) — we do not sell personal information.</li>
+  </ul>
+
+  <h2>7. Account Deletion</h2>
+  <p>You can delete your account and all associated data directly in the app: <strong>Settings → Account → Delete Account</strong>. Deletion removes your authentication record, clears on-device data (bookmarks, reading history, preferences, cached content), and signs you out. Data in your private iCloud container is controlled by you and can be removed via iOS Settings.</p>
+
+  <h2>8. Children's Privacy</h2>
+  <p>Pulse is not directed at children under 13 (or the minimum digital-consent age in your jurisdiction). We do not knowingly collect personal information from children. If you believe a child has provided us information, contact us and we will delete it.</p>
+
+  <h2>9. International Data Transfers</h2>
+  <p>Our processors operate servers in multiple regions. When data is transferred outside your country, we rely on standard contractual clauses or equivalent safeguards offered by the processor.</p>
+
+  <h2>10. Security</h2>
+  <p>We use HTTPS for all network traffic, Apple's Keychain for sensitive credentials, and Apple's encrypted private CloudKit database for synchronized user data. No system is perfectly secure; we cannot guarantee absolute security.</p>
+
+  <h2>11. Changes to This Policy</h2>
+  <p>We may update this policy to reflect changes in the app or applicable law. Material changes will be announced in-app and the "Last updated" date above will be revised.</p>
+
+  <h2>12. Contact</h2>
+  <p>Questions or requests? Email us at <a href="mailto:bruno.guitarpro@gmail.com">bruno.guitarpro@gmail.com</a>.</p>
+
+  <footer>
+    &copy; <span id="year"></span> Pulse. All rights reserved.
+  </footer>
+</div>
+<script>document.getElementById("year").textContent = new Date().getFullYear();</script>
+</body>
+</html>
