@@ -74,3 +74,5 @@ Pulse/Resources/Models/*
 *.tmp
 *.temp
 buildServer.json
+__pycache__/
+*.pyc
