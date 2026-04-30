@@ -18,7 +18,7 @@ final class AuthenticationUITests: BaseUITestCase {
             XCTAssertTrue(safeExists(tabBar), "Tab bar should exist for authenticated user")
 
             let homeTab = app.tabBars.buttons["Home"]
-            XCTAssertTrue(safeExists(homeTab), "Home tab should exist")
+            XCTAssertTrue(safeWaitForExistence(homeTab, timeout: Self.shortTimeout), "Home tab should exist")
 
             if safeExists(homeTab), !homeTab.isSelected {
                 safeTap(homeTab)
