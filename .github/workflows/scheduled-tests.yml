@@ -717,6 +717,7 @@ jobs:
     permissions:
       actions: read
       contents: write
+      id-token: write
       pull-requests: write
 
     steps:
@@ -868,7 +869,6 @@ jobs:
         CLAUDE_CODE_EFFORT_LEVEL: max
       with:
         claude_code_oauth_token: ${{ secrets.CLAUDE_CODE_OAUTH_TOKEN }}
-        model: claude-opus-4-7
         prompt: |
           ultrathink
 
@@ -894,7 +894,7 @@ jobs:
           - Stage all changes with git add
           - Do NOT commit - the workflow will handle that
         # Restricted tool access — no arbitrary command execution
-        claude_args: '--allowedTools "Read,Edit,Write,Glob,Grep,Bash(git add:*),Bash(git status:*),Bash(git diff:*),Bash(ls:*),Bash(cat:*),Bash(head:*),Bash(tail:*),Bash(find:*),Bash(make generate)"'
+        claude_args: '--model claude-opus-4-7 --allowedTools "Read,Edit,Write,Glob,Grep,Bash(git add:*),Bash(git status:*),Bash(git diff:*),Bash(ls:*),Bash(cat:*),Bash(head:*),Bash(tail:*),Bash(find:*),Bash(make generate)"'
 
     - name: Check for changes
       id: check-changes
