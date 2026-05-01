@@ -74,3 +74,9 @@ Pulse/Resources/Models/*
 *.tmp
 *.temp
 buildServer.json
+
+# Claude Code worktrees and tooling artifacts
+.claude/worktrees/
+.claude/scheduled_tasks.lock
+.swift-version
+ci-pr-report-*.md
