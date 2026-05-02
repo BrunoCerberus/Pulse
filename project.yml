@@ -132,6 +132,7 @@ targets:
           - UIInterfaceOrientationLandscapeRight
         NSFaceIDUsageDescription: "Pulse uses Face ID to protect your app content."
         NSSupportsLiveActivities: true
+        ITSAppUsesNonExemptEncryption: false
         UIBackgroundModes:
           - remote-notification
         CFBundleURLTypes:
