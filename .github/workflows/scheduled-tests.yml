@@ -63,7 +63,7 @@ jobs:
         path: |
           Pulse.xcodeproj/project.xcworkspace/xcshareddata/swiftpm
           ~/Library/Caches/org.swift.swiftpm
-        key: ${{ runner.os }}-spm-v9
+        key: ${{ runner.os }}-spm-v10
 
     - name: Install XcodeGen
       run: |
@@ -441,7 +441,7 @@ jobs:
         path: |
           Pulse.xcodeproj/project.xcworkspace/xcshareddata/swiftpm
           ~/Library/Caches/org.swift.swiftpm
-        key: ${{ runner.os }}-spm-v9
+        key: ${{ runner.os }}-spm-v10
 
     - name: Install XcodeGen
       run: |
@@ -756,7 +756,7 @@ jobs:
       with:
         path: |
           Pulse.xcodeproj/project.xcworkspace/xcshareddata/swiftpm
-        key: ${{ runner.os }}-spm-v9
+        key: ${{ runner.os }}-spm-v10
 
     - name: Install dependencies
       run: |
