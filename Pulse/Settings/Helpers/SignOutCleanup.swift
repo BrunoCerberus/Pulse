@@ -14,6 +14,12 @@ enum SignOutCleanup {
     /// Removes every keychain item under the given service identifiers.
     /// `errSecItemNotFound` is a benign "nothing to delete" outcome and
     /// is ignored. Any other non-success status is logged.
+    ///
+    /// Generic-password items only — matches what `EntropyCore.KeychainManager`
+    /// writes today. If anything in this app ever stores `kSecClassInternetPassword`,
+    /// `kSecClassCertificate`, or `kSecClassKey` under one of these services,
+    /// add another `SecItemDelete` call here for that class — otherwise those
+    /// items will silently survive sign-out.
     static func wipeKeychain(services: [String]) {
         for service in services {
             let query: [String: Any] = [
