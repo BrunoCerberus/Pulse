@@ -67,11 +67,15 @@ struct RootView: View {
         // goes `.inactive` for many transient interactions, not just the
         // app-switcher snapshot. Restricting to opted-in users keeps the
         // protection where it matters and avoids surprising the rest.
+        //
+        // We deliberately keep the opaque overlay visible *even when locked*:
+        // `AppLockOverlayView` uses `.ultraThickMaterial`, which is translucent,
+        // so the article / history underneath would still bleed through into
+        // the app-switcher snapshot. Layering the opaque overlay on top of
+        // `AppLockOverlayView` for non-active scenes seals that gap.
         guard lockManager.isAppLockEnabled else { return false }
         guard case .authenticated = authManager.authState else { return false }
         guard scenePhase != .active else { return false }
-        // The lock overlay already covers content while locked.
-        if lockManager.isLocked { return false }
         // Don't flash during biometry prompts; those flip scenePhase but we
         // want the user to see Face ID land on the actual UI.
         if lockManager.isAuthenticating { return false }
