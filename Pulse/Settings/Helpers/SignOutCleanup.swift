@@ -29,21 +29,37 @@ enum SignOutCleanup {
         }
     }
 
-    /// Deletes the app's private CloudKit zone so reinstalling on the same
-    /// iCloud account does not resurrect synced bookmarks / reading history.
-    static func deletePrivateCloudKitZone(_ containerIdentifier: String) {
-        let zoneID = CKRecordZone.ID(zoneName: CKRecordZone.ID.defaultZoneName)
-        CKContainer(identifier: containerIdentifier)
-            .privateCloudDatabase
-            .delete(withRecordZoneID: zoneID) { _, error in
-                if let error {
-                    Logger.shared.service(
-                        "CloudKit zone delete failed (non-fatal): \(error.localizedDescription)",
-                        level: .warning
-                    )
-                } else {
-                    Logger.shared.service("CloudKit private zone deleted on sign-out", level: .info)
+    /// Deletes every record zone in the app's private CloudKit DB so that
+    /// reinstalling on the same iCloud account does not resurrect synced
+    /// bookmarks / reading history.
+    ///
+    /// We can't hardcode a zone ID: SwiftData's CloudKit mirroring writes to
+    /// `com.apple.coredata.cloudkit.zone` rather than `_defaultZone`, and the
+    /// exact name is an implementation detail that may change. Enumerating
+    /// `allRecordZones()` covers the SwiftData zone today and any zones we
+    /// might add later (additional models, shared zones) without coupling
+    /// this helper to Apple's internal naming.
+    static func deletePrivateCloudKitZones(_ containerIdentifier: String) {
+        Task.detached(priority: .utility) {
+            let database = CKContainer(identifier: containerIdentifier).privateCloudDatabase
+            do {
+                let zones = try await database.allRecordZones()
+                guard !zones.isEmpty else {
+                    Logger.shared.service("CloudKit private DB had no zones to delete", level: .info)
+                    return
                 }
+                let zoneIDs = zones.map(\.zoneID)
+                _ = try await database.modifyRecordZones(saving: [], deleting: zoneIDs)
+                Logger.shared.service(
+                    "CloudKit private zones deleted on sign-out (\(zoneIDs.count))",
+                    level: .info
+                )
+            } catch {
+                Logger.shared.service(
+                    "CloudKit zone delete failed (non-fatal): \(error.localizedDescription)",
+                    level: .warning
+                )
             }
+        }
     }
 }

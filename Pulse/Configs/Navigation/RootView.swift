@@ -61,6 +61,13 @@ struct RootView: View {
     }
 
     private var shouldShowPrivacyOverlay: Bool {
+        // Only users who explicitly enabled App Lock opted into privacy. Without
+        // this gate, every notification banner / Control Center pull / Share
+        // Sheet would flash a black overlay over the article — `scenePhase`
+        // goes `.inactive` for many transient interactions, not just the
+        // app-switcher snapshot. Restricting to opted-in users keeps the
+        // protection where it matters and avoids surprising the rest.
+        guard lockManager.isAppLockEnabled else { return false }
         guard case .authenticated = authManager.authState else { return false }
         guard scenePhase != .active else { return false }
         // The lock overlay already covers content while locked.

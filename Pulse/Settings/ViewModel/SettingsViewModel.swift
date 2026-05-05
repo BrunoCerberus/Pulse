@@ -259,7 +259,7 @@ final class SettingsViewModel: CombineViewModel, ObservableObject {
         // 9. Best-effort: delete the user's private CloudKit record zone so a
         //    reinstall on the same iCloud account doesn't restore prior bookmarks
         //    / reading history. Fire-and-forget; failures only log.
-        SignOutCleanup.deletePrivateCloudKitZone(LiveStorageService.cloudKitContainerIdentifier)
+        SignOutCleanup.deletePrivateCloudKitZones(LiveStorageService.cloudKitContainerIdentifier)
 
         Logger.shared.service("Cleared all local user data", level: .info)
     }
