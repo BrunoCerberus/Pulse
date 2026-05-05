@@ -115,7 +115,12 @@ final class ShareViewController: UIViewController {
                     }()
                     let capturedError = error
                     DispatchQueue.main.async {
-                        if let extractedURL {
+                        if let extractedURL,
+                           SharedURLQueue.isAcceptable(urlString: extractedURL.absoluteString)
+                        {
+                            // Reject `javascript:`, `data:`, `file:`, and custom-scheme URLs
+                            // here so the host system never sees an attempt to enqueue them.
+                            // The queue itself enforces the same rule as defense in depth.
                             completion(.success(extractedURL))
                         } else if let capturedError {
                             completion(.failure(capturedError))

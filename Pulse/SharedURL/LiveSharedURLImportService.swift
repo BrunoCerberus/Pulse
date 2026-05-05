@@ -26,7 +26,13 @@ final class LiveSharedURLImportService: SharedURLImportService, @unchecked Senda
         let drained = queue.drain()
         guard !drained.isEmpty else { return }
         for item in drained {
-            guard let url = URL(string: item.url) else { continue }
+            // Defense in depth: re-validate scheme/length on consumption. The
+            // queue boundary already rejects bad URLs, but a downgraded App
+            // Group write (e.g. forensic injection on a jailbroken device, or
+            // a future producer that bypasses validation) shouldn't propagate.
+            guard SharedURLQueue.isAcceptable(urlString: item.url),
+                  let url = URL(string: item.url)
+            else { continue }
             pendingURLSubject.send(url)
         }
     }

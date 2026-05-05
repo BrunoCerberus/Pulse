@@ -17,6 +17,17 @@ final class LiveStorageService: StorageService {
     ///     CloudKit off regardless of `enableCloudKit`.
     ///   - enableCloudKit: When `true` (and not `inMemory`), mirrors the store
     ///     to the private CloudKit database at `cloudKitContainerIdentifier`.
+    ///
+    /// ## Data Protection
+    ///
+    /// SwiftData inherits the iOS-default file protection class
+    /// `.completeUntilFirstUserAuthentication`. This is intentional: the
+    /// CloudKit-mirroring layer must be able to read and write the store
+    /// while the device is locked (background push delivery, silent
+    /// notifications, periodic sync). Promoting the store to `.complete`
+    /// would break those flows. Sensitive *fields* (read history) should be
+    /// protected by App Lock + the privacy overlay added in `RootView`,
+    /// not by the file-protection class on a synced store.
     init(inMemory: Bool = false, enableCloudKit: Bool = true) {
         do {
             let schema = Schema([

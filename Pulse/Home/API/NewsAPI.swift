@@ -1,6 +1,18 @@
 import EntropyCore
 import Foundation
 
+/// HTTP-header carrier for the NewsAPI.org API key. Sending the key in
+/// `X-Api-Key` keeps it out of the URL query string — query strings are
+/// logged by HTTP intermediaries (CDNs, proxies, browser history when a
+/// link is shared, server access logs), so headers are the safer channel.
+private struct NewsAPIAuthHeader: Codable {
+    let xApiKey: String
+
+    enum CodingKeys: String, CodingKey {
+        case xApiKey = "X-Api-Key"
+    }
+}
+
 enum NewsAPI: APIFetcher {
     case topHeadlines(country: String, page: Int)
     case topHeadlinesByCategory(category: NewsCategory, country: String, page: Int)
@@ -53,7 +65,6 @@ enum NewsAPI: APIFetcher {
             }
         }
 
-        queryItems.append(URLQueryItem(name: "apiKey", value: apiKey))
         components.queryItems = queryItems
 
         guard let urlString = components.string else {
@@ -71,8 +82,9 @@ enum NewsAPI: APIFetcher {
         nil
     }
 
+    /// API key travels in `X-Api-Key` header — see `NewsAPIAuthHeader`.
     var header: (any Codable)? {
-        nil
+        NewsAPIAuthHeader(xApiKey: apiKey)
     }
 
     var debug: Bool {

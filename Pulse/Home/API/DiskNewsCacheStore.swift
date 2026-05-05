@@ -48,10 +48,12 @@ final class DiskNewsCacheStore: NewsCacheStore {
             }
         }
 
-        // Set file protection so cache is encrypted at rest until first unlock
+        // Set file protection. The cache is only read while the app is foregrounded
+        // (no background sync, no widget reads), so `.complete` is safe and gives the
+        // strongest at-rest protection — files are unreadable while the device is locked.
         do {
             try fileManager.setAttributes(
-                [.protectionKey: FileProtectionType.completeUntilFirstUserAuthentication],
+                [.protectionKey: FileProtectionType.complete],
                 ofItemAtPath: cacheDirectory.path
             )
         } catch {

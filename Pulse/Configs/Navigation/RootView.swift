@@ -17,6 +17,7 @@ struct RootView: View {
     let serviceLocator: ServiceLocator
 
     @Environment(\.accessibilityReduceMotion) private var reduceMotion
+    @Environment(\.scenePhase) private var scenePhase
 
     var body: some View {
         ZStack {
@@ -42,10 +43,42 @@ struct RootView: View {
             if lockManager.isLocked, case .authenticated = authManager.authState {
                 AppLockOverlayView()
             }
+
+            // Privacy overlay for the app-switcher snapshot. iOS captures the
+            // window image immediately after `sceneWillResignActive`, so we hide
+            // content the moment the scene leaves the active phase. Skipped
+            // during biometry prompts (which also flip the phase to `.inactive`)
+            // so users don't see a black flash mid-Face-ID — `isAuthenticating`
+            // is true for that whole window.
+            if shouldShowPrivacyOverlay {
+                privacyOverlay
+                    .transition(.identity) // no fade — must be instant before snapshot
+            }
         }
         .environment(\.locale, appLocalization.locale)
         .preferredColorScheme(themeManager.colorScheme)
         .animation(reduceMotion ? nil : .easeInOut(duration: 0.3), value: authManager.authState)
+    }
+
+    private var shouldShowPrivacyOverlay: Bool {
+        guard case .authenticated = authManager.authState else { return false }
+        guard scenePhase != .active else { return false }
+        // The lock overlay already covers content while locked.
+        if lockManager.isLocked { return false }
+        // Don't flash during biometry prompts; those flip scenePhase but we
+        // want the user to see Face ID land on the actual UI.
+        if lockManager.isAuthenticating { return false }
+        return true
+    }
+
+    private var privacyOverlay: some View {
+        ZStack {
+            Color.black.ignoresSafeArea()
+            Image(systemName: "lock.fill")
+                .font(.system(size: 64))
+                .foregroundStyle(.white.opacity(0.4))
+                .accessibilityHidden(true)
+        }
     }
 
     private var loadingView: some View {
