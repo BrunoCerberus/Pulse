@@ -67,8 +67,8 @@ struct NewsAPITests {
         #expect(!path.contains("country="))
     }
 
-    @Test("All endpoints include API key")
-    func allEndpointsIncludeApiKey() {
+    @Test("API key travels in X-Api-Key header, not query string")
+    func apiKeyInHeaderNotQuery() throws {
         let cases: [NewsAPI] = [
             .topHeadlines(country: "us", page: 1),
             .topHeadlinesByCategory(category: .technology, country: "us", page: 1),
@@ -77,7 +77,13 @@ struct NewsAPITests {
         ]
 
         for api in cases {
-            #expect(api.path.contains("apiKey="))
+            // Query string must NOT contain the key — it would leak to logs.
+            #expect(!api.path.contains("apiKey="))
+            // Header carrier is non-nil and encodes as `X-Api-Key`.
+            let header = try #require(api.header)
+            let data = try JSONEncoder().encode(header)
+            let dict = try #require(try JSONSerialization.jsonObject(with: data) as? [String: String])
+            #expect(dict["X-Api-Key"] != nil)
         }
     }
 
@@ -95,11 +101,11 @@ struct NewsAPITests {
         }
     }
 
-    @Test("All cases return nil task and header")
+    @Test("All cases return nil task; header carries API key")
     func allCasesReturnNilTaskAndHeader() {
         let api = NewsAPI.topHeadlines(country: "us", page: 1)
         #expect(api.task == nil)
-        #expect(api.header == nil)
+        #expect(api.header != nil)
     }
 
     @Test("Base URL is NewsAPI")

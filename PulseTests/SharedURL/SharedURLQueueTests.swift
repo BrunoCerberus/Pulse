@@ -138,6 +138,92 @@ struct SharedURLQueueTests {
         #expect(snapshot.first?.url == "https://example.com/\(overflow)")
         #expect(snapshot.last?.url == "https://example.com/\(total - 1)")
     }
+
+    // MARK: - Scheme / length validation
+
+    @Test("Enqueue rejects javascript: scheme")
+    func enqueueRejectsJavascriptScheme() {
+        let item = SharedURLItem(url: "javascript:alert(1)", sharedAt: Date())
+
+        let success = sut.enqueue(item)
+
+        #expect(success == false)
+        #expect(sut.peekAll().isEmpty)
+    }
+
+    @Test("Enqueue rejects data: scheme")
+    func enqueueRejectsDataScheme() {
+        let item = SharedURLItem(url: "data:text/html,<script>alert(1)</script>", sharedAt: Date())
+
+        let success = sut.enqueue(item)
+
+        #expect(success == false)
+        #expect(sut.peekAll().isEmpty)
+    }
+
+    @Test("Enqueue rejects file: scheme")
+    func enqueueRejectsFileScheme() {
+        let item = SharedURLItem(url: "file:///etc/passwd", sharedAt: Date())
+
+        let success = sut.enqueue(item)
+
+        #expect(success == false)
+        #expect(sut.peekAll().isEmpty)
+    }
+
+    @Test("Enqueue rejects custom scheme")
+    func enqueueRejectsCustomScheme() {
+        let item = SharedURLItem(url: "pulse://settings", sharedAt: Date())
+
+        let success = sut.enqueue(item)
+
+        #expect(success == false)
+        #expect(sut.peekAll().isEmpty)
+    }
+
+    @Test("Enqueue rejects URL longer than maxURLLength")
+    func enqueueRejectsOversizedURL() {
+        let longPath = String(repeating: "a", count: SharedURLQueue.maxURLLength + 1)
+        let item = SharedURLItem(url: "https://example.com/\(longPath)", sharedAt: Date())
+
+        let success = sut.enqueue(item)
+
+        #expect(success == false)
+        #expect(sut.peekAll().isEmpty)
+    }
+
+    @Test("Enqueue rejects empty URL string")
+    func enqueueRejectsEmptyURL() {
+        let item = SharedURLItem(url: "", sharedAt: Date())
+
+        let success = sut.enqueue(item)
+
+        #expect(success == false)
+        #expect(sut.peekAll().isEmpty)
+    }
+
+    @Test("Enqueue accepts http URL")
+    func enqueueAcceptsHTTP() {
+        let item = SharedURLItem(url: "http://example.com/article", sharedAt: Date())
+
+        let success = sut.enqueue(item)
+
+        #expect(success == true)
+        #expect(sut.peekAll().count == 1)
+    }
+
+    @Test("isAcceptable static helper matches enqueue rules")
+    func isAcceptableMatchesEnqueue() {
+        #expect(SharedURLQueue.isAcceptable(urlString: "https://example.com") == true)
+        #expect(SharedURLQueue.isAcceptable(urlString: "http://example.com") == true)
+        #expect(SharedURLQueue.isAcceptable(urlString: "javascript:alert(1)") == false)
+        #expect(SharedURLQueue.isAcceptable(urlString: "data:,foo") == false)
+        #expect(SharedURLQueue.isAcceptable(urlString: "file:///etc") == false)
+        #expect(SharedURLQueue.isAcceptable(urlString: "pulse://x") == false)
+        #expect(SharedURLQueue.isAcceptable(urlString: "") == false)
+        let oversized = "https://example.com/" + String(repeating: "a", count: SharedURLQueue.maxURLLength)
+        #expect(SharedURLQueue.isAcceptable(urlString: oversized) == false)
+    }
 }
 
 private extension SharedURLQueue {

@@ -326,6 +326,12 @@ extension LiveAuthService: ASAuthorizationControllerDelegate {
             return
         }
 
+        // Fraud signal — `.unsupported` is rare (sandbox/test accounts). We log
+        // for risk rather than block; Firebase validates `idTokenString` server-side.
+        if appleCredential.realUserStatus == .unsupported {
+            Logger.shared.service("Apple sign-in realUserStatus=unsupported", level: .warning)
+        }
+
         let credential = OAuthProvider.appleCredential(
             withIDToken: idTokenString,
             rawNonce: nonce,
@@ -369,30 +375,5 @@ extension LiveAuthService: ASAuthorizationControllerDelegate {
     private func cleanupAppleSignInState() {
         currentNonce = nil
         appleSignInContinuation = nil
-    }
-}
-
-// MARK: - Firebase User Extension
-
-private extension FirebaseAuth.User {
-    func toAuthUser() -> AuthUser? {
-        let provider: AuthProvider
-        if providerData.contains(where: { $0.providerID == "google.com" }) {
-            provider = .google
-        } else if providerData.contains(where: { $0.providerID == "apple.com" }) {
-            provider = .apple
-        } else {
-            let providerIDs = providerData.map(\.providerID).joined(separator: ", ")
-            Logger.shared.service("Unknown auth provider(s): \(providerIDs), defaulting to .google", level: .warning)
-            provider = .google
-        }
-
-        return AuthUser(
-            uid: uid,
-            email: email,
-            displayName: displayName,
-            photoURL: photoURL,
-            provider: provider
-        )
     }
 }

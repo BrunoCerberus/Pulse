@@ -340,4 +340,55 @@ struct DeeplinkRouterTests {
 
         #expect(importService.processCallCount == initialCount + 1)
     }
+
+    // MARK: - App Lock Gate Tests
+
+    @Test("Routing while App Lock is locked does not navigate")
+    func routeWhileLockedDoesNotNavigate() {
+        // Configure AppLockManager into a locked state.
+        let lockManager = AppLockManager.shared
+        let mockService = MockAppLockService()
+        mockService.isEnabled = true
+        lockManager.configureForTesting(with: mockService)
+        lockManager.handleSceneDidEnterBackground()
+        #expect(lockManager.isLocked == true)
+
+        sut.setCoordinator(coordinator)
+        coordinator.selectedTab = .search
+
+        // The router should hold the deeplink rather than route it.
+        sut.route(deeplink: .home)
+
+        #expect(coordinator.selectedTab == .search)
+
+        // Reset for subsequent tests in the suite.
+        lockManager.configureForTesting(with: MockAppLockService())
+    }
+
+    @Test("Queued deeplink is flushed when App Lock unlocks")
+    func queuedDeeplinkFlushedOnUnlock() async throws {
+        let lockManager = AppLockManager.shared
+        let mockService = MockAppLockService()
+        mockService.isEnabled = true
+        lockManager.configureForTesting(with: mockService)
+        lockManager.handleSceneDidEnterBackground()
+        #expect(lockManager.isLocked == true)
+
+        // Use a fresh router so the in-test state of AppLockManager is observed
+        // from `init` onwards (subscriber binds in `setupObservers`).
+        let newRouter = DeeplinkRouter()
+        newRouter.setCoordinator(coordinator)
+        coordinator.selectedTab = .search
+
+        newRouter.route(deeplink: .home)
+        try await waitForStateUpdate()
+        #expect(coordinator.selectedTab == .search)
+
+        // Unlock — the subscriber should flush the queued deeplink.
+        lockManager.configureForTesting(with: MockAppLockService())
+        let routed = await waitForCondition(timeout: 3_000_000_000) { @MainActor [coordinator] in
+            coordinator.selectedTab == .home
+        }
+        #expect(routed)
+    }
 }

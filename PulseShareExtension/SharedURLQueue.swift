@@ -36,6 +36,17 @@ struct SharedURLQueue: @unchecked Sendable {
     /// are dropped (FIFO eviction).
     static let maxQueueSize = 50
 
+    /// Hard cap on the length of any single URL string accepted into the queue.
+    /// 2048 chars covers every practical web URL while bounding `UserDefaults`
+    /// memory pressure and serialization cost. URLs longer than this are rejected
+    /// rather than truncated — truncation would silently corrupt the link.
+    static let maxURLLength = 2048
+
+    /// Schemes accepted by `enqueue`. Anything else (`javascript:`, `data:`,
+    /// `file:`, custom schemes) is rejected at the queue boundary so a malicious
+    /// or buggy producer can't smuggle non-web URLs to the main app.
+    static let allowedSchemes: Set<String> = ["http", "https"]
+
     /// Backing defaults store. Optional to allow safe handling of a
     /// missing/misconfigured App Group at runtime.
     let defaults: UserDefaults?
@@ -46,20 +57,37 @@ struct SharedURLQueue: @unchecked Sendable {
 
     /// Append an item to the tail of the queue.
     ///
-    /// If the queue would exceed `maxQueueSize` after the append, the oldest entries are
-    /// dropped first (FIFO eviction). This protects App Group `UserDefaults` from
-    /// unbounded growth when the main app is not yet draining the queue.
+    /// Rejects items whose URL string exceeds `maxURLLength`, has an
+    /// unparseable URL, or uses a scheme outside `allowedSchemes`.
+    /// If the queue would exceed `maxQueueSize` after the append, the oldest
+    /// entries are dropped (FIFO eviction).
     ///
-    /// - Returns: `true` if persistence succeeded, `false` otherwise.
+    /// - Returns: `true` if persistence succeeded, `false` if the item was
+    ///   rejected, the App Group is unavailable, or the write failed.
     @discardableResult
     func enqueue(_ item: SharedURLItem) -> Bool {
         guard defaults != nil else { return false }
+        guard Self.isAcceptable(urlString: item.url) else { return false }
         var current = readQueue()
         current.append(item)
         if current.count > Self.maxQueueSize {
             current.removeFirst(current.count - Self.maxQueueSize)
         }
         return writeQueue(current)
+    }
+
+    /// Validates that a URL string is short enough, parseable, and uses an
+    /// allow-listed scheme. Exposed at file scope so the producer side
+    /// (`ShareViewController`) and consumer side (`LiveSharedURLImportService`)
+    /// can apply the same rule for defense in depth.
+    static func isAcceptable(urlString: String) -> Bool {
+        guard !urlString.isEmpty,
+              urlString.count <= maxURLLength,
+              let url = URL(string: urlString),
+              let scheme = url.scheme?.lowercased(),
+              allowedSchemes.contains(scheme)
+        else { return false }
+        return true
     }
 
     /// Returns all queued items in FIFO order without removing them.

@@ -17,7 +17,10 @@ final class AppLockManager: ObservableObject {
     @Published var showFaceIDPrompt = false
 
     /// Guards against re-locking during biometric dialog lifecycle events.
-    private(set) var isAuthenticating = false
+    /// Published so SwiftUI views (e.g. `RootView`'s app-switcher privacy
+    /// overlay) can react to the value without relying on incidental
+    /// re-renders from other published properties.
+    @Published private(set) var isAuthenticating = false
 
     private var appLockService: AppLockService?
 

@@ -243,8 +243,23 @@ final class SettingsViewModel: CombineViewModel, ObservableObject {
         themeManager.useSystemTheme = true
         themeManager.isDarkMode = false
 
-        // 7. Clear widget shared data
-        UserDefaults(suiteName: "group.com.bruno.Pulse-News")?.removeObject(forKey: "shared_articles")
+        // 7. Clear widget shared data and any URLs queued by the Share Extension.
+        let appGroupDefaults = UserDefaults(suiteName: "group.com.bruno.Pulse-News")
+        appGroupDefaults?.removeObject(forKey: "shared_articles")
+        appGroupDefaults?.removeObject(forKey: SharedURLQueue.queueKey)
+
+        // 8. Wipe every Keychain item this app uses. `SignOutCleanup` deletes
+        //    every `kSecAttrService` entry directly so we don't depend on the
+        //    per-key API knowing which keys exist.
+        SignOutCleanup.wipeKeychain(services: [
+            LiveAppLockService.keychainService,
+            APIKeysProvider.keychainService,
+        ])
+
+        // 9. Best-effort: delete the user's private CloudKit record zone so a
+        //    reinstall on the same iCloud account doesn't restore prior bookmarks
+        //    / reading history. Fire-and-forget; failures only log.
+        SignOutCleanup.deletePrivateCloudKitZones(LiveStorageService.cloudKitContainerIdentifier)
 
         Logger.shared.service("Cleared all local user data", level: .info)
     }

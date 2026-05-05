@@ -56,6 +56,21 @@ final class DeeplinkRouter {
                 }
             }
             .store(in: &cancellables)
+
+        // Flush any queued deeplink the moment App Lock is unlocked. Quick
+        // Actions, push payloads, and `pulse://` launches that arrive while
+        // the app is locked are held in `queuedDeeplink` and routed only
+        // after the user authenticates — so the lock screen stays the only
+        // visible surface until biometry / passcode succeeds.
+        AppLockManager.shared.$isLocked
+            .removeDuplicates()
+            .sink { [weak self] isLocked in
+                guard let self, !isLocked else { return }
+                Task { @MainActor in
+                    self.processQueuedDeeplink()
+                }
+            }
+            .store(in: &cancellables)
     }
 
     /// Processes any queued deeplink that was received before coordinator was available.
@@ -66,8 +81,22 @@ final class DeeplinkRouter {
     }
 
     /// Routes a deeplink to the appropriate navigation action.
+    ///
+    /// Acts as a security gate: if App Lock is engaged the deeplink is held
+    /// until the user authenticates, so a Quick Action / push notification /
+    /// `pulse://` launch can never reveal its target screen behind the lock
+    /// overlay. Real routing lives in `performRoute(deeplink:)`.
+    ///
     /// - Parameter deeplink: The deeplink to route
     func route(deeplink: Deeplink) {
+        if AppLockManager.shared.isLocked {
+            queuedDeeplink = deeplink
+            return
+        }
+        performRoute(deeplink: deeplink)
+    }
+
+    private func performRoute(deeplink: Deeplink) {
         guard let coordinator else {
             // Queue the deeplink for later processing
             queuedDeeplink = deeplink
