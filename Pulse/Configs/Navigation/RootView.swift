@@ -61,24 +61,44 @@ struct RootView: View {
     }
 
     private var shouldShowPrivacyOverlay: Bool {
-        // Only users who explicitly enabled App Lock opted into privacy. Without
-        // this gate, every notification banner / Control Center pull / Share
-        // Sheet would flash a black overlay over the article — `scenePhase`
-        // goes `.inactive` for many transient interactions, not just the
-        // app-switcher snapshot. Restricting to opted-in users keeps the
-        // protection where it matters and avoids surprising the rest.
-        //
-        // We deliberately keep the opaque overlay visible *even when locked*:
-        // `AppLockOverlayView` uses `.ultraThickMaterial`, which is translucent,
-        // so the article / history underneath would still bleed through into
-        // the app-switcher snapshot. Layering the opaque overlay on top of
-        // `AppLockOverlayView` for non-active scenes seals that gap.
-        guard lockManager.isAppLockEnabled else { return false }
-        guard case .authenticated = authManager.authState else { return false }
+        Self.shouldShowPrivacyOverlay(
+            authState: authManager.authState,
+            scenePhase: scenePhase,
+            isAppLockEnabled: lockManager.isAppLockEnabled,
+            isAuthenticating: lockManager.isAuthenticating
+        )
+    }
+
+    /// Pure-function decision for the app-switcher privacy overlay.
+    ///
+    /// Extracted from the SwiftUI `body` so it can be unit-tested without
+    /// driving real singletons (`AppLockManager.shared`, `AuthenticationManager.shared`)
+    /// or the `Environment(\.scenePhase)` machinery.
+    ///
+    /// Rules:
+    /// - Only users who explicitly enabled App Lock opted into privacy.
+    ///   Without this gate, every notification banner / Control Center pull /
+    ///   Share Sheet would flash a black overlay over the article —
+    ///   `scenePhase` goes `.inactive` for many transient interactions, not
+    ///   just the app-switcher snapshot.
+    /// - We deliberately keep the opaque overlay visible *even when locked*:
+    ///   `AppLockOverlayView` uses `.ultraThickMaterial`, which is translucent,
+    ///   so the article / history underneath would still bleed through into
+    ///   the snapshot. Layering the opaque overlay on top of the lock overlay
+    ///   for non-active scenes seals that gap.
+    /// - Suppress during biometry prompts; those flip `scenePhase` but we
+    ///   want the user to see Face ID land on the actual UI rather than a
+    ///   black flash.
+    static func shouldShowPrivacyOverlay(
+        authState: AuthenticationManager.AuthState,
+        scenePhase: ScenePhase,
+        isAppLockEnabled: Bool,
+        isAuthenticating: Bool
+    ) -> Bool {
+        guard isAppLockEnabled else { return false }
+        guard case .authenticated = authState else { return false }
         guard scenePhase != .active else { return false }
-        // Don't flash during biometry prompts; those flip scenePhase but we
-        // want the user to see Face ID land on the actual UI.
-        if lockManager.isAuthenticating { return false }
+        if isAuthenticating { return false }
         return true
     }
 
