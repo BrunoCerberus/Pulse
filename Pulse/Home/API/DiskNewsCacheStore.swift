@@ -48,14 +48,48 @@ final class DiskNewsCacheStore: NewsCacheStore {
             }
         }
 
-        // Set file protection so cache is encrypted at rest until first unlock
+        // Set file protection. The cache is only read while the app is foregrounded
+        // (no background sync, no widget reads), so `.complete` is safe and gives the
+        // strongest at-rest protection — files are unreadable while the device is locked.
+        //
+        // The directory attribute applies to *new* files written here (and to the
+        // directory itself). Files already on disk from a prior version retain their
+        // original protection class until rewritten — so we also walk existing
+        // entries and re-apply the attribute one-time, making the upgrade transparent.
+        applyCompleteProtection(to: cacheDirectory)
+    }
+
+    /// Set `.complete` protection on a directory and every file already inside it.
+    /// Best-effort — failures are logged at `.warning` so a lone unwritable file
+    /// doesn't prevent the cache from operating.
+    private func applyCompleteProtection(to directory: URL) {
         do {
             try fileManager.setAttributes(
-                [.protectionKey: FileProtectionType.completeUntilFirstUserAuthentication],
-                ofItemAtPath: cacheDirectory.path
+                [.protectionKey: FileProtectionType.complete],
+                ofItemAtPath: directory.path
             )
         } catch {
             Logger.shared.service("Failed to set file protection on cache directory: \(error)", level: .warning)
+        }
+
+        guard let contents = try? fileManager.contentsOfDirectory(
+            at: directory,
+            includingPropertiesForKeys: nil,
+            options: [.skipsHiddenFiles, .skipsSubdirectoryDescendants]
+        ) else { return }
+
+        for url in contents {
+            do {
+                try fileManager.setAttributes(
+                    [.protectionKey: FileProtectionType.complete],
+                    ofItemAtPath: url.path
+                )
+            } catch {
+                Logger.shared.service(
+                    "Failed to upgrade file protection on \(url.lastPathComponent): \(error)",
+                    level: .warning
+                )
+            }
         }
     }
 

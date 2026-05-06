@@ -30,8 +30,10 @@ import Foundation
 enum APIKeysProvider {
     // MARK: - Constants
 
-    /// Keychain service identifier for API keys
-    private static let keychainService: String = "com.bruno.Pulse.APIKeys"
+    /// Keychain service identifier for API keys.
+    /// Exposed at module scope so `SettingsViewModel.clearAllUserData()` can wipe
+    /// every entry under this service on sign-out / account deletion.
+    static let keychainService: String = "com.bruno.Pulse.APIKeys"
 
     /// Key identifiers for keychain storage
     private static let newsAPIKeyKey: String = "NewsAPIKey"

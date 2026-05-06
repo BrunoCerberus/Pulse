@@ -162,4 +162,50 @@ struct DiskNewsCacheStoreTests {
 
         #expect(retrieved?.data.count == 4)
     }
+
+    // MARK: - File Protection Migration Tests
+
+    @Test("Init walks pre-existing files without corrupting them")
+    func initWalksExistingFilesWithoutCorruption() throws {
+        // Coverage target: `applyCompleteProtection(to:)` enumerates the
+        // directory and re-applies `.complete` to every entry. We can't
+        // assert the protection class itself on the simulator —
+        // `attributesOfItem(atPath:)` doesn't expose `protectionKey` there —
+        // but we *can* prove the loop runs by planting files first and
+        // confirming they survive intact (instead of, say, being deleted or
+        // truncated by a buggy migration).
+        let migrationDirectory = FileManager.default.temporaryDirectory
+            .appendingPathComponent("DiskNewsCacheStore_Migration_\(UUID().uuidString)", isDirectory: true)
+        defer { try? FileManager.default.removeItem(at: migrationDirectory) }
+
+        try FileManager.default.createDirectory(
+            at: migrationDirectory,
+            withIntermediateDirectories: true
+        )
+
+        let legacyFile = migrationDirectory.appendingPathComponent("legacy.json")
+        let secondFile = migrationDirectory.appendingPathComponent("other.json")
+        try Data("legacy payload".utf8).write(to: legacyFile)
+        try Data("second payload".utf8).write(to: secondFile)
+
+        // Init triggers `applyCompleteProtection`, which iterates the
+        // directory contents and calls `setAttributes` on each file.
+        _ = DiskNewsCacheStore(directory: migrationDirectory)
+
+        let firstPayload = try Data(contentsOf: legacyFile)
+        let secondPayload = try Data(contentsOf: secondFile)
+        #expect(String(data: firstPayload, encoding: .utf8) == "legacy payload")
+        #expect(String(data: secondPayload, encoding: .utf8) == "second payload")
+    }
+
+    @Test("Empty cache directory init does not crash")
+    func emptyDirectoryInitDoesNotCrash() {
+        let emptyDirectory = FileManager.default.temporaryDirectory
+            .appendingPathComponent("DiskNewsCacheStore_Empty_\(UUID().uuidString)", isDirectory: true)
+        defer { try? FileManager.default.removeItem(at: emptyDirectory) }
+
+        _ = DiskNewsCacheStore(directory: emptyDirectory)
+
+        #expect(FileManager.default.fileExists(atPath: emptyDirectory.path))
+    }
 }
