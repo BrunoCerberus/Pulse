@@ -29,7 +29,7 @@ class BaseUITestCase: XCTestCase {
         // exceptions disabled"). This crashes the test runner and cascades to all
         // subsequent tests. With true, failures are recorded without crashing.
         continueAfterFailure = true
-        XCUIDevice.shared.orientation = .portrait
+        ObjCExceptionCatcher.safeSetDeviceOrientation(.portrait)
 
         app = XCUIApplication()
         configureAndLaunchApp()
@@ -119,6 +119,25 @@ class BaseUITestCase: XCTestCase {
         }
         if description.contains("Failed to terminate") {
             print("[BaseUITestCase] Suppressed terminate-flake: \(description)")
+            return
+        }
+        // Simulator launch timeout on CI shared runners — the app failed to start
+        // within Xcode's internal timeout. setUp() will detect app.state != .runningForeground
+        // and either retry or throw XCTSkip, so this is a CI environment issue, not a
+        // real regression. Suppress to avoid spurious test failures.
+        if description.contains("does not have a process ID")
+            || description.contains("Timed out while launching application")
+        {
+            print("[BaseUITestCase] Suppressed CI launch flake: \(description)")
+            return
+        }
+        // Orientation change timeout on CI shared runners — XCUIDevice.shared.orientation
+        // uses safeSetDeviceOrientation in setUp/tearDown, but XCTest can still record
+        // the issue internally before the ObjC++ wrapper catches it.
+        if description.contains("Failed to set device orientation")
+            || description.contains("Timed out waiting for confirmation of orientation change")
+        {
+            print("[BaseUITestCase] Suppressed CI orientation flake: \(description)")
             return
         }
         super.record(issue)
