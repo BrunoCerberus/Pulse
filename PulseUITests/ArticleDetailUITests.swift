@@ -151,14 +151,27 @@ final class ArticleDetailUITests: BaseUITestCase {
         XCTAssertTrue(safeExists(backButtonAfterShare), "Navigation should still work after scrolling")
 
         // --- Back Navigation ---
-        // Use predicate-based wait for hittability with longer timeout for scroll settling
-        let hittablePredicate = NSPredicate(format: "isHittable == true")
-        let expectation = XCTNSPredicateExpectation(predicate: hittablePredicate, object: backButtonAfterShare)
-        let isHittable = XCTWaiter.wait(for: [expectation], timeout: 5) == .completed
+        // Poll for the back button to have a valid (non-zero) frame before tapping.
+        // Avoid XCTNSPredicateExpectation with isHittable — on Xcode 26 / iOS 26 shared
+        // CI runners the predicate evaluation internally calls activationPoint on a
+        // zero-frame element and XCTest records "Activation point invalid and no
+        // suggested hit points based on element frame" as a test failure *before* the
+        // expectation times out, even though we would fall back to safeSwipeLeftEdge.
+        // Manual polling with safeExists is safe because ObjCExceptionCatcher wraps the
+        // underlying .exists call in @try/@catch, preventing C++ exception crashes.
+        var backButtonIsReady = false
+        let backPollDeadline = Date().addingTimeInterval(5)
+        while Date() < backPollDeadline {
+            if safeExists(backButtonAfterShare) && !backButtonAfterShare.frame.isEmpty {
+                backButtonIsReady = true
+                break
+            }
+            RunLoop.current.run(until: Date().addingTimeInterval(0.5))
+        }
 
         // If button isn't hittable, use swipe-right gesture to navigate back (enabled via .enableSwipeBack())
-        if isHittable {
-            backButtonAfterShare.tap()
+        if backButtonIsReady {
+            ObjCExceptionCatcher.safeTap(backButtonAfterShare)
         } else {
             // Use coordinate-based left-edge swipe instead of app.swipeRight().
             // app.swipeRight() evaluates the full accessibility tree and hangs for 30+
