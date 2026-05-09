@@ -45,4 +45,14 @@ struct MockTopicExtractionServiceTests {
             _ = try await sut.extractTopics(title: "T", summary: nil)
         }
     }
+
+    @Test("Honors extractionDelay before returning")
+    func honorsExtractionDelay() async throws {
+        let sut = MockTopicExtractionService()
+        sut.extractionDelay = 0.05
+        let start = Date()
+        _ = try await sut.extractTopics(title: "T", summary: nil)
+        let elapsed = Date().timeIntervalSince(start)
+        #expect(elapsed >= 0.04)
+    }
 }

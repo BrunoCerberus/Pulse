@@ -151,4 +151,72 @@ struct ForYouSettingsDomainInteractorTests {
         }
         #expect(reloaded)
     }
+
+    @Test("Reloads on cloudSyncDidComplete notification")
+    func reloadsOnCloudSync() async throws {
+        let sut = ForYouSettingsDomainInteractor(serviceLocator: serviceLocator)
+        // Bring the interactor into a known empty state first.
+        sut.dispatch(action: .loadProfile)
+        _ = await waitForMainActorCondition { [sut] in
+            sut.currentState.isLoading == false
+        }
+        // Stage a topic that the next reload should surface.
+        try await mockProfile.upsert(
+            topicID: "post-sync", displayName: "Synced", weightDelta: 1,
+            source: .extracted, category: nil
+        )
+        // Drop the notification we just received from the mock's upsert
+        // (it already triggered a reload). Then post a fresh CloudKit
+        // notification and assert the reload still happens.
+        try await waitForStateUpdate(duration: TestWaitDuration.short)
+        NotificationCenter.default.post(name: .cloudSyncDidComplete, object: nil)
+        let reloaded = await waitForMainActorCondition { [sut] in
+            sut.currentState.topics.contains { $0.topicID == "post-sync" }
+        }
+        #expect(reloaded)
+    }
+
+    @Test("removeTopic surfaces service errors")
+    func removeTopicSurfacesError() async throws {
+        struct Boom: Error, LocalizedError {
+            var errorDescription: String? {
+                "remove failed"
+            }
+        }
+        try await mockProfile.upsert(
+            topicID: "ai", displayName: "AI", weightDelta: 1,
+            source: .seed, category: nil
+        )
+        mockProfile.removeError = Boom()
+        let sut = ForYouSettingsDomainInteractor(serviceLocator: serviceLocator)
+        sut.dispatch(action: .loadProfile)
+        _ = await waitForMainActorCondition { [sut] in
+            !sut.currentState.topics.isEmpty
+        }
+
+        sut.dispatch(action: .removeTopic(topicID: "ai"))
+        let errored = await waitForMainActorCondition { [sut] in
+            sut.currentState.error != nil
+        }
+        #expect(errored)
+    }
+
+    @Test("confirmReset surfaces service errors")
+    func confirmResetSurfacesError() async {
+        struct Boom: Error, LocalizedError {
+            var errorDescription: String? {
+                "reset failed"
+            }
+        }
+        mockProfile.resetProfileError = Boom()
+        let sut = ForYouSettingsDomainInteractor(serviceLocator: serviceLocator)
+
+        sut.dispatch(action: .requestReset)
+        sut.dispatch(action: .confirmReset)
+        let errored = await waitForMainActorCondition { [sut] in
+            sut.currentState.error != nil
+        }
+        #expect(errored)
+        #expect(sut.currentState.showResetConfirmation == false)
+    }
 }

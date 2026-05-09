@@ -14,6 +14,7 @@ final class MockInterestProfileService: InterestProfileService, @unchecked Senda
     var fetchProfileError: Error?
     var upsertError: Error?
     var removeError: Error?
+    var resetProfileError: Error?
 
     /// Snapshot of all stored topics, sorted by weight descending.
     var topics: [InterestTopic] {
@@ -79,6 +80,9 @@ final class MockInterestProfileService: InterestProfileService, @unchecked Senda
     }
 
     func resetProfile() async throws {
+        if let resetProfileError {
+            throw resetProfileError
+        }
         storage = [:]
         broadcastChange()
     }

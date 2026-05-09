@@ -1,3 +1,4 @@
+import Combine
 import Foundation
 @testable import Pulse
 import Testing
@@ -72,5 +73,66 @@ struct MockInterestProfileServiceTests {
         try await sut.upsert(topicID: "small", displayName: "S", weightDelta: 1, source: .seed, category: nil)
         try await sut.upsert(topicID: "big", displayName: "B", weightDelta: 5, source: .seed, category: nil)
         #expect(sut.topics.map(\.topicID) == ["big", "small"])
+    }
+
+    @Test("upsertError propagates")
+    func upsertSurfacesError() async {
+        struct Boom: Error {}
+        let sut = MockInterestProfileService()
+        sut.upsertError = Boom()
+
+        var thrown: Error?
+        do {
+            try await sut.upsert(topicID: "a", displayName: "A", weightDelta: 1, source: .seed, category: nil)
+        } catch {
+            thrown = error
+        }
+        #expect(thrown is Boom)
+    }
+
+    @Test("removeError propagates")
+    func removeSurfacesError() async {
+        struct Boom: Error {}
+        let sut = MockInterestProfileService()
+        sut.removeError = Boom()
+
+        var thrown: Error?
+        do {
+            try await sut.remove(topicID: "anything")
+        } catch {
+            thrown = error
+        }
+        #expect(thrown is Boom)
+    }
+
+    @Test("resetProfileError propagates")
+    func resetSurfacesError() async {
+        struct Boom: Error {}
+        let sut = MockInterestProfileService()
+        sut.resetProfileError = Boom()
+
+        var thrown: Error?
+        do {
+            try await sut.resetProfile()
+        } catch {
+            thrown = error
+        }
+        #expect(thrown is Boom)
+    }
+
+    @Test("profileChangedPublisher emits on every mutation")
+    func profileChangedPublisherEmits() async throws {
+        let sut = MockInterestProfileService()
+        var hits = 0
+        let cancellable = sut.profileChangedPublisher.sink { _ in
+            hits += 1
+        }
+        defer { cancellable.cancel() }
+
+        try await sut.upsert(topicID: "a", displayName: "A", weightDelta: 1, source: .seed, category: nil)
+        try await sut.remove(topicID: "a")
+        try await sut.resetProfile()
+        try await Task.sleep(nanoseconds: 50_000_000)
+        #expect(hits >= 3)
     }
 }

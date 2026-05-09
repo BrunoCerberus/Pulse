@@ -71,4 +71,19 @@ struct MockEngagementEventsServiceTests {
         try await sut.clearAll()
         #expect(sut.recordedEvents.isEmpty)
     }
+
+    @Test("markProcessedError surfaces injected errors")
+    func markProcessedSurfacesError() async {
+        struct Boom: Error {}
+        let sut = MockEngagementEventsService()
+        sut.markProcessedError = Boom()
+
+        var thrown: Error?
+        do {
+            try await sut.markProcessed([UUID()])
+        } catch {
+            thrown = error
+        }
+        #expect(thrown is Boom)
+    }
 }
