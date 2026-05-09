@@ -103,7 +103,7 @@ struct ForYouViewModelTests {
         #expect(sut.viewState.cards.isEmpty)
     }
 
-    @Test("onFeatureFlagChanged event toggles visibility live")
+    @Test("Carousel becomes visible when Remote Config flips on at runtime")
     func featureFlagChangedAtRuntime() async throws {
         mockRemoteConfig.forYouEnabledValue = false
         mockForYou.scoredArticlesResult = .success([makeScoredArticle(id: "a", score: 0.9)])
@@ -112,10 +112,10 @@ struct ForYouViewModelTests {
         try await waitForStateUpdate(duration: TestWaitDuration.long)
         #expect(sut.viewState.isVisible == false)
 
-        // Flip the flag at runtime.
-        sut.handle(event: .onFeatureFlagChanged(true))
-        // Pool needs a re-score to refill (current implementation clears
-        // when flag goes off). Re-dispatching the pool re-scores.
+        // Flip the live Remote Config flag (simulating the async fetch
+        // finishing) — the next scoring pass should re-read it.
+        mockRemoteConfig.forYouEnabledValue = true
+        // Trigger a re-score by dispatching a pool change.
         sut.handle(event: .onPoolChanged([makeArticle(id: "a")]))
 
         let nowVisible = await waitForMainActorCondition { [sut] in

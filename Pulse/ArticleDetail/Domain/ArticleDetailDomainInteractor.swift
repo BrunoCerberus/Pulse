@@ -154,6 +154,10 @@ final class ArticleDetailDomainInteractor: CombineInteractor {
     /// event after the user has had the article open for 30 seconds. The
     /// task lives in `backgroundTasks` and is cancelled on `deinit`, so
     /// closing the article before the threshold elapses produces no signal.
+    ///
+    /// Re-reads `isForYouEnabled` *after* the sleep so a Remote Config
+    /// kill-switch flip mid-session genuinely stops new captures — not just
+    /// captures scheduled after the flip.
     private func scheduleRead30sCapture() {
         guard !hasScheduledRead30sCapture,
               isForYouEnabled,
@@ -169,7 +173,12 @@ final class ArticleDetailDomainInteractor: CombineInteractor {
             } catch {
                 return
             }
-            guard self != nil, !Task.isCancelled else { return }
+            // Re-check on main actor: the 30s window is long enough for the
+            // Remote Config kill-switch to flip from on → off.
+            let stillEnabled = await MainActor.run { [weak self] in
+                self?.isForYouEnabled ?? false
+            }
+            guard !Task.isCancelled, stillEnabled else { return }
             await service.value.record(event)
         }
         trackBackgroundTask(task)

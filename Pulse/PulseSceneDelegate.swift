@@ -388,7 +388,10 @@ private extension PulseSceneDelegate {
         if let profileService = try? serviceLocator.retrieve(InterestProfileService.self) {
             serviceLocator.register(
                 ForYouService.self,
-                instance: LiveForYouService(profileService: profileService)
+                instance: LiveForYouService(
+                    profileService: profileService,
+                    storageService: storageService
+                )
             )
         }
     }

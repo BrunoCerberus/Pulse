@@ -134,4 +134,62 @@ struct LiveForYouServiceTests {
         let sut = LiveForYouService(profileService: profileService)
         #expect(sut.explanation(for: []).isEmpty)
     }
+
+    // MARK: - Read / bookmarked filter
+
+    @Test("Articles already in reading history are excluded from results")
+    func excludesReadArticles() async throws {
+        let profileService = MockInterestProfileService()
+        try await profileService.upsert(
+            topicID: "technology", displayName: "Technology",
+            weightDelta: 1, source: .seed, category: "technology"
+        )
+        let storageService = MockStorageService()
+        let alreadyRead = makeArticle(id: "read", category: .technology)
+        let unread = makeArticle(id: "unread", category: .technology)
+        try await storageService.markArticleAsRead(alreadyRead)
+
+        let sut = LiveForYouService(
+            profileService: profileService,
+            storageService: storageService
+        )
+
+        let result = try await sut.scoredArticles(from: [alreadyRead, unread], topN: 5)
+        #expect(result.map(\.article.id) == ["unread"])
+    }
+
+    @Test("Articles already bookmarked are excluded from results")
+    func excludesBookmarkedArticles() async throws {
+        let profileService = MockInterestProfileService()
+        try await profileService.upsert(
+            topicID: "technology", displayName: "Technology",
+            weightDelta: 1, source: .seed, category: "technology"
+        )
+        let storageService = MockStorageService()
+        let bookmarked = makeArticle(id: "saved", category: .technology)
+        let fresh = makeArticle(id: "fresh", category: .technology)
+        try await storageService.saveArticle(bookmarked)
+
+        let sut = LiveForYouService(
+            profileService: profileService,
+            storageService: storageService
+        )
+
+        let result = try await sut.scoredArticles(from: [bookmarked, fresh], topN: 5)
+        #expect(result.map(\.article.id) == ["fresh"])
+    }
+
+    @Test("Without storageService, filtering is a no-op")
+    func noFilteringWithoutStorageService() async throws {
+        let profileService = MockInterestProfileService()
+        try await profileService.upsert(
+            topicID: "technology", displayName: "Technology",
+            weightDelta: 1, source: .seed, category: "technology"
+        )
+        let sut = LiveForYouService(profileService: profileService)
+
+        let pool = [makeArticle(id: "a", category: .technology)]
+        let result = try await sut.scoredArticles(from: pool, topN: 5)
+        #expect(result.count == 1)
+    }
 }

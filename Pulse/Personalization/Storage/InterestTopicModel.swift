@@ -23,6 +23,16 @@ final class InterestTopicModel {
     var lastReinforcedAt: Date = Date()
     var createdAt: Date = Date()
     /// `InterestTopic.Source.rawValue`.
+    ///
+    /// Defaults to `.extracted` because that's the most common provenance
+    /// by volume (LLM-extracted tags accumulate per article read), so a row
+    /// that loses its `sourceRaw` value across a CloudKit migration or
+    /// schema bump is statistically most likely to have *been* an extracted
+    /// row. The trade-off: a `.seed` row that loses `sourceRaw` would mis-
+    /// label as `.extracted` in the Settings list. We accept that risk in
+    /// favour of "label something sensible" over "leave it nil and surface
+    /// 'Unknown source' to users." If the schema ever evolves to add a new
+    /// `Source` case, give it precedence over this default.
     var sourceRaw: String = InterestTopic.Source.extracted.rawValue
 
     init(from topic: InterestTopic) {

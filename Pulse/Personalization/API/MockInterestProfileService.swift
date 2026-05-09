@@ -42,11 +42,15 @@ final class MockInterestProfileService: InterestProfileService, @unchecked Senda
             throw upsertError
         }
         if let existing = storage[topicID] {
+            // Mirror Live's preserve-after-first-insert semantics: keep the
+            // original displayName / source / createdAt; only top up if
+            // missing.
+            let preservedName = existing.displayName.isEmpty ? displayName : existing.displayName
             storage[topicID] = InterestTopic(
                 topicID: existing.topicID,
-                displayName: displayName,
+                displayName: preservedName,
                 weight: existing.weight + weightDelta,
-                category: category ?? existing.category,
+                category: existing.category ?? category,
                 lastReinforcedAt: .now,
                 createdAt: existing.createdAt,
                 source: existing.source

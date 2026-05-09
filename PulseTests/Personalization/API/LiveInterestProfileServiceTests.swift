@@ -72,10 +72,26 @@ struct LiveInterestProfileServiceTests {
         #expect(profile.first?.createdAt == originalCreatedAt)
     }
 
-    @Test("Upsert refreshes displayName on every call")
-    func upsertRefreshesDisplayName() async throws {
+    @Test("Upsert preserves the original displayName across re-upserts")
+    func upsertPreservesDisplayName() async throws {
         try await sut.upsert(
             topicID: "ai", displayName: "AI",
+            weightDelta: 1.0, source: .seed, category: nil
+        )
+        try await sut.upsert(
+            topicID: "ai", displayName: "Artificial Intelligence",
+            weightDelta: 0.5, source: .extracted, category: nil
+        )
+        let profile = try await sut.fetchProfile()
+        // Original "AI" wins — onboarding labels shouldn't get flipped
+        // every drain by an LLM-derived display name.
+        #expect(profile.first?.displayName == "AI")
+    }
+
+    @Test("Upsert fills in displayName when the original was empty")
+    func upsertFillsEmptyDisplayName() async throws {
+        try await sut.upsert(
+            topicID: "ai", displayName: "",
             weightDelta: 1.0, source: .seed, category: nil
         )
         try await sut.upsert(

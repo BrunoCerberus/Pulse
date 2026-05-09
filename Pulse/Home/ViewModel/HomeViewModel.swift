@@ -56,9 +56,21 @@ final class HomeViewModel: CombineViewModel, ObservableObject {
             .assign(to: &$viewState)
 
         // Mirror the raw articles so consumers (For You carousel) don't
-        // have to round-trip through `ArticleViewItem`.
+        // have to round-trip through `ArticleViewItem`. Includes both
+        // headlines *and* breaking news (deduped by ID) so a top-of-feed
+        // breaking article that perfectly matches the user's interests can
+        // also surface in For You — otherwise breaking-only articles never
+        // get a chance to be re-ranked.
         interactor.statePublisher
-            .map { state in state.headlines }
+            .map { state -> [Article] in
+                var seen = Set<String>()
+                var combined: [Article] = []
+                combined.reserveCapacity(state.headlines.count + state.breakingNews.count)
+                for article in state.headlines + state.breakingNews where seen.insert(article.id).inserted {
+                    combined.append(article)
+                }
+                return combined
+            }
             .removeDuplicates()
             .receive(on: DispatchQueue.main)
             .assign(to: &$articlePool)

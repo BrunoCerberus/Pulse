@@ -52,9 +52,17 @@ final class LiveInterestProfileService: InterestProfileService {
 
         if let existing = try context.fetch(descriptor).first {
             existing.weight += weightDelta
-            existing.displayName = displayName
             existing.lastReinforcedAt = .now
-            if let category {
+            // Preserve original `displayName` and `source` after first insert
+            // (matches the protocol contract). Onboarding seeds rich names
+            // like "Artificial Intelligence"; later LLM upserts shouldn't
+            // flip the user-facing label every drain. We *do* fill in a
+            // missing displayName so a corrupt-or-empty seed still gets a
+            // sensible value.
+            if existing.displayName.isEmpty, !displayName.isEmpty {
+                existing.displayName = displayName
+            }
+            if let category, existing.category == nil {
                 existing.category = category
             }
         } else {

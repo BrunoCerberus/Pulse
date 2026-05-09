@@ -28,13 +28,18 @@ final class LiveTopicExtractionService: TopicExtractionService {
             config: .topicExtraction
         )
 
+        // Hard cap. `LLMInferenceConfig.topicExtraction.maxTokens = 80` is
+        // the real safeguard, but a non-conforming small model can ignore
+        // `maxTokens` on certain prompts (e.g., comma-only streams). Capping
+        // raw character length defends against runaway output regardless.
+        let rawCharacterCap = 1000
         var raw = ""
         for try await token in stream {
             raw.append(token)
             // Stop early once we have a likely-complete tag list. The
             // configured stop-sequence already covers `\n\n`, this is a
             // belt-and-suspenders early bail.
-            if raw.contains("\n\n") {
+            if raw.contains("\n\n") || raw.count > rawCharacterCap {
                 llmService.cancelGeneration()
                 break
             }

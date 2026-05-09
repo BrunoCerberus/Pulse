@@ -123,7 +123,12 @@ final class TopicExtractionDrainer {
             return
         }
 
-        var processedIDs: [UUID] = []
+        // Mark each event processed *inside* the loop, immediately after a
+        // successful `applyTags` (or a non-recoverable extraction error).
+        // Doing this per-event instead of batching at the end of the drain
+        // limits the double-count window: if `markProcessed` fails on one
+        // event, only that event's tags get re-applied on the next drain,
+        // not the whole batch's worth of weight.
         for event in pending {
             if Task.isCancelled { break }
             do {
@@ -132,9 +137,9 @@ final class TopicExtractionDrainer {
                     summary: event.articleSummary
                 )
                 await applyTags(tags, for: event, profile: profile)
-                processedIDs.append(event.id)
+                try? await engagement.value.markProcessed([event.id])
             } catch let error as LLMError where error == .memoryPressure {
-                // Stop the batch but DON'T mark anything processed —
+                // Stop the batch and DON'T mark anything processed —
                 // memory pressure is transient.
                 Logger.shared.service(
                     "TopicExtractionDrainer: memory pressure, stopping batch",
@@ -148,18 +153,7 @@ final class TopicExtractionDrainer {
                     "TopicExtractionDrainer: extraction failed for \(event.articleID): \(error)",
                     level: .debug
                 )
-                processedIDs.append(event.id)
-            }
-        }
-
-        if !processedIDs.isEmpty {
-            do {
-                try await engagement.value.markProcessed(processedIDs)
-            } catch {
-                Logger.shared.service(
-                    "TopicExtractionDrainer: markProcessed failed: \(error)",
-                    level: .warning
-                )
+                try? await engagement.value.markProcessed([event.id])
             }
         }
     }
