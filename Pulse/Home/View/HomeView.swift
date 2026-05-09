@@ -30,8 +30,9 @@ struct HomeView<R: HomeNavigationRouter>: View {
     @ObservedObject var viewModel: HomeViewModel
 
     /// ViewModel for the embedded "For You" personalization carousel.
-    /// Hidden until the user has accumulated profile signal *and* the
-    /// `for_you_enabled` Remote Config flag is on.
+    /// The carousel self-hides when there are no scored cards and no
+    /// scoring is in flight — i.e. cold-start users with no profile
+    /// signal yet won't see it.
     @ObservedObject var forYouViewModel: ForYouViewModel
 
     /// Namespace for matched geometry animation in category tabs
