@@ -13,6 +13,7 @@ final class OnboardingDomainInteractor: CombineInteractor {
     private var onboardingService: OnboardingService
     private let analyticsService: AnalyticsService?
     private let settingsService: SettingsService?
+    private let interestProfileService: InterestProfileService?
     private var loadedPreferences: UserPreferences?
     private var userHasTouchedTopics = false
 
@@ -28,6 +29,7 @@ final class OnboardingDomainInteractor: CombineInteractor {
         onboardingService = (try? serviceLocator.retrieve(OnboardingService.self)) ?? MockOnboardingService()
         analyticsService = try? serviceLocator.retrieve(AnalyticsService.self)
         settingsService = try? serviceLocator.retrieve(SettingsService.self)
+        interestProfileService = try? serviceLocator.retrieve(InterestProfileService.self)
 
         loadPreferences()
     }
@@ -112,6 +114,23 @@ final class OnboardingDomainInteractor: CombineInteractor {
         guard let settingsService else { return }
         // Preserve input-order stability by sorting by declaration order.
         let orderedTopics = NewsCategory.allCases.filter { topics.contains($0) }
+
+        // Seed the personalization profile alongside the user-preferences save.
+        // Best-effort and decoupled — onboarding should never block on profile
+        // seed failures (CloudKit hiccup, account not signed in to iCloud, etc.).
+        if let interestProfileService {
+            let service = UncheckedSendableBox(value: interestProfileService)
+            Task {
+                do {
+                    try await service.value.seedFromCategories(orderedTopics)
+                } catch {
+                    Logger.shared.service(
+                        "Failed to seed interest profile during onboarding: \(error)",
+                        level: .warning
+                    )
+                }
+            }
+        }
         // Re-fetch preferences before saving so we merge against the freshest
         // stored value. Without this, if "Get Started" fires before the initial
         // fetchPreferences() resolves (e.g. slow CloudKit cold read), we'd fall

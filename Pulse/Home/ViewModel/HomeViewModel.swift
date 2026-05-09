@@ -22,6 +22,11 @@ final class HomeViewModel: CombineViewModel, ObservableObject {
 
     @Published private(set) var viewState: HomeViewState = .initial
 
+    /// Raw `Article` pool surfaced separately from `viewState` so the
+    /// embedded For You carousel can score against the actual articles
+    /// (not their `ArticleViewItem` projections).
+    @Published private(set) var articlePool: [Article] = []
+
     private let interactor: HomeDomainInteractor
     private let reducer: HomeViewStateReducer
     private let eventMap: HomeEventActionMap
@@ -49,5 +54,13 @@ final class HomeViewModel: CombineViewModel, ObservableObject {
             .removeDuplicates()
             .receive(on: DispatchQueue.main)
             .assign(to: &$viewState)
+
+        // Mirror the raw articles so consumers (For You carousel) don't
+        // have to round-trip through `ArticleViewItem`.
+        interactor.statePublisher
+            .map { state in state.headlines }
+            .removeDuplicates()
+            .receive(on: DispatchQueue.main)
+            .assign(to: &$articlePool)
     }
 }

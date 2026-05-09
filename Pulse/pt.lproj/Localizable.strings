@@ -473,3 +473,37 @@
 "quick_action.daily_digest.title" = "Resumo Diário";
 "quick_action.bookmarks.title" = "Favoritos";
 "quick_action.breaking_news.title" = "Últimas Notícias";
+
+/* ============== */
+/* MARK: - For You */
+/* ============== */
+
+"for_you.title" = "Para Você";
+"for_you.why_this" = "Por que isto?";
+"for_you.matched_prefix" = "Combina com:";
+"for_you.loading" = "Personalizando seu feed…";
+
+/* For You settings page */
+"for_you_settings.title" = "Personalização";
+"for_you_settings.subtitle" = "Seus interesses são aprendidos neste iPhone e sincronizados de forma privada pela sua conta iCloud.";
+"for_you_settings.empty.title" = "Sem interesses ainda";
+"for_you_settings.empty.message" = "Conforme você lê, salva e compartilha artigos, o Pulse aprende o que importa — totalmente no dispositivo.";
+"for_you_settings.reset_button" = "Redefinir";
+"for_you_settings.reset_confirm.title" = "Redefinir personalização?";
+"for_you_settings.reset_confirm.message" = "Isso apaga todos os interesses aprendidos neste dispositivo e no iCloud. Seu histórico e favoritos não são afetados.";
+"for_you_settings.reset_confirm.action" = "Redefinir";
+"for_you_settings.source.seed" = "Do onboarding";
+"for_you_settings.source.extracted" = "Aprendido";
+"for_you_settings.source.manual" = "Adicionado manualmente";
+
+/* Settings → Personalization row */
+"settings.personalization.header" = "Personalização";
+"settings.personalization.row.title" = "Para Você";
+"settings.personalization.row.subtitle" = "Gerencie seu perfil de interesses";
+
+/* Onboarding privacy page */
+"onboarding.privacy.title" = "Privacidade desde o início";
+"onboarding.privacy.subtitle" = "Seus interesses ficam neste iPhone. O Pulse aprende com o que você lê — nunca é enviado a um servidor. A sincronização iCloud usa apenas seu banco de dados privado.";
+
+/* Common */
+"common.delete" = "Excluir";

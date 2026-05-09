@@ -445,6 +445,7 @@ final class MockRemoteConfigService: RemoteConfigService, @unchecked Sendable {
     var gnewsAPIKeyValue: String?
     var supabaseURLValue: String?
     var supabaseAnonKeyValue: String?
+    var forYouEnabledValue: Bool = false
     var shouldThrowOnFetch = false
 
     func fetchAndActivate() async throws {
@@ -459,6 +460,14 @@ final class MockRemoteConfigService: RemoteConfigService, @unchecked Sendable {
         case .gnewsAPIKey: gnewsAPIKeyValue
         case .supabaseURL: supabaseURLValue
         case .supabaseAnonKey: supabaseAnonKeyValue
+        case .forYouEnabled: nil
+        }
+    }
+
+    func getBool(forKey key: RemoteConfigKey) -> Bool {
+        switch key {
+        case .forYouEnabled: forYouEnabledValue
+        case .newsAPIKey, .gnewsAPIKey, .supabaseURL, .supabaseAnonKey: false
         }
     }
 
@@ -476,6 +485,10 @@ final class MockRemoteConfigService: RemoteConfigService, @unchecked Sendable {
 
     var supabaseAnonKey: String? {
         supabaseAnonKeyValue
+    }
+
+    var isForYouEnabled: Bool {
+        forYouEnabledValue
     }
 }
 
@@ -498,6 +511,10 @@ extension ServiceLocator {
         locator.register(TextToSpeechService.self, instance: MockTextToSpeechService())
         locator.register(NotificationService.self, instance: MockNotificationService())
         locator.register(OnboardingService.self, instance: MockOnboardingService(hasCompletedOnboarding: true))
+        locator.register(EngagementEventsService.self, instance: MockEngagementEventsService())
+        locator.register(InterestProfileService.self, instance: MockInterestProfileService())
+        locator.register(TopicExtractionService.self, instance: MockTopicExtractionService())
+        locator.register(ForYouService.self, instance: MockForYouService())
 
         // Auth service with mock signed-in user
         let mockAuth = MockAuthService()
@@ -526,6 +543,10 @@ extension ServiceLocator {
         locator.register(TextToSpeechService.self, instance: MockTextToSpeechService())
         locator.register(NotificationService.self, instance: MockNotificationService())
         locator.register(OnboardingService.self, instance: MockOnboardingService(hasCompletedOnboarding: true))
+        locator.register(EngagementEventsService.self, instance: MockEngagementEventsService())
+        locator.register(InterestProfileService.self, instance: MockInterestProfileService())
+        locator.register(TopicExtractionService.self, instance: MockTopicExtractionService())
+        locator.register(ForYouService.self, instance: MockForYouService())
         return locator
     }
 }

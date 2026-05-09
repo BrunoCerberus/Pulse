@@ -99,6 +99,11 @@ final class HomeViewSnapshotTests: XCTestCase {
         serviceLocator = ServiceLocator()
         serviceLocator.register(NewsService.self, instance: MockNewsService())
         serviceLocator.register(StorageService.self, instance: MockStorageService())
+        // For You stack — required for embedded carousel ViewModel
+        serviceLocator.register(ForYouService.self, instance: MockForYouService())
+        serviceLocator.register(InterestProfileService.self, instance: MockInterestProfileService())
+        serviceLocator.register(RemoteConfigService.self, instance: MockRemoteConfigService())
+        serviceLocator.register(AnalyticsService.self, instance: MockAnalyticsService())
     }
 
     // MARK: - HomeView Tests
@@ -106,7 +111,8 @@ final class HomeViewSnapshotTests: XCTestCase {
     func testHomeViewLoading() {
         let view = HomeView(
             router: HomeNavigationRouter(),
-            viewModel: HomeViewModel(serviceLocator: serviceLocator)
+            viewModel: HomeViewModel(serviceLocator: serviceLocator),
+            forYouViewModel: ForYouViewModel(serviceLocator: serviceLocator)
         )
         let controller = UIHostingController(rootView: view)
 
@@ -125,7 +131,11 @@ final class HomeViewSnapshotTests: XCTestCase {
         viewModel.handle(event: .onAppear)
 
         let view = NavigationStack {
-            HomeView(router: HomeNavigationRouter(), viewModel: viewModel)
+            HomeView(
+                router: HomeNavigationRouter(),
+                viewModel: viewModel,
+                forYouViewModel: ForYouViewModel(serviceLocator: serviceLocator)
+            )
         }
         let controller = UIHostingController(rootView: view)
 

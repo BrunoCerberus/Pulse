@@ -10,7 +10,12 @@ final class LiveStorageService: StorageService {
     /// Must match the `com.apple.developer.icloud-container-identifiers` entitlement.
     static let cloudKitContainerIdentifier = "iCloud.com.bruno.Pulse-News"
 
-    private let modelContainer: ModelContainer
+    /// Exposed (module-internal) so other CloudKit-synced services in the
+    /// `Personalization` module — e.g. `LiveInterestProfileService` — can
+    /// share the same container without each of them spinning up their own
+    /// CloudKit-mirrored store. Outside this module the container is not
+    /// reachable.
+    let modelContainer: ModelContainer
 
     /// - Parameters:
     ///   - inMemory: When `true`, uses an in-memory store (for tests). Forces
@@ -34,6 +39,7 @@ final class LiveStorageService: StorageService {
                 BookmarkedArticle.self,
                 UserPreferencesModel.self,
                 ReadArticle.self,
+                InterestTopicModel.self,
             ])
             let modelConfiguration: ModelConfiguration
             if inMemory || !enableCloudKit {

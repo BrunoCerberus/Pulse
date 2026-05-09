@@ -94,6 +94,12 @@ final class Coordinator: ObservableObject {
     /// Shared HomeViewModel instance
     lazy var homeViewModel: HomeViewModel = .init(serviceLocator: serviceLocator)
 
+    /// Shared ForYouViewModel instance for the personalization carousel
+    /// embedded in `HomeView`. Lives at the Coordinator level so the
+    /// underlying `ForYouDomainInteractor` keeps its profile-change
+    /// subscription across `HomeView` re-instantiations.
+    lazy var forYouViewModel: ForYouViewModel = .init(serviceLocator: serviceLocator)
+
     /// Shared MediaViewModel instance
     lazy var mediaViewModel: MediaViewModel = .init(serviceLocator: serviceLocator)
 
@@ -211,6 +217,11 @@ final class Coordinator: ObservableObject {
             ReadingHistoryView(
                 router: ReadingHistoryNavigationRouter(coordinator: self),
                 viewModel: ReadingHistoryViewModel(serviceLocator: serviceLocator)
+            )
+
+        case .forYouSettings:
+            ForYouSettingsView(
+                viewModel: ForYouSettingsViewModel(serviceLocator: serviceLocator)
             )
         }
     }

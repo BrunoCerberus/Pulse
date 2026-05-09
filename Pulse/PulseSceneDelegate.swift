@@ -26,6 +26,11 @@ final class PulseSceneDelegate: UIResponder, UIWindowSceneDelegate {
     /// feature interactors reload from storage when remote changes merge in.
     private var cloudSyncInteractor: CloudSyncDomainInteractor?
 
+    /// Drainer that converts queued engagement events into interest-profile
+    /// updates via on-device topic extraction. Retained for the scene's
+    /// lifetime; observes `didEnterBackgroundNotification` internally.
+    private var topicExtractionDrainer: TopicExtractionDrainer?
+
     func scene(
         _ scene: UIScene,
         willConnectTo _: UISceneSession,
@@ -57,6 +62,11 @@ final class PulseSceneDelegate: UIResponder, UIWindowSceneDelegate {
 
         // Start CloudKit sync observation (always enabled; no UI entry point)
         startCloudSyncObservation()
+
+        // Start the personalization drainer (no-op if its services aren't
+        // registered or if the For You feature flag is off — see drainer
+        // for the full bail-out conditions).
+        startTopicExtractionDrainer()
 
         // Preload LLM model in background for faster digest generation
         preloadLLMModelIfPremium()
@@ -207,6 +217,23 @@ private extension PulseSceneDelegate {
         cloudSyncInteractor = interactor
     }
 
+    func startTopicExtractionDrainer() {
+        guard
+            let engagement = try? serviceLocator.retrieve(EngagementEventsService.self),
+            let extraction = try? serviceLocator.retrieve(TopicExtractionService.self),
+            let profile = try? serviceLocator.retrieve(InterestProfileService.self)
+        else {
+            return
+        }
+        let drainer = TopicExtractionDrainer(
+            engagementService: engagement,
+            extractionService: extraction,
+            profileService: profile
+        )
+        drainer.startObservingBackground()
+        topicExtractionDrainer = drainer
+    }
+
     func preloadLLMModelIfPremium() {
         Task.detached(priority: .utility) { [serviceLocator] in
             do {
@@ -286,6 +313,10 @@ private extension PulseSceneDelegate {
             serviceLocator.register(NotificationService.self, instance: MockNotificationService())
             serviceLocator.register(SharedURLImportService.self, instance: MockSharedURLImportService())
             serviceLocator.register(CloudSyncService.self, instance: MockCloudSyncService())
+            serviceLocator.register(EngagementEventsService.self, instance: MockEngagementEventsService())
+            serviceLocator.register(InterestProfileService.self, instance: MockInterestProfileService())
+            serviceLocator.register(TopicExtractionService.self, instance: MockTopicExtractionService())
+            serviceLocator.register(ForYouService.self, instance: MockForYouService())
             let mockOnboarding = MockOnboardingService(hasCompletedOnboarding: true)
             serviceLocator.register(OnboardingService.self, instance: mockOnboarding)
 
@@ -343,6 +374,23 @@ private extension PulseSceneDelegate {
         serviceLocator.register(TextToSpeechService.self, instance: LiveTextToSpeechService())
         serviceLocator.register(NotificationService.self, instance: LiveNotificationService.shared)
         serviceLocator.register(SharedURLImportService.self, instance: LiveSharedURLImportService())
+        serviceLocator.register(EngagementEventsService.self, instance: LiveEngagementEventsService())
+        serviceLocator.register(
+            InterestProfileService.self,
+            instance: LiveInterestProfileService(modelContainer: storageService.modelContainer)
+        )
+        if let llmService = try? serviceLocator.retrieve(LLMService.self) {
+            serviceLocator.register(
+                TopicExtractionService.self,
+                instance: LiveTopicExtractionService(llmService: llmService)
+            )
+        }
+        if let profileService = try? serviceLocator.retrieve(InterestProfileService.self) {
+            serviceLocator.register(
+                ForYouService.self,
+                instance: LiveForYouService(profileService: profileService)
+            )
+        }
     }
 }
 

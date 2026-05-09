@@ -211,6 +211,36 @@ final class SettingsViewModel: CombineViewModel, ObservableObject {
             }
         }
 
+        // 1a. Clear personalization profile (CloudKit-synced) and pending
+        //     engagement events (device-local). Best-effort — failures here
+        //     don't block the rest of sign-out cleanup.
+        if let profileService = try? serviceLocator.retrieve(InterestProfileService.self) {
+            let service = UncheckedSendableBox(value: profileService)
+            Task {
+                do {
+                    try await service.value.resetProfile()
+                } catch {
+                    Logger.shared.service(
+                        "Failed to clear interest profile on sign-out: \(error)",
+                        level: .warning
+                    )
+                }
+            }
+        }
+        if let engagementService = try? serviceLocator.retrieve(EngagementEventsService.self) {
+            let service = UncheckedSendableBox(value: engagementService)
+            Task {
+                do {
+                    try await service.value.clearAll()
+                } catch {
+                    Logger.shared.service(
+                        "Failed to clear engagement queue on sign-out: \(error)",
+                        level: .warning
+                    )
+                }
+            }
+        }
+
         // 2. Clear news and media caches (L1 + L2)
         if let newsService = try? serviceLocator.retrieve(NewsService.self) {
             (newsService as? CachingNewsService)?.invalidateAllCaches()

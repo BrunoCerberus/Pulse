@@ -41,6 +41,7 @@ final class LiveRemoteConfigService: RemoteConfigService, @unchecked Sendable {
             RemoteConfigKey.gnewsAPIKey.rawValue: "" as NSString,
             RemoteConfigKey.supabaseURL.rawValue: "" as NSString,
             RemoteConfigKey.supabaseAnonKey.rawValue: "" as NSString,
+            RemoteConfigKey.forYouEnabled.rawValue: false as NSNumber,
         ])
     }
 
@@ -67,6 +68,10 @@ final class LiveRemoteConfigService: RemoteConfigService, @unchecked Sendable {
         return value.isEmpty ? nil : value
     }
 
+    func getBool(forKey key: RemoteConfigKey) -> Bool {
+        remoteConfig.configValue(forKey: key.rawValue).boolValue
+    }
+
     var newsAPIKey: String? {
         getStringOrNil(forKey: .newsAPIKey)
     }
@@ -81,5 +86,9 @@ final class LiveRemoteConfigService: RemoteConfigService, @unchecked Sendable {
 
     var supabaseAnonKey: String? {
         getStringOrNil(forKey: .supabaseAnonKey)
+    }
+
+    var isForYouEnabled: Bool {
+        getBool(forKey: .forYouEnabled)
     }
 }

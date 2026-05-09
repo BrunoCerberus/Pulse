@@ -16,4 +16,7 @@ enum Page: Hashable {
 
     /// Navigate to reading history view
     case readingHistory
+
+    /// Navigate to the For You personalization settings view
+    case forYouSettings
 }

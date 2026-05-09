@@ -65,7 +65,8 @@ struct CoordinatorView: View {
                 NavigationStack(path: $coordinator.homePath) {
                     HomeView(
                         router: HomeNavigationRouter(coordinator: coordinator),
-                        viewModel: coordinator.homeViewModel
+                        viewModel: coordinator.homeViewModel,
+                        forYouViewModel: coordinator.forYouViewModel
                     )
                     .navigationDestination(for: Page.self) { page in
                         coordinator.build(page: page)
