@@ -11,17 +11,14 @@ struct ForYouDomainInteractorTests {
 
     let serviceLocator: ServiceLocator
     let mockForYou: MockForYouService
-    let mockRemoteConfig: MockRemoteConfigService
     let mockProfile: MockInterestProfileService
 
     init() {
         serviceLocator = ServiceLocator()
         mockForYou = MockForYouService()
-        mockRemoteConfig = MockRemoteConfigService()
         mockProfile = MockInterestProfileService()
 
         serviceLocator.register(ForYouService.self, instance: mockForYou)
-        serviceLocator.register(RemoteConfigService.self, instance: mockRemoteConfig)
         serviceLocator.register(InterestProfileService.self, instance: mockProfile)
         serviceLocator.register(AnalyticsService.self, instance: MockAnalyticsService())
     }
@@ -54,26 +51,18 @@ struct ForYouDomainInteractorTests {
 
     // MARK: - Initial State
 
-    @Test("Initial state reflects RemoteConfig flag at construction time")
-    func initialStateReflectsFlag() {
-        mockRemoteConfig.forYouEnabledValue = true
+    @Test("Initial state has empty articles and not loading")
+    func initialState() {
         let sut = ForYouDomainInteractor(serviceLocator: serviceLocator)
-        #expect(sut.currentState.isFeatureEnabled == true)
-    }
-
-    @Test("Initial state defaults to feature disabled")
-    func initialStateDefaultsDisabled() {
-        let sut = ForYouDomainInteractor(serviceLocator: serviceLocator)
-        #expect(sut.currentState.isFeatureEnabled == false)
         #expect(sut.currentState.scoredArticles.isEmpty)
         #expect(sut.currentState.isLoading == false)
+        #expect(sut.currentState.error == nil)
     }
 
     // MARK: - Scoring flow
 
     @Test("scoreFromPool fetches scored articles and updates state")
     func scoreFromPoolUpdatesState() async {
-        mockRemoteConfig.forYouEnabledValue = true
         mockForYou.scoredArticlesResult = .success([
             makeScoredArticle(id: "a", score: 0.9),
             makeScoredArticle(id: "b", score: 0.5),
@@ -90,22 +79,8 @@ struct ForYouDomainInteractorTests {
         #expect(sut.currentState.isLoading == false)
     }
 
-    @Test("scoreFromPool with feature flag off clears state without calling service")
-    func scoreFromPoolFlagOffClears() async throws {
-        mockRemoteConfig.forYouEnabledValue = false
-        mockForYou.scoredArticlesResult = .success([makeScoredArticle(id: "a", score: 0.9)])
-        let sut = ForYouDomainInteractor(serviceLocator: serviceLocator)
-
-        sut.dispatch(action: .scoreFromPool(pool: [makeArticle(id: "a")]))
-        try await waitForStateUpdate(duration: TestWaitDuration.long)
-
-        #expect(sut.currentState.scoredArticles.isEmpty)
-        #expect(mockForYou.lastPool.isEmpty)
-    }
-
     @Test("Empty pool clears the scored-articles state")
     func emptyPoolClearsState() async throws {
-        mockRemoteConfig.forYouEnabledValue = true
         let sut = ForYouDomainInteractor(serviceLocator: serviceLocator)
         // First populate
         mockForYou.scoredArticlesResult = .success([makeScoredArticle(id: "a", score: 0.9)])
@@ -127,7 +102,6 @@ struct ForYouDomainInteractorTests {
                 "boom"
             }
         }
-        mockRemoteConfig.forYouEnabledValue = true
         mockForYou.scoredArticlesResult = .failure(Boom())
         let sut = ForYouDomainInteractor(serviceLocator: serviceLocator)
 
@@ -144,7 +118,6 @@ struct ForYouDomainInteractorTests {
 
     @Test("Receives interestProfileDidChange and re-scores against the last pool")
     func reactsToProfileChange() async {
-        mockRemoteConfig.forYouEnabledValue = true
         let sut = ForYouDomainInteractor(serviceLocator: serviceLocator)
         // Seed an initial pool.
         mockForYou.scoredArticlesResult = .success([makeScoredArticle(id: "a", score: 0.5)])
@@ -163,14 +136,5 @@ struct ForYouDomainInteractorTests {
             sut.currentState.scoredArticles.count == 2
         }
         #expect(rescored)
-    }
-
-    @Test("setFeatureEnabled toggles isFeatureEnabled in state")
-    func setFeatureEnabledTogglesFlag() {
-        let sut = ForYouDomainInteractor(serviceLocator: serviceLocator)
-        sut.dispatch(action: .setFeatureEnabled(true))
-        #expect(sut.currentState.isFeatureEnabled == true)
-        sut.dispatch(action: .setFeatureEnabled(false))
-        #expect(sut.currentState.isFeatureEnabled == false)
     }
 }

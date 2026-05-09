@@ -166,28 +166,22 @@ struct SettingsView: View {
             .eraseToAnyPublisher()
     }
 
-    /// Personalization row routes to `Page.forYouSettings`. Gated on the
-    /// `for_you_enabled` Remote Config flag — when the feature is off
-    /// (default rollout), the row is hidden so users on the default-off
-    /// rollout don't see a dead-end navigation that opens an empty
-    /// "you don't have personalization yet" screen.
-    @ViewBuilder
+    /// Personalization row routes to `Page.forYouSettings`. Visible to
+    /// every user; the destination shows the on-device interest profile
+    /// and a destructive Reset.
     private var personalizationSection: some View {
-        let isForYouEnabled = (try? serviceLocator.retrieve(RemoteConfigService.self))?.isForYouEnabled == true
-        if isForYouEnabled {
-            Section(Constants.personalizationHeader) {
-                NavigationLink(value: Page.forYouSettings) {
-                    Label {
-                        VStack(alignment: .leading, spacing: Spacing.xxs) {
-                            Text(Constants.personalizationRowTitle)
-                            Text(Constants.personalizationRowSubtitle)
-                                .font(Typography.captionMedium)
-                                .foregroundStyle(.secondary)
-                        }
-                    } icon: {
-                        Image(systemName: "sparkles")
-                            .foregroundStyle(Color.Accent.primary)
+        Section(Constants.personalizationHeader) {
+            NavigationLink(value: Page.forYouSettings) {
+                Label {
+                    VStack(alignment: .leading, spacing: Spacing.xxs) {
+                        Text(Constants.personalizationRowTitle)
+                        Text(Constants.personalizationRowSubtitle)
+                            .font(Typography.captionMedium)
+                            .foregroundStyle(.secondary)
                     }
+                } icon: {
+                    Image(systemName: "sparkles")
+                        .foregroundStyle(Color.Accent.primary)
                 }
             }
         }

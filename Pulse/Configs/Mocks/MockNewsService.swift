@@ -445,7 +445,6 @@ final class MockRemoteConfigService: RemoteConfigService, @unchecked Sendable {
     var gnewsAPIKeyValue: String?
     var supabaseURLValue: String?
     var supabaseAnonKeyValue: String?
-    var forYouEnabledValue: Bool = false
     var shouldThrowOnFetch = false
 
     func fetchAndActivate() async throws {
@@ -460,14 +459,6 @@ final class MockRemoteConfigService: RemoteConfigService, @unchecked Sendable {
         case .gnewsAPIKey: gnewsAPIKeyValue
         case .supabaseURL: supabaseURLValue
         case .supabaseAnonKey: supabaseAnonKeyValue
-        case .forYouEnabled: nil
-        }
-    }
-
-    func getBool(forKey key: RemoteConfigKey) -> Bool {
-        switch key {
-        case .forYouEnabled: forYouEnabledValue
-        case .newsAPIKey, .gnewsAPIKey, .supabaseURL, .supabaseAnonKey: false
         }
     }
 
@@ -485,10 +476,6 @@ final class MockRemoteConfigService: RemoteConfigService, @unchecked Sendable {
 
     var supabaseAnonKey: String? {
         supabaseAnonKeyValue
-    }
-
-    var isForYouEnabled: Bool {
-        forYouEnabledValue
     }
 }
 

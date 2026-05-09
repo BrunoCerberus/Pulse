@@ -12,7 +12,4 @@ enum ForYouDomainAction: Equatable {
     /// `.cloudSyncDidComplete`) and we want fresh ranking without
     /// re-fetching from the host.
     case rescore
-
-    /// Push a new feature-flag value (driven by Remote Config).
-    case setFeatureEnabled(Bool)
 }

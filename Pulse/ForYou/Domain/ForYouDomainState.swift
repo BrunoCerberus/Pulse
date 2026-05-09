@@ -17,16 +17,11 @@ struct ForYouDomainState: Equatable {
     /// Last error message from a scoring failure, if any.
     var error: String?
 
-    /// `true` when the For You feature flag is on and the carousel may
-    /// be rendered. When `false`, the host should hide the section.
-    var isFeatureEnabled: Bool
-
     static var initial: ForYouDomainState {
         ForYouDomainState(
             scoredArticles: [],
             isLoading: false,
-            error: nil,
-            isFeatureEnabled: false
+            error: nil
         )
     }
 }

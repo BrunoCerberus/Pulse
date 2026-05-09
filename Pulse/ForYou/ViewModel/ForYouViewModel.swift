@@ -32,8 +32,6 @@ final class ForYouViewModel: CombineViewModel, ObservableObject {
         switch event {
         case let .onPoolChanged(pool):
             interactor.dispatch(action: .scoreFromPool(pool: pool))
-        case let .onFeatureFlagChanged(enabled):
-            interactor.dispatch(action: .setFeatureEnabled(enabled))
         }
     }
 
@@ -51,7 +49,10 @@ final class ForYouViewModel: CombineViewModel, ObservableObject {
                 return ForYouViewState(
                     cards: cards,
                     isLoading: state.isLoading,
-                    isVisible: state.isFeatureEnabled && (state.isLoading || !cards.isEmpty),
+                    // Hide the section when there's nothing to show and
+                    // we're not actively loading — keeps Home uncluttered
+                    // for cold-start users with no profile signal yet.
+                    isVisible: state.isLoading || !cards.isEmpty,
                     errorMessage: state.error
                 )
             }
@@ -67,9 +68,8 @@ final class ForYouViewModel: CombineViewModel, ObservableObject {
 struct ForYouViewState: Equatable {
     var cards: [ForYouCardItem]
     var isLoading: Bool
-    /// `true` only when the feature flag is on AND we either have cards
-    /// to show or are loading. Hiding when both are false keeps Home
-    /// uncluttered for cold-start users.
+    /// `true` when we either have cards to show or are loading. Hiding
+    /// when both are false keeps Home uncluttered for cold-start users.
     var isVisible: Bool
     var errorMessage: String?
 
@@ -103,6 +103,4 @@ struct ForYouCardItem: Identifiable, Equatable {
 enum ForYouViewEvent: Equatable {
     /// The host's article pool changed — re-score against the new pool.
     case onPoolChanged([Article])
-    /// Remote-config flag changed — flip visibility.
-    case onFeatureFlagChanged(Bool)
 }

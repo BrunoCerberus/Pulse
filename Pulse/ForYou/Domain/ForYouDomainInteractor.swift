@@ -15,12 +15,6 @@ final class ForYouDomainInteractor: CombineInteractor {
 
     private let forYouService: ForYouService?
     private let analyticsService: AnalyticsService?
-    /// Retained so we can re-read `isForYouEnabled` on every scoring pass.
-    /// `RemoteConfig.fetchAndActivate()` runs fire-and-forget at scene-connect
-    /// time, so the value at `init` is whatever was locally cached (or the
-    /// `false` default). Once the network fetch lands, we want subsequent
-    /// scoring to pick up the new value without forcing an app relaunch.
-    private let remoteConfigService: RemoteConfigService?
     private let stateSubject = CurrentValueSubject<DomainState, Never>(.initial)
     private var cancellables = Set<AnyCancellable>()
     private var lastPool: [Article] = []
@@ -40,9 +34,6 @@ final class ForYouDomainInteractor: CombineInteractor {
     init(serviceLocator: ServiceLocator) {
         forYouService = try? serviceLocator.retrieve(ForYouService.self)
         analyticsService = try? serviceLocator.retrieve(AnalyticsService.self)
-        remoteConfigService = try? serviceLocator.retrieve(RemoteConfigService.self)
-
-        updateState { $0.isFeatureEnabled = remoteConfigService?.isForYouEnabled ?? false }
 
         observeProfileChanges()
         observeCloudSync()
@@ -55,8 +46,6 @@ final class ForYouDomainInteractor: CombineInteractor {
             runScoring()
         case .rescore:
             runScoring()
-        case let .setFeatureEnabled(enabled):
-            updateState { $0.isFeatureEnabled = enabled }
         }
     }
 
@@ -83,20 +72,6 @@ final class ForYouDomainInteractor: CombineInteractor {
     // MARK: - Scoring
 
     private func runScoring() {
-        // Re-read the Remote Config flag on every scoring pass — see
-        // `remoteConfigService` doc for why init-time capture isn't enough.
-        let liveFlag = remoteConfigService?.isForYouEnabled ?? false
-        if liveFlag != currentState.isFeatureEnabled {
-            updateState { $0.isFeatureEnabled = liveFlag }
-        }
-
-        guard liveFlag else {
-            updateState { state in
-                state.scoredArticles = []
-                state.isLoading = false
-            }
-            return
-        }
         guard let forYouService else { return }
         guard !lastPool.isEmpty else {
             updateState { state in

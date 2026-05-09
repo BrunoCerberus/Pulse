@@ -11,14 +11,11 @@ struct ForYouViewModelTests {
 
     let serviceLocator: ServiceLocator
     let mockForYou: MockForYouService
-    let mockRemoteConfig: MockRemoteConfigService
 
     init() {
         serviceLocator = ServiceLocator()
         mockForYou = MockForYouService()
-        mockRemoteConfig = MockRemoteConfigService()
         serviceLocator.register(ForYouService.self, instance: mockForYou)
-        serviceLocator.register(RemoteConfigService.self, instance: mockRemoteConfig)
         serviceLocator.register(InterestProfileService.self, instance: MockInterestProfileService())
         serviceLocator.register(AnalyticsService.self, instance: MockAnalyticsService())
     }
@@ -55,7 +52,6 @@ struct ForYouViewModelTests {
 
     @Test("After scoring, viewState becomes visible with mapped cards")
     func scoringMapsCards() async {
-        mockRemoteConfig.forYouEnabledValue = true
         mockForYou.scoredArticlesResult = .success([
             makeScoredArticle(id: "a", score: 0.9),
             makeScoredArticle(id: "b", score: 0.5),
@@ -76,7 +72,6 @@ struct ForYouViewModelTests {
 
     @Test("Cards include explanation strings derived from matched topics")
     func cardsIncludeExplanation() async {
-        mockRemoteConfig.forYouEnabledValue = true
         mockForYou.scoredArticlesResult = .success([makeScoredArticle(id: "a", score: 0.9)])
         mockForYou.explanationOverride = "Tech, Science"
         let sut = ForYouViewModel(serviceLocator: serviceLocator)
@@ -90,10 +85,9 @@ struct ForYouViewModelTests {
         #expect(sut.viewState.cards.first?.explanation == "Tech, Science")
     }
 
-    @Test("With feature flag off, the carousel stays hidden even with results")
-    func featureFlagOffHidesCarousel() async throws {
-        mockRemoteConfig.forYouEnabledValue = false
-        mockForYou.scoredArticlesResult = .success([makeScoredArticle(id: "a", score: 0.9)])
+    @Test("Carousel hides when scoring returns no cards")
+    func emptyResultsHideCarousel() async throws {
+        mockForYou.scoredArticlesResult = .success([])
         let sut = ForYouViewModel(serviceLocator: serviceLocator)
 
         sut.handle(event: .onPoolChanged([makeArticle(id: "a")]))
@@ -101,26 +95,5 @@ struct ForYouViewModelTests {
 
         #expect(sut.viewState.isVisible == false)
         #expect(sut.viewState.cards.isEmpty)
-    }
-
-    @Test("Carousel becomes visible when Remote Config flips on at runtime")
-    func featureFlagChangedAtRuntime() async throws {
-        mockRemoteConfig.forYouEnabledValue = false
-        mockForYou.scoredArticlesResult = .success([makeScoredArticle(id: "a", score: 0.9)])
-        let sut = ForYouViewModel(serviceLocator: serviceLocator)
-        sut.handle(event: .onPoolChanged([makeArticle(id: "a")]))
-        try await waitForStateUpdate(duration: TestWaitDuration.long)
-        #expect(sut.viewState.isVisible == false)
-
-        // Flip the live Remote Config flag (simulating the async fetch
-        // finishing) — the next scoring pass should re-read it.
-        mockRemoteConfig.forYouEnabledValue = true
-        // Trigger a re-score by dispatching a pool change.
-        sut.handle(event: .onPoolChanged([makeArticle(id: "a")]))
-
-        let nowVisible = await waitForMainActorCondition { [sut] in
-            sut.viewState.isVisible
-        }
-        #expect(nowVisible)
     }
 }

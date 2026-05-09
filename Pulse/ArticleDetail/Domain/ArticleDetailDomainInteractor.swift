@@ -30,7 +30,6 @@ final class ArticleDetailDomainInteractor: CombineInteractor {
     private let ttsService: TextToSpeechService?
     private let analyticsService: AnalyticsService?
     private let engagementEventsService: EngagementEventsService?
-    private let remoteConfigService: RemoteConfigService?
     private let stateSubject: CurrentValueSubject<DomainState, Never>
     private var cancellables = Set<AnyCancellable>()
     private var ttsCancellables = Set<AnyCancellable>()
@@ -66,7 +65,6 @@ final class ArticleDetailDomainInteractor: CombineInteractor {
         ttsService = try? serviceLocator.retrieve(TextToSpeechService.self)
         analyticsService = try? serviceLocator.retrieve(AnalyticsService.self)
         engagementEventsService = try? serviceLocator.retrieve(EngagementEventsService.self)
-        remoteConfigService = try? serviceLocator.retrieve(RemoteConfigService.self)
 
         setupTTSBindings()
 
@@ -154,15 +152,8 @@ final class ArticleDetailDomainInteractor: CombineInteractor {
     /// event after the user has had the article open for 30 seconds. The
     /// task lives in `backgroundTasks` and is cancelled on `deinit`, so
     /// closing the article before the threshold elapses produces no signal.
-    ///
-    /// Re-reads `isForYouEnabled` *after* the sleep so a Remote Config
-    /// kill-switch flip mid-session genuinely stops new captures — not just
-    /// captures scheduled after the flip.
     private func scheduleRead30sCapture() {
-        guard !hasScheduledRead30sCapture,
-              isForYouEnabled,
-              let engagementEventsService
-        else { return }
+        guard !hasScheduledRead30sCapture, let engagementEventsService else { return }
         hasScheduledRead30sCapture = true
 
         let event = EngagementEvent(from: currentState.article, kind: .read30s)
@@ -173,22 +164,17 @@ final class ArticleDetailDomainInteractor: CombineInteractor {
             } catch {
                 return
             }
-            // Re-check on main actor: the 30s window is long enough for the
-            // Remote Config kill-switch to flip from on → off.
-            let stillEnabled = await MainActor.run { [weak self] in
-                self?.isForYouEnabled ?? false
-            }
-            guard !Task.isCancelled, stillEnabled else { return }
+            guard self != nil, !Task.isCancelled else { return }
             await service.value.record(event)
         }
         trackBackgroundTask(task)
     }
 
     /// Records an immediate engagement event (`.bookmarked`, `.shared`, …)
-    /// for the current article. No-op when the For You feature flag is off
-    /// or the service isn't registered.
+    /// for the current article. No-op when the engagement service isn't
+    /// registered (e.g. preview locator).
     private func recordEngagement(kind: EngagementEvent.Kind) {
-        guard isForYouEnabled, let engagementEventsService else { return }
+        guard let engagementEventsService else { return }
         let event = EngagementEvent(from: currentState.article, kind: kind)
         let service = UncheckedSendableBox(value: engagementEventsService)
         let task = Task { [weak self] in
@@ -196,10 +182,6 @@ final class ArticleDetailDomainInteractor: CombineInteractor {
             await service.value.record(event)
         }
         trackBackgroundTask(task)
-    }
-
-    private var isForYouEnabled: Bool {
-        remoteConfigService?.isForYouEnabled == true
     }
 
     // MARK: - Bookmark
