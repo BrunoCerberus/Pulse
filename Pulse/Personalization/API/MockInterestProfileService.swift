@@ -16,6 +16,14 @@ final class MockInterestProfileService: InterestProfileService, @unchecked Senda
     var removeError: Error?
     var resetProfileError: Error?
 
+    /// Number of times `fetchProfile()` has been called. Useful for tests
+    /// that need to verify a notification triggered a reload independent
+    /// of the resulting state (e.g. cloud-sync subscription coverage,
+    /// where the underlying storage may already be populated and we
+    /// can't distinguish "reload happened" from "state was already there"
+    /// by inspecting topics alone).
+    private(set) var fetchProfileCallCount: Int = 0
+
     /// Snapshot of all stored topics, sorted by weight descending.
     var topics: [InterestTopic] {
         storage.values.sorted { $0.weight > $1.weight }
@@ -26,6 +34,7 @@ final class MockInterestProfileService: InterestProfileService, @unchecked Senda
     }
 
     func fetchProfile() async throws -> [InterestTopic] {
+        fetchProfileCallCount += 1
         if let fetchProfileError {
             throw fetchProfileError
         }

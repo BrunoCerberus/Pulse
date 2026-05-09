@@ -153,25 +153,27 @@ struct ForYouSettingsDomainInteractorTests {
     }
 
     @Test("Reloads on cloudSyncDidComplete notification")
-    func reloadsOnCloudSync() async throws {
+    func reloadsOnCloudSync() async {
         let sut = ForYouSettingsDomainInteractor(serviceLocator: serviceLocator)
-        // Bring the interactor into a known empty state first.
+        // Bring the interactor through its initial fetch so we can
+        // measure subsequent reload calls against a stable baseline.
         sut.dispatch(action: .loadProfile)
         _ = await waitForMainActorCondition { [sut] in
             sut.currentState.isLoading == false
         }
-        // Stage a topic that the next reload should surface.
-        try await mockProfile.upsert(
-            topicID: "post-sync", displayName: "Synced", weightDelta: 1,
-            source: .extracted, category: nil
-        )
-        // Drop the notification we just received from the mock's upsert
-        // (it already triggered a reload). Then post a fresh CloudKit
-        // notification and assert the reload still happens.
-        try await waitForStateUpdate(duration: TestWaitDuration.short)
+
+        // Snapshot the call count *after* the initial fetch but before
+        // the cloudSync notification — this is the key to making the
+        // test fail if `observeCloudSync()` is removed from the SUT.
+        // Inspecting state.topics alone wouldn't catch a missing
+        // subscription, since the storage might already be populated
+        // by the time the notification fires.
+        let baseline = mockProfile.fetchProfileCallCount
+
         NotificationCenter.default.post(name: .cloudSyncDidComplete, object: nil)
-        let reloaded = await waitForMainActorCondition { [sut] in
-            sut.currentState.topics.contains { $0.topicID == "post-sync" }
+
+        let reloaded = await waitForMainActorCondition { [mockProfile] in
+            mockProfile.fetchProfileCallCount > baseline
         }
         #expect(reloaded)
     }
