@@ -498,6 +498,10 @@ extension ServiceLocator {
         locator.register(TextToSpeechService.self, instance: MockTextToSpeechService())
         locator.register(NotificationService.self, instance: MockNotificationService())
         locator.register(OnboardingService.self, instance: MockOnboardingService(hasCompletedOnboarding: true))
+        locator.register(EngagementEventsService.self, instance: MockEngagementEventsService())
+        locator.register(InterestProfileService.self, instance: MockInterestProfileService())
+        locator.register(TopicExtractionService.self, instance: MockTopicExtractionService())
+        locator.register(ForYouService.self, instance: MockForYouService())
 
         // Auth service with mock signed-in user
         let mockAuth = MockAuthService()
@@ -526,6 +530,10 @@ extension ServiceLocator {
         locator.register(TextToSpeechService.self, instance: MockTextToSpeechService())
         locator.register(NotificationService.self, instance: MockNotificationService())
         locator.register(OnboardingService.self, instance: MockOnboardingService(hasCompletedOnboarding: true))
+        locator.register(EngagementEventsService.self, instance: MockEngagementEventsService())
+        locator.register(InterestProfileService.self, instance: MockInterestProfileService())
+        locator.register(TopicExtractionService.self, instance: MockTopicExtractionService())
+        locator.register(ForYouService.self, instance: MockForYouService())
         return locator
     }
 }

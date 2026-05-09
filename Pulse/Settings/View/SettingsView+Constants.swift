@@ -8,6 +8,18 @@ extension SettingsView {
             AppLocalization.localized("settings.title")
         }
 
+        static var personalizationHeader: String {
+            AppLocalization.localized("settings.personalization.header")
+        }
+
+        static var personalizationRowTitle: String {
+            AppLocalization.localized("settings.personalization.row.title")
+        }
+
+        static var personalizationRowSubtitle: String {
+            AppLocalization.localized("settings.personalization.row.subtitle")
+        }
+
         static var viewGithub: String {
             AppLocalization.localized("settings.view_github")
         }

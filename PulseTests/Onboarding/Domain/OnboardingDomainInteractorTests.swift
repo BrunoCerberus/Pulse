@@ -44,6 +44,9 @@ struct OnboardingDomainInteractorTests {
         #expect(sut.currentState.currentPage == .aiPowered)
 
         sut.dispatch(action: .nextPage)
+        #expect(sut.currentState.currentPage == .privacy)
+
+        sut.dispatch(action: .nextPage)
         #expect(sut.currentState.currentPage == .stayConnected)
 
         sut.dispatch(action: .nextPage)

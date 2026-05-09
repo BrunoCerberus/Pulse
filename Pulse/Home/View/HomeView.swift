@@ -29,6 +29,12 @@ struct HomeView<R: HomeNavigationRouter>: View {
     /// Backing ViewModel managing data and actions
     @ObservedObject var viewModel: HomeViewModel
 
+    /// ViewModel for the embedded "For You" personalization carousel.
+    /// The carousel self-hides when there are no scored cards and no
+    /// scoring is in flight — i.e. cold-start users with no profile
+    /// signal yet won't see it.
+    @ObservedObject var forYouViewModel: ForYouViewModel
+
     /// Namespace for matched geometry animation in category tabs
     @Namespace private var categoryAnimation
 
@@ -46,13 +52,16 @@ struct HomeView<R: HomeNavigationRouter>: View {
         horizontalSizeClass == .regular ? 320 : 260
     }
 
-    /// Creates the view with a router and ViewModel.
+    /// Creates the view with a router, host ViewModel, and the
+    /// personalization-carousel ViewModel.
     /// - Parameters:
     ///   - router: Navigation router for routing actions
     ///   - viewModel: ViewModel for managing data and actions
-    init(router: R, viewModel: HomeViewModel) {
+    ///   - forYouViewModel: ViewModel powering the embedded For You section
+    init(router: R, viewModel: HomeViewModel, forYouViewModel: ForYouViewModel) {
         self.router = router
         self.viewModel = viewModel
+        self.forYouViewModel = forYouViewModel
     }
 
     var body: some View {
@@ -132,6 +141,9 @@ struct HomeView<R: HomeNavigationRouter>: View {
                     Constants.refreshComplete
                 ).post()
             }
+        }
+        .onChange(of: viewModel.articlePool) { _, newPool in
+            forYouViewModel.handle(event: .onPoolChanged(newPool))
         }
     }
 
@@ -257,6 +269,24 @@ struct HomeView<R: HomeNavigationRouter>: View {
                     }
                 }
 
+                // For You carousel — only when on "All" tab AND
+                // ForYouViewModel has decided it's worth showing
+                // (feature flag on, has cards or loading).
+                if viewModel.viewState.selectedCategory == nil
+                    && forYouViewModel.viewState.isVisible
+                {
+                    Section {
+                        ForYouCarouselView(
+                            viewState: forYouViewModel.viewState,
+                            onArticleTapped: { articleId in
+                                viewModel.handle(event: .onArticleTapped(articleId: articleId))
+                            }
+                        )
+                    } header: {
+                        GlassSectionHeader(ForYouCarouselView.Constants.sectionTitle)
+                    }
+                }
+
                 if viewModel.viewState.selectedCategory == nil
                     && !viewModel.viewState.recentlyRead.isEmpty
                 {
@@ -352,7 +382,8 @@ struct HomeView<R: HomeNavigationRouter>: View {
     NavigationStack {
         HomeView(
             router: HomeNavigationRouter(),
-            viewModel: HomeViewModel(serviceLocator: .preview)
+            viewModel: HomeViewModel(serviceLocator: .preview),
+            forYouViewModel: ForYouViewModel(serviceLocator: .preview)
         )
     }
 }

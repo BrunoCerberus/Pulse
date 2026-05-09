@@ -29,10 +29,15 @@ final class ArticleDetailDomainInteractor: CombineInteractor {
     private let newsService: NewsService?
     private let ttsService: TextToSpeechService?
     private let analyticsService: AnalyticsService?
+    private let engagementEventsService: EngagementEventsService?
     private let stateSubject: CurrentValueSubject<DomainState, Never>
     private var cancellables = Set<AnyCancellable>()
     private var ttsCancellables = Set<AnyCancellable>()
     private var backgroundTasks = Set<Task<Void, Never>>()
+
+    /// Once we've scheduled the 30-second read-engagement capture for this
+    /// article view, don't reschedule even if `onAppear` fires twice.
+    private var hasScheduledRead30sCapture = false
 
     /// Monotonically increasing counter that invalidates stale TTS callbacks.
     /// Incremented on every speed-change restart; callbacks from previous generations are discarded.
@@ -59,6 +64,7 @@ final class ArticleDetailDomainInteractor: CombineInteractor {
         newsService = try? serviceLocator.retrieve(NewsService.self)
         ttsService = try? serviceLocator.retrieve(TextToSpeechService.self)
         analyticsService = try? serviceLocator.retrieve(AnalyticsService.self)
+        engagementEventsService = try? serviceLocator.retrieve(EngagementEventsService.self)
 
         setupTTSBindings()
 
@@ -77,6 +83,7 @@ final class ArticleDetailDomainInteractor: CombineInteractor {
             updateState { $0.isBookmarked = isBookmarked }
         case .showShareSheet:
             analyticsService?.logEvent(.articleShared)
+            recordEngagement(kind: .shared)
             updateState { $0.showShareSheet = true }
         case .dismissShareSheet:
             updateState { $0.showShareSheet = false }
@@ -135,6 +142,46 @@ final class ArticleDetailDomainInteractor: CombineInteractor {
             try? await service.value.markArticleAsRead(article)
         }
         trackBackgroundTask(task)
+
+        scheduleRead30sCapture()
+    }
+
+    // MARK: - Engagement Capture
+
+    /// Schedules a deferred capture that records a `.read30s` engagement
+    /// event after the user has had the article open for 30 seconds. The
+    /// task lives in `backgroundTasks` and is cancelled on `deinit`, so
+    /// closing the article before the threshold elapses produces no signal.
+    private func scheduleRead30sCapture() {
+        guard !hasScheduledRead30sCapture, let engagementEventsService else { return }
+        hasScheduledRead30sCapture = true
+
+        let event = EngagementEvent(from: currentState.article, kind: .read30s)
+        let service = UncheckedSendableBox(value: engagementEventsService)
+        let task = Task { [weak self] in
+            do {
+                try await Task.sleep(nanoseconds: 30 * 1_000_000_000)
+            } catch {
+                return
+            }
+            guard self != nil, !Task.isCancelled else { return }
+            await service.value.record(event)
+        }
+        trackBackgroundTask(task)
+    }
+
+    /// Records an immediate engagement event (`.bookmarked`, `.shared`, …)
+    /// for the current article. No-op when the engagement service isn't
+    /// registered (e.g. preview locator).
+    private func recordEngagement(kind: EngagementEvent.Kind) {
+        guard let engagementEventsService else { return }
+        let event = EngagementEvent(from: currentState.article, kind: kind)
+        let service = UncheckedSendableBox(value: engagementEventsService)
+        let task = Task { [weak self] in
+            guard self != nil else { return }
+            await service.value.record(event)
+        }
+        trackBackgroundTask(task)
     }
 
     // MARK: - Bookmark
@@ -146,6 +193,10 @@ final class ArticleDetailDomainInteractor: CombineInteractor {
         // Optimistic update
         updateState { $0.isBookmarked = !wasBookmarked }
         analyticsService?.logEvent(wasBookmarked ? .articleUnbookmarked : .articleBookmarked)
+
+        if !wasBookmarked {
+            recordEngagement(kind: .bookmarked)
+        }
 
         let service = UncheckedSendableBox(value: storageService)
         let task = Task { [weak self] in

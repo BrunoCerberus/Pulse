@@ -38,6 +38,8 @@ struct SettingsView: View {
                     onUpgradeTapped: { isPaywallPresented = true }
                 )
 
+                personalizationSection
+
                 SettingsSecuritySection(lockManager: lockManager)
 
                 notificationsSection
@@ -162,6 +164,27 @@ struct SettingsView: View {
         return storeKitService.subscriptionStatusPublisher
             .receive(on: DispatchQueue.main)
             .eraseToAnyPublisher()
+    }
+
+    /// Personalization row routes to `Page.forYouSettings`. Visible to
+    /// every user; the destination shows the on-device interest profile
+    /// and a destructive Reset.
+    private var personalizationSection: some View {
+        Section(Constants.personalizationHeader) {
+            NavigationLink(value: Page.forYouSettings) {
+                Label {
+                    VStack(alignment: .leading, spacing: Spacing.xxs) {
+                        Text(Constants.personalizationRowTitle)
+                        Text(Constants.personalizationRowSubtitle)
+                            .font(Typography.captionMedium)
+                            .foregroundStyle(.secondary)
+                    }
+                } icon: {
+                    Image(systemName: "sparkles")
+                        .foregroundStyle(Color.Accent.primary)
+                }
+            }
+        }
     }
 
     private var notificationsSection: some View {
