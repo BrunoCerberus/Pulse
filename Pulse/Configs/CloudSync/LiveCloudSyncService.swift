@@ -26,8 +26,10 @@ import Foundation
 /// completion hops back to main via `DispatchQueue.main.async` before mutating
 /// the subjects.
 final class LiveCloudSyncService: CloudSyncService, @unchecked Sendable {
-    private let containerIdentifier: String
+    typealias AccountStatusProvider = (@escaping @Sendable (CKAccountStatus, Error?) -> Void) -> Void
+
     private let notificationCenter: NotificationCenter
+    private let accountStatusProvider: AccountStatusProvider
     private let accountStatusSubject = CurrentValueSubject<CloudSyncAccountStatus, Never>(.couldNotDetermine)
     private let syncStateSubject = CurrentValueSubject<CloudSyncState, Never>(.idle)
     private var cancellables = Set<AnyCancellable>()
@@ -52,12 +54,19 @@ final class LiveCloudSyncService: CloudSyncService, @unchecked Sendable {
     /// - Parameters:
     ///   - containerIdentifier: iCloud container ID matching the entitlement.
     ///   - notificationCenter: Injected for testability.
+    ///   - accountStatusProvider: Injected so unit tests do not need CloudKit entitlements.
     init(
         containerIdentifier: String = "iCloud.com.bruno.Pulse-News",
-        notificationCenter: NotificationCenter = .default
+        notificationCenter: NotificationCenter = .default,
+        accountStatusProvider: AccountStatusProvider? = nil
     ) {
-        self.containerIdentifier = containerIdentifier
         self.notificationCenter = notificationCenter
+        let resolvedContainerIdentifier = containerIdentifier
+        self.accountStatusProvider = accountStatusProvider ?? { completion in
+            CKContainer(identifier: resolvedContainerIdentifier).accountStatus { status, error in
+                completion(status, error)
+            }
+        }
     }
 
     /// - Important: Must be called from the main thread.
@@ -89,8 +98,7 @@ final class LiveCloudSyncService: CloudSyncService, @unchecked Sendable {
     }
 
     func refreshAccountStatus() {
-        let container = CKContainer(identifier: containerIdentifier)
-        container.accountStatus { [weak self] status, error in
+        accountStatusProvider { [weak self] status, error in
             guard let self else { return }
             if let error {
                 Logger.shared.service("CloudKit account status error: \(error)", level: .warning)

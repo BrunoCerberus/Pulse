@@ -172,9 +172,22 @@ targets:
       - name: "Upload dSYMs to Crashlytics"
         basedOnDependencyAnalysis: false
         script: |
-          if [ "${CONFIGURATION}" = "Release" ]; then
-            "${BUILD_DIR%/Build/*}/SourcePackages/checkouts/firebase-ios-sdk/Crashlytics/run"
+          if [ "${CONFIGURATION}" != "Release" ]; then
+            exit 0
           fi
+
+          if [ "${PLATFORM_NAME}" != "iphoneos" ]; then
+            echo "Skipping Crashlytics dSYM upload for ${PLATFORM_NAME} ${CONFIGURATION} build"
+            exit 0
+          fi
+
+          GOOGLE_SERVICE_INFO="${TARGET_BUILD_DIR}/${UNLOCALIZED_RESOURCES_FOLDER_PATH}/GoogleService-Info.plist"
+          if [ ! -f "${GOOGLE_SERVICE_INFO}" ]; then
+            echo "error: Missing GoogleService-Info.plist in app bundle. Add the production Firebase config before archiving Release builds."
+            exit 1
+          fi
+
+          "${BUILD_DIR%/Build/*}/SourcePackages/checkouts/firebase-ios-sdk/Crashlytics/run"
         inputFiles:
           - "${DWARF_DSYM_FOLDER_PATH}/${DWARF_DSYM_FILE_NAME}"
           - "${DWARF_DSYM_FOLDER_PATH}/${DWARF_DSYM_FILE_NAME}/Contents/Resources/DWARF/${PRODUCT_NAME}"

@@ -66,11 +66,12 @@ final class ShareViewController: UIViewController {
             return
         }
 
-        extensionContext?.completeRequest(returningItems: []) { [weak self] _ in
-            guard let self else { return }
-            DispatchQueue.main.async {
-                self.openHostApp(URL(string: "pulse://shared")!)
-            }
+        guard let url = URL(string: "pulse://shared") else {
+            extensionContext?.completeRequest(returningItems: [])
+            return
+        }
+        openHostApp(url) { [weak self] in
+            self?.extensionContext?.completeRequest(returningItems: [])
         }
     }
 
@@ -137,19 +138,22 @@ final class ShareViewController: UIViewController {
 
     // MARK: - Host app launch
 
-    /// Walks the responder chain to find a `UIApplication` instance and
-    /// invokes its `open(_:)` selector. App extensions cannot link
-    /// `UIApplication.shared` directly, so the responder-chain trick is the
-    /// supported way to open the host app via URL scheme.
-    private func openHostApp(_ url: URL) {
-        var responder: UIResponder? = self
-        let selector = sel_registerName("openURL:")
-        while let current = responder {
-            if current.responds(to: selector) {
-                _ = current.perform(selector, with: url)
-                return
+    /// Asks the host system to open the containing app via URL scheme.
+    /// If the extension point declines the request, the queued URL remains
+    /// available and the main app drains it on its next foreground launch.
+    private func openHostApp(_ url: URL, completion: @escaping @MainActor @Sendable () -> Void) {
+        guard let extensionContext else {
+            completion()
+            return
+        }
+
+        extensionContext.open(url) { success in
+            if !success {
+                print("PulseShareExtension: host app open request was declined")
             }
-            responder = current.next
+            Task { @MainActor in
+                completion()
+            }
         }
     }
 }
