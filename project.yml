@@ -385,6 +385,7 @@ targets:
       - sdk: UIKit.framework
       - sdk: SwiftUI.framework
       - sdk: UniformTypeIdentifiers.framework
+      - package: EntropyCore
     info:
       path: PulseShareExtension/Info.plist
       properties:

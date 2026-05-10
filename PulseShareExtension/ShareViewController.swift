@@ -1,3 +1,4 @@
+import EntropyCore
 import SwiftUI
 import UIKit
 import UniformTypeIdentifiers
@@ -149,7 +150,7 @@ final class ShareViewController: UIViewController {
 
         extensionContext.open(url) { success in
             if !success {
-                print("PulseShareExtension: host app open request was declined")
+                Logger.shared.service("Share Extension: host app open request was declined", level: .warning)
             }
             Task { @MainActor in
                 completion()

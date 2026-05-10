@@ -61,9 +61,8 @@ final class LiveCloudSyncService: CloudSyncService, @unchecked Sendable {
         accountStatusProvider: AccountStatusProvider? = nil
     ) {
         self.notificationCenter = notificationCenter
-        let resolvedContainerIdentifier = containerIdentifier
         self.accountStatusProvider = accountStatusProvider ?? { completion in
-            CKContainer(identifier: resolvedContainerIdentifier).accountStatus { status, error in
+            CKContainer(identifier: containerIdentifier).accountStatus { status, error in
                 completion(status, error)
             }
         }
