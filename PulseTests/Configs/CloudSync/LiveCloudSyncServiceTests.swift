@@ -41,6 +41,22 @@ struct LiveCloudSyncServiceTests {
         #expect(sut.isAvailable)
     }
 
+    @Test("refreshAccountStatus handles provider error")
+    func refreshAccountStatusHandlesProviderError() async throws {
+        struct TestError: Error {}
+        let sut = LiveCloudSyncService(
+            notificationCenter: NotificationCenter(),
+            accountStatusProvider: { completion in
+                completion(.couldNotDetermine, TestError())
+            }
+        )
+
+        sut.refreshAccountStatus()
+        try await waitForStateUpdate(duration: TestWaitDuration.short)
+
+        #expect(sut.isAvailable == false)
+    }
+
     // MARK: - Event Handling
 
     @Test("Event without endDate maps to syncing")
