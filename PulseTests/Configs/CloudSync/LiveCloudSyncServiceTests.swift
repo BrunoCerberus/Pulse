@@ -6,11 +6,54 @@ import Testing
 
 @Suite("LiveCloudSyncService Tests")
 struct LiveCloudSyncServiceTests {
+    private func createSUT(notificationCenter: NotificationCenter = NotificationCenter()) -> LiveCloudSyncService {
+        LiveCloudSyncService(
+            notificationCenter: notificationCenter,
+            accountStatusProvider: { completion in
+                completion(.available, nil)
+            }
+        )
+    }
+
     // MARK: - Initial State
 
     @Test("Initial state defaults to not available")
     func initialState() {
-        let sut = LiveCloudSyncService(notificationCenter: NotificationCenter())
+        let sut = createSUT()
+        #expect(sut.isAvailable == false)
+    }
+
+    @Test("refreshAccountStatus surfaces provider status")
+    func refreshAccountStatusUsesProvider() async throws {
+        var providerCallCount = 0
+        let sut = LiveCloudSyncService(
+            notificationCenter: NotificationCenter(),
+            accountStatusProvider: { completion in
+                providerCallCount += 1
+                completion(.available, nil)
+            }
+        )
+
+        sut.refreshAccountStatus()
+        try await waitForStateUpdate(duration: TestWaitDuration.short)
+
+        #expect(providerCallCount == 1)
+        #expect(sut.isAvailable)
+    }
+
+    @Test("refreshAccountStatus handles provider error")
+    func refreshAccountStatusHandlesProviderError() async throws {
+        struct TestError: Error {}
+        let sut = LiveCloudSyncService(
+            notificationCenter: NotificationCenter(),
+            accountStatusProvider: { completion in
+                completion(.couldNotDetermine, TestError())
+            }
+        )
+
+        sut.refreshAccountStatus()
+        try await waitForStateUpdate(duration: TestWaitDuration.short)
+
         #expect(sut.isAvailable == false)
     }
 
@@ -18,7 +61,7 @@ struct LiveCloudSyncServiceTests {
 
     @Test("Event without endDate maps to syncing")
     func eventStartMapsToSyncing() async throws {
-        let sut = LiveCloudSyncService(notificationCenter: NotificationCenter())
+        let sut = createSUT()
         sut.applyEvent(endDate: nil, error: nil, succeeded: false)
 
         let publisher = sut.syncStatePublisher.setFailureType(to: Error.self).eraseToAnyPublisher()
@@ -28,7 +71,7 @@ struct LiveCloudSyncServiceTests {
 
     @Test("Event with endDate and success maps to succeeded")
     func eventEndMapsToSucceeded() async throws {
-        let sut = LiveCloudSyncService(notificationCenter: NotificationCenter())
+        let sut = createSUT()
         let endDate = Date(timeIntervalSince1970: 1_700_000_000)
         sut.applyEvent(endDate: endDate, error: nil, succeeded: true)
 
@@ -48,7 +91,7 @@ struct LiveCloudSyncServiceTests {
                 "boom"
             }
         }
-        let sut = LiveCloudSyncService(notificationCenter: NotificationCenter())
+        let sut = createSUT()
         sut.applyEvent(endDate: Date(), error: TestError(), succeeded: false)
 
         let publisher = sut.syncStatePublisher.setFailureType(to: Error.self).eraseToAnyPublisher()
@@ -62,7 +105,7 @@ struct LiveCloudSyncServiceTests {
 
     @Test("Event without success flag and no error still maps to failed")
     func eventEndWithoutSuccessMapsToFailed() async throws {
-        let sut = LiveCloudSyncService(notificationCenter: NotificationCenter())
+        let sut = createSUT()
         sut.applyEvent(endDate: Date(), error: nil, succeeded: false)
 
         let publisher = sut.syncStatePublisher.setFailureType(to: Error.self).eraseToAnyPublisher()
@@ -78,7 +121,7 @@ struct LiveCloudSyncServiceTests {
 
     @Test("startObserving is idempotent")
     func startObservingIdempotent() {
-        let sut = LiveCloudSyncService(notificationCenter: NotificationCenter())
+        let sut = createSUT()
         sut.startObserving()
         sut.startObserving()
         sut.stopObserving()
@@ -89,7 +132,7 @@ struct LiveCloudSyncServiceTests {
     @Test("stopObserving drops notification subscriptions")
     func stopObservingDropsSubscriptions() async throws {
         let notificationCenter = NotificationCenter()
-        let sut = LiveCloudSyncService(notificationCenter: notificationCenter)
+        let sut = createSUT(notificationCenter: notificationCenter)
         sut.startObserving()
         sut.stopObserving()
 
