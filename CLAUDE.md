@@ -48,6 +48,9 @@ Pulse/
 │   ├── QuickActions/             # Home-screen long-press shortcuts
 │   ├── SharedURL/                # Drains Share Extension App Group queue
 │   ├── Bookmarks/  ReadingHistory/
+│   ├── ForYou/                   # Personalized carousel (embedded in Home)
+│   ├── ForYouSettings/           # User controls for personalization
+│   ├── Personalization/          # On-device topic extraction + engagement signals
 │   ├── Notifications/  AppLock/  Onboarding/  Paywall/  SplashScreen/
 │   ├── CloudSync/                # CloudKit lifecycle (no UI)
 │   └── Configs/
@@ -61,8 +64,10 @@ Pulse/
 │       ├── Mocks/                # Mock services for tests
 │       └── Widget/
 ├── PulseWidgetExtension/         # WidgetKit + TTSLiveActivity
+├── PulseWidgetExtensionTests/
 ├── PulseShareExtension/          # public.url → SharedURLQueue
 ├── PulseTests/  PulseUITests/  PulseSnapshotTests/
+├── Documentation.docc/           # DocC bundle
 ```
 
 `ThemeManager` lives at `Pulse/Configs/ThemeManager.swift` (not in `DesignSystem/`).
@@ -75,7 +80,7 @@ See **AGENTS.md** for the full rules list. The load-bearing ones:
 - **Liquid Glass only** — `.glassEffect`, `GlassEffectContainer`, `.buttonStyle(.glassProminent)`. No legacy `.ultraThinMaterial` / `.regularMaterial`.
 - **Localization** — `AppLocalization.shared.localized("key")`, not `String(localized:)`. Use `static var` computed (never `static let`) for localized constants so runtime language switches propagate.
 - **Tiered cache** — `CachingNewsService` / `CachingMediaService` wrap Live services with L1 (NSCache, 10 min) + L2 (disk JSON, 24 h). Network fetches on cache miss use `Publisher.withNetworkResilience()` (2 retries, 1→2s backoff, 15s timeout). Stale L2 served when offline; pull-to-refresh clears L1 only.
-- **CloudKit** — `ModelConfiguration(cloudKitDatabase: .private("iCloud.com.bruno.Pulse-News"))`. Syncs `BookmarkedArticle`, `ReadArticle`, `UserPreferencesModel`. Every `@Model` property must have a default; no `@Attribute(.unique)` — uniqueness enforced in the service layer (fetch-before-upsert). `CloudSyncDomainInteractor` posts `.cloudSyncDidComplete`; Bookmarks / ReadingHistory / Settings / Home reload on it.
+- **CloudKit** — `ModelConfiguration(cloudKitDatabase: .private("iCloud.com.bruno.Pulse-News"))`. Syncs `BookmarkedArticle`, `ReadArticle`, `UserPreferencesModel`, `InterestTopicModel`. Every `@Model` property must have a default; no `@Attribute(.unique)` — uniqueness enforced in the service layer (fetch-before-upsert). `CloudSyncDomainInteractor` posts `.cloudSyncDidComplete`; Bookmarks / ReadingHistory / Settings / Home reload on it. `PendingEngagementEvent` (Personalization) lives in a **separate non-CloudKit container** — engagement signals stay per-device by design.
 - **iPad layouts** — branch on `@Environment(\.horizontalSizeClass)`, not `userInterfaceIdiom` (Slide Over reports compact). Lists: `LazyVStack` (compact) vs `LazyVGrid(.adaptive(minimum: 360))` (regular). `ArticleDetailView` caps at 720pt. Card components take `cardWidth` from callers — never probe `UIApplication` for screen width.
 - **System integrations** (App Intents, Quick Actions, Share Extension, push) route through `DeeplinkManager.shared.handle(deeplink:)`. All `AppIntent`s set `openAppWhenRun = true`.
 - **Share Extension can't run the LLM** (Gemma 3 1B ≈ 600 MB ≫ extension's ~120 MB budget). It enqueues `SharedURLItem` to `SharedURLQueue` (App Group JSON) and opens `pulse://shared`; main app drains on foreground.
@@ -96,13 +101,16 @@ See **AGENTS.md** for the full rules list. The load-bearing ones:
 | **Storage** | `StorageService.swift`, `LiveStorageService.swift`, `ReadArticle.swift` | SwiftData + CloudKit private DB |
 | **CloudSync** | `CloudSyncService.swift`, `LiveCloudSyncService.swift`, `CloudSyncDomainInteractor.swift`, `CloudSyncNotifications.swift` | Bridges `NSPersistentCloudKitContainer.eventChangedNotification` + `CKAccountChanged` into Combine |
 | **LLM** | `LLMService.swift`, `LiveLLMService.swift`, `LLMModelManager.swift`, `LLMConfiguration.swift` | SwiftLlama; dedicated pinned thread + CFRunLoop (llama.cpp thread-local state); Metal 32 GPU layers |
-| **StoreKit** | `StoreKitService.swift`, `LiveStoreKitService.swift`, `MockStoreKitService.swift`, `PremiumFeature.swift`, `PremiumGateView.swift`, `PaywallView.swift` | StoreKit 2; `MOCK_PREMIUM` env var for UI tests |
+| **StoreKit** | `StoreKitService.swift`, `LiveStoreKitService.swift`, `MockStoreKitService.swift`, `PremiumGateView.swift` (contains `PremiumFeature` enum), `PaywallView.swift` | StoreKit 2; `MOCK_PREMIUM` env var for UI tests |
 | **TTS** | `TextToSpeechService.swift`, `LiveTextToSpeechService.swift`, `SpeechPlayerBarView.swift` | `AVSpeechSynthesizer` + `MPNowPlayingInfoCenter` + `MPRemoteCommandCenter` |
 | **Live Activities** | `TTSActivityAttributes.swift`, `TTSLiveActivityController.swift`, `TTSLockScreenView.swift`, `PulseWidgetExtension/LiveActivities/TTSLiveActivity.swift` | Lock Screen + Dynamic Island; lifecycle driven by `ArticleDetailDomainInteractor` |
 | **Share Ext** | `PulseShareExtension/{ShareViewController,ShareRootView,SharedURLQueue}.swift`, `SharedURLImportService.swift`, `LiveSharedURLImportService.swift` | `public.url` → App Group queue → `pulse://shared` |
 | **Intents / QA** | `Pulse/Intents/*.swift`, `PulseAppShortcuts.swift`, `QuickActionType.swift`, `QuickActionHandler.swift` | All route via `DeeplinkManager`; QA titles localized (registered at scene-connect, not in `Info.plist`) |
 | **Analytics** | `AnalyticsService.swift`, `LiveAnalyticsService.swift`, `MockAnalyticsService.swift` | Type-safe Firebase events (incl. CloudKit sync lifecycle); Crashlytics breadcrumbs |
-| **Security** | `LiveAppLockService.swift`, `KeychainStore.swift`, `PrivacyInfo.xcprivacy` | Biometric + passcode app lock |
+| **Security** | `LiveAppLockService.swift`, `APIKeysProvider.swift` (Keychain storage for API keys), `PrivacyInfo.xcprivacy` | Biometric + passcode app lock; Keychain accessed inline via the `Security` framework |
+| **For You** | `ForYouDomainInteractor.swift`, `ForYouViewModel.swift`, `ForYouCarouselView.swift`, `ArticleScorer.swift`, `LiveForYouService.swift` | Personalized carousel embedded in `HomeView`; on-device scoring against the interest profile |
+| **Personalization** | `LiveTopicExtractionService.swift`, `LiveInterestProfileService.swift`, `LiveEngagementEventsService.swift`, `InterestTopicModel.swift`, `PendingEngagementEvent.swift`, `TopicExtractionDrainer.swift` | On-device LLM topic extraction, interest profile, engagement signals (separate non-CloudKit `ModelContainer`) |
+| **For You Settings** | `ForYouSettingsDomainInteractor.swift`, `ForYouSettingsViewModel.swift`, `ForYouSettingsView.swift` | User controls for personalization (opt-in/out, topic editing) |
 
 ## Commands
 
@@ -131,7 +139,9 @@ Resolution order: **Remote Config** (primary, min 10 chars) → **env vars** (`#
 | `pulse://home` / `media` / `feed` / `bookmarks` / `search` / `settings` | tabs |
 | `pulse://search?q=query` | search with query |
 | `pulse://article?id=path/to/article` | specific article |
+| `pulse://media?type=video` (or `podcast`) | media tab filtered by type |
 | `pulse://shared` | drain Share Extension queue |
+| `pulse://category?name=<category>` | **deprecated** — redirects to home tab |
 
 **Push payloads:**
 - `{"deeplink": "pulse://..."}` *(recommended)*

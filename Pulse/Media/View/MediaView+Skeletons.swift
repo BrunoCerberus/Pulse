@@ -48,7 +48,7 @@ struct FeaturedMediaCardSkeleton: View {
             }
             .padding(Spacing.md)
             .frame(maxWidth: .infinity, alignment: .leading)
-            .background(.ultraThinMaterial.opacity(0.3))
+            .glassEffect(.regular, in: .rect)
         }
         .frame(width: cardWidth, height: cardHeight)
         .clipShape(RoundedRectangle(cornerRadius: CornerRadius.lg, style: .continuous))
