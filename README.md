@@ -6,6 +6,7 @@ A modern iOS news aggregation app built with Clean Architecture, SwiftUI, and Co
 
 - **Authentication** — Firebase Auth (Google + Apple Sign-In) with in-app account deletion (Apple Guideline 5.1.1(v)), including transparent reauthentication when Firebase requires it.
 - **Home / Media / Feed** — breaking news carousel, category filters, recently-read; Videos + Podcasts with in-app playback (YouTube opens externally, podcasts use `AVPlayer`); AI-powered Daily Digest (**Premium**).
+- **Personalized For You** — on-device topic extraction from reading history surfaces a recommended-articles carousel on Home; opt-in/out and topic controls via For You Settings.
 - **Article Summarization** — on-device summaries via Gemma 3 1B (**Premium**).
 - **Text-to-Speech** — `AVSpeechSynthesizer`, speed presets (1×/1.25×/1.5×/2×), language-aware voices, floating mini-player, AirPods/CarPlay/Lock Screen controls.
 - **Offline** — tiered L1 (memory) + L2 (disk) cache, retry with exponential backoff, `NWPathMonitor`, offline banner, graceful degradation.
@@ -20,7 +21,7 @@ A modern iOS news aggregation app built with Clean Architecture, SwiftUI, and Co
 - **App Intents / Siri / Spotlight** — five intents via `PulseAppShortcuts`.
 - **Share Extension** — `public.url` → App Group queue → summarize in the main app (Gemma 3 1B exceeds the extension memory budget).
 - **Home Screen Quick Actions** — Search, Daily Digest, Bookmarks, Breaking News (localized, registered dynamically).
-- **iCloud Cross-Device Sync** — bookmarks, reading history, and preferences via `NSPersistentCloudKitContainer` (always-on, zero-UI).
+- **iCloud Cross-Device Sync** — bookmarks, reading history, preferences, and interest topics via `NSPersistentCloudKitContainer` (always-on, zero-UI). Engagement signals stay per-device by design.
 - **iPad** — `NavigationSplitView` sidebar on regular width, `LazyVGrid(.adaptive)` article lists, 720pt reading cap.
 - **Analytics & Crashlytics** — type-safe Firebase events (incl. CloudKit sync lifecycle); Crashlytics breadcrumbs.
 
@@ -97,13 +98,16 @@ Pulse/
 │   ├── Summarization/ ArticleDetail/ Intents/ QuickActions/ SharedURL/
 │   ├── Bookmarks/ ReadingHistory/ CloudSync/ Search/ Settings/
 │   ├── Notifications/ AppLock/ Onboarding/ Paywall/ SplashScreen/
+│   ├── ForYou/ ForYouSettings/ Personalization/
 │   └── Configs/              # Navigation, DesignSystem, Models, Networking,
 │                             # Storage, CloudSync, Analytics, Mocks, Widget
 ├── PulseWidgetExtension/     # WidgetKit + TTS Live Activity
+├── PulseWidgetExtensionTests/
 ├── PulseShareExtension/      # public.url → App Group queue
 ├── PulseTests/               # Swift Testing
 ├── PulseUITests/             # XCTest + accessibility audits
 ├── PulseSnapshotTests/       # SnapshotTesting
+├── Documentation.docc/       # DocC bundle
 ├── .github/workflows/        # CI/CD
 └── .claude/commands/         # Claude Code slash commands
 ```
@@ -122,8 +126,8 @@ Pulse/
 ## CI/CD
 
 - `ci.yml` — code quality + build + tests on PR
-- `claude.yml` — Claude Code on `@claude` mentions
 - `claude-code-review.yml` — Claude review on PR open/sync
+- `codeql.yml` — CodeQL security analysis on PR + weekly
 - `scheduled-tests.yml` — daily at 2 AM UTC
 
 Schemes: `PulseDev`, `PulseProd`, `PulseTests`, `PulseUITests`, `PulseSnapshotTests`.
@@ -135,6 +139,7 @@ Schemes: `PulseDev`, `PulseProd`, `PulseTests`, `PulseUITests`, `PulseSnapshotTe
 | `pulse://home` / `media` / `feed` / `bookmarks` / `search` / `settings` | tabs |
 | `pulse://search?q=query` | search with query |
 | `pulse://article?id=path/to/article` | specific article |
+| `pulse://media?type=video` (or `podcast`) | media tab filtered by type |
 
 ## Testing
 
