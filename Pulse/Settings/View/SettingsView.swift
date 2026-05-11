@@ -71,7 +71,6 @@ struct SettingsView: View {
             .scrollContentBackground(.hidden)
         }
         .navigationTitle(Constants.title)
-        .toolbarBackground(.ultraThinMaterial, for: .navigationBar)
         .alert(Constants.signOut, isPresented: Binding(
             get: { viewModel.viewState.showSignOutConfirmation },
             set: { _ in viewModel.handle(event: .onCancelSignOut) }

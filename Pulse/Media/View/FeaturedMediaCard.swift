@@ -159,7 +159,7 @@ struct FeaturedMediaCard: View {
                 endPoint: .bottom
             )
         )
-        .background(.ultraThinMaterial.opacity(0.3))
+        .glassEffect(.regular, in: .rect)
     }
 
     private func mediaTypeBadge(_ type: MediaType) -> some View {

@@ -35,7 +35,6 @@ struct PaywallView: View {
         NavigationView {
             content
                 .navigationBarTitleDisplayMode(.inline)
-                .toolbarBackground(.ultraThinMaterial, for: .navigationBar)
                 .toolbar {
                     ToolbarItem(placement: .topBarLeading) {
                         Button {

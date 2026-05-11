@@ -278,7 +278,7 @@ struct SearchView<R: SearchNavigationRouter>: View {
                             ProgressView()
                                 .scaleEffect(1.2)
                                 .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .center)
-                                .background(.ultraThinMaterial.opacity(0.5))
+                                .glassEffect(.regular, in: .rect)
                         }
                     }
 
