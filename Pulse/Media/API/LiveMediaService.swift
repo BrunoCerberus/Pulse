@@ -7,17 +7,10 @@ import Foundation
 /// Fetches media content from the RSS aggregator backend which provides
 /// videos from YouTube channels and podcasts from various podcast feeds.
 final class LiveMediaService: APIRequest, MediaService {
-    private let useSupabase: Bool
-
-    override init() {
-        useSupabase = SupabaseConfig.isConfigured
-        super.init()
-
-        if useSupabase {
-            Logger.shared.service("LiveMediaService: using Supabase backend", level: .info)
-        } else {
-            Logger.shared.service("LiveMediaService: Supabase not configured", level: .warning)
-        }
+    /// Computed, not cached: `SupabaseConfig.isConfigured` reads Remote Config,
+    /// which is fetched asynchronously after this service is constructed.
+    private var useSupabase: Bool {
+        SupabaseConfig.isConfigured
     }
 
     func fetchMedia(type: MediaType?, language: String, page: Int) -> AnyPublisher<[Article], Error> {
