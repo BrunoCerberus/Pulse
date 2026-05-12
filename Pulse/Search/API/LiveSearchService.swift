@@ -9,17 +9,11 @@ import Foundation
 final class LiveSearchService: APIRequest, SearchService {
     private let recentSearchesKey = "pulse.recentSearches"
     private let maxRecentSearches = 10
-    private let isConfigured: Bool
 
-    override init() {
-        isConfigured = SupabaseConfig.isConfigured
-        super.init()
-
-        if isConfigured {
-            Logger.shared.service("LiveSearchService: using Supabase backend", level: .info)
-        } else {
-            Logger.shared.service("LiveSearchService: Supabase not configured", level: .error)
-        }
+    /// Computed, not cached: `SupabaseConfig.isConfigured` reads Remote Config,
+    /// which is fetched asynchronously after this service is constructed.
+    private var isConfigured: Bool {
+        SupabaseConfig.isConfigured
     }
 
     func search(query: String, page: Int, sortBy: String) -> AnyPublisher<[Article], Error> {

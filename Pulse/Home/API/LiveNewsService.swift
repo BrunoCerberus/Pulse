@@ -7,17 +7,10 @@ import Foundation
 /// Articles are fetched from the RSS aggregator backend which provides
 /// high-resolution images and full article content from multiple sources.
 final class LiveNewsService: APIRequest, NewsService {
-    private let isConfigured: Bool
-
-    override init() {
-        isConfigured = SupabaseConfig.isConfigured
-        super.init()
-
-        if isConfigured {
-            Logger.shared.service("LiveNewsService: using Supabase backend", level: .info)
-        } else {
-            Logger.shared.service("LiveNewsService: Supabase not configured", level: .error)
-        }
+    /// Computed, not cached: `SupabaseConfig.isConfigured` reads Remote Config,
+    /// which is fetched asynchronously after this service is constructed.
+    private var isConfigured: Bool {
+        SupabaseConfig.isConfigured
     }
 
     func fetchTopHeadlines(language: String, country _: String, page: Int) -> AnyPublisher<[Article], Error> {
