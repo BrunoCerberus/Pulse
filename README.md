@@ -55,8 +55,8 @@ See `CLAUDE.md` for key files and `AGENTS.md` for conventions and how to add a f
 
 ## Requirements
 
-- Xcode 26.4+
-- iOS 26.4+
+- Xcode 26.5+
+- iOS 26.5+
 - Swift 6.2+
 
 ## Setup
