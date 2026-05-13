@@ -25,10 +25,17 @@ jobs:
     - name: Checkout code
       uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
 
-    - name: Setup Xcode
-      uses: maxim-lobanov/setup-xcode@ed7a3b1fda3918c0306d1b724322adc0b8cc0a90 # v1
-      with:
-        xcode-version: '26.4'
+    - name: Select Xcode 26.5
+      run: |
+        XCODE_PATH=$(ls -d /Applications/Xcode_26.5*.app 2>/dev/null | head -1)
+        if [ -z "$XCODE_PATH" ]; then
+          echo "::error::Xcode 26.5 not found on runner"
+          ls -d /Applications/Xcode_26*.app || true
+          exit 1
+        fi
+        sudo xcode-select -s "$XCODE_PATH/Contents/Developer"
+        echo "DEVELOPER_DIR=$XCODE_PATH/Contents/Developer" >> "$GITHUB_ENV"
+        xcodebuild -version
 
     - name: Install iOS Simulator Runtime
       run: |
@@ -403,10 +410,17 @@ jobs:
     - name: Checkout code
       uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
 
-    - name: Setup Xcode
-      uses: maxim-lobanov/setup-xcode@ed7a3b1fda3918c0306d1b724322adc0b8cc0a90 # v1
-      with:
-        xcode-version: '26.4'
+    - name: Select Xcode 26.5
+      run: |
+        XCODE_PATH=$(ls -d /Applications/Xcode_26.5*.app 2>/dev/null | head -1)
+        if [ -z "$XCODE_PATH" ]; then
+          echo "::error::Xcode 26.5 not found on runner"
+          ls -d /Applications/Xcode_26*.app || true
+          exit 1
+        fi
+        sudo xcode-select -s "$XCODE_PATH/Contents/Developer"
+        echo "DEVELOPER_DIR=$XCODE_PATH/Contents/Developer" >> "$GITHUB_ENV"
+        xcodebuild -version
 
     - name: Install iOS Simulator Runtime
       run: |
@@ -726,10 +740,17 @@ jobs:
       with:
         fetch-depth: 0
 
-    - name: Setup Xcode
-      uses: maxim-lobanov/setup-xcode@ed7a3b1fda3918c0306d1b724322adc0b8cc0a90 # v1
-      with:
-        xcode-version: '26.4'
+    - name: Select Xcode 26.5
+      run: |
+        XCODE_PATH=$(ls -d /Applications/Xcode_26.5*.app 2>/dev/null | head -1)
+        if [ -z "$XCODE_PATH" ]; then
+          echo "::error::Xcode 26.5 not found on runner"
+          ls -d /Applications/Xcode_26*.app || true
+          exit 1
+        fi
+        sudo xcode-select -s "$XCODE_PATH/Contents/Developer"
+        echo "DEVELOPER_DIR=$XCODE_PATH/Contents/Developer" >> "$GITHUB_ENV"
+        xcodebuild -version
 
     - name: Install iOS Simulator Runtime
       run: |
