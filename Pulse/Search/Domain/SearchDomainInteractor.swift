@@ -148,6 +148,10 @@ final class SearchDomainInteractor: CombineInteractor {
                 state.error = nil
                 state.hasSearched = false
                 state.isOfflineError = false
+                // Cancel above doesn't fire .sink completion, so reset manually to avoid stuck loading state.
+                state.isLoading = false
+                state.isLoadingMore = false
+                state.isSorting = false
             }
             return
         }
@@ -230,12 +234,16 @@ final class SearchDomainInteractor: CombineInteractor {
     }
 
     private func clearResults() {
+        searchCancellable?.cancel()
         updateState { state in
             state.query = ""
             state.results = []
             state.suggestions = []
             state.error = nil
             state.hasSearched = false
+            state.isLoading = false
+            state.isLoadingMore = false
+            state.isSorting = false
         }
     }
 

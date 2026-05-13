@@ -18,6 +18,8 @@ struct ArticleDetailView: View {
     private let serviceLocator: ServiceLocator
     private let onRelatedArticleTapped: ((Article) -> Void)?
 
+    @ScaledMetric(relativeTo: .body) private var relatedArticleCardHeight: CGFloat = 96
+
     @State private var isPremium = false
     @State private var isPaywallPresented = false
 
@@ -37,29 +39,33 @@ struct ArticleDetailView: View {
 
     var body: some View {
         ZStack(alignment: .bottom) {
-            ZStack(alignment: .top) {
-                LinearGradient.subtleBackground
-                    .ignoresSafeArea()
+            GeometryReader { proxy in
+                ZStack(alignment: .top) {
+                    LinearGradient.subtleBackground
+                        .ignoresSafeArea()
 
-                ScrollView {
-                    VStack(alignment: .leading, spacing: 0) {
-                        if let imageURL = viewModel.viewState.article.heroImageURL, let url = URL(string: imageURL) {
-                            StretchyAsyncImage(
-                                url: url,
-                                baseHeight: heroBaseHeight,
-                                accessibilityLabel: viewModel.viewState.article.title
-                            )
-                        }
+                    ScrollView {
+                        VStack(alignment: .leading, spacing: 0) {
+                            if let imageURL = viewModel.viewState.article.heroImageURL,
+                               let url = URL(string: imageURL)
+                            {
+                                StretchyAsyncImage(
+                                    url: url,
+                                    baseHeight: heroBaseHeight,
+                                    accessibilityLabel: viewModel.viewState.article.title
+                                )
+                            }
 
-                        HStack(spacing: 0) {
-                            Spacer(minLength: 0)
-                            contentCard
-                                .frame(maxWidth: horizontalSizeClass == .regular ? readingMaxWidth : .infinity)
-                            Spacer(minLength: 0)
+                            HStack(spacing: 0) {
+                                Spacer(minLength: 0)
+                                contentCard(minHeight: contentCardMinHeight(in: proxy))
+                                    .frame(maxWidth: horizontalSizeClass == .regular ? readingMaxWidth : .infinity)
+                                Spacer(minLength: 0)
+                            }
                         }
                     }
+                    .accessibilityIdentifier("articleDetailScrollView")
                 }
-                .accessibilityIdentifier("articleDetailScrollView")
             }
 
             if viewModel.viewState.isTTSPlayerVisible {
@@ -221,7 +227,12 @@ struct ArticleDetailView: View {
         }
     }
 
-    private var contentCard: some View {
+    /// Sizes the card to fill below the hero so `.regularMaterial` doesn't expose the gradient at the bottom.
+    private func contentCardMinHeight(in proxy: GeometryProxy) -> CGFloat {
+        max(proxy.size.height - heroBaseHeight + Spacing.lg, 0)
+    }
+
+    private func contentCard(minHeight: CGFloat) -> some View {
         VStack(alignment: .leading, spacing: Spacing.md) {
             if let category = viewModel.viewState.article.category {
                 GlassCategoryChip(category: category, style: .medium, showIcon: true)
@@ -272,6 +283,7 @@ struct ArticleDetailView: View {
             }
         }
         .padding(Spacing.lg)
+        .frame(maxWidth: .infinity, minHeight: minHeight, alignment: .top)
         .background(.regularMaterial)
         .clipShape(
             .rect(
@@ -353,10 +365,11 @@ struct ArticleDetailView: View {
                     LazyHStack(spacing: Spacing.sm) {
                         ForEach(viewModel.viewState.relatedArticles) { item in
                             relatedArticleCard(for: item)
-                                .frame(width: 260)
+                                .frame(width: 260, height: relatedArticleCardHeight)
                         }
                     }
                 }
+                .frame(height: relatedArticleCardHeight)
                 .scrollIndicators(.hidden)
             }
         }

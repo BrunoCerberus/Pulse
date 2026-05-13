@@ -124,12 +124,11 @@ struct HeroNewsCard: View {
         .frame(maxWidth: .infinity, alignment: .leading)
         .background(
             LinearGradient(
-                colors: [.clear, .black.opacity(0.3)],
+                colors: [.clear, .black.opacity(0.6)],
                 startPoint: .top,
                 endPoint: .bottom
             )
         )
-        .glassEffect(.regular, in: .rect)
     }
 
     private var breakingBadge: some View {
