@@ -39,6 +39,15 @@ jobs:
         echo "DEVELOPER_DIR=$XCODE_PATH/Contents/Developer" >> "$GITHUB_ENV"
         xcodebuild -version
 
+    - name: Install iOS Simulator Runtime
+      run: |
+        echo "Installing iOS simulator runtime..."
+        xcrun simctl list runtimes > /dev/null 2>&1 || true
+        sleep 5
+        xcodebuild -downloadPlatform iOS
+        echo "Available iOS simulator runtimes:"
+        xcrun simctl list runtimes | grep iOS
+
     - name: Install XcodeGen
       run: brew install xcodegen
 
