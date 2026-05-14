@@ -1,0 +1,278 @@
+name: LGPD Conformance
+
+# Lei Geral de Proteção de Dados (Brazil, Lei nº 13.709/2018).
+# Gates PRs that touch user data, analytics, networking, or storage on:
+#   1. Static PII pattern scan (CPF/CNPJ/phone/credentials)
+#   2. PrivacyInfo.xcprivacy + Info.plist tracking declarations
+#   3. PR-body checklist enforcement (LGPD review section)
+#   4. Claude-driven LGPD compliance review of the diff
+
+on:
+  pull_request:
+    branches: [develop, master, main]
+    types: [opened, synchronize, reopened, ready_for_review]
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+permissions: {}
+
+jobs:
+  pii-scan:
+    name: PII Pattern Scan (LGPD)
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    permissions:
+      contents: read
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
+        with:
+          fetch-depth: 0
+
+      - name: Resolve diff range
+        id: diff
+        run: |
+          BASE_SHA="${{ github.event.pull_request.base.sha }}"
+          HEAD_SHA="${{ github.event.pull_request.head.sha }}"
+          git fetch --no-tags --depth=1 origin "$BASE_SHA" || true
+          # Limit scan to changed Swift / plist / strings files in app code.
+          git diff --name-only --diff-filter=AM "$BASE_SHA" "$HEAD_SHA" \
+            | grep -E '\.(swift|plist|strings|json)$' \
+            | grep -vE '^(PulseTests|PulseUITests|PulseSnapshotTests|PulseWidgetExtensionTests)/' \
+            | grep -vE '/(Mocks?|Fixtures?|TestData|__Snapshots__|build|DerivedData)/' \
+            > changed.txt || true
+          echo "count=$(wc -l < changed.txt | tr -d ' ')" >> "$GITHUB_OUTPUT"
+          echo "Files to scan:"
+          cat changed.txt || true
+
+      - name: Scan for Brazilian PII patterns
+        if: steps.diff.outputs.count != '0'
+        run: |
+          set +e
+          FAIL=0
+
+          scan() {
+            local label="$1"; local pattern="$2"
+            # PCRE2 + multiline-safe; restrict to changed files only.
+            local hits
+            hits=$(rg -n --pcre2 --color=never -f <(printf '%s\n' "$pattern") \
+                     -- $(cat changed.txt) 2>/dev/null)
+            if [ -n "$hits" ]; then
+              echo "::warning title=LGPD PII pattern: ${label}::Possible ${label} literal in diff"
+              echo "$hits" | while IFS= read -r line; do
+                file=$(echo "$line" | cut -d: -f1)
+                lineno=$(echo "$line" | cut -d: -f2)
+                msg=$(echo "$line" | cut -d: -f3-)
+                echo "::warning file=${file},line=${lineno}::${label}: ${msg}"
+              done
+              FAIL=1
+            fi
+          }
+
+          # CPF: 000.000.000-00 (with delimiters) or bare 11-digit literal in plausible context.
+          scan "CPF" '\b\d{3}\.\d{3}\.\d{3}-\d{2}\b'
+          # CNPJ: 00.000.000/0000-00
+          scan "CNPJ" '\b\d{2}\.\d{3}\.\d{3}/\d{4}-\d{2}\b'
+          # Brazilian phone: +55 (xx) 9xxxx-xxxx style
+          scan "BR phone" '\+55\s*\(?\d{2}\)?\s*9?\d{4}-?\d{4}'
+          # RG (less rigid; flag long digit-with-dash patterns near "rg" hint)
+          scan "RG-like ID" '(?i)\brg["'\'':\s=]{0,4}\d{2}\.?\d{3}\.?\d{3}-?\d{1,2}\b'
+          # Hardcoded API/secret tokens (generic high-entropy markers)
+          scan "Hardcoded secret" '(?i)(api[_-]?key|secret|token|bearer)\s*[:=]\s*["\x27][A-Za-z0-9_\-]{24,}["\x27]'
+          # Plaintext email literal that isn't an example/placeholder
+          scan "Plaintext email" '\b[A-Za-z0-9._%+\-]+@(?!example\.|test\.|localhost)[A-Za-z0-9.\-]+\.[A-Za-z]{2,}\b'
+
+          if [ $FAIL -eq 1 ]; then
+            echo ""
+            echo "::notice::LGPD PII scan flagged patterns above. These are warnings."
+            echo "::notice::Verify each is fake/test data; otherwise remove or move behind a service boundary."
+          else
+            echo "No LGPD PII patterns detected in changed files."
+          fi
+
+  privacy-manifest:
+    name: Privacy Manifest (LGPD)
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    permissions:
+      contents: read
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
+
+      - name: Validate PrivacyInfo.xcprivacy
+        run: |
+          MANIFEST="Pulse/PrivacyInfo.xcprivacy"
+          if [ ! -f "$MANIFEST" ]; then
+            echo "::error file=${MANIFEST}::Privacy manifest missing — required for LGPD Art. 9 (transparency)"
+            exit 1
+          fi
+
+          python3 - <<'PY'
+          import plistlib, sys
+          path = "Pulse/PrivacyInfo.xcprivacy"
+          with open(path, "rb") as f:
+              try:
+                  data = plistlib.load(f)
+              except Exception as e:
+                  print(f"::error file={path}::Manifest is not valid plist: {e}")
+                  sys.exit(1)
+
+          required_top = ["NSPrivacyTracking", "NSPrivacyTrackingDomains",
+                          "NSPrivacyCollectedDataTypes", "NSPrivacyAccessedAPITypes"]
+          missing = [k for k in required_top if k not in data]
+          if missing:
+              for k in missing:
+                  print(f"::error file={path}::Missing required key for LGPD: {k}")
+              sys.exit(1)
+
+          # LGPD Art. 6 (data minimization) — every collected type must declare a purpose.
+          for entry in data.get("NSPrivacyCollectedDataTypes", []):
+              dtype = entry.get("NSPrivacyCollectedDataType", "<unknown>")
+              purposes = entry.get("NSPrivacyCollectedDataTypePurposes") or []
+              if not purposes:
+                  print(f"::error file={path}::Collected data type {dtype} has no declared purpose (LGPD Art. 6 — finalidade)")
+                  sys.exit(1)
+
+          # If tracking is enabled, NSPrivacyTrackingDomains must be non-empty.
+          if data.get("NSPrivacyTracking") and not data.get("NSPrivacyTrackingDomains"):
+              print(f"::error file={path}::NSPrivacyTracking=true but NSPrivacyTrackingDomains is empty")
+              sys.exit(1)
+
+          print(f"Privacy manifest LGPD checks passed ({len(data.get('NSPrivacyCollectedDataTypes', []))} data types declared).")
+          PY
+
+      - name: Validate Info.plist consent strings
+        run: |
+          # Strings advertised to users must be localized via Localizable.strings or present here.
+          for plist in Pulse/Info.plist PulseShareExtension/Info.plist PulseWidgetExtension/Info.plist; do
+            [ -f "$plist" ] || continue
+            python3 - "$plist" <<'PY'
+          import plistlib, sys
+          path = sys.argv[1]
+          with open(path, "rb") as f:
+              data = plistlib.load(f)
+          # Any *UsageDescription key must have a non-empty value (LGPD Art. 8 — consentimento informado).
+          bad = [k for k, v in data.items()
+                 if k.endswith("UsageDescription") and (not isinstance(v, str) or not v.strip())]
+          if bad:
+              for k in bad:
+                  print(f"::error file={path}::{k} is empty — LGPD requires explicit purpose for consent")
+              sys.exit(1)
+          # If the app declares NSUserTrackingUsageDescription, the manifest must enable tracking.
+          if "NSUserTrackingUsageDescription" in data:
+              print(f"::notice file={path}::NSUserTrackingUsageDescription present — confirm Pulse/PrivacyInfo.xcprivacy NSPrivacyTracking=true")
+          print(f"{path}: consent strings OK")
+          PY
+          done
+
+  pr-checklist:
+    name: PR Checklist (LGPD)
+    runs-on: ubuntu-latest
+    timeout-minutes: 3
+    permissions:
+      contents: read
+      pull-requests: read
+
+    steps:
+      - name: Enforce LGPD checklist in PR body
+        env:
+          GH_TOKEN: ${{ github.token }}
+          PR_NUMBER: ${{ github.event.pull_request.number }}
+          REPO: ${{ github.repository }}
+        run: |
+          BODY=$(gh pr view "$PR_NUMBER" --repo "$REPO" --json body -q .body)
+          if [ -z "$BODY" ]; then
+            echo "::error::PR body is empty — LGPD conformance requires a privacy review section"
+            exit 1
+          fi
+
+          # Accept any of: a checked LGPD item, an explicit "no PII" disclaimer, or "LGPD: N/A".
+          if echo "$BODY" | grep -Eiq '\[x\][[:space:]]+lgpd|lgpd[[:space:]]*(review|reviewed|conformance)[[:space:]]*:|lgpd[[:space:]]*:[[:space:]]*n/?a|no[[:space:]]+(pii|personal[[:space:]]+data)'; then
+            echo "LGPD checklist acknowledgement found in PR body."
+            exit 0
+          fi
+
+          echo "::error::PR body must acknowledge LGPD review. Add one of:"
+          echo "::error::  - [x] LGPD: data flow reviewed (purpose, lawful basis, retention)"
+          echo "::error::  - LGPD: N/A (no personal data touched)"
+          echo "::error::  - 'No PII' disclaimer with rationale"
+          exit 1
+
+  ai-review:
+    name: Claude LGPD Review
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    # Only review once the author marks the PR ready, and skip on every push to keep cost bounded.
+    if: ${{ github.event.pull_request.draft == false && (github.event.action == 'opened' || github.event.action == 'ready_for_review' || github.event.action == 'reopened') }}
+    permissions:
+      contents: read
+      pull-requests: write
+      issues: write
+      id-token: write
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
+        with:
+          fetch-depth: 1
+
+      - name: Run Claude LGPD review
+        uses: anthropics/claude-code-action@686da461dadac38c2bde9089909de4042a75ebf0 # v1
+        env:
+          CLAUDE_CODE_EFFORT_LEVEL: max
+        with:
+          claude_code_oauth_token: ${{ secrets.CLAUDE_CODE_OAUTH_TOKEN }}
+          track_progress: true
+          allowed_bots: "dependabot[bot]"
+          prompt: |
+            REPO: ${{ github.repository }}
+            PR NUMBER: ${{ github.event.pull_request.number }}
+
+            You are reviewing this PR for **LGPD compliance** (Lei Geral de Proteção
+            de Dados Pessoais — Brazil, Lei nº 13.709/2018). The PR branch is
+            already checked out.
+
+            Focus the review on the diff. Cross-check against:
+            - **Art. 6** — Princípios: finalidade, adequação, necessidade (data minimization)
+            - **Art. 7 / 11** — Bases legais (consent, legitimate interest, legal obligation)
+            - **Art. 8** — Consent: free, informed, unambiguous, specific to a purpose
+            - **Art. 9 / 10** — Transparency about what is collected and why
+            - **Art. 17–22** — Direitos do titular (access, correction, deletion, portability)
+            - **Art. 33** — International data transfer safeguards
+            - **Art. 46–49** — Security: encryption, access control, retention limits
+            - **Art. 48** — Breach notification triggers (ANPD + titular)
+
+            iOS-specific concerns to check in the diff:
+            - New analytics events that may carry user identifiers without an opt-out
+            - Third-party SDKs added without a corresponding entry in
+              `Pulse/PrivacyInfo.xcprivacy` `NSPrivacyCollectedDataTypes`
+            - Personal data written to `UserDefaults` / SwiftData / CloudKit without a
+              clear retention policy or deletion path (this app exposes
+              `SettingsViewModel.clearAllUserData()` — new stores must hook into it)
+            - Logs that include emails, names, device identifiers, or IP addresses
+            - Network calls that send user data to non-Brazilian endpoints without an
+              SCC/adequacy basis (Art. 33)
+            - Sign-out / account deletion flow regressions (deletion must be complete)
+
+            STRICT OUTPUT RULES:
+            - Every finding tied to a specific file:line MUST be posted via
+              `mcp__github_inline_comment__create_inline_comment`. Do NOT embed
+              file:line findings in the top-level summary.
+            - The progress/summary comment must contain only: a high-level verdict,
+              counts of findings by severity, and cross-cutting observations that
+              don't map to a single line.
+            - If you have zero line-level findings, say so explicitly in the summary —
+              do not substitute prose for inline comments.
+            - Only post GitHub comments — don't submit review text as chat messages.
+
+            Approvals: if no significant LGPD issues, run `gh pr review --approve`
+            with a short rationale. If you find significant issues
+            (consent gap, undeclared data type, missing deletion path, cross-border
+            transfer without basis), run `gh pr review --request-changes`.
+            Never leave review verdicts only as prose.
+          claude_args: '--model claude-opus-4-7 --allowedTools "mcp__github_inline_comment__create_inline_comment,Bash(gh pr comment:*),Bash(gh pr diff:*),Bash(gh pr view:*),Bash(gh pr review:*)"'

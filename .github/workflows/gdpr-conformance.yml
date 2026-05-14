@@ -1,0 +1,298 @@
+name: GDPR Conformance
+
+# General Data Protection Regulation (EU 2016/679).
+# Gates PRs that touch user data, analytics, networking, or storage on:
+#   1. Static PII pattern scan (EU identifiers / credentials)
+#   2. PrivacyInfo.xcprivacy + Info.plist tracking declarations
+#   3. PR-body checklist enforcement (GDPR review section)
+#   4. Claude-driven GDPR compliance review of the diff
+
+on:
+  pull_request:
+    branches: [develop, master, main]
+    types: [opened, synchronize, reopened, ready_for_review]
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+permissions: {}
+
+jobs:
+  pii-scan:
+    name: PII Pattern Scan (GDPR)
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    permissions:
+      contents: read
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
+        with:
+          fetch-depth: 0
+
+      - name: Resolve diff range
+        id: diff
+        run: |
+          BASE_SHA="${{ github.event.pull_request.base.sha }}"
+          HEAD_SHA="${{ github.event.pull_request.head.sha }}"
+          git fetch --no-tags --depth=1 origin "$BASE_SHA" || true
+          git diff --name-only --diff-filter=AM "$BASE_SHA" "$HEAD_SHA" \
+            | grep -E '\.(swift|plist|strings|json)$' \
+            | grep -vE '^(PulseTests|PulseUITests|PulseSnapshotTests|PulseWidgetExtensionTests)/' \
+            | grep -vE '/(Mocks?|Fixtures?|TestData|__Snapshots__|build|DerivedData)/' \
+            > changed.txt || true
+          echo "count=$(wc -l < changed.txt | tr -d ' ')" >> "$GITHUB_OUTPUT"
+          echo "Files to scan:"
+          cat changed.txt || true
+
+      - name: Scan for EU PII / credential patterns
+        if: steps.diff.outputs.count != '0'
+        run: |
+          set +e
+          FAIL=0
+
+          scan() {
+            local label="$1"; local pattern="$2"
+            local hits
+            hits=$(rg -n --pcre2 --color=never -f <(printf '%s\n' "$pattern") \
+                     -- $(cat changed.txt) 2>/dev/null)
+            if [ -n "$hits" ]; then
+              echo "::warning title=GDPR PII pattern: ${label}::Possible ${label} literal in diff"
+              echo "$hits" | while IFS= read -r line; do
+                file=$(echo "$line" | cut -d: -f1)
+                lineno=$(echo "$line" | cut -d: -f2)
+                msg=$(echo "$line" | cut -d: -f3-)
+                echo "::warning file=${file},line=${lineno}::${label}: ${msg}"
+              done
+              FAIL=1
+            fi
+          }
+
+          # IBAN: 2-letter country + 2 check + up to 30 alnum (loose)
+          scan "IBAN" '\b[A-Z]{2}\d{2}[A-Z0-9]{11,30}\b'
+          # Plaintext email (excluding example domains)
+          scan "Plaintext email" '\b[A-Za-z0-9._%+\-]+@(?!example\.|test\.|localhost)[A-Za-z0-9.\-]+\.[A-Za-z]{2,}\b'
+          # Phone-like sequences with EU country codes (+33/+34/+39/+44/+49 etc.)
+          scan "EU phone" '\+(?:3[0-9]|4[0-9])\s?\(?\d{1,4}\)?[\s\-]?\d{2,4}[\s\-]?\d{2,4}[\s\-]?\d{2,4}'
+          # UK NI number (LL NN NN NN L)
+          scan "UK NIN" '\b[A-CEGHJ-PR-TW-Z]{2}\d{6}[A-D]\b'
+          # Hardcoded API/secret tokens
+          scan "Hardcoded secret" '(?i)(api[_-]?key|secret|token|bearer)\s*[:=]\s*["\x27][A-Za-z0-9_\-]{24,}["\x27]'
+          # IP literals (v4) outside test-reserved ranges
+          scan "IPv4 literal" '\b(?!10\.)(?!127\.)(?!192\.168\.)(?!172\.(?:1[6-9]|2\d|3[01])\.)\d{1,3}\.\d{1,3}\.\d{1,3}\.\d{1,3}\b'
+          # Cross-border transfer hints (pasted endpoints in non-EU regions)
+          scan "Non-EU endpoint" '(?i)\.(us-east|us-west|ap-(?:south|northeast|southeast)|sa-east)[\-.][a-z0-9.\-]*amazonaws\.com'
+
+          if [ $FAIL -eq 1 ]; then
+            echo ""
+            echo "::notice::GDPR PII scan flagged patterns above. These are warnings."
+            echo "::notice::Verify each is fake/test data; otherwise remove, encrypt at rest, or document a lawful basis."
+          else
+            echo "No GDPR PII patterns detected in changed files."
+          fi
+
+  privacy-manifest:
+    name: Privacy Manifest (GDPR)
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    permissions:
+      contents: read
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
+
+      - name: Validate PrivacyInfo.xcprivacy
+        run: |
+          MANIFEST="Pulse/PrivacyInfo.xcprivacy"
+          if [ ! -f "$MANIFEST" ]; then
+            echo "::error file=${MANIFEST}::Privacy manifest missing — required for GDPR Art. 13/14 (information to data subject)"
+            exit 1
+          fi
+
+          python3 - <<'PY'
+          import plistlib, sys
+          path = "Pulse/PrivacyInfo.xcprivacy"
+          with open(path, "rb") as f:
+              try:
+                  data = plistlib.load(f)
+              except Exception as e:
+                  print(f"::error file={path}::Manifest is not valid plist: {e}")
+                  sys.exit(1)
+
+          required_top = ["NSPrivacyTracking", "NSPrivacyTrackingDomains",
+                          "NSPrivacyCollectedDataTypes", "NSPrivacyAccessedAPITypes"]
+          missing = [k for k in required_top if k not in data]
+          if missing:
+              for k in missing:
+                  print(f"::error file={path}::Missing required key for GDPR: {k}")
+              sys.exit(1)
+
+          # GDPR Art. 5(1)(c) — data minimization — every collected type needs a declared purpose.
+          for entry in data.get("NSPrivacyCollectedDataTypes", []):
+              dtype = entry.get("NSPrivacyCollectedDataType", "<unknown>")
+              purposes = entry.get("NSPrivacyCollectedDataTypePurposes") or []
+              if not purposes:
+                  print(f"::error file={path}::Collected data type {dtype} has no declared purpose (GDPR Art. 5(1)(b)/(c))")
+                  sys.exit(1)
+
+          # If NSPrivacyTracking=true, GDPR Art. 7 requires explicit consent path; tracking domains must be enumerated.
+          if data.get("NSPrivacyTracking") and not data.get("NSPrivacyTrackingDomains"):
+              print(f"::error file={path}::NSPrivacyTracking=true but NSPrivacyTrackingDomains is empty (GDPR Art. 7)")
+              sys.exit(1)
+
+          # Sensitive categories under GDPR Art. 9 require explicit consent — flag for human review if present.
+          sensitive = {"NSPrivacyCollectedDataTypeHealth", "NSPrivacyCollectedDataTypeFitness",
+                       "NSPrivacyCollectedDataTypeSensitiveInfo", "NSPrivacyCollectedDataTypePreciseLocation"}
+          for entry in data.get("NSPrivacyCollectedDataTypes", []):
+              if entry.get("NSPrivacyCollectedDataType") in sensitive:
+                  print(f"::warning file={path}::Sensitive category {entry['NSPrivacyCollectedDataType']} declared — verify GDPR Art. 9 explicit-consent path")
+
+          print(f"Privacy manifest GDPR checks passed ({len(data.get('NSPrivacyCollectedDataTypes', []))} data types declared).")
+          PY
+
+      - name: Validate Info.plist consent strings
+        run: |
+          for plist in Pulse/Info.plist PulseShareExtension/Info.plist PulseWidgetExtension/Info.plist; do
+            [ -f "$plist" ] || continue
+            python3 - "$plist" <<'PY'
+          import plistlib, sys
+          path = sys.argv[1]
+          with open(path, "rb") as f:
+              data = plistlib.load(f)
+          bad = [k for k, v in data.items()
+                 if k.endswith("UsageDescription") and (not isinstance(v, str) or not v.strip())]
+          if bad:
+              for k in bad:
+                  print(f"::error file={path}::{k} is empty — GDPR Art. 13 requires informing the user of the purpose")
+              sys.exit(1)
+          if "NSUserTrackingUsageDescription" in data:
+              print(f"::notice file={path}::NSUserTrackingUsageDescription present — confirm Pulse/PrivacyInfo.xcprivacy NSPrivacyTracking=true and consent UI exists")
+          print(f"{path}: consent strings OK")
+          PY
+          done
+
+  pr-checklist:
+    name: PR Checklist (GDPR)
+    runs-on: ubuntu-latest
+    timeout-minutes: 3
+    permissions:
+      contents: read
+      pull-requests: read
+
+    steps:
+      - name: Enforce GDPR checklist in PR body
+        env:
+          GH_TOKEN: ${{ github.token }}
+          PR_NUMBER: ${{ github.event.pull_request.number }}
+          REPO: ${{ github.repository }}
+        run: |
+          BODY=$(gh pr view "$PR_NUMBER" --repo "$REPO" --json body -q .body)
+          if [ -z "$BODY" ]; then
+            echo "::error::PR body is empty — GDPR conformance requires a privacy review section"
+            exit 1
+          fi
+
+          if echo "$BODY" | grep -Eiq '\[x\][[:space:]]+gdpr|gdpr[[:space:]]*(review|reviewed|conformance)[[:space:]]*:|gdpr[[:space:]]*:[[:space:]]*n/?a|no[[:space:]]+(pii|personal[[:space:]]+data)'; then
+            echo "GDPR checklist acknowledgement found in PR body."
+            exit 0
+          fi
+
+          echo "::error::PR body must acknowledge GDPR review. Add one of:"
+          echo "::error::  - [x] GDPR: lawful basis identified, data minimization checked"
+          echo "::error::  - GDPR: N/A (no personal data touched)"
+          echo "::error::  - 'No PII' disclaimer with rationale"
+          exit 1
+
+  ai-review:
+    name: Claude GDPR Review
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    if: ${{ github.event.pull_request.draft == false && (github.event.action == 'opened' || github.event.action == 'ready_for_review' || github.event.action == 'reopened') }}
+    permissions:
+      contents: read
+      pull-requests: write
+      issues: write
+      id-token: write
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
+        with:
+          fetch-depth: 1
+
+      - name: Run Claude GDPR review
+        uses: anthropics/claude-code-action@686da461dadac38c2bde9089909de4042a75ebf0 # v1
+        env:
+          CLAUDE_CODE_EFFORT_LEVEL: max
+        with:
+          claude_code_oauth_token: ${{ secrets.CLAUDE_CODE_OAUTH_TOKEN }}
+          track_progress: true
+          allowed_bots: "dependabot[bot]"
+          prompt: |
+            REPO: ${{ github.repository }}
+            PR NUMBER: ${{ github.event.pull_request.number }}
+
+            You are reviewing this PR for **GDPR compliance** (Regulation (EU)
+            2016/679). The PR branch is already checked out.
+
+            Focus the review on the diff. Cross-check against:
+            - **Art. 5** — Principles: lawfulness, fairness, transparency,
+              purpose limitation, data minimization, accuracy, storage limitation,
+              integrity & confidentiality
+            - **Art. 6** — Lawful basis (consent, contract, legal obligation,
+              vital interest, public interest, legitimate interest)
+            - **Art. 7** — Conditions for consent (freely given, specific,
+              informed, unambiguous; withdrawable as easily as given)
+            - **Art. 9** — Special categories (health, biometric, political views,
+              sexual orientation, etc.) require explicit consent
+            - **Art. 13/14** — Information provided when collecting data
+            - **Art. 15–22** — Data subject rights (access, rectification, erasure,
+              restriction, portability, object, automated decisions)
+            - **Art. 25** — Privacy by design and by default
+            - **Art. 32** — Security: encryption, pseudonymization, access control
+            - **Art. 33/34** — Breach notification (72h to supervisory authority)
+            - **Art. 35** — DPIA triggers (large-scale processing, profiling,
+              special categories)
+            - **Art. 44–49** — Cross-border transfers (Schrems II, SCCs,
+              adequacy decisions); since 2023 EU-US Data Privacy Framework
+
+            iOS-specific concerns to check in the diff:
+            - New analytics events that may carry user identifiers without a
+              lawful basis declared in the privacy notice
+            - Third-party SDKs added without an entry in
+              `Pulse/PrivacyInfo.xcprivacy` `NSPrivacyCollectedDataTypes` and
+              without a documented data processing agreement
+            - Personal data written to `UserDefaults` / SwiftData / CloudKit
+              without a retention policy or erasure path (this app exposes
+              `SettingsViewModel.clearAllUserData()` — new stores must hook into it,
+              including `PendingEngagementEvent` in the non-CloudKit container)
+            - Logs that include emails, names, device IDs, or IP addresses
+              (recital 30 — IPs are personal data)
+            - Network calls that send personal data to non-EU regions without an
+              SCC, adequacy decision, or DPF basis (Art. 44–49)
+            - Profiling / automated decisions affecting users (For You /
+              Personalization paths) — Art. 22 right to object
+            - Sign-out / account deletion regressions (Art. 17 right to erasure
+              must be complete and verifiable)
+
+            STRICT OUTPUT RULES:
+            - Every finding tied to a specific file:line MUST be posted via
+              `mcp__github_inline_comment__create_inline_comment`. Do NOT embed
+              file:line findings in the top-level summary.
+            - The progress/summary comment must contain only: a high-level verdict,
+              counts of findings by severity, and cross-cutting observations that
+              don't map to a single line.
+            - If you have zero line-level findings, say so explicitly in the summary —
+              do not substitute prose for inline comments.
+            - Only post GitHub comments — don't submit review text as chat messages.
+
+            Approvals: if no significant GDPR issues, run `gh pr review --approve`
+            with a short rationale. If you find significant issues (missing lawful
+            basis, undeclared data type, missing erasure path, cross-border transfer
+            without basis, profiling without opt-out), run
+            `gh pr review --request-changes`. Never leave review verdicts only as
+            prose.
+          claude_args: '--model claude-opus-4-7 --allowedTools "mcp__github_inline_comment__create_inline_comment,Bash(gh pr comment:*),Bash(gh pr diff:*),Bash(gh pr view:*),Bash(gh pr review:*)"'
