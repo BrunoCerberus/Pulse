@@ -91,25 +91,14 @@ struct SignInView: View {
 
     private var signInButtonsSection: some View {
         VStack(spacing: Spacing.md) {
-            // Sign in with Apple
-            Button {
+            // Sign in with Apple — Apple-provided button satisfies HIG 4.8 /
+            // App Review guidelines; custom buttons can trigger rejection.
+            AppleSignInButton {
                 HapticManager.shared.buttonPress()
                 viewModel.handle(event: .onAppleSignInTapped)
-            } label: {
-                HStack(spacing: Spacing.sm) {
-                    Image(systemName: "apple.logo")
-                        .font(.headline)
-
-                    Text(Constants.signInApple)
-                        .font(Typography.labelLarge)
-                }
-                .frame(maxWidth: .infinity)
-                .frame(height: 50)
-                .background(Color.white)
-                .foregroundStyle(.black)
-                .clipShape(RoundedRectangle(cornerRadius: CornerRadius.md))
             }
-            .buttonStyle(.plain)
+            .frame(height: 50)
+            .clipShape(RoundedRectangle(cornerRadius: CornerRadius.md))
             .accessibilityLabel(Constants.signInApple)
             .accessibilityHint(Constants.appleHint)
 
@@ -194,6 +183,39 @@ struct SignInView: View {
             .glassEffect(.regular, in: .rect(cornerRadius: CornerRadius.lg))
             .accessibilityElement(children: .combine)
             .accessibilityLabel(Constants.signingIn)
+        }
+    }
+}
+
+// MARK: - AppleSignInButton
+
+/// SwiftUI wrapper around `ASAuthorizationAppleIDButton`. App Review requires
+/// the Apple-provided control rather than a custom-styled button.
+private struct AppleSignInButton: UIViewRepresentable {
+    let action: () -> Void
+
+    func makeCoordinator() -> Coordinator {
+        Coordinator(action: action)
+    }
+
+    func makeUIView(context: Context) -> ASAuthorizationAppleIDButton {
+        let button = ASAuthorizationAppleIDButton(type: .signIn, style: .white)
+        button.addTarget(context.coordinator, action: #selector(Coordinator.handleTap), for: .touchUpInside)
+        return button
+    }
+
+    func updateUIView(_: ASAuthorizationAppleIDButton, context: Context) {
+        context.coordinator.action = action
+    }
+
+    final class Coordinator: NSObject {
+        var action: () -> Void
+        init(action: @escaping () -> Void) {
+            self.action = action
+        }
+
+        @objc func handleTap() {
+            action()
         }
     }
 }
