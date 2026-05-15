@@ -36,17 +36,20 @@ Open a PR from the current branch with a body that satisfies the LGPD / GDPR / C
 
 5. **Confirm with the user** before opening: show the proposed title, the privacy block, and a 1-line summary of the body. Adjust if asked.
 
-6. **Push the branch if needed**, then open the PR:
+6. **Push the branch if needed**, then open the PR. **ALWAYS try `gh` first** — it handles auth, retries, error messages, and JSON encoding properly. Do NOT default to the curl fallback because of "stale memory" from an earlier session; networks recover and `gh` is the right tool when it works:
    ```bash
    gh pr create --title "<title>" --body "$(cat <<'EOF'
    <body>
    EOF
    )"
    ```
-   If `gh` errors with `Post "https://api.github.com/...": dial tcp ...: i/o timeout`, fall back to the REST API forced through the US GitHub edge:
+   **Fallback ONLY if `gh` actually errors right now** with `Post "https://api.github.com/...": dial tcp ...: i/o timeout` (observed against the Brazil edge `4.228.31.149`). Re-test `gh` with `gh pr view <some-pr> --json url` before assuming it's broken — don't carry forward a failure from an earlier turn. When a fallback IS needed, force the connection through the US edge:
    ```bash
    TOKEN=$(gh auth token)
-   export BODY='<body>'
+   export BODY='<body>'              # MUST be exported BEFORE python reads it.
+                                      # Bare `BODY=$(...)` does NOT put BODY in the
+                                      # env for child processes — this nuked PR
+                                      # #319's body once. Always export at assign.
    PAYLOAD=$(python3 -c "import json,os;print(json.dumps({'title':'<title>','head':'<branch>','base':'master','body':os.environ['BODY']}))")
    curl -sS --max-time 30 --resolve api.github.com:443:140.82.121.6 \
      -X POST https://api.github.com/repos/<owner>/<repo>/pulls \
@@ -54,7 +57,6 @@ Open a PR from the current branch with a body that satisfies the LGPD / GDPR / C
      -H "Accept: application/vnd.github+json" \
      -d "$PAYLOAD"
    ```
-   Always export shell variables BEFORE the python child process reads them — `VAR=$(...)` alone doesn't put VAR in the env (this nuked PR #319's body once).
 
 7. **Return the PR URL.**
 
