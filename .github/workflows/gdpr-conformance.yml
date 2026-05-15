@@ -52,6 +52,9 @@ jobs:
         with:
           fetch-depth: 0
 
+      - name: Ensure ripgrep is available
+        run: command -v rg >/dev/null 2>&1 || (sudo apt-get update -qq && sudo apt-get install -y -qq ripgrep)
+
       - name: US SSN pattern ban (CCPA / CPRA)
         shell: bash
         run: |
@@ -172,6 +175,9 @@ jobs:
     steps:
       - name: Checkout code
         uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
+
+      - name: Ensure ripgrep is available
+        run: command -v rg >/dev/null 2>&1 || (sudo apt-get update -qq && sudo apt-get install -y -qq ripgrep)
 
       - name: clearAllUserData() is defined and wired from sign-out + delete-account
         shell: bash

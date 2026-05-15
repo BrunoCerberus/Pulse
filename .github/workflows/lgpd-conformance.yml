@@ -55,6 +55,9 @@ jobs:
           # Full history so gitleaks can sweep every commit.
           fetch-depth: 0
 
+      - name: Ensure ripgrep is available
+        run: command -v rg >/dev/null 2>&1 || (sudo apt-get update -qq && sudo apt-get install -y -qq ripgrep)
+
       - name: CPF / CNPJ pattern ban
         shell: bash
         run: |
@@ -151,6 +154,9 @@ jobs:
       - name: Checkout code
         uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
 
+      - name: Ensure ripgrep is available
+        run: command -v rg >/dev/null 2>&1 || (sudo apt-get update -qq && sudo apt-get install -y -qq ripgrep)
+
       - name: Required docs exist and are non-empty
         shell: bash
         run: |
@@ -193,6 +199,9 @@ jobs:
     steps:
       - name: Checkout code
         uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
+
+      - name: Ensure ripgrep is available
+        run: command -v rg >/dev/null 2>&1 || (sudo apt-get update -qq && sudo apt-get install -y -qq ripgrep)
 
       - name: clearAllUserData() is defined and wired from sign-out + delete-account
         shell: bash
