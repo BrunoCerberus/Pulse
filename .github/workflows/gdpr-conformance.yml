@@ -37,8 +37,9 @@ jobs:
         run: |
           BASE_SHA="${{ github.event.pull_request.base.sha }}"
           HEAD_SHA="${{ github.event.pull_request.head.sha }}"
-          git fetch --no-tags --depth=1 origin "$BASE_SHA" || true
-          git diff --name-only --diff-filter=AM "$BASE_SHA" "$HEAD_SHA" \
+          # checkout above used fetch-depth: 0, so all history is local — no extra fetch needed.
+          # --diff-filter=ACMR includes renamed/copied files (their post-rename content is new on this PR).
+          git diff --name-only --diff-filter=ACMR "$BASE_SHA" "$HEAD_SHA" \
             | grep -E '\.(swift|plist|strings|json)$' \
             | grep -vE '^(PulseTests|PulseUITests|PulseSnapshotTests|PulseWidgetExtensionTests)/' \
             | grep -vE '/(Mocks?|Fixtures?|TestData|__Snapshots__|build|DerivedData)/' \
@@ -52,12 +53,14 @@ jobs:
         run: |
           set +e
           FAIL=0
+          # Read filenames into an array so paths with spaces don't word-split.
+          mapfile -t FILES < changed.txt
+          [ "${#FILES[@]}" -eq 0 ] && { echo "No files to scan."; exit 0; }
 
           scan() {
             local label="$1"; local pattern="$2"
             local hits
-            hits=$(rg -n --pcre2 --color=never -f <(printf '%s\n' "$pattern") \
-                     -- $(cat changed.txt) 2>/dev/null)
+            hits=$(rg -n --pcre2 --color=never -e "$pattern" -- "${FILES[@]}" 2>/dev/null)
             if [ -n "$hits" ]; then
               echo "::warning title=GDPR PII pattern: ${label}::Possible ${label} literal in diff"
               echo "$hits" | while IFS= read -r line; do
@@ -80,9 +83,8 @@ jobs:
           scan "UK NIN" '\b[A-CEGHJ-PR-TW-Z]{2}\d{6}[A-D]\b'
           # Hardcoded API/secret tokens
           scan "Hardcoded secret" '(?i)(api[_-]?key|secret|token|bearer)\s*[:=]\s*["\x27][A-Za-z0-9_\-]{24,}["\x27]'
-          # IP literals (v4) outside test-reserved ranges
-          scan "IPv4 literal" '\b(?!10\.)(?!127\.)(?!192\.168\.)(?!172\.(?:1[6-9]|2\d|3[01])\.)\d{1,3}\.\d{1,3}\.\d{1,3}\.\d{1,3}\b'
-          # Cross-border transfer hints (pasted endpoints in non-EU regions)
+          # Cross-border transfer hints (pasted endpoints in non-EU AWS regions)
+          # IPv4-literal scan dropped — too noisy against semver / build numbers / version strings.
           scan "Non-EU endpoint" '(?i)\.(us-east|us-west|ap-(?:south|northeast|southeast)|sa-east)[\-.][a-z0-9.\-]*amazonaws\.com'
 
           if [ $FAIL -eq 1 ]; then
@@ -195,21 +197,28 @@ jobs:
             exit 1
           fi
 
-          if echo "$BODY" | grep -Eiq '\[x\][[:space:]]+gdpr|gdpr[[:space:]]*(review|reviewed|conformance)[[:space:]]*:|gdpr[[:space:]]*:[[:space:]]*n/?a|no[[:space:]]+(pii|personal[[:space:]]+data)'; then
+          # Accept only an explicit, line-anchored GDPR acknowledgement marker. Loose
+          # phrases like "no PII" anywhere in the body are rejected because they
+          # silently disarm the gate when used inside negations or unrelated prose.
+          if printf '%s\n' "$BODY" | grep -iqE '^[[:space:]]*(-[[:space:]]+)?(\[x\][[:space:]]+gdpr|gdpr[[:space:]]*(review|reviewed|conformance|status)[[:space:]]*:|gdpr[[:space:]]*:[[:space:]]*n/?a)'; then
             echo "GDPR checklist acknowledgement found in PR body."
             exit 0
           fi
 
-          echo "::error::PR body must acknowledge GDPR review. Add one of:"
+          echo "::error::PR body must acknowledge GDPR review on its own line. Add one of:"
           echo "::error::  - [x] GDPR: lawful basis identified, data minimization checked"
           echo "::error::  - GDPR: N/A (no personal data touched)"
-          echo "::error::  - 'No PII' disclaimer with rationale"
+          echo "::error::  - GDPR review: <one-line rationale>"
           exit 1
 
   ai-review:
     name: Claude GDPR Review
     runs-on: ubuntu-latest
     timeout-minutes: 20
+    # Only review once the author marks the PR ready, and skip on every push to keep cost bounded.
+    # Trade-off: re-pushed changes (synchronize event) are NOT re-reviewed by Claude — the
+    # deterministic jobs above still run on every push. Document this in branch protection
+    # so reviewers know the AI verdict is a snapshot of the initial diff, not the merged state.
     if: ${{ github.event.pull_request.draft == false && (github.event.action == 'opened' || github.event.action == 'ready_for_review' || github.event.action == 'reopened') }}
     permissions:
       contents: read
@@ -289,10 +298,15 @@ jobs:
               do not substitute prose for inline comments.
             - Only post GitHub comments — don't submit review text as chat messages.
 
-            Approvals: if no significant GDPR issues, run `gh pr review --approve`
-            with a short rationale. If you find significant issues (missing lawful
-            basis, undeclared data type, missing erasure path, cross-border transfer
-            without basis, profiling without opt-out), run
-            `gh pr review --request-changes`. Never leave review verdicts only as
-            prose.
-          claude_args: '--model claude-opus-4-7 --allowedTools "mcp__github_inline_comment__create_inline_comment,Bash(gh pr comment:*),Bash(gh pr diff:*),Bash(gh pr view:*),Bash(gh pr review:*)"'
+            Verdict: post a single summary comment via `gh pr comment` whose first
+            line is one of:
+              - `GDPR review: APPROVE — <one-line rationale>`
+              - `GDPR review: REQUEST CHANGES — <one-line rationale>` (missing
+                lawful basis, undeclared data type, missing erasure path,
+                cross-border transfer without basis, profiling without opt-out)
+            Do NOT call `gh pr review --approve` or `gh pr review --request-changes`.
+            The merge gate is a human reading your verdict comment — this avoids the
+            prompt-injection vector where adversarial text in the diff could coerce
+            an LLM-driven approval. Never leave the verdict only as prose buried in
+            the summary.
+          claude_args: '--model claude-opus-4-7 --allowedTools "mcp__github_inline_comment__create_inline_comment,Bash(gh pr comment:*),Bash(gh pr diff:*),Bash(gh pr view:*)"'
