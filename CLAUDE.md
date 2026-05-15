@@ -86,6 +86,7 @@ See **AGENTS.md** for the full rules list. The load-bearing ones:
 - **Share Extension can't run the LLM** (Gemma 3 1B ≈ 600 MB ≫ extension's ~120 MB budget). It enqueues `SharedURLItem` to `SharedURLQueue` (App Group JSON) and opens `pulse://shared`; main app drains on foreground.
 - **Mac Catalyst is OFF** (`SUPPORTS_MACCATALYST: false`) — vendored `swift-llama-cpp` xcframework has no Catalyst slice.
 - **Sign-out and account deletion** call `SettingsViewModel.clearAllUserData()` — SwiftData + L1/L2 + keychain + UserDefaults + ThemeManager + widget data.
+- **Privacy conformance gates merges.** Two PR workflows hard-fail on (a) missing/invalid `Pulse/PrivacyInfo.xcprivacy` or any `NSPrivacyCollectedDataType` without a declared purpose, and (b) PR body missing a line-anchored acknowledgement marker (`LGPD: N/A`, `GDPR: N/A`, `CCPA: N/A`, or `LGPD review: <rationale>` / `GDPR review: <rationale>` / `CCPA review: <rationale>`). `lgpd-conformance.yml` covers Brazil; `gdpr-conformance.yml` covers GDPR + CCPA together (~80% rule overlap). Adding a new SDK that collects data needs a corresponding `NSPrivacyCollectedDataTypes` entry. Claude AI review jobs post a verdict comment but never auto-approve — humans approve.
 
 ## Key Files
 

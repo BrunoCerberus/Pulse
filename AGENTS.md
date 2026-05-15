@@ -117,6 +117,7 @@ struct HomeDomainInteractorTests {
 30. **FaceID/TouchID and scene lifecycle** — biometric prompts fire `sceneWillResignActive` / `sceneDidBecomeActive` without `sceneDidEnterBackground`. Any re-lock logic in `sceneDidBecomeActive` must guard against this with an `isAuthenticating` flag set before `LAContext.evaluatePolicy()` and cleared in `defer`, or the app immediately re-locks after successful auth.
 31. **Personalization is opportunistic, not load-bearing.** `LiveTopicExtractionService` runs the on-device LLM to extract topics from articles the user reads; container failures and extraction errors are non-fatal (services no-op, log at `warning`). `LiveEngagementEventsService` owns a **separate `ModelContainer`** for `PendingEngagementEvent` because engagement signals are per-device by design (no CloudKit). `ForYouCarouselView` is embedded inside `HomeView` and bubbles taps up via an `onArticleTapped` callback rather than owning its own navigation — same pattern as Home's breaking-news and recently-read carousels.
 32. **For You Settings is the only personalization UI surface.** Reach it via `Page.forYouSettings` from Settings. Supported actions on `ForYouSettingsDomainInteractor`: `loadProfile`, `removeTopic(topicID:)`, and a confirmed reset (`requestReset` → `confirmReset` / `cancelReset`) that wipes every topic. New personalization affordances belong here.
+33. **Privacy conformance gates PR merges** via `.github/workflows/lgpd-conformance.yml` (Brazil — Lei 13.709/2018) and `.github/workflows/gdpr-conformance.yml` (EU 2016/679 + CCPA / CPRA, Cal. Civ. Code §1798.100 et seq., folded into one workflow because the regimes overlap ~80%). Each runs four jobs: ripgrep PII pattern scan (warnings only), `Pulse/PrivacyInfo.xcprivacy` validation (hard fail — every `NSPrivacyCollectedDataType` must declare a purpose, `NSPrivacyTracking=true` requires non-empty `NSPrivacyTrackingDomains`), PR-body checklist (hard fail — see Commits & PRs), and a Claude AI review with a regulation-tailored prompt. The AI review job runs only on `opened` / `ready_for_review` / `reopened` (not on `synchronize`) to bound API spend; the deterministic gates run on every push. Verdict comments are posted via `gh pr comment` and **never auto-approve** — humans approve, to avoid prompt-injection coercing an LLM into rubber-stamping. Adding a new third-party SDK or new analytics field that touches user data needs both: (a) a matching entry in `NSPrivacyCollectedDataTypes` with declared purposes, and (b) the PR body acknowledgement covering lawful basis / retention / deletion path.
 
 ## Common Tasks
 
@@ -137,6 +138,16 @@ Update `ViewState` → modify `View` → add DT adaptation for horizontal layout
 ## Commits & PRs
 
 Conventional Commits: `feat:`, `fix:`, `refactor:`, `test:`, `docs:`. PR title short (<70 chars); body describes *what* + *why* + manual test steps; include screenshots for UI.
+
+**PR body must include a privacy acknowledgement on its own line** — required by `lgpd-conformance.yml` and `gdpr-conformance.yml`. For changes that don't touch personal data, add:
+
+```
+LGPD: N/A (no personal data touched)
+GDPR: N/A (no personal data touched)
+CCPA: N/A (no personal data touched)
+```
+
+For changes that do, replace `N/A` with a one-line rationale: `LGPD: data flow reviewed (purpose: X, lawful basis: Y, deletion via clearAllUserData)` and equivalents for GDPR / CCPA. Loose phrases like "no PII" embedded in prose are rejected — markers are line-anchored and case-insensitive but must start the line (optionally prefixed by `- `). The GDPR workflow accepts either `GDPR: …` or `CCPA: …` (it covers both regimes), so one of the two is enough; LGPD requires its own marker.
 
 ## Troubleshooting
 
