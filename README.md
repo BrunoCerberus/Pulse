@@ -128,11 +128,11 @@ Pulse/
 - `ci.yml` — code quality + build + tests on PR
 - `claude-code-review.yml` — Claude review on PR open/sync
 - `codeql.yml` — CodeQL security analysis on PR + weekly
-- `lgpd-conformance.yml` — LGPD (Brazil, Lei 13.709/2018) PR gates: PII scan, privacy manifest validation, PR-body checklist, Claude AI review
-- `gdpr-conformance.yml` — GDPR (EU 2016/679) + CCPA / CPRA (California §1798.100 et seq.) PR gates; same four-job shape, dual regime
+- `lgpd-conformance.yml` — LGPD (Brazil, Lei 13.709/2018) PR gates
+- `gdpr-conformance.yml` — GDPR (EU 2016/679) + CCPA / CPRA (California §1798.100 et seq.) PR gates
 - `scheduled-tests.yml` — daily at 2 AM UTC
 
-PRs must include a line-anchored privacy acknowledgement in the body — one of `LGPD: N/A`, `GDPR: N/A`, `CCPA: N/A`, or `LGPD review: <rationale>` / `GDPR review: <rationale>` — or the gate fails. Both workflows hard-fail on missing/invalid `Pulse/PrivacyInfo.xcprivacy`.
+The two conformance workflows mirror the shape of the same-named workflows in `pulse-backend`. Each runs four parallel jobs on push to master + PRs + weekly: **PII Scan** (CPF/CNPJ/SSN regex bans, email allowlist in `.github/pii-allowlist.txt`, gitleaks with custom rules in `.github/lgpd-gdpr-rules.toml`), **Docs Presence**, **Operational Controls** (sign-out / account-delete wipe is wired, env-var key fallbacks are `#if DEBUG`-gated, networking uses https, CloudKit container is `.private(...)`), **Structural Integrity** (`Pulse/PrivacyInfo.xcprivacy` validation). No PR-body marker required — the deterministic code checks do the gating.
 
 Schemes: `PulseDev`, `PulseProd`, `PulseTests`, `PulseUITests`, `PulseSnapshotTests`.
 
