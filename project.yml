@@ -135,6 +135,7 @@ targets:
         ITSAppUsesNonExemptEncryption: false
         UIBackgroundModes:
           - remote-notification
+          - audio
         CFBundleURLTypes:
           - CFBundleURLName: com.bruno.Pulse
             CFBundleURLSchemes:
