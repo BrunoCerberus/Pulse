@@ -1,11 +1,18 @@
-name: GDPR Conformance
+name: GDPR + CCPA Conformance
 
-# General Data Protection Regulation (EU 2016/679).
+# Combined privacy review covering:
+#   - GDPR (EU Regulation 2016/679)
+#   - CCPA / CPRA (California Consumer Privacy Act + Privacy Rights Act,
+#     Cal. Civ. Code §1798.100 et seq.)
+# The two regimes overlap ~80% (transparency, deletion, opt-out, lawful basis).
+# This workflow folds them into one review to avoid triplicating the LGPD/GDPR
+# scaffolding for marginal incremental coverage.
+#
 # Gates PRs that touch user data, analytics, networking, or storage on:
-#   1. Static PII pattern scan (EU identifiers / credentials)
+#   1. Static PII pattern scan (EU identifiers, US SSN, credentials)
 #   2. PrivacyInfo.xcprivacy + Info.plist tracking declarations
-#   3. PR-body checklist enforcement (GDPR review section)
-#   4. Claude-driven GDPR compliance review of the diff
+#   3. PR-body checklist enforcement (GDPR or CCPA acknowledgement)
+#   4. Claude-driven GDPR + CCPA compliance review of the diff
 
 on:
   pull_request:
@@ -20,7 +27,7 @@ permissions: {}
 
 jobs:
   pii-scan:
-    name: PII Pattern Scan (GDPR)
+    name: PII Pattern Scan (GDPR + CCPA)
     runs-on: ubuntu-latest
     timeout-minutes: 5
     permissions:
@@ -48,7 +55,7 @@ jobs:
           echo "Files to scan:"
           cat changed.txt || true
 
-      - name: Scan for EU PII / credential patterns
+      - name: Scan for EU + US PII / credential patterns
         if: steps.diff.outputs.count != '0'
         run: |
           set +e
@@ -62,7 +69,7 @@ jobs:
             local hits
             hits=$(rg -n --pcre2 --color=never -e "$pattern" -- "${FILES[@]}" 2>/dev/null)
             if [ -n "$hits" ]; then
-              echo "::warning title=GDPR PII pattern: ${label}::Possible ${label} literal in diff"
+              echo "::warning title=GDPR/CCPA PII pattern: ${label}::Possible ${label} literal in diff"
               echo "$hits" | while IFS= read -r line; do
                 file=$(echo "$line" | cut -d: -f1)
                 lineno=$(echo "$line" | cut -d: -f2)
@@ -73,6 +80,7 @@ jobs:
             fi
           }
 
+          # GDPR-relevant patterns:
           # IBAN: 2-letter country + 2 check + up to 30 alnum (loose)
           scan "IBAN" '\b[A-Z]{2}\d{2}[A-Z0-9]{11,30}\b'
           # Plaintext email (excluding example domains)
@@ -81,6 +89,11 @@ jobs:
           scan "EU phone" '\+(?:3[0-9]|4[0-9])\s?\(?\d{1,4}\)?[\s\-]?\d{2,4}[\s\-]?\d{2,4}[\s\-]?\d{2,4}'
           # UK NI number (LL NN NN NN L)
           scan "UK NIN" '\b[A-CEGHJ-PR-TW-Z]{2}\d{6}[A-D]\b'
+          # CCPA/CPRA-relevant patterns:
+          # US Social Security Number — sensitive PI under CPRA §1798.140(ae). Excludes the
+          # advisory-invalid 000/666/9xx area numbers to cut false positives on test data.
+          scan "US SSN" '\b(?!000|666|9\d{2})\d{3}-(?!00)\d{2}-(?!0000)\d{4}\b'
+          # Common to both:
           # Hardcoded API/secret tokens
           scan "Hardcoded secret" '(?i)(api[_-]?key|secret|token|bearer)\s*[:=]\s*["\x27][A-Za-z0-9_\-]{24,}["\x27]'
           # Cross-border transfer hints (pasted endpoints in non-EU AWS regions)
@@ -89,14 +102,14 @@ jobs:
 
           if [ $FAIL -eq 1 ]; then
             echo ""
-            echo "::notice::GDPR PII scan flagged patterns above. These are warnings."
+            echo "::notice::GDPR/CCPA PII scan flagged patterns above. These are warnings."
             echo "::notice::Verify each is fake/test data; otherwise remove, encrypt at rest, or document a lawful basis."
           else
-            echo "No GDPR PII patterns detected in changed files."
+            echo "No GDPR/CCPA PII patterns detected in changed files."
           fi
 
   privacy-manifest:
-    name: Privacy Manifest (GDPR)
+    name: Privacy Manifest (GDPR + CCPA)
     runs-on: ubuntu-latest
     timeout-minutes: 5
     permissions:
@@ -145,14 +158,16 @@ jobs:
               print(f"::error file={path}::NSPrivacyTracking=true but NSPrivacyTrackingDomains is empty (GDPR Art. 7)")
               sys.exit(1)
 
-          # Sensitive categories under GDPR Art. 9 require explicit consent — flag for human review if present.
+          # Sensitive categories under GDPR Art. 9 AND CPRA §1798.121 (right to limit
+          # use of sensitive PI). Both regimes require an explicit-consent / opt-out
+          # path — flag for human review if declared.
           sensitive = {"NSPrivacyCollectedDataTypeHealth", "NSPrivacyCollectedDataTypeFitness",
                        "NSPrivacyCollectedDataTypeSensitiveInfo", "NSPrivacyCollectedDataTypePreciseLocation"}
           for entry in data.get("NSPrivacyCollectedDataTypes", []):
               if entry.get("NSPrivacyCollectedDataType") in sensitive:
-                  print(f"::warning file={path}::Sensitive category {entry['NSPrivacyCollectedDataType']} declared — verify GDPR Art. 9 explicit-consent path")
+                  print(f"::warning file={path}::Sensitive category {entry['NSPrivacyCollectedDataType']} declared — verify GDPR Art. 9 explicit-consent path AND CPRA §1798.121 right-to-limit affordance")
 
-          print(f"Privacy manifest GDPR checks passed ({len(data.get('NSPrivacyCollectedDataTypes', []))} data types declared).")
+          print(f"Privacy manifest GDPR + CCPA checks passed ({len(data.get('NSPrivacyCollectedDataTypes', []))} data types declared).")
           PY
 
       - name: Validate Info.plist consent strings
@@ -177,7 +192,7 @@ jobs:
           done
 
   pr-checklist:
-    name: PR Checklist (GDPR)
+    name: PR Checklist (GDPR + CCPA)
     runs-on: ubuntu-latest
     timeout-minutes: 3
     permissions:
@@ -185,7 +200,7 @@ jobs:
       pull-requests: read
 
     steps:
-      - name: Enforce GDPR checklist in PR body
+      - name: Enforce GDPR or CCPA checklist in PR body
         env:
           GH_TOKEN: ${{ github.token }}
           PR_NUMBER: ${{ github.event.pull_request.number }}
@@ -193,26 +208,30 @@ jobs:
         run: |
           BODY=$(gh pr view "$PR_NUMBER" --repo "$REPO" --json body -q .body)
           if [ -z "$BODY" ]; then
-            echo "::error::PR body is empty — GDPR conformance requires a privacy review section"
+            echo "::error::PR body is empty — GDPR + CCPA conformance requires a privacy review section"
             exit 1
           fi
 
-          # Accept only an explicit, line-anchored GDPR acknowledgement marker. Loose
-          # phrases like "no PII" anywhere in the body are rejected because they
-          # silently disarm the gate when used inside negations or unrelated prose.
-          if printf '%s\n' "$BODY" | grep -iqE '^[[:space:]]*(-[[:space:]]+)?(\[x\][[:space:]]+gdpr|gdpr[[:space:]]*(review|reviewed|conformance|status)[[:space:]]*:|gdpr[[:space:]]*:[[:space:]]*n/?a)'; then
-            echo "GDPR checklist acknowledgement found in PR body."
+          # Accept either a GDPR or a CCPA line-anchored acknowledgement marker.
+          # The two regimes are reviewed together by this workflow, so a single
+          # acknowledgement is enough. Loose phrases like "no PII" anywhere in the
+          # body are rejected because they silently disarm the gate.
+          if printf '%s\n' "$BODY" | grep -iqE '^[[:space:]]*(-[[:space:]]+)?(\[x\][[:space:]]+(gdpr|ccpa)|(gdpr|ccpa)[[:space:]]*(review|reviewed|conformance|status)[[:space:]]*:|(gdpr|ccpa)[[:space:]]*:[[:space:]]*n/?a)'; then
+            echo "GDPR or CCPA checklist acknowledgement found in PR body."
             exit 0
           fi
 
-          echo "::error::PR body must acknowledge GDPR review on its own line. Add one of:"
+          echo "::error::PR body must acknowledge GDPR or CCPA review on its own line. Add one of:"
           echo "::error::  - [x] GDPR: lawful basis identified, data minimization checked"
+          echo "::error::  - [x] CCPA: no sale/share of personal information; right-to-delete path verified"
           echo "::error::  - GDPR: N/A (no personal data touched)"
+          echo "::error::  - CCPA: N/A (no personal data touched)"
           echo "::error::  - GDPR review: <one-line rationale>"
+          echo "::error::  - CCPA review: <one-line rationale>"
           exit 1
 
   ai-review:
-    name: Claude GDPR Review
+    name: Claude GDPR + CCPA Review
     runs-on: ubuntu-latest
     timeout-minutes: 20
     # Only review once the author marks the PR ready, and skip on every push to keep cost bounded.
@@ -232,7 +251,7 @@ jobs:
         with:
           fetch-depth: 1
 
-      - name: Run Claude GDPR review
+      - name: Run Claude GDPR + CCPA review
         uses: anthropics/claude-code-action@686da461dadac38c2bde9089909de4042a75ebf0 # v1
         env:
           CLAUDE_CODE_EFFORT_LEVEL: max
@@ -244,10 +263,14 @@ jobs:
             REPO: ${{ github.repository }}
             PR NUMBER: ${{ github.event.pull_request.number }}
 
-            You are reviewing this PR for **GDPR compliance** (Regulation (EU)
-            2016/679). The PR branch is already checked out.
+            You are reviewing this PR for **two overlapping privacy regimes**:
+              - **GDPR** — Regulation (EU) 2016/679
+              - **CCPA / CPRA** — Cal. Civ. Code §1798.100 et seq.
+            The PR branch is already checked out. Note that the two regimes
+            overlap heavily; flag findings under whichever is more specific, and
+            don't double-count.
 
-            Focus the review on the diff. Cross-check against:
+            Focus the review on the diff. **GDPR cross-check:**
             - **Art. 5** — Principles: lawfulness, fairness, transparency,
               purpose limitation, data minimization, accuracy, storage limitation,
               integrity & confidentiality
@@ -268,24 +291,59 @@ jobs:
             - **Art. 44–49** — Cross-border transfers (Schrems II, SCCs,
               adequacy decisions); since 2023 EU-US Data Privacy Framework
 
+            **CCPA / CPRA cross-check** (focus on items GDPR doesn't fully cover):
+            - **§1798.100** — right to know what PI is collected, sources, purposes
+            - **§1798.105** — right to delete (12-month look-back)
+            - **§1798.106** — right to correct inaccurate PI
+            - **§1798.115** — right to know what PI is sold or shared, and to whom
+            - **§1798.120** — right to opt out of "sale" or "sharing" of PI;
+              "sharing" includes cross-context behavioral advertising even without
+              monetary exchange (key CPRA expansion vs original CCPA)
+            - **§1798.121** — right to limit use of **sensitive PI** (precise
+              geolocation, racial/ethnic origin, religious beliefs, mail/email/SMS
+              contents, genetic/biometric, health, sex life/orientation, SSN /
+              driver's license / financial account / passport)
+            - **§1798.135** — "Do Not Sell or Share My Personal Information" link
+              must be a clear and conspicuous affordance in any UI that triggers
+              a sale or share. Honor the **Global Privacy Control** signal
+              (`Sec-GPC: 1` HTTP header) as a valid universal opt-out per CCPA
+              regulations §7025
+            - **§1798.130(a)(5)** — privacy notice must list categories of PI
+              collected, sold, shared, and the business/commercial purpose
+            - **§1798.150** — private right of action for breach of unencrypted /
+              unredacted PI (security must be reasonable)
+            - **Children**: opt-IN consent required for sale/share of PI of users
+              under 16 (under 13 requires verifiable parental consent)
+
             iOS-specific concerns to check in the diff:
             - New analytics events that may carry user identifiers without a
-              lawful basis declared in the privacy notice
+              lawful basis (GDPR) AND without a "sale/share" disclosure +
+              opt-out path (CCPA). Especially: ad-tech SDKs, attribution SDKs,
+              session replay, fingerprinting
             - Third-party SDKs added without an entry in
               `Pulse/PrivacyInfo.xcprivacy` `NSPrivacyCollectedDataTypes` and
-              without a documented data processing agreement
+              without a documented DPA (GDPR) / service-provider contract (CCPA
+              §1798.140(ag))
+            - Network calls that send personal data to non-EU regions without an
+              SCC / adequacy / DPF basis (GDPR Art. 44–49). Cross-border is less
+              regulated under CCPA but still must be disclosed
+            - WKWebView / network layer that fails to honor `Sec-GPC: 1` for users
+              who have it enabled (CCPA §1798.135 + regs §7025)
             - Personal data written to `UserDefaults` / SwiftData / CloudKit
               without a retention policy or erasure path (this app exposes
               `SettingsViewModel.clearAllUserData()` — new stores must hook into it,
-              including `PendingEngagementEvent` in the non-CloudKit container)
+              including `PendingEngagementEvent` in the non-CloudKit container).
+              CCPA §1798.105 requires erasure within 45 days of a verifiable request
             - Logs that include emails, names, device IDs, or IP addresses
-              (recital 30 — IPs are personal data)
-            - Network calls that send personal data to non-EU regions without an
-              SCC, adequacy decision, or DPF basis (Art. 44–49)
+              (GDPR recital 30 — IPs are personal data; CCPA §1798.140(v) — IPs are
+              "personal information")
             - Profiling / automated decisions affecting users (For You /
-              Personalization paths) — Art. 22 right to object
-            - Sign-out / account deletion regressions (Art. 17 right to erasure
-              must be complete and verifiable)
+              Personalization paths) — GDPR Art. 22 right to object; CCPA opt-out
+              of "automated decisionmaking technology" (CPRA regs in flight)
+            - Sign-out / account deletion regressions — must be complete and
+              verifiable for GDPR Art. 17 AND CCPA §1798.105
+            - Sensitive PI (SSN, precise location, health) — verify CPRA §1798.121
+              right-to-limit affordance exists if any new path collects it
 
             STRICT OUTPUT RULES:
             - Every finding tied to a specific file:line MUST be posted via
@@ -299,11 +357,13 @@ jobs:
             - Only post GitHub comments — don't submit review text as chat messages.
 
             Verdict: post a single summary comment via `gh pr comment` whose first
-            line is one of:
-              - `GDPR review: APPROVE — <one-line rationale>`
-              - `GDPR review: REQUEST CHANGES — <one-line rationale>` (missing
-                lawful basis, undeclared data type, missing erasure path,
-                cross-border transfer without basis, profiling without opt-out)
+            line is exactly:
+              - `GDPR + CCPA review: APPROVE — <one-line rationale>`
+              - `GDPR + CCPA review: REQUEST CHANGES — <one-line rationale>`
+                (missing lawful basis, undeclared data type, missing erasure path,
+                cross-border transfer without basis, profiling without opt-out,
+                missing Do-Not-Sell-or-Share affordance, GPC not honored,
+                sensitive PI without right-to-limit, etc.)
             Do NOT call `gh pr review --approve` or `gh pr review --request-changes`.
             The merge gate is a human reading your verdict comment — this avoids the
             prompt-injection vector where adversarial text in the diff could coerce
