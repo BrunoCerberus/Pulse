@@ -128,7 +128,11 @@ Pulse/
 - `ci.yml` — code quality + build + tests on PR
 - `claude-code-review.yml` — Claude review on PR open/sync
 - `codeql.yml` — CodeQL security analysis on PR + weekly
+- `lgpd-conformance.yml` — LGPD (Brazil, Lei 13.709/2018) PR gates: PII scan, privacy manifest validation, PR-body checklist, Claude AI review
+- `gdpr-conformance.yml` — GDPR (EU 2016/679) + CCPA / CPRA (California §1798.100 et seq.) PR gates; same four-job shape, dual regime
 - `scheduled-tests.yml` — daily at 2 AM UTC
+
+PRs must include a line-anchored privacy acknowledgement in the body — one of `LGPD: N/A`, `GDPR: N/A`, `CCPA: N/A`, or `LGPD review: <rationale>` / `GDPR review: <rationale>` — or the gate fails. Both workflows hard-fail on missing/invalid `Pulse/PrivacyInfo.xcprivacy`.
 
 Schemes: `PulseDev`, `PulseProd`, `PulseTests`, `PulseUITests`, `PulseSnapshotTests`.
 
