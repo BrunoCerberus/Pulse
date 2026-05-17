@@ -210,4 +210,44 @@ struct AuthDomainInteractorTests {
         let signOutEvents = mockAnalyticsService.loggedEvents.filter { $0.name == "sign_out" }
         #expect(signOutEvents.count == 1)
     }
+
+    // MARK: - Anonymous (Reviewer) Sign In Tests
+
+    @Test("Anonymous sign in success sets user and logs analytics")
+    func anonymousSignInSuccess() async throws {
+        let expectedUser = AuthUser.mock
+        mockAuthService.signInAnonymouslyResult = .success(expectedUser)
+
+        sut.dispatch(action: .signInAnonymously)
+        try await Task.sleep(nanoseconds: 300_000_000)
+
+        #expect(sut.currentState.isLoading == false)
+        #expect(sut.currentState.user == expectedUser)
+        #expect(sut.currentState.error == nil)
+
+        let signInEvents = mockAnalyticsService.loggedEvents.filter { $0.name == "sign_in" }
+        #expect(signInEvents.count == 1)
+        #expect(signInEvents.first?.parameters?["provider"] as? String == "anonymous")
+        #expect(signInEvents.first?.parameters?["success"] as? Bool == true)
+    }
+
+    @Test("Anonymous sign in failure stays silent in UI but logs to analytics")
+    func anonymousSignInFailureIsSilent() async throws {
+        mockAuthService.signInAnonymouslyResult = .failure(AuthError.networkError)
+
+        sut.dispatch(action: .signInAnonymously)
+        try await Task.sleep(nanoseconds: 300_000_000)
+
+        #expect(sut.currentState.isLoading == false)
+        #expect(sut.currentState.user == nil)
+        // Failure is intentionally silent — reviewer-only path should not surface
+        // raw Firebase errors to a user who stumbled on the 5-tap gesture.
+        #expect(sut.currentState.error == nil)
+
+        let signInEvents = mockAnalyticsService.loggedEvents.filter { $0.name == "sign_in" }
+        #expect(signInEvents.count == 1)
+        #expect(signInEvents.first?.parameters?["provider"] as? String == "anonymous")
+        #expect(signInEvents.first?.parameters?["success"] as? Bool == false)
+        #expect(mockAnalyticsService.recordedErrors.count == 1)
+    }
 }

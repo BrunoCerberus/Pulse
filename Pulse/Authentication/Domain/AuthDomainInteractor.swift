@@ -143,11 +143,15 @@ final class AuthDomainInteractor: CombineInteractor {
             .receive(on: DispatchQueue.main)
             .sink { [weak self] completion in
                 if case let .failure(error) = completion {
+                    // Reviewer-only path: log to analytics/Crashlytics but keep
+                    // the UI silent. A real user who stumbles on the 5-tap
+                    // gesture should never see a raw Firebase error string; a
+                    // reviewer blocked by a backend issue will report it
+                    // out-of-band rather than via the alert sheet.
                     self?.analyticsService?.logEvent(.signIn(provider: "anonymous", success: false))
                     self?.analyticsService?.recordError(error)
                     self?.updateState { state in
                         state.isLoading = false
-                        state.error = error.localizedDescription
                     }
                 }
             } receiveValue: { [weak self] user in
