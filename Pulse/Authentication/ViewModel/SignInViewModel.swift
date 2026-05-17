@@ -32,6 +32,8 @@ final class SignInViewModel: CombineViewModel, ObservableObject {
             interactor.dispatch(action: .signInWithGoogle(presenting: viewController))
         case .onAppleSignInTapped:
             interactor.dispatch(action: .signInWithApple)
+        case .onReviewerSignInTriggered:
+            interactor.dispatch(action: .signInAnonymously)
         case .onDismissError:
             interactor.dispatch(action: .clearError)
         }
@@ -62,5 +64,9 @@ struct SignInViewState: Equatable {
 enum SignInViewEvent {
     case onGoogleSignInTapped(UIViewController)
     case onAppleSignInTapped
+    /// Hidden reviewer entry point. Fired by the 5-tap gesture on the logo
+    /// and dispatched as an anonymous Firebase sign-in. See `SignInView` and
+    /// the App Review Information section in App Store Connect.
+    case onReviewerSignInTriggered
     case onDismissError
 }

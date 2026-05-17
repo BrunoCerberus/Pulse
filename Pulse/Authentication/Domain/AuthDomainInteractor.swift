@@ -52,6 +52,8 @@ final class AuthDomainInteractor: CombineInteractor {
             signInWithGoogle(presenting: viewController)
         case .signInWithApple:
             signInWithApple()
+        case .signInAnonymously:
+            signInAnonymously()
         case .signOut:
             signOut()
         case .clearError:
@@ -123,6 +125,33 @@ final class AuthDomainInteractor: CombineInteractor {
                 }
             } receiveValue: { [weak self] user in
                 self?.analyticsService?.logEvent(.signIn(provider: "apple", success: true))
+                self?.updateState { state in
+                    state.isLoading = false
+                    state.user = user
+                }
+            }
+            .store(in: &cancellables)
+    }
+
+    private func signInAnonymously() {
+        updateState { state in
+            state.isLoading = true
+            state.error = nil
+        }
+
+        authService.signInAnonymously()
+            .receive(on: DispatchQueue.main)
+            .sink { [weak self] completion in
+                if case let .failure(error) = completion {
+                    self?.analyticsService?.logEvent(.signIn(provider: "anonymous", success: false))
+                    self?.analyticsService?.recordError(error)
+                    self?.updateState { state in
+                        state.isLoading = false
+                        state.error = error.localizedDescription
+                    }
+                }
+            } receiveValue: { [weak self] user in
+                self?.analyticsService?.logEvent(.signIn(provider: "anonymous", success: true))
                 self?.updateState { state in
                     state.isLoading = false
                     state.user = user

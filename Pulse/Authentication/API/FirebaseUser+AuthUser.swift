@@ -7,7 +7,9 @@ import FirebaseAuth
 extension FirebaseAuth.User {
     func toAuthUser() -> AuthUser? {
         let provider: AuthProvider
-        if providerData.contains(where: { $0.providerID == "google.com" }) {
+        if isAnonymous {
+            provider = .anonymous
+        } else if providerData.contains(where: { $0.providerID == "google.com" }) {
             provider = .google
         } else if providerData.contains(where: { $0.providerID == "apple.com" }) {
             provider = .apple

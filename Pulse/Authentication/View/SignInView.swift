@@ -76,6 +76,14 @@ struct SignInView: View {
             }
             .glowEffect(color: Color.Accent.primary, radius: 20)
             .accessibilityHidden(true)
+            // Hidden reviewer entry: 5 quick taps on the logo trigger an
+            // anonymous Firebase sign-in so App Review can reach auth-gated
+            // screens without shared OAuth credentials. Trigger is documented
+            // in App Store Connect → App Review Information.
+            .onTapGesture(count: 5) {
+                HapticManager.shared.success()
+                viewModel.handle(event: .onReviewerSignInTriggered)
+            }
 
             VStack(spacing: Spacing.xs) {
                 Text(Constants.appName)
