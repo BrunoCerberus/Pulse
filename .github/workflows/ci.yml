@@ -824,6 +824,13 @@ jobs:
     # Auth business logic is exercised at the domain layer through the
     # AuthService protocol + MockAuthService.
     #
+    # LiveAuthService+Anonymous is split from LiveAuthService to keep the
+    # parent file under SwiftLint's file-length budget; it wraps
+    # `Auth.auth().signInAnonymously()` and carries the same un-mockable
+    # Firebase Auth dependency. Same justification as LiveAuthService.
+    # Reviewer flow is exercised at the domain layer through
+    # AuthDomainInteractorTests and SignInViewModelTests.
+    #
     # FirebaseUser+AuthUser is the same kind of glue — an extension on the
     # non-mockable `FirebaseAuth.User` reference type — and was extracted
     # from LiveAuthService purely to keep that file under SwiftLint's
@@ -851,7 +858,8 @@ jobs:
           --fail-under "$THRESHOLD" \
           --include 'Pulse/**/*.swift' 'PulseShareExtension/**/*.swift' 'PulseWidgetExtension/**/*.swift' \
           --exclude '**/*+Preview.swift' '**/Preview Content/**' \
-                    '**/LiveAuthService.swift' '**/FirebaseUser+AuthUser.swift' \
+                    '**/LiveAuthService.swift' '**/LiveAuthService+Anonymous.swift' \
+                    '**/FirebaseUser+AuthUser.swift' \
                     '**/SignOutCleanup.swift' '**/ShareViewController.swift' \
           --markdown-report patch-coverage.md || RESULT=$?
         {

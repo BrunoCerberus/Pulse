@@ -15,6 +15,13 @@ enum AuthDomainAction {
     /// Presents the native Apple Sign-In sheet.
     case signInWithApple
 
+    /// Initiate anonymous Firebase sign-in.
+    ///
+    /// Reviewer-only path — wired to the hidden 5-tap gesture on the logo in
+    /// `SignInView`. Lets App Review reach auth-gated screens without shared
+    /// OAuth credentials. Trigger is documented in App Store Connect.
+    case signInAnonymously
+
     // MARK: - Sign Out
 
     /// Sign out the current user from Firebase Auth.

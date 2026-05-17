@@ -179,7 +179,7 @@ final class LiveAuthService: NSObject, AuthService {
 
     @MainActor
     private func performDelete(presenting viewController: UIViewController) async throws {
-        guard Auth.auth().currentUser != nil else {
+        guard let isAnonymous = Auth.auth().currentUser?.isAnonymous else {
             throw AuthError.noCurrentUser
         }
 
@@ -189,6 +189,24 @@ final class LiveAuthService: NSObject, AuthService {
             let nsError = error as NSError
             guard AuthErrorCode(rawValue: nsError.code) == .requiresRecentLogin else {
                 throw error
+            }
+
+            // Anonymous users can't be re-authenticated — there's no credential
+            // to re-supply. Returning success after only signing out would lie
+            // to the caller (the Firebase user record persists server-side and
+            // `SettingsViewModel.handleDeleteAccount` would run its success
+            // path: `clearAllUserData` + `delete_account` analytics). Surface
+            // it as a specific error so the reviewer sees an honest message
+            // rather than the generic "Unknown auth provider" fall-through.
+            //
+            // In practice this branch is hard to reach: the reviewer-only
+            // anonymous session is freshly minted by the 5-tap gesture, so
+            // `requiresRecentLogin` (which fires on sessions older than
+            // ~5 minutes) shouldn't trigger during the same App Review pass.
+            if isAnonymous {
+                throw AuthError.unknown(
+                    "Anonymous session can't be re-authenticated; sign out and try again."
+                )
             }
 
             let credential = try await freshCredentialForCurrentUser(presenting: viewController)

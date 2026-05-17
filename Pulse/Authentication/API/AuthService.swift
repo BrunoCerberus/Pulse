@@ -14,6 +14,10 @@ struct AuthUser: Equatable, Codable {
 enum AuthProvider: String, Equatable, Codable {
     case google
     case apple
+    /// Firebase anonymous user. Used only by the reviewer-only sign-in path
+    /// (5-tap gesture on the logo in `SignInView`); real users never reach
+    /// this provider.
+    case anonymous
 }
 
 enum AuthError: Error, LocalizedError {
@@ -46,6 +50,15 @@ protocol AuthService {
 
     /// Sign in with Apple
     func signInWithApple() -> AnyPublisher<AuthUser, Error>
+
+    /// Sign in anonymously via Firebase Auth.
+    ///
+    /// Reviewer-only entry point so App Review can access auth-gated screens
+    /// without us having to share OAuth credentials (and deal with Google /
+    /// Apple ID 2FA reaching the reviewer). Triggered by the hidden 5-tap
+    /// gesture on the logo in `SignInView`; the trigger is documented in
+    /// App Store Connect → App Review Information.
+    func signInAnonymously() -> AnyPublisher<AuthUser, Error>
 
     /// Sign out current user
     func signOut() -> AnyPublisher<Void, Error>
