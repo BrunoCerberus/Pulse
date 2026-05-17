@@ -179,7 +179,7 @@ final class LiveAuthService: NSObject, AuthService {
 
     @MainActor
     private func performDelete(presenting viewController: UIViewController) async throws {
-        guard Auth.auth().currentUser != nil else {
+        guard let isAnonymous = Auth.auth().currentUser?.isAnonymous else {
             throw AuthError.noCurrentUser
         }
 
@@ -189,6 +189,16 @@ final class LiveAuthService: NSObject, AuthService {
             let nsError = error as NSError
             guard AuthErrorCode(rawValue: nsError.code) == .requiresRecentLogin else {
                 throw error
+            }
+
+            // Anonymous users can't be re-authenticated — there's no credential
+            // to re-supply, so `freshCredentialForCurrentUser` would throw
+            // `unknown("Unknown auth provider for re-authentication")`. Sign out
+            // instead; the orphaned anon UID has no user-recoverable surface,
+            // which matches the reviewer-only purpose of the flow.
+            if isAnonymous {
+                try Auth.auth().signOut()
+                return
             }
 
             let credential = try await freshCredentialForCurrentUser(presenting: viewController)
