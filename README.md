@@ -4,7 +4,7 @@ A modern iOS news aggregation app built with Clean Architecture, SwiftUI, and Co
 
 ## Features
 
-- **Authentication** — Firebase Auth (Google + Apple Sign-In) with in-app account deletion (Apple Guideline 5.1.1(v)), including transparent reauthentication when Firebase requires it. A hidden 5-tap-on-logo gesture provides reviewer-only anonymous sign-in for App Review (no shared OAuth credentials).
+- **Authentication** — Firebase Auth (Google + Apple Sign-In) with in-app account deletion (Apple Guideline 5.1.1(v)), including transparent reauthentication when Firebase requires it.
 - **Home / Media / Feed** — breaking news carousel, category filters, recently-read; Videos + Podcasts with in-app playback (YouTube opens externally, podcasts use `AVPlayer`); AI-powered Daily Digest (**Premium**).
 - **Personalized For You** — on-device topic extraction from reading history surfaces a recommended-articles carousel on Home; opt-in/out and topic controls via For You Settings.
 - **Article Summarization** — on-device summaries via Gemma 3 1B (**Premium**).
