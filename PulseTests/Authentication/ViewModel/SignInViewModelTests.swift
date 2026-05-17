@@ -134,6 +134,52 @@ struct SignInViewModelTests {
         #expect(finalState.errorMessage != nil)
     }
 
+    // MARK: - Reviewer (Anonymous) Sign In Tests
+
+    @Test("Handle reviewer sign in updates loading state")
+    func handleReviewerSignIn() async throws {
+        var states: [SignInViewState] = []
+        var cancellables = Set<AnyCancellable>()
+
+        sut.$viewState
+            .sink { state in states.append(state) }
+            .store(in: &cancellables)
+
+        sut.handle(event: .onReviewerSignInTriggered)
+
+        try await Task.sleep(nanoseconds: 100_000_000)
+
+        #expect(states.contains { $0.isLoading == true })
+    }
+
+    @Test("Reviewer sign in success clears loading")
+    func reviewerSignInSuccess() async throws {
+        mockAuthService.signInAnonymouslyResult = .success(.mock)
+
+        sut.handle(event: .onReviewerSignInTriggered)
+
+        try await Task.sleep(nanoseconds: 300_000_000)
+
+        let finalState = sut.viewState
+        #expect(finalState.isLoading == false)
+        #expect(finalState.errorMessage == nil)
+    }
+
+    @Test("Reviewer sign in failure stays silent")
+    func reviewerSignInFailureIsSilent() async throws {
+        mockAuthService.signInAnonymouslyResult = .failure(AuthError.networkError)
+
+        sut.handle(event: .onReviewerSignInTriggered)
+
+        try await Task.sleep(nanoseconds: 300_000_000)
+
+        let finalState = sut.viewState
+        #expect(finalState.isLoading == false)
+        // Failure is intentionally silent for the reviewer-only path — no error
+        // shown to a user who stumbled on the 5-tap gesture.
+        #expect(finalState.errorMessage == nil)
+    }
+
     // MARK: - Dismiss Error Tests
 
     @Test("Handle dismiss error clears error message")
