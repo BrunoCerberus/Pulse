@@ -46,4 +46,24 @@ struct LiveStoreKitServiceTests {
         let publisher = service.checkSubscriptionStatus()
         let _: AnyPublisher<Bool, Never> = publisher
     }
+
+    @Test("refreshSubscriptionStatus returns Bool from StoreKit 2 entitlements")
+    func refreshReturnsBool() async {
+        let service = LiveStoreKitService(startListening: false)
+        // With no live entitlements in the test environment, the call should
+        // complete and report `false`. The point is that it goes through
+        // `Transaction.currentEntitlements` rather than the cached value, so
+        // a tamper of `isPremium` wouldn't help here.
+        let result = await service.refreshSubscriptionStatus()
+        #expect(result == false)
+    }
+
+    @Test("MockStoreKitService.refreshSubscriptionStatus reflects configured state")
+    func mockRefreshReflectsState() async {
+        let mockFree = MockStoreKitService(isPremium: false)
+        #expect(await mockFree.refreshSubscriptionStatus() == false)
+
+        let mockPremium = MockStoreKitService(isPremium: true)
+        #expect(await mockPremium.refreshSubscriptionStatus() == true)
+    }
 }

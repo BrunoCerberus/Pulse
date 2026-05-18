@@ -147,6 +147,11 @@ final class LiveStoreKitService: StoreKitService, @unchecked Sendable {
         .eraseToAnyPublisher()
     }
 
+    func refreshSubscriptionStatus() async -> Bool {
+        await updateSubscriptionStatus()
+        return isPremium
+    }
+
     // MARK: - Private Methods
 
     private func listenForTransactions() -> Task<Void, Never> {

@@ -164,7 +164,10 @@ struct ArticleDetailView: View {
         }
         .onAppear {
             viewModel.handle(event: .onAppear)
-            initializeSubscriptionStatus()
+            seedPremiumFromCache()
+        }
+        .task {
+            await refreshPremiumStatus()
         }
         .onDisappear {
             viewModel.handle(event: .onDisappear)
@@ -174,7 +177,9 @@ struct ArticleDetailView: View {
         }
         .sheet(
             isPresented: $isPaywallPresented,
-            onDismiss: { checkPremiumStatus() },
+            onDismiss: {
+                Task { await refreshPremiumStatus() }
+            },
             content: { PaywallView(viewModel: paywallViewModel) }
         )
         .onChange(of: viewModel.viewState.isBookmarked) { _, isBookmarked in
@@ -199,13 +204,25 @@ struct ArticleDetailView: View {
         .enableSwipeBack()
     }
 
-    private func checkPremiumStatus() {
-        do {
-            let storeKitService = try serviceLocator.retrieve(StoreKitService.self)
+    /// Seeds `isPremium` from the cached StoreKit value for an instant first
+    /// render, before `.task` re-verifies against StoreKit 2.
+    private func seedPremiumFromCache() {
+        if let storeKitService = try? serviceLocator.retrieve(StoreKitService.self) {
             isPremium = storeKitService.isPremium
-        } catch {
-            isPremium = false
         }
+    }
+
+    /// Forces a re-read of StoreKit 2 entitlements instead of trusting the
+    /// in-memory cached `isPremium`. See `StoreKitService.refreshSubscriptionStatus`
+    /// for why premium gates can't rely on the cached value alone.
+    @MainActor
+    private func refreshPremiumStatus() async {
+        guard let storeKitService = try? serviceLocator.retrieve(StoreKitService.self) else {
+            isPremium = false
+            return
+        }
+        let boxed = UncheckedSendableBox(value: storeKitService)
+        isPremium = await boxed.value.refreshSubscriptionStatus()
     }
 
     private var subscriptionStatusPublisher: AnyPublisher<Bool, Never> {
@@ -215,16 +232,6 @@ struct ArticleDetailView: View {
         return storeKitService.subscriptionStatusPublisher
             .receive(on: DispatchQueue.main)
             .eraseToAnyPublisher()
-    }
-
-    private func initializeSubscriptionStatus() {
-        do {
-            let storeKitService = try serviceLocator.retrieve(StoreKitService.self)
-            isPremium = storeKitService.isPremium
-        } catch {
-            Logger.shared.warning("Failed to retrieve StoreKitService: \(error)", category: "ArticleDetail")
-            isPremium = false
-        }
     }
 
     /// Sizes the card to fill below the hero so `.regularMaterial` doesn't expose the gradient at the bottom.

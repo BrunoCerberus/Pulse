@@ -84,4 +84,8 @@ final class MockStoreKitService: StoreKitService {
         Just(isPremium)
             .eraseToAnyPublisher()
     }
+
+    func refreshSubscriptionStatus() async -> Bool {
+        isPremium
+    }
 }

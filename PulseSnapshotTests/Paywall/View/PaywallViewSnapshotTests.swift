@@ -150,4 +150,8 @@ private final class FailingStoreKitService: StoreKitService {
     func checkSubscriptionStatus() -> AnyPublisher<Bool, Never> {
         Just(false).eraseToAnyPublisher()
     }
+
+    func refreshSubscriptionStatus() async -> Bool {
+        false
+    }
 }
