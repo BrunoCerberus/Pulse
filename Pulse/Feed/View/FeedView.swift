@@ -50,7 +50,10 @@ struct FeedView<R: FeedNavigationRouter>: View {
             }
         }
         .onAppear {
-            initializeSubscriptionStatus()
+            seedPremiumFromCache()
+        }
+        .task {
+            await refreshPremiumStatus()
         }
         .onReceive(subscriptionStatusPublisher) { newStatus in
             isPremium = newStatus
@@ -95,14 +98,25 @@ struct FeedView<R: FeedNavigationRouter>: View {
             .eraseToAnyPublisher()
     }
 
-    private func initializeSubscriptionStatus() {
-        do {
-            let storeKitService = try serviceLocator.retrieve(StoreKitService.self)
+    /// Seeds `isPremium` from the cached StoreKit value for an instant first
+    /// render, before `.task` re-verifies against StoreKit 2.
+    private func seedPremiumFromCache() {
+        if let storeKitService = try? serviceLocator.retrieve(StoreKitService.self) {
             isPremium = storeKitService.isPremium
-        } catch {
-            Logger.shared.warning("Failed to retrieve StoreKitService: \(error)", category: "Feed")
-            isPremium = false
         }
+    }
+
+    /// Forces a re-read of StoreKit 2 entitlements instead of trusting the
+    /// in-memory cached `isPremium`. See `StoreKitService.refreshSubscriptionStatus`
+    /// for why premium gates can't rely on the cached value alone.
+    @MainActor
+    private func refreshPremiumStatus() async {
+        guard let storeKitService = try? serviceLocator.retrieve(StoreKitService.self) else {
+            isPremium = false
+            return
+        }
+        let boxed = UncheckedSendableBox(value: storeKitService)
+        isPremium = await boxed.value.refreshSubscriptionStatus()
     }
 
     // MARK: - Background

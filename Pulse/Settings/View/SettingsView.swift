@@ -135,25 +135,44 @@ struct SettingsView: View {
         }
         .onAppear {
             viewModel.handle(event: .onAppear)
-            checkPremiumStatus()
+            // Seed from the cached value for an instant first render so
+            // SwiftUI doesn't flash a non-premium gate for paying users.
+            // The `.task` then re-verifies against StoreKit 2's source of
+            // truth and overrides if they differ.
+            seedPremiumFromCache()
+        }
+        .task {
+            await refreshPremiumStatus()
         }
         .onReceive(subscriptionStatusPublisher) { newStatus in
             isPremium = newStatus
         }
         .sheet(
             isPresented: $isPaywallPresented,
-            onDismiss: { checkPremiumStatus() },
+            onDismiss: {
+                Task { await refreshPremiumStatus() }
+            },
             content: { PaywallView(viewModel: paywallViewModel) }
         )
     }
 
-    private func checkPremiumStatus() {
-        do {
-            let storeKitService = try serviceLocator.retrieve(StoreKitService.self)
+    private func seedPremiumFromCache() {
+        if let storeKitService = try? serviceLocator.retrieve(StoreKitService.self) {
             isPremium = storeKitService.isPremium
-        } catch {
-            isPremium = false
         }
+    }
+
+    /// Forces a re-read of StoreKit 2 entitlements instead of trusting the
+    /// in-memory cached `isPremium`. Premium gates rely on this — without it,
+    /// a jailbroken device can flip the cached Bool to unlock features.
+    @MainActor
+    private func refreshPremiumStatus() async {
+        guard let storeKitService = try? serviceLocator.retrieve(StoreKitService.self) else {
+            isPremium = false
+            return
+        }
+        let boxed = UncheckedSendableBox(value: storeKitService)
+        isPremium = await boxed.value.refreshSubscriptionStatus()
     }
 
     private var subscriptionStatusPublisher: AnyPublisher<Bool, Never> {
