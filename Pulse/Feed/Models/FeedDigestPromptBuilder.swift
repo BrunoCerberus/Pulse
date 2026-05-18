@@ -66,10 +66,17 @@ enum FeedDigestPromptBuilder {
             .map { $0.key.displayName }
 
         let articleList = articles.enumerated().map { index, article in
+            // All untrusted (RSS-sourced) fields pass through `PromptSanitizer`
+            // before interpolation. See `PromptSanitizer` for the threat model.
+            let safeTitle = PromptSanitizer.sanitize(article.title, maxLength: 200)
+            let safeSource = PromptSanitizer.sanitize(article.source.name, maxLength: 80)
             let cat = article.category?.displayName ?? "World"
-            var line = "\(index + 1). \(article.title) (\(article.source.name), \(cat))"
+            var line = "\(index + 1). \(safeTitle) (\(safeSource), \(cat))"
             if let desc = article.description, !desc.isEmpty {
-                line += " — \(String(stripHTML(from: desc).prefix(150)))"
+                let safeDesc = PromptSanitizer.sanitize(stripHTML(from: desc), maxLength: 150)
+                if !safeDesc.isEmpty {
+                    line += " — \(safeDesc)"
+                }
             }
             return line
         }.joined(separator: "\n")
