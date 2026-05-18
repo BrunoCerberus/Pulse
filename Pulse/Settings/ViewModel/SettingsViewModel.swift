@@ -169,7 +169,7 @@ final class SettingsViewModel: CombineViewModel, ObservableObject {
                     let themeManager = self.themeManager
                     let interactor = self.interactor
                     Task { @MainActor in
-                        let failures = await Self.performAtomicCleanup(
+                        let failures = await Self.clearAllUserData(
                             serviceLocator: serviceLocator,
                             themeManager: themeManager
                         )
@@ -222,7 +222,7 @@ final class SettingsViewModel: CombineViewModel, ObservableObject {
                     let themeManager = self.themeManager
                     let interactor = self.interactor
                     Task { @MainActor in
-                        let failures = await Self.performAtomicCleanup(
+                        let failures = await Self.clearAllUserData(
                             serviceLocator: serviceLocator,
                             themeManager: themeManager
                         )
@@ -289,7 +289,7 @@ final class SettingsViewModel: CombineViewModel, ObservableObject {
     /// force-quit-between-delete-and-wipe window on top of the dealloc
     /// fix above.
     @MainActor
-    static func performAtomicCleanup(
+    static func clearAllUserData(
         serviceLocator: ServiceLocator,
         themeManager: ThemeManager
     ) async -> [String] {
