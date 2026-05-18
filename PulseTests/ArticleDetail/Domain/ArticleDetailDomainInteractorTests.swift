@@ -318,3 +318,37 @@ extension ArticleDetailDomainInteractorTests {
         #expect(bookmarkEvents.count == 1)
     }
 }
+
+@Suite("ArticleDetailDomainInteractor externalURL gate")
+struct ArticleDetailDomainInteractorExternalURLTests {
+    @Test("HTTPS URL is accepted")
+    func httpsAccepted() {
+        let url = ArticleDetailDomainInteractor.externalURL(from: "https://example.com/article")
+        #expect(url?.absoluteString == "https://example.com/article")
+    }
+
+    @Test("HTTP URL is rejected (M1 — prevents downgrade to plaintext on hostile networks)")
+    func httpRejected() {
+        #expect(ArticleDetailDomainInteractor.externalURL(from: "http://example.com") == nil)
+    }
+
+    @Test("Custom schemes are rejected (javascript:, data:, file:, app:)")
+    func customSchemesRejected() {
+        #expect(ArticleDetailDomainInteractor.externalURL(from: "javascript:alert(1)") == nil)
+        #expect(ArticleDetailDomainInteractor.externalURL(from: "data:text/html,xss") == nil)
+        #expect(ArticleDetailDomainInteractor.externalURL(from: "file:///etc/passwd") == nil)
+        #expect(ArticleDetailDomainInteractor.externalURL(from: "pulse://settings") == nil)
+    }
+
+    @Test("Malformed URL string is rejected")
+    func malformedRejected() {
+        #expect(ArticleDetailDomainInteractor.externalURL(from: "") == nil)
+        #expect(ArticleDetailDomainInteractor.externalURL(from: "   ") == nil)
+    }
+
+    @Test("Scheme casing is normalized (HTTPS accepted case-insensitively)")
+    func schemeCaseInsensitive() {
+        #expect(ArticleDetailDomainInteractor.externalURL(from: "HTTPS://example.com")?.absoluteString != nil)
+        #expect(ArticleDetailDomainInteractor.externalURL(from: "HTTP://example.com") == nil)
+    }
+}

@@ -22,7 +22,10 @@ final class LiveNotificationService: NotificationService {
         static let deviceTokenKeychain = "device_token"
     }
 
-    private init(
+    /// Initializer is `internal` (not `private`) so unit tests can build
+    /// instances with an `InMemoryKeychainStore` and a suite-scoped
+    /// `UserDefaults`. Production code should still go through `.shared`.
+    init(
         keychain: KeychainStore = KeychainManager(service: keychainService),
         defaults: UserDefaults = .standard
     ) {

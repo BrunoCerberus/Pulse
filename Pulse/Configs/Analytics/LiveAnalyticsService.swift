@@ -15,6 +15,18 @@ final class LiveAnalyticsService: AnalyticsService {
     }
 
     func recordError(_ error: Error, userInfo: [String: Any]?) {
+        let sanitizedInfo = Self.buildSanitizedUserInfo(error: error, userInfo: userInfo)
+        Crashlytics.crashlytics().record(error: error, userInfo: sanitizedInfo)
+    }
+
+    /// Enriches `userInfo` with the error's `domain` / `code` / sanitized
+    /// `localizedDescription` and recursively sanitizes the whole dictionary.
+    /// Pulled out of `recordError` so unit tests can verify the redaction +
+    /// enrichment behaviour without mocking the Crashlytics singleton.
+    static func buildSanitizedUserInfo(
+        error: Error,
+        userInfo: [String: Any]?
+    ) -> [String: Any] {
         let nsError = error as NSError
         var enrichedInfo = userInfo ?? [:]
         enrichedInfo["domain"] = nsError.domain
@@ -22,13 +34,10 @@ final class LiveAnalyticsService: AnalyticsService {
         // Wrap the localized description through the sanitizer too — Firebase
         // SDK errors sometimes embed the user's email, the request URL with
         // query params, or other PII directly in the message.
-        enrichedInfo["localizedDescription"] = Self.sanitize(any: nsError.localizedDescription)
-
+        enrichedInfo["localizedDescription"] = sanitize(any: nsError.localizedDescription)
         // Recursive sanitization handles nested dictionaries / arrays that
         // a flat `mapValues` would have skipped over.
-        let sanitizedInfo = enrichedInfo.mapValues(Self.sanitize(any:))
-
-        Crashlytics.crashlytics().record(error: error, userInfo: sanitizedInfo)
+        return enrichedInfo.mapValues(sanitize(any:))
     }
 
     /// Recursively redacts potential PII (emails, URL query strings) from any

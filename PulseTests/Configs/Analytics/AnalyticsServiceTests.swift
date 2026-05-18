@@ -167,6 +167,49 @@ struct LiveAnalyticsServiceSanitizerTests {
         #expect((LiveAnalyticsService.sanitize(any: 42) as? Int) == 42)
         #expect((LiveAnalyticsService.sanitize(any: true) as? Bool) == true)
     }
+
+    @Test("Recursive sanitizer walks NSArray")
+    func sanitizeAnyRecursesIntoNSArray() {
+        let nsArray: NSArray = ["fine", "leak@example.com"]
+        guard let sanitized = LiveAnalyticsService.sanitize(any: nsArray) as? [Any] else {
+            Issue.record("Expected array from NSArray case")
+            return
+        }
+        #expect(sanitized[1] as? String == "[REDACTED_EMAIL]")
+    }
+
+    @Test("Recursive sanitizer walks NSDictionary with string keys")
+    func sanitizeAnyRecursesIntoNSDictionary() {
+        let nsDict: NSDictionary = ["k": "leak@example.com", "k2": "fine"]
+        guard let sanitized = LiveAnalyticsService.sanitize(any: nsDict) as? [String: Any] else {
+            Issue.record("Expected dictionary from NSDictionary case")
+            return
+        }
+        #expect(sanitized["k"] as? String == "[REDACTED_EMAIL]")
+        #expect(sanitized["k2"] as? String == "fine")
+    }
+
+    @Test("buildSanitizedUserInfo enriches with domain + code + sanitizes message")
+    func buildSanitizedUserInfoEnrichesAndSanitizes() {
+        let error = NSError(
+            domain: "TestDomain",
+            code: 42,
+            userInfo: [NSLocalizedDescriptionKey: "Failed to auth user@example.com"]
+        )
+        let result = LiveAnalyticsService.buildSanitizedUserInfo(
+            error: error,
+            userInfo: ["original": "value"]
+        )
+        #expect(result["domain"] as? String == "TestDomain")
+        #expect(result["code"] as? Int == 42)
+        if let desc = result["localizedDescription"] as? String {
+            #expect(desc.contains("[REDACTED_EMAIL]"))
+            #expect(!desc.contains("user@example.com"))
+        } else {
+            Issue.record("Expected sanitized localizedDescription string")
+        }
+        #expect(result["original"] as? String == "value")
+    }
 }
 
 @Suite("MockAnalyticsService Tests")
