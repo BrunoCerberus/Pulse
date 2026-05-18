@@ -253,6 +253,70 @@ struct SettingsViewModelSignOutTests {
         #expect(deleteEvents.count == 1)
     }
 
+    // MARK: - Atomic Cleanup / Partial-Failure Surfacing
+
+    @Test("Sign-out surfaces an error message when local cleanup partially fails")
+    func signOutPartialFailureSurfacesError() async throws {
+        mockStorageService.clearReadingHistoryError = NSError(
+            domain: "test", code: 1, userInfo: [NSLocalizedDescriptionKey: "disk full"]
+        )
+
+        // Seed the key so the post-cleanup assertion is not vacuous —
+        // confirms the cleanup actually ran past the failing step rather
+        // than just passing because the key was never set.
+        let defaults = UserDefaults.standard
+        defaults.set("token-pre-test", forKey: "pulse.deviceToken")
+        defer { defaults.removeObject(forKey: "pulse.deviceToken") }
+
+        let sut = createSUT()
+        sut.handle(event: .onAppear)
+        try await waitForStateUpdate(duration: TestWaitDuration.long)
+
+        sut.handle(event: .onConfirmSignOut)
+        // Cleanup is now sequential and awaited; give it room to finish.
+        try await waitForStateUpdate(duration: TestWaitDuration.long)
+        try await waitForStateUpdate(duration: TestWaitDuration.long)
+
+        #expect(sut.viewState.errorMessage != nil)
+        // Confirm later cleanup steps still ran despite the earlier failure.
+        #expect(defaults.object(forKey: "pulse.deviceToken") == nil)
+        // Also confirm the persisted message is in place for SignInView to surface.
+        let persisted = defaults.string(forKey: SettingsViewModel.pendingCleanupErrorKey)
+        #expect(persisted != nil)
+        defaults.removeObject(forKey: SettingsViewModel.pendingCleanupErrorKey)
+    }
+
+    @Test("Sign-out completes silently when every cleanup step succeeds")
+    func signOutWithoutFailuresShowsNoError() async throws {
+        let sut = createSUT()
+        sut.handle(event: .onAppear)
+        try await waitForStateUpdate(duration: TestWaitDuration.long)
+
+        sut.handle(event: .onConfirmSignOut)
+        try await waitForStateUpdate(duration: TestWaitDuration.long)
+        try await waitForStateUpdate(duration: TestWaitDuration.long)
+
+        #expect(sut.viewState.errorMessage == nil)
+    }
+
+    @Test("Delete-account surfaces an error message when local cleanup partially fails")
+    func deleteAccountPartialFailureSurfacesError() async throws {
+        mockStorageService.clearReadingHistoryError = NSError(
+            domain: "test", code: 1, userInfo: [NSLocalizedDescriptionKey: "disk full"]
+        )
+
+        let sut = createSUT()
+        sut.handle(event: .onAppear)
+        try await waitForStateUpdate(duration: TestWaitDuration.long)
+
+        sut.handle(event: .onConfirmDeleteAccount)
+        try await waitForStateUpdate(duration: TestWaitDuration.long)
+        try await waitForStateUpdate(duration: TestWaitDuration.long)
+
+        #expect(sut.viewState.errorMessage != nil)
+        #expect(!sut.viewState.isDeletingAccount)
+    }
+
     // MARK: - Notification Events Tests
 
     @Test("Toggle notifications updates view state")

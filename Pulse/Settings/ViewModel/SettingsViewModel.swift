@@ -157,7 +157,29 @@ final class SettingsViewModel: CombineViewModel, ObservableObject {
                     }
                 },
                 receiveValue: { [weak self] _ in
-                    self?.clearAllUserData()
+                    guard let self else { return }
+                    // Capture deps strongly into locals BEFORE spawning the
+                    // Task. After Firebase sign-out, AuthenticationManager
+                    // flips state and RootView tears down the Coordinator;
+                    // SettingsViewModel can be released before the Task body
+                    // ever runs. A `[weak self]` Task here would silently
+                    // skip the cleanup — exactly the orphan-PII bug this PR
+                    // is supposed to prevent.
+                    let serviceLocator = self.serviceLocator
+                    let themeManager = self.themeManager
+                    let interactor = self.interactor
+                    Task { @MainActor in
+                        let failures = await Self.clearAllUserData(
+                            serviceLocator: serviceLocator,
+                            themeManager: themeManager
+                        )
+                        if !failures.isEmpty {
+                            Self.surfacePartialCleanupFailure(
+                                key: "account.sign_out.cleanup_partial_failure",
+                                interactor: interactor
+                            )
+                        }
+                    }
                 }
             )
             .store(in: &cancellables)
@@ -172,8 +194,11 @@ final class SettingsViewModel: CombineViewModel, ObservableObject {
             .receive(on: DispatchQueue.main)
             .sink(
                 receiveCompletion: { [weak self] completion in
-                    self?.interactor.dispatch(action: .setIsDeletingAccount(false))
                     if case let .failure(error) = completion {
+                        // Failure path clears the spinner immediately; success
+                        // path defers the clear until cleanup finishes so the
+                        // user isn't dropped back to Settings mid-wipe.
+                        self?.interactor.dispatch(action: .setIsDeletingAccount(false))
                         // Silently swallow user-cancelled re-auth; show everything else.
                         if case AuthError.signInCancelled = error {
                             Logger.shared.service("Account deletion cancelled by user", level: .info)
@@ -185,12 +210,60 @@ final class SettingsViewModel: CombineViewModel, ObservableObject {
                     }
                 },
                 receiveValue: { [weak self] _ in
-                    self?.analyticsService?.logEvent(.deleteAccount)
-                    self?.clearAllUserData()
+                    guard let self else { return }
+                    self.analyticsService?.logEvent(.deleteAccount)
+                    // Same rationale as `handleSignOut`: capture deps strongly
+                    // so cleanup doesn't get cancelled by the auth-state flip
+                    // releasing this view model. Worse here than sign-out
+                    // because the Firebase account is already gone — leaving
+                    // local data orphan would be a direct LGPD / GDPR
+                    // right-to-erasure violation.
+                    let serviceLocator = self.serviceLocator
+                    let themeManager = self.themeManager
+                    let interactor = self.interactor
+                    Task { @MainActor in
+                        let failures = await Self.clearAllUserData(
+                            serviceLocator: serviceLocator,
+                            themeManager: themeManager
+                        )
+                        interactor.dispatch(action: .setIsDeletingAccount(false))
+                        if !failures.isEmpty {
+                            Self.surfacePartialCleanupFailure(
+                                key: "account.delete.cleanup_partial_failure",
+                                interactor: interactor
+                            )
+                        }
+                    }
                 }
             )
             .store(in: &cancellables)
     }
+
+    /// Writes the partial-cleanup error message both to the in-memory
+    /// interactor state (best-effort — Settings may still be mounted) AND
+    /// to UserDefaults under `pendingCleanupErrorKey` so `SignInView` can
+    /// surface it after the auth-state flip has dismounted Settings.
+    ///
+    /// Without the UserDefaults persistence the alert is dead code on the
+    /// happy-path: the moment `authService.signOut()` returns,
+    /// `AuthenticationManager` publishes `.unauthenticated`, `RootView`
+    /// swaps `CoordinatorView` → `SignInView`, and the SwiftUI binding
+    /// that would have presented the alert is gone before this code runs.
+    @MainActor
+    private static func surfacePartialCleanupFailure(
+        key: String,
+        interactor: SettingsDomainInteractor,
+        defaults: UserDefaults = .standard
+    ) {
+        let message = AppLocalization.shared.localized(key)
+        defaults.set(message, forKey: pendingCleanupErrorKey)
+        interactor.dispatch(action: .setError(message))
+    }
+
+    /// UserDefaults key carrying the most recent partial-cleanup failure
+    /// message. Read + cleared by `SignInView` so the user actually sees
+    /// the error after auth-state flip.
+    static let pendingCleanupErrorKey = "pulse.pendingCleanupErrorMessage"
 
     private static func defaultViewControllerProvider() -> UIViewController? {
         UIApplication.shared.connectedScenes
@@ -198,46 +271,76 @@ final class SettingsViewModel: CombineViewModel, ObservableObject {
             .first?.windows.first(where: \.isKeyWindow)?.rootViewController
     }
 
-    private func clearAllUserData() {
-        // 1. Clear SwiftData (bookmarks, preferences, reading history)
+    /// Runs every cleanup step sequentially and returns the list of step
+    /// identifiers that failed. Caller surfaces the list to the user.
+    ///
+    /// `static` — and accepts every dependency it touches as a parameter —
+    /// so the caller can spawn a `Task` that holds the deps strongly
+    /// without capturing `self`. If a `[weak self] Task { … }` wrapper
+    /// were used here instead, the auth-state flip after Firebase
+    /// sign-out / delete would release `SettingsViewModel` before the
+    /// Task body runs, the inner `guard let self` would fail, and the
+    /// cleanup would silently be skipped — exactly the orphan-PII bug
+    /// this method is supposed to prevent.
+    ///
+    /// The previous implementation also fired three async cleanup tasks
+    /// in parallel and returned before any of them had a chance to
+    /// complete. Awaiting each step sequentially closes the
+    /// force-quit-between-delete-and-wipe window on top of the dealloc
+    /// fix above.
+    @MainActor
+    static func clearAllUserData(
+        serviceLocator: ServiceLocator,
+        themeManager: ThemeManager
+    ) async -> [String] {
+        var failures: [String] = []
+
+        // 0. End any active TTS Live Activity first so the article title
+        //    doesn't linger on the Lock Screen after the user signs out.
+        // NOTE: ActivityKit dismissal is OS-mediated and inherently
+        // asynchronous — `end()` returns once we've asked the system to
+        // dismiss, but a force-quit between that call and the system
+        // actually clearing the Live Activity could leave it visible
+        // briefly. This is the best we can do from the app side.
+        TTSLiveActivityController.shared.end()
+
+        // 1. Clear SwiftData (bookmarks, preferences, reading history). Services
+        //    aren't `Sendable`; box them across the `await` per the
+        //    CombineAsyncBridge convention used throughout the app.
         if let storageService = try? serviceLocator.retrieve(StorageService.self) {
             let service = UncheckedSendableBox(value: storageService)
-            Task {
-                do {
-                    try await service.value.clearAllUserData()
-                } catch {
-                    Logger.shared.service("Failed to clear user data on sign-out: \(error)", level: .error)
-                }
+            do {
+                try await service.value.clearAllUserData()
+            } catch {
+                Logger.shared.service("Failed to clear user data on sign-out: \(error)", level: .error)
+                failures.append("storage")
             }
         }
 
         // 1a. Clear personalization profile (CloudKit-synced) and pending
-        //     engagement events (device-local). Best-effort — failures here
-        //     don't block the rest of sign-out cleanup.
+        //     engagement events (device-local).
         if let profileService = try? serviceLocator.retrieve(InterestProfileService.self) {
             let service = UncheckedSendableBox(value: profileService)
-            Task {
-                do {
-                    try await service.value.resetProfile()
-                } catch {
-                    Logger.shared.service(
-                        "Failed to clear interest profile on sign-out: \(error)",
-                        level: .warning
-                    )
-                }
+            do {
+                try await service.value.resetProfile()
+            } catch {
+                Logger.shared.service(
+                    "Failed to clear interest profile on sign-out: \(error)",
+                    level: .warning
+                )
+                failures.append("interest_profile")
             }
         }
         if let engagementService = try? serviceLocator.retrieve(EngagementEventsService.self) {
             let service = UncheckedSendableBox(value: engagementService)
-            Task {
-                do {
-                    try await service.value.clearAll()
-                } catch {
-                    Logger.shared.service(
-                        "Failed to clear engagement queue on sign-out: \(error)",
-                        level: .warning
-                    )
-                }
+            do {
+                try await service.value.clearAll()
+            } catch {
+                Logger.shared.service(
+                    "Failed to clear engagement queue on sign-out: \(error)",
+                    level: .warning
+                )
+                failures.append("engagement")
             }
         }
 
@@ -291,7 +394,15 @@ final class SettingsViewModel: CombineViewModel, ObservableObject {
         //    / reading history. Fire-and-forget; failures only log.
         SignOutCleanup.deletePrivateCloudKitZones(LiveStorageService.cloudKitContainerIdentifier)
 
-        Logger.shared.service("Cleared all local user data", level: .info)
+        if failures.isEmpty {
+            Logger.shared.service("Cleared all local user data", level: .info)
+        } else {
+            Logger.shared.service(
+                "Cleared local user data with failures: \(failures.joined(separator: ", "))",
+                level: .warning
+            )
+        }
+        return failures
     }
 
     private func setupBindings() {

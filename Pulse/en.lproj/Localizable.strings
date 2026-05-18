@@ -168,6 +168,8 @@
 "account.delete.title" = "Delete account?";
 "account.delete.message" = "This permanently deletes your account and all associated data (bookmarks, reading history, preferences). This action cannot be undone.";
 "account.delete.confirm" = "Delete";
+"account.sign_out.cleanup_partial_failure" = "Sign-out is complete, but some local data couldn't be cleared. Sign in again and try once more if you see remnants of your previous session.";
+"account.delete.cleanup_partial_failure" = "Account deleted, but some local data couldn't be cleared. Reinstall the app to ensure complete removal.";
 
 /* ==================== */
 /* MARK: - Auth         */

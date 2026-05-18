@@ -168,6 +168,8 @@
 "account.delete.title" = "Excluir conta?";
 "account.delete.message" = "Isso exclui permanentemente sua conta e todos os dados associados (favoritos, histórico de leitura, preferências). Esta ação não pode ser desfeita.";
 "account.delete.confirm" = "Excluir";
+"account.sign_out.cleanup_partial_failure" = "Saída concluída, mas alguns dados locais não puderam ser removidos. Entre novamente e tente outra vez se ainda houver vestígios da sessão anterior.";
+"account.delete.cleanup_partial_failure" = "Conta excluída, mas alguns dados locais não puderam ser removidos. Reinstale o app para garantir a remoção completa.";
 
 /* ==================== */
 /* MARK: - Auth         */

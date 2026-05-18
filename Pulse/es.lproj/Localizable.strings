@@ -168,6 +168,8 @@
 "account.delete.title" = "¿Eliminar cuenta?";
 "account.delete.message" = "Esto elimina permanentemente tu cuenta y todos los datos asociados (marcadores, historial de lectura, preferencias). Esta acción no se puede deshacer.";
 "account.delete.confirm" = "Eliminar";
+"account.sign_out.cleanup_partial_failure" = "Cierre de sesión completado, pero algunos datos locales no se pudieron eliminar. Inicia sesión de nuevo e inténtalo otra vez si aún quedan restos de la sesión anterior.";
+"account.delete.cleanup_partial_failure" = "Cuenta eliminada, pero algunos datos locales no se pudieron eliminar. Reinstala la aplicación para asegurar la eliminación completa.";
 
 /* ==================== */
 /* MARK: - Auth         */
