@@ -19,9 +19,15 @@ enum TopicExtractionPromptBuilder {
     """
 
     static func buildPrompt(title: String, summary: String?) -> String {
-        var content = "Title: \(title)"
+        // Sanitize untrusted RSS-sourced text before interpolating into the
+        // prompt. The output side is already constrained by `parseTags`.
+        let safeTitle = PromptSanitizer.sanitize(title, maxLength: 200)
+        var content = "Title: \(safeTitle)"
         if let summary, !summary.isEmpty {
-            content += "\n\nSummary: \(summary)"
+            let safeSummary = PromptSanitizer.sanitize(summary, maxLength: 500)
+            if !safeSummary.isEmpty {
+                content += "\n\nSummary: \(safeSummary)"
+            }
         }
         return "Extract topic tags for this article:\n\n\(content)"
     }
