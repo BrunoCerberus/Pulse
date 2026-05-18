@@ -25,6 +25,12 @@ enum AuthError: Error, LocalizedError {
     case invalidCredential
     case networkError
     case noCurrentUser
+    /// Reviewer-only anonymous sign-in was rejected by the 60s throttle.
+    /// Dedicated case so `AuthDomainInteractor` can skip Crashlytics +
+    /// the `signIn(success: false)` analytics event for this specific
+    /// failure — otherwise the throttle hits would pollute the very
+    /// analytics surface the M3 / M9 fixes are trying to keep clean.
+    case anonymousSignInThrottled
     case unknown(String)
 
     var errorDescription: String? {
@@ -33,6 +39,7 @@ enum AuthError: Error, LocalizedError {
         case .invalidCredential: return "Invalid credentials"
         case .networkError: return "Network error occurred"
         case .noCurrentUser: return "No user is currently signed in"
+        case .anonymousSignInThrottled: return "Reviewer sign-in throttled"
         case let .unknown(message): return message
         }
     }
