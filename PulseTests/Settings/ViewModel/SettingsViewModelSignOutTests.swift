@@ -261,6 +261,13 @@ struct SettingsViewModelSignOutTests {
             domain: "test", code: 1, userInfo: [NSLocalizedDescriptionKey: "disk full"]
         )
 
+        // Seed the key so the post-cleanup assertion is not vacuous —
+        // confirms the cleanup actually ran past the failing step rather
+        // than just passing because the key was never set.
+        let defaults = UserDefaults.standard
+        defaults.set("token-pre-test", forKey: "pulse.deviceToken")
+        defer { defaults.removeObject(forKey: "pulse.deviceToken") }
+
         let sut = createSUT()
         sut.handle(event: .onAppear)
         try await waitForStateUpdate(duration: TestWaitDuration.long)
@@ -272,8 +279,11 @@ struct SettingsViewModelSignOutTests {
 
         #expect(sut.viewState.errorMessage != nil)
         // Confirm later cleanup steps still ran despite the earlier failure.
-        let defaults = UserDefaults.standard
         #expect(defaults.object(forKey: "pulse.deviceToken") == nil)
+        // Also confirm the persisted message is in place for SignInView to surface.
+        let persisted = defaults.string(forKey: SettingsViewModel.pendingCleanupErrorKey)
+        #expect(persisted != nil)
+        defaults.removeObject(forKey: SettingsViewModel.pendingCleanupErrorKey)
     }
 
     @Test("Sign-out completes silently when every cleanup step succeeds")

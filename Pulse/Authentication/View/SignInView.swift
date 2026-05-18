@@ -7,6 +7,12 @@ import SwiftUI
 struct SignInView: View {
     @StateObject private var viewModel: SignInViewModel
     @State private var showError = false
+    /// Partial-cleanup failure message persisted by `SettingsViewModel`
+    /// across the sign-out / delete-account auth-state flip. `SignInView`
+    /// is the next surface the user sees, so this is where we present
+    /// the error that `SettingsView` couldn't (it had already been
+    /// dismounted by `RootView` swapping to `SignInView`).
+    @State private var pendingCleanupError: String?
 
     init(serviceLocator: ServiceLocator) {
         _viewModel = StateObject(wrappedValue: SignInViewModel(serviceLocator: serviceLocator))
@@ -45,6 +51,32 @@ struct SignInView: View {
         .onChange(of: viewModel.viewState.errorMessage) { _, newValue in
             showError = newValue != nil
         }
+        .alert(
+            Constants.error,
+            isPresented: Binding(
+                get: { pendingCleanupError != nil },
+                set: { if !$0 { dismissPendingCleanupError() } }
+            )
+        ) {
+            Button(Constants.okButton) { dismissPendingCleanupError() }
+        } message: {
+            Text(pendingCleanupError ?? "")
+        }
+        .onAppear { loadPendingCleanupError() }
+    }
+
+    private func loadPendingCleanupError() {
+        let defaults = UserDefaults.standard
+        if let message = defaults.string(forKey: SettingsViewModel.pendingCleanupErrorKey),
+           !message.isEmpty
+        {
+            pendingCleanupError = message
+        }
+    }
+
+    private func dismissPendingCleanupError() {
+        UserDefaults.standard.removeObject(forKey: SettingsViewModel.pendingCleanupErrorKey)
+        pendingCleanupError = nil
     }
 
     private var backgroundGradient: some View {

@@ -158,13 +158,26 @@ final class SettingsViewModel: CombineViewModel, ObservableObject {
                 },
                 receiveValue: { [weak self] _ in
                     guard let self else { return }
-                    Task { @MainActor [weak self] in
-                        guard let self else { return }
-                        let failures = await self.clearAllUserData()
+                    // Capture deps strongly into locals BEFORE spawning the
+                    // Task. After Firebase sign-out, AuthenticationManager
+                    // flips state and RootView tears down the Coordinator;
+                    // SettingsViewModel can be released before the Task body
+                    // ever runs. A `[weak self]` Task here would silently
+                    // skip the cleanup — exactly the orphan-PII bug this PR
+                    // is supposed to prevent.
+                    let serviceLocator = self.serviceLocator
+                    let themeManager = self.themeManager
+                    let interactor = self.interactor
+                    Task { @MainActor in
+                        let failures = await Self.performAtomicCleanup(
+                            serviceLocator: serviceLocator,
+                            themeManager: themeManager
+                        )
                         if !failures.isEmpty {
-                            self.interactor.dispatch(action: .setError(
-                                AppLocalization.shared.localized("account.sign_out.cleanup_partial_failure")
-                            ))
+                            Self.surfacePartialCleanupFailure(
+                                key: "account.sign_out.cleanup_partial_failure",
+                                interactor: interactor
+                            )
                         }
                     }
                 }
@@ -199,20 +212,58 @@ final class SettingsViewModel: CombineViewModel, ObservableObject {
                 receiveValue: { [weak self] _ in
                     guard let self else { return }
                     self.analyticsService?.logEvent(.deleteAccount)
-                    Task { @MainActor [weak self] in
-                        guard let self else { return }
-                        let failures = await self.clearAllUserData()
-                        self.interactor.dispatch(action: .setIsDeletingAccount(false))
+                    // Same rationale as `handleSignOut`: capture deps strongly
+                    // so cleanup doesn't get cancelled by the auth-state flip
+                    // releasing this view model. Worse here than sign-out
+                    // because the Firebase account is already gone — leaving
+                    // local data orphan would be a direct LGPD / GDPR
+                    // right-to-erasure violation.
+                    let serviceLocator = self.serviceLocator
+                    let themeManager = self.themeManager
+                    let interactor = self.interactor
+                    Task { @MainActor in
+                        let failures = await Self.performAtomicCleanup(
+                            serviceLocator: serviceLocator,
+                            themeManager: themeManager
+                        )
+                        interactor.dispatch(action: .setIsDeletingAccount(false))
                         if !failures.isEmpty {
-                            self.interactor.dispatch(action: .setError(
-                                AppLocalization.shared.localized("account.delete.cleanup_partial_failure")
-                            ))
+                            Self.surfacePartialCleanupFailure(
+                                key: "account.delete.cleanup_partial_failure",
+                                interactor: interactor
+                            )
                         }
                     }
                 }
             )
             .store(in: &cancellables)
     }
+
+    /// Writes the partial-cleanup error message both to the in-memory
+    /// interactor state (best-effort — Settings may still be mounted) AND
+    /// to UserDefaults under `pendingCleanupErrorKey` so `SignInView` can
+    /// surface it after the auth-state flip has dismounted Settings.
+    ///
+    /// Without the UserDefaults persistence the alert is dead code on the
+    /// happy-path: the moment `authService.signOut()` returns,
+    /// `AuthenticationManager` publishes `.unauthenticated`, `RootView`
+    /// swaps `CoordinatorView` → `SignInView`, and the SwiftUI binding
+    /// that would have presented the alert is gone before this code runs.
+    @MainActor
+    private static func surfacePartialCleanupFailure(
+        key: String,
+        interactor: SettingsDomainInteractor,
+        defaults: UserDefaults = .standard
+    ) {
+        let message = AppLocalization.shared.localized(key)
+        defaults.set(message, forKey: pendingCleanupErrorKey)
+        interactor.dispatch(action: .setError(message))
+    }
+
+    /// UserDefaults key carrying the most recent partial-cleanup failure
+    /// message. Read + cleared by `SignInView` so the user actually sees
+    /// the error after auth-state flip.
+    static let pendingCleanupErrorKey = "pulse.pendingCleanupErrorMessage"
 
     private static func defaultViewControllerProvider() -> UIViewController? {
         UIApplication.shared.connectedScenes
@@ -223,17 +274,34 @@ final class SettingsViewModel: CombineViewModel, ObservableObject {
     /// Runs every cleanup step sequentially and returns the list of step
     /// identifiers that failed. Caller surfaces the list to the user.
     ///
-    /// The previous implementation fired three async cleanup tasks in
-    /// parallel and returned before any of them had a chance to complete.
-    /// On a force-quit between the Firebase delete and the local wipe,
-    /// SwiftData / interest-profile / engagement-queue data persisted on
-    /// disk — a privacy / right-to-erasure gap. Awaiting each step
-    /// sequentially closes that window.
-    private func clearAllUserData() async -> [String] {
+    /// `static` — and accepts every dependency it touches as a parameter —
+    /// so the caller can spawn a `Task` that holds the deps strongly
+    /// without capturing `self`. If a `[weak self] Task { … }` wrapper
+    /// were used here instead, the auth-state flip after Firebase
+    /// sign-out / delete would release `SettingsViewModel` before the
+    /// Task body runs, the inner `guard let self` would fail, and the
+    /// cleanup would silently be skipped — exactly the orphan-PII bug
+    /// this method is supposed to prevent.
+    ///
+    /// The previous implementation also fired three async cleanup tasks
+    /// in parallel and returned before any of them had a chance to
+    /// complete. Awaiting each step sequentially closes the
+    /// force-quit-between-delete-and-wipe window on top of the dealloc
+    /// fix above.
+    @MainActor
+    static func performAtomicCleanup(
+        serviceLocator: ServiceLocator,
+        themeManager: ThemeManager
+    ) async -> [String] {
         var failures: [String] = []
 
         // 0. End any active TTS Live Activity first so the article title
         //    doesn't linger on the Lock Screen after the user signs out.
+        // NOTE: ActivityKit dismissal is OS-mediated and inherently
+        // asynchronous — `end()` returns once we've asked the system to
+        // dismiss, but a force-quit between that call and the system
+        // actually clearing the Live Activity could leave it visible
+        // briefly. This is the best we can do from the app side.
         TTSLiveActivityController.shared.end()
 
         // 1. Clear SwiftData (bookmarks, preferences, reading history). Services
