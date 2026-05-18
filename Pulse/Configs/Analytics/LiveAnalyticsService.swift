@@ -19,18 +19,48 @@ final class LiveAnalyticsService: AnalyticsService {
         var enrichedInfo = userInfo ?? [:]
         enrichedInfo["domain"] = nsError.domain
         enrichedInfo["code"] = nsError.code
+        // Wrap the localized description through the sanitizer too — Firebase
+        // SDK errors sometimes embed the user's email, the request URL with
+        // query params, or other PII directly in the message.
+        enrichedInfo["localizedDescription"] = Self.sanitize(any: nsError.localizedDescription)
 
-        // Sanitize values to prevent PII leakage to Crashlytics
-        let sanitizedInfo = enrichedInfo.mapValues { value -> Any in
-            guard let stringValue = value as? String else { return value }
-            return Self.sanitize(stringValue)
-        }
+        // Recursive sanitization handles nested dictionaries / arrays that
+        // a flat `mapValues` would have skipped over.
+        let sanitizedInfo = enrichedInfo.mapValues(Self.sanitize(any:))
 
         Crashlytics.crashlytics().record(error: error, userInfo: sanitizedInfo)
     }
 
+    /// Recursively redacts potential PII (emails, URL query strings) from any
+    /// value type Crashlytics might serialize. Walks dictionaries and arrays;
+    /// for unrecognized types returns the value untouched.
+    ///
+    /// Internal (not `private`) so unit tests can exercise the redaction logic
+    /// directly without round-tripping through the real Crashlytics SDK.
+    static func sanitize(any value: Any) -> Any {
+        switch value {
+        case let string as String:
+            return sanitize(string)
+        case let dict as [String: Any]:
+            return dict.mapValues(sanitize(any:))
+        case let array as [Any]:
+            return array.map(sanitize(any:))
+        case let nsArray as NSArray:
+            return nsArray.map { sanitize(any: $0) }
+        case let nsDict as NSDictionary:
+            var result: [String: Any] = [:]
+            for (key, value) in nsDict {
+                guard let stringKey = key as? String else { continue }
+                result[stringKey] = sanitize(any: value)
+            }
+            return result
+        default:
+            return value
+        }
+    }
+
     /// Redacts potential PII patterns (emails, URLs with tokens) from error context.
-    private static func sanitize(_ value: String) -> String {
+    static func sanitize(_ value: String) -> String {
         var result = value
         // Redact email addresses
         let emailPattern = /[A-Za-z0-9._%+-]+@[A-Za-z0-9.-]+\.[A-Za-z]{2,}/

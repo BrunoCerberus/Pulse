@@ -8,14 +8,27 @@ import UserNotifications
 final class LiveNotificationService: NotificationService {
     static let shared = LiveNotificationService()
 
+    /// Keychain service identifier for the APNs device token. Wiped on
+    /// sign-out / account-deletion via `SignOutCleanup.wipeKeychain(...)`.
+    static let keychainService = "com.pulse.notifications"
+
+    private let keychain: KeychainStore
     private let defaults: UserDefaults
 
     private enum Keys {
-        static let deviceToken = "pulse.deviceToken"
+        /// Legacy UserDefaults key — kept only for the one-time migration to Keychain.
+        static let legacyDeviceTokenDefaults = "pulse.deviceToken"
+        /// Keychain key for the APNs device token.
+        static let deviceTokenKeychain = "device_token"
     }
 
-    private init(defaults: UserDefaults = .standard) {
+    private init(
+        keychain: KeychainStore = KeychainManager(service: keychainService),
+        defaults: UserDefaults = .standard
+    ) {
+        self.keychain = keychain
         self.defaults = defaults
+        migrateDeviceTokenFromUserDefaultsIfNeeded()
     }
 
     func authorizationStatus() async -> NotificationAuthorizationStatus {
@@ -49,11 +62,28 @@ final class LiveNotificationService: NotificationService {
 
     func storeDeviceToken(_ token: Data) {
         let hex = token.map { String(format: "%02.2hhx", $0) }.joined()
-        defaults.set(hex, forKey: Keys.deviceToken)
-        Logger.shared.network("Device token stored", level: .debug)
+        do {
+            try keychain.save(hex, for: Keys.deviceTokenKeychain)
+            Logger.shared.network("Device token stored", level: .debug)
+        } catch {
+            Logger.shared.network("Failed to store device token in keychain: \(error)", level: .warning)
+        }
     }
 
     var storedDeviceToken: String? {
-        defaults.string(forKey: Keys.deviceToken)
+        try? keychain.retrieve(for: Keys.deviceTokenKeychain)
+    }
+
+    /// One-time migration: device tokens used to live in `UserDefaults`. Push
+    /// tokens aren't secrets, but UserDefaults inherits file-protection class
+    /// `.completeUntilFirstUserAuthentication`, which means an iTunes backup
+    /// or a jailbreak read can recover them and use them to send spoofed
+    /// notifications. Keychain items get `.complete` protection by default.
+    private func migrateDeviceTokenFromUserDefaultsIfNeeded() {
+        guard let legacyToken = defaults.string(forKey: Keys.legacyDeviceTokenDefaults) else {
+            return
+        }
+        try? keychain.save(legacyToken, for: Keys.deviceTokenKeychain)
+        defaults.removeObject(forKey: Keys.legacyDeviceTokenDefaults)
     }
 }

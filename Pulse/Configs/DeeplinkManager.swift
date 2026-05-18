@@ -89,6 +89,12 @@ final class DeeplinkManager: ObservableObject {
         deeplinkSubject.eraseToAnyPublisher()
     }
 
+    /// Last-received deeplink, exposed for diagnostic / testing observation.
+    /// **Do not bind a SwiftUI `View` to this value** — rendering an article
+    /// title or search query from here would cause the deeplink target to
+    /// appear in the iOS app-switcher snapshot when the user backgrounds the
+    /// app mid-navigation. The router consumes `deeplinkPublisher` directly
+    /// to avoid that exposure.
     @Published private(set) var currentDeeplink: Deeplink?
 
     private init() {}

@@ -20,6 +20,12 @@ final class TTSLiveActivityController {
         currentActivity != nil
     }
 
+    /// Maximum length for `articleTitle` / `sourceName` written into the
+    /// Live Activity. The Lock Screen / Dynamic Island truncate visually,
+    /// but a pathologically long title (rare RSS edge case) can otherwise
+    /// dominate the snapshot the OS captures for the app switcher.
+    private static let maxLabelLength = 100
+
     private init() {}
 
     // MARK: - Lifecycle
@@ -46,8 +52,8 @@ final class TTSLiveActivityController {
         }
 
         let attributes = TTSActivityAttributes(
-            articleTitle: articleTitle,
-            sourceName: sourceName
+            articleTitle: String(articleTitle.prefix(Self.maxLabelLength)),
+            sourceName: String(sourceName.prefix(Self.maxLabelLength))
         )
         let initialState = TTSActivityAttributes.ContentState(
             isPlaying: true,

@@ -263,9 +263,11 @@ final class ArticleDetailDomainInteractor: CombineInteractor {
     // MARK: - Browser
 
     private func openInBrowser() {
+        // HTTPS-only: an attacker-controlled article row could redirect users
+        // through a plaintext page on a hostile network. The article URL
+        // itself originates from RSS feeds we don't fully control.
         guard let url = URL(string: currentState.article.url),
-              let scheme = url.scheme?.lowercased(),
-              ["https", "http"].contains(scheme)
+              url.scheme?.lowercased() == "https"
         else { return }
         UIApplication.shared.open(url)
     }

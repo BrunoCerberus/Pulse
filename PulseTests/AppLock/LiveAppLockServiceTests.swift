@@ -14,6 +14,13 @@ private final class InMemoryKeychainStore: KeychainStore {
         store[key] = value
     }
 
+    func retrieve(for key: String) throws -> String {
+        guard let value = store[key] else {
+            throw NSError(domain: "InMemoryKeychainStore", code: -1)
+        }
+        return value
+    }
+
     func delete(for key: String) throws {
         store.removeValue(forKey: key)
     }
