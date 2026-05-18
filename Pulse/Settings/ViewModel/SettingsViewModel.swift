@@ -157,7 +157,16 @@ final class SettingsViewModel: CombineViewModel, ObservableObject {
                     }
                 },
                 receiveValue: { [weak self] _ in
-                    self?.clearAllUserData()
+                    guard let self else { return }
+                    Task { @MainActor [weak self] in
+                        guard let self else { return }
+                        let failures = await self.clearAllUserData()
+                        if !failures.isEmpty {
+                            self.interactor.dispatch(action: .setError(
+                                AppLocalization.shared.localized("account.sign_out.cleanup_partial_failure")
+                            ))
+                        }
+                    }
                 }
             )
             .store(in: &cancellables)
@@ -172,8 +181,11 @@ final class SettingsViewModel: CombineViewModel, ObservableObject {
             .receive(on: DispatchQueue.main)
             .sink(
                 receiveCompletion: { [weak self] completion in
-                    self?.interactor.dispatch(action: .setIsDeletingAccount(false))
                     if case let .failure(error) = completion {
+                        // Failure path clears the spinner immediately; success
+                        // path defers the clear until cleanup finishes so the
+                        // user isn't dropped back to Settings mid-wipe.
+                        self?.interactor.dispatch(action: .setIsDeletingAccount(false))
                         // Silently swallow user-cancelled re-auth; show everything else.
                         if case AuthError.signInCancelled = error {
                             Logger.shared.service("Account deletion cancelled by user", level: .info)
@@ -185,8 +197,18 @@ final class SettingsViewModel: CombineViewModel, ObservableObject {
                     }
                 },
                 receiveValue: { [weak self] _ in
-                    self?.analyticsService?.logEvent(.deleteAccount)
-                    self?.clearAllUserData()
+                    guard let self else { return }
+                    self.analyticsService?.logEvent(.deleteAccount)
+                    Task { @MainActor [weak self] in
+                        guard let self else { return }
+                        let failures = await self.clearAllUserData()
+                        self.interactor.dispatch(action: .setIsDeletingAccount(false))
+                        if !failures.isEmpty {
+                            self.interactor.dispatch(action: .setError(
+                                AppLocalization.shared.localized("account.delete.cleanup_partial_failure")
+                            ))
+                        }
+                    }
                 }
             )
             .store(in: &cancellables)
@@ -198,46 +220,59 @@ final class SettingsViewModel: CombineViewModel, ObservableObject {
             .first?.windows.first(where: \.isKeyWindow)?.rootViewController
     }
 
-    private func clearAllUserData() {
-        // 1. Clear SwiftData (bookmarks, preferences, reading history)
+    /// Runs every cleanup step sequentially and returns the list of step
+    /// identifiers that failed. Caller surfaces the list to the user.
+    ///
+    /// The previous implementation fired three async cleanup tasks in
+    /// parallel and returned before any of them had a chance to complete.
+    /// On a force-quit between the Firebase delete and the local wipe,
+    /// SwiftData / interest-profile / engagement-queue data persisted on
+    /// disk — a privacy / right-to-erasure gap. Awaiting each step
+    /// sequentially closes that window.
+    private func clearAllUserData() async -> [String] {
+        var failures: [String] = []
+
+        // 0. End any active TTS Live Activity first so the article title
+        //    doesn't linger on the Lock Screen after the user signs out.
+        TTSLiveActivityController.shared.end()
+
+        // 1. Clear SwiftData (bookmarks, preferences, reading history). Services
+        //    aren't `Sendable`; box them across the `await` per the
+        //    CombineAsyncBridge convention used throughout the app.
         if let storageService = try? serviceLocator.retrieve(StorageService.self) {
             let service = UncheckedSendableBox(value: storageService)
-            Task {
-                do {
-                    try await service.value.clearAllUserData()
-                } catch {
-                    Logger.shared.service("Failed to clear user data on sign-out: \(error)", level: .error)
-                }
+            do {
+                try await service.value.clearAllUserData()
+            } catch {
+                Logger.shared.service("Failed to clear user data on sign-out: \(error)", level: .error)
+                failures.append("storage")
             }
         }
 
         // 1a. Clear personalization profile (CloudKit-synced) and pending
-        //     engagement events (device-local). Best-effort — failures here
-        //     don't block the rest of sign-out cleanup.
+        //     engagement events (device-local).
         if let profileService = try? serviceLocator.retrieve(InterestProfileService.self) {
             let service = UncheckedSendableBox(value: profileService)
-            Task {
-                do {
-                    try await service.value.resetProfile()
-                } catch {
-                    Logger.shared.service(
-                        "Failed to clear interest profile on sign-out: \(error)",
-                        level: .warning
-                    )
-                }
+            do {
+                try await service.value.resetProfile()
+            } catch {
+                Logger.shared.service(
+                    "Failed to clear interest profile on sign-out: \(error)",
+                    level: .warning
+                )
+                failures.append("interest_profile")
             }
         }
         if let engagementService = try? serviceLocator.retrieve(EngagementEventsService.self) {
             let service = UncheckedSendableBox(value: engagementService)
-            Task {
-                do {
-                    try await service.value.clearAll()
-                } catch {
-                    Logger.shared.service(
-                        "Failed to clear engagement queue on sign-out: \(error)",
-                        level: .warning
-                    )
-                }
+            do {
+                try await service.value.clearAll()
+            } catch {
+                Logger.shared.service(
+                    "Failed to clear engagement queue on sign-out: \(error)",
+                    level: .warning
+                )
+                failures.append("engagement")
             }
         }
 
@@ -291,7 +326,15 @@ final class SettingsViewModel: CombineViewModel, ObservableObject {
         //    / reading history. Fire-and-forget; failures only log.
         SignOutCleanup.deletePrivateCloudKitZones(LiveStorageService.cloudKitContainerIdentifier)
 
-        Logger.shared.service("Cleared all local user data", level: .info)
+        if failures.isEmpty {
+            Logger.shared.service("Cleared all local user data", level: .info)
+        } else {
+            Logger.shared.service(
+                "Cleared local user data with failures: \(failures.joined(separator: ", "))",
+                level: .warning
+            )
+        }
+        return failures
     }
 
     private func setupBindings() {

@@ -82,6 +82,8 @@ final class SettingsDomainInteractor: CombineInteractor {
             handleUIStateAction(action)
         case .dismissError:
             updateState { state in state.error = nil }
+        case let .setError(message):
+            updateState { state in state.error = message }
         case .dismissNotificationsDeniedAlert:
             updateState { state in state.showNotificationsDeniedAlert = false }
         case .syncNotificationStatus:
@@ -313,6 +315,7 @@ enum SettingsDomainAction: Equatable {
     case setNewMutedSource(String)
     case setNewMutedKeyword(String)
     case dismissError
+    case setError(String?)
     case dismissNotificationsDeniedAlert
     case syncNotificationStatus
 }
