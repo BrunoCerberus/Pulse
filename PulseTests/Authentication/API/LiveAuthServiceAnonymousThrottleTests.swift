@@ -12,61 +12,80 @@ struct LiveAuthServiceAnonymousThrottleTests {
         return defaults
     }
 
-    @Test("Allows the first attempt and records the timestamp")
-    func firstAttemptAllowed() {
+    @Test("isAnonymousSignInThrottled returns false on a fresh device")
+    func freshDeviceNotThrottled() {
         let defaults = freshDefaults()
-        let now: TimeInterval = 1000
-
-        let result = LiveAuthService.checkAnonymousSignInThrottle(
-            now: now,
+        let throttled = LiveAuthService.isAnonymousSignInThrottled(
+            now: 1000,
             defaults: defaults,
             throttleSeconds: 60
         )
-
-        if case .failure = result {
-            Issue.record("First attempt should not be throttled")
-        }
-        #expect(defaults.double(forKey: LiveAuthService.anonymousSignInLastAttemptKey) == now)
+        #expect(throttled == false)
     }
 
-    @Test("Blocks a second attempt within the throttle window")
-    func secondAttemptThrottled() {
+    @Test("isAnonymousSignInThrottled returns true within the window")
+    func throttledWithinWindow() {
         let defaults = freshDefaults()
         defaults.set(1000.0, forKey: LiveAuthService.anonymousSignInLastAttemptKey)
 
-        let result = LiveAuthService.checkAnonymousSignInThrottle(
+        let throttled = LiveAuthService.isAnonymousSignInThrottled(
             now: 1030,
             defaults: defaults,
             throttleSeconds: 60
         )
-
-        guard case let .failure(error) = result else {
-            Issue.record("Expected throttle to reject the second attempt")
-            return
-        }
-        if case let .unknown(message) = error {
-            #expect(message.contains("throttled"))
-        } else {
-            Issue.record("Unexpected error type")
-        }
-        // Timestamp must NOT be updated on a throttled attempt.
-        #expect(defaults.double(forKey: LiveAuthService.anonymousSignInLastAttemptKey) == 1000)
+        #expect(throttled == true)
     }
 
-    @Test("Allows another attempt after the throttle window elapses")
-    func secondAttemptAllowedAfterWindow() {
+    @Test("isAnonymousSignInThrottled returns false after the window")
+    func notThrottledAfterWindow() {
         let defaults = freshDefaults()
         defaults.set(1000.0, forKey: LiveAuthService.anonymousSignInLastAttemptKey)
 
-        let result = LiveAuthService.checkAnonymousSignInThrottle(
+        let throttled = LiveAuthService.isAnonymousSignInThrottled(
             now: 1061, // 61s later, throttle is 60s
             defaults: defaults,
             throttleSeconds: 60
         )
+        #expect(throttled == false)
+    }
 
-        if case .failure = result {
-            Issue.record("Throttle window should have elapsed")
-        }
-        #expect(defaults.double(forKey: LiveAuthService.anonymousSignInLastAttemptKey) == 1061)
+    @Test("isAnonymousSignInThrottled does NOT update the timestamp")
+    func readDoesNotMutate() {
+        let defaults = freshDefaults()
+        defaults.set(1000.0, forKey: LiveAuthService.anonymousSignInLastAttemptKey)
+
+        _ = LiveAuthService.isAnonymousSignInThrottled(
+            now: 1500,
+            defaults: defaults,
+            throttleSeconds: 60
+        )
+        // Confirms the throttle check is a pure read — a transient Firebase
+        // failure in the caller won't burn the reviewer's window.
+        #expect(defaults.double(forKey: LiveAuthService.anonymousSignInLastAttemptKey) == 1000)
+    }
+
+    @Test("recordAnonymousSignInAttempt writes the timestamp")
+    func recordWritesTimestamp() {
+        let defaults = freshDefaults()
+        LiveAuthService.recordAnonymousSignInAttempt(
+            at: 2000,
+            defaults: defaults
+        )
+        #expect(defaults.double(forKey: LiveAuthService.anonymousSignInLastAttemptKey) == 2000)
+    }
+
+    @Test("Record followed by check inside the window throttles")
+    func recordThenCheckRoundTrip() {
+        let defaults = freshDefaults()
+        LiveAuthService.recordAnonymousSignInAttempt(
+            at: 1000,
+            defaults: defaults
+        )
+        let throttled = LiveAuthService.isAnonymousSignInThrottled(
+            now: 1030,
+            defaults: defaults,
+            throttleSeconds: 60
+        )
+        #expect(throttled == true)
     }
 }

@@ -17,22 +17,28 @@ extension LiveAuthService {
     /// that an App Review reviewer who needs to retry isn't blocked.
     static let anonymousSignInThrottleSeconds: TimeInterval = 60
 
-    /// Returns `.success` and records `now` as the latest attempt when the
-    /// throttle window has elapsed; returns `.failure` with a human-readable
-    /// message otherwise. Extracted from `signInAnonymously` so it can be
-    /// unit-tested with a custom `UserDefaults` suite and clock.
-    static func checkAnonymousSignInThrottle(
+    /// Pure read: returns `true` if a previous attempt is still inside the
+    /// throttle window. Does NOT update the timestamp — record it only on a
+    /// confirmed Firebase success via `recordAnonymousSignInAttempt`. A
+    /// transient Firebase failure shouldn't burn the reviewer's 60s window.
+    static func isAnonymousSignInThrottled(
         now: TimeInterval = Date().timeIntervalSince1970,
         defaults: UserDefaults = .standard,
         throttleSeconds: TimeInterval = anonymousSignInThrottleSeconds
-    ) -> Result<Void, AuthError> {
+    ) -> Bool {
         let lastAttempt = defaults.double(forKey: anonymousSignInLastAttemptKey)
-        if lastAttempt > 0, now - lastAttempt < throttleSeconds {
-            let remaining = Int(throttleSeconds - (now - lastAttempt))
-            return .failure(.unknown("Reviewer sign-in throttled. Try again in \(remaining)s."))
-        }
+        guard lastAttempt > 0 else { return false }
+        return now - lastAttempt < throttleSeconds
+    }
+
+    /// Records a successful anonymous sign-in attempt. Subsequent calls to
+    /// `isAnonymousSignInThrottled` will return `true` for the next
+    /// `throttleSeconds` seconds.
+    static func recordAnonymousSignInAttempt(
+        at now: TimeInterval = Date().timeIntervalSince1970,
+        defaults: UserDefaults = .standard
+    ) {
         defaults.set(now, forKey: anonymousSignInLastAttemptKey)
-        return .success(())
     }
 
     /// Reviewer-only path documented in App Store Connect → App Review
@@ -44,8 +50,8 @@ extension LiveAuthService {
         Future { promise in
             let promise = UncheckedSendableBox(value: promise)
 
-            if case let .failure(error) = Self.checkAnonymousSignInThrottle() {
-                promise.value(.failure(error))
+            if Self.isAnonymousSignInThrottled() {
+                promise.value(.failure(AuthError.anonymousSignInThrottled))
                 return
             }
 
@@ -53,6 +59,10 @@ extension LiveAuthService {
                 do {
                     let authResult = try await Auth.auth().signInAnonymously()
                     if let user = authResult.user.toAuthUser() {
+                        // Only burn the throttle window on a confirmed
+                        // Firebase success — a transient backend / network
+                        // failure shouldn't lock the reviewer out for 60s.
+                        Self.recordAnonymousSignInAttempt()
                         promise.value(.success(user))
                     } else {
                         promise.value(.failure(AuthError.unknown("Failed to create anonymous user")))
