@@ -222,7 +222,11 @@ jobs:
             echo "::error file=$svm::clearAllUserData() not defined. LGPD Art. 18 (right to erasure) requires a single entry point that wipes all local user data."
             exit 1
           fi
-          calls=$(rg -c 'self\?\.clearAllUserData\(\)' "$svm" || echo 0)
+          # Accept both legacy `self?.clearAllUserData()` and the newer
+          # `await self.clearAllUserData()` pattern (used after a
+          # `guard let self else { return }` inside an async Task — required
+          # once cleanup is awaited rather than fire-and-forget).
+          calls=$(rg -c 'self\??\.clearAllUserData\(\)' "$svm" || echo 0)
           if [ "$calls" -lt 2 ]; then
             echo "::error file=$svm::clearAllUserData() is called from $calls site(s) in SettingsViewModel; sign-out and account-deletion handlers must both invoke it (see AGENTS.md item 17)."
             exit 1
