@@ -36,4 +36,12 @@ protocol StoreKitService {
     /// Check current subscription status.
     /// - Returns: Publisher emitting subscription status.
     func checkSubscriptionStatus() -> AnyPublisher<Bool, Never>
+
+    /// Re-validates subscription status by re-reading StoreKit 2's
+    /// `Transaction.currentEntitlements` rather than trusting the cached
+    /// `isPremium` value. Use at `.task` / `.onAppear` / scene-foreground
+    /// boundaries inside premium gates so a jailbroken device can't unlock
+    /// premium features by mutating the in-memory cache.
+    /// - Returns: The freshly-computed subscription status.
+    func refreshSubscriptionStatus() async -> Bool
 }
