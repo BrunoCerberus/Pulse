@@ -320,6 +320,7 @@ extension ArticleDetailDomainInteractorTests {
 }
 
 @Suite("ArticleDetailDomainInteractor externalURL gate")
+@MainActor
 struct ArticleDetailDomainInteractorExternalURLTests {
     @Test("HTTPS URL is accepted")
     func httpsAccepted() {
