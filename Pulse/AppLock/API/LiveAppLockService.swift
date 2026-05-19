@@ -1,11 +1,13 @@
 import EntropyCore
 import LocalAuthentication
 
-/// Abstraction for key-value secure storage used by `LiveAppLockService`.
+/// Abstraction for key-value secure storage used by services that persist
+/// sensitive strings (app-lock state, APNs device token, etc).
 /// Production uses `KeychainManager`; tests use an in-memory implementation.
 protocol KeychainStore {
     func exists(for key: String) -> Bool
     func save(_ value: String, for key: String) throws
+    func retrieve(for key: String) throws -> String
     func delete(for key: String) throws
 }
 

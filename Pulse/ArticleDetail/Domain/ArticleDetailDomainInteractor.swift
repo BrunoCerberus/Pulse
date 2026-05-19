@@ -263,11 +263,19 @@ final class ArticleDetailDomainInteractor: CombineInteractor {
     // MARK: - Browser
 
     private func openInBrowser() {
-        guard let url = URL(string: currentState.article.url),
-              let scheme = url.scheme?.lowercased(),
-              ["https", "http"].contains(scheme)
-        else { return }
+        guard let url = Self.externalURL(from: currentState.article.url) else { return }
         UIApplication.shared.open(url)
+    }
+
+    /// HTTPS-only gate. An attacker-controlled article row could redirect
+    /// users through a plaintext page on a hostile network; the article URL
+    /// originates from RSS feeds we don't fully control. Static so the
+    /// scheme-filter logic is unit-testable without `UIApplication.shared`.
+    static func externalURL(from urlString: String) -> URL? {
+        guard let url = URL(string: urlString),
+              url.scheme?.lowercased() == "https"
+        else { return nil }
+        return url
     }
 
     // MARK: - Content Processing

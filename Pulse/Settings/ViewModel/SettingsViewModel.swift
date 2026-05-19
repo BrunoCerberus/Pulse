@@ -387,6 +387,7 @@ final class SettingsViewModel: CombineViewModel, ObservableObject {
         SignOutCleanup.wipeKeychain(services: [
             LiveAppLockService.keychainService,
             APIKeysProvider.keychainService,
+            LiveNotificationService.keychainService,
         ])
 
         // 9. Best-effort: delete the user's private CloudKit record zone so a

@@ -226,9 +226,10 @@ final class MediaDetailDomainInteractor: CombineInteractor {
     // MARK: - Browser
 
     private func openInBrowser() {
+        // HTTPS-only: see ArticleDetailDomainInteractor.openInBrowser for the
+        // rationale. Article URLs are untrusted RSS data.
         guard let url = URL(string: currentState.article.url),
-              let scheme = url.scheme?.lowercased(),
-              ["https", "http"].contains(scheme)
+              url.scheme?.lowercased() == "https"
         else { return }
         UIApplication.shared.open(url)
     }

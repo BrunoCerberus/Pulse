@@ -109,6 +109,109 @@ struct AnalyticsEventTests {
     }
 }
 
+@Suite("LiveAnalyticsService Sanitizer Tests")
+struct LiveAnalyticsServiceSanitizerTests {
+    @Test("String sanitizer redacts email addresses")
+    func sanitizeStringRedactsEmail() {
+        let result = LiveAnalyticsService.sanitize("Failed to auth user@example.com")
+        #expect(result == "Failed to auth [REDACTED_EMAIL]")
+    }
+
+    @Test("String sanitizer redacts URL query parameters")
+    func sanitizeStringRedactsQueryParams() {
+        let result = LiveAnalyticsService.sanitize("Request to https://api.example.com/x?token=abc123")
+        #expect(result.contains("[REDACTED_PARAMS]"))
+        #expect(!result.contains("abc123"))
+    }
+
+    @Test("Recursive sanitizer walks nested dictionaries")
+    func sanitizeAnyRecursesIntoDicts() {
+        let input: [String: Any] = [
+            "outer": "outer ok",
+            "nested": [
+                "email": "user@example.com",
+                "ok": "fine",
+            ],
+        ]
+        guard let sanitized = LiveAnalyticsService.sanitize(any: input) as? [String: Any] else {
+            Issue.record("Expected dictionary back from sanitize")
+            return
+        }
+        guard let nested = sanitized["nested"] as? [String: Any] else {
+            Issue.record("Expected nested dict")
+            return
+        }
+        #expect(nested["email"] as? String == "[REDACTED_EMAIL]")
+        #expect(nested["ok"] as? String == "fine")
+        #expect(sanitized["outer"] as? String == "outer ok")
+    }
+
+    @Test("Recursive sanitizer walks arrays")
+    func sanitizeAnyRecursesIntoArrays() {
+        let input: [Any] = ["fine", "leak@example.com", ["nested@example.com"]]
+        guard let sanitized = LiveAnalyticsService.sanitize(any: input) as? [Any] else {
+            Issue.record("Expected array back from sanitize")
+            return
+        }
+        #expect(sanitized[0] as? String == "fine")
+        #expect(sanitized[1] as? String == "[REDACTED_EMAIL]")
+        guard let inner = sanitized[2] as? [Any] else {
+            Issue.record("Expected nested array")
+            return
+        }
+        #expect(inner[0] as? String == "[REDACTED_EMAIL]")
+    }
+
+    @Test("Recursive sanitizer leaves non-string scalars untouched")
+    func sanitizeAnyLeavesScalars() {
+        #expect((LiveAnalyticsService.sanitize(any: 42) as? Int) == 42)
+        #expect((LiveAnalyticsService.sanitize(any: true) as? Bool) == true)
+    }
+
+    @Test("Recursive sanitizer walks NSArray")
+    func sanitizeAnyRecursesIntoNSArray() {
+        let nsArray: NSArray = ["fine", "leak@example.com"]
+        guard let sanitized = LiveAnalyticsService.sanitize(any: nsArray) as? [Any] else {
+            Issue.record("Expected array from NSArray case")
+            return
+        }
+        #expect(sanitized[1] as? String == "[REDACTED_EMAIL]")
+    }
+
+    @Test("Recursive sanitizer walks NSDictionary with string keys")
+    func sanitizeAnyRecursesIntoNSDictionary() {
+        let nsDict: NSDictionary = ["k": "leak@example.com", "k2": "fine"]
+        guard let sanitized = LiveAnalyticsService.sanitize(any: nsDict) as? [String: Any] else {
+            Issue.record("Expected dictionary from NSDictionary case")
+            return
+        }
+        #expect(sanitized["k"] as? String == "[REDACTED_EMAIL]")
+        #expect(sanitized["k2"] as? String == "fine")
+    }
+
+    @Test("buildSanitizedUserInfo enriches with domain + code + sanitizes message")
+    func buildSanitizedUserInfoEnrichesAndSanitizes() {
+        let error = NSError(
+            domain: "TestDomain",
+            code: 42,
+            userInfo: [NSLocalizedDescriptionKey: "Failed to auth user@example.com"]
+        )
+        let result = LiveAnalyticsService.buildSanitizedUserInfo(
+            error: error,
+            userInfo: ["original": "value"]
+        )
+        #expect(result["domain"] as? String == "TestDomain")
+        #expect(result["code"] as? Int == 42)
+        if let desc = result["localizedDescription"] as? String {
+            #expect(desc.contains("[REDACTED_EMAIL]"))
+            #expect(!desc.contains("user@example.com"))
+        } else {
+            Issue.record("Expected sanitized localizedDescription string")
+        }
+        #expect(result["original"] as? String == "value")
+    }
+}
+
 @Suite("MockAnalyticsService Tests")
 struct MockAnalyticsServiceTests {
     @Test("Records logged events")
