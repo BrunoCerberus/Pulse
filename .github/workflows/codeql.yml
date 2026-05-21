@@ -14,6 +14,15 @@ concurrency:
 
 permissions: {}
 
+# Skip Homebrew's auto-update before every `brew install`. Auto-update
+# re-evaluates all installed formulae, and any still using the deprecated
+# `no_autobump! :requires_manual_review` API emit a warning that GitHub
+# Actions promotes to an annotation — flooding each run with dozens of
+# identical deprecation warnings. Disabling it removes that phase (and
+# speeds installs); the pinned CLI tools are already on the runner image.
+env:
+  HOMEBREW_NO_AUTO_UPDATE: "1"
+
 jobs:
   analyze:
     name: Analyze
