@@ -61,14 +61,17 @@ jobs:
       run: brew install xcodegen
 
     - name: Generate Xcode project
+      id: generate
       run: make generate
 
     - name: Initialize CodeQL
+      id: codeql-init
       uses: github/codeql-action/init@68bde559dea0fdcac2102bfdf6230c5f70eb485e # v4.35.4
       with:
         languages: swift
 
     - name: Build for CodeQL
+      id: codeql-build
       run: |
         xcodebuild build \
           -project Pulse.xcodeproj \
@@ -79,4 +82,35 @@ jobs:
           CODE_SIGNING_REQUIRED=NO
 
     - name: Perform CodeQL Analysis
+      id: codeql-analyze
       uses: github/codeql-action/analyze@68bde559dea0fdcac2102bfdf6230c5f70eb485e # v4.35.4
+
+    - name: Analysis summary
+      if: always()
+      env:
+        GENERATE: ${{ steps.generate.outcome }}
+        INIT: ${{ steps.codeql-init.outcome }}
+        BUILD: ${{ steps.codeql-build.outcome }}
+        ANALYZE: ${{ steps.codeql-analyze.outcome }}
+      run: |
+        {
+          echo "## CodeQL Analysis (Swift)"
+          echo ""
+          echo "| Stage | Result |"
+          echo "|-------|--------|"
+        } >> "$GITHUB_STEP_SUMMARY"
+        for row in "Generate Xcode project:$GENERATE" \
+                   "Initialize CodeQL:$INIT" \
+                   "Build for CodeQL:$BUILD" \
+                   "Perform CodeQL Analysis:$ANALYZE"; do
+          name="${row%%:*}"
+          result="${row##*:}"
+          case "$result" in
+            success) verdict="Passed" ;;
+            skipped) verdict="Skipped" ;;
+            *)       verdict="FAILED" ;;
+          esac
+          echo "| $name | $verdict |" >> "$GITHUB_STEP_SUMMARY"
+        done
+        echo "" >> "$GITHUB_STEP_SUMMARY"
+        echo "Findings (if any) are reported under the repository's **Security → Code scanning** tab." >> "$GITHUB_STEP_SUMMARY"

@@ -59,6 +59,7 @@ jobs:
         run: command -v rg >/dev/null 2>&1 || (sudo apt-get update -qq && sudo apt-get install -y -qq ripgrep)
 
       - name: CPF / CNPJ pattern ban
+        id: cpf-cnpj-ban
         shell: bash
         run: |
           set -euo pipefail
@@ -83,6 +84,7 @@ jobs:
           echo "OK: no CPF/CNPJ patterns."
 
       - name: Email allowlist enforcement
+        id: email-allowlist
         shell: bash
         run: |
           set -euo pipefail
@@ -140,7 +142,34 @@ jobs:
           gitleaks version
 
       - name: Gitleaks (LGPD/GDPR custom rules)
+        id: gitleaks
         run: gitleaks detect --source . --verbose --redact --no-banner --config .github/lgpd-gdpr-rules.toml
+
+      - name: PII scan summary
+        if: always()
+        env:
+          CPF_CNPJ: ${{ steps.cpf-cnpj-ban.outcome }}
+          EMAILS: ${{ steps.email-allowlist.outcome }}
+          GITLEAKS: ${{ steps.gitleaks.outcome }}
+        run: |
+          {
+            echo "## PII Scan"
+            echo ""
+            echo "| Check | Result |"
+            echo "|-------|--------|"
+          } >> "$GITHUB_STEP_SUMMARY"
+          for row in "CPF / CNPJ pattern ban:$CPF_CNPJ" \
+                     "Email allowlist enforcement:$EMAILS" \
+                     "Gitleaks (custom rules):$GITLEAKS"; do
+            name="${row%%:*}"
+            result="${row##*:}"
+            case "$result" in
+              success) verdict="Passed" ;;
+              skipped) verdict="Skipped" ;;
+              *)       verdict="FAILED" ;;
+            esac
+            echo "| $name | $verdict |" >> "$GITHUB_STEP_SUMMARY"
+          done
 
   # ---------------------------------------------------------------------------
   # Docs presence: project docs that double as the privacy posture record
@@ -158,6 +187,7 @@ jobs:
         run: command -v rg >/dev/null 2>&1 || (sudo apt-get update -qq && sudo apt-get install -y -qq ripgrep)
 
       - name: Required docs exist and are non-empty
+        id: required-docs
         shell: bash
         run: |
           set -euo pipefail
@@ -178,6 +208,7 @@ jobs:
           echo "OK: all required docs present."
 
       - name: README mentions privacy / data handling
+        id: readme-privacy
         shell: bash
         run: |
           set -euo pipefail
@@ -186,6 +217,30 @@ jobs:
             exit 1
           fi
           echo "OK: README references privacy."
+
+      - name: Docs presence summary
+        if: always()
+        env:
+          REQUIRED_DOCS: ${{ steps.required-docs.outcome }}
+          README_PRIVACY: ${{ steps.readme-privacy.outcome }}
+        run: |
+          {
+            echo "## Docs Presence"
+            echo ""
+            echo "| Check | Result |"
+            echo "|-------|--------|"
+          } >> "$GITHUB_STEP_SUMMARY"
+          for row in "Required docs present:$REQUIRED_DOCS" \
+                     "README references privacy:$README_PRIVACY"; do
+            name="${row%%:*}"
+            result="${row##*:}"
+            case "$result" in
+              success) verdict="Passed" ;;
+              skipped) verdict="Skipped" ;;
+              *)       verdict="FAILED" ;;
+            esac
+            echo "| $name | $verdict |" >> "$GITHUB_STEP_SUMMARY"
+          done
 
   # ---------------------------------------------------------------------------
   # Operational controls: load-bearing runtime invariants that keep the LGPD
@@ -204,6 +259,7 @@ jobs:
         run: command -v rg >/dev/null 2>&1 || (sudo apt-get update -qq && sudo apt-get install -y -qq ripgrep)
 
       - name: clearAllUserData() is defined and wired from sign-out + delete-account
+        id: clear-user-data
         shell: bash
         run: |
           set -euo pipefail
@@ -238,6 +294,7 @@ jobs:
           echo "OK: clearAllUserData() defined and invoked from $calls site(s) in SettingsViewModel."
 
       - name: API-key env-var fallbacks are #if DEBUG-gated
+        id: debug-gated-keys
         shell: bash
         run: |
           set -euo pipefail
@@ -257,6 +314,7 @@ jobs:
           echo "OK: env-var fallbacks are DEBUG-gated."
 
       - name: No plaintext http:// in production networking config
+        id: https-only
         shell: bash
         run: |
           set -euo pipefail
@@ -273,6 +331,7 @@ jobs:
           echo "OK: networking config uses https only."
 
       - name: CloudKit container uses .private(...)
+        id: cloudkit-private
         shell: bash
         run: |
           set -euo pipefail
@@ -284,6 +343,34 @@ jobs:
             exit 1
           fi
           echo "OK: CloudKit container scoped to .private."
+
+      - name: Operational controls summary
+        if: always()
+        env:
+          CLEAR_USER_DATA: ${{ steps.clear-user-data.outcome }}
+          DEBUG_GATED_KEYS: ${{ steps.debug-gated-keys.outcome }}
+          HTTPS_ONLY: ${{ steps.https-only.outcome }}
+          CLOUDKIT_PRIVATE: ${{ steps.cloudkit-private.outcome }}
+        run: |
+          {
+            echo "## Operational Controls"
+            echo ""
+            echo "| Check | Result |"
+            echo "|-------|--------|"
+          } >> "$GITHUB_STEP_SUMMARY"
+          for row in "clearAllUserData() wired:$CLEAR_USER_DATA" \
+                     "API-key fallbacks DEBUG-gated:$DEBUG_GATED_KEYS" \
+                     "No plaintext HTTP URLs:$HTTPS_ONLY" \
+                     "CloudKit container .private:$CLOUDKIT_PRIVATE"; do
+            name="${row%%:*}"
+            result="${row##*:}"
+            case "$result" in
+              success) verdict="Passed" ;;
+              skipped) verdict="Skipped" ;;
+              *)       verdict="FAILED" ;;
+            esac
+            echo "| $name | $verdict |" >> "$GITHUB_STEP_SUMMARY"
+          done
 
   # ---------------------------------------------------------------------------
   # Structural integrity: PrivacyInfo.xcprivacy is the load-bearing structural
@@ -299,6 +386,7 @@ jobs:
         uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
 
       - name: Validate PrivacyInfo.xcprivacy
+        id: validate-manifest
         shell: bash
         run: |
           set -euo pipefail
@@ -343,6 +431,7 @@ jobs:
           PY
 
       - name: Info.plist consent strings are non-empty
+        id: consent-strings
         shell: bash
         run: |
           set -euo pipefail
@@ -363,4 +452,28 @@ jobs:
               print(f"::notice file={path}::NSUserTrackingUsageDescription present — confirm Pulse/PrivacyInfo.xcprivacy NSPrivacyTracking=true")
           print(f"OK: {path} consent strings non-empty.")
           PY
+          done
+
+      - name: Structural integrity summary
+        if: always()
+        env:
+          VALIDATE_MANIFEST: ${{ steps.validate-manifest.outcome }}
+          CONSENT_STRINGS: ${{ steps.consent-strings.outcome }}
+        run: |
+          {
+            echo "## Structural Integrity"
+            echo ""
+            echo "| Check | Result |"
+            echo "|-------|--------|"
+          } >> "$GITHUB_STEP_SUMMARY"
+          for row in "PrivacyInfo.xcprivacy valid:$VALIDATE_MANIFEST" \
+                     "Info.plist consent strings:$CONSENT_STRINGS"; do
+            name="${row%%:*}"
+            result="${row##*:}"
+            case "$result" in
+              success) verdict="Passed" ;;
+              skipped) verdict="Skipped" ;;
+              *)       verdict="FAILED" ;;
+            esac
+            echo "| $name | $verdict |" >> "$GITHUB_STEP_SUMMARY"
           done
