@@ -270,7 +270,9 @@ final class LiveAuthService: NSObject, AuthService {
     }
 
     @MainActor
-    private func obtainGoogleCredentialForReauth(presenting viewController: UIViewController) async throws -> AuthCredential {
+    private func obtainGoogleCredentialForReauth(
+        presenting viewController: UIViewController
+    ) async throws -> AuthCredential {
         guard let clientID = FirebaseApp.app()?.options.clientID else {
             throw AuthError.unknown("Missing Firebase client ID")
         }
