@@ -33,6 +33,13 @@ final class DiskNewsCacheStore: NewsCacheStore {
     /// used by both caching services without torn reads or `removeAll`/`set` races.
     private let ioQueue = DispatchQueue(label: "com.pulse.diskcache")
 
+    /// - Important: Register **one** shared instance in production (see
+    ///   `PulseSceneDelegate.registerLiveServices()`) and inject it into every
+    ///   `Caching*Service`. `ioQueue` serializes I/O *within* an instance, but
+    ///   two instances pointing at the same `directory` each have their own queue
+    ///   and would race on the filesystem. The `directory` parameter exists for
+    ///   test isolation (a unique temp dir per test); production passes `nil` to
+    ///   use the shared Caches path.
     init(directory: URL? = nil) {
         if let directory {
             cacheDirectory = directory

@@ -117,15 +117,29 @@ final class LiveAuthService: NSObject, AuthService {
 
             let controller = ASAuthorizationController(authorizationRequests: [request])
             controller.delegate = self
-            controller.performRequests()
 
-            // Store continuation for async handling
+            // The continuation MUST be stored before `performRequests()` kicks
+            // off the flow. Previously `performRequests()` ran here and the
+            // continuation was assigned later inside the Task — a fast delegate
+            // callback could fire while `appleSignInContinuation` was still nil
+            // (callback no-ops), then the Task would assign a continuation that
+            // nothing ever resumes (leaked continuation + a sign-in spinner that
+            // hangs forever). So assign first, then `performRequests()`, both
+            // inside the `@MainActor` continuation body — which also keeps the
+            // assignment on the same thread the delegate reads it from and runs
+            // `performRequests()` on the main thread as UIKit requires.
             let promise = UncheckedSendableBox(value: promise)
             let weakSelf = WeakRef(self)
-            Task {
+            let controllerBox = UncheckedSendableBox(value: controller)
+            Task { @MainActor in
+                guard let strongSelf = weakSelf.object else {
+                    promise.value(.failure(AuthError.unknown("Service deallocated")))
+                    return
+                }
                 do {
                     let user = try await withCheckedThrowingContinuation { continuation in
-                        weakSelf.object?.appleSignInContinuation = continuation
+                        strongSelf.appleSignInContinuation = continuation
+                        controllerBox.value.performRequests()
                     }
                     promise.value(.success(user))
                 } catch {
