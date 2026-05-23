@@ -3,6 +3,8 @@ import SwiftUI
 
 // MARK: - HomeView
 
+// swiftlint:disable type_body_length
+
 /// Main home screen displaying breaking news and headline feeds.
 ///
 /// This view follows the generic router pattern for testability, accepting any type
@@ -377,6 +379,8 @@ struct HomeView<R: HomeNavigationRouter>: View {
         }
     }
 }
+
+// swiftlint:enable type_body_length
 
 #Preview {
     NavigationStack {

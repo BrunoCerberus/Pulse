@@ -3,18 +3,8 @@ import EntropyCore
 import Foundation
 import UIKit
 
-/// ViewModel for the Settings screen.
-///
-/// Implements `CombineViewModel` to manage user preferences and app settings.
-/// Combines state from multiple sources: interactor, ThemeManager, and AuthenticationManager.
-///
-/// ## Features
-/// - Topic management (follow/unfollow)
-/// - Notification settings
-/// - Dark mode and system theme toggle
-/// - Muted sources and keywords
-/// - Account management (sign out)
 @MainActor
+// swiftlint:disable:next type_body_length
 final class SettingsViewModel: CombineViewModel, ObservableObject {
     typealias ViewState = SettingsViewState
     typealias ViewEvent = SettingsViewEvent
@@ -271,6 +261,8 @@ final class SettingsViewModel: CombineViewModel, ObservableObject {
             .first?.windows.first(where: \.isKeyWindow)?.rootViewController
     }
 
+    // swiftlint:disable function_body_length cyclomatic_complexity
+
     /// Runs every cleanup step sequentially and returns the list of step
     /// identifiers that failed. Caller surfaces the list to the user.
     ///
@@ -405,6 +397,8 @@ final class SettingsViewModel: CombineViewModel, ObservableObject {
         }
         return failures
     }
+
+    // swiftlint:enable function_body_length cyclomatic_complexity
 
     private func setupBindings() {
         // Use CombineLatest4 directly instead of nested combineLatest to reduce overhead

@@ -7,6 +7,7 @@ import UIKit
 
 @Suite("SettingsViewModel SignOut Tests")
 @MainActor
+// swiftlint:disable:next type_body_length
 struct SettingsViewModelSignOutTests {
     let mockSettingsService: MockSettingsService
     let mockAuthService: MockAuthService

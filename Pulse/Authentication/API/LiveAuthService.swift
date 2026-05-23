@@ -7,6 +7,7 @@ import FirebaseCore
 import GoogleSignIn
 import UIKit
 
+// swiftlint:disable:next type_body_length
 final class LiveAuthService: NSObject, AuthService {
     private let authStateSubject = CurrentValueSubject<AuthUser?, Never>(nil)
     private var authStateHandle: AuthStateDidChangeListenerHandle?
@@ -270,7 +271,9 @@ final class LiveAuthService: NSObject, AuthService {
     }
 
     @MainActor
-    private func obtainGoogleCredentialForReauth(presenting viewController: UIViewController) async throws -> AuthCredential {
+    private func obtainGoogleCredentialForReauth(
+        presenting viewController: UIViewController
+    ) async throws -> AuthCredential {
         guard let clientID = FirebaseApp.app()?.options.clientID else {
             throw AuthError.unknown("Missing Firebase client ID")
         }

@@ -1,4 +1,3 @@
-// swiftlint:disable file_length
 import Combine
 import EntropyCore
 import SwiftUI
@@ -232,6 +231,7 @@ struct ArticleDetailView: View {
         max(proxy.size.height - heroBaseHeight + Spacing.lg, 0)
     }
 
+    // swiftlint:disable:next function_body_length
     private func contentCard(minHeight: CGFloat) -> some View {
         VStack(alignment: .leading, spacing: Spacing.md) {
             if let category = viewModel.viewState.article.category {

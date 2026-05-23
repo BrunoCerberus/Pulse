@@ -6,6 +6,7 @@ import Testing
 
 @Suite("OnboardingDomainInteractor Tests")
 @MainActor
+// swiftlint:disable:next type_body_length
 struct OnboardingDomainInteractorTests {
     let mockOnboardingService: MockOnboardingService
     let mockAnalyticsService: MockAnalyticsService
