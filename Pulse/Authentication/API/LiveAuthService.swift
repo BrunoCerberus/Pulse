@@ -7,6 +7,7 @@ import FirebaseCore
 import GoogleSignIn
 import UIKit
 
+// swiftlint:disable:next type_body_length
 final class LiveAuthService: NSObject, AuthService {
     private let authStateSubject = CurrentValueSubject<AuthUser?, Never>(nil)
     private var authStateHandle: AuthStateDidChangeListenerHandle?

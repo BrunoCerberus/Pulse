@@ -325,6 +325,7 @@ private extension PulseSceneDelegate {
         }
     #endif
 
+    // swiftlint:disable:next function_body_length
     func registerLiveServices() {
         // Register and configure Remote Config service first
         let remoteConfigService = LiveRemoteConfigService()
