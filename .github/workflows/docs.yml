@@ -1,0 +1,109 @@
+name: DocC
+
+# Builds the DocC bundle so broken doc references / malformed symbol links fail
+# CI instead of silently rotting. Build-only — the .doccarchive is uploaded as
+# an artifact; publishing to GitHub Pages is intentionally NOT wired up (that
+# would need a repo settings change).
+
+on:
+  push:
+    branches: [master]
+  pull_request:
+    branches: [develop, master, main]
+  workflow_dispatch:
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+permissions: {}
+
+env:
+  HOMEBREW_NO_AUTO_UPDATE: "1"
+
+jobs:
+  docc:
+    name: Build DocC
+    runs-on: macos-26
+
+    permissions:
+      contents: read
+
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
+
+    - name: Select Xcode 26.5
+      run: |
+        XCODE_PATH=$(ls -d /Applications/Xcode_26.5*.app 2>/dev/null | head -1)
+        if [ -z "$XCODE_PATH" ]; then
+          echo "::error::Xcode 26.5 not found on runner"
+          ls -d /Applications/Xcode_26*.app || true
+          exit 1
+        fi
+        sudo xcode-select -s "$XCODE_PATH/Contents/Developer"
+        echo "DEVELOPER_DIR=$XCODE_PATH/Contents/Developer" >> "$GITHUB_ENV"
+        xcodebuild -version
+
+    - name: Cache Homebrew packages
+      uses: actions/cache@27d5ce7f107fe9357f9df03efb73ab90386fccae # v5.0.5
+      with:
+        path: |
+          ~/Library/Caches/Homebrew
+          /usr/local/Homebrew
+        key: ${{ runner.os }}-brew-v1
+        restore-keys: |
+          ${{ runner.os }}-brew-
+
+    - name: Cache SPM dependencies
+      uses: actions/cache@27d5ce7f107fe9357f9df03efb73ab90386fccae # v5.0.5
+      with:
+        path: |
+          Pulse.xcodeproj/project.xcworkspace/xcshareddata/swiftpm
+          ~/Library/Caches/org.swift.swiftpm
+        key: ${{ runner.os }}-spm-v10
+
+    - name: Install XcodeGen
+      run: brew install xcodegen
+
+    - name: Generate Xcode project
+      run: make generate
+
+    - name: Resolve Package Dependencies
+      run: |
+        xcodebuild -resolvePackageDependencies \
+          -project Pulse.xcodeproj \
+          -scheme PulseDev \
+          -onlyUsePackageVersionsFromResolvedFile
+
+    - name: Build DocC documentation
+      run: |
+        xcodebuild docbuild \
+          -project Pulse.xcodeproj \
+          -scheme PulseDev \
+          -destination 'generic/platform=iOS' \
+          -derivedDataPath ./DerivedData \
+          -onlyUsePackageVersionsFromResolvedFile \
+          DOCC_EXTRACT_SWIFT_INFO_FOR_OBJC_SYMBOLS=NO \
+          CODE_SIGNING_ALLOWED=NO \
+          -skipMacroValidation
+
+    - name: Locate doccarchive
+      id: docc
+      run: |
+        ARCHIVE=$(find ./DerivedData -name '*.doccarchive' -type d | head -1)
+        if [ -z "$ARCHIVE" ]; then
+          echo "::warning::No .doccarchive produced"
+          exit 0
+        fi
+        echo "archive=$ARCHIVE" >> "$GITHUB_OUTPUT"
+        echo "Built $ARCHIVE"
+
+    - name: Upload doccarchive
+      uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
+      if: steps.docc.outputs.archive != ''
+      with:
+        name: pulse-doccarchive
+        path: ${{ steps.docc.outputs.archive }}
+        if-no-files-found: ignore
+        retention-days: 7

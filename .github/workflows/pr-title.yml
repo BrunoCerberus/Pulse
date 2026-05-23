@@ -1,0 +1,33 @@
+name: PR Title
+
+# Enforces Conventional Commit PR titles (matching the ci:/deps:/fix:/… prefixes
+# already used on master). Squash-merge uses the PR title as the commit subject,
+# so this keeps history — and any future changelog generation — consistent.
+
+on:
+  pull_request:
+    types: [opened, edited, synchronize, reopened, ready_for_review]
+
+permissions: {}
+
+jobs:
+  lint-title:
+    name: Conventional Commit title
+    runs-on: ubuntu-latest
+    steps:
+    - name: Validate PR title
+      env:
+        # Passed via env, never interpolated as ${{ }} into the script body:
+        # PR titles are attacker-controlled, and inlining would be a
+        # shell-injection hole.
+        PR_TITLE: ${{ github.event.pull_request.title }}
+      run: |
+        echo "PR title: $PR_TITLE"
+        pattern='^(build|chore|ci|deps|docs|feat|fix|perf|refactor|revert|style|test)(\([a-z0-9 ,_/.-]+\))?!?: .+'
+        if echo "$PR_TITLE" | grep -Eq "$pattern"; then
+          echo "Title follows Conventional Commits."
+        else
+          echo "::error::PR title must follow Conventional Commits, e.g. 'fix: correct cache TTL' or 'feat(search): add filters'."
+          echo "Allowed types: build, chore, ci, deps, docs, feat, fix, perf, refactor, revert, style, test."
+          exit 1
+        fi

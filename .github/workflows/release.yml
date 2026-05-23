@@ -1,0 +1,274 @@
+name: Release
+
+# Cut a release without touching a terminal:
+#   • Manual run (workflow_dispatch) — pick patch/minor/major; this bumps
+#     MARKETING_VERSION in project.yml, commits, tags vX.Y.Z, and pushes.
+#   • Tag push (vX.Y.Z) — releases an already-tagged commit as-is.
+#
+# Every run validates a Release ARCHIVE (not just a build) and publishes a
+# GitHub Release with auto-generated notes. The signed archive + App Store
+# Connect upload is PRE-WIRED BUT DORMANT: it runs only once the
+# APP_STORE_CONNECT_* / APPLE_TEAM_ID secrets exist, so nothing here needs
+# manual setup today. Add those secrets when you're ready to ship and the
+# upload activates with no further edits.
+
+on:
+  workflow_dispatch:
+    inputs:
+      bump:
+        description: "Semantic version bump"
+        type: choice
+        options: [patch, minor, major]
+        default: patch
+  push:
+    tags: ['v*.*.*']
+
+# Never cancel an in-flight release — a half-cancelled tag/upload is worse
+# than a queued one.
+concurrency:
+  group: release
+  cancel-in-progress: false
+
+permissions: {}
+
+env:
+  HOMEBREW_NO_AUTO_UPDATE: "1"
+
+jobs:
+  release:
+    name: Build & Release
+    runs-on: macos-26
+
+    permissions:
+      contents: write   # version-bump commit, tag push, GitHub Release
+
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
+      with:
+        fetch-depth: 0
+
+    - name: Select Xcode 26.5
+      run: |
+        XCODE_PATH=$(ls -d /Applications/Xcode_26.5*.app 2>/dev/null | head -1)
+        if [ -z "$XCODE_PATH" ]; then
+          echo "::error::Xcode 26.5 not found on runner"
+          ls -d /Applications/Xcode_26*.app || true
+          exit 1
+        fi
+        sudo xcode-select -s "$XCODE_PATH/Contents/Developer"
+        echo "DEVELOPER_DIR=$XCODE_PATH/Contents/Developer" >> "$GITHUB_ENV"
+        xcodebuild -version
+
+    # Decide once whether the signed-upload path is active. Until the key
+    # secret exists, the workflow does an unsigned archive + GitHub Release only.
+    - name: Check for App Store Connect credentials
+      id: asc
+      env:
+        ASC_KEY: ${{ secrets.APP_STORE_CONNECT_API_KEY }}
+      run: |
+        if [ -n "$ASC_KEY" ]; then
+          echo "enabled=true" >> "$GITHUB_OUTPUT"
+          echo "App Store Connect key present — signed archive + upload will run."
+        else
+          echo "enabled=false" >> "$GITHUB_OUTPUT"
+          echo "No App Store Connect key — unsigned archive + GitHub Release only."
+        fi
+
+    - name: Determine version
+      id: version
+      env:
+        EVENT: ${{ github.event_name }}
+        BUMP: ${{ inputs.bump }}
+        REF_NAME: ${{ github.ref_name }}
+      run: |
+        if [ "$EVENT" = "push" ]; then
+          VERSION="${REF_NAME#v}"
+          TAG="$REF_NAME"
+        else
+          CURRENT=$(grep 'MARKETING_VERSION:' project.yml | head -1 | sed 's/.*"\(.*\)"/\1/')
+          MAJOR=$(echo "$CURRENT" | cut -d. -f1)
+          MINOR=$(echo "$CURRENT" | cut -d. -f2)
+          PATCH=$(echo "$CURRENT" | cut -d. -f3)
+          case "$BUMP" in
+            major) MAJOR=$((MAJOR + 1)); MINOR=0; PATCH=0 ;;
+            minor) MINOR=$((MINOR + 1)); PATCH=0 ;;
+            *)     PATCH=$((PATCH + 1)) ;;
+          esac
+          VERSION="$MAJOR.$MINOR.$PATCH"
+          TAG="v$VERSION"
+        fi
+        echo "version=$VERSION" >> "$GITHUB_OUTPUT"
+        echo "tag=$TAG" >> "$GITHUB_OUTPUT"
+        echo "Release version: $VERSION (tag $TAG)"
+
+    - name: Cache Homebrew packages
+      uses: actions/cache@27d5ce7f107fe9357f9df03efb73ab90386fccae # v5.0.5
+      with:
+        path: |
+          ~/Library/Caches/Homebrew
+          /usr/local/Homebrew
+        key: ${{ runner.os }}-brew-v1
+        restore-keys: |
+          ${{ runner.os }}-brew-
+
+    - name: Cache SPM dependencies
+      uses: actions/cache@27d5ce7f107fe9357f9df03efb73ab90386fccae # v5.0.5
+      with:
+        path: |
+          Pulse.xcodeproj/project.xcworkspace/xcshareddata/swiftpm
+          ~/Library/Caches/org.swift.swiftpm
+        key: ${{ runner.os }}-spm-v10
+
+    - name: Install XcodeGen
+      run: brew install xcodegen
+
+    - name: Apply version bump
+      if: github.event_name == 'workflow_dispatch'
+      env:
+        VERSION: ${{ steps.version.outputs.version }}
+      run: |
+        CURRENT=$(grep 'MARKETING_VERSION:' project.yml | head -1 | sed 's/.*"\(.*\)"/\1/')
+        sed -i '' "s/MARKETING_VERSION: \"$CURRENT\"/MARKETING_VERSION: \"$VERSION\"/g" project.yml
+        echo "project.yml MARKETING_VERSION: $CURRENT -> $VERSION"
+
+    - name: Generate Xcode project
+      run: make generate
+
+    - name: Resolve Package Dependencies
+      run: |
+        xcodebuild -resolvePackageDependencies \
+          -project Pulse.xcodeproj \
+          -scheme PulseProd \
+          -onlyUsePackageVersionsFromResolvedFile
+
+    # Unsigned archive — validates the full Release archive path (the one that
+    # breaks in ways a Debug simulator build never surfaces) without needing any
+    # credentials. Runs only when the signed path below is inactive.
+    - name: Archive (unsigned validation)
+      if: steps.asc.outputs.enabled == 'false'
+      run: |
+        xcodebuild archive \
+          -project Pulse.xcodeproj \
+          -scheme PulseProd \
+          -configuration Release \
+          -destination 'generic/platform=iOS' \
+          -archivePath build/Pulse.xcarchive \
+          -onlyUsePackageVersionsFromResolvedFile \
+          -skipMacroValidation \
+          CODE_SIGNING_ALLOWED=NO \
+          CODE_SIGNING_REQUIRED=NO
+        echo "Unsigned archive produced at build/Pulse.xcarchive"
+
+    # DORMANT until secrets exist. Activates automatically when these repo
+    # secrets are set (no certificate/profile juggling — -allowProvisioningUpdates
+    # does cloud signing via the API key):
+    #   APP_STORE_CONNECT_API_KEY     full contents of the AuthKey_*.p8 file
+    #   APP_STORE_CONNECT_KEY_ID      the key's Key ID
+    #   APP_STORE_CONNECT_ISSUER_ID   the issuer ID (App Store Connect → Users and Access → Keys)
+    #   APPLE_TEAM_ID                 10-character Apple Developer Team ID
+    - name: Archive & upload to App Store Connect (signed)
+      if: steps.asc.outputs.enabled == 'true'
+      env:
+        ASC_KEY: ${{ secrets.APP_STORE_CONNECT_API_KEY }}
+        ASC_KEY_ID: ${{ secrets.APP_STORE_CONNECT_KEY_ID }}
+        ASC_ISSUER_ID: ${{ secrets.APP_STORE_CONNECT_ISSUER_ID }}
+        TEAM_ID: ${{ secrets.APPLE_TEAM_ID }}
+        VERSION: ${{ steps.version.outputs.version }}
+      run: |
+        set -euo pipefail
+        KEY_DIR="$RUNNER_TEMP/asc"
+        mkdir -p "$KEY_DIR"
+        KEY_PATH="$KEY_DIR/AuthKey_${ASC_KEY_ID}.p8"
+        printf '%s' "$ASC_KEY" > "$KEY_PATH"
+
+        xcodebuild archive \
+          -project Pulse.xcodeproj \
+          -scheme PulseProd \
+          -configuration Release \
+          -destination 'generic/platform=iOS' \
+          -archivePath build/Pulse.xcarchive \
+          -onlyUsePackageVersionsFromResolvedFile \
+          -skipMacroValidation \
+          -allowProvisioningUpdates \
+          -authenticationKeyPath "$KEY_PATH" \
+          -authenticationKeyID "$ASC_KEY_ID" \
+          -authenticationKeyIssuerID "$ASC_ISSUER_ID"
+
+        cat > "$KEY_DIR/ExportOptions.plist" <<PLIST
+        <?xml version="1.0" encoding="UTF-8"?>
+        <!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+        <plist version="1.0">
+        <dict>
+          <key>method</key><string>app-store-connect</string>
+          <key>destination</key><string>upload</string>
+          <key>signingStyle</key><string>automatic</string>
+          <key>teamID</key><string>${TEAM_ID}</string>
+        </dict>
+        </plist>
+        PLIST
+
+        xcodebuild -exportArchive \
+          -archivePath build/Pulse.xcarchive \
+          -exportOptionsPlist "$KEY_DIR/ExportOptions.plist" \
+          -exportPath build/export \
+          -allowProvisioningUpdates \
+          -authenticationKeyPath "$KEY_PATH" \
+          -authenticationKeyID "$ASC_KEY_ID" \
+          -authenticationKeyIssuerID "$ASC_ISSUER_ID"
+
+        rm -f "$KEY_PATH"
+        echo "Uploaded build $VERSION to App Store Connect (TestFlight)."
+
+    # Tag/commit only after the archive succeeds, so a broken Release build
+    # never produces a tag or a published release.
+    - name: Commit, tag and push
+      if: github.event_name == 'workflow_dispatch'
+      env:
+        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        GH_REPO: ${{ github.repository }}
+        TAG: ${{ steps.version.outputs.tag }}
+      run: |
+        git config user.name "github-actions[bot]"
+        git config user.email "github-actions[bot]@users.noreply.github.com"
+        git remote set-url origin "https://x-access-token:${GITHUB_TOKEN}@github.com/${GH_REPO}.git"
+        git add project.yml
+        git commit -m "chore: release ${TAG}"
+        git tag -a "$TAG" -m "Release ${TAG}"
+        git push origin HEAD:master
+        git push origin "$TAG"
+
+    - name: Create GitHub Release
+      env:
+        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        TAG: ${{ steps.version.outputs.tag }}
+        UPLOADED: ${{ steps.asc.outputs.enabled }}
+      run: |
+        if [ "$UPLOADED" = "true" ]; then
+          NOTE="Build uploaded to App Store Connect (TestFlight)."
+        else
+          NOTE="Unsigned Release archive validated. App Store upload is dormant — add the APP_STORE_CONNECT_* and APPLE_TEAM_ID secrets to enable it."
+        fi
+        gh release create "$TAG" --title "$TAG" --target master --generate-notes --notes "$NOTE" \
+          || gh release edit "$TAG" --notes "$NOTE"
+
+    - name: Release summary
+      if: always()
+      env:
+        VERSION: ${{ steps.version.outputs.version }}
+        TAG: ${{ steps.version.outputs.tag }}
+        UPLOADED: ${{ steps.asc.outputs.enabled }}
+      run: |
+        {
+          echo "## Release"
+          echo ""
+          echo "| Field | Value |"
+          echo "|-------|-------|"
+          echo "| Version | ${VERSION} |"
+          echo "| Tag | ${TAG} |"
+          if [ "$UPLOADED" = "true" ]; then
+            echo "| App Store upload | Uploaded to App Store Connect |"
+          else
+            echo "| App Store upload | Dormant (add APP_STORE_CONNECT_* secrets to enable) |"
+          fi
+        } >> "$GITHUB_STEP_SUMMARY"

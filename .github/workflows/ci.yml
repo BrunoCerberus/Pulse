@@ -1,6 +1,11 @@
 name: CI Pipeline
 
 on:
+  # Post-merge validation: a PR can be green on its own and still break master
+  # when it lands alongside another (semantic conflict). Running the full suite
+  # on push catches that before the nightly scheduled run would.
+  push:
+    branches: [master]
   pull_request:
     branches: [develop, master, main]
     types: [opened, synchronize, reopened, ready_for_review]
@@ -126,6 +131,14 @@ jobs:
         else
           echo "No FIXME comments found"
         fi
+
+    # A dropped/renamed key doesn't fail the build — it silently ships the raw
+    # key string (e.g. "common.ok") to users in that language. This gates on
+    # en/pt/es having identical key sets per target, and on no duplicate keys.
+    - name: Check localization key parity
+      run: |
+        echo "Checking Localizable.strings key parity across en/pt/es..."
+        python3 scripts/check-localization-parity.py .
 
   security-audit:
     name: Security Audit
@@ -508,6 +521,81 @@ jobs:
         path: ./DerivedData
         retention-days: 1
 
+  # The matrix above compiles Debug for the simulator. Release for a generic
+  # iOS *device* exercises a genuinely different path: whole-module optimization
+  # (vs -Onone singlefile), dead-code stripping, device arch, and — specific to
+  # Pulse — the `#if DEBUG` API-key env-var fallback compiled out. These break
+  # at archive time, not on a Debug simulator build, so we catch them on every PR.
+  release-build:
+    name: Release Build
+    runs-on: macos-26
+    needs: code-quality
+
+    permissions:
+      contents: read
+
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
+
+    - name: Select Xcode 26.5
+      run: |
+        XCODE_PATH=$(ls -d /Applications/Xcode_26.5*.app 2>/dev/null | head -1)
+        if [ -z "$XCODE_PATH" ]; then
+          echo "::error::Xcode 26.5 not found on runner"
+          ls -d /Applications/Xcode_26*.app || true
+          exit 1
+        fi
+        sudo xcode-select -s "$XCODE_PATH/Contents/Developer"
+        echo "DEVELOPER_DIR=$XCODE_PATH/Contents/Developer" >> "$GITHUB_ENV"
+        xcodebuild -version
+
+    - name: Cache Homebrew packages
+      uses: actions/cache@27d5ce7f107fe9357f9df03efb73ab90386fccae # v5.0.5
+      with:
+        path: |
+          ~/Library/Caches/Homebrew
+          /usr/local/Homebrew
+        key: ${{ runner.os }}-brew-v1
+        restore-keys: |
+          ${{ runner.os }}-brew-
+
+    - name: Cache SPM dependencies
+      uses: actions/cache@27d5ce7f107fe9357f9df03efb73ab90386fccae # v5.0.5
+      with:
+        path: |
+          Pulse.xcodeproj/project.xcworkspace/xcshareddata/swiftpm
+          ~/Library/Caches/org.swift.swiftpm
+        key: ${{ runner.os }}-spm-v10
+
+    - name: Install XcodeGen
+      run: brew install xcodegen
+
+    - name: Generate Xcode project
+      run: make generate
+
+    - name: Resolve Package Dependencies
+      run: |
+        xcodebuild -resolvePackageDependencies \
+          -project Pulse.xcodeproj \
+          -scheme PulseProd \
+          -onlyUsePackageVersionsFromResolvedFile
+
+    # generic/platform=iOS = device arch, no simulator runtime download needed.
+    # CODE_SIGNING_ALLOWED=NO keeps it credential-free (this validates the
+    # compile, not signing — the release workflow validates archiving).
+    - name: Build PulseProd (Release, unsigned)
+      run: |
+        xcodebuild build \
+          -project Pulse.xcodeproj \
+          -scheme PulseProd \
+          -configuration Release \
+          -destination 'generic/platform=iOS' \
+          -onlyUsePackageVersionsFromResolvedFile \
+          -skipMacroValidation \
+          CODE_SIGNING_ALLOWED=NO \
+          CODE_SIGNING_REQUIRED=NO
+
   tests:
     name: ${{ matrix.test-name }}
     runs-on: macos-26
@@ -535,6 +623,16 @@ jobs:
             scheme: PulseSnapshotTests
             artifact-name: snapshot-test-results
             timeout: 60
+          # iPad = regular size class, where the adaptive paths live
+          # (NavigationSplitView, LazyVGrid vs LazyVStack, the 720pt detail cap).
+          # The iPhone matrix entries only ever exercise compact width. Reuses
+          # the same simulator build products (test-without-building).
+          - test-target: PulseUITests
+            test-name: UI Tests (iPad)
+            scheme: PulseDev
+            artifact-name: ui-test-results-ipad
+            timeout: 180
+            ipad: "true"
 
     steps:
     - name: Checkout code
@@ -608,15 +706,30 @@ jobs:
         TEST_TARGET: ${{ matrix.test-target }}
         ARTIFACT_NAME: ${{ matrix.artifact-name }}
         TEST_NAME: ${{ matrix.test-name }}
+        IPAD: ${{ matrix.ipad }}
       run: |
         mkdir -p test-results
         set -o pipefail
+
+        # Resolve the simulator. iPad entries (matrix.ipad) run on a
+        # dynamically-discovered iPad so the destination survives runner-image
+        # changes; everything else targets iPhone Air, matching the build job.
+        if [ -n "$IPAD" ]; then
+          DEVICE=$(xcrun simctl list devices available --json \
+            | jq -r '[.devices[][] | select(.isAvailable and (.name | startswith("iPad"))) | .name]
+                     | (map(select(test("Pro"))) + .)[0] // empty')
+          [ -z "$DEVICE" ] && DEVICE="iPad Pro 13-inch (M4)"
+        else
+          DEVICE="iPhone Air"
+        fi
+        DEST="platform=iOS Simulator,name=$DEVICE,OS=latest"
+        echo "Test destination: $DEST"
 
         xcodebuild test-without-building \
           -project Pulse.xcodeproj \
           -scheme "$SCHEME" \
           -only-testing:"$TEST_TARGET" \
-          -destination 'platform=iOS Simulator,name=iPhone Air,OS=latest' \
+          -destination "$DEST" \
           -derivedDataPath ./DerivedData \
           -resultBundlePath "test-results/${ARTIFACT_NAME}.xcresult" \
           -enableCodeCoverage YES \
@@ -994,3 +1107,74 @@ jobs:
       run: |
         echo "::error::Test suite failed or was cancelled"
         exit 1
+
+  coverage-summary:
+    name: Coverage Summary
+    runs-on: macos-26
+    needs: tests
+    if: always()
+
+    permissions:
+      contents: read
+
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
+
+    - name: Select Xcode 26.5
+      run: |
+        XCODE_PATH=$(ls -d /Applications/Xcode_26.5*.app 2>/dev/null | head -1)
+        if [ -z "$XCODE_PATH" ]; then
+          echo "::error::Xcode 26.5 not found on runner"
+          ls -d /Applications/Xcode_26*.app || true
+          exit 1
+        fi
+        sudo xcode-select -s "$XCODE_PATH/Contents/Developer"
+        echo "DEVELOPER_DIR=$XCODE_PATH/Contents/Developer" >> "$GITHUB_ENV"
+
+    - name: Download unit test results
+      uses: actions/download-artifact@3e5f45b2cfb9172054b4087a40e8e0b5a5461e7c # v8.0.1
+      continue-on-error: true
+      with:
+        name: unit-test-results
+        path: coverage-xcresult
+
+    # Overall app-target line coverage — complements the Patch Coverage gate,
+    # which only measures *changed* lines. This is reported, not gated, so a
+    # PR that lowers overall coverage is visible without blocking on it.
+    - name: Report overall coverage
+      run: |
+        BUNDLE=$(find coverage-xcresult -maxdepth 2 -name '*.xcresult' -type d 2>/dev/null | head -1)
+        if [ -z "$BUNDLE" ]; then
+          echo "::warning::No xcresult found — skipping coverage summary"
+          {
+            echo "## Coverage Summary"
+            echo ""
+            echo "_No unit-test result bundle available._"
+          } >> "$GITHUB_STEP_SUMMARY"
+          exit 0
+        fi
+        echo "Reading coverage from $BUNDLE"
+        COVERAGE=$(xcrun xccov view --report "$BUNDLE" 2>/dev/null \
+          | grep "Pulse.app" | head -1 | awk '{print $NF}' | tr -d '%')
+        [ -z "$COVERAGE" ] && COVERAGE="0"
+        echo "App-target coverage: ${COVERAGE}%"
+        bash scripts/generate-coverage-badge.sh "$BUNDLE" || true
+        {
+          echo "## Coverage Summary"
+          echo ""
+          echo "| Target | Line coverage |"
+          echo "|--------|---------------|"
+          echo "| Pulse.app | ${COVERAGE}% |"
+          echo ""
+          echo "_Overall app-target coverage. Per-PR changed-line coverage is gated"
+          echo "separately by the Patch Coverage job (75% floor)._"
+        } >> "$GITHUB_STEP_SUMMARY"
+
+    - name: Upload coverage badge
+      uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
+      if: always()
+      with:
+        name: coverage-badge
+        path: badges/coverage.svg
+        if-no-files-found: ignore

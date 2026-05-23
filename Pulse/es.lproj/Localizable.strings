@@ -480,7 +480,6 @@
 /* MARK: - For You */
 /* ============== */
 
-"for_you.title" = "Para Ti";
 "for_you.why_this" = "¿Por qué esto?";
 "for_you.matched_prefix" = "Coincide con:";
 "for_you.loading" = "Personalizando tu feed…";
