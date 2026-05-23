@@ -64,6 +64,19 @@ enum LLMError: Error, LocalizedError, Equatable {
             return AppLocalization.localized("llm.error.busy")
         }
     }
+
+    /// Transient errors a caller should retry rather than treat as terminal
+    /// (e.g. background topic extraction re-queues the event instead of dropping
+    /// it). Switch-based so adding an associated value to a case later won't
+    /// silently break equality-based call sites.
+    var isTransient: Bool {
+        switch self {
+        case .memoryPressure, .busy:
+            return true
+        default:
+            return false
+        }
+    }
 }
 
 /// Protocol for LLM operations

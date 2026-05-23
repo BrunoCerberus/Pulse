@@ -44,9 +44,13 @@ final class AudioPlayerManager: ObservableObject {
     init() {}
 
     /// `onDisappear → cleanup()` is the primary teardown path. This deinit is a
-    /// safety net: if the view is torn down without `onDisappear` firing, the
-    /// periodic time observer would otherwise keep the player alive and the 0.5s
-    /// block keeps firing. Removing the observer here breaks that retain cycle.
+    /// safety net for the periodic time observer specifically: `AVPlayer` retains
+    /// the observer block, and Apple requires `removeTimeObserver(_:)` before the
+    /// player is released. If the view is torn down without `onDisappear`,
+    /// removing it here (as `player` is released alongside `self`) avoids a
+    /// dangling observer. The KVO observers and `AVPlayerItem` are
+    /// `@MainActor`-isolated / non-Sendable, so a nonisolated deinit can't touch
+    /// them — the `onDisappear → cleanup()` path invalidates those.
     deinit {
         if let timeObserver { player?.removeTimeObserver(timeObserver) }
     }

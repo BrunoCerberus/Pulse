@@ -229,25 +229,15 @@ final class LLMModelManager: @unchecked Sendable {
                 return
             }
 
-            // H3: fail-fast generation gate. Claim the shared context under the
-            // lock; if another feature is already generating, bail through the
-            // existing error channel instead of clobbering it.
+            // H3/H4: claim the fail-fast gate AND assign the task in a SINGLE
+            // lock block, so a `cancelGeneration()` arriving between the two
+            // can't observe an empty `generationTask` slot, no-op, and then let
+            // inference start on a model the caller believed it had cancelled.
+            // `Task {}` only schedules the closure, so the lock is released
+            // before `runInference` runs (no re-entrant deadlock).
             let didAcquire = self.lock.withLock { () -> Bool in
                 if self.isGenerating { return false }
                 self.isGenerating = true
-                return true
-            }
-            guard didAcquire else {
-                self.logger.warning(
-                    "Generation already in progress — rejecting concurrent request",
-                    category: self.logCategory
-                )
-                continuation.finish(throwing: LLMError.busy)
-                return
-            }
-
-            // H4: assign the task under the lock.
-            self.lock.withLock {
                 self.generationTask = Task {
                     await self.runInference(
                         prompt: prompt,
@@ -259,6 +249,15 @@ final class LLMModelManager: @unchecked Sendable {
                         continuation: continuation
                     )
                 }
+                return true
+            }
+            guard didAcquire else {
+                self.logger.warning(
+                    "Generation already in progress — rejecting concurrent request",
+                    category: self.logCategory
+                )
+                continuation.finish(throwing: LLMError.busy)
+                return
             }
         }
     }

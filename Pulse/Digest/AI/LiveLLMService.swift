@@ -184,6 +184,13 @@ final class LiveLLMService: LLMService, @unchecked Sendable {
     /// Cancels only the non-streaming (`Future`) generation task — invoked from
     /// the publisher's `receiveCancel` so a torn-down subscription stops the
     /// inference on the shared model (H5).
+    ///
+    /// `modelManager.cancelGeneration()` cancels whatever generation currently
+    /// owns the shared LLM. The H3 fail-fast gate makes concurrent generations
+    /// rare, so in practice that's this same `Future` inference; in a tight race
+    /// where this `Future` already finished, it could cancel a just-started
+    /// generation. That's acceptable fire-and-forget cleanup — a cancelled
+    /// generation surfaces as a retryable error, never corrupted state.
     private func cancelFutureGeneration() {
         let task = lock.withLock { () -> Task<Void, Never>? in
             let task = futureGenerationTask

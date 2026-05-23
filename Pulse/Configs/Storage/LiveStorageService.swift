@@ -218,10 +218,10 @@ final class LiveStorageService: StorageService {
         for row in bookmarks {
             if let kept = keptBookmarks[row.articleID] {
                 // Keep the earliest `savedAt`; delete the newer duplicate.
-                let drop = kept.savedAt <= row.savedAt ? row : kept
-                let keep = drop === kept ? row : kept
-                context.delete(drop)
-                keptBookmarks[row.articleID] = keep
+                let earlier = kept.savedAt <= row.savedAt ? kept : row
+                let later = kept.savedAt <= row.savedAt ? row : kept
+                context.delete(later)
+                keptBookmarks[row.articleID] = earlier
                 didChange = true
             } else {
                 keptBookmarks[row.articleID] = row
@@ -233,10 +233,10 @@ final class LiveStorageService: StorageService {
         for row in reads {
             if let kept = keptReads[row.articleID] {
                 // Keep the earliest `readAt`; delete the newer duplicate.
-                let drop = kept.readAt <= row.readAt ? row : kept
-                let keep = drop === kept ? row : kept
-                context.delete(drop)
-                keptReads[row.articleID] = keep
+                let earlier = kept.readAt <= row.readAt ? kept : row
+                let later = kept.readAt <= row.readAt ? row : kept
+                context.delete(later)
+                keptReads[row.articleID] = earlier
                 didChange = true
             } else {
                 keptReads[row.articleID] = row

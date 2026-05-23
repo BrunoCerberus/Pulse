@@ -180,11 +180,11 @@ final class LiveInterestProfileService: InterestProfileService {
         for row in rows {
             if let survivor = survivors[row.topicID] {
                 // Keep the earliest-created row as the survivor; fold weight.
-                let keep = survivor.createdAt <= row.createdAt ? survivor : row
-                let drop = keep === survivor ? row : survivor
-                keep.weight += drop.weight
-                context.delete(drop)
-                survivors[row.topicID] = keep
+                let earlier = survivor.createdAt <= row.createdAt ? survivor : row
+                let later = survivor.createdAt <= row.createdAt ? row : survivor
+                earlier.weight += later.weight
+                context.delete(later)
+                survivors[row.topicID] = earlier
                 didChange = true
             } else {
                 survivors[row.topicID] = row

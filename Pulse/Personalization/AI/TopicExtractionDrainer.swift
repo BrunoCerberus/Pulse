@@ -174,14 +174,14 @@ final class TopicExtractionDrainer {
                     )
                     break
                 }
-            } catch let error as LLMError where error == .memoryPressure || error == .busy {
-                // Stop the batch and DON'T mark anything processed — both
-                // memory pressure and a busy model (a foreground digest /
-                // summarization holding the shared single-context LLM, H3) are
-                // transient. Leaving the events queued lets the next background
-                // drain retry them instead of dropping the engagement signal.
+            } catch let error as LLMError where error.isTransient {
+                // Stop the batch and DON'T mark anything processed — a transient
+                // error (memory pressure, or a busy model: a foreground digest /
+                // summarization holding the shared single-context LLM, H3) means
+                // the events should stay queued so the next background drain
+                // retries them instead of dropping the engagement signal.
                 Logger.shared.service(
-                    "TopicExtractionDrainer: \(error == .busy ? "model busy" : "memory pressure"), stopping batch",
+                    "TopicExtractionDrainer: transient LLM error (\(error)), stopping batch",
                     level: .warning
                 )
                 break
