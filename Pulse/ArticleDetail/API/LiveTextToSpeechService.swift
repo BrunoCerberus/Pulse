@@ -1,5 +1,6 @@
 import AVFoundation
 @preconcurrency import Combine
+import EntropyCore
 import Foundation
 import MediaPlayer
 
@@ -30,56 +31,82 @@ final class LiveTextToSpeechService: NSObject, TextToSpeechService, @unchecked S
     }
 
     func speak(text: String, language: String, rate: Float) {
-        stop()
+        // `AVSpeechSynthesizer` + `AVAudioSession` must be driven from the main
+        // thread. Callers (the `@MainActor` interactor) are already on main, so
+        // `runOnMain` executes synchronously and preserves ordering (including the
+        // internal `stop()` below); remote-command handlers hop here from a
+        // background queue. This collapses the synthesizer to a single-threaded driver.
+        runOnMain {
+            self.stop()
 
-        let utterance = AVSpeechUtterance(string: text)
-        utterance.rate = rate
-        utterance.voice = AVSpeechSynthesisVoice(language: voiceLanguage(for: language))
-        utterance.pitchMultiplier = 1.0
-        utterance.preUtteranceDelay = 0.1
+            let utterance = AVSpeechUtterance(string: text)
+            utterance.rate = rate
+            utterance.voice = AVSpeechSynthesisVoice(language: self.voiceLanguage(for: language))
+            utterance.pitchMultiplier = 1.0
+            utterance.preUtteranceDelay = 0.1
 
-        totalTextLength = text.count
-        setActiveUtterance(utterance)
-        progressSubject.send(0.0)
+            self.totalTextLength = text.count
+            self.setActiveUtterance(utterance)
+            self.progressSubject.send(0.0)
 
-        configureAudioSession()
-        synthesizer.speak(utterance)
-        playbackStateSubject.send(.playing)
+            self.configureAudioSession()
+            self.synthesizer.speak(utterance)
+            self.playbackStateSubject.send(.playing)
 
-        configureNowPlayingInfo(for: text)
-        registerRemoteCommandsIfNeeded()
+            self.configureNowPlayingInfo(for: text)
+            self.registerRemoteCommandsIfNeeded()
+        }
     }
 
     func pause() {
-        guard synthesizer.isSpeaking else { return }
-        synthesizer.pauseSpeaking(at: .word)
-        playbackStateSubject.send(.paused)
-        updateNowPlayingPlaybackRate(0.0)
+        runOnMain {
+            guard self.synthesizer.isSpeaking else { return }
+            self.synthesizer.pauseSpeaking(at: .word)
+            self.playbackStateSubject.send(.paused)
+            self.updateNowPlayingPlaybackRate(0.0)
+        }
     }
 
     func resume() {
-        guard synthesizer.isPaused else { return }
-        synthesizer.continueSpeaking()
-        playbackStateSubject.send(.playing)
-        updateNowPlayingPlaybackRate(1.0)
+        runOnMain {
+            guard self.synthesizer.isPaused else { return }
+            self.synthesizer.continueSpeaking()
+            self.playbackStateSubject.send(.playing)
+            self.updateNowPlayingPlaybackRate(1.0)
+        }
     }
 
     func stop() {
-        // Clean-up must be idempotent: if `speak()` configured Now Playing / remote commands
-        // but the synthesizer never reached a speaking state (rare race), an early-return
-        // here would leave the Lock Screen entry orphaned. Always tear down session/state.
-        let wasActive = synthesizer.isSpeaking || synthesizer.isPaused
-        if wasActive {
-            setActiveUtterance(nil)
-            synthesizer.stopSpeaking(at: .immediate)
+        runOnMain {
+            // Clean-up must be idempotent: if `speak()` configured Now Playing / remote commands
+            // but the synthesizer never reached a speaking state (rare race), an early-return
+            // here would leave the Lock Screen entry orphaned. Always tear down session/state.
+            let wasActive = self.synthesizer.isSpeaking || self.synthesizer.isPaused
+            if wasActive {
+                self.setActiveUtterance(nil)
+                self.synthesizer.stopSpeaking(at: .immediate)
+            }
+            self.playbackStateSubject.send(.idle)
+            self.progressSubject.send(0.0)
+            self.deactivateAudioSession()
+            self.clearNowPlayingInfo()
         }
-        playbackStateSubject.send(.idle)
-        progressSubject.send(0.0)
-        deactivateAudioSession()
-        clearNowPlayingInfo()
     }
 
     // MARK: - Private
+
+    /// Runs `work` on the main thread, synchronously if already on main so call
+    /// ordering is preserved, otherwise dispatched. All synthesizer / audio-session
+    /// mutations funnel through here so activate/deactivate never interleave across
+    /// threads (which can surface as silent playback or a swallowed
+    /// `AVAudioSessionErrorCodeIsBusy`).
+    private func runOnMain(_ work: @escaping @Sendable () -> Void) {
+        if Thread.isMainThread {
+            work()
+        } else {
+            DispatchQueue.main.async(execute: work)
+        }
+    }
 
     private func setActiveUtterance(_ utterance: AVSpeechUtterance?) {
         utteranceLock.lock()
@@ -115,7 +142,11 @@ final class LiveTextToSpeechService: NSObject, TextToSpeechService, @unchecked S
             try session.setCategory(.playback, mode: .spokenAudio)
             try session.setActive(true)
         } catch {
-            // Non-fatal: speech will still work without explicit session config
+            // Non-fatal: speech will still work without explicit session config.
+            Logger.shared.warning(
+                "TTS audio session activation failed: \(error.localizedDescription)",
+                category: "Audio"
+            )
         }
     }
 
@@ -123,7 +154,11 @@ final class LiveTextToSpeechService: NSObject, TextToSpeechService, @unchecked S
         do {
             try AVAudioSession.sharedInstance().setActive(false, options: .notifyOthersOnDeactivation)
         } catch {
-            // Non-fatal
+            // Non-fatal.
+            Logger.shared.warning(
+                "TTS audio session deactivation failed: \(error.localizedDescription)",
+                category: "Audio"
+            )
         }
     }
 
@@ -184,10 +219,14 @@ final class LiveTextToSpeechService: NSObject, TextToSpeechService, @unchecked S
         center.togglePlayPauseCommand.isEnabled = true
         center.togglePlayPauseCommand.addTarget { [weak self] _ in
             guard let self else { return .commandFailed }
-            if self.synthesizer.isSpeaking, !self.synthesizer.isPaused {
-                self.pause()
-            } else {
-                self.resume()
+            // Read `isSpeaking`/`isPaused` and act on the main thread: this handler
+            // fires off-main and the synthesizer must only be inspected/driven there.
+            DispatchQueue.main.async {
+                if self.synthesizer.isSpeaking, !self.synthesizer.isPaused {
+                    self.pause()
+                } else {
+                    self.resume()
+                }
             }
             return .success
         }

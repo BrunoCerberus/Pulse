@@ -49,7 +49,11 @@ final class AppLockManager: ObservableObject {
     func handleSceneDidBecomeActive() {
         guard !isAuthenticating else { return }
         guard let service = appLockService, service.isEnabled, isLocked else { return }
-        isAuthenticating = true
+        // `attemptUnlock()` owns the `isAuthenticating` lifecycle (guard + set +
+        // `defer` clear). We deliberately don't pre-set it here: doing so would
+        // trip `attemptUnlock`'s own re-entrancy guard and the unlock would never
+        // run. The early-return guard above is enough to debounce repeated
+        // `sceneDidBecomeActive` calls fired by the Face ID dialog itself.
         Task { await attemptUnlock() }
     }
 
@@ -57,6 +61,7 @@ final class AppLockManager: ObservableObject {
 
     /// Attempts biometric authentication to unlock the app.
     func attemptUnlock() async {
+        guard !isAuthenticating else { return }
         guard let service = appLockService else { return }
         let boxedService = UncheckedSendableBox(value: service)
 

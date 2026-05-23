@@ -355,6 +355,15 @@ final class SettingsViewModel: CombineViewModel, ObservableObject {
             searchService.clearRecentSearches()
         }
 
+        // 4a. Unregister the device from APNs before discarding the local token
+        //     below. Wiping the keychain/UserDefaults token alone leaves the
+        //     device APNs-registered for the signed-out account; this tells the
+        //     OS to drop the registration. `NotificationService` is @MainActor
+        //     (as is this method), so no boxing is needed.
+        if let notificationService = try? serviceLocator.retrieve(NotificationService.self) {
+            await notificationService.unregisterForRemoteNotifications()
+        }
+
         // 5. Clear UserDefaults preferences
         let defaults = UserDefaults.standard
         defaults.removeObject(forKey: "pulse.hasCompletedOnboarding")

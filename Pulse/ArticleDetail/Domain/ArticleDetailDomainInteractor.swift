@@ -26,7 +26,11 @@ final class ArticleDetailDomainInteractor: CombineInteractor {
 
     private let storageService: StorageService
     private let newsService: NewsService?
-    private let ttsService: TextToSpeechService?
+    /// `nonisolated(unsafe)` so the non-isolated `deinit` can read it to stop
+    /// playback if the view was torn down without an `.onDisappear → .stopTTS`
+    /// (M10). Assigned once in `init` and otherwise only touched on the main
+    /// actor; `stop()` marshals to main internally, so this is safe.
+    private nonisolated(unsafe) let ttsService: TextToSpeechService?
     private let analyticsService: AnalyticsService?
     private let engagementEventsService: EngagementEventsService?
     private let stateSubject: CurrentValueSubject<DomainState, Never>
@@ -57,7 +61,7 @@ final class ArticleDetailDomainInteractor: CombineInteractor {
             storageService = try serviceLocator.retrieve(StorageService.self)
         } catch {
             Logger.shared.service("Failed to retrieve StorageService: \(error)", level: .warning)
-            storageService = LiveStorageService()
+            storageService = LiveStorageService(enableCloudKit: false)
         }
 
         newsService = try? serviceLocator.retrieve(NewsService.self)
@@ -610,6 +614,19 @@ final class ArticleDetailDomainInteractor: CombineInteractor {
         // Cancel all pending tasks on deallocation
         for task in backgroundTasks {
             task.cancel()
+        }
+
+        // Deterministic teardown if the interactor is dropped without an
+        // `.onDisappear → .stopTTS`. Without this, audio keeps speaking and the
+        // Lock Screen activity lingers. `ttsService` is `nonisolated(unsafe)`
+        // (see its declaration) so this nonisolated deinit can read it; `stop()`
+        // marshals to the main thread internally, so calling it here is safe.
+        ttsService?.stop()
+
+        // Ending the activity touches `@MainActor`-isolated ActivityKit state, so
+        // hop to the main actor (fire-and-forget) rather than touching it directly.
+        Task { @MainActor in
+            TTSLiveActivityController.shared.end()
         }
     }
 

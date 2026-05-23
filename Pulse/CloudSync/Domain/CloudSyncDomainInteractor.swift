@@ -20,6 +20,10 @@ final class CloudSyncDomainInteractor: CombineInteractor {
     private let cloudSyncService: CloudSyncService
     private let analyticsService: AnalyticsService?
     private let notificationCenter: NotificationCenter
+    /// Optional because some test locators don't register them; when present,
+    /// a completed sync triggers a CloudKit-merge dedupe pass (H8).
+    private let storageService: StorageService?
+    private let interestProfileService: InterestProfileService?
     private let stateSubject = CurrentValueSubject<DomainState, Never>(.initial)
     private var cancellables = Set<AnyCancellable>()
     private var previousAccountStatus: CloudSyncAccountStatus = .couldNotDetermine
@@ -44,6 +48,8 @@ final class CloudSyncDomainInteractor: CombineInteractor {
         }
 
         analyticsService = try? serviceLocator.retrieve(AnalyticsService.self)
+        storageService = try? serviceLocator.retrieve(StorageService.self)
+        interestProfileService = try? serviceLocator.retrieve(InterestProfileService.self)
         self.notificationCenter = notificationCenter
 
         observeServicePublishers()
@@ -110,6 +116,7 @@ final class CloudSyncDomainInteractor: CombineInteractor {
             }
             analyticsService?.logEvent(.cloudSyncSucceeded)
             notificationCenter.post(name: .cloudSyncDidComplete, object: nil)
+            deduplicateAfterSync()
         case let .failed(message):
             analyticsService?.logEvent(.cloudSyncFailed(error: message))
             analyticsService?.recordError(
@@ -121,6 +128,31 @@ final class CloudSyncDomainInteractor: CombineInteractor {
             )
         case .idle:
             break
+        }
+    }
+
+    /// Collapses duplicate rows a cross-device CloudKit merge can leave (H8),
+    /// then re-posts `.cloudSyncDidComplete` so feature interactors reload the
+    /// cleaned data — but only when dedupe actually removed rows, so the common
+    /// no-duplicates sync stays a single reload. Runs in a detached `Task` so
+    /// the sync-state handler isn't blocked on the (rare) dedupe work. The
+    /// services aren't `Sendable`, so they're boxed per the project convention
+    /// (see `TopicExtractionDrainer`).
+    private func deduplicateAfterSync() {
+        guard storageService != nil || interestProfileService != nil else { return }
+        let storageBox = storageService.map { UncheckedSendableBox(value: $0) }
+        let profileBox = interestProfileService.map { UncheckedSendableBox(value: $0) }
+        Task { @MainActor [weak self] in
+            var changed = false
+            if let storageBox, let didChange = try? await storageBox.value.deduplicate() {
+                changed = changed || didChange
+            }
+            if let profileBox, let didChange = try? await profileBox.value.deduplicate() {
+                changed = changed || didChange
+            }
+            if changed {
+                self?.notificationCenter.post(name: .cloudSyncDidComplete, object: nil)
+            }
         }
     }
 

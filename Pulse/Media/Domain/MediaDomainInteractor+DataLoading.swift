@@ -69,7 +69,9 @@ extension MediaDomainInteractor {
         }
         let selectedType = currentState.selectedType
         let language = preferredLanguage
-        Publishers.Zip(
+        // Supersede any in-flight "current view" media fetch. Pagination uses its own subscription.
+        mediaFetchCancellable?.cancel()
+        mediaFetchCancellable = Publishers.Zip(
             mediaService.fetchFeaturedMedia(type: selectedType, language: language),
             mediaService.fetchMedia(type: selectedType, language: language, page: 1)
         )
@@ -94,6 +96,5 @@ extension MediaDomainInteractor {
                 state.isOfflineError = false
             }
         }
-        .store(in: &cancellables)
     }
 }

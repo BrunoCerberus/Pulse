@@ -87,4 +87,14 @@ protocol StorageService {
     /// Clears all user data (bookmarks, preferences, reading history).
     /// - Throws: Storage errors if any delete operation fails.
     func clearAllUserData() async throws
+
+    // MARK: - Deduplication
+
+    /// Collapses duplicate bookmark / reading-history rows that a cross-device
+    /// `NSPersistentCloudKitContainer` merge can leave (uniqueness is
+    /// service-enforced, not `@Attribute(.unique)`, which CloudKit forbids).
+    /// Intended to run after a CloudKit sync completes.
+    /// - Returns: `true` if any duplicate rows were removed, `false` otherwise.
+    /// - Throws: Storage errors if the fetch / delete / save fails.
+    func deduplicate() async throws -> Bool
 }

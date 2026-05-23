@@ -364,3 +364,29 @@ extension LLMErrorTests {
         }
     }
 }
+
+// MARK: - LLMError.isTransient Tests
+
+@Suite("LLMError isTransient Tests")
+struct LLMErrorIsTransientTests {
+    @Test("isTransient is true for transient cases (memoryPressure, busy)")
+    func transientCasesAreRetryable() {
+        #expect(LLMError.memoryPressure.isTransient)
+        #expect(LLMError.busy.isTransient)
+    }
+
+    @Test("isTransient is false for terminal cases")
+    func terminalCasesAreNotRetryable() {
+        #expect(!LLMError.modelNotLoaded.isTransient)
+        #expect(!LLMError.generationCancelled.isTransient)
+        #expect(!LLMError.serviceUnavailable.isTransient)
+        #expect(!LLMError.tokenizationFailed.isTransient)
+        #expect(!LLMError.generationFailed("x").isTransient)
+    }
+
+    @Test("busy error exposes a non-empty localized description")
+    func busyHasLocalizedDescription() throws {
+        let description = try #require(LLMError.busy.errorDescription)
+        #expect(!description.isEmpty)
+    }
+}

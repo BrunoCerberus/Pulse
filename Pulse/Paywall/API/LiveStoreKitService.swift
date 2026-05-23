@@ -8,6 +8,7 @@
 import Combine
 import EntropyCore
 import Foundation
+import os
 import StoreKit
 
 /// Live implementation of StoreKitService using StoreKit 2.
@@ -36,7 +37,18 @@ final class LiveStoreKitService: StoreKitService, @unchecked Sendable {
     private let subscriptionStatusSubject = CurrentValueSubject<Bool, Never>(false)
     private var updateListenerTask: Task<Void, Never>?
     private var initialStatusTask: Task<Void, Never>?
-    private var isListening = true
+
+    /// Coalescing guard for `updateSubscriptionStatus()` (M3). `isUpdating` marks a scan
+    /// in flight; `needsRerun` records that a request arrived mid-scan so the in-flight scan
+    /// reruns exactly once more. Concurrent invocations (e.g. `purchase()` + the
+    /// `Transaction.updates` listener observing the same transaction) collapse into a single
+    /// `Transaction.currentEntitlements` scan with deterministic final send ordering.
+    private let entitlementScanState = OSAllocatedUnfairLock(initialState: EntitlementScanState())
+
+    private struct EntitlementScanState {
+        var isUpdating = false
+        var needsRerun = false
+    }
 
     var subscriptionStatusPublisher: AnyPublisher<Bool, Never> {
         subscriptionStatusSubject.eraseToAnyPublisher()
@@ -59,7 +71,6 @@ final class LiveStoreKitService: StoreKitService, @unchecked Sendable {
     }
 
     deinit {
-        isListening = false
         updateListenerTask?.cancel()
         initialStatusTask?.cancel()
     }
@@ -155,9 +166,8 @@ final class LiveStoreKitService: StoreKitService, @unchecked Sendable {
             guard self != nil else { return }
 
             for await result in Transaction.updates {
-                // Check both cancellation and listening flag for proper cleanup
-                guard !Task.isCancelled else { break }
-                guard let self, self.isListening else { break }
+                // Terminate cleanly once the task is cancelled (deinit) or self is gone.
+                guard !Task.isCancelled, let self else { break }
 
                 do {
                     let transaction = try self.checkVerified(result)
@@ -180,7 +190,49 @@ final class LiveStoreKitService: StoreKitService, @unchecked Sendable {
         }
     }
 
+    /// Refreshes `subscriptionStatusSubject` from the current entitlements.
+    ///
+    /// Coalesces concurrent invocations (M3): on a successful purchase both `purchase()` and
+    /// the long-lived `Transaction.updates` listener call this for the same transaction. Rather
+    /// than running two overlapping `Transaction.currentEntitlements` scans with nondeterministic
+    /// send ordering, the first caller performs the scan while any caller arriving mid-scan only
+    /// flags a rerun. The in-flight scan then reruns exactly once more, so the final published
+    /// value always reflects the latest entitlements. `purchase()` does not block on this — it
+    /// resolves its publisher immediately after kicking the refresh off.
     private func updateSubscriptionStatus() async {
+        // If a scan is already running, flag a rerun and let the active scan absorb this request.
+        let shouldStart = entitlementScanState.withLock { state -> Bool in
+            if state.isUpdating {
+                state.needsRerun = true
+                return false
+            }
+            state.isUpdating = true
+            return true
+        }
+        guard shouldStart else { return }
+
+        while true {
+            let finalStatus = await scanCurrentEntitlements()
+            await MainActor.run {
+                subscriptionStatusSubject.send(finalStatus)
+            }
+
+            // Exit unless a request arrived mid-scan, in which case rerun exactly once more.
+            let shouldRerun = entitlementScanState.withLock { state -> Bool in
+                if state.needsRerun {
+                    state.needsRerun = false
+                    return true
+                }
+                state.isUpdating = false
+                return false
+            }
+            if !shouldRerun { break }
+        }
+    }
+
+    /// Performs a single pass over `Transaction.currentEntitlements`, returning whether an
+    /// active (non-revoked) auto-renewable subscription is present.
+    private func scanCurrentEntitlements() async -> Bool {
         var hasActiveSubscription = false
 
         for await result in Transaction.currentEntitlements {
@@ -196,10 +248,7 @@ final class LiveStoreKitService: StoreKitService, @unchecked Sendable {
             }
         }
 
-        let finalStatus = hasActiveSubscription
-        await MainActor.run {
-            subscriptionStatusSubject.send(finalStatus)
-        }
+        return hasActiveSubscription
     }
 }
 

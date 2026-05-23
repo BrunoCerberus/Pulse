@@ -28,9 +28,13 @@ final class AudioPlayerManager: ObservableObject {
 
     // MARK: - Private Properties
 
-    private var player: AVPlayer?
+    // `player` and `timeObserver` are `nonisolated(unsafe)` so the non-isolated
+    // `deinit` can read them to remove the periodic time observer (M9). Both are
+    // only ever mutated on the main actor, and `deinit` runs after the last
+    // reference is gone (no concurrent access), so this is safe.
+    private nonisolated(unsafe) var player: AVPlayer?
     private var playerItem: AVPlayerItem?
-    private var timeObserver: Any?
+    private nonisolated(unsafe) var timeObserver: Any?
     private var statusObserver: NSKeyValueObservation?
     private var durationObserver: NSKeyValueObservation?
     private var rateObserver: NSKeyValueObservation?
@@ -39,9 +43,17 @@ final class AudioPlayerManager: ObservableObject {
 
     init() {}
 
-    // Cleanup is handled automatically — AVPlayer and observers are released
-    // when the instance is deallocated. No explicit deinit needed since
-    // Swift 6.2 nonisolated deinit cannot access @MainActor-isolated properties.
+    /// `onDisappear → cleanup()` is the primary teardown path. This deinit is a
+    /// safety net for the periodic time observer specifically: `AVPlayer` retains
+    /// the observer block, and Apple requires `removeTimeObserver(_:)` before the
+    /// player is released. If the view is torn down without `onDisappear`,
+    /// removing it here (as `player` is released alongside `self`) avoids a
+    /// dangling observer. The KVO observers and `AVPlayerItem` are
+    /// `@MainActor`-isolated / non-Sendable, so a nonisolated deinit can't touch
+    /// them — the `onDisappear → cleanup()` path invalidates those.
+    deinit {
+        if let timeObserver { player?.removeTimeObserver(timeObserver) }
+    }
 
     // MARK: - Audio Session
 

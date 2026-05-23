@@ -47,7 +47,7 @@ final class SettingsDomainInteractor: CombineInteractor {
             settingsService = try serviceLocator.retrieve(SettingsService.self)
         } catch {
             Logger.shared.service("Failed to retrieve SettingsService: \(error)", level: .warning)
-            settingsService = LiveSettingsService(storageService: LiveStorageService())
+            settingsService = LiveSettingsService(storageService: LiveStorageService(enableCloudKit: false))
         }
 
         notificationService = (try? serviceLocator.retrieve(NotificationService.self))

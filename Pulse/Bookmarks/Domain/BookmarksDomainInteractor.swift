@@ -40,7 +40,7 @@ final class BookmarksDomainInteractor: CombineInteractor {
             bookmarksService = try serviceLocator.retrieve(BookmarksService.self)
         } catch {
             Logger.shared.service("Failed to retrieve BookmarksService: \(error)", level: .warning)
-            bookmarksService = LiveBookmarksService(storageService: LiveStorageService())
+            bookmarksService = LiveBookmarksService(storageService: LiveStorageService(enableCloudKit: false))
         }
 
         analyticsService = try? serviceLocator.retrieve(AnalyticsService.self)

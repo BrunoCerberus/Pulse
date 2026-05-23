@@ -29,6 +29,17 @@ final class DiskNewsCacheStore: NewsCacheStore {
     private let encoder = JSONEncoder()
     private let decoder = JSONDecoder()
 
+    /// Serializes all filesystem access so a single shared instance can be safely
+    /// used by both caching services without torn reads or `removeAll`/`set` races.
+    private let ioQueue = DispatchQueue(label: "com.pulse.diskcache")
+
+    /// - Important: Register **one** shared instance in production (see
+    ///   `PulseSceneDelegate.registerLiveServices()`) and inject it into every
+    ///   `Caching*Service`. `ioQueue` serializes I/O *within* an instance, but
+    ///   two instances pointing at the same `directory` each have their own queue
+    ///   and would race on the filesystem. The `directory` parameter exists for
+    ///   test isolation (a unique temp dir per test); production passes `nil` to
+    ///   use the shared Caches path.
     init(directory: URL? = nil) {
         if let directory {
             cacheDirectory = directory
@@ -94,79 +105,87 @@ final class DiskNewsCacheStore: NewsCacheStore {
     }
 
     func get<T>(for key: NewsCacheKey) -> CacheEntry<T>? {
-        let fileURL = fileURL(for: key)
+        ioQueue.sync {
+            let fileURL = fileURL(for: key)
 
-        guard let data = try? Data(contentsOf: fileURL),
-              let wrapper = try? decoder.decode(DiskCacheWrapper.self, from: data)
-        else {
+            guard let data = try? Data(contentsOf: fileURL),
+                  let wrapper = try? decoder.decode(DiskCacheWrapper.self, from: data)
+            else {
+                return nil
+            }
+
+            // Decode payload based on expected type
+            if let articles = try? decoder.decode([Article].self, from: wrapper.payload) as? T {
+                return CacheEntry(data: articles, timestamp: wrapper.timestamp)
+            }
+            if let article = try? decoder.decode(Article.self, from: wrapper.payload) as? T {
+                return CacheEntry(data: article, timestamp: wrapper.timestamp)
+            }
+
             return nil
         }
-
-        // Decode payload based on expected type
-        if let articles = try? decoder.decode([Article].self, from: wrapper.payload) as? T {
-            return CacheEntry(data: articles, timestamp: wrapper.timestamp)
-        }
-        if let article = try? decoder.decode(Article.self, from: wrapper.payload) as? T {
-            return CacheEntry(data: article, timestamp: wrapper.timestamp)
-        }
-
-        return nil
     }
 
     func set<T>(_ entry: CacheEntry<T>, for key: NewsCacheKey) {
-        guard let payloadData = encodePayload(entry.data) else { return }
+        ioQueue.sync {
+            guard let payloadData = encodePayload(entry.data) else { return }
 
-        let wrapper = DiskCacheWrapper(timestamp: entry.timestamp, payload: payloadData)
+            let wrapper = DiskCacheWrapper(timestamp: entry.timestamp, payload: payloadData)
 
-        guard let wrapperData = try? encoder.encode(wrapper) else { return }
+            guard let wrapperData = try? encoder.encode(wrapper) else { return }
 
-        let fileURL = fileURL(for: key)
+            let fileURL = fileURL(for: key)
 
-        // Atomic write to prevent corruption
-        let tempURL = cacheDirectory.appendingPathComponent(UUID().uuidString + ".tmp")
-        do {
-            try wrapperData.write(to: tempURL, options: .atomic)
-            // Move atomically to final location
-            if fileManager.fileExists(atPath: fileURL.path) {
-                try fileManager.removeItem(at: fileURL)
+            // Atomic write to prevent corruption
+            let tempURL = cacheDirectory.appendingPathComponent(UUID().uuidString + ".tmp")
+            do {
+                try wrapperData.write(to: tempURL, options: .atomic)
+                // Move atomically to final location
+                if fileManager.fileExists(atPath: fileURL.path) {
+                    try fileManager.removeItem(at: fileURL)
+                }
+                try fileManager.moveItem(at: tempURL, to: fileURL)
+            } catch {
+                try? fileManager.removeItem(at: tempURL)
+                Logger.shared.service("Disk cache write failed for \(key.stringKey): \(error)", level: .debug)
             }
-            try fileManager.moveItem(at: tempURL, to: fileURL)
-        } catch {
-            try? fileManager.removeItem(at: tempURL)
-            Logger.shared.service("Disk cache write failed for \(key.stringKey): \(error)", level: .debug)
         }
     }
 
     func remove(for key: NewsCacheKey) {
-        let fileURL = fileURL(for: key)
-        guard fileManager.fileExists(atPath: fileURL.path) else { return }
-        do {
-            try fileManager.removeItem(at: fileURL)
-        } catch {
-            Logger.shared.service("Disk cache remove failed for \(key.stringKey): \(error)", level: .debug)
+        ioQueue.sync {
+            let fileURL = fileURL(for: key)
+            guard fileManager.fileExists(atPath: fileURL.path) else { return }
+            do {
+                try fileManager.removeItem(at: fileURL)
+            } catch {
+                Logger.shared.service("Disk cache remove failed for \(key.stringKey): \(error)", level: .debug)
+            }
         }
     }
 
     func removeAll() {
-        let files: [URL]
-        do {
-            files = try fileManager.contentsOfDirectory(
-                at: cacheDirectory,
-                includingPropertiesForKeys: nil
-            )
-        } catch {
-            Logger.shared.service("Failed to list disk cache directory: \(error)", level: .warning)
-            return
-        }
-
-        for file in files {
+        ioQueue.sync {
+            let files: [URL]
             do {
-                try fileManager.removeItem(at: file)
-            } catch {
-                Logger.shared.service(
-                    "Disk cache cleanup failed for \(file.lastPathComponent): \(error)",
-                    level: .debug
+                files = try fileManager.contentsOfDirectory(
+                    at: cacheDirectory,
+                    includingPropertiesForKeys: nil
                 )
+            } catch {
+                Logger.shared.service("Failed to list disk cache directory: \(error)", level: .warning)
+                return
+            }
+
+            for file in files {
+                do {
+                    try fileManager.removeItem(at: file)
+                } catch {
+                    Logger.shared.service(
+                        "Disk cache cleanup failed for \(file.lastPathComponent): \(error)",
+                        level: .debug
+                    )
+                }
             }
         }
     }

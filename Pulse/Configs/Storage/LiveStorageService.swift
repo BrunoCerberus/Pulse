@@ -101,7 +101,7 @@ final class LiveStorageService: StorageService {
         let descriptor = FetchDescriptor<BookmarkedArticle>(
             predicate: #Predicate { $0.articleID == articleID }
         )
-        return (try? context.fetchCount(descriptor)) ?? 0 > 0
+        return ((try? context.fetchCount(descriptor)) ?? 0) > 0
     }
 
     @MainActor
@@ -143,7 +143,7 @@ final class LiveStorageService: StorageService {
         let descriptor = FetchDescriptor<ReadArticle>(
             predicate: #Predicate { $0.articleID == articleID }
         )
-        return (try? context.fetchCount(descriptor)) ?? 0 > 0
+        return ((try? context.fetchCount(descriptor)) ?? 0) > 0
     }
 
     @MainActor
@@ -192,5 +192,59 @@ final class LiveStorageService: StorageService {
         try await clearBookmarks()
         try await clearUserPreferences()
         try await clearReadingHistory()
+    }
+
+    // MARK: - Deduplication
+
+    /// Collapses duplicate `BookmarkedArticle` / `ReadArticle` rows that
+    /// `NSPersistentCloudKitContainer` can produce by merging same-`articleID`
+    /// rows from multiple devices (H8). Uniqueness here is service-enforced
+    /// (no `@Attribute(.unique)`, which CloudKit forbids), so a cross-device
+    /// merge can leave two rows for one article; this folds each group down to
+    /// the earliest-saved / earliest-read survivor and deletes the rest, with a
+    /// single `save()` at the end.
+    ///
+    /// Runs after a CloudKit sync completes: `CloudSyncDomainInteractor` invokes
+    /// it on `.cloudSyncDidComplete` and re-posts the notification when rows were
+    /// collapsed so Bookmarks / Reading History reload the cleaned data.
+    @MainActor
+    @discardableResult
+    func deduplicate() async throws -> Bool {
+        let context = modelContainer.mainContext
+        var didChange = false
+
+        let bookmarks = try context.fetch(FetchDescriptor<BookmarkedArticle>())
+        var keptBookmarks: [String: BookmarkedArticle] = [:]
+        for row in bookmarks {
+            if let kept = keptBookmarks[row.articleID] {
+                // Keep the earliest `savedAt`; delete the newer duplicate.
+                let earlier = kept.savedAt <= row.savedAt ? kept : row
+                let later = kept.savedAt <= row.savedAt ? row : kept
+                context.delete(later)
+                keptBookmarks[row.articleID] = earlier
+                didChange = true
+            } else {
+                keptBookmarks[row.articleID] = row
+            }
+        }
+
+        let reads = try context.fetch(FetchDescriptor<ReadArticle>())
+        var keptReads: [String: ReadArticle] = [:]
+        for row in reads {
+            if let kept = keptReads[row.articleID] {
+                // Keep the earliest `readAt`; delete the newer duplicate.
+                let earlier = kept.readAt <= row.readAt ? kept : row
+                let later = kept.readAt <= row.readAt ? row : kept
+                context.delete(later)
+                keptReads[row.articleID] = earlier
+                didChange = true
+            } else {
+                keptReads[row.articleID] = row
+            }
+        }
+
+        guard didChange else { return false }
+        try context.save()
+        return true
     }
 }

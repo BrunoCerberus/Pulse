@@ -350,14 +350,25 @@ private extension PulseSceneDelegate {
 
         // All Live services use Supabase backend
         // Supabase backend provides RSS-aggregated articles with high-res images and full content
+        // Single shared L2 disk store: both caching services point at the same cache directory,
+        // so they MUST share one instance to serialize filesystem access (see DiskNewsCacheStore.ioQueue).
+        let diskCacheStore = DiskNewsCacheStore()
         serviceLocator.register(
             NewsService.self,
-            instance: CachingNewsService(wrapping: LiveNewsService(), networkMonitor: networkMonitor)
+            instance: CachingNewsService(
+                wrapping: LiveNewsService(),
+                diskCacheStore: diskCacheStore,
+                networkMonitor: networkMonitor
+            )
         )
         serviceLocator.register(SearchService.self, instance: LiveSearchService())
         serviceLocator.register(
             MediaService.self,
-            instance: CachingMediaService(wrapping: LiveMediaService(), networkMonitor: networkMonitor)
+            instance: CachingMediaService(
+                wrapping: LiveMediaService(),
+                diskCacheStore: diskCacheStore,
+                networkMonitor: networkMonitor
+            )
         )
         serviceLocator.register(StoreKitService.self, instance: LiveStoreKitService())
         serviceLocator.register(LLMService.self, instance: LiveLLMService())

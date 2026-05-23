@@ -17,6 +17,14 @@ final class CachingMediaService: MediaService {
     private let networkMonitor: NetworkMonitorService?
     private let networkResilienceEnabled: Bool
 
+    /// Upper bound on how stale an L2 entry may be to still satisfy an *online*
+    /// network-error fallback. Deliberately longer than `DiskNewsCacheStore.diskTTL`
+    /// (the normal L2-hit window): when the backend is reachable-but-failing it's
+    /// better to serve slightly-older-than-TTL content than an error — but it MUST
+    /// stay bounded so a dead backend eventually surfaces an error instead of
+    /// looking like success forever (and pull-to-refresh silently no-opping).
+    static let networkErrorStaleGrace: TimeInterval = 48 * 60 * 60
+
     /// Creates a new caching media service.
     /// - Parameters:
     ///   - wrapped: The underlying media service to wrap
@@ -133,9 +141,17 @@ final class CachingMediaService: MediaService {
                 self?.diskCacheStore?.set(entry, for: key)
             })
             .catch { [weak self] error -> AnyPublisher<T, Error> in
-                // On network failure, fall back to stale disk cache
-                if let staleL2: CacheEntry<T> = self?.diskCacheStore?.get(for: key) {
-                    Logger.shared.service("Network error: serving stale L2 for \(label)", level: .debug)
+                // On network failure, fall back to disk cache only if still within the
+                // bounded staleness grace window — otherwise propagate the error so the
+                // interactor surfaces an error/offline state instead of a dead backend
+                // looking like success forever (and pull-to-refresh silently no-opping).
+                if let staleL2: CacheEntry<T> = self?.diskCacheStore?.get(for: key),
+                   !staleL2.isExpired(ttl: Self.networkErrorStaleGrace)
+                {
+                    Logger.shared.service(
+                        "Network error, serving bounded-stale L2 for \(label): \(error)",
+                        level: .warning
+                    )
                     return Just(staleL2.data)
                         .setFailureType(to: Error.self)
                         .eraseToAnyPublisher()

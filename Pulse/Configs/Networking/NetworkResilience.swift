@@ -36,9 +36,13 @@ extension Publisher {
         scheduler: some Scheduler
     ) -> AnyPublisher<Output, Failure> {
         self.catch { error -> AnyPublisher<Output, Failure> in
-            guard maxRetries > 0 else {
+            // Only retry transient network conditions. Deterministic failures
+            // (decode errors, empty results, 4xx) won't change on retry, so
+            // passing them straight through avoids wasting the backoff budget
+            // (~3s) before the cache falls back.
+            guard maxRetries > 0, Self.isRetryable(error) else {
                 Logger.shared.service(
-                    "Network retry exhausted",
+                    maxRetries > 0 ? "Network error not retryable, propagating" : "Network retry exhausted",
                     level: .debug
                 )
                 return Fail(error: error).eraseToAnyPublisher()
@@ -61,5 +65,28 @@ extension Publisher {
                 .eraseToAnyPublisher()
         }
         .eraseToAnyPublisher()
+    }
+
+    /// Determines whether an error represents a transient network condition worth retrying.
+    ///
+    /// Retryable: `URLError` codes that reflect a temporary connectivity problem
+    /// (timeout, connection lost, can't connect, no internet, DNS failure) — including
+    /// the synthetic `.timedOut` injected by `withNetworkResilience`'s per-attempt timeout.
+    ///
+    /// Non-retryable (propagated immediately): decode/parse errors, empty-result
+    /// `URLError(.resourceUnavailable)`, bad URLs, and 4xx — all deterministic, so a
+    /// retry would only burn the backoff budget before the cache fallback runs.
+    static func isRetryable(_ error: Error) -> Bool {
+        guard let urlError = error as? URLError else { return false }
+        switch urlError.code {
+        case .timedOut,
+             .networkConnectionLost,
+             .cannotConnectToHost,
+             .notConnectedToInternet,
+             .dnsLookupFailed:
+            return true
+        default:
+            return false
+        }
     }
 }

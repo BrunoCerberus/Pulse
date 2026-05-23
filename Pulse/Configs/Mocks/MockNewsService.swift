@@ -253,6 +253,10 @@ final class MockStorageService: StorageService {
         try await clearUserPreferences()
         try await clearReadingHistory()
     }
+
+    func deduplicate() async throws -> Bool {
+        false
+    }
 }
 
 final class MockSummarizationService: SummarizationService, @unchecked Sendable {
