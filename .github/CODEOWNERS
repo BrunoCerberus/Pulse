@@ -1,0 +1,4 @@
+# Default owner for everything in the repo. Review routing only takes effect
+# once branch protection requires code-owner review (Settings → Branches);
+# until then this file is informational.
+* @BrunoCerberus

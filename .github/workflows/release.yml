@@ -1,0 +1,304 @@
+name: Release
+
+# Cut a release without touching a terminal:
+#   • Manual run (workflow_dispatch) — pick patch/minor/major; this bumps
+#     MARKETING_VERSION in project.yml, commits, tags vX.Y.Z, and pushes.
+#   • Tag push (vX.Y.Z) — releases an already-tagged commit as-is.
+#
+# Always: manage the version + publish a GitHub Release with auto-generated
+# notes. The signed device archive + App Store Connect upload is PRE-WIRED BUT
+# DORMANT — a device (iphoneos) Release build runs the Crashlytics dSYM phase,
+# which needs the production GoogleService-Info.plist, and the upload needs the
+# App Store Connect API key; neither is in the repo. The whole archive+upload
+# path activates only once ALL of these secrets exist, so nothing here needs
+# manual setup today (the Release *compile* is already validated on every push
+# to master by ci.yml's Release Build job):
+#   GOOGLE_SERVICE_INFO_PLIST     base64 of Pulse/GoogleService-Info.plist
+#   APP_STORE_CONNECT_API_KEY     full contents of the AuthKey_*.p8 file
+#   APP_STORE_CONNECT_KEY_ID      the key's Key ID
+#   APP_STORE_CONNECT_ISSUER_ID   the issuer ID (App Store Connect → Users and Access → Integrations)
+#   APPLE_TEAM_ID                 10-character Apple Developer Team ID
+
+on:
+  workflow_dispatch:
+    inputs:
+      bump:
+        description: "Semantic version bump"
+        type: choice
+        options: [patch, minor, major]
+        default: patch
+  push:
+    tags: ['v*.*.*']
+
+# Never cancel an in-flight release — a half-cancelled tag/upload is worse
+# than a queued one.
+concurrency:
+  group: release
+  cancel-in-progress: false
+
+permissions: {}
+
+env:
+  HOMEBREW_NO_AUTO_UPDATE: "1"
+
+jobs:
+  release:
+    name: Build & Release
+    runs-on: macos-26
+
+    permissions:
+      contents: write   # version-bump commit, tag push, GitHub Release
+
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
+      with:
+        fetch-depth: 0
+
+    - name: Select Xcode 26.5
+      run: |
+        XCODE_PATH=$(ls -d /Applications/Xcode_26.5*.app 2>/dev/null | head -1)
+        if [ -z "$XCODE_PATH" ]; then
+          echo "::error::Xcode 26.5 not found on runner"
+          ls -d /Applications/Xcode_26*.app || true
+          exit 1
+        fi
+        sudo xcode-select -s "$XCODE_PATH/Contents/Developer"
+        echo "DEVELOPER_DIR=$XCODE_PATH/Contents/Developer" >> "$GITHUB_ENV"
+        xcodebuild -version
+
+    # The device archive + upload path needs BOTH the Firebase config (for the
+    # Crashlytics build phase) and the App Store Connect key (for signing/upload).
+    # Require both, or fall back to GitHub-Release-only.
+    - name: Check for release credentials
+      id: creds
+      env:
+        ASC_KEY: ${{ secrets.APP_STORE_CONNECT_API_KEY }}
+        GSI: ${{ secrets.GOOGLE_SERVICE_INFO_PLIST }}
+      run: |
+        if [ -n "$ASC_KEY" ] && [ -n "$GSI" ]; then
+          echo "enabled=true" >> "$GITHUB_OUTPUT"
+          echo "Firebase config + App Store Connect key present — signed archive + upload will run."
+        else
+          echo "enabled=false" >> "$GITHUB_OUTPUT"
+          echo "Missing GOOGLE_SERVICE_INFO_PLIST and/or APP_STORE_CONNECT_API_KEY — GitHub Release only."
+        fi
+
+    # workflow_dispatch lets the user pick ANY branch in the Actions UI. A
+    # release dispatched from a feature branch would bump and push that branch's
+    # HEAD onto master via `git push origin HEAD:master`. Refuse anything but
+    # master. (Tag-push releases set ref_name to the tag and are exempt.)
+    - name: Guard — dispatch must run on master
+      if: github.event_name == 'workflow_dispatch' && github.ref_name != 'master'
+      env:
+        REF: ${{ github.ref_name }}
+      run: |
+        echo "::error::Release must be dispatched from master (got '$REF')."
+        exit 1
+
+    - name: Determine version
+      id: version
+      env:
+        EVENT: ${{ github.event_name }}
+        BUMP: ${{ inputs.bump }}
+        REF_NAME: ${{ github.ref_name }}
+      run: |
+        if [ "$EVENT" = "push" ]; then
+          VERSION="${REF_NAME#v}"
+          TAG="$REF_NAME"
+        else
+          CURRENT=$(grep 'MARKETING_VERSION:' project.yml | head -1 | sed 's/.*"\(.*\)"/\1/')
+          MAJOR=$(echo "$CURRENT" | cut -d. -f1)
+          MINOR=$(echo "$CURRENT" | cut -d. -f2)
+          PATCH=$(echo "$CURRENT" | cut -d. -f3)
+          case "$BUMP" in
+            major) MAJOR=$((MAJOR + 1)); MINOR=0; PATCH=0 ;;
+            minor) MINOR=$((MINOR + 1)); PATCH=0 ;;
+            *)     PATCH=$((PATCH + 1)) ;;
+          esac
+          VERSION="$MAJOR.$MINOR.$PATCH"
+          TAG="v$VERSION"
+        fi
+        echo "version=$VERSION" >> "$GITHUB_OUTPUT"
+        echo "tag=$TAG" >> "$GITHUB_OUTPUT"
+        echo "Release version: $VERSION (tag $TAG)"
+
+    - name: Apply version bump
+      if: github.event_name == 'workflow_dispatch'
+      env:
+        VERSION: ${{ steps.version.outputs.version }}
+      run: |
+        # Value-agnostic: rewrite every MARKETING_VERSION regardless of its
+        # current value, so the app + widget targets stay in lockstep even if
+        # they ever drift (a value-matching sed would silently skip the stragglers).
+        sed -i '' -E 's/(MARKETING_VERSION:[[:space:]]*")[^"]+(")/\1'"$VERSION"'\2/g' project.yml
+        echo "Set MARKETING_VERSION to $VERSION:"
+        grep -n 'MARKETING_VERSION:' project.yml
+
+    # ----- Device archive + App Store Connect upload (dormant until secrets) -----
+    # Everything from here to the upload runs only when both credentials exist.
+
+    - name: Cache Homebrew packages
+      if: steps.creds.outputs.enabled == 'true'
+      uses: actions/cache@27d5ce7f107fe9357f9df03efb73ab90386fccae # v5.0.5
+      with:
+        path: |
+          ~/Library/Caches/Homebrew
+          /usr/local/Homebrew
+        key: ${{ runner.os }}-brew-v1
+        restore-keys: |
+          ${{ runner.os }}-brew-
+
+    - name: Cache SPM dependencies
+      if: steps.creds.outputs.enabled == 'true'
+      uses: actions/cache@27d5ce7f107fe9357f9df03efb73ab90386fccae # v5.0.5
+      with:
+        path: |
+          Pulse.xcodeproj/project.xcworkspace/xcshareddata/swiftpm
+          ~/Library/Caches/org.swift.swiftpm
+        key: ${{ runner.os }}-spm-v10
+
+    # Decode the Firebase config into the source tree BEFORE `make generate`, so
+    # XcodeGen includes it as a bundled resource and the Crashlytics build phase
+    # finds it. Written to Pulse/ alongside Info.plist (the gitignored location).
+    - name: Provision Firebase config
+      if: steps.creds.outputs.enabled == 'true'
+      env:
+        GSI: ${{ secrets.GOOGLE_SERVICE_INFO_PLIST }}
+      run: |
+        printf '%s' "$GSI" | base64 --decode > Pulse/GoogleService-Info.plist
+        echo "Wrote Pulse/GoogleService-Info.plist ($(wc -c < Pulse/GoogleService-Info.plist) bytes)"
+
+    - name: Install XcodeGen
+      if: steps.creds.outputs.enabled == 'true'
+      run: brew install xcodegen
+
+    - name: Generate Xcode project
+      if: steps.creds.outputs.enabled == 'true'
+      run: make generate
+
+    - name: Resolve Package Dependencies
+      if: steps.creds.outputs.enabled == 'true'
+      run: |
+        xcodebuild -resolvePackageDependencies \
+          -project Pulse.xcodeproj \
+          -scheme PulseProd \
+          -onlyUsePackageVersionsFromResolvedFile
+
+    # Signing is automatic via the App Store Connect API key
+    # (-allowProvisioningUpdates) — no certificates or profiles to manage.
+    - name: Archive & upload to App Store Connect
+      if: steps.creds.outputs.enabled == 'true'
+      env:
+        ASC_KEY: ${{ secrets.APP_STORE_CONNECT_API_KEY }}
+        ASC_KEY_ID: ${{ secrets.APP_STORE_CONNECT_KEY_ID }}
+        ASC_ISSUER_ID: ${{ secrets.APP_STORE_CONNECT_ISSUER_ID }}
+        TEAM_ID: ${{ secrets.APPLE_TEAM_ID }}
+        VERSION: ${{ steps.version.outputs.version }}
+      run: |
+        set -euo pipefail
+        KEY_DIR="$RUNNER_TEMP/asc"
+        mkdir -p "$KEY_DIR"
+        KEY_PATH="$KEY_DIR/AuthKey_${ASC_KEY_ID}.p8"
+        printf '%s' "$ASC_KEY" > "$KEY_PATH"
+
+        xcodebuild archive \
+          -project Pulse.xcodeproj \
+          -scheme PulseProd \
+          -configuration Release \
+          -destination 'generic/platform=iOS' \
+          -archivePath build/Pulse.xcarchive \
+          -onlyUsePackageVersionsFromResolvedFile \
+          -skipMacroValidation \
+          -allowProvisioningUpdates \
+          -authenticationKeyPath "$KEY_PATH" \
+          -authenticationKeyID "$ASC_KEY_ID" \
+          -authenticationKeyIssuerID "$ASC_ISSUER_ID"
+
+        cat > "$KEY_DIR/ExportOptions.plist" <<PLIST
+        <?xml version="1.0" encoding="UTF-8"?>
+        <!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+        <plist version="1.0">
+        <dict>
+          <key>method</key><string>app-store-connect</string>
+          <key>destination</key><string>upload</string>
+          <key>signingStyle</key><string>automatic</string>
+          <key>teamID</key><string>${TEAM_ID}</string>
+        </dict>
+        </plist>
+        PLIST
+
+        xcodebuild -exportArchive \
+          -archivePath build/Pulse.xcarchive \
+          -exportOptionsPlist "$KEY_DIR/ExportOptions.plist" \
+          -exportPath build/export \
+          -allowProvisioningUpdates \
+          -authenticationKeyPath "$KEY_PATH" \
+          -authenticationKeyID "$ASC_KEY_ID" \
+          -authenticationKeyIssuerID "$ASC_ISSUER_ID"
+
+        rm -f "$KEY_PATH"
+        echo "Uploaded build $VERSION to App Store Connect (TestFlight)."
+
+    # When credentials are present, the archive + upload above must succeed
+    # before this runs (a failing step fails the job), so a broken Release build
+    # never produces a tag. Without credentials there is no local archive —
+    # validation is inherited from master, which ci.yml's Release Build + test
+    # suite gate on every push, and this dispatch is guarded to master only.
+    - name: Commit, tag and push
+      if: github.event_name == 'workflow_dispatch'
+      env:
+        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        GH_REPO: ${{ github.repository }}
+        TAG: ${{ steps.version.outputs.tag }}
+      run: |
+        git config user.name "github-actions[bot]"
+        git config user.email "github-actions[bot]@users.noreply.github.com"
+        git remote set-url origin "https://x-access-token:${GITHUB_TOKEN}@github.com/${GH_REPO}.git"
+        # project.yml is the only tracked change; GoogleService-Info.plist is
+        # gitignored so it won't be committed even when provisioned.
+        git add project.yml
+        git commit -m "chore: release ${TAG}"
+        git tag -a "$TAG" -m "Release ${TAG}"
+        git push origin HEAD:master
+        git push origin "$TAG"
+
+    - name: Create GitHub Release
+      env:
+        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        TAG: ${{ steps.version.outputs.tag }}
+        UPLOADED: ${{ steps.creds.outputs.enabled }}
+      run: |
+        if [ "$UPLOADED" = "true" ]; then
+          NOTE="Build uploaded to App Store Connect (TestFlight)."
+        else
+          NOTE="GitHub Release only. App Store upload is dormant — add GOOGLE_SERVICE_INFO_PLIST, APP_STORE_CONNECT_* and APPLE_TEAM_ID secrets to enable the signed archive + upload."
+        fi
+        # Gate on the actual "already exists" condition so real failures
+        # (network, auth, permissions) surface instead of being swallowed by `||`.
+        if gh release view "$TAG" >/dev/null 2>&1; then
+          gh release edit "$TAG" --notes "$NOTE"
+        else
+          gh release create "$TAG" --title "$TAG" --target master --generate-notes --notes "$NOTE"
+        fi
+
+    - name: Release summary
+      if: always()
+      env:
+        VERSION: ${{ steps.version.outputs.version }}
+        TAG: ${{ steps.version.outputs.tag }}
+        UPLOADED: ${{ steps.creds.outputs.enabled }}
+      run: |
+        {
+          echo "## Release"
+          echo ""
+          echo "| Field | Value |"
+          echo "|-------|-------|"
+          echo "| Version | ${VERSION} |"
+          echo "| Tag | ${TAG} |"
+          if [ "$UPLOADED" = "true" ]; then
+            echo "| App Store upload | Uploaded to App Store Connect |"
+          else
+            echo "| App Store upload | Dormant (add Firebase + App Store Connect secrets to enable) |"
+          fi
+        } >> "$GITHUB_STEP_SUMMARY"

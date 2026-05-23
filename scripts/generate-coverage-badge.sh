@@ -1,8 +1,10 @@
 #!/bin/bash
 
-# Generate coverage badge from test results
+# Generate coverage badge from test results.
+# Usage: generate-coverage-badge.sh [path/to/Result.xcresult]
+# Defaults to ./TestResults.xcresult when no path is given.
 
-RESULT_BUNDLE="./TestResults.xcresult"
+RESULT_BUNDLE="${1:-./TestResults.xcresult}"
 BADGE_DIR="./badges"
 
 if [ ! -d "$RESULT_BUNDLE" ]; then
