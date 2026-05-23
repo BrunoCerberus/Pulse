@@ -32,7 +32,7 @@ final class ReadingHistoryDomainInteractor: CombineInteractor {
             storageService = try serviceLocator.retrieve(StorageService.self)
         } catch {
             Logger.shared.service("Failed to retrieve StorageService: \(error)", level: .warning)
-            storageService = LiveStorageService()
+            storageService = LiveStorageService(enableCloudKit: false)
         }
 
         analyticsService = try? serviceLocator.retrieve(AnalyticsService.self)

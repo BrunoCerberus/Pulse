@@ -70,6 +70,40 @@ struct LiveStorageServiceTests {
         #expect(bookmarks.first?.id == testArticle.id)
     }
 
+    // MARK: - Deduplication (H8)
+
+    @Test("deduplicate collapses CloudKit-merged duplicate bookmarks, keeping earliest")
+    func deduplicateCollapsesDuplicateBookmarks() async throws {
+        // Simulate the duplicate rows a cross-device CloudKit merge can leave by
+        // inserting two BookmarkedArticle rows with the same articleID directly
+        // (the service API itself dedupes, so this is the only way to create them).
+        let context = sut.modelContainer.mainContext
+        let older = BookmarkedArticle(from: testArticle)
+        older.savedAt = Self.referenceDate
+        let newer = BookmarkedArticle(from: testArticle)
+        newer.savedAt = Self.referenceDate.addingTimeInterval(60)
+        context.insert(older)
+        context.insert(newer)
+        try context.save()
+        #expect(try context.fetch(FetchDescriptor<BookmarkedArticle>()).count == 2)
+
+        let changed = try await sut.deduplicate()
+
+        #expect(changed == true)
+        let rows = try context.fetch(FetchDescriptor<BookmarkedArticle>())
+        #expect(rows.count == 1)
+        #expect(rows.first?.articleID == testArticle.id)
+        #expect(rows.first?.savedAt == Self.referenceDate) // earliest survivor kept
+    }
+
+    @Test("deduplicate returns false when there are no duplicates")
+    func deduplicateNoOpWhenUnique() async throws {
+        try await sut.saveArticle(testArticle)
+        let changed = try await sut.deduplicate()
+        #expect(changed == false)
+        #expect(try await sut.fetchBookmarkedArticles().count == 1)
+    }
+
     @Test("Delete article removes bookmark")
     func deleteArticleRemovesBookmark() async throws {
         try await sut.saveArticle(testArticle)

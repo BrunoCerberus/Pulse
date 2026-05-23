@@ -118,7 +118,7 @@ build-release:
 test:
 	@echo "Running all tests on iPhone Air (iOS latest)..."
 	@make clean-packages
-	@if xcodebuild clean test -project Pulse.xcodeproj -scheme PulseDev -destination 'platform=iOS Simulator,name=iPhone Air,OS=latest' CODE_SIGNING_ALLOWED=NO -skipMacroValidation 2>&1 | tee /tmp/test_output.log; then \
+	@set -o pipefail; if xcodebuild clean test -project Pulse.xcodeproj -scheme PulseDev -destination 'platform=iOS Simulator,name=iPhone Air,OS=latest' CODE_SIGNING_ALLOWED=NO -skipMacroValidation 2>&1 | tee /tmp/test_output.log; then \
 		echo "All tests completed successfully!"; \
 		grep -E "(Test run.*passed|Test run.*failed)" /tmp/test_output.log | tail -2; \
 	else \
@@ -172,7 +172,7 @@ coverage-badge:
 test-unit:
 	@echo "Running unit tests on iPhone Air (iOS latest)..."
 	@make clean-packages
-	@if xcodebuild clean test -project Pulse.xcodeproj -scheme PulseDev -only-testing:PulseTests -destination 'platform=iOS Simulator,name=iPhone Air,OS=latest' CODE_SIGNING_ALLOWED=NO -skipMacroValidation 2>&1 | tee /tmp/test_output.log; then \
+	@set -o pipefail; if xcodebuild clean test -project Pulse.xcodeproj -scheme PulseDev -only-testing:PulseTests -destination 'platform=iOS Simulator,name=iPhone Air,OS=latest' CODE_SIGNING_ALLOWED=NO -skipMacroValidation 2>&1 | tee /tmp/test_output.log; then \
 		echo "Unit tests completed successfully!"; \
 		grep -E "(Test run.*passed|Test run.*failed)" /tmp/test_output.log | tail -5; \
 	else \
@@ -188,7 +188,7 @@ test-unit:
 test-ui:
 	@echo "Running UI tests on iPhone Air (iOS latest)..."
 	@make clean-packages
-	@if xcodebuild clean test -project Pulse.xcodeproj -scheme PulseDev -only-testing:PulseUITests -destination 'platform=iOS Simulator,name=iPhone Air,OS=latest' CODE_SIGNING_ALLOWED=NO -skipMacroValidation 2>&1 | tee /tmp/test_output.log; then \
+	@set -o pipefail; if xcodebuild clean test -project Pulse.xcodeproj -scheme PulseDev -only-testing:PulseUITests -destination 'platform=iOS Simulator,name=iPhone Air,OS=latest' CODE_SIGNING_ALLOWED=NO -skipMacroValidation 2>&1 | tee /tmp/test_output.log; then \
 		echo "UI tests completed successfully!"; \
 		grep -E "(Test run.*passed|Test run.*failed)" /tmp/test_output.log | tail -1; \
 	else \
@@ -204,7 +204,7 @@ test-ui:
 test-snapshot:
 	@echo "Running snapshot tests on iPhone Air (iOS latest)..."
 	@make clean-packages
-	@if xcodebuild clean test -project Pulse.xcodeproj -scheme PulseSnapshotTests -destination 'platform=iOS Simulator,name=iPhone Air,OS=latest' CODE_SIGNING_ALLOWED=NO -skipMacroValidation 2>&1 | tee /tmp/test_output.log; then \
+	@set -o pipefail; if xcodebuild clean test -project Pulse.xcodeproj -scheme PulseSnapshotTests -destination 'platform=iOS Simulator,name=iPhone Air,OS=latest' CODE_SIGNING_ALLOWED=NO -skipMacroValidation 2>&1 | tee /tmp/test_output.log; then \
 		echo "Snapshot tests completed successfully!"; \
 		grep -E "(Test run.*passed|Test run.*failed)" /tmp/test_output.log | tail -1; \
 	else \

@@ -36,6 +36,11 @@ final class TopicExtractionDrainer {
     /// actor outside `deinit`, so this is safe in practice.
     private nonisolated(unsafe) var observer: NSObjectProtocol?
     private var currentDrainTask: Task<Void, Never>?
+    /// Set when a kick arrives while a drain is already in flight (M4). The
+    /// running coalescer loops once more after the current pass so events
+    /// enqueued mid-drain still get processed instead of waiting for the next
+    /// backgrounding.
+    private var rerunRequested = false
 
     init(
         engagementService: EngagementEventsService,
@@ -78,19 +83,41 @@ final class TopicExtractionDrainer {
     }
 
     private func performDrainCoalesced(batchSize: Int) async {
+        // A drain is already running: request one more pass so events enqueued
+        // while it runs get processed (M4), then await the in-flight task. The
+        // owning runner below picks up `rerunRequested` and loops.
         if let currentDrainTask, !currentDrainTask.isCancelled {
+            rerunRequested = true
             await currentDrainTask.value
             return
         }
         let task = Task { [weak self] in
             guard let self else { return }
-            await self.performDrain(batchSize: batchSize)
+            // Loop while a kick arrived mid-drain. Reset the flag *before* each
+            // pass so only kicks that land during/after that pass trigger a
+            // rerun (and a kick during the final `performDrain` is still seen
+            // by the `while`). Cancellation / memory-pressure stop conditions
+            // inside `performDrain` still apply per pass — both leave the queue
+            // intact for a later attempt.
+            repeat {
+                self.rerunRequested = false
+                await self.performDrain(batchSize: batchSize)
+            } while self.rerunRequested && !Task.isCancelled
         }
         currentDrainTask = task
         await task.value
+        // Clear ownership but DON'T reset `rerunRequested` here: a kick that
+        // landed in the gap between the task's final `while` exit and this
+        // continuation resuming must not be lost. Leaving the flag set means
+        // the next `performDrainCoalesced` (or the check below) still drains
+        // those events.
         currentDrainTask = nil
+        if rerunRequested, !Task.isCancelled {
+            await performDrainCoalesced(batchSize: batchSize)
+        }
     }
 
+    // swiftlint:disable:next function_body_length
     private func performDrain(batchSize: Int) async {
         // Box every service before the first await — the protocols aren't
         // declared `Sendable`, and Swift 6 strict concurrency conservatively
@@ -123,12 +150,13 @@ final class TopicExtractionDrainer {
             return
         }
 
-        // Mark each event processed *inside* the loop, immediately after a
-        // successful `applyTags` (or a non-recoverable extraction error).
-        // Doing this per-event instead of batching at the end of the drain
-        // limits the double-count window: if `markProcessed` fails on one
-        // event, only that event's tags get re-applied on the next drain,
-        // not the whole batch's worth of weight.
+        // Mark each event processed *inside* the loop, BEFORE applying its
+        // tags (M5). Removing the event from the durable queue first means a
+        // `markProcessed` failure costs us one signal rather than re-applying
+        // that event's additive weight on every future drain (unbounded
+        // inflation). For best-effort personalization, "lose one signal" beats
+        // "double-count forever". Per-event (vs. batched at end-of-drain) keeps
+        // any single failure from forfeiting the whole batch.
         for event in pending {
             if Task.isCancelled { break }
             do {
@@ -136,13 +164,24 @@ final class TopicExtractionDrainer {
                     title: event.articleTitle,
                     summary: event.articleSummary
                 )
-                await applyTags(tags, for: event, profile: profile)
-                try? await engagement.value.markProcessed([event.id])
-            } catch let error as LLMError where error == .memoryPressure {
-                // Stop the batch and DON'T mark anything processed —
-                // memory pressure is transient.
+                do {
+                    try await engagement.value.markProcessed([event.id])
+                    await applyTags(tags, for: event, profile: profile)
+                } catch {
+                    Logger.shared.service(
+                        "TopicExtractionDrainer: markProcessed failed for \(event.articleID); skipping apply: \(error)",
+                        level: .warning
+                    )
+                    break
+                }
+            } catch let error as LLMError where error == .memoryPressure || error == .busy {
+                // Stop the batch and DON'T mark anything processed — both
+                // memory pressure and a busy model (a foreground digest /
+                // summarization holding the shared single-context LLM, H3) are
+                // transient. Leaving the events queued lets the next background
+                // drain retry them instead of dropping the engagement signal.
                 Logger.shared.service(
-                    "TopicExtractionDrainer: memory pressure, stopping batch",
+                    "TopicExtractionDrainer: \(error == .busy ? "model busy" : "memory pressure"), stopping batch",
                     level: .warning
                 )
                 break
@@ -165,6 +204,27 @@ final class TopicExtractionDrainer {
     ) async {
         guard !tags.isEmpty else { return }
         let perTagWeight = event.weight / Double(tags.count)
+
+        // Prefer the batched API so all of this event's tags land in a single
+        // save + a single `.interestProfileDidChange` broadcast (M14) — one
+        // `ForYou` rescore per event instead of one per tag. `upsertMany` is a
+        // concrete affordance of `LiveInterestProfileService`; the protocol
+        // can't expose it without an out-of-scope change, so fall back to the
+        // per-tag protocol API for mocks / other implementations.
+        if let live = profile.value as? LiveInterestProfileService {
+            let upserts = tags.map { tag in
+                InterestTopicUpsert(
+                    topicID: tag,
+                    displayName: TopicExtractionPromptBuilder.displayName(for: tag),
+                    weightDelta: perTagWeight,
+                    source: .extracted,
+                    category: event.categoryRaw
+                )
+            }
+            try? await live.upsertMany(upserts)
+            return
+        }
+
         for tag in tags {
             try? await profile.value.upsert(
                 topicID: tag,

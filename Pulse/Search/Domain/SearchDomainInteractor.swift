@@ -31,6 +31,7 @@ final class SearchDomainInteractor: CombineInteractor {
     private let suggestionQuerySubject = PassthroughSubject<String, Never>()
     private var cancellables = Set<AnyCancellable>()
     private var searchCancellable: AnyCancellable?
+    private var suggestionCancellable: AnyCancellable?
     private var backgroundTasks = Set<Task<Void, Never>>()
 
     var statePublisher: AnyPublisher<DomainState, Never> {
@@ -53,7 +54,7 @@ final class SearchDomainInteractor: CombineInteractor {
             storageService = try serviceLocator.retrieve(StorageService.self)
         } catch {
             Logger.shared.service("Failed to retrieve StorageService: \(error)", level: .warning)
-            storageService = LiveStorageService()
+            storageService = LiveStorageService(enableCloudKit: false)
         }
 
         analyticsService = try? serviceLocator.retrieve(AnalyticsService.self)
@@ -84,14 +85,17 @@ final class SearchDomainInteractor: CombineInteractor {
     }
 
     private func fetchSuggestions(for query: String) {
-        searchService.getSuggestions(for: query)
+        // Supersede the previous suggestion request so out-of-order responses can't overwrite
+        // newer suggestions, and subscriptions don't accumulate per debounced keystroke. Kept
+        // separate from `searchCancellable` so suggestions and results don't cancel each other.
+        suggestionCancellable?.cancel()
+        suggestionCancellable = searchService.getSuggestions(for: query)
             .receive(on: DispatchQueue.main)
             .sink { [weak self] suggestions in
                 self?.updateState { state in
                     state.suggestions = suggestions
                 }
             }
-            .store(in: &cancellables)
     }
 
     // swiftlint:disable:next cyclomatic_complexity
@@ -208,7 +212,11 @@ final class SearchDomainInteractor: CombineInteractor {
 
         let nextPage = currentState.currentPage + 1
 
-        searchService.search(
+        // Use `searchCancellable` (not `cancellables`) so a query change mid-pagination cancels
+        // this in-flight page — otherwise a stale page appends onto the new query's results and
+        // corrupts currentPage/hasMorePages. loadMore and performSearch never coexist: changing
+        // the query invalidates pagination.
+        searchCancellable = searchService.search(
             query: currentState.query,
             page: nextPage,
             sortBy: currentState.sortBy.rawValue
@@ -230,7 +238,6 @@ final class SearchDomainInteractor: CombineInteractor {
                 state.hasMorePages = articles.count >= 20
             }
         }
-        .store(in: &cancellables)
     }
 
     private func clearResults() {

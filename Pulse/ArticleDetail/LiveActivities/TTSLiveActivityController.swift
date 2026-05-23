@@ -26,6 +26,13 @@ final class TTSLiveActivityController {
     /// dominate the snapshot the OS captures for the app switcher.
     private static let maxLabelLength = 100
 
+    /// How far in the future to set each activity's `staleDate`. ActivityKit will
+    /// auto-stale (and the OS can dismiss) an activity that isn't refreshed within
+    /// this window — the safety net for an orphaned activity whose owning
+    /// interactor was deallocated without ending it. Refreshed on every `update`,
+    /// which the TTS progress publisher fires frequently while playing.
+    private static let staleInterval: TimeInterval = 5 * 60
+
     private init() {}
 
     // MARK: - Lifecycle
@@ -64,7 +71,7 @@ final class TTSLiveActivityController {
         do {
             let activity = try Activity<TTSActivityAttributes>.request(
                 attributes: attributes,
-                content: .init(state: initialState, staleDate: nil),
+                content: .init(state: initialState, staleDate: Date().addingTimeInterval(Self.staleInterval)),
                 pushType: nil
             )
             currentActivity = activity
@@ -93,7 +100,11 @@ final class TTSLiveActivityController {
             speedLabel: speedLabel
         )
 
-        await activity.update(ActivityContent(state: newState, staleDate: nil))
+        // Refresh the stale date on every update so a live, actively-updating
+        // activity never goes stale, while an orphaned one (no further updates)
+        // stales after `staleInterval`.
+        let staleDate = Date().addingTimeInterval(Self.staleInterval)
+        await activity.update(ActivityContent(state: newState, staleDate: staleDate))
     }
 
     /// Ends the current activity, if any. Safe to call when no activity exists.

@@ -47,8 +47,12 @@ final class PaywallDomainInteractor: CombineInteractor {
         do {
             storeKitService = try serviceLocator.retrieve(StoreKitService.self)
         } catch {
-            Logger.shared.service("Failed to retrieve StoreKitService: \(error)", level: .warning)
-            storeKitService = LiveStoreKitService()
+            // StoreKitService is always registered in registerLiveServices(); reaching here means
+            // a DI misconfiguration. Use a non-listening instance so we do NOT spin up a second
+            // Transaction.updates listener (which would double-observe/finish transactions and let
+            // isPremium diverge from the registered service).
+            Logger.shared.service("Failed to retrieve StoreKitService: \(error)", level: .error)
+            storeKitService = LiveStoreKitService(startListening: false)
         }
 
         analyticsService = try? serviceLocator.retrieve(AnalyticsService.self)

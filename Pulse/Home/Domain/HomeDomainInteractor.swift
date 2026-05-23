@@ -30,7 +30,10 @@ final class HomeDomainInteractor: CombineInteractor {
     let stateSubject = CurrentValueSubject<DomainState, Never>(.initial)
     var cancellables = Set<AnyCancellable>()
     private var backgroundTasks = Set<Task<Void, Never>>()
-    var isLocalPreferenceChange = false
+    /// Tracks the in-flight "current view" headlines fetch (initial load, category change,
+    /// refresh, language-change reload) so a newer fetch supersedes the previous one.
+    /// Pagination uses `cancellables` instead, since load-more must coexist.
+    var headlinesCancellable: AnyCancellable?
     var preferredLanguage: String = "en"
 
     var statePublisher: AnyPublisher<DomainState, Never> {
@@ -53,7 +56,7 @@ final class HomeDomainInteractor: CombineInteractor {
             storageService = try serviceLocator.retrieve(StorageService.self)
         } catch {
             Logger.shared.service("Failed to retrieve StorageService: \(error)", level: .warning)
-            storageService = LiveStorageService()
+            storageService = LiveStorageService(enableCloudKit: false)
         }
 
         do {
@@ -65,16 +68,13 @@ final class HomeDomainInteractor: CombineInteractor {
 
         analyticsService = try? serviceLocator.retrieve(AnalyticsService.self)
 
-        // Observe preference changes to update followed topics when returning from Settings
+        // Observe preference changes to update followed topics when returning from Settings.
+        // Ignore notifications we posted ourselves (from toggleTopic) so we don't redundantly
+        // re-fetch — the local save path already updates state.followedTopics directly.
         NotificationCenter.default.publisher(for: .userPreferencesDidChange)
             .receive(on: DispatchQueue.main)
-            .sink { [weak self] _ in
-                guard let self else { return }
-                // Skip re-fetch when the change originated from our own toggleTopic
-                if self.isLocalPreferenceChange {
-                    self.isLocalPreferenceChange = false
-                    return
-                }
+            .sink { [weak self] note in
+                guard let self, (note.object as AnyObject?) !== self else { return }
                 self.loadFollowedTopicsAndCheckLanguage()
             }
             .store(in: &cancellables)
@@ -300,15 +300,21 @@ private extension HomeDomainInteractor {
 
 extension HomeDomainInteractor {
     func fetchHeadlinesForCurrentCategory(page: Int, isRefreshing: Bool = false) {
+        // Supersede any in-flight "current view" fetch so a late response from the previous
+        // category/language can't overwrite newer state. Pagination uses its own subscription.
+        headlinesCancellable?.cancel()
         let country = "us"
         if let category = currentState.selectedCategory {
-            fetchCategoryHeadlines(category: category, country: country, page: page, isRefreshing: isRefreshing)
-                .sink { _ in }
-                .store(in: &cancellables)
+            headlinesCancellable = fetchCategoryHeadlines(
+                category: category,
+                country: country,
+                page: page,
+                isRefreshing: isRefreshing
+            )
+            .sink { _ in }
         } else {
-            fetchAllHeadlines(country: country, page: page, isRefreshing: isRefreshing)
+            headlinesCancellable = fetchAllHeadlines(country: country, page: page, isRefreshing: isRefreshing)
                 .sink { _ in }
-                .store(in: &cancellables)
         }
     }
 }

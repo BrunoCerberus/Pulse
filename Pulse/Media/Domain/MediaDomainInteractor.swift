@@ -29,6 +29,10 @@ final class MediaDomainInteractor: CombineInteractor {
     let analyticsService: AnalyticsService?
     let stateSubject = CurrentValueSubject<DomainState, Never>(.initial)
     var cancellables = Set<AnyCancellable>()
+    /// Tracks the in-flight "current view" media fetch (initial load, type change, refresh,
+    /// language-change reload) so a newer fetch supersedes the previous one. Pagination uses
+    /// `cancellables` instead, since load-more must coexist.
+    var mediaFetchCancellable: AnyCancellable?
     var preferredLanguage: String = "en"
 
     var statePublisher: AnyPublisher<DomainState, Never> {
@@ -51,7 +55,8 @@ final class MediaDomainInteractor: CombineInteractor {
             settingsService = try serviceLocator.retrieve(SettingsService.self)
         } catch {
             Logger.shared.service("Failed to retrieve SettingsService: \(error)", level: .warning)
-            let storageService = (try? serviceLocator.retrieve(StorageService.self)) ?? LiveStorageService()
+            let storageService = (try? serviceLocator.retrieve(StorageService.self))
+                ?? LiveStorageService(enableCloudKit: false)
             settingsService = LiveSettingsService(storageService: storageService)
         }
 
@@ -134,7 +139,9 @@ final class MediaDomainInteractor: CombineInteractor {
     private func fetchInitialMedia(selectedType: MediaType?) {
         let language = preferredLanguage
 
-        Publishers.Zip(
+        // Supersede any in-flight "current view" media fetch. Pagination uses its own subscription.
+        mediaFetchCancellable?.cancel()
+        mediaFetchCancellable = Publishers.Zip(
             mediaService.fetchFeaturedMedia(type: selectedType, language: language),
             mediaService.fetchMedia(type: selectedType, language: language, page: 1)
         )
@@ -159,7 +166,6 @@ final class MediaDomainInteractor: CombineInteractor {
                 state.isOfflineError = false
             }
         }
-        .store(in: &cancellables)
     }
 
     private func loadMoreMedia() {
@@ -213,7 +219,9 @@ final class MediaDomainInteractor: CombineInteractor {
         let selectedType = currentState.selectedType
         let language = preferredLanguage
 
-        Publishers.Zip(
+        // Supersede any in-flight "current view" media fetch. Pagination uses its own subscription.
+        mediaFetchCancellable?.cancel()
+        mediaFetchCancellable = Publishers.Zip(
             mediaService.fetchFeaturedMedia(type: selectedType, language: language),
             mediaService.fetchMedia(type: selectedType, language: language, page: 1)
         )
@@ -238,7 +246,6 @@ final class MediaDomainInteractor: CombineInteractor {
                 state.isOfflineError = false
             }
         }
-        .store(in: &cancellables)
     }
 
     private func handleSelectMediaType(_ type: MediaType?) {
@@ -256,9 +263,12 @@ final class MediaDomainInteractor: CombineInteractor {
             state.error = nil
         }
 
-        // Fetch both featured media and first page of media items for new type
+        // Fetch both featured media and first page of media items for new type.
+        // Supersede any in-flight "current view" media fetch so a late response from the previous
+        // type can't overwrite newer state. Pagination uses its own subscription.
         let language = preferredLanguage
-        Publishers.Zip(
+        mediaFetchCancellable?.cancel()
+        mediaFetchCancellable = Publishers.Zip(
             mediaService.fetchFeaturedMedia(type: type, language: language),
             mediaService.fetchMedia(type: type, language: language, page: 1)
         )
@@ -283,7 +293,6 @@ final class MediaDomainInteractor: CombineInteractor {
                 state.isOfflineError = false
             }
         }
-        .store(in: &cancellables)
     }
 
     private func selectMedia(_ media: Article) {

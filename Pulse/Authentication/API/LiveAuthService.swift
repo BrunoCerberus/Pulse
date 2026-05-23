@@ -180,12 +180,22 @@ final class LiveAuthService: NSObject, AuthService {
 
     @MainActor
     private func performDelete(presenting viewController: UIViewController) async throws {
-        guard let isAnonymous = Auth.auth().currentUser?.isAnonymous else {
+        // Capture the user's identity ONCE. Account deletion is an irreversible,
+        // multi-step (re-auth → re-auth-confirm → delete) operation; the
+        // auth-state listener can flip `Auth.auth().currentUser` between steps
+        // (token refresh, sign-out on another thread, etc.). Re-reading
+        // `currentUser` in each step could act on a different — or absent —
+        // user. We keep only Sendable values (`uid`, `isAnonymous`) out of this
+        // read; the non-Sendable `User` never escapes. Each subsequent step
+        // asserts `currentUser?.uid == capturedUID` before acting.
+        guard let currentUser = Auth.auth().currentUser else {
             throw AuthError.noCurrentUser
         }
+        let uid = currentUser.uid
+        let isAnonymous = currentUser.isAnonymous
 
         do {
-            try await deleteCurrentFirebaseUser()
+            try await deleteCurrentFirebaseUser(expectedUID: uid)
         } catch {
             let nsError = error as NSError
             guard AuthErrorCode(rawValue: nsError.code) == .requiresRecentLogin else {
@@ -210,18 +220,25 @@ final class LiveAuthService: NSObject, AuthService {
                 )
             }
 
-            let credential = try await freshCredentialForCurrentUser(presenting: viewController)
-            try await reauthenticateCurrentFirebaseUser(with: credential)
-            try await deleteCurrentFirebaseUser()
+            let credential = try await freshCredentialForCurrentUser(
+                presenting: viewController,
+                expectedUID: uid
+            )
+            try await reauthenticateCurrentFirebaseUser(with: credential, expectedUID: uid)
+            try await deleteCurrentFirebaseUser(expectedUID: uid)
         }
     }
 
     /// Wraps Firebase's callback-based `delete` so we never hold a non-Sendable `User`
     /// reference across an `await`, which Swift 6.2 strict concurrency flags as a data race.
+    ///
+    /// `expectedUID` is the uid captured at the start of `performDelete`. If the
+    /// live `currentUser` no longer matches (auth-state flip mid-deletion) we
+    /// abort rather than delete a different/absent user.
     @MainActor
-    private func deleteCurrentFirebaseUser() async throws {
+    private func deleteCurrentFirebaseUser(expectedUID: String) async throws {
         try await withCheckedThrowingContinuation { (continuation: CheckedContinuation<Void, Error>) in
-            guard let user = Auth.auth().currentUser else {
+            guard let user = Auth.auth().currentUser, user.uid == expectedUID else {
                 continuation.resume(throwing: AuthError.noCurrentUser)
                 return
             }
@@ -236,9 +253,12 @@ final class LiveAuthService: NSObject, AuthService {
     }
 
     @MainActor
-    private func reauthenticateCurrentFirebaseUser(with credential: AuthCredential) async throws {
+    private func reauthenticateCurrentFirebaseUser(
+        with credential: AuthCredential,
+        expectedUID: String
+    ) async throws {
         try await withCheckedThrowingContinuation { (continuation: CheckedContinuation<Void, Error>) in
-            guard let user = Auth.auth().currentUser else {
+            guard let user = Auth.auth().currentUser, user.uid == expectedUID else {
                 continuation.resume(throwing: AuthError.noCurrentUser)
                 return
             }
@@ -254,9 +274,10 @@ final class LiveAuthService: NSObject, AuthService {
 
     @MainActor
     private func freshCredentialForCurrentUser(
-        presenting viewController: UIViewController
+        presenting viewController: UIViewController,
+        expectedUID: String
     ) async throws -> AuthCredential {
-        guard let user = Auth.auth().currentUser else {
+        guard let user = Auth.auth().currentUser, user.uid == expectedUID else {
             throw AuthError.noCurrentUser
         }
         let isGoogle = user.providerData.contains(where: { $0.providerID == "google.com" })
@@ -340,9 +361,14 @@ extension LiveAuthService: ASAuthorizationControllerDelegate {
               let appleIDToken = appleCredential.identityToken,
               let idTokenString = String(data: appleIDToken, encoding: .utf8)
         else {
-            appleSignInContinuation?.resume(throwing: AuthError.invalidCredential)
-            appleReauthCredentialContinuation?.resume(throwing: AuthError.invalidCredential)
+            // Take-and-nil each continuation before resuming so the trailing
+            // `cleanupAppleSignInState()` can't double-resume them.
+            let signIn = appleSignInContinuation
+            appleSignInContinuation = nil
+            let reauth = appleReauthCredentialContinuation
             appleReauthCredentialContinuation = nil
+            signIn?.resume(throwing: AuthError.invalidCredential)
+            reauth?.resume(throwing: AuthError.invalidCredential)
             cleanupAppleSignInState()
             return
         }
@@ -368,17 +394,25 @@ extension LiveAuthService: ASAuthorizationControllerDelegate {
             return
         }
 
+        // Take-and-nil the continuation synchronously (still on the delegate's
+        // thread, the same context that set it) BEFORE spawning the Task, so the
+        // deferred `cleanupAppleSignInState()` can't resume it a second time and
+        // we don't mutate `appleSignInContinuation` off the delegate thread.
+        // `CheckedContinuation<AuthUser, Error>` is Sendable (AuthUser is a
+        // value type of Sendable members), so the local captures cleanly.
+        let signIn = appleSignInContinuation
+        appleSignInContinuation = nil
         Task {
             defer { cleanupAppleSignInState() }
             do {
                 let authResult = try await Auth.auth().signIn(with: credential)
                 if let user = authResult.user.toAuthUser() {
-                    appleSignInContinuation?.resume(returning: user)
+                    signIn?.resume(returning: user)
                 } else {
-                    appleSignInContinuation?.resume(throwing: AuthError.unknown("Failed to create user"))
+                    signIn?.resume(throwing: AuthError.unknown("Failed to create user"))
                 }
             } catch {
-                appleSignInContinuation?.resume(throwing: AuthError.unknown(error.localizedDescription))
+                signIn?.resume(throwing: AuthError.unknown(error.localizedDescription))
             }
         }
     }
@@ -387,14 +421,33 @@ extension LiveAuthService: ASAuthorizationControllerDelegate {
         let mapped: AuthError = (error as NSError).code == ASAuthorizationError.canceled.rawValue
             ? .signInCancelled
             : .unknown(error.localizedDescription)
-        appleSignInContinuation?.resume(throwing: mapped)
-        appleReauthCredentialContinuation?.resume(throwing: mapped)
+        // Take-and-nil each continuation before resuming so the trailing
+        // `cleanupAppleSignInState()` can't double-resume them.
+        let signIn = appleSignInContinuation
+        appleSignInContinuation = nil
+        let reauth = appleReauthCredentialContinuation
         appleReauthCredentialContinuation = nil
+        signIn?.resume(throwing: mapped)
+        reauth?.resume(throwing: mapped)
         cleanupAppleSignInState()
     }
 
+    /// Tears down all in-flight Apple Sign-In / re-auth state. Any continuation
+    /// still pending here was never resumed by a delegate callback (e.g. the
+    /// controller was dismissed without firing one), so we resume it with a
+    /// cancellation error before niling — leaving it dangling would leak the
+    /// continuation (`SWIFT TASK CONTINUATION MISUSE`) and strand the UI in a
+    /// permanent `isLoading` state. Each continuation is taken-and-niled before
+    /// the resume so this can't double-resume one a delegate already handled.
     private func cleanupAppleSignInState() {
         currentNonce = nil
-        appleSignInContinuation = nil
+        if let pending = appleSignInContinuation {
+            appleSignInContinuation = nil
+            pending.resume(throwing: AuthError.signInCancelled)
+        }
+        if let pendingReauth = appleReauthCredentialContinuation {
+            appleReauthCredentialContinuation = nil
+            pendingReauth.resume(throwing: AuthError.signInCancelled)
+        }
     }
 }

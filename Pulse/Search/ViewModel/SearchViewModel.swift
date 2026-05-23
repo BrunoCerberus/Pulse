@@ -23,6 +23,9 @@ final class SearchViewModel: CombineViewModel, ObservableObject {
     private let interactor: SearchDomainInteractor
     private var cancellables = Set<AnyCancellable>()
     private let searchQuerySubject = PassthroughSubject<String, Never>()
+    /// Query for which `.search` was last dispatched, used to collapse the multiple search
+    /// trigger paths (debounce, submit, suggestion tap) into a single search per user intent.
+    private var lastSearchedQuery: String?
 
     init(serviceLocator: ServiceLocator) {
         self.serviceLocator = serviceLocator
@@ -42,10 +45,15 @@ final class SearchViewModel: CombineViewModel, ObservableObject {
                 searchQuerySubject.send(query)
             }
         case .onSearch:
-            interactor.dispatch(action: .search)
+            // Use the interactor's query (updated synchronously by `.updateQuery`)
+            // rather than `viewState.query`, which lags behind the async state
+            // binding — a submit immediately after a keystroke would otherwise
+            // read the stale (empty) query and skip the search.
+            dispatchSearch(for: interactor.currentState.query)
         case .onLoadMore:
             interactor.dispatch(action: .loadMore)
         case .onClear:
+            lastSearchedQuery = nil
             interactor.dispatch(action: .clearResults)
         case let .onSortChanged(option):
             interactor.dispatch(action: .setSortOption(option))
@@ -55,7 +63,7 @@ final class SearchViewModel: CombineViewModel, ObservableObject {
             interactor.dispatch(action: .clearSelectedArticle)
         case let .onSuggestionTapped(suggestion):
             interactor.dispatch(action: .updateQuery(suggestion))
-            interactor.dispatch(action: .search)
+            dispatchSearch(for: suggestion)
         case let .onBookmarkTapped(articleId):
             interactor.dispatch(action: .bookmarkArticle(articleId: articleId))
         case let .onShareTapped(articleId):
@@ -69,10 +77,20 @@ final class SearchViewModel: CombineViewModel, ObservableObject {
         searchQuerySubject
             .debounce(for: .milliseconds(300), scheduler: DispatchQueue.main)
             .filter { !$0.isEmpty }
-            .sink { [weak self] _ in
-                self?.interactor.dispatch(action: .search)
+            .sink { [weak self] query in
+                self?.dispatchSearch(for: query)
             }
             .store(in: &cancellables)
+    }
+
+    /// Single entry point for triggering a search. Collapses the debounce, submit, and
+    /// suggestion-tap paths into one search per distinct query so a typed query immediately
+    /// followed by submit (or a suggestion tap matching the pending debounce) doesn't fire a
+    /// duplicate network round-trip and duplicate `searchPerformed` analytics event.
+    private func dispatchSearch(for query: String) {
+        guard !query.isEmpty, query != lastSearchedQuery else { return }
+        lastSearchedQuery = query
+        interactor.dispatch(action: .search)
     }
 
     private func setupBindings() {

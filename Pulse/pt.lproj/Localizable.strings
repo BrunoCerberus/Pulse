@@ -508,3 +508,17 @@
 
 /* Common */
 "common.delete" = "Excluir";
+
+/* Errors */
+"error.offline.no_cache" = "Você está offline e não há conteúdo em cache disponível.";
+
+/* LLM errors */
+"llm.error.model_not_loaded" = "O modelo no dispositivo ainda não foi carregado. Tente novamente em instantes.";
+"llm.error.model_load_failed" = "Falha ao carregar o modelo no dispositivo.";
+"llm.error.inference_timeout" = "O modelo no dispositivo demorou muito para responder. Tente novamente.";
+"llm.error.memory_pressure" = "Não há memória suficiente para executar o modelo no dispositivo. Tente fechar outros apps.";
+"llm.error.generation_cancelled" = "Geração cancelada.";
+"llm.error.service_unavailable" = "O modelo no dispositivo está indisponível no momento.";
+"llm.error.tokenization_failed" = "O modelo no dispositivo não conseguiu processar este texto.";
+"llm.error.generation_failed" = "O modelo no dispositivo não conseguiu concluir a geração.";
+"llm.error.busy" = "O modelo no dispositivo está ocupado. Tente novamente em instantes.";

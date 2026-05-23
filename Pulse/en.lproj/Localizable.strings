@@ -508,3 +508,17 @@
 
 /* Common */
 "common.delete" = "Delete";
+
+/* Errors */
+"error.offline.no_cache" = "You're offline and no cached content is available.";
+
+/* LLM errors */
+"llm.error.model_not_loaded" = "The on-device model isn't loaded yet. Please try again in a moment.";
+"llm.error.model_load_failed" = "The on-device model failed to load.";
+"llm.error.inference_timeout" = "The on-device model took too long to respond. Please try again.";
+"llm.error.memory_pressure" = "There isn't enough memory to run the on-device model. Try closing other apps.";
+"llm.error.generation_cancelled" = "Generation was cancelled.";
+"llm.error.service_unavailable" = "The on-device model is unavailable right now.";
+"llm.error.tokenization_failed" = "The on-device model couldn't process this text.";
+"llm.error.generation_failed" = "The on-device model couldn't finish generating.";
+"llm.error.busy" = "The on-device model is busy. Please try again in a moment.";

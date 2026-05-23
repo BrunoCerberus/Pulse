@@ -48,6 +48,14 @@ protocol InterestProfileService {
     /// onboarding.
     func seedFromCategories(_ categories: [NewsCategory]) async throws
 
+    /// Collapses duplicate `InterestTopicModel` rows that a cross-device
+    /// `NSPersistentCloudKitContainer` merge can leave (uniqueness is
+    /// service-enforced, not `@Attribute(.unique)`). Folds duplicate weights
+    /// into the earliest-created survivor. Intended to run after a CloudKit
+    /// sync completes.
+    /// - Returns: `true` if any duplicate rows were removed, `false` otherwise.
+    func deduplicate() async throws -> Bool
+
     /// Emits each time the profile is mutated (every upsert / remove /
     /// reset / seed). Safe to ignore; the corresponding
     /// `Notification.Name.interestProfileDidChange` is also posted for

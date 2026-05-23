@@ -17,8 +17,12 @@ final class DeeplinkRouter {
     /// Cancellable for current article fetch request (one at a time)
     private var articleFetchCancellable: AnyCancellable?
 
-    /// Queued deeplink to process when coordinator becomes available
-    private var queuedDeeplink: Deeplink?
+    /// FIFO buffer of deeplinks received before the coordinator was available
+    /// or while App Lock was engaged. A single optional slot would drop the
+    /// first of two deeplinks arriving back-to-back (e.g. a cold-launch Quick
+    /// Action followed by a `pulse://shared`); the queue preserves all of them
+    /// in arrival order and drains them once routing is unblocked.
+    private var queuedDeeplinks: [Deeplink] = []
 
     init() {
         setupObservers()
@@ -57,9 +61,9 @@ final class DeeplinkRouter {
             }
             .store(in: &cancellables)
 
-        // Flush any queued deeplink the moment App Lock is unlocked. Quick
+        // Flush any queued deeplinks the moment App Lock is unlocked. Quick
         // Actions, push payloads, and `pulse://` launches that arrive while
-        // the app is locked are held in `queuedDeeplink` and routed only
+        // the app is locked are held in `queuedDeeplinks` and routed only
         // after the user authenticates — so the lock screen stays the only
         // visible surface until biometry / passcode succeeds.
         AppLockManager.shared.$isLocked
@@ -73,11 +77,19 @@ final class DeeplinkRouter {
             .store(in: &cancellables)
     }
 
-    /// Processes any queued deeplink that was received before coordinator was available.
+    /// Processes any deeplinks queued before the coordinator was available or
+    /// while App Lock was engaged. Drains the whole buffer in arrival order.
+    ///
+    /// The buffer is cleared up front so that if `route` re-queues an entry
+    /// (still locked / no coordinator) it lands in a fresh buffer rather than
+    /// being re-drained in this same pass — preserving idempotency.
     private func processQueuedDeeplink() {
-        guard let deeplink = queuedDeeplink else { return }
-        queuedDeeplink = nil
-        route(deeplink: deeplink)
+        guard !queuedDeeplinks.isEmpty else { return }
+        let pending = queuedDeeplinks
+        queuedDeeplinks.removeAll()
+        for deeplink in pending {
+            route(deeplink: deeplink)
+        }
     }
 
     /// Routes a deeplink to the appropriate navigation action.
@@ -90,7 +102,7 @@ final class DeeplinkRouter {
     /// - Parameter deeplink: The deeplink to route
     func route(deeplink: Deeplink) {
         if AppLockManager.shared.isLocked {
-            queuedDeeplink = deeplink
+            queuedDeeplinks.append(deeplink)
             return
         }
         performRoute(deeplink: deeplink)
@@ -99,7 +111,7 @@ final class DeeplinkRouter {
     private func performRoute(deeplink: Deeplink) {
         guard let coordinator else {
             // Queue the deeplink for later processing
-            queuedDeeplink = deeplink
+            queuedDeeplinks.append(deeplink)
             return
         }
 

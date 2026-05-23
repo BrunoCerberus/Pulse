@@ -508,3 +508,17 @@
 
 /* Common */
 "common.delete" = "Eliminar";
+
+/* Errors */
+"error.offline.no_cache" = "Estás sin conexión y no hay contenido en caché disponible.";
+
+/* LLM errors */
+"llm.error.model_not_loaded" = "El modelo del dispositivo aún no se ha cargado. Inténtalo de nuevo en un momento.";
+"llm.error.model_load_failed" = "No se pudo cargar el modelo del dispositivo.";
+"llm.error.inference_timeout" = "El modelo del dispositivo tardó demasiado en responder. Inténtalo de nuevo.";
+"llm.error.memory_pressure" = "No hay memoria suficiente para ejecutar el modelo del dispositivo. Cierra otras apps.";
+"llm.error.generation_cancelled" = "Generación cancelada.";
+"llm.error.service_unavailable" = "El modelo del dispositivo no está disponible en este momento.";
+"llm.error.tokenization_failed" = "El modelo del dispositivo no pudo procesar este texto.";
+"llm.error.generation_failed" = "El modelo del dispositivo no pudo completar la generación.";
+"llm.error.busy" = "El modelo del dispositivo está ocupado. Inténtalo de nuevo en un momento.";

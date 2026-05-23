@@ -54,6 +54,10 @@ final class SummarizationDomainInteractor: CombineInteractor {
 
     private func setupBindings() {
         summarizationService.modelStatusPublisher
+            // Services deliver on background queues; hop to main before the sink
+            // mutates `stateSubject` (via `dispatch`), matching every other
+            // interactor. Don't rely on the service to pre-hop.
+            .receive(on: DispatchQueue.main)
             .sink { [weak self] status in
                 self?.dispatch(action: .modelStatusChanged(status))
             }

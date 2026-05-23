@@ -96,6 +96,10 @@ final class MockInterestProfileService: InterestProfileService, @unchecked Senda
         broadcastChange()
     }
 
+    func deduplicate() async throws -> Bool {
+        false
+    }
+
     func seedFromCategories(_ categories: [NewsCategory]) async throws {
         for category in categories {
             try await upsert(

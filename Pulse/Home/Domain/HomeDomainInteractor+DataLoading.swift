@@ -250,10 +250,11 @@ extension HomeDomainInteractor {
                     }
                 },
                 receiveValue: { [weak self] in
-                    // Mark as local change so our notification observer skips the redundant re-fetch
-                    self?.isLocalPreferenceChange = true
-                    // Notify other components that preferences changed
-                    NotificationCenter.default.post(name: .userPreferencesDidChange, object: nil)
+                    guard let self else { return }
+                    // Notify other components that preferences changed. Tag the notification with
+                    // `self` so our own observer skips the redundant re-fetch (state.followedTopics
+                    // was already updated above), while foreign posters still trigger it.
+                    NotificationCenter.default.post(name: .userPreferencesDidChange, object: self)
                 }
             )
             .store(in: &cancellables)

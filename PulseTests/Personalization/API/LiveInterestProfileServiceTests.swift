@@ -53,6 +53,47 @@ struct LiveInterestProfileServiceTests {
         #expect(profile.first?.weight == 3.5)
     }
 
+    // MARK: - Deduplication (H8)
+
+    @Test("deduplicate folds duplicate topic rows: keeps earliest, sums weight")
+    func deduplicateFoldsDuplicateTopics() async throws {
+        // CloudKit can merge two rows with the same topicID from different
+        // devices; insert them directly to reproduce that state.
+        let context = storageService.modelContainer.mainContext
+        let older = InterestTopicModel(from: InterestTopic(
+            topicID: "ai", displayName: "AI", weight: 2.0, category: nil,
+            lastReinforcedAt: Date(timeIntervalSince1970: 1000),
+            createdAt: Date(timeIntervalSince1970: 1000), source: .extracted
+        ))
+        let newer = InterestTopicModel(from: InterestTopic(
+            topicID: "ai", displayName: "AI", weight: 3.0, category: nil,
+            lastReinforcedAt: Date(timeIntervalSince1970: 2000),
+            createdAt: Date(timeIntervalSince1970: 2000), source: .extracted
+        ))
+        context.insert(older)
+        context.insert(newer)
+        try context.save()
+        #expect(try context.fetch(FetchDescriptor<InterestTopicModel>()).count == 2)
+
+        let changed = try await sut.deduplicate()
+
+        #expect(changed == true)
+        let profile = try await sut.fetchProfile()
+        #expect(profile.count == 1)
+        #expect(profile.first?.weight == 5.0) // 2.0 + 3.0 folded into survivor
+        #expect(profile.first?.createdAt == Date(timeIntervalSince1970: 1000)) // earliest kept
+    }
+
+    @Test("deduplicate returns false when topics are unique")
+    func deduplicateNoOpWhenUnique() async throws {
+        try await sut.upsert(
+            topicID: "ai", displayName: "AI",
+            weightDelta: 1.0, source: .extracted, category: nil
+        )
+        let changed = try await sut.deduplicate()
+        #expect(changed == false)
+    }
+
     @Test("Upsert preserves original source and createdAt across re-upsert")
     func upsertPreservesOriginalSource() async throws {
         try await sut.upsert(

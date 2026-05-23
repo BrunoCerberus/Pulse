@@ -36,6 +36,11 @@ enum LLMError: Error, LocalizedError, Equatable {
     case serviceUnavailable
     case tokenizationFailed
     case generationFailed(String)
+    /// A generation was requested while another is already in flight on the
+    /// shared single-context model. Transient — callers should retry shortly
+    /// (H3). Distinct from `.generationFailed` so background work (topic
+    /// extraction) can retry rather than treat it as a poison-pill.
+    case busy
 
     var errorDescription: String? {
         switch self {
@@ -55,6 +60,8 @@ enum LLMError: Error, LocalizedError, Equatable {
             return AppLocalization.localized("llm.error.tokenization_failed")
         case let .generationFailed(reason):
             return AppLocalization.localized("llm.error.generation_failed") + " " + reason
+        case .busy:
+            return AppLocalization.localized("llm.error.busy")
         }
     }
 }
