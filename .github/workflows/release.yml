@@ -240,8 +240,11 @@ jobs:
         rm -f "$KEY_PATH"
         echo "Uploaded build $VERSION to App Store Connect (TestFlight)."
 
-    # Tag/commit only after any archive step succeeds, so a broken Release build
-    # never produces a tag or a published release.
+    # When credentials are present, the archive + upload above must succeed
+    # before this runs (a failing step fails the job), so a broken Release build
+    # never produces a tag. Without credentials there is no local archive —
+    # validation is inherited from master, which ci.yml's Release Build + test
+    # suite gate on every push, and this dispatch is guarded to master only.
     - name: Commit, tag and push
       if: github.event_name == 'workflow_dispatch'
       env:
