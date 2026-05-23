@@ -261,8 +261,26 @@ final class SettingsViewModel: CombineViewModel, ObservableObject {
             .first?.windows.first(where: \.isKeyWindow)?.rootViewController
     }
 
+    // swiftlint:disable function_body_length cyclomatic_complexity
+
+    /// Runs every cleanup step sequentially and returns the list of step
+    /// identifiers that failed. Caller surfaces the list to the user.
+    ///
+    /// `static` — and accepts every dependency it touches as a parameter —
+    /// so the caller can spawn a `Task` that holds the deps strongly
+    /// without capturing `self`. If a `[weak self] Task { … }` wrapper
+    /// were used here instead, the auth-state flip after Firebase
+    /// sign-out / delete would release `SettingsViewModel` before the
+    /// Task body runs, the inner `guard let self` would fail, and the
+    /// cleanup would silently be skipped — exactly the orphan-PII bug
+    /// this method is supposed to prevent.
+    ///
+    /// The previous implementation also fired three async cleanup tasks
+    /// in parallel and returned before any of them had a chance to
+    /// complete. Awaiting each step sequentially closes the
+    /// force-quit-between-delete-and-wipe window on top of the dealloc
+    /// fix above.
     @MainActor
-    // swiftlint:disable:next function_body_length cyclomatic_complexity
     static func clearAllUserData(
         serviceLocator: ServiceLocator,
         themeManager: ThemeManager
@@ -379,6 +397,8 @@ final class SettingsViewModel: CombineViewModel, ObservableObject {
         }
         return failures
     }
+
+    // swiftlint:enable function_body_length cyclomatic_complexity
 
     private func setupBindings() {
         // Use CombineLatest4 directly instead of nested combineLatest to reduce overhead

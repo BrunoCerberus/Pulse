@@ -3,7 +3,25 @@ import SwiftUI
 
 // MARK: - HomeView
 
-// swiftlint:disable:next type_body_length
+// swiftlint:disable type_body_length
+
+/// Main home screen displaying breaking news and headline feeds.
+///
+/// This view follows the generic router pattern for testability, accepting any type
+/// conforming to `HomeNavigationRouter` for navigation handling.
+///
+/// ## Features
+/// - Breaking news carousel at the top
+/// - Scrollable headline feed with infinite scroll
+/// - Pull-to-refresh with cache invalidation
+/// - Settings access via toolbar button
+/// - Article sharing via share sheet
+///
+/// ## Usage
+/// ```swift
+/// HomeView(router: HomeNavigationRouter(coordinator: coordinator),
+///          viewModel: HomeViewModel(serviceLocator: serviceLocator))
+/// ```
 struct HomeView<R: HomeNavigationRouter>: View {
     // MARK: - Properties
 
@@ -361,6 +379,8 @@ struct HomeView<R: HomeNavigationRouter>: View {
         }
     }
 }
+
+// swiftlint:enable type_body_length
 
 #Preview {
     NavigationStack {
