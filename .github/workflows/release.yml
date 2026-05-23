@@ -75,6 +75,18 @@ jobs:
           echo "No App Store Connect key — unsigned archive + GitHub Release only."
         fi
 
+    # workflow_dispatch lets the user pick ANY branch in the Actions UI. A
+    # release dispatched from a feature branch would bump and push that branch's
+    # HEAD onto master via `git push origin HEAD:master`. Refuse anything but
+    # master. (Tag-push releases set ref_name to the tag and are exempt.)
+    - name: Guard — dispatch must run on master
+      if: github.event_name == 'workflow_dispatch' && github.ref_name != 'master'
+      env:
+        REF: ${{ github.ref_name }}
+      run: |
+        echo "::error::Release must be dispatched from master (got '$REF')."
+        exit 1
+
     - name: Determine version
       id: version
       env:
@@ -128,9 +140,12 @@ jobs:
       env:
         VERSION: ${{ steps.version.outputs.version }}
       run: |
-        CURRENT=$(grep 'MARKETING_VERSION:' project.yml | head -1 | sed 's/.*"\(.*\)"/\1/')
-        sed -i '' "s/MARKETING_VERSION: \"$CURRENT\"/MARKETING_VERSION: \"$VERSION\"/g" project.yml
-        echo "project.yml MARKETING_VERSION: $CURRENT -> $VERSION"
+        # Value-agnostic: rewrite every MARKETING_VERSION regardless of its
+        # current value, so the app + widget targets stay in lockstep even if
+        # they ever drift (a value-matching sed would silently skip the stragglers).
+        sed -i '' -E 's/(MARKETING_VERSION:[[:space:]]*")[^"]+(")/\1'"$VERSION"'\2/g' project.yml
+        echo "Set MARKETING_VERSION to $VERSION:"
+        grep -n 'MARKETING_VERSION:' project.yml
 
     - name: Generate Xcode project
       run: make generate
@@ -249,8 +264,13 @@ jobs:
         else
           NOTE="Unsigned Release archive validated. App Store upload is dormant — add the APP_STORE_CONNECT_* and APPLE_TEAM_ID secrets to enable it."
         fi
-        gh release create "$TAG" --title "$TAG" --target master --generate-notes --notes "$NOTE" \
-          || gh release edit "$TAG" --notes "$NOTE"
+        # Gate on the actual "already exists" condition so real failures
+        # (network, auth, permissions) surface instead of being swallowed by `||`.
+        if gh release view "$TAG" >/dev/null 2>&1; then
+          gh release edit "$TAG" --notes "$NOTE"
+        else
+          gh release create "$TAG" --title "$TAG" --target master --generate-notes --notes "$NOTE"
+        fi
 
     - name: Release summary
       if: always()

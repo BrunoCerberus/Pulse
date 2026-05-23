@@ -31,11 +31,21 @@ SKIP_DIRS = {"DerivedData", ".build", ".git"}
 KEY_RE = re.compile(r'^\s*"((?:[^"\\]|\\.)*)"\s*=')
 
 
+def read_strings(path: Path) -> str:
+    """Read a .strings file as UTF-8, falling back to UTF-16 — Apple tooling and
+    some editors still write .strings as UTF-16 LE with a BOM, which would
+    otherwise raise UnicodeDecodeError and turn CI red on a harmless re-save."""
+    try:
+        return path.read_text(encoding="utf-8")
+    except UnicodeDecodeError:
+        return path.read_text(encoding="utf-16")
+
+
 def parse_keys(path: Path) -> list[str]:
     """Return the keys declared in a .strings file, in order, comments stripped."""
     keys: list[str] = []
     in_block_comment = False
-    for raw in path.read_text(encoding="utf-8").splitlines():
+    for raw in read_strings(path).splitlines():
         line = raw.strip()
         if in_block_comment:
             if "*/" in line:
