@@ -185,11 +185,19 @@ final class PaywallDomainInteractor: CombineInteractor {
             .receive(on: DispatchQueue.main)
             .sink { [weak self] isPremium in
                 guard let self else { return }
-                updateState(currentState.copy(
-                    isPremium: isPremium,
-                    shouldDismiss: currentState.shouldDismiss || isPremium
-                ))
-            }
+                    updateState(currentState.copy(
+                        isPremium: hasPurchases,
+                        isRestoring: false
+                    ))
+                }
+            )
+            .store(in: &cancellables)
+    }
+    
+    deinit {
+        // Cancel all pending cancellables
+        cancellables.forEach { $0.cancel() }
+    }
             .store(in: &cancellables)
     }
 

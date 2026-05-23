@@ -119,4 +119,11 @@ final class ForYouDomainInteractor: CombineInteractor {
         transform(&state)
         stateSubject.send(state)
     }
+    
+    deinit {
+        // Cancel all pending tasks on deallocation
+        for task in backgroundTasks {
+            task.cancel()
+        }
+    }
 }

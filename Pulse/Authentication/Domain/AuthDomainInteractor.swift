@@ -59,8 +59,14 @@ final class AuthDomainInteractor: CombineInteractor {
         case .clearError:
             updateState { state in
                 state.error = nil
+                }
             }
-        }
+            .store(in: &cancellables)
+    }
+    
+    deinit {
+        // Cancel all pending cancellables
+        cancellables.forEach { $0.cancel() }
     }
 
     private func signInWithGoogle(presenting viewController: UIViewController) {

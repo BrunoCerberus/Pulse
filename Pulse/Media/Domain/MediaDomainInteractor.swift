@@ -321,4 +321,11 @@ final class MediaDomainInteractor: CombineInteractor {
             state.mediaToPlay = nil
         }
     }
+    
+    deinit {
+        // Cancel all pending tasks on deallocation
+        for task in backgroundTasks {
+            task.cancel()
+        }
+    }
 }

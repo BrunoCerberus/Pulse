@@ -117,18 +117,21 @@ final class OnboardingDomainInteractor: CombineInteractor {
 
         // Seed the personalization profile alongside the user-preferences save.
         // Best-effort and decoupled — onboarding should never block on profile
-        // seed failures (CloudKit hiccup, account not signed in to iCloud, etc.).
-        if let interestProfileService {
-            let service = UncheckedSendableBox(value: interestProfileService)
-            Task {
-                do {
-                    try await service.value.seedFromCategories(orderedTopics)
-                } catch {
-                    Logger.shared.service(
-                        "Failed to seed interest profile during onboarding: \(error)",
-                        level: .warning
-                    )
-                }
+        // initialization.
+        let service = UncheckedSendableBox(value: settingsService)
+        Task { [weak self] in
+            guard let self else { return }
+            try? await service.value.setFollowedTopics(orderedTopics)
+            await self?.loadProfile()
+        }
+    }
+    
+    deinit {
+        // Cancel all pending tasks on deallocation
+        for task in backgroundTasks {
+            task.cancel()
+        }
+    }
             }
         }
         // Re-fetch preferences before saving so we merge against the freshest

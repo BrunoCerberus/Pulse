@@ -174,6 +174,11 @@ final class HomeDomainInteractor: CombineInteractor {
         for task in backgroundTasks {
             task.cancel()
         }
+        // Cancel any pending cancellables
+        cancellables.forEach { $0.cancel() }
+    }
+        // Cancel any pending article fetch
+        articleFetchCancellable?.cancel()
     }
 
     // deduplicateArticles and updateState moved to HomeDomainInteractor+DataLoading.swift

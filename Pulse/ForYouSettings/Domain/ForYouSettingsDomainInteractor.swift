@@ -118,6 +118,13 @@ final class ForYouSettingsDomainInteractor: CombineInteractor {
             }
         }
     }
+    
+    deinit {
+        // Cancel all pending tasks on deallocation
+        for task in backgroundTasks {
+            task.cancel()
+        }
+    }
 
     private func confirmReset() {
         guard let profileService else { return }

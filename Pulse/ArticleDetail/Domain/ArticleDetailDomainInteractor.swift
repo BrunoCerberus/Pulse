@@ -611,6 +611,8 @@ final class ArticleDetailDomainInteractor: CombineInteractor {
         for task in backgroundTasks {
             task.cancel()
         }
+        // Cancel TTS cancellables
+        ttsCancellables.forEach { $0.cancel() }
     }
 
     private func updateState(_ transform: (inout DomainState) -> Void) {

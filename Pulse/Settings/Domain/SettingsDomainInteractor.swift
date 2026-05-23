@@ -297,8 +297,15 @@ final class SettingsDomainInteractor: CombineInteractor {
         var state = stateSubject.value
         transform(&state)
         stateSubject.send(state)
+        }
     }
-}
+    
+    deinit {
+        // Cancel all pending tasks on deallocation
+        for task in backgroundTasks {
+            task.cancel()
+        }
+    }
 
 enum SettingsDomainAction: Equatable {
     case loadPreferences

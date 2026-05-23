@@ -73,6 +73,13 @@ final class DeeplinkRouter {
             .store(in: &cancellables)
     }
 
+    deinit {
+        // Cancel all pending cancellables
+        cancellables.forEach { $0.cancel() }
+        // Cancel any pending article fetch
+        articleFetchCancellable?.cancel()
+    }
+
     /// Processes any queued deeplink that was received before coordinator was available.
     private func processQueuedDeeplink() {
         guard let deeplink = queuedDeeplink else { return }

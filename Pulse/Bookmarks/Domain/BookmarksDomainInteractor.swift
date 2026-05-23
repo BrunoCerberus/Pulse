@@ -179,6 +179,13 @@ final class BookmarksDomainInteractor: CombineInteractor {
             state.articleToShare = nil
         }
     }
+    
+    deinit {
+        // Cancel all pending tasks on deallocation
+        for task in backgroundTasks {
+            task.cancel()
+        }
+    }
 
     private func updateState(_ transform: (inout DomainState) -> Void) {
         var state = stateSubject.value

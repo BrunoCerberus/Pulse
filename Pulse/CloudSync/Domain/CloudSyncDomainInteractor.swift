@@ -119,9 +119,15 @@ final class CloudSyncDomainInteractor: CombineInteractor {
                     userInfo: [NSLocalizedDescriptionKey: message]
                 )
             )
-        case .idle:
-            break
         }
+    }
+    
+    deinit {
+        // Cancel all pending tasks on deallocation
+        for task in backgroundTasks {
+            task.cancel()
+        }
+    }
     }
 
     private func updateState(_ transform: (inout DomainState) -> Void) {
