@@ -88,7 +88,7 @@ jobs:
           CODE_SIGNING_ALLOWED=NO \
           -skipMacroValidation
 
-    - name: Locate doccarchive
+    - name: Locate and zip doccarchive
       id: docc
       run: |
         ARCHIVE=$(find ./DerivedData -name '*.doccarchive' -type d | head -1)
@@ -96,14 +96,18 @@ jobs:
           echo "::warning::No .doccarchive produced"
           exit 0
         fi
-        echo "archive=$ARCHIVE" >> "$GITHUB_OUTPUT"
         echo "Built $ARCHIVE"
+        # DocC writes symbol JSON with ':' in the filenames (e.g.
+        # method(param:).json), which actions/upload-artifact rejects as an
+        # invalid path. Zip first so the artifact is a single valid-named file.
+        ditto -c -k --sequesterRsrc --keepParent "$ARCHIVE" pulse-doccarchive.zip
+        echo "zip=pulse-doccarchive.zip" >> "$GITHUB_OUTPUT"
 
     - name: Upload doccarchive
       uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
-      if: steps.docc.outputs.archive != ''
+      if: steps.docc.outputs.zip != ''
       with:
         name: pulse-doccarchive
-        path: ${{ steps.docc.outputs.archive }}
+        path: ${{ steps.docc.outputs.zip }}
         if-no-files-found: ignore
         retention-days: 7

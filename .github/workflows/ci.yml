@@ -521,11 +521,14 @@ jobs:
         path: ./DerivedData
         retention-days: 1
 
-  # The matrix above compiles Debug for the simulator. Release for a generic
-  # iOS *device* exercises a genuinely different path: whole-module optimization
-  # (vs -Onone singlefile), dead-code stripping, device arch, and — specific to
-  # Pulse — the `#if DEBUG` API-key env-var fallback compiled out. These break
-  # at archive time, not on a Debug simulator build, so we catch them on every PR.
+  # The matrix above compiles Debug. Release exercises a genuinely different
+  # path: whole-module optimization (vs -Onone singlefile), dead-code stripping,
+  # and — specific to Pulse — the `#if DEBUG` API-key env-var fallback compiled
+  # out. We build for the *simulator* on purpose: a device (iphoneos) Release
+  # build trips the "Upload dSYMs to Crashlytics" phase, which requires the
+  # production GoogleService-Info.plist (a secret, not in the repo). The simulator
+  # skips that phase (PLATFORM_NAME != iphoneos), so this stays credential-free
+  # while still catching Release-only compile breaks. Mirrors `make build-release`.
   release-build:
     name: Release Build
     runs-on: macos-26
@@ -549,6 +552,16 @@ jobs:
         sudo xcode-select -s "$XCODE_PATH/Contents/Developer"
         echo "DEVELOPER_DIR=$XCODE_PATH/Contents/Developer" >> "$GITHUB_ENV"
         xcodebuild -version
+
+    - name: Install iOS Simulator Runtime
+      run: |
+        echo "Installing iOS simulator runtime..."
+        # Initialize CoreSimulator service before downloading
+        xcrun simctl list runtimes > /dev/null 2>&1 || true
+        sleep 5
+        xcodebuild -downloadPlatform iOS
+        echo "Available iOS simulator runtimes:"
+        xcrun simctl list runtimes | grep iOS
 
     - name: Cache Homebrew packages
       uses: actions/cache@27d5ce7f107fe9357f9df03efb73ab90386fccae # v5.0.5
@@ -581,20 +594,19 @@ jobs:
           -scheme PulseProd \
           -onlyUsePackageVersionsFromResolvedFile
 
-    # generic/platform=iOS = device arch, no simulator runtime download needed.
-    # CODE_SIGNING_ALLOWED=NO keeps it credential-free (this validates the
-    # compile, not signing — the release workflow validates archiving).
-    - name: Build PulseProd (Release, unsigned)
+    # Simulator destination so the device-only "Upload dSYMs to Crashlytics" guard
+    # phase is skipped (no GoogleService-Info.plist needed). CODE_SIGNING_ALLOWED=NO
+    # keeps it credential-free — this validates the Release compile, not signing.
+    - name: Build PulseProd (Release, simulator)
       run: |
         xcodebuild build \
           -project Pulse.xcodeproj \
           -scheme PulseProd \
           -configuration Release \
-          -destination 'generic/platform=iOS' \
+          -destination 'platform=iOS Simulator,name=iPhone Air,OS=latest' \
           -onlyUsePackageVersionsFromResolvedFile \
           -skipMacroValidation \
-          CODE_SIGNING_ALLOWED=NO \
-          CODE_SIGNING_REQUIRED=NO
+          CODE_SIGNING_ALLOWED=NO
 
   tests:
     name: ${{ matrix.test-name }}

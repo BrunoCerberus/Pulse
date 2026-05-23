@@ -141,12 +141,13 @@ Schemes: `PulseDev`, `PulseProd`, `PulseTests`, `PulseUITests`, `PulseSnapshotTe
 
 ### Releasing
 
-Run the **Release** workflow (Actions → Release → Run workflow) and pick `patch` / `minor` / `major`. It bumps `MARKETING_VERSION` in `project.yml`, commits + tags `vX.Y.Z`, validates a Release archive, and publishes a GitHub Release with auto-generated notes. Pushing a `vX.Y.Z` tag manually does the same for an existing commit.
+Run the **Release** workflow (Actions → Release → Run workflow) and pick `patch` / `minor` / `major`. It bumps `MARKETING_VERSION` in `project.yml`, commits + tags `vX.Y.Z`, and publishes a GitHub Release with auto-generated notes. Pushing a `vX.Y.Z` tag manually does the same for an existing commit. (The Release *compile* is validated on every push to master by CI's Release Build job.)
 
-Uploading to App Store Connect / TestFlight is **pre-wired but dormant** — it activates automatically once these repository secrets exist (Settings → Secrets and variables → Actions), with no workflow edits:
+Building the signed device archive and uploading to App Store Connect / TestFlight is **pre-wired but dormant** — it activates automatically once all of these repository secrets exist (Settings → Secrets and variables → Actions), with no workflow edits:
 
 | Secret | Value |
 |---|---|
+| `GOOGLE_SERVICE_INFO_PLIST` | base64 of `Pulse/GoogleService-Info.plist` (`base64 -i Pulse/GoogleService-Info.plist`) — the device Release build runs the Crashlytics dSYM phase, which requires it |
 | `APP_STORE_CONNECT_API_KEY` | full contents of the `AuthKey_*.p8` file |
 | `APP_STORE_CONNECT_KEY_ID` | the key's Key ID |
 | `APP_STORE_CONNECT_ISSUER_ID` | issuer ID (App Store Connect → Users and Access → Integrations) |
