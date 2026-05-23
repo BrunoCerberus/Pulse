@@ -104,6 +104,34 @@ struct LiveStorageServiceTests {
         #expect(try await sut.fetchBookmarkedArticles().count == 1)
     }
 
+    @Test("deduplicate collapses duplicate read-history rows, keeping the earliest")
+    func deduplicateCollapsesDuplicateReads() async throws {
+        let context = sut.modelContainer.mainContext
+        let older = ReadArticle(from: testArticle)
+        older.readAt = Self.referenceDate
+        let newer = ReadArticle(from: testArticle)
+        newer.readAt = Self.referenceDate.addingTimeInterval(60)
+        context.insert(older)
+        context.insert(newer)
+        try context.save()
+        #expect(try context.fetch(FetchDescriptor<ReadArticle>()).count == 2)
+
+        let changed = try await sut.deduplicate()
+
+        #expect(changed == true)
+        let rows = try context.fetch(FetchDescriptor<ReadArticle>())
+        #expect(rows.count == 1)
+        #expect(rows.first?.articleID == testArticle.id)
+        #expect(rows.first?.readAt == Self.referenceDate) // earliest survivor kept
+    }
+
+    @Test("isRead reflects reading-history state")
+    func isReadReflectsState() async throws {
+        #expect(await sut.isRead(testArticle.id) == false)
+        try await sut.markArticleAsRead(testArticle)
+        #expect(await sut.isRead(testArticle.id) == true)
+    }
+
     @Test("Delete article removes bookmark")
     func deleteArticleRemovesBookmark() async throws {
         try await sut.saveArticle(testArticle)

@@ -984,6 +984,31 @@ jobs:
     # runtime) and the `NSItemProvider` callback. The URL-validation logic
     # it dispatches into is unit-tested through SharedURLQueueTests, so the
     # only uncovered code is the UIKit lifecycle around it.
+    #
+    # LLMModelManager + LiveLLMService are direct glue over the vendored
+    # SwiftLlama / llama.cpp + Metal stack. The 600 MB model is never loaded in
+    # CI, so the generation / inference paths cannot execute under test. The
+    # LLMService protocol is exercised at the domain layer through mocks
+    # (SummarizationDomainInteractorTests, FeedDomainInteractorTests). Same
+    # un-mockable-singleton justification as LiveAuthService.
+    #
+    # LiveTextToSpeechService is glue over AVSpeechSynthesizer + AVAudioSession +
+    # MPRemoteCommandCenter / MPNowPlayingInfoCenter — system singletons with no
+    # protocol seam. Driven through the TextToSpeechService protocol +
+    # MockTextToSpeechService at the domain layer (ArticleDetailTTSInteractorTests).
+    #
+    # TTSLiveActivityController wraps ActivityKit, which requires a running app
+    # context (no Activity can be requested / updated in the unit-test host) and
+    # is a `.shared` singleton with no seam.
+    #
+    # LiveStoreKitService is glue over StoreKit 2's Transaction.currentEntitlements
+    # / Transaction.updates async sequences; exercising them needs an SKTestSession
+    # harness not present in the suite (tracked as a follow-up). StoreKitService is
+    # mocked at the domain layer (MockStoreKitService, PaywallDomainInteractorTests).
+    #
+    # PulseSceneDelegate is the composition root — UIWindowSceneDelegate lifecycle
+    # plus service registration; not unit-testable, same category as
+    # ShareViewController.
     - name: Enforce patch coverage threshold
       run: |
         RESULT=0
@@ -995,6 +1020,11 @@ jobs:
                     '**/LiveAuthService.swift' '**/LiveAuthService+Anonymous.swift' \
                     '**/FirebaseUser+AuthUser.swift' \
                     '**/SignOutCleanup.swift' '**/ShareViewController.swift' \
+                    '**/LLMModelManager.swift' '**/LiveLLMService.swift' \
+                    '**/LiveTextToSpeechService.swift' \
+                    '**/TTSLiveActivityController.swift' \
+                    '**/LiveStoreKitService.swift' \
+                    '**/PulseSceneDelegate.swift' \
           --markdown-report patch-coverage.md || RESULT=$?
         {
           echo "## Patch Coverage Report"
