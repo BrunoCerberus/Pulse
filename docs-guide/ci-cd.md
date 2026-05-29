@@ -1,0 +1,48 @@
+# CI/CD
+
+[← Back to README](../README.md) · [Features](features.md) · [Architecture](architecture.md) · [Development](development.md) · [Testing](testing.md)
+
+## Workflows
+
+- `ci.yml` — code quality (incl. localization key parity) + Debug build + Release build + unit/UI/snapshot tests on iPhone, plus a UI-test pass on iPad (regular size class) + patch & overall coverage, on PR **and push to master**
+- `release.yml` — version bump → Release archive → GitHub Release; App Store Connect upload dormant until secrets exist (see [Releasing](#releasing))
+- `docs.yml` — DocC build (broken-reference check) on PR + master
+- `pr-title.yml` — Conventional Commit PR-title lint
+- `claude-code-review.yml` — Claude review on PR open/sync
+- `codeql.yml` — CodeQL security analysis on PR + weekly
+- `lgpd-conformance.yml` — LGPD (Brazil, Lei 13.709/2018) PR gates
+- `gdpr-conformance.yml` — GDPR (EU 2016/679) + CCPA / CPRA (California §1798.100 et seq.) PR gates
+- `scheduled-tests.yml` — daily at 2 AM UTC (+ Claude auto-fix on failure)
+
+> The CI test matrix runs unit (`PulseTests`) and snapshot (`PulseSnapshotTests`) suites on iPhone Air only; the UI suite (`PulseUITests`) runs on both iPhone Air **and** iPad (the iPad entry exercises the regular size class).
+
+## Privacy conformance
+
+The two conformance workflows mirror the shape of the same-named workflows in `pulse-backend`. Each runs four parallel jobs on push to master + PRs + weekly:
+
+- **PII Scan** — CPF/CNPJ/SSN regex bans, email allowlist in `.github/pii-allowlist.txt`, gitleaks with custom rules in `.github/lgpd-gdpr-rules.toml`
+- **Docs Presence** — `README.md` / `AGENTS.md` / `CLAUDE.md` / `Pulse/PrivacyInfo.xcprivacy` exist and are non-empty; README mentions privacy
+- **Operational Controls** — sign-out / account-delete wipe is wired, env-var key fallbacks are `#if DEBUG`-gated, networking uses https, CloudKit container is `.private(...)`, engagement-events container is non-CloudKit
+- **Structural Integrity** — `Pulse/PrivacyInfo.xcprivacy` valid plist, every `NSPrivacyCollectedDataType` has a purpose, `*UsageDescription` strings non-empty
+
+No PR-body marker required — the deterministic code checks do the gating. Adding a new SDK that collects data needs a corresponding `NSPrivacyCollectedDataTypes` entry; new email addresses in source need an entry in `.github/pii-allowlist.txt`.
+
+## Schemes
+
+`PulseDev`, `PulseProd`, `PulseTests`, `PulseUITests`, `PulseSnapshotTests`, `PulseWidgetExtensionTests`.
+
+## Releasing
+
+Run the **Release** workflow (Actions → Release → Run workflow) and pick `patch` / `minor` / `major`. It bumps `MARKETING_VERSION` in `project.yml`, commits + tags `vX.Y.Z`, and publishes a GitHub Release with auto-generated notes. Pushing a `vX.Y.Z` tag manually does the same for an existing commit. (The Release *compile* is validated on every push to master by CI's Release Build job.)
+
+Building the signed device archive and uploading to App Store Connect / TestFlight is **pre-wired but dormant** — it activates automatically once all of these repository secrets exist (Settings → Secrets and variables → Actions), with no workflow edits:
+
+| Secret | Value |
+|---|---|
+| `GOOGLE_SERVICE_INFO_PLIST` | base64 of `Pulse/GoogleService-Info.plist` (`base64 -i Pulse/GoogleService-Info.plist`) — the device Release build runs the Crashlytics dSYM phase, which requires it |
+| `APP_STORE_CONNECT_API_KEY` | full contents of the `AuthKey_*.p8` file |
+| `APP_STORE_CONNECT_KEY_ID` | the key's Key ID |
+| `APP_STORE_CONNECT_ISSUER_ID` | issuer ID (App Store Connect → Users and Access → Integrations) |
+| `APPLE_TEAM_ID` | 10-character Apple Developer Team ID |
+
+Signing uses Xcode cloud signing (`-allowProvisioningUpdates`) — no certificates or provisioning profiles to manage.
