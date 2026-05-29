@@ -894,7 +894,7 @@ jobs:
     - name: Run Claude to analyze and fix tests
       uses: anthropics/claude-code-action@686da461dadac38c2bde9089909de4042a75ebf0 # v1
       env:
-        # Max reasoning effort — Opus 4.7's highest adaptive thinking tier with no token constraints.
+        # Max reasoning effort — Opus 4.8's highest adaptive thinking tier with no token constraints.
         # Matches the convention already used in .github/workflows/claude-code-review.yml.
         CLAUDE_CODE_EFFORT_LEVEL: max
       with:
@@ -924,7 +924,7 @@ jobs:
           - Stage all changes with git add
           - Do NOT commit - the workflow will handle that
         # Restricted tool access — no arbitrary command execution
-        claude_args: '--model claude-opus-4-7 --allowedTools "Read,Edit,Write,Glob,Grep,Bash(git add:*),Bash(git status:*),Bash(git diff:*),Bash(ls:*),Bash(cat:*),Bash(head:*),Bash(tail:*),Bash(find:*),Bash(make generate)"'
+        claude_args: '--model "claude-opus-4-8[1m]" --allowedTools "Read,Edit,Write,Glob,Grep,Bash(git add:*),Bash(git status:*),Bash(git diff:*),Bash(ls:*),Bash(cat:*),Bash(head:*),Bash(tail:*),Bash(find:*),Bash(make generate)"'
 
     - name: Check for changes
       id: check-changes
