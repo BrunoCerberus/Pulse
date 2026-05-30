@@ -859,6 +859,14 @@ jobs:
     # context (no Activity can be requested / updated in the unit-test host) and
     # is a `.shared` singleton with no seam.
     #
+    # The WidgetKit declarative UI — TTSLiveActivity (the Live Activity lock-screen
+    # / Dynamic Island views), PulseNewsWidget (the home-screen widget view), and
+    # PulseWidgetBundle (the @main WidgetBundle entry point) — only renders inside a
+    # widget / Activity host, so there is no unit-test seam (same category as
+    # TTSLiveActivityController above and the PulseSceneDelegate composition root
+    # below). The testable widget code — NewsTimelineProvider, SharedArticle,
+    # SharedDataManager — stays in the coverage net.
+    #
     # LiveStoreKitService is glue over StoreKit 2's Transaction.currentEntitlements
     # / Transaction.updates async sequences; exercising them needs an SKTestSession
     # harness not present in the suite (tracked as a follow-up). StoreKitService is
@@ -881,6 +889,8 @@ jobs:
                     '**/LLMModelManager.swift' '**/LiveLLMService.swift' \
                     '**/LiveTextToSpeechService.swift' \
                     '**/TTSLiveActivityController.swift' \
+                    '**/TTSLiveActivity.swift' '**/PulseNewsWidget.swift' \
+                    '**/PulseWidgetBundle.swift' \
                     '**/LiveStoreKitService.swift' \
                     '**/PulseSceneDelegate.swift' \
           --markdown-report patch-coverage.md || RESULT=$?
