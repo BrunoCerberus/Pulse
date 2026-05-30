@@ -6,10 +6,12 @@ name: PR Title
 
 on:
   pull_request:
-    # No `synchronize`: pushing commits never changes the title, so it would
-    # only add redundant runs. opened/edited/reopened/ready_for_review cover
-    # every event that can actually change the title.
-    types: [opened, edited, reopened, ready_for_review]
+    # `synchronize` is load-bearing: "Conventional Commit title" is a REQUIRED
+    # status check, so it must report on every head commit. Drop synchronize and
+    # the check never re-attaches after a push — it goes missing from the new
+    # head SHA and blocks merge. (edited/opened/reopened/ready_for_review alone
+    # leave pushed-over PRs un-mergeable.)
+    types: [opened, edited, synchronize, reopened, ready_for_review]
 
 concurrency:
   group: ${{ github.workflow }}-${{ github.ref }}

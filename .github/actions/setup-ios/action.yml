@@ -3,8 +3,11 @@ description: >
   Shared setup for the macOS jobs: selects Xcode 26.5, optionally installs the
   iOS simulator runtime (idempotently), restores the Homebrew + SPM caches,
   installs XcodeGen, and generates the Xcode project. Centralizes the chain
-  that was previously copy-pasted across ci.yml, scheduled-tests.yml, codeql.yml,
-  docs.yml and release.yml. Assumes the caller has already run actions/checkout.
+  that was previously copy-pasted across ci.yml (build/release-build/tests),
+  scheduled-tests.yml, codeql.yml and docs.yml. (release.yml keeps its own
+  inlined chain — it interleaves a Firebase-config provisioning step before
+  `make generate` that doesn't fit this action.) Assumes the caller has already
+  run actions/checkout.
 
 inputs:
   install-runtime:

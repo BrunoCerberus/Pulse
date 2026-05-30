@@ -946,7 +946,14 @@ jobs:
         GH_RUN_ID: ${{ github.run_id }}
         BRANCH_NAME: ${{ steps.create-branch.outputs.branch_name }}
       run: |
+        # --draft on purpose: these bot PRs run from a github-actions[bot] branch,
+        # which claude-review (a required check) is not configured to run for, so
+        # a non-draft PR would sit permanently un-mergeable. A draft is the correct
+        # "for human triage" state — a maintainer reviews, re-runs the failing test
+        # locally, and marks it ready (or closes it) rather than it masquerading as
+        # merge-ready.
         gh pr create \
+          --draft \
           --title "fix: Auto-fix test failures from $(date +%Y-%m-%d) scheduled run" \
           --body "## Automated Test Fix PR
 

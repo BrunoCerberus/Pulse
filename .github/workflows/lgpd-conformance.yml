@@ -62,6 +62,7 @@ jobs:
         with:
           # Full history so gitleaks can sweep every commit.
           fetch-depth: 0
+          persist-credentials: false
 
       - name: Ensure ripgrep is available
         run: command -v rg >/dev/null 2>&1 || (sudo apt-get update -qq && sudo apt-get install -y -qq ripgrep)
@@ -190,6 +191,8 @@ jobs:
     steps:
       - name: Checkout code
         uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
+        with:
+          persist-credentials: false
 
       - name: Required docs exist and are non-empty
         id: required-docs
@@ -265,6 +268,8 @@ jobs:
 
       - name: Checkout code
         uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
+        with:
+          persist-credentials: false
 
       - name: Ensure ripgrep is available
         run: command -v rg >/dev/null 2>&1 || (sudo apt-get update -qq && sudo apt-get install -y -qq ripgrep)
@@ -453,6 +458,8 @@ jobs:
     steps:
       - name: Checkout code
         uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
+        with:
+          persist-credentials: false
 
       - name: Validate PrivacyInfo.xcprivacy
         id: validate-manifest
