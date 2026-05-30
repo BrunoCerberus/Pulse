@@ -1,0 +1,7 @@
+# actionlint config. `macos-26` is a valid GitHub-hosted runner image, but
+# actionlint's pinned built-in label list (v1.7.7) predates it and flags it as
+# unknown. Declaring it here (the documented workaround for unrecognized labels)
+# stops the false-positive `runner-label` errors without disabling the check.
+self-hosted-runner:
+  labels:
+    - macos-26

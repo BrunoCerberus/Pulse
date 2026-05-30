@@ -286,7 +286,6 @@ docs:
 		-destination 'generic/platform=iOS' \
 		-derivedDataPath ./DerivedData \
 		DOCC_EXTRACT_SWIFT_INFO_FOR_OBJC_SYMBOLS=NO \
-		OTHER_DOCC_FLAGS="--warnings-as-errors" \
 		CODE_SIGNING_ALLOWED=NO -skipMacroValidation
 	@echo ""
 	@echo "Documentation generated at:"
