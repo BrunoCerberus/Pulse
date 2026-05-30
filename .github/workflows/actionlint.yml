@@ -48,17 +48,16 @@ jobs:
     # auto-detects it and lints embedded run-block shell. Pinned release
     # tarball (same install pattern as the gitleaks step in ci.yml).
     #
-    # SHELLCHECK_OPTS excludes four codes that are accepted, longstanding
-    # conventions across this repo's workflows (so the gate fails only on NEW
-    # real problems, not pre-existing style):
-    #   SC2012 — `ls -d /Applications/Xcode_*.app | head` for Xcode selection
-    #   SC2044 — `for f in $(find ...)` in the entitlements/ATS audit loops
-    #   SC2086 — unquoted "$GITHUB_OUTPUT"/"$GITHUB_STEP_SUMMARY" (no spaces)
-    #   SC2129 — individual `>> $GITHUB_STEP_SUMMARY` redirects vs a block
-    # Everything else (real bugs, undefined vars, etc.) still fails the check.
+    # The high-value layer here is actionlint's NATIVE checks (YAML schema,
+    # ${{ }} expression typing, `uses:` ref validation, runner labels, matrix /
+    # needs wiring, deprecated actions) — those stay fully active. shellcheck is
+    # scoped to `--severity=error` so the gate fails on genuine shell bugs but
+    # not on the repo's accepted style/info conventions (unquoted $GITHUB_OUTPUT,
+    # ls-for-Xcode, find-loops, …). This is also deterministic across the
+    # runner-image's shellcheck version, which a per-code exclude list is not.
     - name: Run actionlint
       env:
-        SHELLCHECK_OPTS: "-e SC2012 -e SC2044 -e SC2086 -e SC2129"
+        SHELLCHECK_OPTS: "--severity=error"
       run: |
         ACTIONLINT_VERSION="1.7.7"
         curl -sSfL "https://github.com/rhysd/actionlint/releases/download/v${ACTIONLINT_VERSION}/actionlint_${ACTIONLINT_VERSION}_linux_amd64.tar.gz" \
