@@ -85,11 +85,11 @@ struct ShareRootView: View {
 }
 
 #if DEBUG
-#Preview {
-    ShareRootView(
-        url: URL(string: "https://www.theguardian.com/technology/2026/apr/08/example-article")!,
-        onSummarize: {},
-        onCancel: {}
-    )
-}
+    #Preview {
+        ShareRootView(
+            url: URL(string: "https://www.theguardian.com/technology/2026/apr/08/example-article")!,
+            onSummarize: {},
+            onCancel: {}
+        )
+    }
 #endif

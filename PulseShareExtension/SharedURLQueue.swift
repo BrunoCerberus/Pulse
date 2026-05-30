@@ -5,7 +5,7 @@ import Foundation
 /// This model is shared between the Share Extension and the main app via
 /// the App Group container, allowing the extension to enqueue URLs for
 /// later summarization while keeping the LLM workload in the main process.
-struct SharedURLItem: Codable, Hashable, Sendable {
+struct SharedURLItem: Codable, Hashable {
     /// The shared URL as an absolute string.
     let url: String
 

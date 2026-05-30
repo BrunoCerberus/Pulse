@@ -45,10 +45,18 @@ jobs:
   # git history with the custom rules in .github/lgpd-gdpr-rules.toml.
   # ---------------------------------------------------------------------------
   pii-scan:
-    name: PII Scan
+    name: PII Scan (LGPD)
     runs-on: ubuntu-latest
     timeout-minutes: 10
     steps:
+      # Egress audit must be the FIRST step (before checkout) so it can
+      # baseline outbound traffic before we curl|sudo tar gitleaks and
+      # apt-get ripgrep. Mirrors ci.yml's security-audit job.
+      - name: Harden runner
+        uses: step-security/harden-runner@9af89fc71515a100421586dfdb3dc9c984fbf411 # v2.19.4
+        with:
+          egress-policy: audit
+
       - name: Checkout code
         uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
         with:
@@ -176,15 +184,12 @@ jobs:
   # must exist and be non-empty.
   # ---------------------------------------------------------------------------
   docs-presence:
-    name: Docs Presence
+    name: Docs Presence (LGPD)
     runs-on: ubuntu-latest
     timeout-minutes: 5
     steps:
       - name: Checkout code
         uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
-
-      - name: Ensure ripgrep is available
-        run: command -v rg >/dev/null 2>&1 || (sudo apt-get update -qq && sudo apt-get install -y -qq ripgrep)
 
       - name: Required docs exist and are non-empty
         id: required-docs
@@ -248,10 +253,16 @@ jobs:
   # contract documented in CLAUDE.md / AGENTS.md.
   # ---------------------------------------------------------------------------
   operational-controls:
-    name: Operational Controls
+    name: Operational Controls (LGPD)
     runs-on: ubuntu-latest
     timeout-minutes: 5
     steps:
+      # apt-get installs ripgrep below — baseline egress first.
+      - name: Harden runner
+        uses: step-security/harden-runner@9af89fc71515a100421586dfdb3dc9c984fbf411 # v2.19.4
+        with:
+          egress-policy: audit
+
       - name: Checkout code
         uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
 
@@ -293,25 +304,81 @@ jobs:
           fi
           echo "OK: clearAllUserData() defined and invoked from $calls site(s) in SettingsViewModel."
 
+      - name: Right-to-erasure cleanup (keychain wipe + CloudKit zone deletion) is wired
+        id: erasure-cleanup
+        shell: bash
+        run: |
+          set -euo pipefail
+          # clearAllUserData() existing is necessary but not sufficient. The
+          # load-bearing erasure work lives in SignOutCleanup: wipeKeychain()
+          # purges credential storage and deletePrivateCloudKitZones() removes
+          # the user's private CloudKit data. Both must be invoked from
+          # SettingsViewModel (LGPD Art. 18 — eliminação dos dados pessoais).
+          svm="Pulse/Settings/ViewModel/SettingsViewModel.swift"
+          if [ ! -f "$svm" ]; then
+            echo "::error file=$svm::SettingsViewModel.swift missing."
+            exit 1
+          fi
+          fail=0
+          if ! rg -q 'SignOutCleanup\.wipeKeychain\(' "$svm"; then
+            echo "::error file=$svm::SignOutCleanup.wipeKeychain(...) is not invoked. Right-to-erasure requires the keychain to be wiped on sign-out / account deletion."
+            fail=1
+          fi
+          if ! rg -q 'SignOutCleanup\.deletePrivateCloudKitZones\(' "$svm"; then
+            echo "::error file=$svm::SignOutCleanup.deletePrivateCloudKitZones(...) is not invoked. Right-to-erasure requires the user's private CloudKit zones to be deleted."
+            fail=1
+          fi
+          [ "$fail" -eq 0 ] || exit 1
+          echo "OK: keychain wipe + CloudKit zone deletion are wired from SettingsViewModel."
+
       - name: API-key env-var fallbacks are #if DEBUG-gated
         id: debug-gated-keys
         shell: bash
         run: |
           set -euo pipefail
-          # APIKeysProvider.swift may read SUPABASE_URL / SUPABASE_ANON_KEY from
-          # the env, but only inside `#if DEBUG`. A release build that reads
-          # secrets from the env would defeat the Remote-Config + Keychain
-          # resolution chain documented in CLAUDE.md.
-          if ! rg -t swift -q '#if DEBUG' Pulse/Configs/Networking/APIKeysProvider.swift; then
-            echo "::error file=Pulse/Configs/Networking/APIKeysProvider.swift::Missing #if DEBUG guard. Env-var key fallbacks must be DEBUG-only."
+          # The env-var key/URL fallbacks across the Networking layer
+          # (SupabaseConfig.swift reads SUPABASE_URL; APIKeysProvider.swift
+          # reads NEWS_API_KEY / GNEWS_API_KEY) must each sit inside a
+          # `#if DEBUG` block. A release build that reads secrets from the env
+          # would defeat the Remote-Config + Keychain resolution chain
+          # documented in CLAUDE.md. We scan the whole Networking dir and
+          # verify EVERY ProcessInfo.processInfo.environment read has a
+          # `#if DEBUG` within the ~5 lines above it — a single gated read must
+          # not mask an ungated one.
+          dir="Pulse/Configs/Networking"
+          if ! rg -t swift -q '#if DEBUG' "$dir"; then
+            echo "::error::No #if DEBUG guard found in $dir. Env-var key/URL fallbacks must be DEBUG-only."
             exit 1
           fi
-          if rg -t swift --pcre2 -q 'ProcessInfo\.processInfo\.environment\b' Pulse/Configs/Networking/APIKeysProvider.swift \
-              && ! rg -t swift -B5 'ProcessInfo\.processInfo\.environment' Pulse/Configs/Networking/APIKeysProvider.swift | grep -q '#if DEBUG'; then
-            echo "::error file=Pulse/Configs/Networking/APIKeysProvider.swift::ProcessInfo.processInfo.environment access exists outside a #if DEBUG block."
-            exit 1
-          fi
-          echo "OK: env-var fallbacks are DEBUG-gated."
+          fail=0
+          # Per-file: pair each env-read line against the nearest preceding
+          # `#if DEBUG`. PROXIMITY is the allowed gap (env read within N lines
+          # below the guard). Anything further is treated as ungated.
+          PROXIMITY=5
+          while IFS= read -r f; do
+            # `|| true`: rg exits 1 on no-match, which under `set -o pipefail`
+            # would abort the step on every Networking file that has no env
+            # read (BaseURLs.swift, NetworkResilience.swift, …). Empty capture
+            # is the intended signal, not a failure.
+            reads=$(rg -t swift -n --pcre2 -o 'ProcessInfo\.processInfo\.environment\b' "$f" | cut -d: -f1 || true)
+            [ -z "$reads" ] && continue
+            guards=$(rg -t swift -n '#if DEBUG' "$f" | cut -d: -f1 || true)
+            for r in $reads; do
+              gated=0
+              for g in $guards; do
+                if [ "$g" -le "$r" ] && [ "$((r - g))" -le "$PROXIMITY" ]; then
+                  gated=1
+                  break
+                fi
+              done
+              if [ "$gated" -ne 1 ]; then
+                echo "::error file=$f,line=$r::ProcessInfo.processInfo.environment read is not within $PROXIMITY lines of a #if DEBUG guard — env-var fallbacks must be DEBUG-gated."
+                fail=1
+              fi
+            done
+          done < <(find "$dir" -name '*.swift')
+          [ "$fail" -eq 0 ] || exit 1
+          echo "OK: every env-var fallback in $dir is DEBUG-gated."
 
       - name: No plaintext http:// in production networking config
         id: https-only
@@ -348,6 +415,7 @@ jobs:
         if: always()
         env:
           CLEAR_USER_DATA: ${{ steps.clear-user-data.outcome }}
+          ERASURE_CLEANUP: ${{ steps.erasure-cleanup.outcome }}
           DEBUG_GATED_KEYS: ${{ steps.debug-gated-keys.outcome }}
           HTTPS_ONLY: ${{ steps.https-only.outcome }}
           CLOUDKIT_PRIVATE: ${{ steps.cloudkit-private.outcome }}
@@ -359,6 +427,7 @@ jobs:
             echo "|-------|--------|"
           } >> "$GITHUB_STEP_SUMMARY"
           for row in "clearAllUserData() wired:$CLEAR_USER_DATA" \
+                     "Right-to-erasure cleanup wired:$ERASURE_CLEANUP" \
                      "API-key fallbacks DEBUG-gated:$DEBUG_GATED_KEYS" \
                      "No plaintext HTTP URLs:$HTTPS_ONLY" \
                      "CloudKit container .private:$CLOUDKIT_PRIVATE"; do
@@ -378,7 +447,7 @@ jobs:
   # cross-reference it against Info.plist consent strings.
   # ---------------------------------------------------------------------------
   structural-integrity:
-    name: Structural Integrity
+    name: Structural Integrity (LGPD)
     runs-on: ubuntu-latest
     timeout-minutes: 5
     steps:

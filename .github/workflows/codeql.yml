@@ -36,39 +36,23 @@ jobs:
     - name: Checkout repository
       uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
 
-    - name: Select Xcode 26.5
-      run: |
-        XCODE_PATH=$(ls -d /Applications/Xcode_26.5*.app 2>/dev/null | head -1)
-        if [ -z "$XCODE_PATH" ]; then
-          echo "::error::Xcode 26.5 not found on runner"
-          ls -d /Applications/Xcode_26*.app || true
-          exit 1
-        fi
-        sudo xcode-select -s "$XCODE_PATH/Contents/Developer"
-        echo "DEVELOPER_DIR=$XCODE_PATH/Contents/Developer" >> "$GITHUB_ENV"
-        xcodebuild -version
-
-    - name: Install iOS Simulator Runtime
-      run: |
-        echo "Installing iOS simulator runtime..."
-        xcrun simctl list runtimes > /dev/null 2>&1 || true
-        sleep 5
-        xcodebuild -downloadPlatform iOS
-        echo "Available iOS simulator runtimes:"
-        xcrun simctl list runtimes | grep iOS
-
-    - name: Install XcodeGen
-      run: brew install xcodegen
-
-    - name: Generate Xcode project
-      id: generate
-      run: make generate
+    # Shared setup (Select Xcode + brew/SPM caches + xcodegen + generate).
+    # install-runtime: false — CodeQL builds against a generic simulator
+    # destination and never boots a simulator, so it doesn't need the runtime.
+    - name: Set up iOS build environment
+      uses: ./.github/actions/setup-ios
+      with:
+        install-runtime: "false"
 
     - name: Initialize CodeQL
       id: codeql-init
       uses: github/codeql-action/init@7211b7c8077ea37d8641b6271f6a365a22a5fbfa # v4.36.0
       with:
         languages: swift
+        # security-extended adds the broader security query pack on top of the
+        # default high-precision suite — more coverage for a low triage cost on
+        # an advisory (non-blocking) scan.
+        queries: security-extended
 
     - name: Build for CodeQL
       id: codeql-build
@@ -88,7 +72,6 @@ jobs:
     - name: Analysis summary
       if: always()
       env:
-        GENERATE: ${{ steps.generate.outcome }}
         INIT: ${{ steps.codeql-init.outcome }}
         BUILD: ${{ steps.codeql-build.outcome }}
         ANALYZE: ${{ steps.codeql-analyze.outcome }}
@@ -99,8 +82,7 @@ jobs:
           echo "| Stage | Result |"
           echo "|-------|--------|"
         } >> "$GITHUB_STEP_SUMMARY"
-        for row in "Generate Xcode project:$GENERATE" \
-                   "Initialize CodeQL:$INIT" \
+        for row in "Initialize CodeQL:$INIT" \
                    "Build for CodeQL:$BUILD" \
                    "Perform CodeQL Analysis:$ANALYZE"; do
           name="${row%%:*}"

@@ -9,7 +9,7 @@ on:
   push:
     branches: [master]
   pull_request:
-    branches: [develop, master, main]
+    branches: [master]
   workflow_dispatch:
 
 concurrency:
@@ -25,6 +25,7 @@ jobs:
   docc:
     name: Build DocC
     runs-on: macos-26
+    timeout-minutes: 30
 
     permissions:
       contents: read
@@ -33,41 +34,13 @@ jobs:
     - name: Checkout code
       uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
 
-    - name: Select Xcode 26.5
-      run: |
-        XCODE_PATH=$(ls -d /Applications/Xcode_26.5*.app 2>/dev/null | head -1)
-        if [ -z "$XCODE_PATH" ]; then
-          echo "::error::Xcode 26.5 not found on runner"
-          ls -d /Applications/Xcode_26*.app || true
-          exit 1
-        fi
-        sudo xcode-select -s "$XCODE_PATH/Contents/Developer"
-        echo "DEVELOPER_DIR=$XCODE_PATH/Contents/Developer" >> "$GITHUB_ENV"
-        xcodebuild -version
-
-    - name: Cache Homebrew packages
-      uses: actions/cache@27d5ce7f107fe9357f9df03efb73ab90386fccae # v5.0.5
+    # Shared setup (Select Xcode + brew/SPM caches + xcodegen + generate).
+    # install-runtime: false — docbuild targets a generic iOS destination and
+    # never boots a simulator.
+    - name: Set up iOS build environment
+      uses: ./.github/actions/setup-ios
       with:
-        path: |
-          ~/Library/Caches/Homebrew
-          /usr/local/Homebrew
-        key: ${{ runner.os }}-brew-v1
-        restore-keys: |
-          ${{ runner.os }}-brew-
-
-    - name: Cache SPM dependencies
-      uses: actions/cache@27d5ce7f107fe9357f9df03efb73ab90386fccae # v5.0.5
-      with:
-        path: |
-          Pulse.xcodeproj/project.xcworkspace/xcshareddata/swiftpm
-          ~/Library/Caches/org.swift.swiftpm
-        key: ${{ runner.os }}-spm-v10
-
-    - name: Install XcodeGen
-      run: brew install xcodegen
-
-    - name: Generate Xcode project
-      run: make generate
+        install-runtime: "false"
 
     - name: Resolve Package Dependencies
       run: |
@@ -76,6 +49,9 @@ jobs:
           -scheme PulseDev \
           -onlyUsePackageVersionsFromResolvedFile
 
+    # OTHER_DOCC_FLAGS="--warnings-as-errors" makes a broken <doc:> link or an
+    # unresolved symbol reference FAIL the build — which is what the workflow
+    # header promises. Without it DocC emits those as warnings and still exits 0.
     - name: Build DocC documentation
       run: |
         xcodebuild docbuild \
@@ -85,6 +61,7 @@ jobs:
           -derivedDataPath ./DerivedData \
           -onlyUsePackageVersionsFromResolvedFile \
           DOCC_EXTRACT_SWIFT_INFO_FOR_OBJC_SYMBOLS=NO \
+          OTHER_DOCC_FLAGS="--warnings-as-errors" \
           CODE_SIGNING_ALLOWED=NO \
           -skipMacroValidation
 
@@ -93,8 +70,10 @@ jobs:
       run: |
         ARCHIVE=$(find ./DerivedData -name '*.doccarchive' -type d | head -1)
         if [ -z "$ARCHIVE" ]; then
-          echo "::warning::No .doccarchive produced"
-          exit 0
+          # A successful docbuild always emits exactly one archive; zero archives
+          # means a scheme/target regression, so fail rather than pass green.
+          echo "::error::No .doccarchive produced"
+          exit 1
         fi
         echo "Built $ARCHIVE"
         # DocC writes symbol JSON with ':' in the filenames (e.g.

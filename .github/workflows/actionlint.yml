@@ -1,0 +1,66 @@
+name: Actionlint
+
+# Lints the GitHub Actions workflows themselves: actionlint validates the YAML
+# schema, expression syntax, and `uses:` refs, and bundles shellcheck over every
+# embedded `run:` block — exactly the bash/glob/quoting surface this repo leans
+# on heavily (1000+ lines of inlined shell with set -euo pipefail, heredocs and
+# regex pipelines). Cheap (seconds on ubuntu) and high-signal.
+
+on:
+  push:
+    branches: [master]
+    paths:
+      - ".github/workflows/**"
+      - ".github/actions/**"
+  pull_request:
+    paths:
+      - ".github/workflows/**"
+      - ".github/actions/**"
+  workflow_dispatch:
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+permissions: {}
+
+jobs:
+  actionlint:
+    name: Actionlint
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+
+    permissions:
+      contents: read
+
+    steps:
+    - name: Harden runner
+      uses: step-security/harden-runner@9af89fc71515a100421586dfdb3dc9c984fbf411 # v2.19.4
+      with:
+        egress-policy: audit
+
+    - name: Checkout code
+      uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
+      with:
+        persist-credentials: false
+
+    # shellcheck ships preinstalled on the ubuntu-latest image; actionlint
+    # auto-detects it and lints embedded run-block shell. Pinned release
+    # tarball (same install pattern as the gitleaks step in ci.yml).
+    #
+    # SHELLCHECK_OPTS excludes four codes that are accepted, longstanding
+    # conventions across this repo's workflows (so the gate fails only on NEW
+    # real problems, not pre-existing style):
+    #   SC2012 — `ls -d /Applications/Xcode_*.app | head` for Xcode selection
+    #   SC2044 — `for f in $(find ...)` in the entitlements/ATS audit loops
+    #   SC2086 — unquoted "$GITHUB_OUTPUT"/"$GITHUB_STEP_SUMMARY" (no spaces)
+    #   SC2129 — individual `>> $GITHUB_STEP_SUMMARY` redirects vs a block
+    # Everything else (real bugs, undefined vars, etc.) still fails the check.
+    - name: Run actionlint
+      env:
+        SHELLCHECK_OPTS: "-e SC2012 -e SC2044 -e SC2086 -e SC2129"
+      run: |
+        ACTIONLINT_VERSION="1.7.7"
+        curl -sSfL "https://github.com/rhysd/actionlint/releases/download/v${ACTIONLINT_VERSION}/actionlint_${ACTIONLINT_VERSION}_linux_amd64.tar.gz" \
+          | tar xz actionlint
+        ./actionlint -color

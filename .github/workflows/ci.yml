@@ -7,7 +7,7 @@ on:
   push:
     branches: [master]
   pull_request:
-    branches: [develop, master, main]
+    branches: [master]
     types: [opened, synchronize, reopened, ready_for_review]
 
 concurrency:
@@ -30,6 +30,7 @@ jobs:
   code-quality:
     name: Code Quality
     runs-on: macos-26
+    timeout-minutes: 20
 
     permissions:
       contents: read
@@ -92,44 +93,30 @@ jobs:
       run: |
         brew install swiftlint
 
+    # Lint scope includes the two shipped app extensions (PulseShareExtension,
+    # PulseWidgetExtension) — they ship to users and are inside the patch-coverage
+    # gate, so they should hold the same style bar as the main app. (Test targets
+    # are intentionally left out: they carry accepted style-warning noise.)
     - name: Validate SwiftFormat
       run: |
         echo "Running SwiftFormat validation..."
-        if mint run swiftformat Pulse PulseTests --lint; then
+        if mint run swiftformat Pulse PulseTests PulseShareExtension PulseWidgetExtension --lint; then
           echo "SwiftFormat validation passed"
         else
           echo "SwiftFormat validation failed!"
-          echo "Please run 'mint run swiftformat Pulse PulseTests' locally to fix formatting issues."
+          echo "Please run 'mint run swiftformat Pulse PulseTests PulseShareExtension PulseWidgetExtension' locally to fix formatting issues."
           exit 1
         fi
 
     - name: Run SwiftLint
       run: |
         echo "Running SwiftLint..."
-        if swiftlint lint Pulse PulseTests --reporter github-actions-logging; then
+        if swiftlint lint Pulse PulseTests PulseShareExtension PulseWidgetExtension --reporter github-actions-logging; then
           echo "SwiftLint validation passed"
         else
           echo "SwiftLint found issues!"
           echo "Please run 'swiftlint' locally to see detailed issues."
           exit 1
-        fi
-
-    - name: Check for TODO comments
-      run: |
-        echo "Checking for TODO comments..."
-        if grep -r "TODO" --include="*.swift" Pulse PulseTests; then
-          echo "TODO comments found in code"
-        else
-          echo "No TODO comments found"
-        fi
-
-    - name: Check for FIXME comments
-      run: |
-        echo "Checking for FIXME comments..."
-        if grep -r "FIXME" --include="*.swift" Pulse PulseTests; then
-          echo "FIXME comments found in code"
-        else
-          echo "No FIXME comments found"
         fi
 
     # A dropped/renamed key doesn't fail the build — it silently ships the raw
@@ -143,6 +130,7 @@ jobs:
   security-audit:
     name: Security Audit
     runs-on: ubuntu-latest
+    timeout-minutes: 20
 
     permissions:
       contents: read
@@ -170,22 +158,12 @@ jobs:
       with:
         fail-on-severity: critical
 
-    # Gitleaks: 150+ secret patterns vs our previous 3-pattern grep scan
-    - name: Install Gitleaks
-      run: |
-        GITLEAKS_VERSION="8.22.1"
-        curl -sSfL "https://github.com/gitleaks/gitleaks/releases/download/v${GITLEAKS_VERSION}/gitleaks_${GITLEAKS_VERSION}_linux_x64.tar.gz" | tar xz
-        sudo mv gitleaks /usr/local/bin/
-
-    - name: Run Gitleaks secret scanning
-      id: gitleaks
-      continue-on-error: true
-      run: |
-        echo "============================================"
-        echo "  Gitleaks Secret Scanning (150+ patterns)"
-        echo "============================================"
-        echo ""
-        gitleaks detect --source . --redact --verbose --no-banner --config .gitleaks.toml
+    # Secret scanning is owned by the conformance "PII Scan" jobs, which run
+    # gitleaks with the real ruleset (.github/lgpd-gdpr-rules.toml: extend.useDefault
+    # + the CPF/CNPJ/IBAN/SSN PII rules) on every PR AND push to master. A second
+    # gitleaks run here pointed at the rule-less root .gitleaks.toml (allowlist only,
+    # no extend.useDefault) detected nothing — so it was removed rather than left as
+    # a no-op that implied coverage it didn't provide.
 
     # mobsfscan: iOS/Swift-specific SAST (OWASP MASTG patterns)
     - name: Install mobsfscan
@@ -363,7 +341,8 @@ jobs:
     - name: Security audit summary
       if: always()
       env:
-        GITLEAKS: ${{ steps.gitleaks.outcome }}
+        DEPENDENCY: ${{ steps.dependency-review.outcome }}
+        EVENT: ${{ github.event_name }}
         MOBSFSCAN: ${{ steps.mobsfscan.outcome }}
         HTTPS_CHECK: ${{ steps.https-check.outcome }}
         PRIVACY: ${{ steps.privacy-manifest.outcome }}
@@ -376,13 +355,18 @@ jobs:
         echo "  Security Audit Summary"
         echo "============================================"
 
+        # dependency-review-action only runs on pull_request; on push it errors
+        # ("event not supported") and continue-on-error swallows it, so don't let
+        # that count as a failure on push — only gate on it for PRs.
+        [ "$EVENT" != "pull_request" ] && DEPENDENCY="skipped"
+
         echo "## Security Audit Results" >> "$GITHUB_STEP_SUMMARY"
         echo "" >> "$GITHUB_STEP_SUMMARY"
         echo "| Check | Result |" >> "$GITHUB_STEP_SUMMARY"
         echo "|-------|--------|" >> "$GITHUB_STEP_SUMMARY"
 
         FAILURES=0
-        for check in "Gitleaks:$GITLEAKS" "mobsfscan:$MOBSFSCAN" "HTTPS Enforcement:$HTTPS_CHECK" "Privacy Manifest:$PRIVACY" "ATS Exceptions:$ATS" "Entitlements:$ENTITLEMENTS" "File Permissions:$FILE_PERMS"; do
+        for check in "Dependency Review:$DEPENDENCY" "mobsfscan:$MOBSFSCAN" "HTTPS Enforcement:$HTTPS_CHECK" "Privacy Manifest:$PRIVACY" "ATS Exceptions:$ATS" "Entitlements:$ENTITLEMENTS" "File Permissions:$FILE_PERMS"; do
           name="${check%%:*}"
           result="${check##*:}"
           if [ "$result" = "failure" ]; then
@@ -407,6 +391,7 @@ jobs:
     name: Build Project
     runs-on: macos-26
     needs: code-quality
+    timeout-minutes: 45
 
     permissions:
       contents: read
@@ -415,60 +400,10 @@ jobs:
     - name: Checkout code
       uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
 
-    - name: Select Xcode 26.5
-      run: |
-        XCODE_PATH=$(ls -d /Applications/Xcode_26.5*.app 2>/dev/null | head -1)
-        if [ -z "$XCODE_PATH" ]; then
-          echo "::error::Xcode 26.5 not found on runner"
-          ls -d /Applications/Xcode_26*.app || true
-          exit 1
-        fi
-        sudo xcode-select -s "$XCODE_PATH/Contents/Developer"
-        echo "DEVELOPER_DIR=$XCODE_PATH/Contents/Developer" >> "$GITHUB_ENV"
-        xcodebuild -version
-
-    - name: Install iOS Simulator Runtime
-      run: |
-        echo "Installing iOS simulator runtime..."
-        # Initialize CoreSimulator service before downloading
-        xcrun simctl list runtimes > /dev/null 2>&1 || true
-        sleep 5
-        xcodebuild -downloadPlatform iOS
-        echo "Available iOS simulator runtimes:"
-        xcrun simctl list runtimes | grep iOS
-
-    # Cache Homebrew packages
-    # Note: Static version key (brew-v1) - increment manually when brew dependencies change
-    - name: Cache Homebrew packages
-      uses: actions/cache@27d5ce7f107fe9357f9df03efb73ab90386fccae # v5.0.5
+    - name: Set up iOS build environment
+      uses: ./.github/actions/setup-ios
       with:
-        path: |
-          ~/Library/Caches/Homebrew
-          /usr/local/Homebrew
-        key: ${{ runner.os }}-brew-v1
-        restore-keys: |
-          ${{ runner.os }}-brew-
-
-    # Cache SPM dependencies (metadata + downloaded artifacts including binary XCFrameworks)
-    # Note: Using static version key due to hashFiles() limitations in this CI environment
-    # Manually increment version when project.yml package dependencies change
-    # IMPORTANT: Do NOT use broad restore-keys fallback - it can restore stale package versions
-    # v6: Added ~/Library/Caches/org.swift.swiftpm to cache binary artifacts
-    - name: Cache SPM dependencies
-      uses: actions/cache@27d5ce7f107fe9357f9df03efb73ab90386fccae # v5.0.5
-      with:
-        path: |
-          Pulse.xcodeproj/project.xcworkspace/xcshareddata/swiftpm
-          ~/Library/Caches/org.swift.swiftpm
-        key: ${{ runner.os }}-spm-v10
-
-    - name: Install XcodeGen
-      run: |
-        brew install xcodegen
-
-    - name: Generate Xcode project
-      run: |
-        make generate
+        install-runtime: "true"
 
     - name: Debug Package Dependencies
       run: |
@@ -533,6 +468,7 @@ jobs:
     name: Release Build
     runs-on: macos-26
     needs: code-quality
+    timeout-minutes: 45
 
     permissions:
       contents: read
@@ -541,51 +477,10 @@ jobs:
     - name: Checkout code
       uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
 
-    - name: Select Xcode 26.5
-      run: |
-        XCODE_PATH=$(ls -d /Applications/Xcode_26.5*.app 2>/dev/null | head -1)
-        if [ -z "$XCODE_PATH" ]; then
-          echo "::error::Xcode 26.5 not found on runner"
-          ls -d /Applications/Xcode_26*.app || true
-          exit 1
-        fi
-        sudo xcode-select -s "$XCODE_PATH/Contents/Developer"
-        echo "DEVELOPER_DIR=$XCODE_PATH/Contents/Developer" >> "$GITHUB_ENV"
-        xcodebuild -version
-
-    - name: Install iOS Simulator Runtime
-      run: |
-        echo "Installing iOS simulator runtime..."
-        # Initialize CoreSimulator service before downloading
-        xcrun simctl list runtimes > /dev/null 2>&1 || true
-        sleep 5
-        xcodebuild -downloadPlatform iOS
-        echo "Available iOS simulator runtimes:"
-        xcrun simctl list runtimes | grep iOS
-
-    - name: Cache Homebrew packages
-      uses: actions/cache@27d5ce7f107fe9357f9df03efb73ab90386fccae # v5.0.5
+    - name: Set up iOS build environment
+      uses: ./.github/actions/setup-ios
       with:
-        path: |
-          ~/Library/Caches/Homebrew
-          /usr/local/Homebrew
-        key: ${{ runner.os }}-brew-v1
-        restore-keys: |
-          ${{ runner.os }}-brew-
-
-    - name: Cache SPM dependencies
-      uses: actions/cache@27d5ce7f107fe9357f9df03efb73ab90386fccae # v5.0.5
-      with:
-        path: |
-          Pulse.xcodeproj/project.xcworkspace/xcshareddata/swiftpm
-          ~/Library/Caches/org.swift.swiftpm
-        key: ${{ runner.os }}-spm-v10
-
-    - name: Install XcodeGen
-      run: brew install xcodegen
-
-    - name: Generate Xcode project
-      run: make generate
+        install-runtime: "true"
 
     - name: Resolve Package Dependencies
       run: |
@@ -612,6 +507,10 @@ jobs:
     name: ${{ matrix.test-name }}
     runs-on: macos-26
     needs: build
+    # Ceiling above the longest per-leg step timeout (UI Tests = 180) plus setup.
+    # The real per-run bound is the matrix `timeout` step-level value below; this
+    # is just runaway insurance for the setup/download steps.
+    timeout-minutes: 210
 
     permissions:
       contents: read
@@ -650,60 +549,10 @@ jobs:
     - name: Checkout code
       uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
 
-    - name: Select Xcode 26.5
-      run: |
-        XCODE_PATH=$(ls -d /Applications/Xcode_26.5*.app 2>/dev/null | head -1)
-        if [ -z "$XCODE_PATH" ]; then
-          echo "::error::Xcode 26.5 not found on runner"
-          ls -d /Applications/Xcode_26*.app || true
-          exit 1
-        fi
-        sudo xcode-select -s "$XCODE_PATH/Contents/Developer"
-        echo "DEVELOPER_DIR=$XCODE_PATH/Contents/Developer" >> "$GITHUB_ENV"
-        xcodebuild -version
-
-    - name: Install iOS Simulator Runtime
-      run: |
-        echo "Installing iOS simulator runtime..."
-        # Initialize CoreSimulator service before downloading
-        xcrun simctl list runtimes > /dev/null 2>&1 || true
-        sleep 5
-        xcodebuild -downloadPlatform iOS
-        echo "Available iOS simulator runtimes:"
-        xcrun simctl list runtimes | grep iOS
-
-    # Cache Homebrew packages
-    # Note: Static version key (brew-v1) - increment manually when brew dependencies change
-    - name: Cache Homebrew packages
-      uses: actions/cache@27d5ce7f107fe9357f9df03efb73ab90386fccae # v5.0.5
+    - name: Set up iOS build environment
+      uses: ./.github/actions/setup-ios
       with:
-        path: |
-          ~/Library/Caches/Homebrew
-          /usr/local/Homebrew
-        key: ${{ runner.os }}-brew-v1
-        restore-keys: |
-          ${{ runner.os }}-brew-
-
-    # Cache SPM dependencies (metadata + downloaded artifacts including binary XCFrameworks)
-    # Note: Using static version key due to hashFiles() limitations in this CI environment
-    # Manually increment version when project.yml package dependencies change
-    # IMPORTANT: Do NOT use broad restore-keys fallback - it can restore stale package versions
-    # v6: Added ~/Library/Caches/org.swift.swiftpm to cache binary artifacts
-    - name: Cache SPM dependencies
-      uses: actions/cache@27d5ce7f107fe9357f9df03efb73ab90386fccae # v5.0.5
-      with:
-        path: |
-          Pulse.xcodeproj/project.xcworkspace/xcshareddata/swiftpm
-          ~/Library/Caches/org.swift.swiftpm
-        key: ${{ runner.os }}-spm-v10
-
-    - name: Install XcodeGen
-      run: |
-        brew install xcodegen
-
-    - name: Generate Xcode project
-      run: |
-        make generate
+        install-runtime: "true"
 
     - name: Download build artifacts
       uses: actions/download-artifact@3e5f45b2cfb9172054b4087a40e8e0b5a5461e7c # v8.0.1
@@ -1054,9 +903,12 @@ jobs:
 
   test-results:
     name: Test Results Summary
-    runs-on: macos-26
+    # Pure bookkeeping (download artifacts + shell) — no Xcode/xcrun, so it runs
+    # on ubuntu (10x cheaper than a macOS runner).
+    runs-on: ubuntu-latest
     needs: [tests]
     if: always()
+    timeout-minutes: 10
 
     permissions:
       contents: read
@@ -1155,6 +1007,7 @@ jobs:
     runs-on: macos-26
     needs: tests
     if: always()
+    timeout-minutes: 10
 
     permissions:
       contents: read

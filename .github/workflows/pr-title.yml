@@ -6,7 +6,14 @@ name: PR Title
 
 on:
   pull_request:
-    types: [opened, edited, synchronize, reopened, ready_for_review]
+    # No `synchronize`: pushing commits never changes the title, so it would
+    # only add redundant runs. opened/edited/reopened/ready_for_review cover
+    # every event that can actually change the title.
+    types: [opened, edited, reopened, ready_for_review]
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
 
 permissions: {}
 
@@ -14,6 +21,7 @@ jobs:
   lint-title:
     name: Conventional Commit title
     runs-on: ubuntu-latest
+    timeout-minutes: 5
     steps:
     - name: Validate PR title
       env:
@@ -23,7 +31,7 @@ jobs:
         PR_TITLE: ${{ github.event.pull_request.title }}
       run: |
         echo "PR title: $PR_TITLE"
-        pattern='^(build|chore|ci|deps|docs|feat|fix|perf|refactor|revert|style|test)(\([a-z0-9 ,_/.-]+\))?!?: .+'
+        pattern='^(build|chore|ci|deps|docs|feat|fix|perf|refactor|revert|style|test)(\([a-zA-Z0-9 ,_/.-]+\))?!?: .+'
         if echo "$PR_TITLE" | grep -Eq "$pattern"; then
           echo "Title follows Conventional Commits."
         else

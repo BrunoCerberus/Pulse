@@ -24,8 +24,9 @@ env:
 
 jobs:
   build:
-    name: Build Project
+    name: Nightly Build
     runs-on: macos-26
+    timeout-minutes: 45
 
     permissions:
       contents: read
@@ -34,60 +35,10 @@ jobs:
     - name: Checkout code
       uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
 
-    - name: Select Xcode 26.5
-      run: |
-        XCODE_PATH=$(ls -d /Applications/Xcode_26.5*.app 2>/dev/null | head -1)
-        if [ -z "$XCODE_PATH" ]; then
-          echo "::error::Xcode 26.5 not found on runner"
-          ls -d /Applications/Xcode_26*.app || true
-          exit 1
-        fi
-        sudo xcode-select -s "$XCODE_PATH/Contents/Developer"
-        echo "DEVELOPER_DIR=$XCODE_PATH/Contents/Developer" >> "$GITHUB_ENV"
-        xcodebuild -version
-
-    - name: Install iOS Simulator Runtime
-      run: |
-        echo "Installing iOS simulator runtime..."
-        # Initialize CoreSimulator service before downloading
-        xcrun simctl list runtimes > /dev/null 2>&1 || true
-        sleep 5
-        xcodebuild -downloadPlatform iOS
-        echo "Available iOS simulator runtimes:"
-        xcrun simctl list runtimes | grep iOS
-
-    # Cache Homebrew packages
-    # Note: Static version key (brew-v1) - increment manually when brew dependencies change
-    - name: Cache Homebrew packages
-      uses: actions/cache@27d5ce7f107fe9357f9df03efb73ab90386fccae # v5.0.5
+    - name: Set up iOS build environment
+      uses: ./.github/actions/setup-ios
       with:
-        path: |
-          ~/Library/Caches/Homebrew
-          /usr/local/Homebrew
-        key: ${{ runner.os }}-brew-v1
-        restore-keys: |
-          ${{ runner.os }}-brew-
-
-    # Cache SPM dependencies (metadata + downloaded artifacts including binary XCFrameworks)
-    # Note: Using static version key due to hashFiles() limitations in this CI environment
-    # Manually increment version when project.yml package dependencies change
-    # IMPORTANT: Do NOT use broad restore-keys fallback - it can restore stale package versions
-    # v6: Added ~/Library/Caches/org.swift.swiftpm to cache binary artifacts
-    - name: Cache SPM dependencies
-      uses: actions/cache@27d5ce7f107fe9357f9df03efb73ab90386fccae # v5.0.5
-      with:
-        path: |
-          Pulse.xcodeproj/project.xcworkspace/xcshareddata/swiftpm
-          ~/Library/Caches/org.swift.swiftpm
-        key: ${{ runner.os }}-spm-v10
-
-    - name: Install XcodeGen
-      run: |
-        brew install xcodegen
-
-    - name: Generate Xcode project
-      run: |
-        make generate
+        install-runtime: "true"
 
     - name: Debug Package Dependencies
       run: |
@@ -137,7 +88,7 @@ jobs:
         retention-days: 1
 
   security-audit:
-    name: Security Audit
+    name: Nightly Security Audit
     runs-on: ubuntu-latest
 
     permissions:
@@ -154,10 +105,15 @@ jobs:
       with:
         fetch-depth: 0
 
-    # Gitleaks: 150+ secret patterns vs our previous 3-pattern grep scan
-    - name: Install Gitleaks
+    # Gitleaks: 150+ secret patterns vs our previous 3-pattern grep scan.
+    # NIGHTLY-ONLY INCREMENTAL VALUE: unlike ci.yml (pinned to 8.22.1 for
+    # reproducible PR gating), the nightly tracks the LATEST gitleaks release so
+    # newly-classified detector rules re-scan already-merged code and surface
+    # secrets the pinned CI scan would never re-evaluate.
+    - name: Install Gitleaks (latest)
       run: |
-        GITLEAKS_VERSION="8.22.1"
+        GITLEAKS_VERSION=$(curl -sSfL https://api.github.com/repos/gitleaks/gitleaks/releases/latest | jq -r '.tag_name' | sed 's/^v//')
+        echo "Installing latest gitleaks: v${GITLEAKS_VERSION}"
         curl -sSfL "https://github.com/gitleaks/gitleaks/releases/download/v${GITLEAKS_VERSION}/gitleaks_${GITLEAKS_VERSION}_linux_x64.tar.gz" | tar xz
         sudo mv gitleaks /usr/local/bin/
 
@@ -171,9 +127,12 @@ jobs:
         echo ""
         gitleaks detect --source . --redact --verbose --no-banner --config .gitleaks.toml
 
-    # mobsfscan: iOS/Swift-specific SAST (OWASP MASTG patterns)
-    - name: Install mobsfscan
-      run: pip install 'mobsfscan>=0.3,<1.0'
+    # mobsfscan: iOS/Swift-specific SAST (OWASP MASTG patterns).
+    # NIGHTLY-ONLY INCREMENTAL VALUE: ci.yml pins to '>=0.3,<1.0'; the nightly
+    # installs the latest release so newly-added detector rules re-scan
+    # already-merged code for issues the pinned CI scan would miss.
+    - name: Install mobsfscan (latest)
+      run: pip install --upgrade mobsfscan
 
     - name: Run mobsfscan iOS security analysis
       id: mobsfscan
@@ -388,9 +347,10 @@ jobs:
         echo "All security checks passed"
 
   tests:
-    name: ${{ matrix.test-name }}
+    name: Nightly ${{ matrix.test-name }}
     runs-on: macos-26
     needs: build
+    timeout-minutes: 25
 
     permissions:
       contents: read
@@ -419,60 +379,10 @@ jobs:
     - name: Checkout code
       uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
 
-    - name: Select Xcode 26.5
-      run: |
-        XCODE_PATH=$(ls -d /Applications/Xcode_26.5*.app 2>/dev/null | head -1)
-        if [ -z "$XCODE_PATH" ]; then
-          echo "::error::Xcode 26.5 not found on runner"
-          ls -d /Applications/Xcode_26*.app || true
-          exit 1
-        fi
-        sudo xcode-select -s "$XCODE_PATH/Contents/Developer"
-        echo "DEVELOPER_DIR=$XCODE_PATH/Contents/Developer" >> "$GITHUB_ENV"
-        xcodebuild -version
-
-    - name: Install iOS Simulator Runtime
-      run: |
-        echo "Installing iOS simulator runtime..."
-        # Initialize CoreSimulator service before downloading
-        xcrun simctl list runtimes > /dev/null 2>&1 || true
-        sleep 5
-        xcodebuild -downloadPlatform iOS
-        echo "Available iOS simulator runtimes:"
-        xcrun simctl list runtimes | grep iOS
-
-    # Cache Homebrew packages
-    # Note: Static version key (brew-v1) - increment manually when brew dependencies change
-    - name: Cache Homebrew packages
-      uses: actions/cache@27d5ce7f107fe9357f9df03efb73ab90386fccae # v5.0.5
+    - name: Set up iOS build environment
+      uses: ./.github/actions/setup-ios
       with:
-        path: |
-          ~/Library/Caches/Homebrew
-          /usr/local/Homebrew
-        key: ${{ runner.os }}-brew-v1
-        restore-keys: |
-          ${{ runner.os }}-brew-
-
-    # Cache SPM dependencies (metadata + downloaded artifacts including binary XCFrameworks)
-    # Note: Using static version key due to hashFiles() limitations in this CI environment
-    # Manually increment version when project.yml package dependencies change
-    # IMPORTANT: Do NOT use broad restore-keys fallback - it can restore stale package versions
-    # v6: Added ~/Library/Caches/org.swift.swiftpm to cache binary artifacts
-    - name: Cache SPM dependencies
-      uses: actions/cache@27d5ce7f107fe9357f9df03efb73ab90386fccae # v5.0.5
-      with:
-        path: |
-          Pulse.xcodeproj/project.xcworkspace/xcshareddata/swiftpm
-          ~/Library/Caches/org.swift.swiftpm
-        key: ${{ runner.os }}-spm-v10
-
-    - name: Install XcodeGen
-      run: |
-        brew install xcodegen
-
-    - name: Generate Xcode project
-      run: |
-        make generate
+        install-runtime: "true"
 
     - name: Download build artifacts
       uses: actions/download-artifact@3e5f45b2cfb9172054b4087a40e8e0b5a5461e7c # v8.0.1
@@ -630,10 +540,11 @@ jobs:
         if-no-files-found: ignore
 
   test-results:
-    name: Test Results Summary
+    name: Nightly Test Results
     runs-on: macos-26
     needs: [tests]
     if: always()
+    timeout-minutes: 10
 
     permissions:
       contents: read
@@ -730,71 +641,37 @@ jobs:
         exit 1
 
   auto-fix-tests:
-    name: Auto-Fix Failing Tests
+    name: Nightly Auto-Fix Failing Tests
     runs-on: macos-26
     needs: [test-results]
     if: always() && needs.test-results.result == 'failure'
+    timeout-minutes: 45
     concurrency:
       group: auto-fix-tests
       cancel-in-progress: true
     permissions:
       actions: read
       contents: write
-      id-token: write
+      issues: write
       pull-requests: write
+    outputs:
+      has_changes: ${{ steps.check-changes.outputs.has_changes }}
 
     steps:
     - name: Checkout code
       uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
       with:
         fetch-depth: 0
+        # Safe to disable: the "Commit and push changes" step below uses its own
+        # explicit credential — it runs `git remote set-url origin
+        # https://x-access-token:${GITHUB_TOKEN}@...` before pushing, so it does
+        # NOT rely on the checkout-persisted GITHUB_TOKEN.
+        persist-credentials: false
 
-    - name: Select Xcode 26.5
-      run: |
-        XCODE_PATH=$(ls -d /Applications/Xcode_26.5*.app 2>/dev/null | head -1)
-        if [ -z "$XCODE_PATH" ]; then
-          echo "::error::Xcode 26.5 not found on runner"
-          ls -d /Applications/Xcode_26*.app || true
-          exit 1
-        fi
-        sudo xcode-select -s "$XCODE_PATH/Contents/Developer"
-        echo "DEVELOPER_DIR=$XCODE_PATH/Contents/Developer" >> "$GITHUB_ENV"
-        xcodebuild -version
-
-    - name: Install iOS Simulator Runtime
-      run: |
-        echo "Installing iOS simulator runtime..."
-        # Initialize CoreSimulator service before downloading
-        xcrun simctl list runtimes > /dev/null 2>&1 || true
-        sleep 5
-        xcodebuild -downloadPlatform iOS
-        echo "Available iOS simulator runtimes:"
-        xcrun simctl list runtimes | grep iOS
-
-    - name: Cache Homebrew packages
-      uses: actions/cache@27d5ce7f107fe9357f9df03efb73ab90386fccae # v5.0.5
+    - name: Set up iOS build environment
+      uses: ./.github/actions/setup-ios
       with:
-        path: |
-          ~/Library/Caches/Homebrew
-          /usr/local/Homebrew
-        key: ${{ runner.os }}-brew-v1
-        restore-keys: |
-          ${{ runner.os }}-brew-
-
-    - name: Cache SPM dependencies
-      uses: actions/cache@27d5ce7f107fe9357f9df03efb73ab90386fccae # v5.0.5
-      with:
-        path: |
-          Pulse.xcodeproj/project.xcworkspace/xcshareddata/swiftpm
-        key: ${{ runner.os }}-spm-v10
-
-    - name: Install dependencies
-      run: |
-        brew install xcodegen
-
-    - name: Generate Xcode project
-      run: |
-        make generate
+        install-runtime: "true"
 
     - name: Download unit test results
       uses: actions/download-artifact@3e5f45b2cfb9172054b4087a40e8e0b5a5461e7c # v8.0.1
@@ -830,26 +707,70 @@ jobs:
         ls -la snapshot-test-results/ 2>/dev/null || echo "  snapshot-test-results: not found"
         echo ""
 
-        # Extract failures from xcresult bundles using xcresulttool
+        # Extract failures from xcresult bundles. The bare `xcrun xcresulttool
+        # get --format json` invocation is INVALID on Xcode 26 (it needs a
+        # subcommand), so we reuse the proven extractor from ci.yml's `tests`
+        # job: `xcrun xcresulttool get object` with a "" -> "--legacy" fallback
+        # loop, navigating to actionResult.issues.testFailureSummaries. This
+        # writes REAL failure messages to /tmp/failures.txt so the Claude
+        # auto-fix step below isn't fixing tests blind.
+        : > /tmp/failures.txt
         for result_dir in unit-test-results ui-test-results snapshot-test-results; do
           if [ -d "$result_dir" ]; then
             for xcresult in "$result_dir"/*.xcresult; do
               if [ -d "$xcresult" ]; then
                 echo "Processing $xcresult..."
 
-                # Method 1: Try to get test results summary first
-                echo "  Attempting test-results extraction..."
+                # Human-readable summary (modern call) for the run log only.
+                echo "  test-results summary:"
                 xcrun xcresulttool get test-results summary --path "$xcresult" 2>/dev/null | head -50 || echo "  test-results summary not available"
 
-                # Method 2: Get failures using JSON query
-                echo "  Attempting JSON extraction..."
-                xcrun xcresulttool get --format json --path "$xcresult" 2>/dev/null | \
-                  jq -r '.. | objects | select(.testStatus == "Failure") | "Test: \(.identifier // "unknown")\nName: \(.name // "unknown")\nMessage: \(.failureSummaries // [] | .[0]?.message // "No message")\nFile: \(.failureSummaries // [] | .[0]?.fileName // "Unknown") line \(.failureSummaries // [] | .[0]?.lineNumber // "?")\n---"' 2>/dev/null >> /tmp/failures.txt || true
+                # Machine extraction of failure messages into /tmp/failures.txt.
+                RESULT_BUNDLE="$xcresult" python3 << 'PYTHON_SCRIPT' >> /tmp/failures.txt
+        import json
+        import subprocess
+        import sys
+        import os
 
-                # Method 3: Alternative - look for issues in the result bundle
-                echo "  Attempting issues extraction..."
-                xcrun xcresulttool get --format json --path "$xcresult" 2>/dev/null | \
-                  jq -r '.. | objects | select(.issueType? != null) | "Issue: \(.issueType // "unknown")\nMessage: \(.message // "No message")\nFile: \(.documentLocationInCreatingWorkspace?.url // "Unknown")\n---"' 2>/dev/null >> /tmp/failures.txt || true
+        result_bundle = os.environ.get('RESULT_BUNDLE', '')
+
+        # Try the modern object format first, then fall back to --legacy
+        # (required on newer Xcode for the classic actions/issues schema).
+        data = None
+        for legacy_flag in ["", "--legacy"]:
+            try:
+                cmd = ["xcrun", "xcresulttool", "get", "object"]
+                if legacy_flag:
+                    cmd.append(legacy_flag)
+                cmd.extend(["--path", result_bundle, "--format", "json"])
+
+                result = subprocess.run(cmd, capture_output=True, text=True)
+                if result.returncode == 0 and result.stdout.strip():
+                    data = json.loads(result.stdout)
+                    break
+            except Exception:
+                continue
+
+        if data is None:
+            sys.exit(0)
+
+        actions = data.get('actions', {}).get('_values', [])
+        if not actions:
+            sys.exit(0)
+
+        action = actions[0]
+        issues = action.get('actionResult', {}).get('issues', {})
+        failures = issues.get('testFailureSummaries', {}).get('_values', [])
+
+        for f in failures:
+            test_name = f.get('testCaseName', {}).get('_value', 'Unknown Test')
+            message = f.get('message', {}).get('_value', 'No message')
+            location = f.get('documentLocationInCreatingWorkspace', {}).get('url', {}).get('_value', 'Unknown')
+            print(f"Test: {test_name}")
+            print(f"Message: {message}")
+            print(f"Location: {location}")
+            print("---")
+        PYTHON_SCRIPT
 
                 echo ""
               fi
@@ -1046,3 +967,84 @@ jobs:
         *This PR was auto-generated by the scheduled-tests workflow.*" \
           --base master \
           --head "$BRANCH_NAME"
+
+  # Surfaces a red nightly where a maintainer actually looks. A scheduled run's
+  # red check never appears on a branch/PR, so without this a broken nightly is
+  # invisible. Fires when the test run failed AND the auto-fix either produced
+  # no changes (has_changes == false) or the auto-fix job itself errored
+  # (failure / cancelled / skipped). De-duplicates a single tracking issue
+  # (fixed label + title) so consecutive red nights update one issue instead of
+  # spamming new ones.
+  notify-failure:
+    name: Nightly Failure Notification
+    runs-on: ubuntu-latest
+    needs: [test-results, auto-fix-tests]
+    if: >-
+      always() &&
+      needs.test-results.result == 'failure' &&
+      (needs.auto-fix-tests.result != 'success' ||
+       needs.auto-fix-tests.outputs.has_changes != 'true')
+    timeout-minutes: 10
+
+    permissions:
+      issues: write
+
+    steps:
+    - name: Open or update tracking issue
+      env:
+        GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        GH_REPO: ${{ github.repository }}
+        GH_SERVER_URL: ${{ github.server_url }}
+        GH_RUN_ID: ${{ github.run_id }}
+        AUTOFIX_RESULT: ${{ needs.auto-fix-tests.result }}
+        AUTOFIX_HAS_CHANGES: ${{ needs.auto-fix-tests.outputs.has_changes }}
+      run: |
+        set -euo pipefail
+
+        ISSUE_TITLE="Nightly test run is failing"
+        ISSUE_LABEL="nightly-failure"
+        RUN_URL="${GH_SERVER_URL}/${GH_REPO}/actions/runs/${GH_RUN_ID}"
+
+        if [ "$AUTOFIX_RESULT" != "success" ]; then
+          REASON="the auto-fix job did not complete successfully (result: \`${AUTOFIX_RESULT}\`)"
+        else
+          REASON="the auto-fix job ran but produced no source changes (Claude could not determine a fix)"
+        fi
+
+        BODY=$(cat <<EOF
+        The scheduled nightly test run failed and ${REASON}.
+
+        No auto-fix PR was opened for this run, so this needs manual attention.
+
+        - Failing run: ${RUN_URL}
+        - Date: $(date -u +"%Y-%m-%d %H:%M UTC")
+
+        ---
+        _Auto-managed by the scheduled-tests workflow. This issue is updated (not duplicated) on each consecutive red nightly. Close it once the nightly is green again._
+        EOF
+        )
+
+        # Ensure the dedup label exists (idempotent).
+        gh label create "$ISSUE_LABEL" \
+          --description "Tracking issue for failing nightly scheduled-tests runs" \
+          --color B60205 2>/dev/null || true
+
+        # Find an existing OPEN tracking issue by label + exact title.
+        EXISTING=$(gh issue list \
+          --state open \
+          --label "$ISSUE_LABEL" \
+          --search "in:title \"$ISSUE_TITLE\"" \
+          --json number,title \
+          --jq "map(select(.title == \"$ISSUE_TITLE\")) | .[0].number // empty")
+
+        if [ -n "$EXISTING" ]; then
+          echo "Updating existing tracking issue #$EXISTING"
+          gh issue comment "$EXISTING" --body "$BODY"
+          gh issue edit "$EXISTING" --add-label "$ISSUE_LABEL" >/dev/null 2>&1 || true
+        else
+          echo "Creating new tracking issue"
+          gh issue create \
+            --title "$ISSUE_TITLE" \
+            --label "$ISSUE_LABEL" \
+            --body "$BODY"
+        fi
