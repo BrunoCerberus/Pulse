@@ -29,13 +29,16 @@ jobs:
       contents: read
       pull-requests: write
       issues: write
+      # Required: claude-code-action fetches an OIDC token and exchanges it for
+      # a GitHub App token. Without id-token:write the action fails early with
+      # "Could not fetch an OIDC token."
+      id-token: write
 
     steps:
       - name: Checkout repository
         uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
         with:
           fetch-depth: 1
-          persist-credentials: false
 
       - name: Run Claude Code Review
         id: claude-review

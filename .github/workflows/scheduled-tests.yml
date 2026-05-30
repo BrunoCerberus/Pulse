@@ -654,6 +654,10 @@ jobs:
       contents: write
       issues: write
       pull-requests: write
+      # Required by claude-code-action's OIDC -> app-token exchange (same as the
+      # claude-review job). Without it the action fails with "Could not fetch an
+      # OIDC token."
+      id-token: write
     outputs:
       has_changes: ${{ steps.check-changes.outputs.has_changes }}
 
