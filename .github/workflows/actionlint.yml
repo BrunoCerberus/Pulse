@@ -5,17 +5,17 @@ name: Actionlint
 # embedded `run:` block — exactly the bash/glob/quoting surface this repo leans
 # on heavily (1000+ lines of inlined shell with set -euo pipefail, heredocs and
 # regex pipelines). Cheap (seconds on ubuntu) and high-signal.
+#
+# Runs on EVERY push/PR (no `paths:` filter) on purpose: it's a required status
+# check, and a path-filtered required check reports "pending" — and so blocks
+# merge — on any PR that doesn't touch the filtered paths. The job is ~15s, so
+# running it unconditionally costs nothing and keeps the gate always reporting.
 
 on:
   push:
     branches: [master]
-    paths:
-      - ".github/workflows/**"
-      - ".github/actions/**"
   pull_request:
-    paths:
-      - ".github/workflows/**"
-      - ".github/actions/**"
+    branches: [master]
   workflow_dispatch:
 
 concurrency:
