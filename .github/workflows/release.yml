@@ -54,6 +54,9 @@ jobs:
       uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
       with:
         fetch-depth: 0
+        # The push step below injects its own x-access-token remote, so nothing
+        # depends on the checkout-persisted credential being left in .git/config.
+        persist-credentials: false
 
     - name: Select Xcode 26.5
       run: |
@@ -119,9 +122,31 @@ jobs:
           VERSION="$MAJOR.$MINOR.$PATCH"
           TAG="v$VERSION"
         fi
+        if ! printf '%s' "$VERSION" | grep -Eq '^[0-9]+\.[0-9]+\.[0-9]+$'; then
+          echo "::error::Computed version '$VERSION' is not semver X.Y.Z — refusing to release."
+          exit 1
+        fi
         echo "version=$VERSION" >> "$GITHUB_OUTPUT"
         echo "tag=$TAG" >> "$GITHUB_OUTPUT"
         echo "Release version: $VERSION (tag $TAG)"
+
+    # A raw `git tag vX.Y.Z <arbitrary-sha> && git push --tags` would otherwise
+    # ship a GitHub Release (and, once secrets exist, a TestFlight upload) for a
+    # commit that never went through CI. CI gates every push to master, so require
+    # the tagged commit to be an ancestor of master. (The dispatch path is exempt:
+    # it pushes the bump commit to master itself.)
+    - name: Guard — tagged commit must be on master
+      if: github.event_name == 'push'
+      env:
+        SHA: ${{ github.sha }}
+      run: |
+        set -euo pipefail
+        git fetch --no-tags origin master
+        if ! git merge-base --is-ancestor "$SHA" FETCH_HEAD; then
+          echo "::error::Tagged commit $SHA is not an ancestor of origin/master — refusing to release an unvalidated commit."
+          exit 1
+        fi
+        echo "Tagged commit is on master — already validated by CI on push."
 
     - name: Apply version bump
       if: github.event_name == 'workflow_dispatch'
@@ -156,7 +181,9 @@ jobs:
         path: |
           Pulse.xcodeproj/project.xcworkspace/xcshareddata/swiftpm
           ~/Library/Caches/org.swift.swiftpm
-        key: ${{ runner.os }}-spm-v10
+        key: ${{ runner.os }}-spm-${{ hashFiles('Pulse.xcodeproj/project.xcworkspace/xcshareddata/swiftpm/Package.resolved') }}
+        restore-keys: |
+          ${{ runner.os }}-spm-
 
     # Decode the Firebase config into the source tree BEFORE `make generate`, so
     # XcodeGen includes it as a bundled resource and the Crashlytics build phase
@@ -176,6 +203,23 @@ jobs:
     - name: Generate Xcode project
       if: steps.creds.outputs.enabled == 'true'
       run: make generate
+
+    # App Store Connect rejects re-uploading an existing (version, build) pair.
+    # MARKETING_VERSION is bumped above; the build number must also be unique and
+    # monotonic. CFBundleVersion is a literal in each shipping target's Info.plist
+    # (not derived from $(CURRENT_PROJECT_VERSION)), so stamp it directly on the
+    # app + both extensions — App Store requires them to share the same value.
+    # Uses the run number, which increases monotonically across releases.
+    - name: Set build number
+      if: steps.creds.outputs.enabled == 'true'
+      env:
+        BUILD_NUMBER: ${{ github.run_number }}
+      run: |
+        set -euo pipefail
+        for plist in Pulse/Info.plist PulseShareExtension/Info.plist PulseWidgetExtension/Info.plist; do
+          /usr/libexec/PlistBuddy -c "Set :CFBundleVersion $BUILD_NUMBER" "$plist"
+          echo "Set CFBundleVersion=$BUILD_NUMBER in $plist"
+        done
 
     - name: Resolve Package Dependencies
       if: steps.creds.outputs.enabled == 'true'
@@ -252,6 +296,7 @@ jobs:
         GH_REPO: ${{ github.repository }}
         TAG: ${{ steps.version.outputs.tag }}
       run: |
+        set -euo pipefail
         git config user.name "github-actions[bot]"
         git config user.email "github-actions[bot]@users.noreply.github.com"
         git remote set-url origin "https://x-access-token:${GITHUB_TOKEN}@github.com/${GH_REPO}.git"

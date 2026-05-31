@@ -1,0 +1,65 @@
+name: Actionlint
+
+# Lints the GitHub Actions workflows themselves: actionlint validates the YAML
+# schema, expression syntax, and `uses:` refs, and bundles shellcheck over every
+# embedded `run:` block — exactly the bash/glob/quoting surface this repo leans
+# on heavily (1000+ lines of inlined shell with set -euo pipefail, heredocs and
+# regex pipelines). Cheap (seconds on ubuntu) and high-signal.
+#
+# Runs on EVERY push/PR (no `paths:` filter) on purpose: it's a required status
+# check, and a path-filtered required check reports "pending" — and so blocks
+# merge — on any PR that doesn't touch the filtered paths. The job is ~15s, so
+# running it unconditionally costs nothing and keeps the gate always reporting.
+
+on:
+  push:
+    branches: [master]
+  pull_request:
+    branches: [master]
+  workflow_dispatch:
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+permissions: {}
+
+jobs:
+  actionlint:
+    name: Actionlint
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+
+    permissions:
+      contents: read
+
+    steps:
+    - name: Harden runner
+      uses: step-security/harden-runner@9af89fc71515a100421586dfdb3dc9c984fbf411 # v2.19.4
+      with:
+        egress-policy: audit
+
+    - name: Checkout code
+      uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
+      with:
+        persist-credentials: false
+
+    # shellcheck ships preinstalled on the ubuntu-latest image; actionlint
+    # auto-detects it and lints embedded run-block shell. Pinned release
+    # tarball (same install pattern as the gitleaks step in ci.yml).
+    #
+    # The high-value layer here is actionlint's NATIVE checks (YAML schema,
+    # ${{ }} expression typing, `uses:` ref validation, runner labels, matrix /
+    # needs wiring, deprecated actions) — those stay fully active. shellcheck is
+    # scoped to `--severity=error` so the gate fails on genuine shell bugs but
+    # not on the repo's accepted style/info conventions (unquoted $GITHUB_OUTPUT,
+    # ls-for-Xcode, find-loops, …). This is also deterministic across the
+    # runner-image's shellcheck version, which a per-code exclude list is not.
+    - name: Run actionlint
+      env:
+        SHELLCHECK_OPTS: "--severity=error"
+      run: |
+        ACTIONLINT_VERSION="1.7.7"
+        curl -sSfL "https://github.com/rhysd/actionlint/releases/download/v${ACTIONLINT_VERSION}/actionlint_${ACTIONLINT_VERSION}_linux_amd64.tar.gz" \
+          | tar xz actionlint
+        ./actionlint -color

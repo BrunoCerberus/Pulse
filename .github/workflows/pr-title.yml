@@ -6,7 +6,16 @@ name: PR Title
 
 on:
   pull_request:
+    # `synchronize` is load-bearing: "Conventional Commit title" is a REQUIRED
+    # status check, so it must report on every head commit. Drop synchronize and
+    # the check never re-attaches after a push — it goes missing from the new
+    # head SHA and blocks merge. (edited/opened/reopened/ready_for_review alone
+    # leave pushed-over PRs un-mergeable.)
     types: [opened, edited, synchronize, reopened, ready_for_review]
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
 
 permissions: {}
 
@@ -14,6 +23,7 @@ jobs:
   lint-title:
     name: Conventional Commit title
     runs-on: ubuntu-latest
+    timeout-minutes: 5
     steps:
     - name: Validate PR title
       env:
@@ -23,7 +33,7 @@ jobs:
         PR_TITLE: ${{ github.event.pull_request.title }}
       run: |
         echo "PR title: $PR_TITLE"
-        pattern='^(build|chore|ci|deps|docs|feat|fix|perf|refactor|revert|style|test)(\([a-z0-9 ,_/.-]+\))?!?: .+'
+        pattern='^(build|chore|ci|deps|docs|feat|fix|perf|refactor|revert|style|test)(\([a-zA-Z0-9 ,_/.-]+\))?!?: .+'
         if echo "$PR_TITLE" | grep -Eq "$pattern"; then
           echo "Title follows Conventional Commits."
         else

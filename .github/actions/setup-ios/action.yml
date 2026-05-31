@@ -1,0 +1,95 @@
+name: "Set up iOS build environment"
+description: >
+  Shared setup for the macOS jobs: selects Xcode 26.5, optionally installs the
+  iOS simulator runtime (idempotently), restores the Homebrew + SPM caches,
+  installs XcodeGen, and generates the Xcode project. Centralizes the chain
+  that was previously copy-pasted across ci.yml (build/release-build/tests),
+  scheduled-tests.yml, codeql.yml and docs.yml. (release.yml keeps its own
+  inlined chain — it interleaves a Firebase-config provisioning step before
+  `make generate` that doesn't fit this action.) Assumes the caller has already
+  run actions/checkout.
+
+inputs:
+  install-runtime:
+    description: >
+      Install the iOS simulator runtime. Set "false" for jobs that only build
+      against a generic destination (CodeQL, DocC, Release archive) and never
+      boot a simulator.
+    required: false
+    default: "true"
+
+runs:
+  using: "composite"
+  steps:
+    - name: Select Xcode 26.5
+      shell: bash
+      run: |
+        XCODE_PATH=$(ls -d /Applications/Xcode_26.5*.app 2>/dev/null | head -1)
+        if [ -z "$XCODE_PATH" ]; then
+          echo "::error::Xcode 26.5 not found on runner"
+          ls -d /Applications/Xcode_26*.app || true
+          exit 1
+        fi
+        sudo xcode-select -s "$XCODE_PATH/Contents/Developer"
+        echo "DEVELOPER_DIR=$XCODE_PATH/Contents/Developer" >> "$GITHUB_ENV"
+        xcodebuild -version
+
+    # Idempotent: macOS runner images sometimes already ship a usable iOS
+    # runtime. Probe first and only download when absent — `-downloadPlatform`
+    # is the single largest wall-clock cost when it runs, but removing it
+    # outright previously broke the simulator (commit b01707c), so we keep it
+    # as the fallback rather than dropping it.
+    - name: Install iOS Simulator Runtime
+      if: ${{ inputs.install-runtime == 'true' }}
+      shell: bash
+      run: |
+        # Skip only when an AVAILABLE iOS runtime already exists (a line like
+        # "iOS 18.0 (...) - com.apple.CoreSimulator.SimRuntime.iOS-18-0" that is
+        # not flagged unavailable). Conservative on purpose: anything short of a
+        # confirmed-available runtime falls through to the download, preserving
+        # the failure-safety that the unconditional download previously gave.
+        if xcrun simctl list runtimes 2>/dev/null | grep -E '^iOS [0-9]' | grep -qiv 'unavailable'; then
+          echo "An available iOS simulator runtime is already installed — skipping download."
+          xcrun simctl list runtimes | grep -E '^iOS [0-9]' || true
+        else
+          echo "No available iOS simulator runtime found — downloading..."
+          # Initialize CoreSimulator service before downloading
+          xcrun simctl list runtimes > /dev/null 2>&1 || true
+          sleep 5
+          xcodebuild -downloadPlatform iOS
+          echo "Available iOS simulator runtimes:"
+          xcrun simctl list runtimes | grep -E '^iOS [0-9]'
+        fi
+
+    - name: Cache Homebrew packages
+      uses: actions/cache@27d5ce7f107fe9357f9df03efb73ab90386fccae # v5.0.5
+      with:
+        path: |
+          ~/Library/Caches/Homebrew
+          /usr/local/Homebrew
+        key: ${{ runner.os }}-brew-v1
+        restore-keys: |
+          ${{ runner.os }}-brew-
+
+    # Keyed on the git-tracked Package.resolved so the cache auto-invalidates
+    # when a dependency changes — no more manual version-key bumps. The
+    # restore-keys fallback is now safe: -onlyUsePackageVersionsFromResolvedFile
+    # in the resolve/build steps forces resolution from the checked-out
+    # Package.resolved, so a partially-stale restore is corrected, not trusted.
+    - name: Cache SPM dependencies
+      uses: actions/cache@27d5ce7f107fe9357f9df03efb73ab90386fccae # v5.0.5
+      with:
+        path: |
+          Pulse.xcodeproj/project.xcworkspace/xcshareddata/swiftpm
+          ~/Library/Caches/org.swift.swiftpm
+        key: ${{ runner.os }}-spm-${{ hashFiles('Pulse.xcodeproj/project.xcworkspace/xcshareddata/swiftpm/Package.resolved') }}
+        restore-keys: |
+          ${{ runner.os }}-spm-
+
+    - name: Install XcodeGen
+      shell: bash
+      run: brew install xcodegen
+
+    - name: Generate Xcode project
+      shell: bash
+      run: make generate

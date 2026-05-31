@@ -22,6 +22,7 @@ struct TTSLiveActivity: Widget {
         } dynamicIsland: { context in
             DynamicIsland {
                 // MARK: Expanded
+
                 DynamicIslandExpandedRegion(.leading) {
                     HStack(spacing: 6) {
                         Image(systemName: context.state.isPlaying ? "pause.fill" : "play.fill")

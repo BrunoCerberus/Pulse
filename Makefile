@@ -59,17 +59,17 @@ init:
 # Run linting checks (SwiftFormat + SwiftLint)
 lint:
 	@echo "Running SwiftFormat lint check..."
-	@mint run nicklockwood/SwiftFormat swiftformat Pulse PulseTests --lint
+	@mint run nicklockwood/SwiftFormat swiftformat Pulse PulseTests PulseShareExtension PulseWidgetExtension --lint
 	@echo "SwiftFormat check passed"
 	@echo ""
 	@echo "Running SwiftLint..."
-	@swiftlint lint Pulse PulseTests
+	@swiftlint lint Pulse PulseTests PulseShareExtension PulseWidgetExtension
 	@echo "SwiftLint check passed"
 
 # Auto-fix formatting with SwiftFormat
 format:
 	@echo "Running SwiftFormat..."
-	@mint run nicklockwood/SwiftFormat swiftformat Pulse PulseTests
+	@mint run nicklockwood/SwiftFormat swiftformat Pulse PulseTests PulseShareExtension PulseWidgetExtension
 	@echo "Formatting complete!"
 
 # Install XcodeGen
