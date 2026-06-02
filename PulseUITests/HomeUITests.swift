@@ -247,12 +247,17 @@ final class HomeUITests: BaseUITestCase {
                 // --- Article Card Navigation ---
 
                 // Scroll to make the card hittable if needed
-                if !firstCard.exists {
+                if !safeExists(firstCard) {
                     app.scrollViews.firstMatch.swipeUp()
                 }
 
-                if firstCard.exists {
-                    firstCard.tap()
+                if safeExists(firstCard) {
+                    // Coordinate-based safeTap instead of firstCard.tap(): a raw .tap() on a
+                    // card that exists but isn't hittable makes XCUITest auto-"scroll element
+                    // to visible" and re-evaluate the accessibility tree, which hangs for the
+                    // entire job timeout under Xcode 26's degraded accessibility framework.
+                    // That hang is what stalled the nightly UI suite on this test.
+                    safeTap(firstCard)
                     XCTAssertTrue(waitForArticleDetail(), "Should navigate to article detail")
 
                     // Navigate back with explicit wait for News nav bar
@@ -280,7 +285,7 @@ final class HomeUITests: BaseUITestCase {
                 )
 
                 // Horizontal carousel scroll (if Breaking News exists)
-                if app.staticTexts["Breaking News"].exists {
+                if safeExists(app.staticTexts["Breaking News"]) {
                     scrollView.swipeLeft()
                 }
 
@@ -288,13 +293,17 @@ final class HomeUITests: BaseUITestCase {
                 let cardsAfterScroll = articleCards()
                 let contextCard = cardsAfterScroll.firstMatch
                 if safeWaitForExistence(contextCard, timeout: Self.shortTimeout) {
-                    contextCard.press(forDuration: 0.5)
+                    // Coordinate-based long press — a raw .press(forDuration:) auto-scrolls a
+                    // non-hittable card into view and hangs the same way a raw .tap() does.
+                    ObjCExceptionCatcher.safeLongPress(contextCard, duration: 0.5)
 
                     let contextMenuAppeared = safeWaitForExistence(app.buttons["Bookmark"], timeout: Self.shortTimeout) ||
                         safeWaitForExistence(app.buttons["Share"], timeout: 1)
 
                     if contextMenuAppeared {
-                        app.tap() // Dismiss context menu
+                        // Dismiss context menu via a coordinate tap. app.tap() can re-evaluate
+                        // the full accessibility tree and hang on a degraded Xcode 26 runner.
+                        app.coordinate(withNormalizedOffset: CGVector(dx: 0.5, dy: 0.1)).tap()
                     }
                 }
             }
