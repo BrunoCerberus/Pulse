@@ -91,6 +91,30 @@ struct DeeplinkManagerTests {
         #expect(sut.currentDeeplink == nil)
     }
 
+    @Test("handle() sanitizes directly-constructed search deeplinks (choke point)")
+    func handleSanitizesDirectSearch() {
+        sut.handle(deeplink: .search(query: "swift\u{0000}\nnews"))
+
+        #expect(sut.currentDeeplink == .search(query: "swiftnews"))
+    }
+
+    @Test("handle() collapses a whitespace-only direct search query to nil")
+    func handleCollapsesBlankDirectSearch() {
+        sut.handle(deeplink: .search(query: "   "))
+
+        #expect(sut.currentDeeplink == .search(query: nil))
+    }
+
+    @Test("SearchPulseIntent routes its query through the sanitizing choke point")
+    func searchIntentSanitizesQuery() async throws {
+        let intent = SearchPulseIntent()
+        intent.query = "climate\nchange\u{0000}"
+
+        _ = try await intent.perform()
+
+        #expect(sut.currentDeeplink == .search(query: "climatechange"))
+    }
+
     @Test("Invalid scheme is ignored")
     func invalidSchemeIsIgnored() throws {
         let url = try #require(URL(string: "invalid://home"))
