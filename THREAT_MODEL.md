@@ -69,10 +69,15 @@ defense or a known residual; look for **unfixed variants** of each.
 
 1. **Prompt injection via untrusted article text** into the on-device Gemma model
    (`ArticleSummaryPromptBuilder.buildArticleContent`, `TopicExtractionPromptBuilder`,
-   `FeedDigestPromptBuilder`). Inputs are HTML-stripped + truncated but not
-   prompt-boundary-escaped. *Impact is bounded* — on-device model, no tool access,
-   output is a user-facing summary/tags — so the realistic worst case is a
-   manipulated summary, not exfiltration or RCE. Triage accordingly; do not inflate.
+   `FeedDigestPromptBuilder`). `description`/`content` are HTML-stripped + truncated;
+   the **`title` is interpolated raw**. None are prompt-boundary-escaped, so a poisoned
+   RSS `title` can inject Gemma turn markers (`<start_of_turn>`), tokenized as real
+   control tokens. The shared `PromptSanitizer` (commit `5277a32`) is **prepared on the
+   unmerged `security/pr-4-prompt-injection` branch — NOT in master**, so this gap is
+   live (confirmed by the discovery+verify run). *Impact is bounded* — on-device model,
+   no tool access, output is a user-facing summary/CloudKit-synced tags — so the
+   realistic worst case is manipulated output / tag pollution, not exfiltration or RCE.
+   Triage accordingly; do not inflate.
 2. **Unvalidated deeplink / push parameters.** Article IDs get `isValidArticleID`
    (≤512 chars, charset allowlist, no `..`). Free-text params are now bounded at the
    boundary; verify no new param type bypasses this and that push-payload fields are
@@ -89,15 +94,23 @@ defense or a known residual; look for **unfixed variants** of each.
 6. **Entitlement / paywall bypass.** Premium gates must re-verify against StoreKit 2,
    not trust cached state.
 
-### Past-fix "bug-shape" bootstrap (from `git log --grep=security`)
-Real fixes a discovery agent should mine for siblings/variants:
+### Past-fix "bug-shape" bootstrap
+Mine these for siblings/variants — but **verify presence in the working tree, not
+`git log --all`**. The repo carries a family of prepared-but-unmerged `security/pr-*`
+branches whose fixes are NOT in master; a `--all` SHA does not mean the fix shipped.
 
-- `9d582f7` tighten URL surface, APNs token → Keychain, recursive analytics sanitizer (#328)
-- `5277a32` sanitize untrusted article text before LLM prompt interpolation
-- `51e9767` atomically wipe local data on sign-out / account deletion (#327)
-- `10bd96e` re-verify premium entitlements against StoreKit 2 at view appearance
-- `d61df44` keep reviewer-only anonymous sign-in out of analytics + throttle
-- `0f8984b` cover keychain migration + sanitizer + URL gate (tests)
+**Merged to master (defenses you can rely on):**
+- URL-surface hardening + APNs token → Keychain + recursive analytics/error sanitizer (#328)
+- Atomic `clearAllUserData()` on sign-out / account deletion (#327)
+
+**Prepared but NOT in master — gaps the discovery+verify run confirmed are live:**
+- Article-text `PromptSanitizer` before LLM prompt interpolation → on `security/pr-4-prompt-injection` (class §3.1)
+- Reviewer-only anonymous sign-in kept out of analytics + a sign-in throttle → on `security/pr-3-reviewer-hygiene` (class §3.4 / abuse)
+- StoreKit re-verification of premium entitlements → on `security/pr-5-storekit-refresh` (class §3.6)
+
+> Also unmerged: `security/pr-1-atomic-cleanup`, `security/pr-2-url-hardening`,
+> `security/audit-fixes`, `security/audit-remediation`. Their themes (#327/#328) appear
+> merged, but reconcile each branch against master before trusting any "fixed" claim.
 
 ## 4. What are we going to do about it? (Q4)
 
