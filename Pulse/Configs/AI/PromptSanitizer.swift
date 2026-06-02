@@ -10,12 +10,12 @@ import Foundation
 /// off-topic content.
 ///
 /// **Mitigations applied here**:
-/// 1. Collapse newlines and control characters — these are the primary
-///    vectors used to break out of an in-prompt context.
+/// 1. Map control characters (newlines, tabs, etc.) to spaces — these are the
+///    primary vectors used to break out of an in-prompt context.
 /// 2. Strip code-fence backticks — small models often treat fenced blocks
 ///    as instruction boundaries.
-/// 3. Hard length cap so a single hostile field can't dominate the prompt
-///    window.
+/// 3. Collapse whitespace runs and hard-cap the length so a single hostile
+///    field can't dominate the prompt window.
 ///
 /// **NOT a complete defense.** LLMs are inherently susceptible to prompt
 /// injection, and a small on-device model is more so. This raises the bar
@@ -32,20 +32,19 @@ enum PromptSanitizer {
     static func sanitize(_ text: String, maxLength: Int) -> String {
         guard maxLength > 0 else { return "" }
 
-        // Collapse line breaks / tabs into a single space.
-        var result = text.replacingOccurrences(
-            of: #"[\r\n\t\u{0B}\u{0C}]+"#,
-            with: " ",
-            options: .regularExpression
-        )
+        // Map every Unicode control character (newlines, tabs, BEL, DEL, …) to a
+        // space. Replacing rather than deleting prevents adjacent words from being
+        // glued together when a line break separated them, and neutralizes the
+        // control characters most often used to break out of an in-prompt context.
+        let space = Unicode.Scalar(0x20)!
+        var scalars = String.UnicodeScalarView()
+        for scalar in text.unicodeScalars {
+            scalars.append(CharacterSet.controlCharacters.contains(scalar) ? space : scalar)
+        }
+        var result = String(scalars)
 
         // Strip backticks so the model can't be tricked into a fenced block.
         result = result.replacing("`", with: "'")
-
-        // Drop other Unicode control characters (category Cc).
-        result = String(result.unicodeScalars.filter { scalar in
-            !CharacterSet.controlCharacters.contains(scalar)
-        })
 
         // Collapse runs of whitespace and trim.
         result = result.replacingOccurrences(
