@@ -1,0 +1,187 @@
+name: Claude Security Review
+
+# Threat-model-guided adversarial security pass, distinct from the general-purpose
+# style/quality review in claude-code-review.yml. Implements the discovery + in-prompt
+# adversarial-verify stages of Anthropic's "Using LLMs to Secure Source Code" playbook,
+# scoped by THREAT_MODEL.md and SEVERITY_RUBRIC.md.
+#
+# ADVISORY by design: this workflow only leaves comments / artifacts — it never runs
+# `gh pr review`, so it does NOT set a review verdict and is NOT wired into the master
+# ruleset as a required check. Promote it to required later via the ruleset (PUT) once
+# its signal-to-noise is trusted.
+
+on:
+  pull_request:
+    types: [opened, synchronize, ready_for_review, reopened]
+  schedule:
+    # Weekly Monday 06:00 UTC — offset from CodeQL's Sunday 00:00 so the two security
+    # scans don't compete for runners or land findings at the same time.
+    - cron: "0 6 * * 1"
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+# Deny all permissions by default — each job grants only what it needs.
+permissions: {}
+
+jobs:
+  # ── Per-PR adversarial security review ────────────────────────────────────────
+  pr-security-review:
+    # Skip fork PRs (secrets incl. CLAUDE_CODE_OAUTH_TOKEN aren't exposed to fork runs)
+    # and drafts. Same-repo PRs — including Dependabot's — still run. Unlike
+    # `claude-review`, this is NOT a required check, so a skipped run leaves nothing
+    # pending.
+    if: >-
+      github.event_name == 'pull_request' &&
+      github.event.pull_request.draft == false &&
+      github.event.pull_request.head.repo.full_name == github.repository
+    runs-on: ubuntu-latest
+    timeout-minutes: 25
+    permissions:
+      contents: read
+      pull-requests: write
+      issues: write
+      # claude-code-action exchanges an OIDC token for a GitHub App token.
+      id-token: write
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
+        with:
+          fetch-depth: 1
+
+      - name: Run Claude security review
+        id: security-review
+        continue-on-error: true
+        uses: anthropics/claude-code-action@686da461dadac38c2bde9089909de4042a75ebf0 # v1
+        env:
+          CLAUDE_CODE_EFFORT_LEVEL: max
+        with:
+          claude_code_oauth_token: ${{ secrets.CLAUDE_CODE_OAUTH_TOKEN }}
+          track_progress: true
+          allowed_bots: "dependabot[bot]"
+          prompt: |
+            REPO: ${{ github.repository }}
+            PR NUMBER: ${{ github.event.pull_request.number }}
+
+            You are a security reviewer, NOT a style reviewer. Do a focused,
+            adversarial security pass on THIS PR. Ignore formatting, naming, and
+            general code quality — claude-code-review.yml already covers those.
+
+            STEP 1 — Load scope. Read THREAT_MODEL.md and SEVERITY_RUBRIC.md from the
+            checked-out repo. They define the trust boundaries, untrusted inputs,
+            vulnerability classes, and the severity rubric. Stay within that scope:
+            there is NO server code in this repo (backend issues are out of scope).
+
+            STEP 2 — Hunt. Diff the PR (`gh pr diff`), then read the surrounding files.
+            Look specifically for the THREAT_MODEL.md §3 classes reaching the changed
+            code: prompt injection via untrusted article text into the on-device LLM,
+            unvalidated deeplink/push parameters, Share-Extension IPC tampering, secret
+            handling / `#if DEBUG`-only key fallbacks, incomplete clearAllUserData
+            wiring, entitlement bypass. Hunt for same-class and same-call-site VARIANTS
+            of each finding, not just the first instance.
+
+            STEP 3 — Adversarially self-verify BEFORE posting. For every candidate
+            finding, try to DISPROVE it: is there upstream validation, an auth gate, a
+            type/length constraint, or is the code unreachable? Drop or downgrade
+            anything you cannot substantiate. A plausible-but-unproven finding is worse
+            than silence here.
+
+            STEP 4 — Score each surviving finding against SEVERITY_RUBRIC.md (the five
+            dimensions). Remember the default ceiling is Medium — nearly everything sits
+            behind Firebase auth + a private CloudKit zone. Justify any Critical/High.
+
+            OUTPUT RULES (advisory — comments only):
+            - Post each file:line finding via
+              `mcp__github_inline_comment__create_inline_comment`, including: the vuln
+              class, the five-dimension scoring, the severity, and a concrete PoC
+              (ideally a failing Swift Testing case) or "unproven" if you can't build one.
+            - Post ONE summary comment with `gh pr comment`: counts by severity and any
+              cross-cutting observation. If you have zero substantiated findings, say so
+              explicitly.
+            - Do NOT run `gh pr review` — this pass is advisory and must not approve or
+              request changes.
+          claude_args: '--model "claude-opus-4-8[1m]" --allowedTools "Read,Grep,Glob,mcp__github_inline_comment__create_inline_comment,Bash(gh pr comment:*),Bash(gh pr diff:*),Bash(gh pr view:*)"'
+
+      - name: Review summary
+        if: always()
+        env:
+          OUTCOME: ${{ steps.security-review.outcome }}
+          PR_NUMBER: ${{ github.event.pull_request.number }}
+          PR_URL: ${{ github.event.pull_request.html_url }}
+        run: |
+          {
+            echo "## Claude Security Review"
+            echo ""
+            echo "| Field | Value |"
+            echo "|-------|-------|"
+            echo "| Pull request | [#${PR_NUMBER}](${PR_URL}) |"
+            echo "| Step outcome | ${OUTCOME} |"
+            echo ""
+            echo "Advisory pass — findings (if any) are posted as inline comments and a"
+            echo "summary comment on the pull request. This check never blocks merges."
+          } >> "$GITHUB_STEP_SUMMARY"
+
+  # ── Weekly full-repository security sweep ─────────────────────────────────────
+  scheduled-security-sweep:
+    if: github.event_name == 'schedule'
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    permissions:
+      contents: read
+      id-token: write
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
+        with:
+          fetch-depth: 0
+          persist-credentials: false
+
+      - name: Run Claude security sweep
+        id: security-sweep
+        continue-on-error: true
+        uses: anthropics/claude-code-action@686da461dadac38c2bde9089909de4042a75ebf0 # v1
+        env:
+          CLAUDE_CODE_EFFORT_LEVEL: max
+        with:
+          claude_code_oauth_token: ${{ secrets.CLAUDE_CODE_OAUTH_TOKEN }}
+          prompt: |
+            You are running a periodic, whole-repository security sweep of the Pulse
+            iOS app (no PR context). This complements CodeQL/mobsfscan with semantic
+            reasoning they can't do (e.g. prompt-injection sinks).
+
+            1. Read THREAT_MODEL.md and SEVERITY_RUBRIC.md for scope and scoring.
+            2. Partition the attack surface (auth, networking/secrets, deeplink/push,
+               share-extension IPC, on-device LLM prompt builders, storage/CloudKit)
+               and review each for the THREAT_MODEL.md §3 vulnerability classes. Mine
+               `git log --grep=security` for unfixed variants of past fixes.
+            3. Adversarially self-verify every candidate (try to disprove it) and score
+               survivors against the rubric.
+            4. Write ALL substantiated findings as Markdown to
+               `security-sweep-findings.md` at the repo root, using the per-finding
+               format from SEVERITY_RUBRIC.md. If there are none, write a file
+               containing exactly "No substantiated findings this run."
+          claude_args: '--model "claude-opus-4-8[1m]" --allowedTools "Read,Grep,Glob,Write,Bash(git log:*)"'
+
+      - name: Publish findings to job summary
+        if: always()
+        run: |
+          if [ -f security-sweep-findings.md ]; then
+            {
+              echo "## Claude Security Sweep — $(date -u +%Y-%m-%d)"
+              echo ""
+              cat security-sweep-findings.md
+            } >> "$GITHUB_STEP_SUMMARY"
+          else
+            echo "::warning title=Claude Security Sweep::No findings file was produced (the sweep step may have failed)."
+            echo "## Claude Security Sweep — no findings file produced" >> "$GITHUB_STEP_SUMMARY"
+          fi
+
+      - name: Upload findings artifact
+        if: always()
+        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
+        with:
+          name: security-sweep-findings
+          path: security-sweep-findings.md
+          if-no-files-found: warn
+          retention-days: 90
