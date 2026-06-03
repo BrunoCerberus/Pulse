@@ -25,6 +25,9 @@ on:
     # Weekly Monday 06:00 UTC — offset from CodeQL's Sunday 00:00 so the two security
     # scans don't compete for runners or land findings at the same time.
     - cron: "0 6 * * 1"
+  # Run the whole-repo sweep on demand (e.g. before a release, or to validate the
+  # sweep path without waiting for the weekly cron).
+  workflow_dispatch:
 
 concurrency:
   group: ${{ github.workflow }}-${{ github.ref }}
@@ -183,9 +186,9 @@ jobs:
             echo "comments. Advisory — never blocks merges."
           } >> "$GITHUB_STEP_SUMMARY"
 
-  # ── Weekly full-repository security sweep ─────────────────────────────────────
+  # ── Weekly (+ on-demand) full-repository security sweep ───────────────────────
   scheduled-security-sweep:
-    if: github.event_name == 'schedule'
+    if: github.event_name == 'schedule' || github.event_name == 'workflow_dispatch'
     runs-on: ubuntu-latest
     timeout-minutes: 30
     permissions:
