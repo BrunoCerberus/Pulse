@@ -51,8 +51,8 @@ enum NotificationDeeplinkParser {
         case "bookmarks": return .bookmarks
         case "settings": return .settings
         case "search":
-            let query = components.queryItems?.first { $0.name == "q" }?.value
-            return .search(query: query)
+            let rawQuery = components.queryItems?.first { $0.name == "q" }?.value
+            return .search(query: rawQuery.flatMap(Deeplink.sanitizedQueryParameter))
         case "article":
             guard let id = components.queryItems?.first(where: { $0.name == "id" })?.value,
                   Deeplink.isValidArticleID(id)
@@ -78,8 +78,8 @@ enum NotificationDeeplinkParser {
         case "bookmarks": return .bookmarks
         case "settings": return .settings
         case "search":
-            let query = userInfo["deeplinkQuery"] as? String
-            return .search(query: query)
+            let rawQuery = userInfo["deeplinkQuery"] as? String
+            return .search(query: rawQuery.flatMap(Deeplink.sanitizedQueryParameter))
         case "article":
             guard let id = userInfo["deeplinkId"] as? String,
                   Deeplink.isValidArticleID(id)

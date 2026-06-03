@@ -58,6 +58,28 @@ enum Deeplink: Equatable {
         else { return false }
         return true
     }
+
+    /// Maximum allowed length for free-text deeplink parameters (search query,
+    /// category name). Matches `SearchDomainInteractor.maxQueryLength` so the
+    /// boundary cap and the downstream cap agree.
+    private static let maxQueryParameterLength = 256
+
+    /// Sanitizes a free-text deeplink parameter (search query, category name).
+    ///
+    /// Unlike article IDs — structured identifiers validated against a strict
+    /// charset allowlist — these are free text, so over-validating would break
+    /// legitimate queries. Instead we strip control characters (newlines, null
+    /// bytes) that have no place in a query and could enable log/render
+    /// injection, trim surrounding whitespace, and cap the length at the trust
+    /// boundary. Returns `nil` when the value is empty after sanitization so
+    /// callers collapse blank parameters to the no-argument case.
+    static func sanitizedQueryParameter(_ value: String) -> String? {
+        var scalars = value.unicodeScalars
+        scalars.removeAll { CharacterSet.controlCharacters.contains($0) }
+        let cleaned = String(scalars).trimmingCharacters(in: .whitespacesAndNewlines)
+        guard !cleaned.isEmpty else { return nil }
+        return String(cleaned.prefix(maxQueryParameterLength))
+    }
 }
 
 /// Manages deeplink URL parsing and routing.
@@ -116,8 +138,8 @@ final class DeeplinkManager: ObservableObject {
             let mediaType = typeString.flatMap { MediaType(rawValue: $0) }
             deeplink = .media(type: mediaType)
         case "search":
-            let query = components.queryItems?.first(where: { $0.name == "q" })?.value
-            deeplink = .search(query: query)
+            let rawQuery = components.queryItems?.first(where: { $0.name == "q" })?.value
+            deeplink = .search(query: rawQuery.flatMap(Deeplink.sanitizedQueryParameter))
         case "bookmarks":
             deeplink = .bookmarks
         case "feed":
@@ -132,7 +154,9 @@ final class DeeplinkManager: ObservableObject {
             }
             deeplink = .article(id: articleID)
         case "category":
-            guard let categoryName = components.queryItems?.first(where: { $0.name == "name" })?.value else {
+            guard let rawName = components.queryItems?.first(where: { $0.name == "name" })?.value,
+                  let categoryName = Deeplink.sanitizedQueryParameter(rawName)
+            else {
                 return
             }
             deeplink = .category(name: categoryName)
@@ -146,8 +170,21 @@ final class DeeplinkManager: ObservableObject {
     }
 
     func handle(deeplink: Deeplink) {
-        currentDeeplink = deeplink
-        deeplinkSubject.send(deeplink)
+        // Enforce free-text sanitization at the single choke point every entry path
+        // funnels through (parse, push parser, App Intents, Quick Actions). A caller
+        // that constructs a Deeplink directly — e.g. `SearchPulseIntent` — would
+        // otherwise bypass the boundary validation applied in `parse(url:)`.
+        // `sanitizedQueryParameter` is idempotent, so paths that already sanitized are
+        // unaffected.
+        let sanitized: Deeplink
+        switch deeplink {
+        case let .search(query):
+            sanitized = .search(query: query.flatMap(Deeplink.sanitizedQueryParameter))
+        default:
+            sanitized = deeplink
+        }
+        currentDeeplink = sanitized
+        deeplinkSubject.send(sanitized)
     }
 
     func clearDeeplink() {
