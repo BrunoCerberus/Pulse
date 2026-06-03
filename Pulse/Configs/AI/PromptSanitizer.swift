@@ -50,18 +50,17 @@ enum PromptSanitizer {
         // Strip backticks so the model can't be tricked into a fenced block.
         result = result.replacing("`", with: "'")
 
-        // Neutralize chat-template control markers — THE primary injection vector.
-        // Strings like Gemma's `<start_of_turn>`, `<end_of_turn>`, `<bos>`, `<eos>`
-        // are plain ASCII in an untrusted title, but once rendered into the chat
-        // template and tokenized with special-token parsing they become real control
-        // tokens, letting an article forge a new turn. Match the lowercase
-        // `<token>` / `</token>` special-token shape so ordinary `<…>` text
-        // (capitalized words, "<3", math) is left untouched.
-        result = result.replacingOccurrences(
-            of: #"</?[a-z][a-z0-9_]*>"#,
-            with: " ",
-            options: .regularExpression
-        )
+        // Neutralize Gemma chat-template control markers — THE primary injection
+        // vector. These literal strings are plain ASCII in an untrusted title, but
+        // once rendered into the chat template and tokenized with special-token
+        // parsing they become real control tokens, letting an article forge a new
+        // turn. Match the EXACT special-token strings (case-sensitive — only an exact
+        // match tokenizes as special), which deliberately leaves ordinary
+        // angle-bracket text untouched: decoded HTML like "<script>" / "<div>",
+        // "<3", and "<NEW>" are not Gemma tokens and tokenize as harmless text.
+        for marker in ["<start_of_turn>", "<end_of_turn>", "<bos>", "<eos>", "<pad>", "<unk>", "<eot>"] {
+            result = result.replacingOccurrences(of: marker, with: " ")
+        }
 
         // Collapse runs of whitespace and trim.
         result = result.replacingOccurrences(
