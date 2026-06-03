@@ -10,11 +10,15 @@ import Foundation
 /// off-topic content.
 ///
 /// **Mitigations applied here**:
-/// 1. Map control characters (newlines, tabs, etc.) to spaces — these are the
-///    primary vectors used to break out of an in-prompt context.
-/// 2. Strip code-fence backticks — small models often treat fenced blocks
+/// 1. Neutralize chat-template control markers (e.g. Gemma's `<start_of_turn>`,
+///    `<end_of_turn>`, `<bos>`, `<eos>`) — the primary vector: a title carrying
+///    these literal strings can forge a new turn once tokenized with special-token
+///    parsing.
+/// 2. Map control characters (newlines, tabs, etc.) to spaces — a secondary
+///    breakout vector and a source of misleading formatting.
+/// 3. Strip code-fence backticks — small models often treat fenced blocks
 ///    as instruction boundaries.
-/// 3. Collapse whitespace runs and hard-cap the length so a single hostile
+/// 4. Collapse whitespace runs and hard-cap the length so a single hostile
 ///    field can't dominate the prompt window.
 ///
 /// **NOT a complete defense.** LLMs are inherently susceptible to prompt
@@ -45,6 +49,19 @@ enum PromptSanitizer {
 
         // Strip backticks so the model can't be tricked into a fenced block.
         result = result.replacing("`", with: "'")
+
+        // Neutralize chat-template control markers — THE primary injection vector.
+        // Strings like Gemma's `<start_of_turn>`, `<end_of_turn>`, `<bos>`, `<eos>`
+        // are plain ASCII in an untrusted title, but once rendered into the chat
+        // template and tokenized with special-token parsing they become real control
+        // tokens, letting an article forge a new turn. Match the lowercase
+        // `<token>` / `</token>` special-token shape so ordinary `<…>` text
+        // (capitalized words, "<3", math) is left untouched.
+        result = result.replacingOccurrences(
+            of: #"</?[a-z][a-z0-9_]*>"#,
+            with: " ",
+            options: .regularExpression
+        )
 
         // Collapse runs of whitespace and trim.
         result = result.replacingOccurrences(
