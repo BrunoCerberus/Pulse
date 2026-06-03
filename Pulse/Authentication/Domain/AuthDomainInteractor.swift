@@ -148,6 +148,19 @@ final class AuthDomainInteractor: CombineInteractor {
                     // gesture should never see a raw Firebase error string; a
                     // reviewer blocked by a backend issue will report it
                     // out-of-band rather than via the alert sheet.
+                    //
+                    // The throttle-rejection case is special-cased: it's a
+                    // local UX guard, not a sign-in failure worth shipping to
+                    // Crashlytics or counting as a failed `signIn` event. The
+                    // whole point of M3 + M9 was to keep reviewer-pass noise
+                    // OUT of analytics; reporting throttle hits would defeat
+                    // both fixes.
+                    if case AuthError.anonymousSignInThrottled = error {
+                        self?.updateState { state in
+                            state.isLoading = false
+                        }
+                        return
+                    }
                     self?.analyticsService?.logEvent(.signIn(provider: "anonymous", success: false))
                     self?.analyticsService?.recordError(error)
                     self?.updateState { state in

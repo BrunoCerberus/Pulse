@@ -250,4 +250,22 @@ struct AuthDomainInteractorTests {
         #expect(signInEvents.first?.parameters?["success"] as? Bool == false)
         #expect(mockAnalyticsService.recordedErrors.count == 1)
     }
+
+    @Test("Anonymous sign in throttled clears loading and stays OUT of analytics")
+    func anonymousSignInThrottledSkipsAnalytics() async throws {
+        mockAuthService.signInAnonymouslyResult = .failure(AuthError.anonymousSignInThrottled)
+
+        sut.dispatch(action: .signInAnonymously)
+        try await Task.sleep(nanoseconds: 300_000_000)
+
+        #expect(sut.currentState.isLoading == false)
+        #expect(sut.currentState.user == nil)
+        #expect(sut.currentState.error == nil)
+        // The throttle is a local UX guard, not a sign-in failure — it must NOT log a
+        // failed sign_in event or record to Crashlytics, or it would re-pollute the
+        // exact reviewer-path analytics surface this fix keeps clean.
+        let signInEvents = mockAnalyticsService.loggedEvents.filter { $0.name == "sign_in" }
+        #expect(signInEvents.isEmpty)
+        #expect(mockAnalyticsService.recordedErrors.isEmpty)
+    }
 }
