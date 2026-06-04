@@ -59,11 +59,26 @@ struct VideoPlayerView: UIViewRepresentable {
         if let videoID = extractYouTubeVideoID(from: url.absoluteString) {
             let html = createYouTubeEmbedHTML(videoID: videoID)
             webView.loadHTMLString(html, baseURL: URL(string: "https://www.youtube.com"))
-        } else {
-            // For non-YouTube videos, load the URL directly
-            let request = URLRequest(url: url)
-            webView.load(request)
+        } else if Self.isSafeInlineVideoURL(url) {
+            // Non-YouTube direct video: load only over HTTPS. `url` originates from
+            // `article.mediaURL` (untrusted third-party RSS) and this web view runs
+            // JavaScript with no navigation allowlist, so a non-HTTPS scheme must never
+            // reach `load(_:)`. A rejected URL simply renders nothing.
+            webView.load(URLRequest(url: url))
         }
+    }
+
+    /// Whether an untrusted media URL may be loaded into the inline web view.
+    ///
+    /// `article.mediaURL` is third-party RSS data and this `WKWebView` has JavaScript
+    /// enabled with no navigation-policy allowlist, so the inline player applies the
+    /// same HTTPS-only gate the open-in-browser paths enforce
+    /// (`MediaDetailDomainInteractor.openInBrowser`,
+    /// `ArticleDetailDomainInteractor.externalURL`). Rejects `http`, `file`, and custom
+    /// schemes. (`https` content is further bounded by ATS, the absence of any JS↔Swift
+    /// message handler, and `load(_:)` not granting file-system read.)
+    static func isSafeInlineVideoURL(_ url: URL) -> Bool {
+        url.scheme?.lowercased() == "https"
     }
 
     /// Creates an HTML page with an embedded YouTube iframe using the IFrame Player API.
