@@ -882,6 +882,11 @@ jobs:
     # for plain xctest. The re-verify contract is covered at the service layer
     # (StoreKitService protocol + Mock/Live tests); the views are the same
     # untestable-lifecycle category as the entries above.
+    #
+    # VideoPlayerView is a UIViewRepresentable wrapping WKWebView — its updateUIView
+    # lifecycle has no protocol seam for plain xctest. Its one security-relevant
+    # decision (the HTTPS-only inline-load gate, isSafeInlineVideoURL) IS unit-tested
+    # in VideoPlayerViewTests; only the UIKit glue is excluded.
     - name: Enforce patch coverage threshold
       run: |
         RESULT=0
@@ -901,6 +906,7 @@ jobs:
                     '**/LiveStoreKitService.swift' \
                     '**/PulseSceneDelegate.swift' \
                     '**/SettingsView.swift' '**/ArticleDetailView.swift' '**/FeedView.swift' \
+                    '**/VideoPlayerView.swift' \
           --markdown-report patch-coverage.md || RESULT=$?
         {
           echo "## Patch Coverage Report"
