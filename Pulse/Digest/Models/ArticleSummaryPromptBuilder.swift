@@ -37,18 +37,23 @@ enum ArticleSummaryPromptBuilder {
     }
 
     private static func buildArticleContent(_ article: Article) -> String {
-        var content = "Title: \(article.title)\n"
-        content += "Source: \(article.source.name)\n"
+        // All untrusted (RSS-sourced) fields pass through `PromptSanitizer`
+        // before interpolation. See `PromptSanitizer` for the threat model.
+        var content = "Title: \(PromptSanitizer.sanitize(article.title, maxLength: 200))\n"
+        content += "Source: \(PromptSanitizer.sanitize(article.source.name, maxLength: 80))\n"
 
         if let description = article.description, !description.isEmpty {
-            let cleanDescription = stripHTML(from: description)
-            content += "Description: \(cleanDescription)\n"
+            let cleaned = PromptSanitizer.sanitize(stripHTML(from: description), maxLength: 500)
+            if !cleaned.isEmpty {
+                content += "Description: \(cleaned)\n"
+            }
         }
 
         if let articleContent = article.content, !articleContent.isEmpty {
-            let cleanContent = stripHTML(from: articleContent)
-            let truncated = String(cleanContent.prefix(1500))
-            content += "Content: \(truncated)"
+            let cleaned = PromptSanitizer.sanitize(stripHTML(from: articleContent), maxLength: 1500)
+            if !cleaned.isEmpty {
+                content += "Content: \(cleaned)"
+            }
         }
 
         return content

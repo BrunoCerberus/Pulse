@@ -162,6 +162,12 @@ private extension PulseSceneDelegate {
     }
 
     /// Sync analytics user ID with authentication state changes.
+    ///
+    /// Reviewer-only anonymous Firebase sessions are deliberately excluded:
+    /// their UIDs are short-lived but stable enough that propagating them to
+    /// Firebase Analytics + Crashlytics would link every reviewer-triggered
+    /// event back to the App Review pass, polluting the production analytics
+    /// dashboard and giving the reviewer's session a tracking surface.
     func configureAnalyticsUserID() {
         guard let analyticsService = try? serviceLocator.retrieve(AnalyticsService.self) else { return }
 
@@ -171,7 +177,13 @@ private extension PulseSceneDelegate {
                 .sink { state in
                     switch state {
                     case let .authenticated(user):
-                        service.setUserID(user.uid)
+                        if user.provider == .anonymous {
+                            // Clear any prior identifier so a reviewer session
+                            // can't inherit the previous signed-in user's UID.
+                            service.setUserID(nil)
+                        } else {
+                            service.setUserID(user.uid)
+                        }
                     case .unauthenticated:
                         service.setUserID(nil)
                     case .loading:

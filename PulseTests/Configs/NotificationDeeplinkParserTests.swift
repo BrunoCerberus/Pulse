@@ -48,6 +48,23 @@ struct NotificationDeeplinkParserTests {
         #expect(result == .search(query: "swift"))
     }
 
+    @Test("Parse full deeplink URL - search query strips control characters")
+    func parseFullDeeplinkURLSearchSanitizesQuery() {
+        let userInfo: [AnyHashable: Any] = ["deeplink": "pulse://search?q=%0Aswift%00news"]
+        let result = NotificationDeeplinkParser.parse(from: userInfo)
+        #expect(result == .search(query: "swiftnews"))
+    }
+
+    @Test("Parse typed deeplink - search query strips control characters")
+    func parseTypedSearchSanitizesQuery() {
+        let userInfo: [AnyHashable: Any] = [
+            "deeplinkType": "search",
+            "deeplinkQuery": "ios\u{0000}\u{000A}news",
+        ]
+        let result = NotificationDeeplinkParser.parse(from: userInfo)
+        #expect(result == .search(query: "iosnews"))
+    }
+
     @Test("Parse full deeplink URL - article with id")
     func parseFullDeeplinkURLArticle() {
         let userInfo: [AnyHashable: Any] = ["deeplink": "pulse://article?id=world/2024/jan/01/article-slug"]

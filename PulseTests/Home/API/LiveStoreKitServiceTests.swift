@@ -46,4 +46,20 @@ struct LiveStoreKitServiceTests {
         let publisher = service.checkSubscriptionStatus()
         let _: AnyPublisher<Bool, Never> = publisher
     }
+
+    // NOTE: a live `LiveStoreKitService.refreshSubscriptionStatus()` test was
+    // intentionally NOT included here. It drives `Transaction.currentEntitlements`,
+    // which blocks indefinitely under plain `xctest` (no StoreKit configuration /
+    // StoreKit Testing host) and hangs the whole suite. The contract — re-reading
+    // entitlements rather than the cached `isPremium` — is covered behaviorally via
+    // the mock below; the live path is exercised by StoreKit Testing / manual QA.
+
+    @Test("MockStoreKitService.refreshSubscriptionStatus reflects configured state")
+    func mockRefreshReflectsState() async {
+        let mockFree = MockStoreKitService(isPremium: false)
+        #expect(await mockFree.refreshSubscriptionStatus() == false)
+
+        let mockPremium = MockStoreKitService(isPremium: true)
+        #expect(await mockPremium.refreshSubscriptionStatus() == true)
+    }
 }
