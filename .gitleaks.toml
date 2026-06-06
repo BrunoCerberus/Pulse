@@ -3,9 +3,13 @@
 
 [allowlist]
   description = "Pulse false positive allowlist"
+  # Only exclude generated/binary artifacts. Source and test directories are
+  # scanned: a real credential accidentally committed to a test fixture must
+  # still be caught. If a specific fixture trips a false positive, allowlist it
+  # by regex or with an inline `gitleaks:allow` comment rather than excluding
+  # the whole tree. (The PR-merge gate uses .github/lgpd-gdpr-rules.toml, which
+  # already scans these dirs; this keeps the scheduled scan consistent.)
   paths = [
-    '''PulseTests/.*''',
-    '''PulseSnapshotTests/.*''',
     '''.*\.xcresult/.*''',
     '''.*__Snapshots__/.*''',
   ]

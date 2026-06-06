@@ -4,7 +4,14 @@ import Foundation
 
 final class LiveAnalyticsService: AnalyticsService {
     func logEvent(_ event: AnalyticsEvent) {
-        Analytics.logEvent(event.name, parameters: event.parameters)
+        // Run parameters through the same recursive PII sanitizer `recordError`
+        // uses. Some events carry free-text fields (e.g. `cloudSyncFailed` /
+        // `purchaseFailed` `error` strings sourced from `localizedDescription`),
+        // which can embed an email or a tokenized URL; without this they'd reach
+        // the analytics dashboard unredacted while the parallel `recordError`
+        // call redacts them.
+        let sanitizedParameters = event.parameters.map { $0.mapValues(Self.sanitize(any:)) }
+        Analytics.logEvent(event.name, parameters: sanitizedParameters)
         // Also log as Crashlytics breadcrumb for crash context
         Crashlytics.crashlytics().log("Event: \(event.name)")
     }

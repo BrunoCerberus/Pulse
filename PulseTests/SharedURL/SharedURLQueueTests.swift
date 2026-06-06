@@ -139,6 +139,27 @@ struct SharedURLQueueTests {
         #expect(snapshot.last?.url == "https://example.com/\(total - 1)")
     }
 
+    @Test("Read side re-caps a directly-written oversized payload (symmetric with enqueue)")
+    func readSideCapsOversizedPayload() throws {
+        // Simulate a tampered / first-party-bug write that bypasses `enqueue`'s
+        // cap by writing an oversized array straight to the App Group key.
+        let overflow = 10
+        let total = SharedURLQueue.maxQueueSize + overflow
+        let items = (0 ..< total).map { index in
+            SharedURLItem(
+                url: "https://example.com/\(index)",
+                sharedAt: Date(timeIntervalSince1970: TimeInterval(index))
+            )
+        }
+        let encoded = try JSONEncoder().encode(items)
+        defaults.set(encoded, forKey: SharedURLQueue.queueKey)
+
+        // Both read paths must be bounded, keeping the newest items.
+        #expect(sut.peekAll().count == SharedURLQueue.maxQueueSize)
+        #expect(sut.peekAll().last?.url == "https://example.com/\(total - 1)")
+        #expect(sut.drain().count == SharedURLQueue.maxQueueSize)
+    }
+
     // MARK: - Scheme / length validation
 
     @Test("Enqueue rejects javascript: scheme")

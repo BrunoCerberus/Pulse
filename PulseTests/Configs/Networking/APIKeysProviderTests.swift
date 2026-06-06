@@ -148,7 +148,6 @@ struct RemoteConfigKeyTests {
         #expect(RemoteConfigKey.newsAPIKey.rawValue == "news_api_key")
         #expect(RemoteConfigKey.gnewsAPIKey.rawValue == "gnews_api_key")
         #expect(RemoteConfigKey.supabaseURL.rawValue == "supabase_url")
-        #expect(RemoteConfigKey.supabaseAnonKey.rawValue == "supabase_anon_key")
     }
 
     @Test("RemoteConfigKey has all expected keys")
@@ -158,10 +157,9 @@ struct RemoteConfigKeyTests {
             .newsAPIKey,
             .gnewsAPIKey,
             .supabaseURL,
-            .supabaseAnonKey,
         ]
 
-        #expect(allKeys.count == 4)
+        #expect(allKeys.count == 3)
 
         // All raw values should be unique
         let uniqueValues = Set(allKeys.map(\.rawValue))
@@ -195,12 +193,10 @@ struct MockRemoteConfigServiceTests {
         mock.newsAPIKeyValue = "news-test"
         mock.gnewsAPIKeyValue = "gnews-test"
         mock.supabaseURLValue = "https://test.supabase.co"
-        mock.supabaseAnonKeyValue = "anon-key-test"
 
         #expect(mock.newsAPIKey == "news-test")
         #expect(mock.gnewsAPIKey == "gnews-test")
         #expect(mock.supabaseURL == "https://test.supabase.co")
-        #expect(mock.supabaseAnonKey == "anon-key-test")
     }
 
     @Test("MockRemoteConfigService getStringOrNil returns correct values")
@@ -240,6 +236,5 @@ struct MockRemoteConfigServiceTests {
         #expect(mock.newsAPIKey == nil)
         #expect(mock.gnewsAPIKey == nil)
         #expect(mock.supabaseURL == nil)
-        #expect(mock.supabaseAnonKey == nil)
     }
 }

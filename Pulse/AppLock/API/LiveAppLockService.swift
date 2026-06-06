@@ -66,7 +66,15 @@ final class LiveAppLockService: AppLockService {
         // when biometrics are unavailable, locked out, or fail repeatedly.
         var error: NSError?
         guard context.canEvaluatePolicy(.deviceOwnerAuthentication, error: &error) else {
-            throw AppLockError.authenticationFailed
+            // No passcode/biometrics enrolled — e.g. the user removed the device
+            // passcode after enabling App Lock. The lock can never be satisfied,
+            // so throwing here would trap the user behind a gate that can't be
+            // evaluated. A passcode-less device has no OS-level security to
+            // enforce anyway, so disable the now-unenforceable lock and unlock
+            // rather than strand them. Re-adding a device passcode lets the user
+            // re-enable App Lock from Settings. (Availability fix.)
+            isEnabled = false
+            return true
         }
 
         do {

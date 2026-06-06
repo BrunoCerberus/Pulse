@@ -105,6 +105,34 @@ struct DeeplinkManagerTests {
         #expect(sut.currentDeeplink == .search(query: nil))
     }
 
+    @Test("handle() sanitizes directly-constructed category deeplinks (choke point)")
+    func handleSanitizesDirectCategory() {
+        sut.handle(deeplink: .category(name: "tech\u{0000}\nnews"))
+
+        #expect(sut.currentDeeplink == .category(name: "technews"))
+    }
+
+    @Test("handle() drops a category whose name is empty after sanitization")
+    func handleDropsBlankDirectCategory() {
+        sut.handle(deeplink: .category(name: "   "))
+
+        #expect(sut.currentDeeplink == nil)
+    }
+
+    @Test("handle() drops a directly-constructed article deeplink with an invalid id")
+    func handleDropsInvalidDirectArticle() {
+        sut.handle(deeplink: .article(id: "../../etc/passwd"))
+
+        #expect(sut.currentDeeplink == nil)
+    }
+
+    @Test("handle() forwards a valid directly-constructed article deeplink")
+    func handleForwardsValidDirectArticle() {
+        sut.handle(deeplink: .article(id: "world/2024/story"))
+
+        #expect(sut.currentDeeplink == .article(id: "world/2024/story"))
+    }
+
     @Test("SearchPulseIntent routes its query through the sanitizing choke point")
     func searchIntentSanitizesQuery() async throws {
         let intent = SearchPulseIntent()

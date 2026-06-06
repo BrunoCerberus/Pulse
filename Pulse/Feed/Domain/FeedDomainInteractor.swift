@@ -28,6 +28,9 @@ final class FeedDomainInteractor: CombineInteractor {
     private let newsService: NewsService
     private let networkMonitor: NetworkMonitorService?
     private let analyticsService: AnalyticsService?
+    /// Used for a defense-in-depth Premium re-check at the service boundary.
+    /// Optional so previews / unit tests that don't register StoreKit aren't gated.
+    private let storeKitService: StoreKitService?
     private let stateSubject = CurrentValueSubject<DomainState, Never>(.initial)
     private var cancellables = Set<AnyCancellable>()
     private var generationTask: Task<Void, Never>?
@@ -52,6 +55,7 @@ final class FeedDomainInteractor: CombineInteractor {
 
         networkMonitor = try? serviceLocator.retrieve(NetworkMonitorService.self)
         analyticsService = try? serviceLocator.retrieve(AnalyticsService.self)
+        storeKitService = try? serviceLocator.retrieve(StoreKitService.self)
 
         setupModelStatusBinding()
     }
@@ -276,8 +280,21 @@ private extension FeedDomainInteractor {
 // MARK: - Feed Digest Generation
 
 private extension FeedDomainInteractor {
-    // swiftlint:disable:next function_body_length
+    // swiftlint:disable:next function_body_length cyclomatic_complexity
     func generateDigest() {
+        // Defense-in-depth: re-verify the Premium entitlement at the service
+        // boundary, not just in the view layer. The digest UI sits behind a
+        // Premium gate, but a tampered client could dispatch `.generateDigest`
+        // directly. No-op when no StoreKit service is registered (previews /
+        // unit tests).
+        guard storeKitService?.isPremium != false else {
+            Logger.shared.service(
+                "Digest generation blocked: Premium entitlement not active",
+                level: .warning
+            )
+            return
+        }
+
         guard !currentState.latestArticles.isEmpty else {
             updateState { $0.generationState = .error("No articles available") }
             return

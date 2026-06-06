@@ -262,4 +262,53 @@ struct AuthenticationManagerTests {
         #expect(sut.authState == .unauthenticated)
         #expect(sut.currentUser == nil)
     }
+
+    // MARK: - Session cleanup on sign-out transition (B1)
+
+    @Test("Session cleanup runs on an authenticated → unauthenticated transition")
+    func sessionCleanupRunsOnSignOut() async {
+        let user = AuthUser(
+            uid: "u-cleanup",
+            email: "cleanup@example.com",
+            displayName: "Cleanup User",
+            photoURL: nil,
+            provider: .google
+        )
+        mockAuthService.mockCurrentUser = user
+        sut.configure(with: mockAuthService)
+        #expect(sut.isAuthenticated)
+
+        let spy = CleanupSpy()
+        sut.configureSessionCleanup { spy.run() }
+
+        // Server-driven or user-initiated sign-out both surface here.
+        mockAuthService.simulateSignedOut()
+
+        let ran = await waitForCondition { @MainActor in spy.didRun }
+        #expect(ran)
+    }
+
+    @Test("Session cleanup does NOT run on a cold-launch loading → unauthenticated transition")
+    func sessionCleanupSkippedOnColdLaunch() async {
+        let spy = CleanupSpy()
+        // Register the hook BEFORE configuring so the initial unauthenticated
+        // emission could (wrongly) trigger it if the guard were missing.
+        sut.configureSessionCleanup { spy.run() }
+
+        mockAuthService.mockCurrentUser = nil
+        sut.configure(with: mockAuthService)
+
+        // No prior authenticated state → must never wipe a returning user's data.
+        let firedUnexpectedly = await waitForCondition(timeout: 200_000_000) { @MainActor in spy.didRun }
+        #expect(!firedUnexpectedly)
+    }
+}
+
+/// Records whether the auth-transition session cleanup hook fired.
+@MainActor
+private final class CleanupSpy {
+    private(set) var didRun = false
+    func run() {
+        didRun = true
+    }
 }

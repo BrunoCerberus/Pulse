@@ -170,16 +170,23 @@ final class DeeplinkManager: ObservableObject {
     }
 
     func handle(deeplink: Deeplink) {
-        // Enforce free-text sanitization at the single choke point every entry path
-        // funnels through (parse, push parser, App Intents, Quick Actions). A caller
-        // that constructs a Deeplink directly — e.g. `SearchPulseIntent` — would
-        // otherwise bypass the boundary validation applied in `parse(url:)`.
-        // `sanitizedQueryParameter` is idempotent, so paths that already sanitized are
-        // unaffected.
+        // Re-validate every free-text / identifier-bearing case at the single
+        // choke point every entry path funnels through (parse, push parser, App
+        // Intents, Quick Actions). A caller that constructs a Deeplink directly —
+        // e.g. `SearchPulseIntent` — would otherwise bypass the boundary
+        // validation `parse(url:)` applies. The validators are idempotent, so
+        // paths that already sanitized upstream are unaffected; a value that
+        // fails validation drops the deeplink rather than forwarding it raw.
         let sanitized: Deeplink
         switch deeplink {
         case let .search(query):
             sanitized = .search(query: query.flatMap(Deeplink.sanitizedQueryParameter))
+        case let .category(name):
+            guard let safeName = Deeplink.sanitizedQueryParameter(name) else { return }
+            sanitized = .category(name: safeName)
+        case let .article(id):
+            guard Deeplink.isValidArticleID(id) else { return }
+            sanitized = .article(id: id)
         default:
             sanitized = deeplink
         }

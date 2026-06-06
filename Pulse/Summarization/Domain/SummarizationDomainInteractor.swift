@@ -25,6 +25,9 @@ final class SummarizationDomainInteractor: CombineInteractor {
 
     private let summarizationService: SummarizationService
     private let analyticsService: AnalyticsService?
+    /// Used for a defense-in-depth Premium re-check at the service boundary.
+    /// Optional so previews / unit tests that don't register StoreKit aren't gated.
+    private let storeKitService: StoreKitService?
     private let stateSubject: CurrentValueSubject<DomainState, Never>
     private var cancellables = Set<AnyCancellable>()
     private var summarizationTask: Task<Void, Never>?
@@ -48,6 +51,7 @@ final class SummarizationDomainInteractor: CombineInteractor {
         }
 
         analyticsService = try? serviceLocator.retrieve(AnalyticsService.self)
+        storeKitService = try? serviceLocator.retrieve(StoreKitService.self)
 
         setupBindings()
     }
@@ -81,7 +85,21 @@ final class SummarizationDomainInteractor: CombineInteractor {
 
     // MARK: - Summarization
 
+    // swiftlint:disable:next function_body_length
     private func startSummarization() {
+        // Defense-in-depth: re-verify the Premium entitlement at the service
+        // boundary, not just in the view layer. The summarize UI sits behind
+        // `PremiumGateView`, but a tampered client could dispatch
+        // `.startSummarization` directly. No-op when no StoreKit service is
+        // registered (previews / unit tests).
+        guard storeKitService?.isPremium != false else {
+            Logger.shared.service(
+                "Summarization blocked: Premium entitlement not active",
+                level: .warning
+            )
+            return
+        }
+
         summarizationTask?.cancel()
         updateState { state in
             state.generatedSummary = ""

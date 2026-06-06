@@ -40,7 +40,6 @@ final class LiveRemoteConfigService: RemoteConfigService, @unchecked Sendable {
             RemoteConfigKey.newsAPIKey.rawValue: "" as NSString,
             RemoteConfigKey.gnewsAPIKey.rawValue: "" as NSString,
             RemoteConfigKey.supabaseURL.rawValue: "" as NSString,
-            RemoteConfigKey.supabaseAnonKey.rawValue: "" as NSString,
         ])
     }
 
@@ -77,9 +76,5 @@ final class LiveRemoteConfigService: RemoteConfigService, @unchecked Sendable {
 
     var supabaseURL: String? {
         getStringOrNil(forKey: .supabaseURL)
-    }
-
-    var supabaseAnonKey: String? {
-        getStringOrNil(forKey: .supabaseAnonKey)
     }
 }

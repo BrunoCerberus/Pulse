@@ -447,7 +447,6 @@ final class MockRemoteConfigService: RemoteConfigService, @unchecked Sendable {
     var newsAPIKeyValue: String?
     var gnewsAPIKeyValue: String?
     var supabaseURLValue: String?
-    var supabaseAnonKeyValue: String?
     var shouldThrowOnFetch = false
 
     func fetchAndActivate() async throws {
@@ -461,7 +460,6 @@ final class MockRemoteConfigService: RemoteConfigService, @unchecked Sendable {
         case .newsAPIKey: newsAPIKeyValue
         case .gnewsAPIKey: gnewsAPIKeyValue
         case .supabaseURL: supabaseURLValue
-        case .supabaseAnonKey: supabaseAnonKeyValue
         }
     }
 
@@ -475,10 +473,6 @@ final class MockRemoteConfigService: RemoteConfigService, @unchecked Sendable {
 
     var supabaseURL: String? {
         supabaseURLValue
-    }
-
-    var supabaseAnonKey: String? {
-        supabaseAnonKeyValue
     }
 }
 

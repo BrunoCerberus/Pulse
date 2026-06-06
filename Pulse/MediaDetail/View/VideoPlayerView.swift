@@ -57,28 +57,33 @@ struct VideoPlayerView: UIViewRepresentable {
 
         // Check if it's a YouTube video
         if let videoID = extractYouTubeVideoID(from: url.absoluteString) {
+            // Trusted in-app embed HTML, constrained by a strict CSP to YouTube
+            // origins. JavaScript stays on for the IFrame Player API.
+            context.coordinator.loadMode = .youTube
             let html = createYouTubeEmbedHTML(videoID: videoID)
             webView.loadHTMLString(html, baseURL: URL(string: "https://www.youtube.com"))
         } else if Self.isSafeInlineVideoURL(url) {
             // Non-YouTube direct video: load only over HTTPS. `url` originates from
-            // `article.mediaURL` (untrusted third-party RSS) and this web view runs
-            // JavaScript with no navigation allowlist, so a non-HTTPS scheme must never
-            // reach `load(_:)`. A rejected URL simply renders nothing.
+            // `article.mediaURL` (untrusted third-party RSS), so the coordinator
+            // disables JavaScript and pins navigation to this host (see
+            // `decidePolicyFor`) — an attacker HTTPS page can't run scripts or
+            // redirect into in-WebView phishing. A rejected URL renders nothing.
+            context.coordinator.loadMode = .directVideo(host: url.host?.lowercased())
             webView.load(URLRequest(url: url))
         }
     }
 
     /// Whether an untrusted media URL may be loaded into the inline web view.
     ///
-    /// `article.mediaURL` is third-party RSS data and this `WKWebView` has JavaScript
-    /// enabled with no navigation-policy allowlist, so the inline player applies the
-    /// same HTTPS-only gate the open-in-browser paths enforce
-    /// (`MediaDetailDomainInteractor.openInBrowser`,
-    /// `ArticleDetailDomainInteractor.externalURL`). Rejects `http`, `file`, and custom
-    /// schemes. (`https` content is further bounded by ATS, the absence of any JS↔Swift
-    /// message handler, and `load(_:)` not granting file-system read.)
+    /// `article.mediaURL` is third-party RSS data, so the inline player applies the
+    /// same shared HTTPS-only gate (`SafeMediaURL`) the open-in-browser and audio
+    /// paths enforce. Rejects `http`, `file`, and custom schemes. The direct-video
+    /// branch additionally disables JavaScript and pins navigation to the loaded
+    /// host (see `Coordinator.decidePolicyFor`); `https` content is further bounded
+    /// by ATS, the absence of any JS↔Swift message handler, and `load(_:)` not
+    /// granting file-system read.
     static func isSafeInlineVideoURL(_ url: URL) -> Bool {
-        url.scheme?.lowercased() == "https"
+        SafeMediaURL.isSafe(url)
     }
 
     /// Creates an HTML page with an embedded YouTube iframe using the IFrame Player API.
@@ -166,6 +171,18 @@ struct VideoPlayerView: UIViewRepresentable {
 
     // MARK: - Coordinator
 
+    /// What the web view is currently displaying, which determines the
+    /// navigation policy applied in `decidePolicyFor`.
+    enum LoadMode: Equatable {
+        /// Our own trusted embed HTML, already constrained by a strict CSP to
+        /// YouTube origins. JavaScript is required for the IFrame Player API.
+        case youTube
+        /// An untrusted third-party direct-video URL. JavaScript is disabled and
+        /// navigation is pinned to the original host so the page can't run
+        /// scripts or redirect into in-WebView phishing.
+        case directVideo(host: String?)
+    }
+
     class Coordinator: NSObject, WKNavigationDelegate {
         var onLoadingStarted: (() -> Void)?
         var onLoadingFinished: (() -> Void)?
@@ -173,6 +190,44 @@ struct VideoPlayerView: UIViewRepresentable {
 
         /// Tracks the currently loaded URL to prevent duplicate loads
         var loadedURL: URL?
+
+        /// Set by `updateUIView` before each load; drives the navigation policy.
+        var loadMode: LoadMode = .youTube
+
+        /// Decides whether a navigation is allowed, and with what JavaScript
+        /// posture. The trusted YouTube embed keeps JS on (its CSP constrains
+        /// it); the untrusted direct-video branch disables JS and pins
+        /// navigation to the originally-loaded host.
+        func webView(
+            _: WKWebView,
+            decidePolicyFor navigationAction: WKNavigationAction,
+            preferences: WKWebpagePreferences,
+            decisionHandler: @escaping (WKNavigationActionPolicy, WKWebpagePreferences) -> Void
+        ) {
+            switch loadMode {
+            case .youTube:
+                preferences.allowsContentJavaScript = true
+                decisionHandler(.allow, preferences)
+            case let .directVideo(host):
+                preferences.allowsContentJavaScript = false
+                let allowed = Self.allowsDirectVideoNavigation(
+                    to: navigationAction.request.url,
+                    host: host
+                )
+                decisionHandler(allowed ? .allow : .cancel, preferences)
+            }
+        }
+
+        /// Direct-video navigations are pinned to the originally-loaded HTTPS
+        /// host. `about:` (the empty bootstrap document) is also permitted; any
+        /// cross-host or non-HTTPS navigation is cancelled. Static so the policy
+        /// is unit-testable without a live `WKWebView`.
+        static func allowsDirectVideoNavigation(to url: URL?, host: String?) -> Bool {
+            guard let url else { return false }
+            if url.scheme == "about" { return true }
+            guard SafeMediaURL.isSafe(url), let host else { return false }
+            return url.host?.lowercased() == host
+        }
 
         init(
             onLoadingStarted: (() -> Void)?,

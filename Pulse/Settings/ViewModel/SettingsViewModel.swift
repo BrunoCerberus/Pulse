@@ -280,11 +280,30 @@ final class SettingsViewModel: CombineViewModel, ObservableObject {
     /// complete. Awaiting each step sequentially closes the
     /// force-quit-between-delete-and-wipe window on top of the dealloc
     /// fix above.
+    /// Guards against overlapping wipes. `clearAllUserData` is reachable from
+    /// two places that both fire on a user-initiated sign-out — the Settings
+    /// flow above and the `AuthenticationManager` auth-transition safety net
+    /// (which also catches server-driven sign-outs). The first caller owns the
+    /// wipe; a second concurrent call returns immediately so the SwiftData
+    /// container isn't torn down twice in parallel. `@MainActor` isolation makes
+    /// the flag check race-free.
+    private static var isClearingUserData = false
+
     @MainActor
     static func clearAllUserData(
         serviceLocator: ServiceLocator,
         themeManager: ThemeManager
     ) async -> [String] {
+        guard !isClearingUserData else {
+            Logger.shared.service(
+                "clearAllUserData already in progress; skipping re-entrant call",
+                level: .debug
+            )
+            return []
+        }
+        isClearingUserData = true
+        defer { isClearingUserData = false }
+
         var failures: [String] = []
 
         // 0. End any active TTS Live Activity first so the article title
