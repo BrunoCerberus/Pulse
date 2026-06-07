@@ -111,8 +111,9 @@ defense or a known residual; look for **unfixed variants** of each.
    `false` outside `DEBUG`.
 5. **Incomplete data wipe.** Both sign-out and delete-account call `clearAllUserData()`,
    and it is **also** triggered centrally on any `authenticated → unauthenticated`
-   transition in `AuthenticationManager` (single-flight-guarded; never fires on cold-launch
-   `loading → unauthenticated`), so server-driven sign-outs (token revoked / account
+   transition in `AuthenticationManager` (de-dupes a *concurrent* Settings wipe via a
+   single-flight guard, and is idempotent so a sequential re-run is harmless; never fires on
+   cold-launch `loading → unauthenticated`), so server-driven sign-outs (token revoked / account
    disabled or deleted on another device) wipe local data too. `LiveAuthService` clears the
    GoogleSignIn session on sign-out / delete. A new persistence store added without wiring
    into `clearAllUserData()` still leaks across account boundaries — keep wiring new stores in.

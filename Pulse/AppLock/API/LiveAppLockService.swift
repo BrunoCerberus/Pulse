@@ -66,15 +66,20 @@ final class LiveAppLockService: AppLockService {
         // when biometrics are unavailable, locked out, or fail repeatedly.
         var error: NSError?
         guard context.canEvaluatePolicy(.deviceOwnerAuthentication, error: &error) else {
-            // No passcode/biometrics enrolled — e.g. the user removed the device
-            // passcode after enabling App Lock. The lock can never be satisfied,
-            // so throwing here would trap the user behind a gate that can't be
-            // evaluated. A passcode-less device has no OS-level security to
-            // enforce anyway, so disable the now-unenforceable lock and unlock
-            // rather than strand them. Re-adding a device passcode lets the user
-            // re-enable App Lock from Settings. (Availability fix.)
-            isEnabled = false
-            return true
+            // Only the genuinely-unenforceable case — the device has *no*
+            // passcode set (e.g. the user removed it after enabling App Lock) —
+            // auto-disables the lock and unlocks. A passcode-less device has no
+            // OS-level security to enforce, so trapping the user behind a gate
+            // that can never be satisfied is pure harm; re-adding a passcode lets
+            // them re-enable App Lock from Settings. For ANY other (transient /
+            // unexpected) evaluation failure we stay fail-CLOSED — throwing keeps
+            // the app locked rather than silently dropping the user's security
+            // control. (Availability fix, scoped so it can't fail open.)
+            if Self.isUnenforceableLockError(error) {
+                isEnabled = false
+                return true
+            }
+            throw AppLockError.authenticationFailed
         }
 
         do {
@@ -90,6 +95,16 @@ final class LiveAppLockService: AppLockService {
                 throw AppLockError.authenticationFailed
             }
         }
+    }
+
+    /// Whether a `canEvaluatePolicy(.deviceOwnerAuthentication)` failure means
+    /// the lock is genuinely unenforceable — i.e. the device has no passcode set
+    /// (`LAError.passcodeNotSet`) — as opposed to a transient/unexpected failure
+    /// we should treat as fail-closed. Static + `NSError`-based so the decision
+    /// is unit-testable without a live `LAContext`.
+    static func isUnenforceableLockError(_ error: NSError?) -> Bool {
+        guard let error, error.domain == LAError.errorDomain else { return false }
+        return LAError.Code(rawValue: error.code) == .passcodeNotSet
     }
 
     /// One-time migration from UserDefaults to Keychain for existing users.

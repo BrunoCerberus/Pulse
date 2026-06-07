@@ -172,8 +172,9 @@ private extension PulseSceneDelegate {
                 // Safety net for server-driven sign-outs (token revoked, account
                 // disabled/deleted on another device) that bypass the Settings
                 // flow: wipe local data on any authenticated → unauthenticated
-                // transition. `clearAllUserData` is single-flight-guarded, so this
-                // never double-wipes alongside the Settings sign-out/delete path.
+                // transition. `clearAllUserData` de-dupes a concurrent Settings
+                // wipe via its single-flight guard, and is idempotent, so a
+                // sequential second run is harmless.
                 AuthenticationManager.shared.configureSessionCleanup {
                     _ = await SettingsViewModel.clearAllUserData(
                         serviceLocator: locator,

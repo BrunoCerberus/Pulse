@@ -1,4 +1,5 @@
 import Foundation
+import LocalAuthentication
 @testable import Pulse
 import Testing
 
@@ -49,6 +50,25 @@ struct LiveAppLockServiceTests {
 
         sut.isEnabled = false
         #expect(sut.isEnabled == false)
+    }
+
+    @Test("Auto-disable is scoped to passcode-not-set; other LA failures stay fail-closed")
+    func unenforceableLockErrorScoping() {
+        // Device has no passcode → lock is genuinely unenforceable → auto-disable.
+        let passcodeNotSet = NSError(domain: LAError.errorDomain, code: LAError.Code.passcodeNotSet.rawValue)
+        #expect(LiveAppLockService.isUnenforceableLockError(passcodeNotSet))
+
+        // Transient / unexpected LA failures must NOT disable the lock (fail-closed).
+        let biometryNotAvailable = NSError(
+            domain: LAError.errorDomain,
+            code: LAError.Code.biometryNotAvailable.rawValue
+        )
+        #expect(!LiveAppLockService.isUnenforceableLockError(biometryNotAvailable))
+
+        // A passcode-not-set code from a different domain, or no error, is not unenforceable.
+        let wrongDomain = NSError(domain: "SomeOtherDomain", code: LAError.Code.passcodeNotSet.rawValue)
+        #expect(!LiveAppLockService.isUnenforceableLockError(wrongDomain))
+        #expect(!LiveAppLockService.isUnenforceableLockError(nil))
     }
 
     @Test("hasPromptedFaceID round-trips through UserDefaults")
