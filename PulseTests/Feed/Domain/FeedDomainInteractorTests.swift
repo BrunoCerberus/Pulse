@@ -47,6 +47,33 @@ struct FeedDomainInteractorTests {
         }
     }
 
+    @Test("Digest generation is blocked at the service boundary when StoreKit is not premium")
+    func digestBlockedWhenNotPremium() async {
+        // Fresh locator with a non-premium StoreKit — the suite's default `sut`
+        // registers no StoreKit (so it isn't gated).
+        let locator = ServiceLocator()
+        locator.register(FeedService.self, instance: MockFeedService())
+        locator.register(NewsService.self, instance: MockNewsService())
+        locator.register(NetworkMonitorService.self, instance: MockNetworkMonitorService())
+        locator.register(AnalyticsService.self, instance: MockAnalyticsService())
+        locator.register(StoreKitService.self, instance: MockStoreKitService(isPremium: false))
+        let gated = FeedDomainInteractor(serviceLocator: locator)
+
+        gated.dispatch(action: .generateDigest)
+
+        // The Premium re-check short-circuits BEFORE the model loads and before
+        // the empty-articles guard — so it reaches neither `.generating` nor the
+        // `.error("No articles available")` path the un-gated flow would hit on
+        // empty articles. Reaching either would mean the gate didn't fire.
+        let proceeded = await waitForCondition(timeout: 300_000_000) { @MainActor in
+            switch gated.currentState.generationState {
+            case .generating, .error: true
+            default: false
+            }
+        }
+        #expect(!proceeded)
+    }
+
     @Test("Load data fetches latest articles from API")
     func loadDataFetchesArticles() async {
         mockNewsService.topHeadlinesResult = .success(Article.mockArticles)

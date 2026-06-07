@@ -66,15 +66,11 @@ final class LiveAppLockService: AppLockService {
         // when biometrics are unavailable, locked out, or fail repeatedly.
         var error: NSError?
         guard context.canEvaluatePolicy(.deviceOwnerAuthentication, error: &error) else {
-            // Only the genuinely-unenforceable case — the device has *no*
-            // passcode set (e.g. the user removed it after enabling App Lock) —
-            // auto-disables the lock and unlocks. A passcode-less device has no
-            // OS-level security to enforce, so trapping the user behind a gate
-            // that can never be satisfied is pure harm; re-adding a passcode lets
-            // them re-enable App Lock from Settings. For ANY other (transient /
-            // unexpected) evaluation failure we stay fail-CLOSED — throwing keeps
-            // the app locked rather than silently dropping the user's security
-            // control. (Availability fix, scoped so it can't fail open.)
+            // Only the genuinely-unenforceable case (no device passcode set) auto-
+            // disables the lock and unlocks — trapping the user behind a gate that
+            // can never be satisfied is pure harm, and a passcode-less device has
+            // no OS-level security to enforce anyway. ANY other (transient/
+            // unexpected) failure stays fail-CLOSED. See `isUnenforceableLockError`.
             if Self.isUnenforceableLockError(error) {
                 isEnabled = false
                 return true
