@@ -31,13 +31,19 @@ final class PulseSceneDelegate: UIResponder, UIWindowSceneDelegate {
     /// lifetime; observes `didEnterBackgroundNotification` internally.
     private var topicExtractionDrainer: TopicExtractionDrainer?
 
+    /// Opaque window-level cover installed while the scene is inactive so the
+    /// app-switcher snapshot can't leak on-screen content. Unlike the in-content
+    /// SwiftUI overlay in `RootView`, a window-level cover also hides presented
+    /// sheets / the share sheet (which present above the hosting controller).
+    private var privacyCoverView: UIView?
+
     func scene(
         _ scene: UIScene,
         willConnectTo _: UISceneSession,
         options connectionOptions: UIScene.ConnectionOptions
     ) {
         // Prevent scene delegate execution during unit tests to avoid conflicts
-        guard ProcessInfo.processInfo.environment["IS_RUNNING_UNIT_TESTS"] != "YES" else { return }
+        guard !TestEnvironment.isRunningUnitTests else { return }
 
         // Initialize services in ServiceLocator
         setupServices()
@@ -104,8 +110,15 @@ final class PulseSceneDelegate: UIResponder, UIWindowSceneDelegate {
         }
     }
 
+    func sceneWillResignActive(_: UIScene) {
+        MainActor.assumeIsolated {
+            installPrivacyCoverIfNeeded()
+        }
+    }
+
     func sceneDidBecomeActive(_: UIScene) {
         MainActor.assumeIsolated {
+            removePrivacyCover()
             AppLockManager.shared.handleSceneDidBecomeActive()
         }
     }
@@ -153,8 +166,21 @@ private extension PulseSceneDelegate {
     func configureAuthenticationManager() {
         do {
             nonisolated(unsafe) let authService = try serviceLocator.retrieve(AuthService.self)
+            nonisolated(unsafe) let locator = serviceLocator
             MainActor.assumeIsolated {
                 AuthenticationManager.shared.configure(with: authService)
+                // Safety net for server-driven sign-outs (token revoked, account
+                // disabled/deleted on another device) that bypass the Settings
+                // flow: wipe local data on any authenticated → unauthenticated
+                // transition. `clearAllUserData` de-dupes a concurrent Settings
+                // wipe via its single-flight guard, and is idempotent, so a
+                // sequential second run is harmless.
+                AuthenticationManager.shared.configureSessionCleanup {
+                    _ = await SettingsViewModel.clearAllUserData(
+                        serviceLocator: locator,
+                        themeManager: .shared
+                    )
+                }
             }
         } catch {
             Logger.shared.service("Failed to configure AuthenticationManager: \(error)", level: .warning)
@@ -425,14 +451,55 @@ private extension PulseSceneDelegate {
 
 private extension PulseSceneDelegate {
     var isRunningUITests: Bool {
-        let env = ProcessInfo.processInfo.environment
-        return env["UI_TESTING"] == "1" || env["XCTestConfigurationFilePath"] == "UI"
+        TestEnvironment.isUITesting
     }
 
     func makeRootViewController() -> UIHostingController<RootView> {
         let controller = UIHostingController(rootView: RootView(serviceLocator: serviceLocator))
         controller.overrideUserInterfaceStyle = uiUserInterfaceStyle(from: ThemeManager.shared.colorScheme)
         return controller
+    }
+
+    /// Installs an opaque, window-level privacy cover so the app-switcher
+    /// snapshot can't leak on-screen content — including presented sheets and
+    /// the share sheet, which the in-content `RootView` overlay cannot cover
+    /// because they present above the hosting controller. Gated on the user
+    /// having opted into App Lock and not being mid-biometry (which also flips
+    /// the scene inactive — we don't want a black flash behind Face ID).
+    func installPrivacyCoverIfNeeded() {
+        guard AppLockManager.shared.isAppLockEnabled,
+              !AppLockManager.shared.isAuthenticating,
+              let window,
+              privacyCoverView == nil
+        else { return }
+
+        let cover = UIView(frame: window.bounds)
+        cover.backgroundColor = .black
+        cover.autoresizingMask = [.flexibleWidth, .flexibleHeight]
+        cover.isUserInteractionEnabled = false
+
+        let icon = UIImageView(image: UIImage(systemName: "lock.fill"))
+        icon.tintColor = UIColor.white.withAlphaComponent(0.4)
+        icon.contentMode = .scaleAspectFit
+        icon.translatesAutoresizingMaskIntoConstraints = false
+        cover.addSubview(icon)
+        NSLayoutConstraint.activate([
+            icon.centerXAnchor.constraint(equalTo: cover.centerXAnchor),
+            icon.centerYAnchor.constraint(equalTo: cover.centerYAnchor),
+            icon.widthAnchor.constraint(equalToConstant: 64),
+            icon.heightAnchor.constraint(equalToConstant: 64),
+        ])
+
+        // Added as the window's topmost subview so it sits above any presented
+        // sheet / share sheet in the same window.
+        window.addSubview(cover)
+        privacyCoverView = cover
+    }
+
+    /// Removes the window-level privacy cover, if installed.
+    func removePrivacyCover() {
+        privacyCoverView?.removeFromSuperview()
+        privacyCoverView = nil
     }
 
     func showSplashScreen(in window: UIWindow) {

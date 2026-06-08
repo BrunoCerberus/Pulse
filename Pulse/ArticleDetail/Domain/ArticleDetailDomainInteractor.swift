@@ -272,13 +272,11 @@ final class ArticleDetailDomainInteractor: CombineInteractor {
 
     /// HTTPS-only gate. An attacker-controlled article row could redirect
     /// users through a plaintext page on a hostile network; the article URL
-    /// originates from RSS feeds we don't fully control. Static so the
-    /// scheme-filter logic is unit-testable without `UIApplication.shared`.
+    /// originates from RSS feeds we don't fully control. Delegates to the
+    /// shared `SafeMediaURL` gate so the inline-video, audio, and browser sinks
+    /// can't drift apart. Static so it's unit-testable without `UIApplication`.
     static func externalURL(from urlString: String) -> URL? {
-        guard let url = URL(string: urlString),
-              url.scheme?.lowercased() == "https"
-        else { return nil }
-        return url
+        SafeMediaURL.validated(urlString)
     }
 
     // MARK: - Content Processing

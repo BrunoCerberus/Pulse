@@ -123,9 +123,9 @@ struct PaywallView: View {
     }
 
     /// Check if running in test environment where SubscriptionStoreView doesn't render properly.
+    /// Gated to DEBUG via `TestEnvironment` so this fallback can't ship in Release.
     private var isRunningTests: Bool {
-        ProcessInfo.processInfo.environment["XCTestConfigurationFilePath"] != nil
-            || ProcessInfo.processInfo.environment["UI_TESTING"] == "1"
+        TestEnvironment.isRunningTests
     }
 
     @ViewBuilder

@@ -22,6 +22,21 @@ final class AuthenticationManager: ObservableObject {
     private var authService: AuthService?
     private var cancellables = Set<AnyCancellable>()
 
+    /// Cleanup invoked when the user transitions from authenticated to
+    /// unauthenticated. Covers server-driven sign-outs (token revoked, account
+    /// disabled or deleted on another device) that never go through the Settings
+    /// sign-out/delete flow and would otherwise leave local data on the device.
+    /// Wired in `PulseSceneDelegate`; single-flight is enforced downstream by
+    /// `SettingsViewModel.clearAllUserData`, so firing it alongside the Settings
+    /// flow is safe.
+    private var sessionCleanup: (@MainActor () async -> Void)?
+
+    /// Registers the local-data wipe to run on sign-out transitions. See
+    /// `sessionCleanup`.
+    func configureSessionCleanup(_ cleanup: @escaping @MainActor () async -> Void) {
+        sessionCleanup = cleanup
+    }
+
     enum AuthState: Equatable {
         case loading
         case authenticated(AuthUser)
@@ -57,15 +72,32 @@ final class AuthenticationManager: ObservableObject {
         authService.authStatePublisher
             .receive(on: DispatchQueue.main)
             .sink { [weak self] user in
+                guard let self else { return }
+                let wasAuthenticated = self.isAuthenticated
                 if let user {
-                    self?.authState = .authenticated(user)
-                    self?.currentUser = user
+                    self.authState = .authenticated(user)
+                    self.currentUser = user
                 } else {
-                    self?.authState = .unauthenticated
-                    self?.currentUser = nil
+                    self.authState = .unauthenticated
+                    self.currentUser = nil
+                    // Only a genuine authenticated → unauthenticated transition
+                    // triggers cleanup. A cold-launch `loading → unauthenticated`
+                    // or a redundant unauthenticated emission must NOT wipe — that
+                    // would erase a returning (or still signed-in) user's data.
+                    if wasAuthenticated {
+                        self.runSessionCleanup()
+                    }
                 }
             }
             .store(in: &cancellables)
+    }
+
+    /// Fires the registered `sessionCleanup` (if any) on the main actor.
+    private func runSessionCleanup() {
+        guard let sessionCleanup else { return }
+        Task { @MainActor in
+            await sessionCleanup()
+        }
     }
 
     /// Check if user is authenticated
@@ -96,6 +128,7 @@ final class AuthenticationManager: ObservableObject {
             cancellables.removeAll()
             authState = .loading
             currentUser = nil
+            sessionCleanup = nil
         }
     #endif
 }

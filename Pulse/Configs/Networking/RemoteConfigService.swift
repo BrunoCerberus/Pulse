@@ -5,7 +5,6 @@ enum RemoteConfigKey: String {
     case newsAPIKey = "news_api_key"
     case gnewsAPIKey = "gnews_api_key"
     case supabaseURL = "supabase_url"
-    case supabaseAnonKey = "supabase_anon_key"
 }
 
 /// Protocol for Remote Config operations.
@@ -24,9 +23,6 @@ protocol RemoteConfigService: Sendable {
 
     /// Gets the Supabase project URL from remote config.
     var supabaseURL: String? { get }
-
-    /// Gets the Supabase anonymous key from remote config.
-    var supabaseAnonKey: String? { get }
 }
 
 // MARK: - Errors

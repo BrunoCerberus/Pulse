@@ -317,8 +317,12 @@ struct AudioPlayerView: View {
     // MARK: - Helpers
 
     private func loadAudio() {
+        // `article.mediaURL` is untrusted third-party RSS data handed to
+        // `AVURLAsset`. Apply the same HTTPS-only gate the video/browser sinks
+        // use (`SafeMediaURL`) so a hostile `file://` / custom-scheme media URL
+        // can't reach AVFoundation. A rejected URL surfaces the no-URL error.
         guard let mediaURLString = article.mediaURL,
-              let url = URL(string: mediaURLString)
+              let url = SafeMediaURL.validated(mediaURLString)
         else {
             onError?(Constants.noURLError)
             return

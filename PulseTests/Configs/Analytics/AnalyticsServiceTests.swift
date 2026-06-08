@@ -210,6 +210,21 @@ struct LiveAnalyticsServiceSanitizerTests {
         }
         #expect(result["original"] as? String == "value")
     }
+
+    @Test("Event-parameter sanitization redacts PII the same way logEvent now does")
+    func eventParametersAreSanitizedLikeLogEvent() {
+        // Mirrors `LiveAnalyticsService.logEvent`'s new step:
+        // `event.parameters.map { $0.mapValues(Self.sanitize(any:)) }`.
+        let event = AnalyticsEvent.cloudSyncFailed(
+            error: "Sync failed for user@example.com via https://api.example.com/x?token=abc123"
+        )
+        let sanitized = (event.parameters ?? [:]).mapValues(LiveAnalyticsService.sanitize(any:))
+        let errorValue = sanitized["error"] as? String ?? ""
+
+        #expect(!errorValue.contains("user@example.com"))
+        #expect(errorValue.contains("[REDACTED_EMAIL]"))
+        #expect(!errorValue.contains("abc123"))
+    }
 }
 
 @Suite("MockAnalyticsService Tests")

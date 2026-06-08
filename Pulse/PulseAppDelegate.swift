@@ -36,7 +36,7 @@ final class PulseAppDelegate: UIResponder, UIApplicationDelegate {
         }
 
         // Skip Firebase during UI tests (app runs in separate process without GoogleService-Info.plist)
-        let isUITesting = ProcessInfo.processInfo.environment["UI_TESTING"] == "1"
+        let isUITesting = TestEnvironment.isUITesting
         if !isUITesting {
             FirebaseApp.configure()
 

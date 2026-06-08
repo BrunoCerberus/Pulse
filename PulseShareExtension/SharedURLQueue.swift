@@ -129,7 +129,15 @@ struct SharedURLQueue: @unchecked Sendable {
             return []
         }
         do {
-            return try JSONDecoder().decode([SharedURLItem].self, from: data)
+            let decoded = try JSONDecoder().decode([SharedURLItem].self, from: data)
+            // Symmetric with `enqueue`'s write-side cap: the `maxQueueSize`
+            // invariant is re-applied on read so a tampered or oversized payload
+            // written directly to the App Group key (first-party/jailbreak only)
+            // can't make the main app decode an unbounded array. Keep the newest
+            // items (FIFO eviction of the oldest), matching `enqueue`.
+            return decoded.count > Self.maxQueueSize
+                ? Array(decoded.suffix(Self.maxQueueSize))
+                : decoded
         } catch {
             // Treat corrupted payloads as empty so a single bad write does
             // not block future enqueues. The extension cannot log here.

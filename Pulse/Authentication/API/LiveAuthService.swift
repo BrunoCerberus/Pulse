@@ -154,6 +154,11 @@ final class LiveAuthService: NSObject, AuthService {
         Future { promise in
             do {
                 try Auth.auth().signOut()
+                // Firebase sign-out alone leaves GoogleSignIn's own cached
+                // session (`currentUser` / `hasPreviousSignIn`) populated, so a
+                // Google credential would linger for the next user of a shared
+                // device. Clear it too.
+                GIDSignIn.sharedInstance.signOut()
                 promise(.success(()))
             } catch {
                 promise(.failure(AuthError.unknown(error.localizedDescription)))
@@ -207,9 +212,14 @@ final class LiveAuthService: NSObject, AuthService {
         }
         let uid = currentUser.uid
         let isAnonymous = currentUser.isAnonymous
+        // Captured before any `await` (non-Sendable `User` never escapes) so we
+        // can revoke the GoogleSignIn grant after a successful deletion.
+        let isGoogle = currentUser.providerData.contains { $0.providerID == "google.com" }
 
         do {
             try await deleteCurrentFirebaseUser(expectedUID: uid)
+            clearGoogleSessionIfNeeded(isGoogle: isGoogle)
+            return
         } catch {
             let nsError = error as NSError
             guard AuthErrorCode(rawValue: nsError.code) == .requiresRecentLogin else {
@@ -240,6 +250,24 @@ final class LiveAuthService: NSObject, AuthService {
             )
             try await reauthenticateCurrentFirebaseUser(with: credential, expectedUID: uid)
             try await deleteCurrentFirebaseUser(expectedUID: uid)
+            clearGoogleSessionIfNeeded(isGoogle: isGoogle)
+        }
+    }
+
+    /// After a successful account deletion, clear and revoke any GoogleSignIn
+    /// session so no Google credential lingers for the next user of the device.
+    /// No-op for non-Google providers (Apple keeps no persistent SDK session).
+    @MainActor
+    private func clearGoogleSessionIfNeeded(isGoogle: Bool) {
+        guard isGoogle else { return }
+        GIDSignIn.sharedInstance.signOut()
+        GIDSignIn.sharedInstance.disconnect { error in
+            if let error {
+                Logger.shared.service(
+                    "GoogleSignIn disconnect after delete failed: \(error.localizedDescription)",
+                    level: .warning
+                )
+            }
         }
     }
 

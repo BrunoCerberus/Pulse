@@ -28,7 +28,7 @@ struct RootView: View {
                 case .unauthenticated:
                     SignInView(serviceLocator: serviceLocator)
                 case .authenticated:
-                    if hasCompletedOnboarding || ProcessInfo.processInfo.environment["UI_TESTING"] == "1" {
+                    if hasCompletedOnboarding || TestEnvironment.isUITesting {
                         CoordinatorView(serviceLocator: serviceLocator)
                             .onAppear { lockManager.checkPostSignupPrompt() }
                             .sheet(isPresented: $lockManager.showFaceIDPrompt) {

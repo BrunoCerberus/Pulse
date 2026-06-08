@@ -37,6 +37,29 @@ struct SummarizationDomainInteractorTests {
         #expect(state.modelStatus == .notLoaded)
     }
 
+    // MARK: - Premium Gate Tests
+
+    @Test("Summarization is blocked at the service boundary when StoreKit is not premium")
+    func summarizationBlockedWhenNotPremium() async {
+        // Fresh locator with a non-premium StoreKit registered — the suite's
+        // default `sut` registers no StoreKit (so it isn't gated).
+        let locator = ServiceLocator()
+        locator.register(SummarizationService.self, instance: MockSummarizationService())
+        locator.register(AnalyticsService.self, instance: MockAnalyticsService())
+        locator.register(StoreKitService.self, instance: MockStoreKitService(isPremium: false))
+        let gated = SummarizationDomainInteractor(article: article, serviceLocator: locator)
+
+        gated.dispatch(action: .startSummarization)
+
+        // The Premium re-check refuses: state must stay idle — it never enters
+        // loadingModel / generating.
+        let leaked = await waitForCondition(timeout: 300_000_000) { @MainActor in
+            gated.currentState.summarizationState != .idle
+        }
+        #expect(!leaked)
+        #expect(gated.currentState.summarizationState == .idle)
+    }
+
     // MARK: - Start Summarization Tests
 
     @Test("Start summarization updates state to loading")
