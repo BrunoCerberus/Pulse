@@ -84,7 +84,7 @@ Self-hosted Supabase backend (`pulse-backend` Go RSS worker): aggregates major n
 
 ## Privacy & Compliance
 
-Pulse ships a privacy manifest (`Pulse/PrivacyInfo.xcprivacy`) and gates every PR with deterministic **LGPD** (Brazil) and **GDPR** / **CCPA** conformance workflows — PII scanning, docs presence, operational controls, and privacy-manifest structural integrity. Details in [CI/CD → Privacy conformance](docs-guide/ci-cd.md#privacy-conformance).
+Pulse ships a privacy manifest (`Pulse/PrivacyInfo.xcprivacy`) and gates every PR with deterministic **LGPD** (Brazil) and **GDPR** / **CCPA** conformance workflows — PII scanning, docs presence, operational controls, and privacy-manifest structural integrity. Security review is threat-model-guided: [`THREAT_MODEL.md`](THREAT_MODEL.md) + [`SEVERITY_RUBRIC.md`](SEVERITY_RUBRIC.md) scope the trust boundaries and severity scoring, and an advisory `claude-security-review.yml` runs a two-stage discovery → verify pass on PRs plus a weekly sweep. Details in [CI/CD → Privacy conformance](docs-guide/ci-cd.md#privacy-conformance).
 
 ## Contributing
 

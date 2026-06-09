@@ -38,7 +38,7 @@ Keys are resolved in order: **Firebase Remote Config** (primary) → **environme
 export SUPABASE_URL="https://your-project.supabase.co"
 ```
 
-There is **no** `SUPABASE_ANON_KEY` env override — the Supabase anon key is sourced from Remote Config only (the Edge Functions API does not require auth). The NewsAPI/GNews keys (`NEWS_API_KEY`, `GNEWS_API_KEY`) also have DEBUG env fallbacks.
+There is **no** `SUPABASE_ANON_KEY` — Supabase needs only `SUPABASE_URL` (the Edge Functions API is public/unauthenticated), sourced from Remote Config with a `#if DEBUG`-only env override. The NewsAPI/GNews keys (`NEWS_API_KEY`, `GNEWS_API_KEY`) also have DEBUG env fallbacks.
 
 Release builds use Remote Config + Keychain only (env-var fallbacks are `#if DEBUG`-gated). The NewsAPI/GNews Remote Config keys are validated at ≥10 chars; the Supabase URL is validated as non-empty. See `APIKeysProvider.swift`, `SupabaseConfig.swift`.
 

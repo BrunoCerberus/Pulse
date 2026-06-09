@@ -4,11 +4,13 @@
 
 ## Workflows
 
-- `ci.yml` — code quality (incl. localization key parity) + Debug build + Release build + unit/UI/snapshot tests on iPhone, plus a UI-test pass on iPad (regular size class) + patch & overall coverage, on PR **and push to master**
+- `ci.yml` — code quality (incl. localization key parity) + a `security-audit` job (mobsfscan iOS SAST, HTTPS-only network-call check, privacy-manifest validation, ATS-exception + entitlements + file-permission audit, dependency review) + Debug build + Release build + unit/UI/snapshot tests on iPhone, plus a UI-test pass on iPad (regular size class) + patch & overall coverage, on PR **and push to master**. Build/release/test jobs share the `.github/actions/setup-ios` composite action (Xcode select + SPM cache + xcodegen + `make generate`).
+- `actionlint.yml` — lints workflow YAML (schema, `${{ }}` exprs, `uses:` refs) + shellcheck over embedded `run:` blocks; a **required** status check that runs unconditionally (no `paths:` filter) on every push to master / PR so it can't deadlock as a pending required check
 - `release.yml` — version bump → Release archive → GitHub Release; App Store Connect upload dormant until secrets exist (see [Releasing](#releasing))
 - `docs.yml` — DocC build (broken-reference check) on PR + master
 - `pr-title.yml` — Conventional Commit PR-title lint
 - `claude-code-review.yml` — Claude review on PR open/sync
+- `claude-security-review.yml` — advisory threat-model-guided security pass: two-stage `pr-discovery` → separate-context `pr-verify` on PRs + a weekly Monday 06:00 UTC full-repo sweep (`workflow_dispatch`-able); distinct from `claude-code-review.yml` and intentionally **not** in the required-check ruleset
 - `codeql.yml` — CodeQL security analysis on PR + weekly
 - `lgpd-conformance.yml` — LGPD (Brazil, Lei 13.709/2018) PR gates
 - `gdpr-conformance.yml` — GDPR (EU 2016/679) + CCPA / CPRA (California §1798.100 et seq.) PR gates

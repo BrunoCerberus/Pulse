@@ -34,7 +34,7 @@ architecture: `View → ViewModel → DomainInteractor → Service (Live/Mock) �
 | Component | Identifier / note |
 |---|---|
 | Supabase backend | HTTPS only — no plaintext `http://` permitted in `Pulse/Configs/Networking/` (enforced by conformance jobs) |
-| Firebase Remote Config | Primary source of `SUPABASE_URL` / `SUPABASE_ANON_KEY` / news API keys (min 10 chars) |
+| Firebase Remote Config | Primary source of `SUPABASE_URL` (non-empty check) + NewsAPI / GNews keys (min 10 chars). No Supabase anon key exists — the Edge Functions API is public/unauthenticated. |
 | Keychain | `com.bruno.Pulse.APIKeys` (user-provided keys), `com.pulse.applock`, APNs token — device-only accessibility |
 | CloudKit | `iCloud.com.bruno.Pulse-News` — **`.private`** database (per-user) |
 | App Lock | Biometric / passcode gate in front of sensitive flows |
@@ -141,13 +141,13 @@ branches whose fixes are NOT in master; a `--all` SHA does not mean the fix ship
 - `DeeplinkManager.handle` re-validates `.category` / `.article`; share-queue read-side cap;
   `logEvent` PII sanitization; `TestEnvironment` DEBUG-gating; service-boundary premium
   re-check (classes §3.2 / §3.3 / §3.4 / §3.6)
+- Reviewer-only anonymous sign-in kept out of analytics (`setUserID(nil)` for the anonymous
+  provider + suppressed throttle-failure events) + a 60s sign-in throttle (#353, class §3.4 / abuse)
 
-**Still prepared but NOT in master — reconcile before trusting:**
-- Reviewer-only anonymous sign-in kept out of analytics + a sign-in throttle → on `security/pr-3-reviewer-hygiene` (class §3.4 / abuse)
-
-> Also unmerged: `security/pr-1-atomic-cleanup`, `security/pr-2-url-hardening`,
-> `security/audit-fixes`, `security/audit-remediation`. Their themes (#327/#328) appear
-> merged, but reconcile each branch against master before trusting any "fixed" claim.
+> The repo still carries a family of stale `security/pr-*` branches
+> (`security/pr-1-atomic-cleanup`, `security/pr-2-url-hardening`, `security/audit-fixes`,
+> `security/audit-remediation`). Their themes (#327/#328) appear merged; reconcile each
+> branch against master before trusting any "fixed" claim.
 
 ## 4. What are we going to do about it? (Q4)
 

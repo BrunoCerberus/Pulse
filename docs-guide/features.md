@@ -18,7 +18,7 @@ The app uses iOS 26 Liquid Glass on the root `TabView` (iPhone) and `NavigationS
 - **Enhanced Sharing** — `ShareItemsBuilder` formats `[title — source, URL]`.
 - **Localization** — English, Portuguese, Spanish (UI + content), no app restart.
 - **Accessibility** — Dynamic Type layout adaptation, VoiceOver heading hierarchy, focus management, live announcements.
-- **Security** — input validation, sign-out / account-deletion data wipe, Keychain-backed app lock (biometric + passcode), privacy manifest.
+- **Security** — input validation, untrusted-RSS-text sanitization before the on-device LLM (`PromptSanitizer`), HTTPS-only media-URL gate (`SafeMediaURL`), full sign-out / account-deletion data wipe (incl. private CloudKit zone), Keychain-backed app lock (biometric + passcode), an app-switcher privacy cover over the multitasking snapshot while App Lock is enabled, PII sanitization of all analytics event parameters, and a privacy manifest.
 - **Widget + Live Activities** — home screen headlines; TTS on Lock Screen + Dynamic Island.
 - **App Intents / Siri / Spotlight** — five intents via `PulseAppShortcuts`: Open Pulse, Open Daily Digest, Open Bookmarks, Search Pulse, Open Settings.
 - **Share Extension** — `public.url` → App Group queue → summarize in the main app (Gemma 3 1B exceeds the extension memory budget).
