@@ -34,7 +34,7 @@ Pulse/
 │   ├── Bookmarks/ ReadingHistory/ CloudSync/ Search/ Settings/
 │   ├── Notifications/ AppLock/ Onboarding/ Paywall/ SplashScreen/
 │   ├── ForYou/ ForYouSettings/ Personalization/
-│   ├── Configs/                  # Navigation, DesignSystem, Models, Networking,
+│   ├── Configs/                  # Navigation, DesignSystem, Models, Networking, AI,
 │   │                             # Storage, CloudSync, Analytics, Mocks, Widget
 │   └── Documentation.docc/       # DocC bundle (Architecture, GettingStarted, Pulse)
 ├── PulseWidgetExtension/         # WidgetKit + TTS Live Activity
