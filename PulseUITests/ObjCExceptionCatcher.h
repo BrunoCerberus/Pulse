@@ -23,6 +23,12 @@ NS_ASSUME_NONNULL_BEGIN
 /// Returns query.count, catching any C++ exception. Returns 0 on exception.
 + (NSInteger)safeCountForQuery:(XCUIElementQuery *)query;
 
+/// Returns element.label, catching any C++ exception. Returns an empty string on exception.
++ (NSString *)safeLabelForElement:(XCUIElement *)element;
+
+/// Returns element.identifier, catching any C++ exception. Returns an empty string on exception.
++ (NSString *)safeIdentifierForElement:(XCUIElement *)element;
+
 /// Terminates an application, catching any C++ exception from "Failed to terminate".
 + (void)safeTerminateApp:(XCUIApplication *)app;
 

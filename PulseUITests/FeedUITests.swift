@@ -118,14 +118,22 @@ final class FeedUITests: BaseUITestCase {
         let tabBar = app.tabBars.firstMatch
         XCTAssertTrue(safeWaitForExistence(tabBar, timeout: Self.launchTimeout), "Tab bar should exist")
 
-        // Verify Feed tab exists and is in the correct position
-        let tabButtons = tabBar.buttons.allElementsBoundByIndex
-        XCTAssertGreaterThanOrEqual(tabButtons.count, 5, "Tab bar should have at least 5 tabs")
+        // Read the tab buttons through ObjC++ exception-safe wrappers. Evaluating
+        // `allElementsBoundByIndex`, `.count`, or `.label`/`.identifier` directly
+        // forces an accessibility snapshot that, on Xcode 26 CI shared runners,
+        // can throw a "Timed out while evaluating UI query" C++ exception. Unlike
+        // the rest of the suite, those raw reads were not wrapped, so the exception
+        // SIGABRT'd the runner mid-test instead of surfacing as a clean assertion
+        // failure (and cascaded to subsequent tests).
+        let tabButtons = tabBar.buttons
+        let tabCount = ObjCExceptionCatcher.safeCount(for: tabButtons)
+        XCTAssertGreaterThanOrEqual(tabCount, 5, "Tab bar should have at least 5 tabs")
 
-        // Find Feed tab index
+        // Find Feed tab index using exception-safe label/identifier reads.
         var feedIndex = -1
-        for (index, button) in tabButtons.enumerated() {
-            if button.label == "Feed" || button.identifier == "Feed" {
+        for index in 0 ..< tabCount {
+            let button = tabButtons.element(boundBy: index)
+            if safeLabel(button) == "Feed" || safeIdentifier(button) == "Feed" {
                 feedIndex = index
                 break
             }
