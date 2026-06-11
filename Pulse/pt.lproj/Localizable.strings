@@ -314,6 +314,7 @@
 /* ==================== */
 
 "briefing.intro" = "Aqui está o seu boletim Pulse.";
+"speech.by_author" = "Por %@";
 "briefing.digest_item_title" = "Resumo de Hoje";
 
 "feed.listen_briefing" = "Ouvir Boletim";

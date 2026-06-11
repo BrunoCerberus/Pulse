@@ -60,11 +60,6 @@ final class TTSLiveActivityController {
             return
         }
 
-        // If an activity is already active, end it first so we don't leak.
-        if currentActivity != nil {
-            end()
-        }
-
         let initialState = Self.contentState(
             isPlaying: true,
             progress: 0.0,
@@ -73,14 +68,33 @@ final class TTSLiveActivityController {
             currentSource: currentSource,
             queuePosition: queuePosition
         )
+        let content = ActivityContent(
+            state: initialState,
+            staleDate: Date().addingTimeInterval(Self.staleInterval)
+        )
 
+        // Replacing a session: await the old activity's end before requesting
+        // the new one so the Lock Screen never shows two TTS activities, even
+        // transiently. Updates issued in that window no-op (no current
+        // activity) and the next throttled progress sync repaints the state.
+        if let previous = currentActivity {
+            currentActivity = nil
+            Task { @MainActor in
+                await previous.end(nil, dismissalPolicy: .immediate)
+                self.requestActivity(with: content)
+            }
+        } else {
+            requestActivity(with: content)
+        }
+    }
+
+    private func requestActivity(with content: ActivityContent<TTSActivityAttributes.ContentState>) {
         do {
-            let activity = try Activity<TTSActivityAttributes>.request(
+            currentActivity = try Activity<TTSActivityAttributes>.request(
                 attributes: TTSActivityAttributes(),
-                content: .init(state: initialState, staleDate: Date().addingTimeInterval(Self.staleInterval)),
+                content: content,
                 pushType: nil
             )
-            currentActivity = activity
         } catch {
             Logger.shared.service(
                 "TTSLiveActivityController: failed to start activity: \(error)",

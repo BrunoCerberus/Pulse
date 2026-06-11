@@ -14,7 +14,9 @@ enum SpeechTextBuilder {
         var parts: [String] = [article.title]
 
         if let author = article.author, !author.isEmpty {
-            parts.append("By \(author)")
+            // Localized: the narration voice matches the content language, so
+            // an English "By" would be spoken mid-sentence in pt/es briefings.
+            parts.append(String(format: AppLocalization.localized("speech.by_author"), author))
         }
 
         if let description = article.description {

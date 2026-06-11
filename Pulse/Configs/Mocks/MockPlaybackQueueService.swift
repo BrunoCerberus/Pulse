@@ -33,7 +33,9 @@ final class MockPlaybackQueueService: PlaybackQueueService {
         lastPlayedMode = mode
 
         guard !items.isEmpty else { return }
+        // Mirror Live semantics: the speed preset survives queue replacement.
         var state = PlaybackQueueState.idle
+        state.speedPreset = stateSubject.value.speedPreset
         state.items = items
         state.currentIndex = 0
         state.mode = mode
@@ -74,7 +76,10 @@ final class MockPlaybackQueueService: PlaybackQueueService {
         skipCallCount += 1
         lastSkippedToItemID = itemID
         var state = stateSubject.value
-        guard let target = state.items.firstIndex(where: { $0.id == itemID }) else { return }
+        // Mirror Live semantics: skipping to the current item is a no-op.
+        guard let target = state.items.firstIndex(where: { $0.id == itemID }),
+              target != state.currentIndex
+        else { return }
         state.currentIndex = target
         state.itemProgress = 0.0
         stateSubject.send(state)
@@ -89,7 +94,10 @@ final class MockPlaybackQueueService: PlaybackQueueService {
 
     func stop() {
         stopCallCount += 1
-        stateSubject.send(.idle)
+        // Mirror Live semantics: the speed preset survives teardown.
+        var state = PlaybackQueueState.idle
+        state.speedPreset = stateSubject.value.speedPreset
+        stateSubject.send(state)
     }
 
     // MARK: - Test Helpers

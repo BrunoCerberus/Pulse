@@ -32,6 +32,10 @@ final class LiveTextToSpeechService: NSObject, TextToSpeechService, @unchecked S
         didFinishSubject.eraseToAnyPublisher()
     }
 
+    var currentPlaybackState: TTSPlaybackState {
+        playbackStateSubject.value
+    }
+
     override init() {
         super.init()
         synthesizer.delegate = self
@@ -76,6 +80,11 @@ final class LiveTextToSpeechService: NSObject, TextToSpeechService, @unchecked S
     func resume() {
         runOnMain {
             guard self.synthesizer.isPaused else { return }
+            // The system can deactivate our session while paused (audio
+            // interruptions); reactivating before continueSpeaking avoids
+            // silently "playing" into a dead session. Re-activating an
+            // already-active session is a no-op.
+            self.configureAudioSession()
             self.synthesizer.continueSpeaking()
             self.playbackStateSubject.send(.playing)
         }

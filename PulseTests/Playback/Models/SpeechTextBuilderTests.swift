@@ -34,7 +34,9 @@ struct SpeechTextBuilderTests {
         let text = SpeechTextBuilder.speechText(for: article)
 
         #expect(text.contains("Test Title"))
-        #expect(text.contains("By Jane Doe"))
+        // Resolved through AppLocalization (not hardcoded "By"): the runtime
+        // language is whatever a previously-run test left persisted.
+        #expect(text.contains(String(format: AppLocalization.localized("speech.by_author"), "Jane Doe")))
         #expect(text.contains("A description."))
         #expect(text.contains("Full content here."))
     }

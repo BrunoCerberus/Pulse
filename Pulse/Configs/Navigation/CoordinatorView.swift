@@ -56,7 +56,6 @@ struct CoordinatorView: View {
             }
         }
         .animation(.easeInOut(duration: 0.3), value: isOffline)
-        .animation(.easeInOut(duration: 0.3), value: coordinator.playbackViewModel.viewState.isVisible)
         .onReceive(
             networkMonitor?.isConnectedPublisher ?? Just(true).eraseToAnyPublisher()
         ) { connected in

@@ -11,17 +11,29 @@ struct MiniPlayerView: View {
     @ObservedObject var viewModel: PlaybackViewModel
 
     var body: some View {
-        if viewModel.viewState.isVisible {
-            playerBar
-                .transition(.move(edge: .bottom).combined(with: .opacity))
-                .sheet(isPresented: queueSheetBinding) {
-                    PlaybackQueueSheet(viewModel: viewModel)
-                }
-                .onChange(of: viewModel.viewState.isPlaying) { _, isPlaying in
-                    let announcement = isPlaying ? Constants.playingAnnouncement : Constants.pausedAnnouncement
-                    AccessibilityNotification.Announcement(announcement).post()
-                }
+        // The animation lives here, not in `CoordinatorView`: visibility
+        // changes re-render only this view (it is the `@ObservedObject`
+        // observer), so an ancestor `.animation(value:)` would never see them.
+        ZStack {
+            if viewModel.viewState.isVisible {
+                playerBar
+                    .transition(.move(edge: .bottom).combined(with: .opacity))
+                    .sheet(isPresented: queueSheetBinding) {
+                        PlaybackQueueSheet(viewModel: viewModel)
+                    }
+                    .onAppear {
+                        // The bar appears with playback already running, so the
+                        // `onChange` below never fires for the initial state.
+                        guard viewModel.viewState.isPlaying else { return }
+                        AccessibilityNotification.Announcement(Constants.playingAnnouncement).post()
+                    }
+                    .onChange(of: viewModel.viewState.isPlaying) { _, isPlaying in
+                        let announcement = isPlaying ? Constants.playingAnnouncement : Constants.pausedAnnouncement
+                        AccessibilityNotification.Announcement(announcement).post()
+                    }
+            }
         }
+        .animation(.easeInOut(duration: 0.3), value: viewModel.viewState.isVisible)
     }
 
     private var playerBar: some View {
@@ -76,6 +88,7 @@ struct MiniPlayerView: View {
                                 in: .rect(cornerRadius: CornerRadius.sm)
                             )
                     }
+                    .frame(minWidth: 44, minHeight: 44)
                     .accessibilityIdentifier("ttsSpeedButton")
                     .accessibilityLabel(String(format: Constants.speedLabel, viewModel.viewState.speedLabel))
                     .accessibilityHint(Constants.speedHint)

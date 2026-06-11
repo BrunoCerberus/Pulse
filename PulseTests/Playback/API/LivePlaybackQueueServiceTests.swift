@@ -1,3 +1,4 @@
+import AVFoundation
 import Combine
 import EntropyCore
 import Foundation
@@ -9,14 +10,19 @@ import Testing
 struct LivePlaybackQueueServiceTests {
     let mockTTSService: MockTextToSpeechService
     let mockAnalyticsService: MockAnalyticsService
+    /// Per-test center so posted AVAudioSession notifications never leak into
+    /// other parallel-running service instances.
+    let notificationCenter: NotificationCenter
     let sut: LivePlaybackQueueService
 
     init() {
         mockTTSService = MockTextToSpeechService()
         mockAnalyticsService = MockAnalyticsService()
+        notificationCenter = NotificationCenter()
         sut = LivePlaybackQueueService(
             ttsService: mockTTSService,
-            analyticsService: mockAnalyticsService
+            analyticsService: mockAnalyticsService,
+            notificationCenter: notificationCenter
         )
     }
 

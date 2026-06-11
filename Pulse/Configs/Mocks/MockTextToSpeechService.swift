@@ -30,6 +30,10 @@ final class MockTextToSpeechService: TextToSpeechService {
         didFinishSubject.eraseToAnyPublisher()
     }
 
+    var currentPlaybackState: TTSPlaybackState {
+        playbackStateSubject.value
+    }
+
     func speak(text: String, language: String, rate: Float) {
         speakCallCount += 1
         lastSpokenText = text

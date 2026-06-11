@@ -26,7 +26,7 @@ struct PlaybackQueueSheet: View {
                             .font(Typography.labelMedium)
                             .monospacedDigit()
                     }
-                    .accessibilityIdentifier("ttsSpeedButton")
+                    .accessibilityIdentifier("queueSheetSpeedButton")
                     .accessibilityLabel(String(format: Constants.speedLabel, viewModel.viewState.speedLabel))
                     .accessibilityHint(Constants.speedHint)
                 }

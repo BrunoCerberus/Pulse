@@ -15,6 +15,10 @@ import SwiftUI
 enum PremiumFeature {
     case dailyDigest
     case articleSummarization
+    /// Not yet presented by a `PremiumGateView` anywhere: the briefing button
+    /// lives inside the Feed's `.dailyDigest`-gated content, and the service
+    /// boundary re-checks entitlement in `FeedDomainInteractor`. The case
+    /// exists for a future standalone briefing surface (widget, App Intent).
     case audioBriefing
 
     var icon: String {
