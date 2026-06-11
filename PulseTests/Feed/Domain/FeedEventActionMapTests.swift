@@ -19,6 +19,12 @@ struct FeedEventActionMapTests {
         #expect(action == .generateDigest)
     }
 
+    @Test("onListenBriefingTapped event maps to startAudioBriefing action")
+    func onListenBriefingTappedMapping() {
+        let action = sut.map(event: .onListenBriefingTapped)
+        #expect(action == .startAudioBriefing)
+    }
+
     @Test("onArticleTapped event maps to selectArticle action with correct article")
     func onArticleTappedMapping() {
         let testArticle = Article.mockArticles[0]
