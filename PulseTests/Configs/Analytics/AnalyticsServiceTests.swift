@@ -56,6 +56,14 @@ struct AnalyticsEventTests {
         #expect(AnalyticsEvent.signOut.parameters == nil)
     }
 
+    @Test("briefing events carry their counters as parameters")
+    func briefingEventParameters() {
+        #expect(AnalyticsEvent.briefingStarted(itemCount: 11).parameters?["item_count"] as? Int == 11)
+        #expect(AnalyticsEvent.briefingStopped(itemsPlayed: 4).parameters?["items_played"] as? Int == 4)
+        #expect(AnalyticsEvent.briefingCompleted.parameters == nil)
+        #expect(AnalyticsEvent.briefingItemSkipped.parameters == nil)
+    }
+
     @Test("searchPerformed has correct parameters")
     func searchPerformedParameters() {
         let event = AnalyticsEvent.searchPerformed(queryLength: 12, resultCount: 25)

@@ -16,6 +16,9 @@ struct CoordinatorView: View {
         static var online: String {
             AppLocalization.localized("accessibility.online")
         }
+
+        /// Lifts the mini player above the floating tab bar in compact layouts.
+        static let miniPlayerTabBarClearance: CGFloat = 56
     }
 
     @StateObject private var coordinator: Coordinator
@@ -39,10 +42,17 @@ struct CoordinatorView: View {
                 OfflineBannerView()
             }
 
-            if horizontalSizeClass == .regular {
-                regularLayout
-            } else {
-                compactLayout
+            ZStack(alignment: .bottom) {
+                if horizontalSizeClass == .regular {
+                    regularLayout
+                } else {
+                    compactLayout
+                }
+
+                MiniPlayerView(viewModel: coordinator.playbackViewModel)
+                    .frame(maxWidth: horizontalSizeClass == .regular ? 480 : .infinity)
+                    .padding(.horizontal, Spacing.sm)
+                    .padding(.bottom, horizontalSizeClass == .regular ? Spacing.sm : Constants.miniPlayerTabBarClearance)
             }
         }
         .animation(.easeInOut(duration: 0.3), value: isOffline)

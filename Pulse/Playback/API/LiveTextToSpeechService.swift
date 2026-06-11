@@ -2,15 +2,18 @@ import AVFoundation
 @preconcurrency import Combine
 import EntropyCore
 import Foundation
-import MediaPlayer
 
 /// Live implementation of `TextToSpeechService` using `AVSpeechSynthesizer`.
+///
+/// This service is a dumb synthesizer + audio-session driver. System media
+/// integration (Now Playing metadata, remote commands) is owned by
+/// `LivePlaybackQueueService`, which is the single consumer of this service.
 final class LiveTextToSpeechService: NSObject, TextToSpeechService, @unchecked Sendable {
     private nonisolated(unsafe) let synthesizer = AVSpeechSynthesizer()
     private nonisolated(unsafe) let playbackStateSubject = CurrentValueSubject<TTSPlaybackState, Never>(.idle)
     private nonisolated(unsafe) let progressSubject = CurrentValueSubject<Double, Never>(0.0)
+    private nonisolated(unsafe) let didFinishSubject = PassthroughSubject<Void, Never>()
     private nonisolated(unsafe) var totalTextLength: Int = 0
-    private nonisolated(unsafe) var remoteCommandsRegistered = false
 
     /// Thread-safe reference to the utterance currently being spoken.
     /// Delegate callbacks for any other utterance are silently discarded.
@@ -25,6 +28,14 @@ final class LiveTextToSpeechService: NSObject, TextToSpeechService, @unchecked S
         progressSubject.eraseToAnyPublisher()
     }
 
+    var didFinishUtterancePublisher: AnyPublisher<Void, Never> {
+        didFinishSubject.eraseToAnyPublisher()
+    }
+
+    var currentPlaybackState: TTSPlaybackState {
+        playbackStateSubject.value
+    }
+
     override init() {
         super.init()
         synthesizer.delegate = self
@@ -32,12 +43,15 @@ final class LiveTextToSpeechService: NSObject, TextToSpeechService, @unchecked S
 
     func speak(text: String, language: String, rate: Float) {
         // `AVSpeechSynthesizer` + `AVAudioSession` must be driven from the main
-        // thread. Callers (the `@MainActor` interactor) are already on main, so
+        // thread. Callers (the `@MainActor` queue service) are already on main, so
         // `runOnMain` executes synchronously and preserves ordering (including the
-        // internal `stop()` below); remote-command handlers hop here from a
-        // background queue. This collapses the synthesizer to a single-threaded driver.
+        // internal cancellation below); this collapses the synthesizer to a
+        // single-threaded driver.
         runOnMain {
-            self.stop()
+            // Cancel without deactivating the audio session: back-to-back speak()
+            // calls (queue auto-advance, speed change) must not bounce the session,
+            // which can fail with `AVAudioSessionErrorCodeIsBusy` in the background.
+            self.cancelCurrentUtterance()
 
             let utterance = AVSpeechUtterance(string: text)
             utterance.rate = rate
@@ -52,9 +66,6 @@ final class LiveTextToSpeechService: NSObject, TextToSpeechService, @unchecked S
             self.configureAudioSession()
             self.synthesizer.speak(utterance)
             self.playbackStateSubject.send(.playing)
-
-            self.configureNowPlayingInfo(for: text)
-            self.registerRemoteCommandsIfNeeded()
         }
     }
 
@@ -63,37 +74,42 @@ final class LiveTextToSpeechService: NSObject, TextToSpeechService, @unchecked S
             guard self.synthesizer.isSpeaking else { return }
             self.synthesizer.pauseSpeaking(at: .word)
             self.playbackStateSubject.send(.paused)
-            self.updateNowPlayingPlaybackRate(0.0)
         }
     }
 
     func resume() {
         runOnMain {
             guard self.synthesizer.isPaused else { return }
+            // The system can deactivate our session while paused (audio
+            // interruptions); reactivating before continueSpeaking avoids
+            // silently "playing" into a dead session. Re-activating an
+            // already-active session is a no-op.
+            self.configureAudioSession()
             self.synthesizer.continueSpeaking()
             self.playbackStateSubject.send(.playing)
-            self.updateNowPlayingPlaybackRate(1.0)
         }
     }
 
     func stop() {
         runOnMain {
-            // Clean-up must be idempotent: if `speak()` configured Now Playing / remote commands
-            // but the synthesizer never reached a speaking state (rare race), an early-return
-            // here would leave the Lock Screen entry orphaned. Always tear down session/state.
-            let wasActive = self.synthesizer.isSpeaking || self.synthesizer.isPaused
-            if wasActive {
-                self.setActiveUtterance(nil)
-                self.synthesizer.stopSpeaking(at: .immediate)
-            }
+            self.cancelCurrentUtterance()
             self.playbackStateSubject.send(.idle)
             self.progressSubject.send(0.0)
+            // The session is deactivated only here — never between utterances —
+            // so other apps' audio resumes exactly when playback explicitly ends.
             self.deactivateAudioSession()
-            self.clearNowPlayingInfo()
         }
     }
 
     // MARK: - Private
+
+    /// Stops the synthesizer and clears the active utterance without touching
+    /// the audio session or publishing state. Idempotent.
+    private func cancelCurrentUtterance() {
+        guard synthesizer.isSpeaking || synthesizer.isPaused else { return }
+        setActiveUtterance(nil)
+        synthesizer.stopSpeaking(at: .immediate)
+    }
 
     /// Runs `work` on the main thread, synchronously if already on main so call
     /// ordering is preserved, otherwise dispatched. All synthesizer / audio-session
@@ -161,90 +177,6 @@ final class LiveTextToSpeechService: NSObject, TextToSpeechService, @unchecked S
             )
         }
     }
-
-    // MARK: - MPNowPlayingInfoCenter
-
-    /// Populates `MPNowPlayingInfoCenter.default()` so the system media controls
-    /// (Lock Screen, Control Center, Dynamic Island media chip) reflect the
-    /// currently-playing TTS session. Failures are silently swallowed.
-    private func configureNowPlayingInfo(for text: String) {
-        let titlePreview = String(text.prefix(80))
-        var info: [String: Any] = [:]
-        info[MPMediaItemPropertyTitle] = titlePreview
-        info[MPMediaItemPropertyArtist] = "Pulse"
-        info[MPNowPlayingInfoPropertyPlaybackRate] = 1.0
-        MPNowPlayingInfoCenter.default().nowPlayingInfo = info
-    }
-
-    private func updateNowPlayingPlaybackRate(_ rate: Double) {
-        var info = MPNowPlayingInfoCenter.default().nowPlayingInfo ?? [:]
-        info[MPNowPlayingInfoPropertyPlaybackRate] = rate
-        MPNowPlayingInfoCenter.default().nowPlayingInfo = info
-    }
-
-    private func clearNowPlayingInfo() {
-        MPNowPlayingInfoCenter.default().nowPlayingInfo = nil
-        unregisterRemoteCommands()
-    }
-
-    /// Registers remote command handlers exactly once. Subsequent invocations
-    /// are no-ops, so command targets aren't registered multiple times.
-    private func registerRemoteCommandsIfNeeded() {
-        guard !remoteCommandsRegistered else { return }
-        remoteCommandsRegistered = true
-
-        let center = MPRemoteCommandCenter.shared()
-
-        center.playCommand.isEnabled = true
-        center.playCommand.addTarget { [weak self] _ in
-            guard let self else { return .commandFailed }
-            self.resume()
-            return .success
-        }
-
-        center.pauseCommand.isEnabled = true
-        center.pauseCommand.addTarget { [weak self] _ in
-            guard let self else { return .commandFailed }
-            self.pause()
-            return .success
-        }
-
-        center.stopCommand.isEnabled = true
-        center.stopCommand.addTarget { [weak self] _ in
-            guard let self else { return .commandFailed }
-            self.stop()
-            return .success
-        }
-
-        center.togglePlayPauseCommand.isEnabled = true
-        center.togglePlayPauseCommand.addTarget { [weak self] _ in
-            guard let self else { return .commandFailed }
-            // Read `isSpeaking`/`isPaused` and act on the main thread: this handler
-            // fires off-main and the synthesizer must only be inspected/driven there.
-            DispatchQueue.main.async {
-                if self.synthesizer.isSpeaking, !self.synthesizer.isPaused {
-                    self.pause()
-                } else {
-                    self.resume()
-                }
-            }
-            return .success
-        }
-    }
-
-    private func unregisterRemoteCommands() {
-        guard remoteCommandsRegistered else { return }
-        let center = MPRemoteCommandCenter.shared()
-        center.playCommand.isEnabled = false
-        center.pauseCommand.isEnabled = false
-        center.stopCommand.isEnabled = false
-        center.togglePlayPauseCommand.isEnabled = false
-        center.playCommand.removeTarget(nil)
-        center.pauseCommand.removeTarget(nil)
-        center.stopCommand.removeTarget(nil)
-        center.togglePlayPauseCommand.removeTarget(nil)
-        remoteCommandsRegistered = false
-    }
 }
 
 // MARK: - AVSpeechSynthesizerDelegate
@@ -265,8 +197,11 @@ extension LiveTextToSpeechService: AVSpeechSynthesizerDelegate {
         clearActiveUtterance(ifEquals: utterance)
         progressSubject.send(1.0)
         playbackStateSubject.send(.idle)
-        deactivateAudioSession()
-        clearNowPlayingInfo()
+        // The audio session stays active here so a queue consumer can speak the
+        // next item immediately (gapless auto-advance, works while backgrounded).
+        // Finish fires after the state settles so consumers reacting to it
+        // observe a consistent idle state.
+        didFinishSubject.send(())
     }
 
     func speechSynthesizer(_: AVSpeechSynthesizer, didCancel utterance: AVSpeechUtterance) {
@@ -274,7 +209,5 @@ extension LiveTextToSpeechService: AVSpeechSynthesizerDelegate {
         clearActiveUtterance(ifEquals: utterance)
         progressSubject.send(0.0)
         playbackStateSubject.send(.idle)
-        deactivateAudioSession()
-        clearNowPlayingInfo()
     }
 }

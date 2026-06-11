@@ -17,16 +17,18 @@ final class TTSLiveActivityViewSnapshotTests: XCTestCase {
         progress: Double = 0.35,
         speedLabel: String = "1x",
         articleTitle: String = "SwiftUI 6.0 Brings Revolutionary New Features",
-        sourceName: String = "TechCrunch"
+        sourceName: String = "TechCrunch",
+        queuePosition: String? = nil
     ) -> some View {
         TTSLockScreenView(
             state: .init(
                 isPlaying: isPlaying,
                 progress: progress,
-                speedLabel: speedLabel
-            ),
-            articleTitle: articleTitle,
-            sourceName: sourceName
+                speedLabel: speedLabel,
+                currentTitle: articleTitle,
+                currentSource: sourceName,
+                queuePosition: queuePosition
+            )
         )
         .padding()
         .frame(maxWidth: .infinity)
@@ -73,6 +75,17 @@ final class TTSLiveActivityViewSnapshotTests: XCTestCase {
 
     func test_fastest_speed_preset() {
         let view = makeView(progress: 0.85, speedLabel: "2x")
+        let controller = UIHostingController(rootView: view)
+
+        assertSnapshot(
+            of: controller,
+            as: SnapshotConfig.snapshotting(on: lockScreenConfig),
+            record: false
+        )
+    }
+
+    func test_briefing_queue_position() {
+        let view = makeView(queuePosition: "2/11")
         let controller = UIHostingController(rootView: view)
 
         assertSnapshot(

@@ -31,11 +31,17 @@ final class FeedDomainInteractor: CombineInteractor {
     /// Used for a defense-in-depth Premium re-check at the service boundary.
     /// Optional so previews / unit tests that don't register StoreKit aren't gated.
     private let storeKitService: StoreKitService?
+    /// Personalizes the audio-briefing queue. Optional: when missing or when
+    /// it returns nothing, the briefing falls back to digest-only.
+    private let forYouService: ForYouService?
+    /// Global playback queue that runs the audio briefing.
+    private let playbackQueueService: PlaybackQueueService?
     private let stateSubject = CurrentValueSubject<DomainState, Never>(.initial)
     private var cancellables = Set<AnyCancellable>()
     private var generationTask: Task<Void, Never>?
     private var preloadTask: Task<Void, Never>?
     private var fetchArticlesTask: Task<Void, Never>?
+    private var briefingTask: Task<Void, Never>?
 
     var statePublisher: AnyPublisher<DomainState, Never> {
         stateSubject.eraseToAnyPublisher()
@@ -56,6 +62,8 @@ final class FeedDomainInteractor: CombineInteractor {
         networkMonitor = try? serviceLocator.retrieve(NetworkMonitorService.self)
         analyticsService = try? serviceLocator.retrieve(AnalyticsService.self)
         storeKitService = try? serviceLocator.retrieve(StoreKitService.self)
+        forYouService = try? serviceLocator.retrieve(ForYouService.self)
+        playbackQueueService = try? serviceLocator.retrieve(PlaybackQueueService.self)
 
         setupModelStatusBinding()
     }
@@ -78,6 +86,8 @@ final class FeedDomainInteractor: CombineInteractor {
             }
         case .generateDigest:
             generateDigest()
+        case .startAudioBriefing:
+            startAudioBriefing()
         case let .digestTokenReceived(token):
             updateState { $0.streamingText += token }
         case let .digestCompleted(digest):
@@ -133,6 +143,7 @@ final class FeedDomainInteractor: CombineInteractor {
         generationTask?.cancel()
         preloadTask?.cancel()
         fetchArticlesTask?.cancel()
+        briefingTask?.cancel()
     }
 }
 
@@ -402,6 +413,51 @@ private extension FeedDomainInteractor {
             state.currentDigest = digest
             state.streamingText = ""
             state.generationState = .completed
+        }
+    }
+}
+
+// MARK: - Audio Briefing
+
+private extension FeedDomainInteractor {
+    /// Assembles the Premium audio briefing and hands it to the global
+    /// playback queue: digest narration first, then the top For You articles
+    /// scored from the same pool the digest was built from. Falls back to a
+    /// digest-only queue when personalization yields nothing (new users,
+    /// scoring errors), so the button always produces audio.
+    func startAudioBriefing() {
+        // Defense-in-depth: same service-boundary Premium re-check as
+        // `generateDigest()` — the Feed UI is gated, but a tampered client
+        // could dispatch the action directly.
+        guard storeKitService?.isPremium != false else {
+            Logger.shared.service(
+                "Audio briefing blocked: Premium entitlement not active",
+                level: .warning
+            )
+            return
+        }
+
+        // The listen button only renders with a completed digest; guard anyway.
+        guard let digest = currentState.currentDigest else { return }
+        guard let playbackQueueService else { return }
+
+        let pool = currentState.latestArticles.filter { !$0.isMedia }
+        let forYouBox = UncheckedSendableBox(value: forYouService)
+        let playbackBox = UncheckedSendableBox(value: playbackQueueService)
+
+        briefingTask?.cancel()
+        briefingTask = Task { @MainActor [weak self] in
+            let language = AppLocalization.shared.language
+            let digestItem = PlaybackItem.digest(digest, language: language)
+
+            var articleItems: [PlaybackItem] = []
+            if let forYouService = forYouBox.value {
+                let scored = (try? await forYouService.scoredArticles(from: pool, topN: 10)) ?? []
+                articleItems = scored.map { PlaybackItem.article($0.article, language: language) }
+            }
+
+            guard self != nil, !Task.isCancelled else { return }
+            playbackBox.value.play(items: [digestItem] + articleItems, mode: .briefing)
         }
     }
 }

@@ -2,7 +2,7 @@ import Foundation
 
 // MARK: - Constants
 
-extension SpeechPlayerBarView {
+extension MiniPlayerView {
     enum Constants {
         static var progress: String {
             AppLocalization.localized("tts.progress")
@@ -24,6 +24,10 @@ extension SpeechPlayerBarView {
             AppLocalization.localized("tts.listening")
         }
 
+        static var next: String {
+            AppLocalization.localized("tts.next")
+        }
+
         static var speedLabel: String {
             AppLocalization.localized("tts.speed_label")
         }
@@ -34,6 +38,18 @@ extension SpeechPlayerBarView {
 
         static var stop: String {
             AppLocalization.localized("tts.stop")
+        }
+
+        static var expandHint: String {
+            AppLocalization.localized("player.expand_hint")
+        }
+
+        static var playingAnnouncement: String {
+            AppLocalization.localized("accessibility.tts_started")
+        }
+
+        static var pausedAnnouncement: String {
+            AppLocalization.localized("accessibility.tts_paused")
         }
     }
 }

@@ -16,6 +16,7 @@ struct SettingsViewModelSignOutTests {
     let mockSearchService: MockSearchService
     let mockAppLockService: MockAppLockService
     let mockNotificationService: MockNotificationService
+    let mockPlaybackQueueService: MockPlaybackQueueService
     let serviceLocator: ServiceLocator
 
     init() {
@@ -26,6 +27,7 @@ struct SettingsViewModelSignOutTests {
         mockSearchService = MockSearchService()
         mockAppLockService = MockAppLockService()
         mockNotificationService = MockNotificationService()
+        mockPlaybackQueueService = MockPlaybackQueueService()
         serviceLocator = ServiceLocator()
 
         serviceLocator.register(SettingsService.self, instance: mockSettingsService)
@@ -35,6 +37,7 @@ struct SettingsViewModelSignOutTests {
         serviceLocator.register(SearchService.self, instance: mockSearchService)
         serviceLocator.register(AppLockService.self, instance: mockAppLockService)
         serviceLocator.register(NotificationService.self, instance: mockNotificationService)
+        serviceLocator.register(PlaybackQueueService.self, instance: mockPlaybackQueueService)
     }
 
     private func createSUT() -> SettingsViewModel {
@@ -316,6 +319,63 @@ struct SettingsViewModelSignOutTests {
 
         #expect(sut.viewState.errorMessage != nil)
         #expect(!sut.viewState.isDeletingAccount)
+    }
+
+    // MARK: - Playback Wipe Tests
+
+    /// The wipe must silence an in-flight audio briefing / Listen session:
+    /// queue items snapshot the signed-out user's digest and For You picks,
+    /// so letting narration continue past sign-out would keep reading
+    /// personalized content aloud.
+    @Test("Sign-out stops active playback and clears the queue")
+    func signOutStopsActivePlayback() async throws {
+        mockPlaybackQueueService.play(
+            items: [makePlaybackItem()],
+            mode: .briefing
+        )
+        #expect(mockPlaybackQueueService.currentState.currentIndex != nil)
+
+        let sut = createSUT()
+        sut.handle(event: .onAppear)
+        try await waitForStateUpdate(duration: TestWaitDuration.long)
+
+        sut.handle(event: .onConfirmSignOut)
+        try await waitForStateUpdate(duration: TestWaitDuration.long)
+        try await waitForStateUpdate(duration: TestWaitDuration.long)
+
+        #expect(mockPlaybackQueueService.stopCallCount == 1)
+        #expect(mockPlaybackQueueService.currentState.currentIndex == nil)
+    }
+
+    @Test("Account deletion stops active playback and clears the queue")
+    func deleteAccountStopsActivePlayback() async throws {
+        mockPlaybackQueueService.play(
+            items: [makePlaybackItem()],
+            mode: .singleArticle
+        )
+        #expect(mockPlaybackQueueService.currentState.currentIndex != nil)
+
+        let sut = createSUT()
+        sut.handle(event: .onAppear)
+        try await waitForStateUpdate(duration: TestWaitDuration.long)
+
+        sut.handle(event: .onConfirmDeleteAccount)
+        try await waitForStateUpdate(duration: TestWaitDuration.long)
+        try await waitForStateUpdate(duration: TestWaitDuration.long)
+
+        #expect(mockPlaybackQueueService.stopCallCount == 1)
+        #expect(mockPlaybackQueueService.currentState.currentIndex == nil)
+    }
+
+    private func makePlaybackItem() -> PlaybackItem {
+        PlaybackItem(
+            id: "item-0",
+            kind: .article(Article.mockArticles[0]),
+            title: "Title",
+            sourceName: "Source",
+            speechText: "Text",
+            language: "en"
+        )
     }
 
     // MARK: - Notification Events Tests

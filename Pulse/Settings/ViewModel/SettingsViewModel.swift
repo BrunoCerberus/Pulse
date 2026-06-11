@@ -306,8 +306,16 @@ final class SettingsViewModel: CombineViewModel, ObservableObject {
 
         var failures: [String] = []
 
-        // 0. End any active TTS Live Activity first so the article title
-        //    doesn't linger on the Lock Screen after the user signs out.
+        // 0. Stop any active playback (single-article Listen or audio
+        //    briefing) so narration doesn't keep reading the signed-out
+        //    user's queue. `stop()` also tears down Now Playing and the
+        //    Live Activity; the explicit `end()` below stays as a safety
+        //    net for an orphaned activity when the queue is already idle
+        //    (or the service isn't registered).
+        if let playbackService = try? serviceLocator.retrieve(PlaybackQueueService.self) {
+            playbackService.stop()
+        }
+
         // NOTE: ActivityKit dismissal is OS-mediated and inherently
         // asynchronous — `end()` returns once we've asked the system to
         // dismiss, but a force-quit between that call and the system

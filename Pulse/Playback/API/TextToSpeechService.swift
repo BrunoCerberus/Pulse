@@ -55,6 +55,17 @@ protocol TextToSpeechService: AnyObject {
     /// Publisher for speech progress (0.0 to 1.0).
     var progressPublisher: AnyPublisher<Double, Never> { get }
 
+    /// Fires exactly once each time an utterance finishes speaking naturally.
+    /// Never fires for `stop()` or for utterances cancelled by a new `speak()`,
+    /// so consumers can drive queue auto-advance without disambiguating `.idle`.
+    var didFinishUtterancePublisher: AnyPublisher<Void, Never> { get }
+
+    /// Current playback state, synchronously readable. Lets consumers that
+    /// receive publisher events after a main-queue hop check whether the
+    /// event still describes the present utterance (a new `speak()` may have
+    /// started in the intervening runloop turn).
+    var currentPlaybackState: TTSPlaybackState { get }
+
     /// Start speaking the given text.
     /// - Parameters:
     ///   - text: The text to speak.

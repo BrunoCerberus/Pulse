@@ -15,6 +15,11 @@ import SwiftUI
 enum PremiumFeature {
     case dailyDigest
     case articleSummarization
+    /// Not yet presented by a `PremiumGateView` anywhere: the briefing button
+    /// lives inside the Feed's `.dailyDigest`-gated content, and the service
+    /// boundary re-checks entitlement in `FeedDomainInteractor`. The case
+    /// exists for a future standalone briefing surface (widget, App Intent).
+    case audioBriefing
 
     var icon: String {
         switch self {
@@ -22,6 +27,8 @@ enum PremiumFeature {
             return "sparkles"
         case .articleSummarization:
             return "doc.text.magnifyingglass"
+        case .audioBriefing:
+            return "headphones"
         }
     }
 
@@ -31,6 +38,8 @@ enum PremiumFeature {
             return .purple
         case .articleSummarization:
             return .blue
+        case .audioBriefing:
+            return .orange
         }
     }
 
@@ -40,6 +49,8 @@ enum PremiumFeature {
             return AppLocalization.localized("premium_gate.daily_digest.title")
         case .articleSummarization:
             return AppLocalization.localized("premium_gate.summarization.title")
+        case .audioBriefing:
+            return AppLocalization.localized("premium_gate.audio_briefing.title")
         }
     }
 
@@ -49,6 +60,8 @@ enum PremiumFeature {
             return AppLocalization.localized("premium_gate.daily_digest.description")
         case .articleSummarization:
             return AppLocalization.localized("premium_gate.summarization.description")
+        case .audioBriefing:
+            return AppLocalization.localized("premium_gate.audio_briefing.description")
         }
     }
 }
