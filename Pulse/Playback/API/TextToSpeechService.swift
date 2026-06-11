@@ -55,6 +55,11 @@ protocol TextToSpeechService: AnyObject {
     /// Publisher for speech progress (0.0 to 1.0).
     var progressPublisher: AnyPublisher<Double, Never> { get }
 
+    /// Fires exactly once each time an utterance finishes speaking naturally.
+    /// Never fires for `stop()` or for utterances cancelled by a new `speak()`,
+    /// so consumers can drive queue auto-advance without disambiguating `.idle`.
+    var didFinishUtterancePublisher: AnyPublisher<Void, Never> { get }
+
     /// Start speaking the given text.
     /// - Parameters:
     ///   - text: The text to speak.

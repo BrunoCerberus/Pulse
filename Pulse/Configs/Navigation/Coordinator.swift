@@ -115,6 +115,10 @@ final class Coordinator: ObservableObject {
     /// Shared SettingsViewModel instance
     lazy var settingsViewModel: SettingsViewModel = .init(serviceLocator: serviceLocator)
 
+    /// Shared PlaybackViewModel instance backing the global mini player.
+    /// App-lifetime so playback UI survives every navigation change.
+    lazy var playbackViewModel: PlaybackViewModel = .init(serviceLocator: serviceLocator)
+
     // MARK: - Initialization
 
     /// Creates a coordinator with the given service locator.

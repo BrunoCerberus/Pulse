@@ -26,25 +26,16 @@ final class ArticleDetailDomainInteractor: CombineInteractor {
 
     private let storageService: StorageService
     private let newsService: NewsService?
-    /// `nonisolated(unsafe)` so the non-isolated `deinit` can read it to stop
-    /// playback if the view was torn down without an `.onDisappear → .stopTTS`
-    /// (M10). Assigned once in `init` and otherwise only touched on the main
-    /// actor; `stop()` marshals to main internally, so this is safe.
-    private nonisolated(unsafe) let ttsService: TextToSpeechService?
+    private let playbackQueueService: PlaybackQueueService?
     private let analyticsService: AnalyticsService?
     private let engagementEventsService: EngagementEventsService?
     private let stateSubject: CurrentValueSubject<DomainState, Never>
     private var cancellables = Set<AnyCancellable>()
-    private var ttsCancellables = Set<AnyCancellable>()
     private var backgroundTasks = Set<Task<Void, Never>>()
 
     /// Once we've scheduled the 30-second read-engagement capture for this
     /// article view, don't reschedule even if `onAppear` fires twice.
     private var hasScheduledRead30sCapture = false
-
-    /// Monotonically increasing counter that invalidates stale TTS callbacks.
-    /// Incremented on every speed-change restart; callbacks from previous generations are discarded.
-    private var ttsGeneration = 0
 
     var statePublisher: AnyPublisher<DomainState, Never> {
         stateSubject.eraseToAnyPublisher()
@@ -65,11 +56,9 @@ final class ArticleDetailDomainInteractor: CombineInteractor {
         }
 
         newsService = try? serviceLocator.retrieve(NewsService.self)
-        ttsService = try? serviceLocator.retrieve(TextToSpeechService.self)
+        playbackQueueService = try? serviceLocator.retrieve(PlaybackQueueService.self)
         analyticsService = try? serviceLocator.retrieve(AnalyticsService.self)
         engagementEventsService = try? serviceLocator.retrieve(EngagementEventsService.self)
-
-        setupTTSBindings()
 
         // Start content processing immediately on init
         startContentProcessing()
@@ -104,18 +93,8 @@ final class ArticleDetailDomainInteractor: CombineInteractor {
             updateState { $0.showSummarizationSheet = false }
 
         // MARK: - TTS Actions
-        case .startTTS:
-            startTTS()
-        case .toggleTTSPlayback:
-            toggleTTSPlayback()
-        case .stopTTS:
-            stopTTS()
-        case .cycleTTSSpeed:
-            cycleTTSSpeed()
-        case let .ttsPlaybackStateChanged(state):
-            handleTTSPlaybackStateChanged(state)
-        case let .ttsProgressUpdated(progress):
-            updateState { $0.ttsProgress = progress }
+        case .listen:
+            listen()
 
         // MARK: - Related Articles Actions
         case let .relatedArticlesLoaded(articles):
@@ -377,222 +356,35 @@ final class ArticleDetailDomainInteractor: CombineInteractor {
         return paragraphs.joined(separator: "\n\n")
     }
 
+    // Text cleaning is shared with the playback queue's narration path via
+    // `SpeechTextBuilder` so display and speech can never drift apart.
+
     private nonisolated func stripHTML(from html: String) -> String {
-        html.replacingOccurrences(of: #"<[^>]+>"#, with: " ", options: .regularExpression)
-            .replacingOccurrences(of: "&nbsp;", with: " ")
-            .replacingOccurrences(of: "&amp;", with: "&")
-            .replacingOccurrences(of: "&lt;", with: "<")
-            .replacingOccurrences(of: "&gt;", with: ">")
-            .replacingOccurrences(of: "&quot;", with: "\"")
-            .replacingOccurrences(of: "&#39;", with: "'")
-            .replacingOccurrences(of: #"\s+"#, with: " ", options: .regularExpression)
+        SpeechTextBuilder.stripHTML(from: html)
     }
 
     private nonisolated func stripTruncationMarker(from content: String) -> String {
-        let pattern = #"\s*\[\+\d+ chars\]"#
-        return content.replacingOccurrences(of: pattern, with: "", options: .regularExpression)
+        SpeechTextBuilder.stripTruncationMarker(from: content)
     }
 
-    /// Known scraper-injected error phrases from The Guardian and similar sites.
-    private nonisolated static let knownErrorPhrases: [String] = [
-        "A required part of this site couldn't load.",
-        "This may be due to a browser extension, network issues, or browser settings.",
-        "Please check your connection, disable any ad blockers, or try a different browser.",
-        "Please check your connection, disable any ad blockers",
-        "We noticed you're using an ad blocker",
-        "Please disable your ad blocker",
-        "JavaScript must be enabled",
-        "You need to enable JavaScript to run this app",
-        "This content is only available with JavaScript",
-        "Please enable JavaScript",
-        "Your browser does not support JavaScript",
-    ]
-
-    /// Filters out known error/noise patterns injected by content scrapers (e.g. go-readability
-    /// picking up Guardian anti-adblock banners). Returns the cleaned content, or `nil` if the
-    /// entire content is noise and nothing useful remains.
     private nonisolated func filterKnownErrorContent(from content: String) -> String? {
-        var cleaned = content
-
-        for phrase in Self.knownErrorPhrases {
-            cleaned = cleaned.replacingOccurrences(of: phrase, with: "", options: .caseInsensitive)
-        }
-
-        let result = cleaned.trimmingCharacters(in: .whitespacesAndNewlines)
-        return result.isEmpty ? nil : result
+        SpeechTextBuilder.filterKnownErrorContent(from: content)
     }
 
     // MARK: - Text-to-Speech
 
-    private func setupTTSBindings() {
-        guard let ttsService else { return }
+    /// Hands the article to the global playback queue as a single-item
+    /// session, replacing whatever is playing. The mini player (mounted in
+    /// `CoordinatorView`) renders all transport controls, and playback —
+    /// including the Live Activity and Now Playing entry — is owned by
+    /// `PlaybackQueueService`, so it survives navigating away from here.
+    private func listen() {
+        guard let playbackQueueService else { return }
 
-        ttsCancellables.removeAll()
-        let generation = ttsGeneration
+        let item = PlaybackItem.article(currentState.article, language: AppLocalization.shared.language)
+        guard !item.speechText.isEmpty else { return }
 
-        ttsService.playbackStatePublisher
-            .removeDuplicates()
-            .receive(on: DispatchQueue.main)
-            .sink { [weak self] state in
-                guard let self, self.ttsGeneration == generation else { return }
-                self.dispatch(action: .ttsPlaybackStateChanged(state))
-                self.syncLiveActivity()
-            }
-            .store(in: &ttsCancellables)
-
-        // Dispatch UI updates immediately so the in-app progress bar stays smooth.
-        ttsService.progressPublisher
-            .receive(on: DispatchQueue.main)
-            .sink { [weak self] progress in
-                guard let self, self.ttsGeneration == generation else { return }
-                self.dispatch(action: .ttsProgressUpdated(progress))
-            }
-            .store(in: &ttsCancellables)
-
-        // `willSpeakRangeOfSpeechString` fires per character (~100Hz). Each Live
-        // Activity update spawns a `Task` and an actor-isolated call into ActivityKit,
-        // which is wasteful at that rate. Throttle the *Live Activity* path only —
-        // the UI dispatch path above stays unthrottled for smoothness.
-        ttsService.progressPublisher
-            .throttle(for: .milliseconds(200), scheduler: DispatchQueue.main, latest: true)
-            .sink { [weak self] _ in
-                guard let self, self.ttsGeneration == generation else { return }
-                self.syncLiveActivity()
-            }
-            .store(in: &ttsCancellables)
-    }
-
-    /// Pushes the current TTS state to the active Live Activity, if any.
-    /// Calling this when no activity is running is a safe no-op.
-    private func syncLiveActivity() {
-        let state = currentState
-        Task { @MainActor in
-            await TTSLiveActivityController.shared.update(
-                isPlaying: state.ttsPlaybackState == .playing,
-                progress: state.ttsProgress,
-                speedLabel: state.ttsSpeedPreset.label
-            )
-        }
-    }
-
-    private func startTTS() {
-        guard let ttsService else { return }
-
-        let article = currentState.article
-        let text = buildSpeechText(from: article)
-        guard !text.isEmpty else { return }
-
-        let language = AppLocalization.shared.language
-        let rate = currentState.ttsSpeedPreset.rate
-
-        ttsService.speak(text: text, language: language, rate: rate)
-        updateState { $0.isTTSPlayerVisible = true }
-        analyticsService?.logEvent(.ttsStarted)
-
-        TTSLiveActivityController.shared.start(
-            articleTitle: article.title,
-            sourceName: article.source.name,
-            speedLabel: currentState.ttsSpeedPreset.label
-        )
-    }
-
-    private func toggleTTSPlayback() {
-        guard let ttsService else { return }
-
-        switch currentState.ttsPlaybackState {
-        case .playing:
-            ttsService.pause()
-        case .paused:
-            ttsService.resume()
-        case .idle:
-            startTTS()
-        }
-    }
-
-    private func stopTTS() {
-        ttsService?.stop()
-        updateState { state in
-            state.isTTSPlayerVisible = false
-            state.ttsProgress = 0.0
-        }
-        analyticsService?.logEvent(.ttsStopped)
-        TTSLiveActivityController.shared.end()
-    }
-
-    private func cycleTTSSpeed() {
-        let nextPreset = currentState.ttsSpeedPreset.next()
-        updateState { state in
-            state.ttsSpeedPreset = nextPreset
-            state.ttsProgress = 0.0
-        }
-
-        // Restart speech with new rate if currently playing
-        if currentState.ttsPlaybackState == .playing || currentState.ttsPlaybackState == .paused {
-            guard let ttsService else { return }
-            let article = currentState.article
-            let text = buildSpeechText(from: article)
-            guard !text.isEmpty else { return }
-
-            let language = AppLocalization.shared.language
-            ttsService.speak(text: text, language: language, rate: nextPreset.rate)
-
-            // Increment generation and re-subscribe so stale callbacks from the
-            // old utterance's didCancel are discarded. Re-subscribing to the
-            // CurrentValueSubject picks up the current .playing state as baseline.
-            ttsGeneration += 1
-            setupTTSBindings()
-        }
-
-        analyticsService?.logEvent(.ttsSpeedChanged(speed: nextPreset.label))
-
-        let isPlaying = currentState.ttsPlaybackState == .playing
-        let progress = currentState.ttsProgress
-        let speedLabel = nextPreset.label
-        Task { @MainActor in
-            await TTSLiveActivityController.shared.update(
-                isPlaying: isPlaying,
-                progress: progress,
-                speedLabel: speedLabel
-            )
-        }
-    }
-
-    private func handleTTSPlaybackStateChanged(_ state: TTSPlaybackState) {
-        updateState { $0.ttsPlaybackState = state }
-
-        // Auto-hide player when speech finishes naturally
-        if state == .idle, currentState.isTTSPlayerVisible, currentState.ttsProgress >= 1.0 {
-            updateState { $0.isTTSPlayerVisible = false }
-        }
-
-        if state == .idle {
-            TTSLiveActivityController.shared.end()
-        }
-    }
-
-    private nonisolated func buildSpeechText(from article: Article) -> String {
-        var parts: [String] = [article.title]
-
-        if let author = article.author, !author.isEmpty {
-            parts.append("By \(author)")
-        }
-
-        if let description = article.description {
-            let clean = stripHTML(from: description).trimmingCharacters(in: .whitespacesAndNewlines)
-            if !clean.isEmpty {
-                parts.append(clean)
-            }
-        }
-
-        if let content = article.content {
-            let clean = stripHTML(from: stripTruncationMarker(from: content))
-                .trimmingCharacters(in: .whitespacesAndNewlines)
-            if let filtered = filterKnownErrorContent(from: clean), !filtered.isEmpty {
-                parts.append(filtered)
-            }
-        }
-
-        return parts.joined(separator: ". ")
+        playbackQueueService.play(items: [item], mode: .singleArticle)
     }
 
     // MARK: - Background Task Management
@@ -609,22 +401,11 @@ final class ArticleDetailDomainInteractor: CombineInteractor {
     }
 
     deinit {
-        // Cancel all pending tasks on deallocation
+        // Cancel all pending tasks on deallocation. Playback is deliberately
+        // NOT stopped here: it belongs to the global `PlaybackQueueService`
+        // and must survive this screen being torn down.
         for task in backgroundTasks {
             task.cancel()
-        }
-
-        // Deterministic teardown if the interactor is dropped without an
-        // `.onDisappear → .stopTTS`. Without this, audio keeps speaking and the
-        // Lock Screen activity lingers. `ttsService` is `nonisolated(unsafe)`
-        // (see its declaration) so this nonisolated deinit can read it; `stop()`
-        // marshals to the main thread internally, so calling it here is safe.
-        ttsService?.stop()
-
-        // Ending the activity touches `@MainActor`-isolated ActivityKit state, so
-        // hop to the main actor (fire-and-forget) rather than touching it directly.
-        Task { @MainActor in
-            TTSLiveActivityController.shared.end()
         }
     }
 

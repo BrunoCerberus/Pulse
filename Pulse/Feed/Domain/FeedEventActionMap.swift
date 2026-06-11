@@ -22,6 +22,8 @@ struct FeedEventActionMap: DomainEventActionMap {
             return .loadInitialData
         case .onGenerateDigestTapped:
             return .generateDigest
+        case .onListenBriefingTapped:
+            return .startAudioBriefing
         case let .onArticleTapped(article):
             return .selectArticle(article)
         case .onArticleNavigated:

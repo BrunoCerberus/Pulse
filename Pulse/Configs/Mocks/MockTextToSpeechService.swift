@@ -4,6 +4,7 @@ import Foundation
 final class MockTextToSpeechService: TextToSpeechService {
     private let playbackStateSubject = CurrentValueSubject<TTSPlaybackState, Never>(.idle)
     private let progressSubject = CurrentValueSubject<Double, Never>(0.0)
+    private let didFinishSubject = PassthroughSubject<Void, Never>()
 
     // MARK: - Call Tracking
 
@@ -23,6 +24,10 @@ final class MockTextToSpeechService: TextToSpeechService {
 
     var progressPublisher: AnyPublisher<Double, Never> {
         progressSubject.eraseToAnyPublisher()
+    }
+
+    var didFinishUtterancePublisher: AnyPublisher<Void, Never> {
+        didFinishSubject.eraseToAnyPublisher()
     }
 
     func speak(text: String, language: String, rate: Float) {
@@ -56,9 +61,12 @@ final class MockTextToSpeechService: TextToSpeechService {
         progressSubject.send(value)
     }
 
+    /// Simulates an utterance finishing naturally, matching the Live event
+    /// ordering: progress 1.0 → `.idle` → finish event.
     func simulateFinished() {
         progressSubject.send(1.0)
         playbackStateSubject.send(.idle)
+        didFinishSubject.send(())
     }
 
     /// Simulates the stale `didCancel` callback that AVSpeechSynthesizer fires

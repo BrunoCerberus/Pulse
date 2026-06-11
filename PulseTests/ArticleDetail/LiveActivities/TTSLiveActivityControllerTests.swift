@@ -25,9 +25,10 @@ struct TTSLiveActivityControllerTests {
         // In CI / simulator, Live Activities are typically not enabled.
         // The call must complete without throwing or crashing.
         controller.start(
-            articleTitle: "Test article",
-            sourceName: "Test source",
-            speedLabel: "1x"
+            currentTitle: "Test article",
+            currentSource: "Test source",
+            speedLabel: "1x",
+            queuePosition: "1/5"
         )
 
         // Whether or not the activity actually started depends on the
@@ -59,8 +60,22 @@ struct TTSLiveActivityControllerTests {
         let controller = TTSLiveActivityController.shared
         controller.end()
 
-        await controller.update(isPlaying: true, progress: 0.5, speedLabel: "1x")
-        await controller.update(isPlaying: false, progress: 1.0, speedLabel: "2x")
+        await controller.update(
+            isPlaying: true,
+            progress: 0.5,
+            speedLabel: "1x",
+            currentTitle: "Title",
+            currentSource: "Source",
+            queuePosition: nil
+        )
+        await controller.update(
+            isPlaying: false,
+            progress: 1.0,
+            speedLabel: "2x",
+            currentTitle: "Other title",
+            currentSource: "Other source",
+            queuePosition: "3/7"
+        )
 
         #expect(controller.isActive == false)
     }
@@ -75,7 +90,10 @@ struct TTSActivityAttributesTests {
         let original = TTSActivityAttributes.ContentState(
             isPlaying: true,
             progress: 0.42,
-            speedLabel: "1.25x"
+            speedLabel: "1.25x",
+            currentTitle: "SwiftUI 6.0 Brings Revolutionary New Features",
+            currentSource: "TechCrunch",
+            queuePosition: "2/11"
         )
 
         let encoder = JSONEncoder()
@@ -87,56 +105,54 @@ struct TTSActivityAttributesTests {
         #expect(decoded.isPlaying == true)
         #expect(decoded.progress == 0.42)
         #expect(decoded.speedLabel == "1.25x")
+        #expect(decoded.currentTitle == "SwiftUI 6.0 Brings Revolutionary New Features")
+        #expect(decoded.currentSource == "TechCrunch")
+        #expect(decoded.queuePosition == "2/11")
     }
 
-    @Test("Attributes round-trip through JSON")
-    func attributesCodableRoundTrip() throws {
-        let original = TTSActivityAttributes(
-            articleTitle: "SwiftUI 6.0 Brings Revolutionary New Features",
-            sourceName: "TechCrunch"
+    @Test("ContentState with nil queue position round-trips through JSON")
+    func contentStateNilQueuePositionRoundTrip() throws {
+        let original = TTSActivityAttributes.ContentState(
+            isPlaying: false,
+            progress: 0.0,
+            speedLabel: "1x",
+            currentTitle: "Title",
+            currentSource: "Source",
+            queuePosition: nil
         )
 
-        let encoder = JSONEncoder()
-        let decoder = JSONDecoder()
-        let data = try encoder.encode(original)
-        let decoded = try decoder.decode(TTSActivityAttributes.self, from: data)
+        let data = try JSONEncoder().encode(original)
+        let decoded = try JSONDecoder().decode(TTSActivityAttributes.ContentState.self, from: data)
 
-        #expect(decoded.articleTitle == original.articleTitle)
-        #expect(decoded.sourceName == original.sourceName)
+        #expect(decoded == original)
+        #expect(decoded.queuePosition == nil)
     }
 
     @Test("ContentState equality is value-based")
     func contentStateEquality() {
-        let stateA = TTSActivityAttributes.ContentState(
-            isPlaying: true,
-            progress: 0.35,
-            speedLabel: "1x"
-        )
-        let stateB = TTSActivityAttributes.ContentState(
-            isPlaying: true,
-            progress: 0.35,
-            speedLabel: "1x"
-        )
-        let stateC = TTSActivityAttributes.ContentState(
-            isPlaying: false,
-            progress: 0.35,
-            speedLabel: "1x"
-        )
-        let stateD = TTSActivityAttributes.ContentState(
-            isPlaying: true,
-            progress: 0.36,
-            speedLabel: "1x"
-        )
-        let stateE = TTSActivityAttributes.ContentState(
-            isPlaying: true,
-            progress: 0.35,
-            speedLabel: "2x"
-        )
+        func makeState(
+            isPlaying: Bool = true,
+            progress: Double = 0.35,
+            speedLabel: String = "1x",
+            currentTitle: String = "Title",
+            queuePosition: String? = "2/11"
+        ) -> TTSActivityAttributes.ContentState {
+            TTSActivityAttributes.ContentState(
+                isPlaying: isPlaying,
+                progress: progress,
+                speedLabel: speedLabel,
+                currentTitle: currentTitle,
+                currentSource: "Source",
+                queuePosition: queuePosition
+            )
+        }
 
-        #expect(stateA == stateB)
-        #expect(stateA != stateC)
-        #expect(stateA != stateD)
-        #expect(stateA != stateE)
+        #expect(makeState() == makeState())
+        #expect(makeState() != makeState(isPlaying: false))
+        #expect(makeState() != makeState(progress: 0.36))
+        #expect(makeState() != makeState(speedLabel: "2x"))
+        #expect(makeState() != makeState(currentTitle: "Other"))
+        #expect(makeState() != makeState(queuePosition: nil))
     }
 
     @Test("ContentState is Hashable and produces consistent hashes")
@@ -144,12 +160,18 @@ struct TTSActivityAttributesTests {
         let stateA = TTSActivityAttributes.ContentState(
             isPlaying: true,
             progress: 0.5,
-            speedLabel: "1.5x"
+            speedLabel: "1.5x",
+            currentTitle: "Title",
+            currentSource: "Source",
+            queuePosition: "4/9"
         )
         let stateB = TTSActivityAttributes.ContentState(
             isPlaying: true,
             progress: 0.5,
-            speedLabel: "1.5x"
+            speedLabel: "1.5x",
+            currentTitle: "Title",
+            currentSource: "Source",
+            queuePosition: "4/9"
         )
 
         var hasherA = Hasher()

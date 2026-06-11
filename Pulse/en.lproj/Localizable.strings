@@ -310,6 +310,19 @@
 "offline.banner" = "You're offline";
 
 /* ==================== */
+/* MARK: - Briefing     */
+/* ==================== */
+
+"briefing.intro" = "Here's your Pulse briefing.";
+"briefing.digest_item_title" = "Today's Digest";
+
+"feed.listen_briefing" = "Listen to Briefing";
+"feed.listen_briefing_hint" = "Plays your digest and top stories aloud";
+
+"premium_gate.audio_briefing.title" = "Audio Briefing";
+"premium_gate.audio_briefing.description" = "Listen to your AI digest and top personalized stories, read aloud like a podcast.";
+
+/* ==================== */
 /* MARK: - Feed         */
 /* ==================== */
 
@@ -451,8 +464,14 @@
 "tts.speed_hint" = "Cycle speech speed";
 "tts.progress" = "Speech progress";
 "tts.progress_value" = "%d percent";
+"tts.next" = "Next article";
 "accessibility.tts_started" = "Reading aloud";
 "accessibility.tts_paused" = "Reading paused";
+
+"player.queue_title" = "Listening Queue";
+"player.expand_hint" = "Show the listening queue";
+"player.current_item_hint" = "Currently playing";
+"player.jump_hint" = "Play this item";
 
 /* ============================ */
 /* MARK: - Paywall Periods      */

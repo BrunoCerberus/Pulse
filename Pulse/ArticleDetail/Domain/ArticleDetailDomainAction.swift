@@ -51,23 +51,10 @@ enum ArticleDetailDomainAction: Equatable {
 
     // MARK: - Text-to-Speech
 
-    /// Start reading the article aloud.
-    case startTTS
-
-    /// Toggle between playing and paused TTS.
-    case toggleTTSPlayback
-
-    /// Stop TTS and dismiss the player bar.
-    case stopTTS
-
-    /// Cycle to the next TTS speed preset.
-    case cycleTTSSpeed
-
-    /// TTS playback state changed (from service publisher).
-    case ttsPlaybackStateChanged(TTSPlaybackState)
-
-    /// TTS progress updated (from service publisher).
-    case ttsProgressUpdated(Double)
+    /// Start reading the article aloud via the global playback queue.
+    /// Replaces whatever the queue is currently playing; transport controls
+    /// live in the global mini player, which survives navigation.
+    case listen
 
     // MARK: - Related Articles
 

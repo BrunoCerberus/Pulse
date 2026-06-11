@@ -51,6 +51,13 @@ enum FeedDomainAction: Equatable {
     /// - Parameter error: A human-readable error message.
     case digestFailed(String)
 
+    // MARK: - Audio Briefing
+
+    /// Start the Premium audio briefing: narrates the current digest, then
+    /// auto-advances through top For You articles via the global playback queue.
+    /// Requires a completed digest.
+    case startAudioBriefing
+
     // MARK: - Navigation
 
     /// Select an article from the digest sources to navigate to detail view.

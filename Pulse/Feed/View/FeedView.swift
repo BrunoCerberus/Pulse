@@ -172,6 +172,8 @@ struct FeedView<R: FeedNavigationRouter>: View {
                     .offset(y: viewModel.viewState.digest != nil ? 0 : 10)
 
                 if let digest = viewModel.viewState.digest {
+                    listenBriefingButton
+
                     BentoDigestGrid(
                         digest: digest,
                         sourceArticles: viewModel.viewState.sourceArticles,
@@ -190,6 +192,24 @@ struct FeedView<R: FeedNavigationRouter>: View {
             }
             .padding(.bottom, Spacing.xl)
         }
+    }
+
+    // MARK: - Listen Briefing
+
+    /// Starts the audio briefing (digest narration + For You queue) in the
+    /// global playback queue; the mini player appears above the tab bar.
+    private var listenBriefingButton: some View {
+        Button {
+            HapticManager.shared.buttonPress()
+            viewModel.handle(event: .onListenBriefingTapped)
+        } label: {
+            Label(Constants.listenBriefing, systemImage: "headphones")
+                .font(Typography.labelLarge)
+        }
+        .buttonStyle(.glassProminent)
+        .accessibilityIdentifier("listenBriefingButton")
+        .accessibilityLabel(Constants.listenBriefing)
+        .accessibilityHint(Constants.listenBriefingHint)
     }
 
     // MARK: - Empty State View

@@ -8,20 +8,27 @@ import SwiftUI
 /// BOTH the main Pulse app target and the PulseWidgetExtension target.
 struct TTSLockScreenView: View {
     let state: TTSActivityAttributes.ContentState
-    let articleTitle: String
-    let sourceName: String
 
     var body: some View {
         GlassEffectContainer(spacing: 8) {
             VStack(alignment: .leading, spacing: 10) {
                 HStack(alignment: .top, spacing: 12) {
                     VStack(alignment: .leading, spacing: 4) {
-                        Text(sourceName)
-                            .font(.caption)
-                            .foregroundStyle(.secondary)
-                            .lineLimit(1)
+                        HStack(spacing: 6) {
+                            Text(state.currentSource)
+                                .font(.caption)
+                                .foregroundStyle(.secondary)
+                                .lineLimit(1)
 
-                        Text(articleTitle)
+                            if let queuePosition = state.queuePosition {
+                                Text(queuePosition)
+                                    .font(.caption)
+                                    .monospacedDigit()
+                                    .foregroundStyle(.secondary)
+                            }
+                        }
+
+                        Text(state.currentTitle)
                             .font(.subheadline)
                             .fontWeight(.semibold)
                             .foregroundStyle(.white)
@@ -57,21 +64,31 @@ struct TTSLockScreenView: View {
     }
 }
 
-#Preview("Playing") {
+#Preview("Playing - Briefing") {
     TTSLockScreenView(
-        state: .init(isPlaying: true, progress: 0.35, speedLabel: "1x"),
-        articleTitle: "SwiftUI 6.0 Brings Revolutionary New Features",
-        sourceName: "TechCrunch"
+        state: .init(
+            isPlaying: true,
+            progress: 0.35,
+            speedLabel: "1x",
+            currentTitle: "SwiftUI 6.0 Brings Revolutionary New Features",
+            currentSource: "TechCrunch",
+            queuePosition: "2/11"
+        )
     )
     .padding()
     .background(Color.black)
 }
 
-#Preview("Paused") {
+#Preview("Paused - Single Article") {
     TTSLockScreenView(
-        state: .init(isPlaying: false, progress: 0.7, speedLabel: "1.25x"),
-        articleTitle: "Markets Rally on Economic News",
-        sourceName: "Financial Times"
+        state: .init(
+            isPlaying: false,
+            progress: 0.7,
+            speedLabel: "1.25x",
+            currentTitle: "Markets Rally on Economic News",
+            currentSource: "Financial Times",
+            queuePosition: nil
+        )
     )
     .padding()
     .background(Color.black)

@@ -49,6 +49,10 @@ enum AnalyticsEvent {
     case ttsStarted
     case ttsStopped
     case ttsSpeedChanged(speed: String)
+    case briefingStarted(itemCount: Int)
+    case briefingCompleted
+    case briefingStopped(itemsPlayed: Int)
+    case briefingItemSkipped
     case cloudSyncStarted
     case cloudSyncSucceeded
     case cloudSyncFailed(error: String)
@@ -79,6 +83,10 @@ enum AnalyticsEvent {
         case .ttsStarted: "tts_started"
         case .ttsStopped: "tts_stopped"
         case .ttsSpeedChanged: "tts_speed_changed"
+        case .briefingStarted: "briefing_started"
+        case .briefingCompleted: "briefing_completed"
+        case .briefingStopped: "briefing_stopped"
+        case .briefingItemSkipped: "briefing_item_skipped"
         case .cloudSyncStarted: "cloud_sync_started"
         case .cloudSyncSucceeded: "cloud_sync_succeeded"
         case .cloudSyncFailed: "cloud_sync_failed"
@@ -99,9 +107,15 @@ enum AnalyticsEvent {
              .deleteAccount,
              .ttsStarted,
              .ttsStopped,
+             .briefingCompleted,
+             .briefingItemSkipped,
              .cloudSyncStarted,
              .cloudSyncSucceeded:
             nil
+        case let .briefingStarted(itemCount):
+            ["item_count": itemCount]
+        case let .briefingStopped(itemsPlayed):
+            ["items_played": itemsPlayed]
         case let .searchPerformed(queryLength, resultCount):
             ["query_length": queryLength, "result_count": resultCount]
         case let .categorySelected(category):

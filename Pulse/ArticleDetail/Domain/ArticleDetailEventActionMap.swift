@@ -29,25 +29,14 @@ struct ArticleDetailEventActionMap: DomainEventActionMap {
         case .onReadFullTapped:
             return .openInBrowser
         case .onListenTapped:
-            return .startTTS
-        case .onTTSPlayPauseTapped:
-            return .toggleTTSPlayback
-        default:
-            return mapTTSEvent(event)
-        }
-    }
-
-    private func mapTTSEvent(_ event: ArticleDetailViewEvent) -> ArticleDetailDomainAction? {
-        switch event {
-        case .onDisappear, .onTTSStopTapped:
-            return .stopTTS
+            return .listen
         case .onShareSheetDismissed:
             return .dismissShareSheet
         case .onSummarizationSheetDismissed:
             return .dismissSummarizationSheet
-        case .onTTSSpeedTapped:
-            return .cycleTTSSpeed
-        default:
+        case .onDisappear:
+            // Deliberately unmapped: playback lives in the global queue and
+            // must survive navigating away from the article.
             return nil
         }
     }

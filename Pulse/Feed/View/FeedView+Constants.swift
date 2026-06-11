@@ -12,6 +12,14 @@ extension FeedView {
             AppLocalization.localized("feed.header_title")
         }
 
+        static var listenBriefing: String {
+            AppLocalization.localized("feed.listen_briefing")
+        }
+
+        static var listenBriefingHint: String {
+            AppLocalization.localized("feed.listen_briefing_hint")
+        }
+
         static var emptyTitle: String {
             AppLocalization.localized("feed.empty.title")
         }

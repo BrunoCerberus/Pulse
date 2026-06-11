@@ -60,14 +60,6 @@ extension ArticleDetailView {
             AppLocalization.localized("accessibility.bookmark_removed")
         }
 
-        static var ttsStarted: String {
-            AppLocalization.localized("accessibility.tts_started")
-        }
-
-        static var ttsPaused: String {
-            AppLocalization.localized("accessibility.tts_paused")
-        }
-
         static var byAuthor: String {
             AppLocalization.localized("article.by_author")
         }

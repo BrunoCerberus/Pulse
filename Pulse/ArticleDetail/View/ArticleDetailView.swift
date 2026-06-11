@@ -66,25 +66,7 @@ struct ArticleDetailView: View {
                     .accessibilityIdentifier("articleDetailScrollView")
                 }
             }
-
-            if viewModel.viewState.isTTSPlayerVisible {
-                SpeechPlayerBarView(
-                    title: viewModel.viewState.article.title,
-                    playbackState: viewModel.viewState.ttsPlaybackState,
-                    progress: viewModel.viewState.ttsProgress,
-                    speedPreset: viewModel.viewState.ttsSpeedPreset,
-                    onPlayPause: { viewModel.handle(event: .onTTSPlayPauseTapped) },
-                    onStop: { viewModel.handle(event: .onTTSStopTapped) },
-                    onSpeedTap: { viewModel.handle(event: .onTTSSpeedTapped) }
-                )
-                .frame(maxWidth: horizontalSizeClass == .regular ? readingMaxWidth : .infinity)
-                .padding(.horizontal, Spacing.sm)
-                .padding(.bottom, Spacing.sm)
-                .transition(.move(edge: .bottom).combined(with: .opacity))
-                .accessibilityIdentifier("speechPlayerBar")
-            }
         }
-        .animation(.easeInOut(duration: 0.3), value: viewModel.viewState.isTTSPlayerVisible)
         .navigationBarBackButtonHidden(true)
         .toolbarBackground(.hidden, for: .navigationBar)
         .toolbar {
@@ -186,19 +168,6 @@ struct ArticleDetailView: View {
                 ? Constants.bookmarkAdded
                 : Constants.bookmarkRemoved
             AccessibilityNotification.Announcement(announcement).post()
-        }
-        .onChange(of: viewModel.viewState.ttsPlaybackState) { _, newState in
-            let announcement: String? = switch newState {
-            case .playing:
-                Constants.ttsStarted
-            case .paused:
-                Constants.ttsPaused
-            case .idle:
-                nil
-            }
-            if let announcement {
-                AccessibilityNotification.Announcement(announcement).post()
-            }
         }
         .enableSwipeBack()
     }

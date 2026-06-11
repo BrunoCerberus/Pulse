@@ -24,10 +24,6 @@ struct ArticleDetailViewStateReducer: ViewStateReducing {
             isBookmarked: domainState.isBookmarked,
             showShareSheet: domainState.showShareSheet,
             showSummarizationSheet: domainState.showSummarizationSheet,
-            ttsPlaybackState: domainState.ttsPlaybackState,
-            ttsProgress: domainState.ttsProgress,
-            ttsSpeedPreset: domainState.ttsSpeedPreset,
-            isTTSPlayerVisible: domainState.isTTSPlayerVisible,
             relatedArticles: domainState.relatedArticles.enumerated().map { index, article in
                 ArticleViewItem(from: article, index: index)
             },

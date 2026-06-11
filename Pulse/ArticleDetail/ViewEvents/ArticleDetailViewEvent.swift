@@ -17,9 +17,6 @@ enum ArticleDetailViewEvent: Equatable {
     case onShareSheetDismissed
     case onSummarizationSheetDismissed
 
-    // Text-to-Speech
+    /// Text-to-Speech
     case onListenTapped
-    case onTTSPlayPauseTapped
-    case onTTSStopTapped
-    case onTTSSpeedTapped
 }

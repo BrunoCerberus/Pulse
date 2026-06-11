@@ -30,20 +30,6 @@ struct ArticleDetailViewState: Equatable {
     /// Whether to show the AI summarization sheet (Premium feature).
     var showSummarizationSheet: Bool
 
-    // MARK: - Text-to-Speech
-
-    /// Current TTS playback state.
-    var ttsPlaybackState: TTSPlaybackState
-
-    /// TTS speech progress (0.0 to 1.0).
-    var ttsProgress: Double
-
-    /// Current TTS speed preset.
-    var ttsSpeedPreset: TTSSpeedPreset
-
-    /// Whether the TTS player bar is visible.
-    var isTTSPlayerVisible: Bool
-
     // MARK: - Related Articles
 
     /// Related articles to display at the bottom of the detail view.
@@ -64,10 +50,6 @@ struct ArticleDetailViewState: Equatable {
             isBookmarked: false,
             showShareSheet: false,
             showSummarizationSheet: false,
-            ttsPlaybackState: .idle,
-            ttsProgress: 0.0,
-            ttsSpeedPreset: .normal,
-            isTTSPlayerVisible: false,
             relatedArticles: [],
             relatedArticleModels: []
         )

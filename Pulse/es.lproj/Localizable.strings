@@ -310,6 +310,19 @@
 "offline.banner" = "Estás sin conexión";
 
 /* ==================== */
+/* MARK: - Briefing     */
+/* ==================== */
+
+"briefing.intro" = "Aquí está tu boletín de Pulse.";
+"briefing.digest_item_title" = "Resumen de Hoy";
+
+"feed.listen_briefing" = "Escuchar Boletín";
+"feed.listen_briefing_hint" = "Lee en voz alta tu resumen y noticias principales";
+
+"premium_gate.audio_briefing.title" = "Boletín de Audio";
+"premium_gate.audio_briefing.description" = "Escucha tu resumen de IA y las principales noticias personalizadas, leídas en voz alta como un pódcast.";
+
+/* ==================== */
 /* MARK: - Feed         */
 /* ==================== */
 
@@ -451,8 +464,14 @@
 "tts.speed_hint" = "Cambiar velocidad de lectura";
 "tts.progress" = "Progreso de lectura";
 "tts.progress_value" = "%d por ciento";
+"tts.next" = "Siguiente artículo";
 "accessibility.tts_started" = "Leyendo en voz alta";
 "accessibility.tts_paused" = "Lectura pausada";
+
+"player.queue_title" = "Cola de Reproducción";
+"player.expand_hint" = "Mostrar la cola de reproducción";
+"player.current_item_hint" = "Reproduciendo ahora";
+"player.jump_hint" = "Reproducir este elemento";
 
 /* ============================ */
 /* MARK: - Paywall Periods      */
