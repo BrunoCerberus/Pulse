@@ -252,6 +252,7 @@ extension VideoPlayerView.Coordinator {
     /// posture. The trusted YouTube embed keeps JS on (its CSP constrains
     /// it); the untrusted direct-video branch disables JS and pins
     /// navigation to the originally-loaded host.
+    @objc
     func webView(
         _: WKWebView,
         decidePolicyFor navigationAction: WKNavigationAction,
