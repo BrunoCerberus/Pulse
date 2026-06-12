@@ -183,7 +183,7 @@ struct VideoPlayerView: UIViewRepresentable {
         case directVideo(host: String?)
     }
 
-    class Coordinator: NSObject, WKNavigationDelegate {
+    class Coordinator: NSObject {
         var onLoadingStarted: (() -> Void)?
         var onLoadingFinished: (() -> Void)?
         var onError: ((String) -> Void)?
@@ -193,30 +193,6 @@ struct VideoPlayerView: UIViewRepresentable {
 
         /// Set by `updateUIView` before each load; drives the navigation policy.
         var loadMode: LoadMode = .youTube
-
-        /// Decides whether a navigation is allowed, and with what JavaScript
-        /// posture. The trusted YouTube embed keeps JS on (its CSP constrains
-        /// it); the untrusted direct-video branch disables JS and pins
-        /// navigation to the originally-loaded host.
-        func webView(
-            _: WKWebView,
-            decidePolicyFor navigationAction: WKNavigationAction,
-            preferences: WKWebpagePreferences,
-            decisionHandler: @escaping (WKNavigationActionPolicy, WKWebpagePreferences) -> Void
-        ) {
-            switch loadMode {
-            case .youTube:
-                preferences.allowsContentJavaScript = true
-                decisionHandler(.allow, preferences)
-            case let .directVideo(host):
-                preferences.allowsContentJavaScript = false
-                let allowed = Self.allowsDirectVideoNavigation(
-                    to: navigationAction.request.url,
-                    host: host
-                )
-                decisionHandler(allowed ? .allow : .cancel, preferences)
-            }
-        }
 
         /// Direct-video navigations are pinned to the originally-loaded HTTPS
         /// host. `about:` (the empty bootstrap document) is also permitted; any
@@ -238,31 +214,61 @@ struct VideoPlayerView: UIViewRepresentable {
             self.onLoadingFinished = onLoadingFinished
             self.onError = onError
         }
+    }
+}
 
-        func webView(_: WKWebView, didStartProvisionalNavigation _: WKNavigation!) {
-            onLoadingStarted?()
+@MainActor
+extension VideoPlayerView.Coordinator: WKNavigationDelegate {
+    func webView(_: WKWebView, didStartProvisionalNavigation _: WKNavigation!) {
+        onLoadingStarted?()
+    }
+
+    func webView(_: WKWebView, didFinish _: WKNavigation!) {
+        onLoadingFinished?()
+    }
+
+    func webView(_: WKWebView, didFail _: WKNavigation!, withError error: Error) {
+        // Ignore cancellation errors (code -999)
+        let nsError = error as NSError
+        if nsError.domain == NSURLErrorDomain, nsError.code == NSURLErrorCancelled {
+            return
         }
+        onError?(error.localizedDescription)
+    }
 
-        func webView(_: WKWebView, didFinish _: WKNavigation!) {
-            onLoadingFinished?()
+    func webView(_: WKWebView, didFailProvisionalNavigation _: WKNavigation!, withError error: Error) {
+        // Ignore cancellation errors (code -999)
+        let nsError = error as NSError
+        if nsError.domain == NSURLErrorDomain, nsError.code == NSURLErrorCancelled {
+            return
         }
+        onError?(error.localizedDescription)
+    }
+}
 
-        func webView(_: WKWebView, didFail _: WKNavigation!, withError error: Error) {
-            // Ignore cancellation errors (code -999)
-            let nsError = error as NSError
-            if nsError.domain == NSURLErrorDomain, nsError.code == NSURLErrorCancelled {
-                return
-            }
-            onError?(error.localizedDescription)
-        }
-
-        func webView(_: WKWebView, didFailProvisionalNavigation _: WKNavigation!, withError error: Error) {
-            // Ignore cancellation errors (code -999)
-            let nsError = error as NSError
-            if nsError.domain == NSURLErrorDomain, nsError.code == NSURLErrorCancelled {
-                return
-            }
-            onError?(error.localizedDescription)
+@MainActor
+extension VideoPlayerView.Coordinator {
+    /// Decides whether a navigation is allowed, and with what JavaScript
+    /// posture. The trusted YouTube embed keeps JS on (its CSP constrains
+    /// it); the untrusted direct-video branch disables JS and pins
+    /// navigation to the originally-loaded host.
+    func webView(
+        _: WKWebView,
+        decidePolicyFor navigationAction: WKNavigationAction,
+        preferences: WKWebpagePreferences,
+        decisionHandler: @escaping (WKNavigationActionPolicy, WKWebpagePreferences) -> Void
+    ) {
+        switch loadMode {
+        case .youTube:
+            preferences.allowsContentJavaScript = true
+            decisionHandler(.allow, preferences)
+        case let .directVideo(host):
+            preferences.allowsContentJavaScript = false
+            let allowed = Self.allowsDirectVideoNavigation(
+                to: navigationAction.request.url,
+                host: host
+            )
+            decisionHandler(allowed ? .allow : .cancel, preferences)
         }
     }
 }
