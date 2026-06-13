@@ -35,8 +35,8 @@ struct YouTubeThumbnailView: View {
         } label: {
             ZStack {
                 // Thumbnail or fallback from article
-                if let thumbnailURL, let url = URL(string: thumbnailURL) {
-                    AsyncImage(url: url) { phase in
+                if let thumbnailURL, let safeThumbnailURL = SafeMediaURL.validated(thumbnailURL) {
+                    AsyncImage(url: safeThumbnailURL) { phase in
                         switch phase {
                         case .empty:
                             thumbnailPlaceholder
@@ -103,9 +103,9 @@ struct YouTubeThumbnailView: View {
     @ViewBuilder
     private var articleImageFallback: some View {
         if let imageURL = articleImageURL,
-           let url = URL(string: imageURL)
+           let safeArticleURL = SafeMediaURL.validated(imageURL)
         {
-            AsyncImage(url: url) { phase in
+            AsyncImage(url: safeArticleURL) { phase in
                 switch phase {
                 case .empty:
                     thumbnailPlaceholder
