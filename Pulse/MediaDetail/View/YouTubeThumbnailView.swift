@@ -26,11 +26,8 @@ struct YouTubeThumbnailView: View {
 
         Button {
             HapticManager.shared.buttonPress()
-            if let url = URL(string: urlString),
-               let scheme = url.scheme?.lowercased(),
-               ["https"].contains(scheme)
-            {
-                UIApplication.shared.open(url)
+            if let safeURL = SafeMediaURL.validated(urlString) {
+                UIApplication.shared.open(safeURL)
             }
         } label: {
             ZStack {
