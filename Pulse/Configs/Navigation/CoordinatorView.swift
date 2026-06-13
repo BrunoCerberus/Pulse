@@ -52,7 +52,10 @@ struct CoordinatorView: View {
                 MiniPlayerView(viewModel: coordinator.playbackViewModel)
                     .frame(maxWidth: horizontalSizeClass == .regular ? 480 : .infinity)
                     .padding(.horizontal, Spacing.sm)
-                    .padding(.bottom, horizontalSizeClass == .regular ? Spacing.sm : Constants.miniPlayerTabBarClearance)
+                    .padding(
+                        .bottom,
+                        horizontalSizeClass == .regular ? Spacing.sm : Constants.miniPlayerTabBarClearance
+                    )
             }
         }
         .animation(.easeInOut(duration: 0.3), value: isOffline)

@@ -25,10 +25,8 @@ struct TTSLiveActivityControllerTests {
         // In CI / simulator, Live Activities are typically not enabled.
         // The call must complete without throwing or crashing.
         controller.start(
-            currentTitle: "Test article",
-            currentSource: "Test source",
-            speedLabel: "1x",
-            queuePosition: "1/5"
+            displayInfo: .init(title: "Test article", source: "Test source", position: "1/5"),
+            speedLabel: "1x"
         )
 
         // Whether or not the activity actually started depends on the
@@ -61,20 +59,12 @@ struct TTSLiveActivityControllerTests {
         controller.end()
 
         await controller.update(
-            isPlaying: true,
-            progress: 0.5,
-            speedLabel: "1x",
-            currentTitle: "Title",
-            currentSource: "Source",
-            queuePosition: nil
+            isPlaying: true, progress: 0.5, speedLabel: "1x",
+            displayInfo: .init(title: "Title", source: "Source", position: nil)
         )
         await controller.update(
-            isPlaying: false,
-            progress: 1.0,
-            speedLabel: "2x",
-            currentTitle: "Other title",
-            currentSource: "Other source",
-            queuePosition: "3/7"
+            isPlaying: false, progress: 1.0, speedLabel: "2x",
+            displayInfo: .init(title: "Other title", source: "Other source", position: "3/7")
         )
 
         #expect(controller.isActive == false)
