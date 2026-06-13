@@ -42,6 +42,25 @@
     }
 }
 
++ (NSString *)safeLabelForElement:(XCUIElement *)element {
+    // Reading .label forces an accessibility snapshot, which can throw the same
+    // "Timed out while evaluating UI query" C++ exception as .exists on Xcode 26.
+    // Catch it here so the raw property read cannot SIGABRT the Swift runtime.
+    @try {
+        return element.label ?: @"";
+    } @catch (...) {
+        return @"";
+    }
+}
+
++ (NSString *)safeIdentifierForElement:(XCUIElement *)element {
+    @try {
+        return element.identifier ?: @"";
+    } @catch (...) {
+        return @"";
+    }
+}
+
 + (void)safeTerminateApp:(XCUIApplication *)app {
     @try {
         [app terminate];

@@ -391,6 +391,18 @@ class BaseUITestCase: XCTestCase {
         ObjCExceptionCatcher.safeTap(element)
     }
 
+    /// Reads `element.label` via ObjC++ @try/@catch. Returns "" if the underlying
+    /// accessibility snapshot times out (which would otherwise throw an uncaught
+    /// C++ exception and SIGABRT the runner).
+    func safeLabel(_ element: XCUIElement) -> String {
+        ObjCExceptionCatcher.safeLabel(for: element)
+    }
+
+    /// Reads `element.identifier` via ObjC++ @try/@catch. Returns "" on snapshot timeout.
+    func safeIdentifier(_ element: XCUIElement) -> String {
+        ObjCExceptionCatcher.safeIdentifier(for: element)
+    }
+
     // MARK: - Wait Helpers
 
     /// Safe alternative to XCTest's `waitForExistence` that avoids Xcode 26 C++ exception crashes.
