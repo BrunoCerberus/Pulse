@@ -39,13 +39,10 @@ struct SettingsView: View {
                 )
 
                 personalizationSection
-
                 SettingsSecuritySection(lockManager: lockManager)
-
                 notificationsSection
                 contentLanguageSection
                 appearanceSection
-
                 dataSection
 
                 SettingsMutedContentSection(
@@ -184,9 +181,7 @@ struct SettingsView: View {
             .eraseToAnyPublisher()
     }
 
-    /// Personalization row routes to `Page.forYouSettings`. Visible to
-    /// every user; the destination shows the on-device interest profile
-    /// and a destructive Reset.
+    /// Personalization row routes to `Page.forYouSettings`.
     private var personalizationSection: some View {
         Section(Constants.personalizationHeader) {
             NavigationLink(value: Page.forYouSettings) {
@@ -194,13 +189,9 @@ struct SettingsView: View {
                     VStack(alignment: .leading, spacing: Spacing.xxs) {
                         Text(Constants.personalizationRowTitle)
                         Text(Constants.personalizationRowSubtitle)
-                            .font(Typography.captionMedium)
-                            .foregroundStyle(.secondary)
+                            .font(Typography.captionMedium).foregroundStyle(.secondary)
                     }
-                } icon: {
-                    Image(systemName: "sparkles")
-                        .foregroundStyle(Color.Accent.primary)
-                }
+                } icon: { Image(systemName: "sparkles").foregroundStyle(Color.Accent.primary) }
             }
         }
     }
@@ -216,8 +207,7 @@ struct SettingsView: View {
             )
 
             Toggle(Constants.breakingNewsAlerts, isOn: Binding(
-                // Show as OFF when parent notifications toggle is disabled, preserving
-                // the underlying preference so it restores when notifications are re-enabled.
+                // Preserves child preference when parent toggle is disabled.
                 get: { viewModel.viewState.notificationsEnabled && viewModel.viewState.breakingNewsEnabled },
                 set: { viewModel.handle(event: .onToggleBreakingNews($0)) }
             ))
