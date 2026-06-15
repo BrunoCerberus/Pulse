@@ -10,7 +10,7 @@ enum ShareItemsBuilder {
     /// - Returns: An array containing formatted share text and the article URL.
     static func activityItems(for article: Article) -> [Any] {
         let text = "\(article.title) — \(article.source.name)"
-        if let url = URL(string: article.url) {
+        if let url = SafeMediaURL.validated(article.url) {
             return [text, url]
         }
         return [text]
