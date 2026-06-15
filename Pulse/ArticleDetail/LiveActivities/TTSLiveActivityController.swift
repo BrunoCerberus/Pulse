@@ -24,12 +24,22 @@ final class TTSLiveActivityController {
         currentActivity != nil
     }
 
-    /// Maximum length for title/source strings written into the Live Activity.
-    /// The Lock Screen / Dynamic Island truncate visually, but a pathologically
-    /// long title (rare RSS edge case) can otherwise dominate the snapshot the
-    /// OS captures for the app switcher, and ContentState updates have a 4 KB
-    /// payload budget.
-    private static let maxLabelLength = 100
+    /// Display fields for a TTS Live Activity.
+    struct PlaybackDisplayInfo {
+        let title: String
+        let source: String
+        let position: String?
+
+        func trimmed() -> Self {
+            .init(
+                title: String(title.prefix(Self.maxLabelLength)),
+                source: String(source.prefix(Self.maxLabelLength)),
+                position: position
+            )
+        }
+
+        private static let maxLabelLength = 100
+    }
 
     /// How far in the future to set each activity's `staleDate`. ActivityKit will
     /// auto-stale (and the OS can dismiss) an activity that isn't refreshed within
@@ -51,7 +61,7 @@ final class TTSLiveActivityController {
     ///   - speedLabel: Initial speed preset label (e.g. `"1x"`).
     ///   - queuePosition: Queue position label (e.g. `"1/11"`), or `nil` for
     ///     single-article playback.
-    func start(currentTitle: String, currentSource: String, speedLabel: String, queuePosition: String?) {
+    func start(displayInfo: PlaybackDisplayInfo, speedLabel: String) {
         guard ActivityAuthorizationInfo().areActivitiesEnabled else {
             Logger.shared.service(
                 "TTSLiveActivityController: Live Activities not enabled, skipping start",
@@ -64,9 +74,7 @@ final class TTSLiveActivityController {
             isPlaying: true,
             progress: 0.0,
             speedLabel: speedLabel,
-            currentTitle: currentTitle,
-            currentSource: currentSource,
-            queuePosition: queuePosition
+            displayInfo: displayInfo
         )
         let content = ActivityContent(
             state: initialState,
@@ -114,9 +122,7 @@ final class TTSLiveActivityController {
         isPlaying: Bool,
         progress: Double,
         speedLabel: String,
-        currentTitle: String,
-        currentSource: String,
-        queuePosition: String?
+        displayInfo: PlaybackDisplayInfo
     ) async {
         guard let activity = currentActivity else { return }
 
@@ -124,9 +130,7 @@ final class TTSLiveActivityController {
             isPlaying: isPlaying,
             progress: progress,
             speedLabel: speedLabel,
-            currentTitle: currentTitle,
-            currentSource: currentSource,
-            queuePosition: queuePosition
+            displayInfo: displayInfo
         )
 
         // Refresh the stale date on every update so a live, actively-updating
@@ -155,17 +159,16 @@ final class TTSLiveActivityController {
         isPlaying: Bool,
         progress: Double,
         speedLabel: String,
-        currentTitle: String,
-        currentSource: String,
-        queuePosition: String?
+        displayInfo: PlaybackDisplayInfo
     ) -> TTSActivityAttributes.ContentState {
-        TTSActivityAttributes.ContentState(
+        let trimmed = displayInfo.trimmed()
+        return TTSActivityAttributes.ContentState(
             isPlaying: isPlaying,
             progress: min(max(progress, 0.0), 1.0),
             speedLabel: speedLabel,
-            currentTitle: String(currentTitle.prefix(maxLabelLength)),
-            currentSource: String(currentSource.prefix(maxLabelLength)),
-            queuePosition: queuePosition
+            currentTitle: trimmed.title,
+            currentSource: trimmed.source,
+            queuePosition: trimmed.position
         )
     }
 }

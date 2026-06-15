@@ -4,48 +4,26 @@ import EntropyCore
 import Foundation
 
 /// Live implementation of `PlaybackQueueService`.
-///
-/// Single owner of `TextToSpeechService`: every speech session in the app —
-/// the single-article "Listen" and the Premium audio briefing — flows through
-/// here. The service auto-advances on natural utterance finish, owns the Now
-/// Playing entry + remote commands (via `NowPlayingController`), drives the
-/// TTS Live Activity, and pauses/resumes around audio interruptions and
-/// output-route changes.
-///
-/// Queue items are immutable snapshots (see `PlaybackItem`), so digest
-/// regeneration or a runtime language switch never affects a playing queue.
-/// Playback deliberately survives navigation; `stop()` is the only teardown.
 @MainActor
 final class LivePlaybackQueueService: PlaybackQueueService {
     private let ttsService: TextToSpeechService
     private let analyticsService: AnalyticsService?
-    /// Injectable so tests can post AVAudioSession notifications without
-    /// leaking them into other parallel-running service instances.
+    /// Injectable so tests can post AVAudioSession notifications without leaking them.
     private let notificationCenter: NotificationCenter
     private let nowPlayingController = NowPlayingController()
     private let stateSubject = CurrentValueSubject<PlaybackQueueState, Never>(.idle)
     private var cancellables = Set<AnyCancellable>()
 
-    /// Items that actually reached the synthesizer this session, for accurate
-    /// `briefingStopped(itemsPlayed:)` analytics (queue position would inflate
-    /// the count when the user skips ahead).
+    /// Items that actually reached the synthesizer this session.
     private var playedItemIDs = Set<String>()
 
-    /// `true` while the current pause was initiated by an audio interruption
-    /// (phone call, alarm) rather than the user. Only interruption-initiated
-    /// pauses are auto-resumed when the system says `.shouldResume` — resuming
-    /// a user's explicit pause because a call happened to end would speak out
-    /// loud against their intent.
+    /// True while the current pause was initiated by an audio interruption.
     private var pausedByInterruption = false
 
-    /// Set when the speed preset changed while paused: the paused utterance
-    /// still carries the old rate (rate is fixed per utterance), so the next
-    /// resume re-speaks the item instead of continuing the stale utterance.
+    /// Set when the speed preset changed while paused.
     private var needsRespeakOnResume = false
 
-    /// Serializes Live Activity pushes: each sync awaits the previous one and
-    /// is skipped when a newer sync has been requested since, so a slow
-    /// ActivityKit update can never overwrite a fresher state.
+    /// Serializes Live Activity pushes via generation tracking.
     private var liveActivitySyncGeneration = 0
     private var liveActivitySyncTask: Task<Void, Never>?
 
@@ -75,9 +53,10 @@ final class LivePlaybackQueueService: PlaybackQueueService {
     func play(items: [PlaybackItem], mode: PlaybackMode) {
         guard !items.isEmpty else { return }
 
-        // Replacing an active briefing must still emit its terminal analytics
-        // event, or funnels see briefings that start and never end.
-        logBriefingStoppedIfActive()
+        // Replacing an active briefing must still emit its terminal analytics event.
+        if currentState.mode == .briefing, currentState.currentIndex != nil {
+            analyticsService?.logEvent(.briefingStopped(itemsPlayed: playedItemIDs.count))
+        }
         playedItemIDs.removeAll()
         pausedByInterruption = false
         needsRespeakOnResume = false
@@ -90,7 +69,13 @@ final class LivePlaybackQueueService: PlaybackQueueService {
             state.playbackState = .playing
         }
         speakCurrentItem()
-        startLiveActivity()
+        if let item = currentState.currentItem {
+            TTSLiveActivityController.shared.start(
+                displayInfo: .init(title: item.title, source: item.sourceName,
+                                   position: currentState.queuePositionLabel),
+                speedLabel: currentState.speedPreset.label
+            )
+        }
 
         switch mode {
         case .briefing:
@@ -108,7 +93,7 @@ final class LivePlaybackQueueService: PlaybackQueueService {
         case .playing:
             ttsService.pause()
         case .paused:
-            resumePlayback()
+            if needsRespeakOnResume { speakCurrentItem() } else { ttsService.resume() }
         case .idle:
             break
         }
@@ -116,13 +101,13 @@ final class LivePlaybackQueueService: PlaybackQueueService {
 
     func next() {
         guard currentState.hasNext, let index = currentState.currentIndex else { return }
-        logItemSkippedIfBriefing()
+        if currentState.mode == .briefing { analyticsService?.logEvent(.briefingItemSkipped) }
         advance(to: index + 1)
     }
 
     func previous() {
         guard currentState.hasPrevious, let index = currentState.currentIndex else { return }
-        logItemSkippedIfBriefing()
+        if currentState.mode == .briefing { analyticsService?.logEvent(.briefingItemSkipped) }
         advance(to: index - 1)
     }
 
@@ -130,7 +115,7 @@ final class LivePlaybackQueueService: PlaybackQueueService {
         guard let target = currentState.items.firstIndex(where: { $0.id == itemID }),
               target != currentState.currentIndex
         else { return }
-        logItemSkippedIfBriefing()
+        if currentState.mode == .briefing { analyticsService?.logEvent(.briefingItemSkipped) }
         advance(to: target)
     }
 
@@ -138,26 +123,19 @@ final class LivePlaybackQueueService: PlaybackQueueService {
         let nextPreset = currentState.speedPreset.next()
         updateState { state in
             state.speedPreset = nextPreset
-            if state.currentIndex != nil {
-                state.itemProgress = 0.0
-            }
+            if state.currentIndex != nil { state.itemProgress = 0.0 }
         }
 
-        if currentState.currentIndex != nil {
-            switch currentState.playbackState {
-            case .playing:
-                // Restart the current item at the new rate. The implicit
-                // cancellation inside `speak()` fires `didCancel` (no finish
-                // event), so this never triggers a spurious auto-advance.
-                speakCurrentItem()
-            case .paused:
-                // Respect the pause: the rate is fixed per utterance, so mark
-                // the paused utterance stale and re-speak on the next resume
-                // instead of audibly restarting now.
-                needsRespeakOnResume = true
-            case .idle:
-                break
-            }
+        guard currentState.currentIndex != nil else {
+            analyticsService?.logEvent(.ttsSpeedChanged(speed: nextPreset.label))
+            syncLiveActivity()
+            return
+        }
+
+        switch currentState.playbackState {
+        case .playing: speakCurrentItem()
+        case .paused: needsRespeakOnResume = true
+        case .idle: break
         }
 
         analyticsService?.logEvent(.ttsSpeedChanged(speed: nextPreset.label))
@@ -186,16 +164,6 @@ final class LivePlaybackQueueService: PlaybackQueueService {
         ttsService.speak(text: item.speechText, language: item.language, rate: currentState.speedPreset.rate)
     }
 
-    /// Resumes from pause, re-speaking the current item when a speed change
-    /// while paused left the paused utterance at a stale rate.
-    private func resumePlayback() {
-        if needsRespeakOnResume {
-            speakCurrentItem()
-        } else {
-            ttsService.resume()
-        }
-    }
-
     private func advance(to index: Int) {
         guard currentState.items.indices.contains(index) else { return }
         pausedByInterruption = false
@@ -205,27 +173,9 @@ final class LivePlaybackQueueService: PlaybackQueueService {
             state.playbackState = .playing
         }
         speakCurrentItem()
-        // The activity spans the whole session; item changes are pushed as
-        // ContentState updates so the Lock Screen never flickers.
         syncLiveActivity()
     }
 
-    /// Natural end of an utterance: advance, or finish the whole queue.
-    private func handleItemFinished() {
-        guard let index = currentState.currentIndex else { return }
-
-        if currentState.hasNext {
-            advance(to: index + 1)
-        } else {
-            if currentState.mode == .briefing {
-                analyticsService?.logEvent(.briefingCompleted)
-            }
-            teardownPlayback()
-        }
-    }
-
-    /// Stops speech, deactivates the audio session, clears the queue, and
-    /// tears down Now Playing + the Live Activity. Speed preset is preserved.
     private func teardownPlayback() {
         ttsService.stop()
         playedItemIDs.removeAll()
@@ -239,25 +189,12 @@ final class LivePlaybackQueueService: PlaybackQueueService {
         TTSLiveActivityController.shared.end()
     }
 
-    private func logItemSkippedIfBriefing() {
-        guard currentState.mode == .briefing else { return }
-        analyticsService?.logEvent(.briefingItemSkipped)
-    }
-
-    /// Terminal analytics for a briefing being replaced by a new `play()`.
-    private func logBriefingStoppedIfActive() {
-        guard currentState.mode == .briefing, currentState.currentIndex != nil else { return }
-        analyticsService?.logEvent(.briefingStopped(itemsPlayed: playedItemIDs.count))
-    }
-
     // MARK: - TTS Bindings
 
     private func setupTTSBindings() {
-        // `.idle` from the TTS service is deliberately NOT mapped into queue
-        // state: it fires transiently between items (didFinish/didCancel) and
-        // would flicker the player UI. The queue owns its idle transitions
-        // (`teardownPlayback`); auto-advance is driven by the explicit finish
-        // event below, which is never ambiguous with cancellation.
+        // `.idle` from TTS is not mapped to queue state — would flicker UI.
+        // Queue owns idle transitions via teardownPlayback; auto-advance is driven by
+        // the explicit finish event, never ambiguous with cancellation.
         ttsService.playbackStatePublisher
             .removeDuplicates()
             .receive(on: DispatchQueue.main)
@@ -265,12 +202,10 @@ final class LivePlaybackQueueService: PlaybackQueueService {
                 guard let self, self.currentState.currentIndex != nil else { return }
                 guard ttsState == .playing || ttsState == .paused else { return }
                 self.updateState { $0.playbackState = ttsState }
-                // Progress events stop while paused, so push play/pause
-                // transitions to the Live Activity immediately.
+                // Progress events stop while paused; push play/pause to Activity immediately.
                 self.syncLiveActivity()
             }
             .store(in: &cancellables)
-
         ttsService.progressPublisher
             .receive(on: DispatchQueue.main)
             .sink { [weak self] progress in
@@ -278,23 +213,25 @@ final class LivePlaybackQueueService: PlaybackQueueService {
                 self.updateState { $0.itemProgress = progress }
             }
             .store(in: &cancellables)
-
         ttsService.didFinishUtterancePublisher
             .receive(on: DispatchQueue.main)
             .sink { [weak self] in
                 guard let self else { return }
-                // The finish event is delivered one runloop hop after it was
-                // sent. If a new utterance started in that window (the queue
-                // was replaced), the event belongs to the previous queue —
-                // acting on it would advance past the new queue's first item.
+                // Finish event is delivered one runloop hop after sending. If a new
+                // utterance started in that window (queue was replaced), the event
+                // belongs to the previous queue — acting on it would skip ahead.
                 guard self.ttsService.currentPlaybackState == .idle else { return }
-                self.handleItemFinished()
+                guard let index = self.currentState.currentIndex else { return }
+                if self.currentState.hasNext {
+                    self.advance(to: index + 1)
+                } else {
+                    if self.currentState.mode == .briefing { self.analyticsService?.logEvent(.briefingCompleted) }
+                    self.teardownPlayback()
+                }
             }
             .store(in: &cancellables)
-
-        // `willSpeakRangeOfSpeechString` fires per character (~100Hz). Each Live
-        // Activity update spawns an actor-isolated call into ActivityKit, which
-        // is wasteful at that rate — throttle the Live Activity path only.
+        // `willSpeakRangeOfSpeechString` fires per character (~100Hz); throttle
+        // Live Activity path only — each update spawns an actor-isolated call.
         ttsService.progressPublisher
             .throttle(for: .milliseconds(200), scheduler: DispatchQueue.main, latest: true)
             .sink { [weak self] _ in
@@ -317,10 +254,16 @@ final class LivePlaybackQueueService: PlaybackQueueService {
             }
             .store(in: &cancellables)
 
+        // Headphones unplugged while playing → pause per system convention for spoken audio.
         notificationCenter.publisher(for: AVAudioSession.routeChangeNotification)
             .receive(on: DispatchQueue.main)
             .sink { [weak self] notification in
-                self?.handleRouteChange(notification)
+                guard let self, self.currentState.playbackState == .playing,
+                      let reasonValue = notification.userInfo?[AVAudioSessionRouteChangeReasonKey] as? UInt,
+                      let reason = AVAudioSession.RouteChangeReason(rawValue: reasonValue),
+                      reason == .oldDeviceUnavailable
+                else { return }
+                self.ttsService.pause()
             }
             .store(in: &cancellables)
     }
@@ -333,67 +276,37 @@ final class LivePlaybackQueueService: PlaybackQueueService {
 
         switch type {
         case .began:
-            if currentState.playbackState == .playing {
-                ttsService.pause()
-                pausedByInterruption = true
-            }
+            if currentState.playbackState == .playing { ttsService.pause(); pausedByInterruption = true }
         case .ended:
-            let optionsValue = notification.userInfo?[AVAudioSessionInterruptionOptionKey] as? UInt ?? 0
-            let options = AVAudioSession.InterruptionOptions(rawValue: optionsValue)
+            let optionsValue = notification.userInfo?[AVAudioSessionInterruptionOptionKey] as? UInt
+            let options = AVAudioSession.InterruptionOptions(rawValue: optionsValue ?? 0)
             let wasInterruptionPause = pausedByInterruption
             pausedByInterruption = false
-            // Resume only a pause this interruption caused. A user-initiated
-            // pause stays paused no matter what the system suggests.
             if options.contains(.shouldResume), wasInterruptionPause,
                currentState.playbackState == .paused
             {
-                resumePlayback()
+                if needsRespeakOnResume { speakCurrentItem() } else { ttsService.resume() }
             }
-        @unknown default:
-            break
+        @unknown default: break
         }
-    }
-
-    private func handleRouteChange(_ notification: Notification) {
-        guard currentState.playbackState == .playing,
-              let reasonValue = notification.userInfo?[AVAudioSessionRouteChangeReasonKey] as? UInt,
-              let reason = AVAudioSession.RouteChangeReason(rawValue: reasonValue),
-              reason == .oldDeviceUnavailable
-        else { return }
-        ttsService.pause()
     }
 
     // MARK: - Live Activity
 
-    private func startLiveActivity() {
-        guard let item = currentState.currentItem else { return }
-        TTSLiveActivityController.shared.start(
-            currentTitle: item.title,
-            currentSource: item.sourceName,
-            speedLabel: currentState.speedPreset.label,
-            queuePosition: currentState.queuePositionLabel
-        )
-    }
-
-    /// Pushes current playback state to the active Live Activity (safe no-op
-    /// when none is running). Pushes are serialized and latest-wins: a stale
-    /// in-flight update can never land after a newer one.
+    /// Pushes playback state to Live Activity (safe no-op when none running).
     private func syncLiveActivity() {
+        guard let item = currentState.currentItem else { return }
         let state = currentState
-        guard let item = state.currentItem else { return }
         liveActivitySyncGeneration += 1
-        let generation = liveActivitySyncGeneration
-        let previous = liveActivitySyncTask
+        let generation = liveActivitySyncGeneration, previousTask = liveActivitySyncTask
         liveActivitySyncTask = Task { @MainActor [weak self] in
-            await previous?.value
+            await previousTask?.value
             guard let self, generation == self.liveActivitySyncGeneration else { return }
             await TTSLiveActivityController.shared.update(
-                isPlaying: state.playbackState == .playing,
-                progress: state.itemProgress,
+                isPlaying: state.playbackState == .playing, progress: state.itemProgress,
                 speedLabel: state.speedPreset.label,
-                currentTitle: item.title,
-                currentSource: item.sourceName,
-                queuePosition: state.queuePositionLabel
+                displayInfo: .init(title: item.title, source: item.sourceName,
+                                   position: state.queuePositionLabel)
             )
         }
     }
@@ -401,16 +314,11 @@ final class LivePlaybackQueueService: PlaybackQueueService {
     // MARK: - State
 
     private func updateState(_ transform: (inout PlaybackQueueState) -> Void) {
-        var state = stateSubject.value
-        var nowPlayingBefore = state
+        var state = stateSubject.value, beforeNowPlaying = state
         transform(&state)
         stateSubject.send(state)
-        // Progress ticks arrive per spoken character (~100Hz) and Now Playing
-        // renders no progress field — skip the MPNowPlayingInfoCenter XPC
-        // write unless something it actually renders changed.
-        nowPlayingBefore.itemProgress = state.itemProgress
-        if nowPlayingBefore != state {
-            nowPlayingController.update(with: state)
-        }
+        // Skip the MPNowPlayingInfoCenter XPC write unless rendered fields changed.
+        beforeNowPlaying.itemProgress = state.itemProgress
+        if beforeNowPlaying != state { nowPlayingController.update(with: state) }
     }
 }

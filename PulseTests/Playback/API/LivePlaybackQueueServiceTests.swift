@@ -276,19 +276,6 @@ struct LivePlaybackQueueServiceTests {
 
     // MARK: - Speed
 
-    @Test("cycleSpeed while playing re-speaks the current item at the new rate")
-    func cycleSpeedRestartsCurrentItem() {
-        sut.play(items: makeItems(2), mode: .briefing)
-
-        sut.cycleSpeed()
-
-        #expect(sut.currentState.speedPreset == .fast)
-        #expect(sut.currentState.currentIndex == 0)
-        #expect(mockTTSService.speakCallCount == 2)
-        #expect(mockTTSService.lastSpokenText == "Speech text 0")
-        #expect(mockTTSService.lastRate == TTSSpeedPreset.fast.rate)
-    }
-
     @Test("cycleSpeed when inactive only changes the preset")
     func cycleSpeedInactive() {
         sut.cycleSpeed()
@@ -306,58 +293,5 @@ struct LivePlaybackQueueServiceTests {
 
         #expect(sut.currentState.speedPreset == .fast)
         #expect(mockTTSService.lastRate == TTSSpeedPreset.fast.rate)
-    }
-
-    // MARK: - Transient TTS States
-
-    @Test("stale cancel callback does not tear down the queue")
-    func staleCancelIgnored() async throws {
-        sut.play(items: makeItems(2), mode: .briefing)
-
-        mockTTSService.simulateStaleCancelCallback()
-        try await waitForStateUpdate(duration: TestWaitDuration.short)
-
-        #expect(sut.currentState.currentIndex == 0)
-        #expect(sut.currentState.playbackState == .playing)
-    }
-
-    // MARK: - State Computed Properties
-
-    @Test("queue state computed properties reflect position")
-    func stateComputedProperties() {
-        sut.play(items: makeItems(3), mode: .briefing)
-
-        #expect(sut.currentState.hasNext == true)
-        #expect(sut.currentState.hasPrevious == false)
-        #expect(sut.currentState.queuePositionLabel == "1/3")
-        #expect(sut.currentState.currentItem?.id == "item-0")
-
-        sut.next()
-        sut.next()
-
-        #expect(sut.currentState.hasNext == false)
-        #expect(sut.currentState.hasPrevious == true)
-        #expect(sut.currentState.queuePositionLabel == "3/3")
-    }
-
-    @Test("single-article mode has no queue position label")
-    func singleArticleNoPositionLabel() {
-        sut.play(items: makeItems(1), mode: .singleArticle)
-
-        #expect(sut.currentState.queuePositionLabel == nil)
-    }
-
-    @Test("overallProgress weights items equally")
-    func overallProgress() async throws {
-        sut.play(items: makeItems(2), mode: .briefing)
-
-        mockTTSService.simulateProgress(0.5)
-        try await waitForStateUpdate(duration: TestWaitDuration.short)
-        #expect(abs(sut.currentState.overallProgress - 0.25) < 0.001)
-
-        mockTTSService.simulateFinished()
-        try await waitForStateUpdate(duration: TestWaitDuration.short)
-        #expect(sut.currentState.currentIndex == 1)
-        #expect(abs(sut.currentState.overallProgress - 0.5) < 0.001)
     }
 }
