@@ -285,10 +285,7 @@ struct MediaView<R: MediaNavigationRouter>: View {
 
     private func openMedia(_ media: Article) {
         let urlString = media.mediaURL ?? media.url
-        guard let url = URL(string: urlString),
-              let scheme = url.scheme?.lowercased(),
-              ["https", "http"].contains(scheme)
-        else { return }
+        guard let url = SafeMediaURL.validated(urlString) else { return }
         UIApplication.shared.open(url)
     }
 }

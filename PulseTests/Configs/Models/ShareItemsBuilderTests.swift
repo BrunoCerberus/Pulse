@@ -58,4 +58,57 @@ struct ShareItemsBuilderTests {
         #expect(items.count == 1)
         #expect(items[0] is String)
     }
+
+    @Test("http article URL rejected by SafeMediaURL returns only string")
+    func httpArticleUrlRejectedBySafeMedia() {
+        let article = Article(
+            id: "http-test",
+            title: "HTTP Article",
+            description: nil,
+            content: nil,
+            author: nil,
+            source: ArticleSource(id: "test", name: "Test Source"),
+            url: "http://example.com/article",
+            imageURL: nil,
+            thumbnailURL: nil,
+            publishedAt: Date(),
+            category: .technology,
+            mediaType: nil,
+            mediaURL: nil,
+            mediaDuration: nil,
+            mediaMimeType: nil
+        )
+
+        let items = ShareItemsBuilder.activityItems(for: article)
+
+        #expect(items.count == 1)
+        #expect(items[0] is String)
+    }
+
+    @Test("https article URL passes SafeMediaURL and returns string with URL")
+    func httpsArticleUrlPassesSafeMedia() {
+        let article = Article(
+            id: "https-test",
+            title: "HTTPS Article",
+            description: nil,
+            content: nil,
+            author: nil,
+            source: ArticleSource(id: "test", name: "Test Source"),
+            url: "https://example.com/article",
+            imageURL: nil,
+            thumbnailURL: nil,
+            publishedAt: Date(),
+            category: .technology,
+            mediaType: nil,
+            mediaURL: nil,
+            mediaDuration: nil,
+            mediaMimeType: nil
+        )
+
+        let items = ShareItemsBuilder.activityItems(for: article)
+
+        #expect(items.count == 2)
+        #expect(items[0] is String)
+        #expect(items[1] is URL)
+    }
 }

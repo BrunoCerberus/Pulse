@@ -115,8 +115,8 @@ struct AudioPlayerView: View {
         GeometryReader { geometry in
             let size = min(geometry.size.width, 300)
             Group {
-                if let imageURL = article.heroImageURL, let url = URL(string: imageURL) {
-                    AsyncImage(url: url) { phase in
+                if let imageURL = article.heroImageURL, let safeImageURL = SafeMediaURL.validated(imageURL) {
+                    AsyncImage(url: safeImageURL) { phase in
                         switch phase {
                         case .empty:
                             artworkPlaceholder
