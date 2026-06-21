@@ -849,7 +849,7 @@ jobs:
           - Stage all changes with git add
           - Do NOT commit - the workflow will handle that
         # Restricted tool access — no arbitrary command execution
-        claude_args: '--model "claude-sonnet-4-6[1m]" --allowedTools "Read,Edit,Write,Glob,Grep,Bash(git add:*),Bash(git status:*),Bash(git diff:*),Bash(ls:*),Bash(cat:*),Bash(head:*),Bash(tail:*),Bash(find:*),Bash(make generate)"'
+        claude_args: '--model "claude-sonnet-4-6" --allowedTools "Read,Edit,Write,Glob,Grep,Bash(git add:*),Bash(git status:*),Bash(git diff:*),Bash(ls:*),Bash(cat:*),Bash(head:*),Bash(tail:*),Bash(find:*),Bash(make generate)"'
 
     - name: Check for changes
       id: check-changes
