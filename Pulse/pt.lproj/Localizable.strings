@@ -181,6 +181,19 @@
 "auth.terms" = "Ao entrar, você concorda com nossos Termos de Serviço e Política de Privacidade";
 "auth.terms.markdown" = "Ao entrar, você concorda com nossos [Termos de Serviço](%1$@) e [Política de Privacidade](%2$@).";
 "auth.signing_in" = "Entrando...";
+"auth.sign_in_passkey" = "Entrar com Passkey";
+"auth.passkey_hint" = "Toque duas vezes para entrar usando uma passkey armazenada neste dispositivo";
+"auth.no_passkeys_found" = "Nenhuma passkey encontrada. Você pode registrar uma abaixo.";
+
+/* ==================== */
+/* MARK: - Passkey      */
+/* ==================== */
+
+"settings.passkeys.title" = "Passkeys";
+"settings.passkeys.account" = "Conta";
+"settings.passkeys.no_passkeys_title" = "Sem Passkeys";
+"settings.passkeys.no_passkeys_description" = "Passkeys permitem entrar com Face ID ou Touch ID. Registre uma passkey para uma camada extra de segurança.";
+"settings.passkeys.register" = "Registrar Passkey";
 
 /* ==================== */
 /* MARK: - Paywall      */

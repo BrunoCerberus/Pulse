@@ -52,6 +52,14 @@ final class AuthDomainInteractor: CombineInteractor {
             signInWithGoogle(presenting: viewController)
         case .signInWithApple:
             signInWithApple()
+        case .signInWithPasskey:
+            signInWithPasskey()
+        case .registerPasskey:
+            registerPasskey()
+        case .loadPasskeys:
+            loadPasskeys()
+        case let .deletePasskey(username):
+            deletePasskey(username: username)
         case .signInAnonymously:
             signInAnonymously()
         case .signOut:
@@ -172,6 +180,161 @@ final class AuthDomainInteractor: CombineInteractor {
                 self?.updateState { state in
                     state.isLoading = false
                     state.user = user
+                }
+            }
+            .store(in: &cancellables)
+    }
+
+    // MARK: - Passkey Methods
+
+    private func signInWithPasskey() {
+        updateState { state in
+            state.isLoading = true
+            state.error = nil
+        }
+
+        authService.signInWithPasskey()
+            .receive(on: DispatchQueue.main)
+            .sink { [weak self] completion in
+                if case let .failure(error) = completion {
+                    if case AuthError.signInCancelled = error {
+                        // Don't track or show error for user cancellation
+                    } else if case AuthError.noPasskeysAvailable = error {
+                        // No passkeys — surface as info so the UI can offer
+                        // registration instead of a raw error.
+                        self?.updateState { state in
+                            state.isLoading = false
+                            state.error = error.localizedDescription
+                        }
+                    } else {
+                        self?.analyticsService?.logEvent(.signIn(provider: "passkey", success: false))
+                        self?.analyticsService?.recordError(error)
+                    }
+                    self?.updateState { state in
+                        state.isLoading = false
+                        if case AuthError.signInCancelled = error {
+                            // Don't show error for user cancellation
+                        } else if case AuthError.noPasskeysAvailable = error {
+                            // Not shown to user — handled by UI offering registration
+                        } else {
+                            state.error = error.localizedDescription
+                        }
+                    }
+                }
+            } receiveValue: { [weak self] user in
+                self?.analyticsService?.logEvent(.signIn(provider: "passkey", success: true))
+                self?.updateState { state in
+                    state.isLoading = false
+                    state.user = user
+                    state.hasPasskey = true
+                }
+            }
+            .store(in: &cancellables)
+    }
+
+    private func registerPasskey() {
+        updateState { state in
+            state.isLoading = true
+            state.error = nil
+        }
+
+        authService.registerPasskey()
+            .receive(on: DispatchQueue.main)
+            .sink { [weak self] completion in
+                if case let .failure(error) = completion {
+                    if case AuthError.signInCancelled = error {
+                        // Don't track or show error for user cancellation
+                    } else {
+                        self?.analyticsService?.recordError(error)
+                    }
+                    self?.updateState { state in
+                        state.isLoading = false
+                        if case AuthError.signInCancelled = error {
+                            // Don't show error for user cancellation
+                        } else {
+                            state.error = error.localizedDescription
+                        }
+                    }
+                }
+            } receiveValue: { [weak self] user in
+                self?.analyticsService?.logEvent(.passkeyRegistered(method: "explicit"))
+                self?.updateState { state in
+                    state.isLoading = false
+                    state.user = user
+                    state.hasPasskey = true
+                }
+            }
+            .store(in: &cancellables)
+    }
+
+    private func loadPasskeys() {
+        updateState { state in
+            state.isLoading = true
+            state.error = nil
+        }
+
+        authService.getAvailablePasskeys()
+            .receive(on: DispatchQueue.main)
+            .sink { [weak self] completion in
+                if case let .failure(error) = completion {
+                    if case AuthError.signInCancelled = error {
+                        // Don't track or show error for user cancellation
+                    } else {
+                        self?.analyticsService?.recordError(error)
+                    }
+                    self?.updateState { state in
+                        state.isLoading = false
+                        if case AuthError.signInCancelled = error {
+                            // Don't show error for user cancellation
+                        } else {
+                            state.error = error.localizedDescription
+                        }
+                    }
+                }
+            } receiveValue: { [weak self] usernames in
+                self?.updateState { state in
+                    state.isLoading = false
+                    // Store passkey count as a hint for UI display.
+                    // The interactor doesn't carry the full list — that's
+                    // managed at the view level to keep Domain UI-agnostic.
+                    state.hasPasskey = !usernames.isEmpty
+                }
+            }
+            .store(in: &cancellables)
+    }
+
+    private func deletePasskey(username: String) {
+        updateState { state in
+            state.isLoading = true
+            state.error = nil
+        }
+
+        authService.deletePasskey(username: username)
+            .receive(on: DispatchQueue.main)
+            .sink { [weak self] completion in
+                if case let .failure(error) = completion {
+                    if case AuthError.signInCancelled = error {
+                        // Don't track or show error for user cancellation
+                    } else {
+                        self?.analyticsService?.recordError(error)
+                    }
+                    self?.updateState { state in
+                        state.isLoading = false
+                        if case AuthError.signInCancelled = error {
+                            // Don't show error for user cancellation
+                        } else {
+                            state.error = error.localizedDescription
+                        }
+                    }
+                }
+            } receiveValue: { [weak self] in
+                self?.analyticsService?.logEvent(.passkeyDeleted(username: username))
+                // Remove the passkey flag from UserDefaults so subsequent
+                // auth state reads reflect the new reality.
+                UserDefaults.standard.removeObject(forKey: AuthUserKeys.hasPasskey)
+                self?.updateState { state in
+                    state.isLoading = false
+                    state.hasPasskey = false
                 }
             }
             .store(in: &cancellables)

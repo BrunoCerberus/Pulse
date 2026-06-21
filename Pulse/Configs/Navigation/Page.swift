@@ -19,4 +19,7 @@ enum Page: Hashable {
 
     /// Navigate to the For You personalization settings view
     case forYouSettings
+
+    /// Navigate to Passkey management settings view
+    case passkeySettings
 }

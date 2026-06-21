@@ -227,6 +227,11 @@ final class Coordinator: ObservableObject {
             ForYouSettingsView(
                 viewModel: ForYouSettingsViewModel(serviceLocator: serviceLocator)
             )
+
+        case .passkeySettings:
+            PasskeyManagementView(
+                viewModel: PasskeyManagementViewModel(serviceLocator: serviceLocator)
+            )
         }
     }
 }

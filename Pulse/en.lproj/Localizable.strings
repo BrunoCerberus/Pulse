@@ -181,6 +181,19 @@
 "auth.terms" = "By signing in, you agree to our Terms of Service and Privacy Policy";
 "auth.terms.markdown" = "By signing in, you agree to our [Terms of Service](%1$@) and [Privacy Policy](%2$@).";
 "auth.signing_in" = "Signing in...";
+"auth.sign_in_passkey" = "Sign in with Passkey";
+"auth.passkey_hint" = "Double tap to sign in using a passkey stored on this device";
+"auth.no_passkeys_found" = "No passkeys found. You can register one below.";
+
+/* ==================== */
+/* MARK: - Passkey      */
+/* ==================== */
+
+"settings.passkeys.title" = "Passkeys";
+"settings.passkeys.account" = "Account";
+"settings.passkeys.no_passkeys_title" = "No Passkeys";
+"settings.passkeys.no_passkeys_description" = "Passkeys let you sign in with Face ID or Touch ID. Register a passkey for an extra layer of security.";
+"settings.passkeys.register" = "Register Passkey";
 
 /* ==================== */
 /* MARK: - Paywall      */

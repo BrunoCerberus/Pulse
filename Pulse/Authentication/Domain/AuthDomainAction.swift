@@ -1,9 +1,10 @@
+import AuthenticationServices
 import UIKit
 
 /// Actions that can be dispatched to the Authentication domain interactor.
 ///
 /// These actions manage user authentication via Firebase Auth,
-/// supporting Google Sign-In and Apple Sign-In providers.
+/// supporting Google Sign-In, Apple Sign-In, and Passkey providers.
 enum AuthDomainAction {
     // MARK: - Sign In
 
@@ -14,6 +15,18 @@ enum AuthDomainAction {
     /// Initiate Apple Sign-In flow using AuthenticationServices.
     /// Presents the native Apple Sign-In sheet.
     case signInWithApple
+
+    /// Initiate Passkey (WebAuthn) sign-in.
+    case signInWithPasskey
+
+    /// Register a new Passkey for the current Firebase user.
+    case registerPasskey
+
+    /// Load available passkeys for the current device to show in a picker.
+    case loadPasskeys
+
+    /// Delete a stored passkey by username (requires re-auth per Apple policy).
+    case deletePasskey(username: String)
 
     /// Initiate anonymous Firebase sign-in.
     ///

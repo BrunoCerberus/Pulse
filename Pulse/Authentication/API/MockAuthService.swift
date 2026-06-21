@@ -1,3 +1,4 @@
+import AuthenticationServices
 import Combine
 import UIKit
 
@@ -22,6 +23,12 @@ final class MockAuthService: AuthService {
     }
 
     var signInWithAppleResult: Result<AuthUser, Error> = .success(AuthUser.mock)
+    var signInWithPasskeyResult: Result<AuthUser, Error> = .success(AuthUser.mock)
+    var registerPasskeyResult: Result<AuthUser, Error> = .success(AuthUser.mock)
+    var getAvailablePasskeysResult: Result<[String], Error> = .success(["device-passkey"])
+    var deletePasskeyResult: Result<Void, Error> = .success(())
+    private(set) var deletePasskeyCallCount = 0
+
     var signInAnonymouslyResult: Result<AuthUser, Error> = .success(AuthUser.mock)
     var signOutResult: Result<Void, Error> = .success(())
     var deleteAccountResult: Result<Void, Error> = .success(())
@@ -47,6 +54,41 @@ final class MockAuthService: AuthService {
         signInWithAppleResult.publisher
             .handleEvents(receiveOutput: { [weak self] user in
                 self?.authStateSubject.send(user)
+            })
+            .eraseToAnyPublisher()
+    }
+
+    func signInWithPasskey() -> AnyPublisher<AuthUser, Error> {
+        signInWithPasskeyResult.publisher
+            .handleEvents(receiveOutput: { [weak self] user in
+                if user.provider == .passkey {
+                    UserDefaults.standard.set(true, forKey: AuthUserKeys.hasPasskey)
+                }
+                self?.authStateSubject.send(user)
+            })
+            .eraseToAnyPublisher()
+    }
+
+    func registerPasskey() -> AnyPublisher<AuthUser, Error> {
+        registerPasskeyResult.publisher
+            .handleEvents(receiveOutput: { [weak self] user in
+                UserDefaults.standard.set(true, forKey: AuthUserKeys.hasPasskey)
+                self?.authStateSubject.send(user)
+            })
+            .eraseToAnyPublisher()
+    }
+
+    func getAvailablePasskeys() -> AnyPublisher<[String], Error> {
+        getAvailablePasskeysResult.publisher.eraseToAnyPublisher()
+    }
+
+    func deletePasskey(username: String) -> AnyPublisher<Void, Error> {
+        _ = username
+        deletePasskeyCallCount += 1
+        return deletePasskeyResult.publisher
+            .handleEvents(receiveOutput: { [weak self] _ in
+                UserDefaults.standard.removeObject(forKey: AuthUserKeys.hasPasskey)
+                self?.authStateSubject.send(nil)
             })
             .eraseToAnyPublisher()
     }

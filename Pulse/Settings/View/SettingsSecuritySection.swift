@@ -19,6 +19,10 @@ private enum Constants {
     static var unavailable: String {
         AppLocalization.localized("applock.settings_unavailable")
     }
+
+    static var passkeysTitle: String {
+        AppLocalization.localized("settings.passkeys.title")
+    }
 }
 
 // MARK: - SettingsSecuritySection
@@ -45,6 +49,10 @@ struct SettingsSecuritySection: View {
                         .foregroundStyle(.secondary)
                 }
             }
+
+            NavigationLink(value: Page.passkeySettings, label: {
+                Label(Constants.passkeysTitle, systemImage: "hand.raised.square.on.square")
+            })
         } header: {
             Text(Constants.header)
                 .font(Typography.captionLarge)

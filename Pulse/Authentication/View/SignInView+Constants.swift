@@ -51,5 +51,21 @@ extension SignInView {
         static var googleHint: String {
             AppLocalization.localized("auth.google_hint")
         }
+
+        static var signInPasskey: String {
+            AppLocalization.localized("auth.sign_in_passkey")
+        }
+
+        static var passkeyHint: String {
+            AppLocalization.localized("auth.passkey_hint")
+        }
+
+        static var cancelButton: String {
+            AppLocalization.localized("common.cancel")
+        }
+
+        static var noPasskeysMessage: String {
+            AppLocalization.localized("auth.no_passkeys_found")
+        }
     }
 }

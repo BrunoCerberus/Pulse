@@ -57,6 +57,8 @@ enum AnalyticsEvent {
     case cloudSyncSucceeded
     case cloudSyncFailed(error: String)
     case cloudSyncAccountUnavailable(status: String)
+    case passkeyRegistered(method: String)
+    case passkeyDeleted(username: String)
 
     var name: String {
         switch self {
@@ -91,6 +93,8 @@ enum AnalyticsEvent {
         case .cloudSyncSucceeded: "cloud_sync_succeeded"
         case .cloudSyncFailed: "cloud_sync_failed"
         case .cloudSyncAccountUnavailable: "cloud_sync_account_unavailable"
+        case .passkeyRegistered: "passkey_registered"
+        case .passkeyDeleted: "passkey_deleted"
         }
     }
 
@@ -150,6 +154,10 @@ enum AnalyticsEvent {
             ["error": error]
         case let .cloudSyncAccountUnavailable(status):
             ["status": status]
+        case let .passkeyRegistered(method):
+            ["method": method]
+        case let .passkeyDeleted(username):
+            ["username": username]
         }
     }
 }

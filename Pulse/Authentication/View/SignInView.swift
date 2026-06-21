@@ -7,6 +7,8 @@ import SwiftUI
 struct SignInView: View {
     @StateObject private var viewModel: SignInViewModel
     @State private var showError = false
+    /// When passkey sign-in fails because no credentials exist, show a registration sheet.
+    @State private var showRegisterPasskey = false
     /// Partial-cleanup failure message persisted by `SettingsViewModel`
     /// across the sign-out / delete-account auth-state flip. `SignInView`
     /// is the next surface the user sees, so this is where we present
@@ -48,8 +50,34 @@ struct SignInView: View {
         } message: {
             Text(viewModel.viewState.errorMessage ?? Constants.unknownError)
         }
+        .alert(
+            "Passkey",
+            isPresented: $showRegisterPasskey
+        ) {
+            Button(Constants.signInPasskey) {
+                viewModel.handle(event: .registerPasskeyTapped)
+            }
+            Button(Constants.cancelButton, role: .cancel) {
+                viewModel.handle(event: .onDismissError)
+            }
+        } message: {
+            Text(Constants.noPasskeysMessage)
+        }
         .onChange(of: viewModel.viewState.errorMessage) { _, newValue in
-            showError = newValue != nil
+            if let errorMessage = newValue {
+                // Reset any pending UI state when a new error arrives.
+                showRegisterPasskey = false
+                showError = false
+
+                if errorMessage == AuthError.noPasskeysAvailable.localizedDescription {
+                    showRegisterPasskey = true
+                } else {
+                    showError = true
+                }
+            } else {
+                showRegisterPasskey = false
+                showError = false
+            }
         }
         .alert(
             Constants.error,
@@ -63,6 +91,7 @@ struct SignInView: View {
             Text(pendingCleanupError ?? "")
         }
         .onAppear { loadPendingCleanupError() }
+        .onAppear { showRegisterPasskey = false }
     }
 
     private func loadPendingCleanupError() {
@@ -142,6 +171,28 @@ struct SignInView: View {
             .accessibilityLabel(Constants.signInApple)
             .accessibilityHint(Constants.appleHint)
 
+            // Sign in with Passkey — WebAuthn credential stored on the device.
+            Button {
+                HapticManager.shared.buttonPress()
+                viewModel.handle(event: .onPasskeySignInTapped)
+            } label: {
+                HStack(spacing: Spacing.sm) {
+                    passkeyIcon
+                        .frame(width: 20, height: 20)
+
+                    Text(Constants.signInPasskey)
+                        .font(Typography.labelLarge)
+                }
+                .frame(maxWidth: .infinity)
+                .frame(height: 50)
+                .background(Color.white.opacity(0.12))
+                .foregroundStyle(.white)
+                .clipShape(RoundedRectangle(cornerRadius: CornerRadius.md))
+            }
+            .buttonStyle(.plain)
+            .accessibilityLabel(Constants.signInPasskey)
+            .accessibilityHint(Constants.passkeyHint)
+
             // Sign in with Google
             Button {
                 HapticManager.shared.buttonPress()
@@ -178,6 +229,18 @@ struct SignInView: View {
             .foregroundStyle(
                 .linearGradient(
                     colors: [.red, .yellow, .green, .blue],
+                    startPoint: .topLeading,
+                    endPoint: .bottomTrailing
+                )
+            )
+    }
+
+    private var passkeyIcon: some View {
+        Image(systemName: "hand.raised.square.on.square")
+            .font(.system(size: 14, weight: .medium))
+            .foregroundStyle(
+                .linearGradient(
+                    colors: [.accentColor, Color.purple],
                     startPoint: .topLeading,
                     endPoint: .bottomTrailing
                 )

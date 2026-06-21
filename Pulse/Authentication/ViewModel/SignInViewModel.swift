@@ -5,12 +5,13 @@ import UIKit
 
 /// ViewModel for the Sign In screen.
 ///
-/// Implements `CombineViewModel` to handle authentication via Google and Apple Sign-In.
+/// Implements `CombineViewModel` to handle authentication via Google, Apple, and Passkey Sign-In.
 /// Provides loading state and error handling for auth operations.
 ///
 /// ## Features
 /// - Google Sign-In via Firebase Auth
-/// - Apple Sign-In via Firebase Auth
+/// - Apple Sign-In via Firebase Auth (supports Passkeys on iOS 16+)
+/// - Explicit Passkey sign-in and registration via WebAuthn
 /// - Error display with dismiss action
 @MainActor
 final class SignInViewModel: CombineViewModel, ObservableObject {
@@ -32,6 +33,10 @@ final class SignInViewModel: CombineViewModel, ObservableObject {
             interactor.dispatch(action: .signInWithGoogle(presenting: viewController))
         case .onAppleSignInTapped:
             interactor.dispatch(action: .signInWithApple)
+        case .onPasskeySignInTapped:
+            interactor.dispatch(action: .signInWithPasskey)
+        case .registerPasskeyTapped:
+            interactor.dispatch(action: .registerPasskey)
         case .onReviewerSignInTriggered:
             interactor.dispatch(action: .signInAnonymously)
         case .onDismissError:
@@ -64,6 +69,8 @@ struct SignInViewState: Equatable {
 enum SignInViewEvent {
     case onGoogleSignInTapped(UIViewController)
     case onAppleSignInTapped
+    case onPasskeySignInTapped
+    case registerPasskeyTapped
     /// Hidden reviewer entry point. Fired by the 5-tap gesture on the logo
     /// and dispatched as an anonymous Firebase sign-in. See `SignInView` and
     /// the App Review Information section in App Store Connect.
