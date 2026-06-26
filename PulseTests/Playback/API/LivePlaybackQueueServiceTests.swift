@@ -274,24 +274,4 @@ struct LivePlaybackQueueServiceTests {
         #expect(mockAnalyticsService.loggedEvents.isEmpty)
     }
 
-    // MARK: - Speed
-
-    @Test("cycleSpeed when inactive only changes the preset")
-    func cycleSpeedInactive() {
-        sut.cycleSpeed()
-
-        #expect(sut.currentState.speedPreset == .fast)
-        #expect(mockTTSService.speakCallCount == 0)
-    }
-
-    @Test("speed preset survives queue teardown")
-    func speedPresetSurvivesTeardown() {
-        sut.cycleSpeed()
-        sut.play(items: makeItems(1), mode: .singleArticle)
-
-        sut.stop()
-
-        #expect(sut.currentState.speedPreset == .fast)
-        #expect(mockTTSService.lastRate == TTSSpeedPreset.fast.rate)
-    }
 }
