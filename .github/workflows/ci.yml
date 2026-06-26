@@ -56,7 +56,7 @@ jobs:
     # Cache Homebrew packages
     # Note: Static version key (brew-v1) - increment manually when brew dependencies change
     - name: Cache Homebrew packages
-      uses: actions/cache@27d5ce7f107fe9357f9df03efb73ab90386fccae # v5.0.5
+      uses: actions/cache@2c8a9bd7457de244a408f35966fab2fb45fda9c8 # v6.0.0
       with:
         path: |
           ~/Library/Caches/Homebrew
@@ -68,7 +68,7 @@ jobs:
     # Cache Mint packages
     # Note: Static version key (mint-v1) - increment manually when mint dependencies change
     - name: Cache Mint packages
-      uses: actions/cache@27d5ce7f107fe9357f9df03efb73ab90386fccae # v5.0.5
+      uses: actions/cache@2c8a9bd7457de244a408f35966fab2fb45fda9c8 # v6.0.0
       with:
         path: ~/.mint
         key: ${{ runner.os }}-mint-v1
