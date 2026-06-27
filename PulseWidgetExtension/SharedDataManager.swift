@@ -12,6 +12,12 @@ final class SharedDataManager: Sendable {
         UserDefaults(suiteName: appGroupIdentifier)
     }
 
+    /// Hard cap on the number of articles returned from shared storage. An attacker
+    /// who poisons App Group storage can't use a massive JSON payload to cause memory
+    /// pressure in the widget process (~120 MB budget). Mirrors `SharedURLQueue`'s
+    /// write-side + read-side defense-in-depth (rule 23).
+    private static let maxArticlesCount = 10
+
     func getArticles() -> [SharedArticle] {
         guard let defaults = sharedDefaults,
               let data = defaults.data(forKey: articlesKey)
@@ -20,7 +26,10 @@ final class SharedDataManager: Sendable {
         }
 
         do {
-            return try JSONDecoder().decode([SharedArticle].self, from: data)
+            let decoded = try JSONDecoder().decode([SharedArticle].self, from: data)
+            return decoded.count > Self.maxArticlesCount
+                ? Array(decoded.prefix(Self.maxArticlesCount))
+                : decoded
         } catch {
             return []
         }

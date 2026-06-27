@@ -62,7 +62,7 @@ struct ShareRootView: View {
                 .fill(Color(uiColor: .secondarySystemBackground))
         )
         .accessibilityElement(children: .combine)
-        .accessibilityLabel("Shared link from \(url.host ?? "the web"). \(url.absoluteString)")
+        .accessibilityLabel("Shared link from \(url.host ?? "the web").")
     }
 
     private var actionButtons: some View {

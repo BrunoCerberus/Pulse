@@ -77,9 +77,11 @@ struct SharedURLQueue: @unchecked Sendable {
     }
 
     /// Validates that a URL string is short enough, parseable, and uses an
-    /// allow-listed scheme. Exposed at file scope so the producer side
-    /// (`ShareViewController`) and consumer side (`LiveSharedURLImportService`)
-    /// can apply the same rule for defense in depth.
+    /// allow-listed scheme. Rejects path-traversal (`..`) in the path component
+    /// and any URL containing control characters, matching the defense-in-depth
+    /// strategy applied to deeplink parameters (rule 16). Exposed at file scope
+    /// so the producer side (`ShareViewController`) and consumer side
+    /// (`LiveSharedURLImportService`) can apply the same rule for defense in depth.
     static func isAcceptable(urlString: String) -> Bool {
         guard !urlString.isEmpty,
               urlString.count <= maxURLLength,
@@ -87,6 +89,17 @@ struct SharedURLQueue: @unchecked Sendable {
               let scheme = url.scheme?.lowercased(),
               allowedSchemes.contains(scheme)
         else { return false }
+        // Reject path-traversal sequences that could escape the intended scope.
+        guard !url.pathComponents.contains("..") else {
+            return false
+        }
+        // Reject URLs whose string form contains control characters (could be
+        // obfuscation vectors or lead to malformed payloads). This mirrors the
+        // control-char stripping applied in `PromptSanitizer` and deeplink
+        // parameter sanitization (rule 16).
+        for scalar in urlString.unicodeScalars where CharacterSet.controlCharacters.contains(scalar) {
+            return false
+        }
         return true
     }
 

@@ -31,9 +31,15 @@ final class TTSLiveActivityController {
         let position: String?
 
         func trimmed() -> Self {
+            // `PromptSanitizer` is scoped to LLM prompts but its core
+            // behaviour — control-char removal, length-capping, and stripping
+            // of obfuscation characters (backticks, turn markers) — is also the
+            // right defence-in-depth for any text rendered on-screen that
+            // originates from untrusted RSS feeds.  The LLM-specific markers
+            // are harmless no-ops in this context.
             .init(
-                title: String(title.prefix(Self.maxLabelLength)),
-                source: String(source.prefix(Self.maxLabelLength)),
+                title: PromptSanitizer.sanitize(title, maxLength: Self.maxLabelLength),
+                source: PromptSanitizer.sanitize(source, maxLength: Self.maxLabelLength),
                 position: position
             )
         }
