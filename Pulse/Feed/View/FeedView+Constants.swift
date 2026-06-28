@@ -28,6 +28,10 @@ extension FeedView {
             AppLocalization.localized("feed.empty.message")
         }
 
+        static var emptyStartReading: String {
+            AppLocalization.localized("feed.start_reading")
+        }
+
         static var errorTitle: String {
             AppLocalization.localized("feed.error.title")
         }

@@ -320,6 +320,10 @@
 "feed.listen_briefing" = "Ouvir Boletim";
 "feed.listen_briefing_hint" = "Lê em voz alta seu resumo e principais notícias";
 
+"feed.audio_briefing_gate.title" = "Boletim em Áudio";
+"feed.audio_briefing_gate.description" = "Ouça seu resumo de IA e as principais notícias personalizadas, lidas em voz alta como um podcast.";
+"feed.audio_briefing_gate.unlock_button" = "Desbloquear Boletim";
+
 "premium_gate.audio_briefing.title" = "Boletim em Áudio";
 "premium_gate.audio_briefing.description" = "Ouça seu resumo de IA e as principais notícias personalizadas, lidas em voz alta como um podcast.";
 

@@ -218,7 +218,7 @@ struct FeedView<R: FeedNavigationRouter>: View {
         VStack(spacing: Spacing.lg) {
             Spacer()
 
-            FeedEmptyStateView()
+            AudioBriefingGateView(serviceLocator: serviceLocator)
                 .padding(.horizontal, Spacing.md)
 
             Spacer()

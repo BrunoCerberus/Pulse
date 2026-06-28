@@ -320,6 +320,10 @@
 "feed.listen_briefing" = "Escuchar Boletín";
 "feed.listen_briefing_hint" = "Lee en voz alta tu resumen y noticias principales";
 
+"feed.audio_briefing_gate.title" = "Boletín de Audio";
+"feed.audio_briefing_gate.description" = "Escucha tu resumen de IA y las principales noticias personalizadas, leídas en voz alta como un pódcast.";
+"feed.audio_briefing_gate.unlock_button" = "Desbloquear Boletín";
+
 "premium_gate.audio_briefing.title" = "Boletín de Audio";
 "premium_gate.audio_briefing.description" = "Escucha tu resumen de IA y las principales noticias personalizadas, leídas en voz alta como un pódcast.";
 

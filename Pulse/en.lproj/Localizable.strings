@@ -320,6 +320,10 @@
 "feed.listen_briefing" = "Listen to Briefing";
 "feed.listen_briefing_hint" = "Plays your digest and top stories aloud";
 
+"feed.audio_briefing_gate.title" = "Audio Briefing";
+"feed.audio_briefing_gate.description" = "Listen to your AI digest and top personalized stories, read aloud like a podcast.";
+"feed.audio_briefing_gate.unlock_button" = "Unlock Briefing";
+
 "premium_gate.audio_briefing.title" = "Audio Briefing";
 "premium_gate.audio_briefing.description" = "Listen to your AI digest and top personalized stories, read aloud like a podcast.";
 
