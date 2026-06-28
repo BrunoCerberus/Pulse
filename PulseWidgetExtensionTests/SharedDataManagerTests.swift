@@ -49,4 +49,45 @@ struct SharedDataManagerTests {
         let articles = manager.getArticles()
         #expect(articles.isEmpty)
     }
+
+    @Test("getArticles caps at maxArticlesCount keeping first items")
+    func getArticlesCapsAtMax() {
+        let manager = SharedDataManager()
+
+        let articles = Array(0 ..< 15).map { index in
+            SharedArticle(
+                id: String(index),
+                title: "Test Article \(index)",
+                source: "Source \(index)",
+                imageURL: "https://example.com/image\(index).jpg"
+            )
+        }
+
+        manager.saveArticles(articles)
+
+        let savedArticles = manager.getArticles()
+        #expect(savedArticles.count == 10)
+        // prefix keeps the FIRST items, not the last (suffix would keep last)
+        #expect(savedArticles[0].id == "0")
+        #expect(savedArticles[9].id == "9")
+    }
+
+    @Test("getArticles returns all when under cap")
+    func getArticlesReturnsAllWhenUnderCap() {
+        let manager = SharedDataManager()
+
+        let articles = Array(0 ..< 5).map { index in
+            SharedArticle(
+                id: String(index),
+                title: "Test Article \(index)",
+                source: "Source \(index)",
+                imageURL: "https://example.com/image\(index).jpg"
+            )
+        }
+
+        manager.saveArticles(articles)
+
+        let savedArticles = manager.getArticles()
+        #expect(savedArticles.count == 5)
+    }
 }
