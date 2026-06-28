@@ -17,8 +17,16 @@ final class LiveAnalyticsService: AnalyticsService {
     }
 
     func setUserID(_ userID: String?) {
-        Analytics.setUserID(userID)
-        Crashlytics.crashlytics().setUserID(userID ?? "")
+        // Sanitize the user ID before forwarding to Firebase / Crashlytics.
+        // While current callers pass Firebase UIDs (which are safe), any future
+        // caller that accidentally passes a human-identifiable value would be a
+        // direct PII leak. Apply the same email / URL redaction that `logEvent`
+        // and `recordError` use.  After sanitization, an empty result is mapped
+        // to nil so we don't send a blank user ID string.  (Firebase treats `""`
+        // and `nil` differently — nil clears the ID.)
+        let safeID = userID.map { Self.sanitize($0) } ?? ""
+        Analytics.setUserID(safeID.isEmpty ? nil : safeID)
+        Crashlytics.crashlytics().setUserID(safeID.isEmpty ? nil : safeID)
     }
 
     func recordError(_ error: Error, userInfo: [String: Any]?) {

@@ -15,23 +15,38 @@ enum SignOutCleanup {
     /// `errSecItemNotFound` is a benign "nothing to delete" outcome and
     /// is ignored. Any other non-success status is logged.
     ///
-    /// Generic-password items only — matches what `EntropyCore.KeychainManager`
-    /// writes today. If anything in this app ever stores `kSecClassInternetPassword`,
-    /// `kSecClassCertificate`, or `kSecClassKey` under one of these services,
-    /// add another `SecItemDelete` call here for that class — otherwise those
-    /// items will silently survive sign-out.
+    /// Only iterates over `kSecClassGenericPassword` and
+    /// `kSecClassInternetPassword` — those are the only two classes that
+    /// support `kSecAttrService` in a SecItemDelete query.  Using the service
+    /// attribute with `kSecClassCertificate`, `kSecClassIdentity`, or
+    /// `kSecClassKey` silently returns `errSecItemNotFound`, giving false
+    /// assurance that those classes are cleaned up.  If the app ever needs to
+    /// delete items in those other classes, class-appropriate query attributes
+    /// (e.g. `kSecAttrSubject` for certificates) must be used instead.
     static func wipeKeychain(services: [String]) {
+        let classes: [CFString] = [
+            kSecClassGenericPassword,
+            kSecClassInternetPassword,
+        ]
         for service in services {
-            let query: [String: Any] = [
-                kSecClass as String: kSecClassGenericPassword,
-                kSecAttrService as String: service,
-            ]
-            let status = SecItemDelete(query as CFDictionary)
-            guard status != errSecSuccess, status != errSecItemNotFound else { continue }
-            Logger.shared.service(
-                "Failed to wipe keychain service \(service): OSStatus \(status)",
-                level: .warning
-            )
+            for keychainClass in classes {
+                let query: [String: Any] = [
+                    kSecClass as String: keychainClass,
+                    kSecAttrService as String: service,
+                ]
+                let status = SecItemDelete(query as CFDictionary)
+                guard status != errSecSuccess, status != errSecItemNotFound else { continue }
+                let className: String
+                switch keychainClass {
+                case kSecClassGenericPassword: className = "genericPassword"
+                case kSecClassInternetPassword: className = "internetPassword"
+                default: className = "(unknown)"
+                }
+                Logger.shared.service(
+                    "Failed to wipe keychain service \(service), class \(className): OSStatus \(status)",
+                    level: .warning
+                )
+            }
         }
     }
 

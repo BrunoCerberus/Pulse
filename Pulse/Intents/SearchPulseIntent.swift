@@ -10,7 +10,11 @@ struct SearchPulseIntent: AppIntent {
 
     static let openAppWhenRun: Bool = true
 
-    /// The search term to run inside Pulse.
+    /// The search term to run inside Pulse. Length is capped at 256 chars and
+    /// control characters are stripped in `DeeplinkManager.handle`, which every
+    /// entry path (App Intents, Quick Actions, push deeplinks) funnels through.
+    /// This intent does not duplicate that validation; it relies on the choke
+    /// point as documented in rule 16.
     @Parameter(title: "Query")
     var query: String
 

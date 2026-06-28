@@ -245,6 +245,45 @@ struct SharedURLQueueTests {
         let oversized = "https://example.com/" + String(repeating: "a", count: SharedURLQueue.maxURLLength)
         #expect(SharedURLQueue.isAcceptable(urlString: oversized) == false)
     }
+
+    // MARK: - Path-traversal rejection
+
+    @Test("Enqueue rejects URL with .. in path")
+    func enqueueRejectsPathTraversal() {
+        let item = SharedURLItem(url: "https://example.com/../../etc/passwd", sharedAt: Date())
+
+        let success = sut.enqueue(item)
+
+        #expect(success == false)
+        #expect(sut.peekAll().isEmpty)
+    }
+
+    @Test("isAcceptable rejects .. at various path positions")
+    func isAcceptableRejectsPathTraversalVariants() {
+        #expect(SharedURLQueue.isAcceptable(urlString: "https://example.com/foo/../../bar") == false)
+        #expect(SharedURLQueue.isAcceptable(urlString: "https://example.com/./../secret") == false)
+        #expect(SharedURLQueue.isAcceptable(urlString: "https://example.com/normal/path") == true)
+    }
+
+    // MARK: - Control character rejection
+
+    @Test("Enqueue rejects URL with control characters")
+    func enqueueRejectsControlChars() {
+        let item = SharedURLItem(url: "https://example.com/\u{00}\u{01}\u{7F}test", sharedAt: Date())
+
+        let success = sut.enqueue(item)
+
+        #expect(success == false)
+        #expect(sut.peekAll().isEmpty)
+    }
+
+    @Test("isAcceptable rejects URLs with control characters")
+    func isAcceptableRejectsControlChars() {
+        #expect(SharedURLQueue.isAcceptable(urlString: "https://example.com/\u{00}") == false)
+        #expect(SharedURLQueue.isAcceptable(urlString: "https://example.com/\u{01}") == false)
+        #expect(SharedURLQueue.isAcceptable(urlString: "https://example.com/\u{7F}") == false)
+        #expect(SharedURLQueue.isAcceptable(urlString: "https://example.com/normal") == true)
+    }
 }
 
 private extension SharedURLQueue {

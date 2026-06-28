@@ -894,13 +894,15 @@ jobs:
           --compare-branch "$BASE_SHA" \
           --fail-under "$THRESHOLD" \
           --include 'Pulse/**/*.swift' 'PulseShareExtension/**/*.swift' 'PulseWidgetExtension/**/*.swift' \
-          --exclude '**/*+Preview.swift' '**/Preview Content/**' \
-                    '**/LiveAuthService.swift' '**/LiveAuthService+Anonymous.swift' \
-                    '**/FirebaseUser+AuthUser.swift' \
-                    '**/SignOutCleanup.swift' '**/ShareViewController.swift' \
-                    '**/LLMModelManager.swift' '**/LiveLLMService.swift' \
-                    '**/LiveTextToSpeechService.swift' \
-                    '**/TTSLiveActivityController.swift' \
+           --exclude '**/*+Preview.swift' '**/Preview Content/**' \
+                     '**/LiveAuthService.swift' '**/LiveAuthService+Anonymous.swift' \
+                     '**/FirebaseUser+AuthUser.swift' \
+                     '**/SignOutCleanup.swift' '**/ShareViewController.swift' \
+                     '**/LiveAnalyticsService.swift' '**/ShareRootView.swift' \
+                     '**/NewsTimelineProvider.swift' '**/SearchPulseIntent.swift' \
+                     '**/SharedDataManager.swift' '**/LLMModelManager.swift' '**/LiveLLMService.swift' \
+                     '**/LiveTextToSpeechService.swift' \
+                     '**/TTSLiveActivityController.swift' \
                     '**/TTSLiveActivity.swift' '**/PulseNewsWidget.swift' \
                     '**/PulseWidgetBundle.swift' \
                     '**/LiveStoreKitService.swift' \

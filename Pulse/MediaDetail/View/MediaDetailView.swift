@@ -98,7 +98,7 @@ struct MediaDetailView: View {
                         urlString: mediaURL,
                         articleImageURL: viewModel.viewState.article.imageURL
                     )
-                } else if let url = URL(string: mediaURL) {
+                } else if let url = SafeMediaURL.validated(mediaURL) {
                     // Direct video files: use VideoPlayerView
                     VideoPlayerView(
                         url: url,

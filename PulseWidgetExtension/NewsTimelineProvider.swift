@@ -76,7 +76,8 @@ struct NewsTimelineProvider: TimelineProvider {
 
         for article in articles {
             guard let urlString = article.imageURL,
-                  let url = URL(string: urlString)
+                  let url = URL(string: urlString),
+                  isSafeImageURL(url)
             else {
                 continue
             }
@@ -110,6 +111,14 @@ struct NewsTimelineProvider: TimelineProvider {
             }
             completion(widgetArticles)
         }
+    }
+
+    /// Rejects non-HTTPS image URLs to avoid leaking article metadata over
+    /// plaintext connections. The widget only downloads images for display, so
+    /// this is a best-effort defense — the tight widget memory budget and
+    /// restricted networking make exfiltration impractical.
+    private func isSafeImageURL(_ url: URL) -> Bool {
+        url.scheme?.lowercased() == "https"
     }
 }
 
