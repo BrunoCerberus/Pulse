@@ -218,31 +218,11 @@ struct FeedView<R: FeedNavigationRouter>: View {
         VStack(spacing: Spacing.lg) {
             Spacer()
 
-            emptyStateCard
+            FeedEmptyStateView()
+                .padding(.horizontal, Spacing.md)
 
             Spacer()
         }
-    }
-
-    private var emptyStateCard: some View {
-        GlassCard(style: .thin, shadowStyle: .medium, padding: Spacing.xl) {
-            VStack(spacing: Spacing.md) {
-                Image(systemName: "doc.bubble")
-                    .font(.system(size: IconSize.xxl))
-                    .foregroundStyle(.secondary)
-                    .accessibilityHidden(true)
-
-                Text(Constants.emptyTitle)
-                    .font(Typography.titleMedium)
-                    .accessibilityAddTraits(.isHeader)
-
-                Text(Constants.emptyMessage)
-                    .font(Typography.bodyMedium)
-                    .foregroundStyle(.secondary)
-                    .multilineTextAlignment(.center)
-            }
-        }
-        .padding(.horizontal, Spacing.md)
     }
 
     // MARK: - Error View

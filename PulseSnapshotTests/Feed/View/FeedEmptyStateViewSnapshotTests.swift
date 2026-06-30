@@ -25,4 +25,30 @@ final class FeedEmptyStateViewSnapshotTests: XCTestCase {
             record: false
         )
     }
+
+    func testFeedEmptyStateAccessibility1() {
+        let view = FeedEmptyStateView()
+            .frame(maxWidth: .infinity, maxHeight: .infinity)
+
+        let controller = UIHostingController(rootView: view)
+
+        assertSnapshot(
+            of: controller,
+            as: SnapshotConfig.snapshotting(on: SnapshotConfig.iPhoneAirAccessibility),
+            record: false
+        )
+    }
+
+    func testFeedEmptyStateExtraLarge() {
+        let view = FeedEmptyStateView()
+            .frame(maxWidth: .infinity, maxHeight: .infinity)
+
+        let controller = UIHostingController(rootView: view)
+
+        assertSnapshot(
+            of: controller,
+            as: SnapshotConfig.snapshotting(on: SnapshotConfig.iPhoneAirExtraExtraLarge),
+            record: false
+        )
+    }
 }

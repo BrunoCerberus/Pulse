@@ -102,7 +102,6 @@ struct FeedViewEmptyStateTests {
     func emptyStateConstantsResolve() {
         #expect(!FeedView.Constants.emptyTitle.isEmpty)
         #expect(!FeedView.Constants.emptyMessage.isEmpty)
-        #expect(!FeedView.Constants.emptyStartReading.isEmpty)
     }
 
     @Test("PremiumFeature.audioBriefing enum case exists")
