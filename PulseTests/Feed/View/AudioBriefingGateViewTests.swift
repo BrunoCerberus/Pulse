@@ -65,29 +65,7 @@ struct AudioBriefingLocalizationBundleTests {
 
             for key in Self.briefingKeys {
                 let value = bundle.localizedString(forKey: key, value: nil, table: nil)
-                #expect(!value.isEmpty && !value.hasPrefix("%@"), "Key '\(key)' should have a non-empty value in \(localeCode)")
-            }
-        }
-    }
-
-    @Test("Briefing gate strings are non-empty in each locale")
-    func briefingStringsNonEmptyPerLocale() {
-        for localeCode in Self.locales {
-            guard let bundlePath = Bundle.main.path(
-                forResource: localeCode,
-                ofType: "lproj"
-            ) else { continue }
-
-            let bundle = Bundle(path: bundlePath)
-            guard let bundle else { continue }
-
-            for key in Self.briefingKeys {
-                let value = bundle.localizedString(forKey: key, value: nil, table: nil)
-                if !value.isEmpty, !value.hasPrefix("%@") {
-                    #expect(!value.isEmpty, "Key '\(key)' in \(localeCode) should not be empty")
-                } else {
-                    Issue.record("Missing or empty key '\(key)' in \(localeCode) bundle")
-                }
+                #expect(value != key && !value.isEmpty, "Key '\(key)' should have a non-empty value in \(localeCode)")
             }
         }
     }

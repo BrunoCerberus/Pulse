@@ -11,10 +11,6 @@ private enum Constants {
     static var message: String {
         AppLocalization.localized("feed.empty.message")
     }
-
-    static var startReading: String {
-        AppLocalization.localized("feed.start_reading")
-    }
 }
 
 // MARK: - FeedEmptyStateView
