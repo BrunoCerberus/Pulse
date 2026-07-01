@@ -1,7 +1,7 @@
 import Foundation
 
 /// Represents a daily AI-generated digest of articles the user has read
-struct DailyDigest: Equatable, Identifiable {
+struct DailyDigest: Equatable, Identifiable, Codable {
     let id: String
     let summary: String
     let sourceArticles: [Article]

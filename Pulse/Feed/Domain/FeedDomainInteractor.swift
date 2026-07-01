@@ -36,6 +36,10 @@ final class FeedDomainInteractor: CombineInteractor {
     private let forYouService: ForYouService?
     /// Global playback queue that runs the audio briefing.
     private let playbackQueueService: PlaybackQueueService?
+    /// Cache of today's opportunistically pre-generated Morning Briefing,
+    /// written by `MorningBriefingPrefetcher`. Optional: when missing, the
+    /// scheduled briefing falls back to on-demand generation.
+    private let briefingCacheService: BriefingCacheService?
     private let stateSubject = CurrentValueSubject<DomainState, Never>(.initial)
     private var cancellables = Set<AnyCancellable>()
     private var generationTask: Task<Void, Never>?
@@ -64,11 +68,12 @@ final class FeedDomainInteractor: CombineInteractor {
         storeKitService = try? serviceLocator.retrieve(StoreKitService.self)
         forYouService = try? serviceLocator.retrieve(ForYouService.self)
         playbackQueueService = try? serviceLocator.retrieve(PlaybackQueueService.self)
+        briefingCacheService = try? serviceLocator.retrieve(BriefingCacheService.self)
 
         setupModelStatusBinding()
     }
 
-    // swiftlint:disable:next cyclomatic_complexity
+    // swiftlint:disable:next cyclomatic_complexity function_body_length
     func dispatch(action: DomainAction) {
         switch action {
         case .loadInitialData:
@@ -88,6 +93,8 @@ final class FeedDomainInteractor: CombineInteractor {
             generateDigest()
         case .startAudioBriefing:
             startAudioBriefing()
+        case .startMorningBriefing:
+            startMorningBriefing()
         case let .digestTokenReceived(token):
             updateState { $0.streamingText += token }
         case let .digestCompleted(digest):
@@ -200,64 +207,21 @@ private extension FeedDomainInteractor {
         }
     }
 
-    // swiftlint:disable:next function_body_length
     func fetchLatestNews() {
         fetchArticlesTask?.cancel()
         updateState { $0.generationState = .loadingArticles }
 
-        // Capture newsService on MainActor before entering task group
         let newsService = UncheckedSendableBox(value: self.newsService)
 
         fetchArticlesTask = Task { @MainActor [weak self] in
             guard let self else { return }
             defer { self.fetchArticlesTask = nil }
-            var allArticles: [Article] = []
 
-            // Fetch 10 articles from each category in parallel
-            await withTaskGroup(of: [Article].self) { group in
-                for category in NewsCategory.allCases {
-                    group.addTask {
-                        do {
-                            // Convert Combine publisher to async
-                            let articles = try await withCheckedThrowingContinuation { continuation in
-                                var cancellable: AnyCancellable?
-                                cancellable = newsService.value
-                                    .fetchTopHeadlines(category: category, language: "en", country: "us", page: 1)
-                                    .first()
-                                    .sink(
-                                        receiveCompletion: { completion in
-                                            if case let .failure(error) = completion {
-                                                continuation.resume(throwing: error)
-                                            }
-                                            cancellable?.cancel()
-                                        },
-                                        receiveValue: { articles in
-                                            continuation.resume(returning: articles)
-                                        }
-                                    )
-                            }
-                            // Take first 10 articles from this category
-                            return Array(articles.prefix(10))
-                        } catch {
-                            Logger.shared.warning(
-                                "Failed to fetch \(category.displayName): \(error)",
-                                category: "FeedDomainInteractor"
-                            )
-                            return [] // Continue with other categories
-                        }
-                    }
-                }
-
-                for await articles in group {
-                    guard !Task.isCancelled else { return }
-                    allArticles.append(contentsOf: articles)
-                }
-            }
-
+            let allArticles = await FeedArticlePoolBuilder.fetchPool(
+                newsService: newsService.value,
+                language: AppLocalization.shared.language
+            )
             guard !Task.isCancelled else { return }
-
-            // Sort by publishedAt (most recent first) - capping happens in generateDigest()
-            allArticles.sort { $0.publishedAt > $1.publishedAt }
 
             if allArticles.isEmpty {
                 let isOffline = self.networkMonitor?.isConnected == false
@@ -351,7 +315,7 @@ private extension FeedDomainInteractor {
 
                     // Update UI with cleaned text during streaming
                     if tokensSinceLastUpdate >= updateBatchSize {
-                        let currentText = cleanLLMOutput(fullText)
+                        let currentText = Self.cleanLLMOutput(fullText)
                         await MainActor.run { [weak self] in
                             self?.updateState { $0.streamingText = currentText }
                         }
@@ -362,7 +326,7 @@ private extension FeedDomainInteractor {
                 guard !Task.isCancelled else { return }
 
                 // Create and save digest
-                let finalSummary = cleanLLMOutput(fullText)
+                let finalSummary = Self.cleanLLMOutput(fullText)
 
                 // Log generation result for debugging
                 Logger.shared.info(
@@ -414,12 +378,74 @@ private extension FeedDomainInteractor {
             state.streamingText = ""
             state.generationState = .completed
         }
+
+        if currentState.autoPlayBriefingOnCompletion {
+            updateState { $0.autoPlayBriefingOnCompletion = false }
+            startAudioBriefing()
+        }
     }
 }
 
 // MARK: - Audio Briefing
 
 private extension FeedDomainInteractor {
+    /// Entry point for the scheduled Morning Briefing (deeplink from the
+    /// local notification, or a manual replay of it). Plays instantly from
+    /// whatever digest is already available — either this session's
+    /// `currentDigest` or a same-day pre-generated cache — and only falls
+    /// back to a fresh on-demand generation when neither exists.
+    func startMorningBriefing() {
+        guard storeKitService?.isPremium != false else {
+            Logger.shared.service(
+                "Morning Briefing blocked: Premium entitlement not active",
+                level: .warning
+            )
+            return
+        }
+
+        // Already has a digest this session (e.g. the Feed tab was visited
+        // earlier today) — play immediately, no need to consult the cache.
+        if currentState.currentDigest != nil {
+            startAudioBriefing()
+            return
+        }
+
+        if let cached = briefingCacheService?.fetchIfFreshToday() {
+            updateState { state in
+                state.currentDigest = cached.digest
+                state.latestArticles = cached.queueArticles
+                state.hasLoadedInitialData = true
+                state.generationState = .completed
+            }
+            playCachedBriefing(cached)
+            return
+        }
+
+        // No digest anywhere: fetch fresh articles directly (bypassing
+        // `loadInitialData()`'s `hasLoadedInitialData` guard, since we've
+        // already established above that there's no usable digest to show)
+        // and let the existing auto-generate-on-load path
+        // (`handleArticlesLoaded` → `.generateDigest`) kick off generation.
+        // `handleDigestCompleted` auto-plays once it finishes.
+        updateState { $0.autoPlayBriefingOnCompletion = true }
+        preloadModel()
+        fetchLatestNews()
+    }
+
+    /// Plays a pre-generated briefing's exact queue directly, skipping
+    /// `startAudioBriefing()`'s ForYou re-scoring — `cached.queueArticles`
+    /// is already the final, ranked selection `MorningBriefingPrefetcher`
+    /// computed. Re-scoring it again against whatever the profile looks
+    /// like *now* could reorder or drop items relative to what was
+    /// prepared, and is wasted work for a queue that's already final.
+    func playCachedBriefing(_ cached: PregeneratedBriefing) {
+        guard let playbackQueueService else { return }
+        let language = AppLocalization.shared.language
+        let digestItem = PlaybackItem.digest(cached.digest, language: language)
+        let articleItems = cached.queueArticles.map { PlaybackItem.article($0, language: language) }
+        playbackQueueService.play(items: [digestItem] + articleItems, mode: .briefing)
+    }
+
     /// Assembles the Premium audio briefing and hands it to the global
     /// playback queue: digest narration first, then the top For You articles
     /// scored from the same pool the digest was built from. Falls back to a

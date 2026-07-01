@@ -154,6 +154,11 @@
 "settings.notifications_denied.title" = "Notifications Disabled";
 "settings.notifications_denied.message" = "Notifications are disabled in System Settings. Tap Open Settings to enable them.";
 "settings.notifications_denied.open_settings" = "Open Settings";
+"settings.morning_briefing" = "Morning Briefing";
+"settings.morning_briefing.enable" = "Daily Audio Briefing";
+"settings.morning_briefing.time" = "Briefing Time";
+"briefing.notification.title" = "Your Morning Briefing is Ready";
+"briefing.notification.body" = "Tap to listen to your personalized news briefing.";
 
 /* ==================== */
 /* MARK: - Account      */

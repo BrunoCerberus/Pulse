@@ -19,6 +19,12 @@ final class UserPreferencesModel {
     var notificationsEnabled: Bool = false
     /// Whether breaking news alerts are enabled (requires notificationsEnabled).
     var breakingNewsNotifications: Bool = false
+    /// Whether the scheduled daily audio briefing notification is enabled.
+    var morningBriefingEnabled: Bool = false
+    /// Hour (0-23) at which the daily briefing notification fires.
+    var morningBriefingHour: Int = 7
+    /// Minute (0-59) at which the daily briefing notification fires.
+    var morningBriefingMinute: Int = 0
 
     /// Creates a persistence model from domain preferences.
     /// - Parameter preferences: The domain preferences to persist.
@@ -29,6 +35,9 @@ final class UserPreferencesModel {
         preferredLanguage = preferences.preferredLanguage
         notificationsEnabled = preferences.notificationsEnabled
         breakingNewsNotifications = preferences.breakingNewsNotifications
+        morningBriefingEnabled = preferences.morningBriefingEnabled
+        morningBriefingHour = preferences.morningBriefingHour
+        morningBriefingMinute = preferences.morningBriefingMinute
     }
 
     /// Converts this persisted model back to domain preferences.
@@ -40,7 +49,10 @@ final class UserPreferencesModel {
             mutedKeywords: mutedKeywords,
             preferredLanguage: preferredLanguage,
             notificationsEnabled: notificationsEnabled,
-            breakingNewsNotifications: breakingNewsNotifications
+            breakingNewsNotifications: breakingNewsNotifications,
+            morningBriefingEnabled: morningBriefingEnabled,
+            morningBriefingHour: morningBriefingHour,
+            morningBriefingMinute: morningBriefingMinute
         )
     }
 }

@@ -154,6 +154,11 @@
 "settings.notifications_denied.title" = "Notificaciones Desactivadas";
 "settings.notifications_denied.message" = "Las notificaciones están desactivadas en Configuración del Sistema. Toca Abrir Configuración para activarlas.";
 "settings.notifications_denied.open_settings" = "Abrir Configuración";
+"settings.morning_briefing" = "Resumen Matutino";
+"settings.morning_briefing.enable" = "Resumen de Audio Diario";
+"settings.morning_briefing.time" = "Hora del Resumen";
+"briefing.notification.title" = "Tu Resumen Matutino está Listo";
+"briefing.notification.body" = "Toca para escuchar tu resumen de noticias personalizado.";
 
 /* ==================== */
 /* MARK: - Account      */

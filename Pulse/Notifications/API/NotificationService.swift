@@ -32,4 +32,11 @@ protocol NotificationService: AnyObject {
 
     /// Returns the last stored device token as a hex string, if any.
     var storedDeviceToken: String? { get }
+
+    /// Schedules (or reschedules) the daily Morning Briefing local
+    /// notification to fire at the given wall-clock time, every day.
+    func scheduleMorningBriefingNotification(hour: Int, minute: Int) async
+
+    /// Cancels the Morning Briefing local notification, if one is pending.
+    func cancelMorningBriefingNotification()
 }

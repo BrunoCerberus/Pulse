@@ -7,6 +7,9 @@ struct UserPreferences: Equatable, Codable {
     var preferredLanguage: String
     var notificationsEnabled: Bool
     var breakingNewsNotifications: Bool
+    var morningBriefingEnabled: Bool = false
+    var morningBriefingHour: Int = 7
+    var morningBriefingMinute: Int = 0
 
     static var `default`: UserPreferences {
         UserPreferences(
@@ -15,7 +18,10 @@ struct UserPreferences: Equatable, Codable {
             mutedKeywords: [],
             preferredLanguage: Locale.current.language.languageCode?.identifier ?? "en",
             notificationsEnabled: true,
-            breakingNewsNotifications: true
+            breakingNewsNotifications: true,
+            morningBriefingEnabled: false,
+            morningBriefingHour: 7,
+            morningBriefingMinute: 0
         )
     }
 }

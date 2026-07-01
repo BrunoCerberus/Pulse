@@ -64,6 +64,18 @@ extension SettingsView {
             AppLocalization.localized("settings.breaking_news_alerts")
         }
 
+        static var morningBriefing: String {
+            AppLocalization.localized("settings.morning_briefing")
+        }
+
+        static var morningBriefingEnable: String {
+            AppLocalization.localized("settings.morning_briefing.enable")
+        }
+
+        static var morningBriefingTime: String {
+            AppLocalization.localized("settings.morning_briefing.time")
+        }
+
         static var contentLanguage: String {
             AppLocalization.localized("settings.content_language")
         }

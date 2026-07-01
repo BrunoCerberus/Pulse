@@ -1,7 +1,10 @@
 import Foundation
 
 extension FeedDomainInteractor {
-    nonisolated func cleanLLMOutput(_ text: String) -> String {
+    /// `static` (not just `nonisolated`) so `MorningBriefingPrefetcher` can
+    /// reuse the exact same LLM-output cleanup without duplicating it —
+    /// this function touches no instance state.
+    nonisolated static func cleanLLMOutput(_ text: String) -> String {
         var cleaned = text
 
         // Remove null characters (LLM sometimes outputs these between tokens)

@@ -108,6 +108,7 @@ final class DeeplinkRouter {
         performRoute(deeplink: deeplink)
     }
 
+    // swiftlint:disable:next cyclomatic_complexity
     private func performRoute(deeplink: Deeplink) {
         guard let coordinator else {
             // Queue the deeplink for later processing
@@ -130,6 +131,10 @@ final class DeeplinkRouter {
 
         case .feed:
             coordinator.switchTab(to: .feed, popToRoot: true)
+
+        case .briefing:
+            coordinator.switchTab(to: .feed, popToRoot: true)
+            coordinator.feedViewModel.handle(event: .onMorningBriefingTapped)
 
         case .settings:
             coordinator.switchTab(to: .home, popToRoot: true)
