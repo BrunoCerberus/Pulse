@@ -58,6 +58,12 @@ enum FeedDomainAction: Equatable {
     /// Requires a completed digest.
     case startAudioBriefing
 
+    /// Entry point for the scheduled Morning Briefing (deeplink from the
+    /// local notification). Plays instantly from a pre-generated cache if
+    /// one exists for today, otherwise falls back to the on-demand
+    /// generation flow and auto-plays once it completes.
+    case startMorningBriefing
+
     // MARK: - Navigation
 
     /// Select an article from the digest sources to navigate to detail view.

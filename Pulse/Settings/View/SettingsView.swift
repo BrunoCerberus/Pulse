@@ -41,6 +41,7 @@ struct SettingsView: View {
                 personalizationSection
                 SettingsSecuritySection(lockManager: lockManager)
                 notificationsSection
+                morningBriefingSection
                 contentLanguageSection
                 appearanceSection
                 dataSection
@@ -212,6 +213,35 @@ struct SettingsView: View {
                 set: { viewModel.handle(event: .onToggleBreakingNews($0)) }
             ))
             .disabled(!viewModel.viewState.notificationsEnabled)
+        }
+    }
+
+    private var morningBriefingSection: some View {
+        Section(Constants.morningBriefing) {
+            Toggle(
+                Constants.morningBriefingEnable,
+                isOn: Binding(
+                    get: { viewModel.viewState.morningBriefingEnabled },
+                    set: { newValue in
+                        if newValue, !isPremium {
+                            isPaywallPresented = true
+                            return
+                        }
+                        viewModel.handle(event: .onToggleMorningBriefing(newValue))
+                    }
+                )
+            )
+
+            if viewModel.viewState.morningBriefingEnabled {
+                DatePicker(
+                    Constants.morningBriefingTime,
+                    selection: Binding(
+                        get: { viewModel.viewState.morningBriefingTime },
+                        set: { viewModel.handle(event: .onMorningBriefingTimeChanged($0)) }
+                    ),
+                    displayedComponents: .hourAndMinute
+                )
+            }
         }
     }
 

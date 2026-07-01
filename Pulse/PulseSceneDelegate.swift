@@ -31,6 +31,11 @@ final class PulseSceneDelegate: UIResponder, UIWindowSceneDelegate {
     /// lifetime; observes `didEnterBackgroundNotification` internally.
     private var topicExtractionDrainer: TopicExtractionDrainer?
 
+    /// Opportunistically pre-generates the Morning Briefing on foreground
+    /// activation. Retained for the scene's lifetime; see
+    /// `MorningBriefingPrefetcher` for the full bail-out conditions.
+    private var morningBriefingPrefetcher: MorningBriefingPrefetcher?
+
     /// Opaque window-level cover installed while the scene is inactive so the
     /// app-switcher snapshot can't leak on-screen content. Unlike the in-content
     /// SwiftUI overlay in `RootView`, a window-level cover also hides presented
@@ -73,6 +78,10 @@ final class PulseSceneDelegate: UIResponder, UIWindowSceneDelegate {
         // registered or if the For You feature flag is off — see drainer
         // for the full bail-out conditions).
         startTopicExtractionDrainer()
+
+        // Construct the Morning Briefing prefetcher; triggered on every
+        // subsequent `sceneDidBecomeActive`.
+        startMorningBriefingPrefetcher()
 
         // Preload LLM model in background for faster digest generation
         preloadLLMModelIfPremium()
@@ -120,6 +129,7 @@ final class PulseSceneDelegate: UIResponder, UIWindowSceneDelegate {
         MainActor.assumeIsolated {
             removePrivacyCover()
             AppLockManager.shared.handleSceneDidBecomeActive()
+            morningBriefingPrefetcher?.prefetchIfNeeded()
         }
     }
 
@@ -272,6 +282,26 @@ private extension PulseSceneDelegate {
         topicExtractionDrainer = drainer
     }
 
+    func startMorningBriefingPrefetcher() {
+        guard
+            let feedService = try? serviceLocator.retrieve(FeedService.self),
+            let newsService = try? serviceLocator.retrieve(NewsService.self),
+            let settingsService = try? serviceLocator.retrieve(SettingsService.self),
+            let briefingCacheService = try? serviceLocator.retrieve(BriefingCacheService.self)
+        else {
+            return
+        }
+        morningBriefingPrefetcher = MorningBriefingPrefetcher(
+            feedService: feedService,
+            newsService: newsService,
+            forYouService: try? serviceLocator.retrieve(ForYouService.self),
+            settingsService: settingsService,
+            briefingCacheService: briefingCacheService,
+            notificationService: try? serviceLocator.retrieve(NotificationService.self),
+            storeKitService: try? serviceLocator.retrieve(StoreKitService.self)
+        )
+    }
+
     func preloadLLMModelIfPremium() {
         Task.detached(priority: .utility) { [serviceLocator] in
             do {
@@ -356,6 +386,7 @@ private extension PulseSceneDelegate {
             serviceLocator.register(InterestProfileService.self, instance: MockInterestProfileService())
             serviceLocator.register(TopicExtractionService.self, instance: MockTopicExtractionService())
             serviceLocator.register(ForYouService.self, instance: MockForYouService())
+            serviceLocator.register(BriefingCacheService.self, instance: MockBriefingCacheService())
             let mockOnboarding = MockOnboardingService(hasCompletedOnboarding: true)
             serviceLocator.register(OnboardingService.self, instance: mockOnboarding)
 
@@ -453,6 +484,7 @@ private extension PulseSceneDelegate {
                 )
             )
         }
+        serviceLocator.register(BriefingCacheService.self, instance: LiveBriefingCacheService())
     }
 }
 

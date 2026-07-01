@@ -24,6 +24,8 @@ struct FeedEventActionMap: DomainEventActionMap {
             return .generateDigest
         case .onListenBriefingTapped:
             return .startAudioBriefing
+        case .onMorningBriefingTapped:
+            return .startMorningBriefing
         case let .onArticleTapped(article):
             return .selectArticle(article)
         case .onArticleNavigated:

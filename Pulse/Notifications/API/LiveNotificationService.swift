@@ -22,6 +22,11 @@ final class LiveNotificationService: NotificationService {
         static let deviceTokenKeychain = "device_token"
     }
 
+    /// Fixed identifier for the Morning Briefing local notification —
+    /// re-adding a request with this identifier replaces any pending one,
+    /// so `scheduleMorningBriefingNotification` never needs to cancel first.
+    private static let morningBriefingIdentifier = "com.pulse.morningBriefing"
+
     /// Initializer is `internal` (not `private`) so unit tests can build
     /// instances with an `InMemoryKeychainStore` and a suite-scoped
     /// `UserDefaults`. Production code should still go through `.shared`.
@@ -75,6 +80,36 @@ final class LiveNotificationService: NotificationService {
 
     var storedDeviceToken: String? {
         try? keychain.retrieve(for: Keys.deviceTokenKeychain)
+    }
+
+    func scheduleMorningBriefingNotification(hour: Int, minute: Int) async {
+        let content = UNMutableNotificationContent()
+        content.title = AppLocalization.shared.localized("briefing.notification.title")
+        content.body = AppLocalization.shared.localized("briefing.notification.body")
+        content.sound = .default
+        content.userInfo = ["deeplink": "pulse://briefing"]
+
+        var dateComponents = DateComponents()
+        dateComponents.hour = hour
+        dateComponents.minute = minute
+        let trigger = UNCalendarNotificationTrigger(dateMatching: dateComponents, repeats: true)
+
+        let request = UNNotificationRequest(
+            identifier: Self.morningBriefingIdentifier,
+            content: content,
+            trigger: trigger
+        )
+
+        do {
+            try await UNUserNotificationCenter.current().add(request)
+        } catch {
+            Logger.shared.service("Failed to schedule Morning Briefing notification: \(error)", level: .warning)
+        }
+    }
+
+    func cancelMorningBriefingNotification() {
+        UNUserNotificationCenter.current()
+            .removePendingNotificationRequests(withIdentifiers: [Self.morningBriefingIdentifier])
     }
 
     /// One-time migration: device tokens used to live in `UserDefaults`. Push

@@ -29,6 +29,9 @@ enum Deeplink: Equatable {
     /// Navigate to the Feed tab (AI Daily Digest).
     case feed
 
+    /// Navigate to the Feed tab and start playing the Morning Briefing.
+    case briefing
+
     /// Navigate to the Settings screen.
     case settings
 
@@ -144,6 +147,8 @@ final class DeeplinkManager: ObservableObject {
             deeplink = .bookmarks
         case "feed":
             deeplink = .feed
+        case "briefing":
+            deeplink = .briefing
         case "settings":
             deeplink = .settings
         case "article":

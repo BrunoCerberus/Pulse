@@ -55,6 +55,19 @@ struct DeeplinkRouterTests {
         #expect(coordinator.feedPath.count == 0)
     }
 
+    // MARK: - Morning Briefing Deeplink Tests
+
+    @Test("Route briefing deeplink switches to feed tab, pops to root, and triggers the briefing event")
+    func routeBriefingDeeplink() {
+        sut.setCoordinator(coordinator)
+        coordinator.selectedTab = .home
+
+        sut.route(deeplink: .briefing)
+
+        #expect(coordinator.selectedTab == .feed)
+        #expect(coordinator.feedPath.count == 0)
+    }
+
     // MARK: - Search Deeplink Tests
 
     @Test("Route search deeplink without query switches to search tab")

@@ -128,6 +128,14 @@ final class SettingsViewModel: CombineViewModel, ObservableObject {
             interactor.dispatch(action: .toggleNotifications(enabled))
         case let .onToggleBreakingNews(enabled):
             interactor.dispatch(action: .toggleBreakingNews(enabled))
+        case let .onToggleMorningBriefing(enabled):
+            interactor.dispatch(action: .toggleMorningBriefing(enabled))
+        case let .onMorningBriefingTimeChanged(time):
+            let components = Calendar.current.dateComponents([.hour, .minute], from: time)
+            interactor.dispatch(action: .changeMorningBriefingTime(
+                hour: components.hour ?? 7,
+                minute: components.minute ?? 0
+            ))
         case let .onLanguageChanged(language):
             interactor.dispatch(action: .changeLanguage(language))
         default:
@@ -453,11 +461,19 @@ final class SettingsViewModel: CombineViewModel, ObservableObject {
                 }
                 return nil
             }()
+            let morningBriefingTime = Calendar.current.date(
+                bySettingHour: state.preferences.morningBriefingHour,
+                minute: state.preferences.morningBriefingMinute,
+                second: 0,
+                of: Date()
+            ) ?? Date()
             return SettingsViewState(
                 mutedSources: state.preferences.mutedSources,
                 mutedKeywords: state.preferences.mutedKeywords,
                 notificationsEnabled: state.preferences.notificationsEnabled,
                 breakingNewsEnabled: state.preferences.breakingNewsNotifications,
+                morningBriefingEnabled: state.preferences.morningBriefingEnabled,
+                morningBriefingTime: morningBriefingTime,
                 isDarkMode: isDarkMode,
                 useSystemTheme: useSystemTheme,
                 isLoading: state.isLoading,
@@ -483,6 +499,8 @@ struct SettingsViewState: Equatable {
     var mutedKeywords: [String]
     var notificationsEnabled: Bool
     var breakingNewsEnabled: Bool
+    var morningBriefingEnabled: Bool
+    var morningBriefingTime: Date
     var isDarkMode: Bool
     var useSystemTheme: Bool
     var isLoading: Bool
@@ -502,6 +520,8 @@ struct SettingsViewState: Equatable {
             mutedKeywords: [],
             notificationsEnabled: true,
             breakingNewsEnabled: true,
+            morningBriefingEnabled: false,
+            morningBriefingTime: Calendar.current.date(bySettingHour: 7, minute: 0, second: 0, of: Date()) ?? Date(),
             isDarkMode: false,
             useSystemTheme: true,
             isLoading: false,
@@ -522,6 +542,8 @@ enum SettingsViewEvent: Equatable {
     case onAppear
     case onToggleNotifications(Bool)
     case onToggleBreakingNews(Bool)
+    case onToggleMorningBriefing(Bool)
+    case onMorningBriefingTimeChanged(Date)
     case onToggleDarkMode(Bool)
     case onToggleSystemTheme(Bool)
     case onLanguageChanged(String)

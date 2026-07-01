@@ -21,6 +21,7 @@ struct DeeplinkManagerTests {
             ("pulse://home", Deeplink.home),
             ("pulse://bookmarks", Deeplink.bookmarks),
             ("pulse://feed", Deeplink.feed),
+            ("pulse://briefing", Deeplink.briefing),
             ("pulse://settings", Deeplink.settings),
             ("pulse://search", Deeplink.search(query: nil)),
             ("pulse://search?q=swift", Deeplink.search(query: "swift")),

@@ -31,6 +31,7 @@ final class SettingsDomainInteractor: CombineInteractor {
     private let settingsService: SettingsService
     private let notificationService: NotificationService
     private let analyticsService: AnalyticsService?
+    private let storeKitService: StoreKitService?
     private let stateSubject = CurrentValueSubject<DomainState, Never>(.initial)
     private var cancellables = Set<AnyCancellable>()
 
@@ -53,6 +54,7 @@ final class SettingsDomainInteractor: CombineInteractor {
         notificationService = (try? serviceLocator.retrieve(NotificationService.self))
             ?? LiveNotificationService.shared
         analyticsService = try? serviceLocator.retrieve(AnalyticsService.self)
+        storeKitService = try? serviceLocator.retrieve(StoreKitService.self)
 
         NotificationCenter.default.publisher(for: .cloudSyncDidComplete)
             .receive(on: DispatchQueue.main)
@@ -62,6 +64,7 @@ final class SettingsDomainInteractor: CombineInteractor {
             .store(in: &cancellables)
     }
 
+    // swiftlint:disable:next cyclomatic_complexity
     func dispatch(action: DomainAction) {
         switch action {
         case .loadPreferences:
@@ -70,6 +73,10 @@ final class SettingsDomainInteractor: CombineInteractor {
             Task { @MainActor in await toggleNotifications(enabled) }
         case let .toggleBreakingNews(enabled):
             toggleBreakingNews(enabled)
+        case let .toggleMorningBriefing(enabled):
+            Task { @MainActor in await toggleMorningBriefing(enabled) }
+        case let .changeMorningBriefingTime(hour, minute):
+            Task { @MainActor in await changeMorningBriefingTime(hour: hour, minute: minute) }
         case let .changeLanguage(language):
             changeLanguage(language)
         case .addMutedSource, .removeMutedSource, .addMutedKeyword, .removeMutedKeyword:
@@ -221,6 +228,66 @@ final class SettingsDomainInteractor: CombineInteractor {
         savePreferences(preferences)
     }
 
+    private func toggleMorningBriefing(_ enabled: Bool) async {
+        guard enabled else {
+            notificationService.cancelMorningBriefingNotification()
+            var preferences = currentState.preferences
+            preferences.morningBriefingEnabled = false
+            savePreferences(preferences)
+            return
+        }
+
+        // Defense-in-depth: re-verify the Premium entitlement at the service
+        // boundary, not just in the view layer, in case a tampered client
+        // dispatches `.toggleMorningBriefing(true)` directly.
+        guard storeKitService?.isPremium != false else {
+            Logger.shared.service(
+                "Morning Briefing enable blocked: Premium entitlement not active",
+                level: .warning
+            )
+            return
+        }
+
+        let status = await notificationService.authorizationStatus()
+        switch status {
+        case .notDetermined:
+            do {
+                let granted = try await notificationService.requestAuthorization()
+                guard granted else {
+                    updateState { state in state.showNotificationsDeniedAlert = true }
+                    return
+                }
+                await scheduleAndSaveMorningBriefing()
+            } catch {
+                updateState { state in state.error = error.localizedDescription }
+            }
+        case .authorized, .provisional:
+            await scheduleAndSaveMorningBriefing()
+        case .denied:
+            updateState { state in state.showNotificationsDeniedAlert = true }
+        }
+    }
+
+    private func scheduleAndSaveMorningBriefing() async {
+        var preferences = currentState.preferences
+        preferences.morningBriefingEnabled = true
+        await notificationService.scheduleMorningBriefingNotification(
+            hour: preferences.morningBriefingHour,
+            minute: preferences.morningBriefingMinute
+        )
+        savePreferences(preferences)
+    }
+
+    private func changeMorningBriefingTime(hour: Int, minute: Int) async {
+        var preferences = currentState.preferences
+        preferences.morningBriefingHour = hour
+        preferences.morningBriefingMinute = minute
+        if preferences.morningBriefingEnabled {
+            await notificationService.scheduleMorningBriefingNotification(hour: hour, minute: minute)
+        }
+        savePreferences(preferences)
+    }
+
     private func changeLanguage(_ language: String) {
         var preferences = currentState.preferences
         preferences.preferredLanguage = language
@@ -304,6 +371,8 @@ enum SettingsDomainAction: Equatable {
     case loadPreferences
     case toggleNotifications(Bool)
     case toggleBreakingNews(Bool)
+    case toggleMorningBriefing(Bool)
+    case changeMorningBriefingTime(hour: Int, minute: Int)
     case changeLanguage(String)
     case addMutedSource(String)
     case removeMutedSource(String)

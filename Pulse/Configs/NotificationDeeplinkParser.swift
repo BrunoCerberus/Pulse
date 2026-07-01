@@ -48,6 +48,7 @@ enum NotificationDeeplinkParser {
         switch components.host {
         case "home": return .home
         case "feed": return .feed
+        case "briefing": return .briefing
         case "bookmarks": return .bookmarks
         case "settings": return .settings
         case "search":
@@ -75,6 +76,7 @@ enum NotificationDeeplinkParser {
         switch type {
         case "home": return .home
         case "feed": return .feed
+        case "briefing": return .briefing
         case "bookmarks": return .bookmarks
         case "settings": return .settings
         case "search":

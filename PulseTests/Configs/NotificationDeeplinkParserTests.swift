@@ -20,6 +20,13 @@ struct NotificationDeeplinkParserTests {
         #expect(result == .feed)
     }
 
+    @Test("Parse full deeplink URL - briefing")
+    func parseFullDeeplinkURLBriefing() {
+        let userInfo: [AnyHashable: Any] = ["deeplink": "pulse://briefing"]
+        let result = NotificationDeeplinkParser.parse(from: userInfo)
+        #expect(result == .briefing)
+    }
+
     @Test("Parse full deeplink URL - bookmarks")
     func parseFullDeeplinkURLBookmarks() {
         let userInfo: [AnyHashable: Any] = ["deeplink": "pulse://bookmarks"]
@@ -130,6 +137,13 @@ struct NotificationDeeplinkParserTests {
         let userInfo: [AnyHashable: Any] = ["deeplinkType": "feed"]
         let result = NotificationDeeplinkParser.parse(from: userInfo)
         #expect(result == .feed)
+    }
+
+    @Test("Parse typed deeplink - briefing")
+    func parseTypedDeeplinkBriefing() {
+        let userInfo: [AnyHashable: Any] = ["deeplinkType": "briefing"]
+        let result = NotificationDeeplinkParser.parse(from: userInfo)
+        #expect(result == .briefing)
     }
 
     @Test("Parse typed deeplink - bookmarks")

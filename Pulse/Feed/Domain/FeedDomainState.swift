@@ -57,6 +57,13 @@ struct FeedDomainState: Equatable {
     /// Whether the current error is due to being offline.
     var isOfflineError: Bool
 
+    /// Set by `startMorningBriefing()` when no pre-generated briefing was
+    /// cached and it falls back to the on-demand generation flow. Consumed
+    /// by `handleDigestCompleted(_:)`, which starts playback once the
+    /// fallback digest finishes generating instead of waiting for a manual
+    /// "Listen" tap.
+    var autoPlayBriefingOnCompletion: Bool = false
+
     /// Creates the default initial state.
     /// Starts with `.loadingArticles` to ensure processing animation shows immediately.
     static var initial: FeedDomainState {
@@ -68,7 +75,8 @@ struct FeedDomainState: Equatable {
             modelStatus: .notLoaded,
             hasLoadedInitialData: false,
             selectedArticle: nil,
-            isOfflineError: false
+            isOfflineError: false,
+            autoPlayBriefingOnCompletion: false
         )
     }
 
