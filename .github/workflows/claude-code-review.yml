@@ -40,6 +40,37 @@ jobs:
         with:
           fetch-depth: 1
 
+      # Each push re-runs this job, so without cleanup, stale inline comments and
+      # review verdicts from earlier commits pile up alongside the new ones. Remove
+      # them before posting a fresh review so only the latest-commit review is live.
+      - name: Clean up stale claude[bot] review output from previous commits
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          REPO: ${{ github.repository }}
+          PR_NUMBER: ${{ github.event.pull_request.number }}
+        run: |
+          echo "Deleting stale claude[bot] inline review comments..."
+          gh api "repos/${REPO}/pulls/${PR_NUMBER}/comments" --paginate \
+            --jq '.[] | select(.user.login == "claude[bot]") | .id' |
+          while read -r id; do
+            gh api -X DELETE "repos/${REPO}/pulls/comments/${id}" || true
+          done
+
+          echo "Dismissing stale claude[bot] review verdicts..."
+          gh api "repos/${REPO}/pulls/${PR_NUMBER}/reviews" --paginate \
+            --jq '.[] | select(.user.login == "claude[bot]" and (.state == "APPROVED" or .state == "CHANGES_REQUESTED")) | .id' |
+          while read -r id; do
+            gh api -X PUT "repos/${REPO}/pulls/${PR_NUMBER}/reviews/${id}/dismissals" \
+              -f message="Superseded by a new automated review on the latest commit." || true
+          done
+
+          echo "Deleting stale claude[bot] progress/summary comments..."
+          gh api "repos/${REPO}/issues/${PR_NUMBER}/comments" --paginate \
+            --jq '.[] | select(.user.login == "claude[bot]") | .id' |
+          while read -r id; do
+            gh api -X DELETE "repos/${REPO}/issues/comments/${id}" || true
+          done
+
       - name: Run Claude Code Review
         id: claude-review
         uses: anthropics/claude-code-action@686da461dadac38c2bde9089909de4042a75ebf0 # v1
