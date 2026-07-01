@@ -88,7 +88,7 @@ jobs:
                `poc` is a failing-Swift-Testing-case sketch or "unproven". Write an empty
                array `[]` if you have no candidates. Do not post comments. Do not run
                `gh pr review` or `gh pr comment`.
-          claude_args: '--model "claude-sonnet-4-6" --allowedTools "Read,Grep,Glob,Write,Bash(gh pr diff:*),Bash(gh pr view:*)"'
+          claude_args: '--model "claude-sonnet-5" --allowedTools "Read,Grep,Glob,Write,Bash(gh pr diff:*),Bash(gh pr view:*)"'
 
       - name: Ensure findings file exists
         if: always()
@@ -164,7 +164,7 @@ jobs:
             - Post ONE summary comment via `gh pr comment`: confirmed vs refuted counts,
               and one line per refuted candidate with the mitigation that killed it.
             - Do NOT run `gh pr review`. This pass is advisory and never blocks merges.
-          claude_args: '--model "claude-sonnet-4-6" --allowedTools "Read,Grep,Glob,Bash(cat:*),mcp__github_inline_comment__create_inline_comment,Bash(gh pr comment:*),Bash(gh pr diff:*),Bash(gh pr view:*)"'
+          claude_args: '--model "claude-sonnet-5" --allowedTools "Read,Grep,Glob,Bash(cat:*),mcp__github_inline_comment__create_inline_comment,Bash(gh pr comment:*),Bash(gh pr diff:*),Bash(gh pr view:*)"'
 
       - name: Verification summary
         if: always()
@@ -225,7 +225,7 @@ jobs:
                `security-sweep-findings.md` at the repo root, using the per-finding
                format from SEVERITY_RUBRIC.md. If there are none, write a file
                containing exactly "No substantiated findings this run."
-          claude_args: '--model "claude-sonnet-4-6" --allowedTools "Read,Grep,Glob,Write,Bash(git log:*)"'
+          claude_args: '--model "claude-sonnet-5" --allowedTools "Read,Grep,Glob,Write,Bash(git log:*)"'
 
       - name: Publish findings to job summary
         if: always()
