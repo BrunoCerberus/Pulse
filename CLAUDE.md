@@ -91,7 +91,7 @@ Pulse/
 | **Concurrency** | `CombineAsyncBridge.swift` | `UncheckedSendableBox`, `WeakRef` |
 | **Localization** | `AppLocalization.swift`, `ContentLanguage.swift`, `{en,pt,es}.lproj/Localizable.strings` | `@MainActor` singleton, `nonisolated localized()` |
 | **Storage** | `StorageService.swift`, `LiveStorageService.swift`, `ReadArticle.swift` | SwiftData + CloudKit private DB |
-| **CloudSync** | `CloudSyncService.swift`, `LiveCloudSyncService.swift`, `CloudSyncDomainInteractor.swift`, `CloudSyncNotifications.swift` | Bridges CloudKit + `CKAccountChanged` into Combine |
+| **CloudSync** | `CloudSyncService.swift`, `LiveCloudSyncService.swift`, `CloudSyncDomainInteractor.swift`, `CloudSyncNotifications.swift` | Bridges `NSPersistentCloudKitContainer.eventChangedNotification` + `CKAccountChanged` into Combine |
 | **LLM** | `LLMService.swift`, `LiveLLMService.swift`, `LLMModelManager.swift`, `LLMConfiguration.swift` | SwiftLlama, pinned thread + CFRunLoop, Metal 32 GPU layers |
 | **StoreKit** | `StoreKitService.swift`, `LiveStoreKitService.swift`, `MockStoreKitService.swift`, `PremiumGateView.swift` (has `PremiumFeature` enum), `PaywallView.swift` | StoreKit 2; `MOCK_PREMIUM` env var for UI tests |
 | **TTS** | `TextToSpeechService.swift`, `LiveTextToSpeechService.swift`, `SpeechPlayerBarView.swift` | `AVSpeechSynthesizer` + Now Playing + remote commands |
