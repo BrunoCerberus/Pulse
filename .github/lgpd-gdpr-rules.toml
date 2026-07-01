@@ -60,4 +60,9 @@ paths = [
   '''\.github/lgpd-gdpr-rules\.toml''',
   '''\.github/pii-allowlist\.txt''',
   '''\.github/workflows/privacy-conformance\.yml''',
+  # Merged into privacy-conformance.yml (2026-07), but gitleaks scans full git
+  # history and these files' illustrative CPF/CNPJ/SSN regexes live in old
+  # commits forever — the path allowlist must keep covering them.
+  '''\.github/workflows/lgpd-conformance\.yml''',
+  '''\.github/workflows/gdpr-conformance\.yml''',
 ]
