@@ -10,7 +10,7 @@
 - `docs.yml` — DocC build (broken-reference check) on PR + master
 - `pr-title.yml` — Conventional Commit PR-title lint
 - `claude-code-review.yml` — Claude review on PR open/sync
-- `claude-security-review.yml` — advisory threat-model-guided security pass: two-stage `pr-discovery` → separate-context `pr-verify` on PRs + a weekly Monday 06:00 UTC full-repo sweep (`workflow_dispatch`-able); distinct from `claude-code-review.yml` and intentionally **not** in the required-check ruleset
+- `claude-security-review.yml` — threat-model-guided security pass: two-stage `pr-discovery` → separate-context `pr-verify` on PRs + a weekly Monday 06:00 UTC full-repo sweep (`workflow_dispatch`-able); distinct from `claude-code-review.yml`. The jobs are required checks (they must run), but findings are advisory — verify never sets a review verdict
 - `codeql.yml` — CodeQL security analysis on PR + weekly
 - `privacy-conformance.yml` — LGPD (Brazil, Lei 13.709/2018) + GDPR (EU 2016/679) + CCPA / CPRA (California §1798.100 et seq.) PR gates
 - `scheduled-tests.yml` — daily at 2 AM UTC (+ Claude auto-fix on failure)

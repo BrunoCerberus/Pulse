@@ -13,10 +13,11 @@ name: Claude Security Review
 # calls out: a discovery agent that self-verifies filters out true positives a separate
 # step would have confirmed.
 #
-# ADVISORY by design: verify only leaves comments — it never runs `gh pr review`, sets
-# no verdict, and is NOT in the master required-check ruleset. Promote later via the
-# ruleset (PUT) once its signal-to-noise is trusted. Scoped by THREAT_MODEL.md +
-# SEVERITY_RUBRIC.md.
+# ADVISORY verdicts by design: verify only leaves comments — it never runs
+# `gh pr review` and sets no verdict. The pr-discovery / pr-verify JOBS are in the
+# master required-check ruleset (they must run, and their claude-code-action steps
+# are continue-on-error, so a flaky action doesn't block merges), but no finding
+# ever turns the check red. Scoped by THREAT_MODEL.md + SEVERITY_RUBRIC.md.
 
 on:
   pull_request:
