@@ -176,6 +176,6 @@ in `.github/pii-allowlist.txt`.
 
 ---
 
-*Maintained alongside the privacy-conformance workflows (`lgpd-conformance.yml`,
-`gdpr-conformance.yml`), which gate merges on deterministic privacy checks. Those are
-intentionally separate from this security loop — keep them so.*
+*Maintained alongside the privacy-conformance workflow (`privacy-conformance.yml`),
+which gates merges on deterministic privacy checks. Those are intentionally separate
+from this security loop — keep them so.*

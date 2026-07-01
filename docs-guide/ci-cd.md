@@ -4,7 +4,7 @@
 
 ## Workflows
 
-- `ci.yml` — code quality (incl. localization key parity) + a `security-audit` job (mobsfscan iOS SAST, HTTPS-only network-call check, privacy-manifest validation, ATS-exception + entitlements + file-permission audit, dependency review) + Debug build + Release build + unit/UI/snapshot tests on iPhone, plus a UI-test pass on iPad (regular size class) + patch & overall coverage, on PR **and push to master**. Build/release/test jobs share the `.github/actions/setup-ios` composite action (Xcode select + SPM cache + xcodegen + `make generate`).
+- `ci.yml` — code quality (incl. localization key parity) + a `security-audit` job (mobsfscan iOS SAST, HTTPS-only network-call check, privacy-manifest validation, ATS-exception + entitlements + file-permission audit, dependency review) + Debug build + Release build + unit/UI/snapshot tests on iPhone, plus a UI-test pass on iPad (regular size class) + patch & overall coverage, on PR **and push to master**. Build/release/test jobs share the `.github/actions/setup-ios` composite action (Xcode select + SPM cache + xcodegen + `make generate`); the security-audit body lives in `reusable-security-audit.yml` (pinned tools here; the nightly calls it with latest tools + gitleaks).
 - `actionlint.yml` — lints workflow YAML (schema, `${{ }}` exprs, `uses:` refs) + shellcheck over embedded `run:` blocks; a **required** status check that runs unconditionally (no `paths:` filter) on every push to master / PR so it can't deadlock as a pending required check
 - `release.yml` — version bump → Release archive → GitHub Release; App Store Connect upload dormant until secrets exist (see [Releasing](#releasing))
 - `docs.yml` — DocC build (broken-reference check) on PR + master
@@ -12,15 +12,14 @@
 - `claude-code-review.yml` — Claude review on PR open/sync
 - `claude-security-review.yml` — advisory threat-model-guided security pass: two-stage `pr-discovery` → separate-context `pr-verify` on PRs + a weekly Monday 06:00 UTC full-repo sweep (`workflow_dispatch`-able); distinct from `claude-code-review.yml` and intentionally **not** in the required-check ruleset
 - `codeql.yml` — CodeQL security analysis on PR + weekly
-- `lgpd-conformance.yml` — LGPD (Brazil, Lei 13.709/2018) PR gates
-- `gdpr-conformance.yml` — GDPR (EU 2016/679) + CCPA / CPRA (California §1798.100 et seq.) PR gates
+- `privacy-conformance.yml` — LGPD (Brazil, Lei 13.709/2018) + GDPR (EU 2016/679) + CCPA / CPRA (California §1798.100 et seq.) PR gates
 - `scheduled-tests.yml` — daily at 2 AM UTC (+ Claude auto-fix on failure)
 
 > The CI test matrix runs unit (`PulseTests`) and snapshot (`PulseSnapshotTests`) suites on iPhone Air only; the UI suite (`PulseUITests`) runs on both iPhone Air **and** iPad (the iPad entry exercises the regular size class).
 
 ## Privacy conformance
 
-The two conformance workflows mirror the shape of the same-named workflows in `pulse-backend`. Each runs four parallel jobs on push to master + PRs + weekly:
+One workflow (`privacy-conformance.yml`) covers all three regimes — LGPD, GDPR, and CCPA/CPRA overlap ~80%, so the checks are shared with per-regime steps where they differ. It runs four parallel jobs on push to master + PRs + weekly:
 
 - **PII Scan** — CPF/CNPJ/SSN regex bans, email allowlist in `.github/pii-allowlist.txt`, gitleaks with custom rules in `.github/lgpd-gdpr-rules.toml`
 - **Docs Presence** — `README.md` / `AGENTS.md` / `CLAUDE.md` / `Pulse/PrivacyInfo.xcprivacy` exist and are non-empty; README mentions privacy

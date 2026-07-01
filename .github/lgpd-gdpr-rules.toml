@@ -59,6 +59,5 @@ description = "Documentation and config files that intentionally reference the p
 paths = [
   '''\.github/lgpd-gdpr-rules\.toml''',
   '''\.github/pii-allowlist\.txt''',
-  '''\.github/workflows/lgpd-conformance\.yml''',
-  '''\.github/workflows/gdpr-conformance\.yml''',
+  '''\.github/workflows/privacy-conformance\.yml''',
 ]

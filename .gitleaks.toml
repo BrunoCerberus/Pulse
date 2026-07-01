@@ -1,6 +1,13 @@
 # Gitleaks configuration — manage false positives
 # https://github.com/gitleaks/gitleaks#configuration
 
+# Without this, a custom config replaces the default ruleset entirely — a
+# config with only an [allowlist] section scans with ZERO detectors and
+# silently finds nothing (which is exactly what the nightly scan did until
+# this was added).
+[extend]
+  useDefault = true
+
 [allowlist]
   description = "Pulse false positive allowlist"
   # Only exclude generated/binary artifacts. Source and test directories are

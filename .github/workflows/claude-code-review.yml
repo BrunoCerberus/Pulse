@@ -43,15 +43,23 @@ jobs:
       # Each push re-runs this job, so without cleanup, stale inline comments and
       # review verdicts from earlier commits pile up alongside the new ones. Remove
       # them before posting a fresh review so only the latest-commit review is live.
+      # Comments carrying the claude-security-review marker are EXCLUDED: that
+      # workflow posts as the same claude[bot] user on the same PR events, and
+      # deleting by login alone would wipe its findings. This job stays the
+      # catch-all owner of every unmarked claude[bot] comment (including both
+      # workflows' action-generated progress comments); the security workflow
+      # deletes only its own marked output.
       - name: Clean up stale claude[bot] review output from previous commits
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           REPO: ${{ github.repository }}
           PR_NUMBER: ${{ github.event.pull_request.number }}
+          SECURITY_MARKER: "<!-- claude-security-review -->"
         run: |
           echo "Deleting stale claude[bot] inline review comments..."
-          gh api "repos/${REPO}/pulls/${PR_NUMBER}/comments" --paginate \
-            --jq '.[] | select(.user.login == "claude[bot]") | .id' |
+          gh api "repos/${REPO}/pulls/${PR_NUMBER}/comments" --paginate |
+          jq -r --arg marker "$SECURITY_MARKER" \
+            '.[] | select(.user.login == "claude[bot]" and (.body | contains($marker) | not)) | .id' |
           while read -r id; do
             gh api -X DELETE "repos/${REPO}/pulls/comments/${id}" || true
           done
@@ -65,8 +73,9 @@ jobs:
           done
 
           echo "Deleting stale claude[bot] progress/summary comments..."
-          gh api "repos/${REPO}/issues/${PR_NUMBER}/comments" --paginate \
-            --jq '.[] | select(.user.login == "claude[bot]") | .id' |
+          gh api "repos/${REPO}/issues/${PR_NUMBER}/comments" --paginate |
+          jq -r --arg marker "$SECURITY_MARKER" \
+            '.[] | select(.user.login == "claude[bot]" and (.body | contains($marker) | not)) | .id' |
           while read -r id; do
             gh api -X DELETE "repos/${REPO}/issues/comments/${id}" || true
           done
