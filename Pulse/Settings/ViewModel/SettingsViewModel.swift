@@ -397,6 +397,10 @@ final class SettingsViewModel: CombineViewModel, ObservableObject {
         //     (as is this method), so no boxing is needed.
         if let notificationService = try? serviceLocator.retrieve(NotificationService.self) {
             await notificationService.unregisterForRemoteNotifications()
+            // A pending Morning Briefing local notification is scheduled
+            // independent of APNs registration — leaving it pending would
+            // fire for whichever account is signed in when it triggers.
+            notificationService.cancelMorningBriefingNotification()
         }
 
         // 5. Clear UserDefaults preferences
@@ -407,6 +411,10 @@ final class SettingsViewModel: CombineViewModel, ObservableObject {
         defaults.removeObject(forKey: "pulse.preferredLanguage")
         defaults.removeObject(forKey: "pulse.notificationsEnabled")
         defaults.removeObject(forKey: "pulse.deviceToken")
+        // Pre-generated Morning Briefing content is personalized (digest +
+        // ForYou queue) — leaving it would leak into the next signed-in
+        // account on a shared device.
+        defaults.removeObject(forKey: LiveBriefingCacheService.storageKey)
 
         // 6. Reset ThemeManager to system defaults
         themeManager.useSystemTheme = true

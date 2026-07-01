@@ -14,7 +14,11 @@ enum FeedArticlePoolBuilder {
     /// returns them flattened, sorted by `publishedAt` (most recent first).
     /// A category that fails to fetch contributes no articles rather than
     /// failing the whole pool.
-    static func fetchPool(newsService: NewsService) async -> [Article] {
+    /// - Parameter language: ISO 639-1 code matching the user's Content
+    ///   Language preference (`AppLocalization.shared.language`) — callers
+    ///   read this on `@MainActor` and pass it in, since this function
+    ///   itself isn't actor-isolated.
+    static func fetchPool(newsService: NewsService, language: String = "en") async -> [Article] {
         let service = UncheckedSendableBox(value: newsService)
         var allArticles: [Article] = []
 
@@ -25,7 +29,7 @@ enum FeedArticlePoolBuilder {
                         let articles = try await withCheckedThrowingContinuation { continuation in
                             var cancellable: AnyCancellable?
                             cancellable = service.value
-                                .fetchTopHeadlines(category: category, language: "en", country: "us", page: 1)
+                                .fetchTopHeadlines(category: category, language: language, country: "us", page: 1)
                                 .first()
                                 .sink(
                                     receiveCompletion: { completion in

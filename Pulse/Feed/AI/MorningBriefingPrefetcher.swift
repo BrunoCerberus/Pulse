@@ -52,6 +52,7 @@ final class MorningBriefingPrefetcher {
         }
     }
 
+    // swiftlint:disable:next function_body_length
     private func run() async {
         // Absence of a registered StoreKitService (previews / unit tests)
         // doesn't gate — matches the `!= false` convention used by
@@ -76,7 +77,10 @@ final class MorningBriefingPrefetcher {
         guard briefingCacheService.fetchIfFreshToday() == nil else { return }
 
         let newsServiceBox = UncheckedSendableBox(value: newsService)
-        let pool = await FeedArticlePoolBuilder.fetchPool(newsService: newsServiceBox.value)
+        let pool = await FeedArticlePoolBuilder.fetchPool(
+            newsService: newsServiceBox.value,
+            language: AppLocalization.shared.language
+        )
         guard !pool.isEmpty else { return }
 
         let articlesToProcess = FeedDigestPromptBuilder.cappedArticles(from: pool)
@@ -146,16 +150,23 @@ final class MorningBriefingPrefetcher {
     private func fetchPreferences() async -> UserPreferences? {
         await withCheckedContinuation { continuation in
             var cancellable: AnyCancellable?
+            var didResume = false
             cancellable = settingsService.fetchPreferences()
                 .first()
                 .sink(
-                    receiveCompletion: { completion in
-                        if case .failure = completion {
+                    receiveCompletion: { _ in
+                        // Reached on `.failure`, or on `.finished` without a
+                        // prior `receiveValue` (e.g. an empty store) — either
+                        // way the continuation must resume or the task hangs
+                        // forever, permanently blocking future prefetches.
+                        if !didResume {
+                            didResume = true
                             continuation.resume(returning: nil)
                         }
                         cancellable?.cancel()
                     },
                     receiveValue: { preferences in
+                        didResume = true
                         continuation.resume(returning: preferences)
                     }
                 )

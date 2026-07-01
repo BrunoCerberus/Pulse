@@ -17,7 +17,10 @@ protocol BriefingCacheService {
 }
 
 final class LiveBriefingCacheService: BriefingCacheService {
-    private static let storageKey = "pulse.pregeneratedBriefing"
+    /// Exposed (not `private`) so sign-out/account-deletion cleanup
+    /// (`SettingsViewModel.clearAllUserData()`) can wipe this key without
+    /// duplicating the literal string.
+    static let storageKey = "pulse.pregeneratedBriefing"
 
     private let defaults: UserDefaults
 

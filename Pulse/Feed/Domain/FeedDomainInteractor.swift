@@ -217,7 +217,10 @@ private extension FeedDomainInteractor {
             guard let self else { return }
             defer { self.fetchArticlesTask = nil }
 
-            let allArticles = await FeedArticlePoolBuilder.fetchPool(newsService: newsService.value)
+            let allArticles = await FeedArticlePoolBuilder.fetchPool(
+                newsService: newsService.value,
+                language: AppLocalization.shared.language
+            )
             guard !Task.isCancelled else { return }
 
             if allArticles.isEmpty {
@@ -414,7 +417,7 @@ private extension FeedDomainInteractor {
                 state.hasLoadedInitialData = true
                 state.generationState = .completed
             }
-            startAudioBriefing()
+            playCachedBriefing(cached)
             return
         }
 
@@ -427,6 +430,20 @@ private extension FeedDomainInteractor {
         updateState { $0.autoPlayBriefingOnCompletion = true }
         preloadModel()
         fetchLatestNews()
+    }
+
+    /// Plays a pre-generated briefing's exact queue directly, skipping
+    /// `startAudioBriefing()`'s ForYou re-scoring — `cached.queueArticles`
+    /// is already the final, ranked selection `MorningBriefingPrefetcher`
+    /// computed. Re-scoring it again against whatever the profile looks
+    /// like *now* could reorder or drop items relative to what was
+    /// prepared, and is wasted work for a queue that's already final.
+    func playCachedBriefing(_ cached: PregeneratedBriefing) {
+        guard let playbackQueueService else { return }
+        let language = AppLocalization.shared.language
+        let digestItem = PlaybackItem.digest(cached.digest, language: language)
+        let articleItems = cached.queueArticles.map { PlaybackItem.article($0, language: language) }
+        playbackQueueService.play(items: [digestItem] + articleItems, mode: .briefing)
     }
 
     /// Assembles the Premium audio briefing and hands it to the global
