@@ -53,17 +53,16 @@ jobs:
         echo "DEVELOPER_DIR=$XCODE_PATH/Contents/Developer" >> "$GITHUB_ENV"
         xcodebuild -version
 
-    # Cache Homebrew packages
-    # Note: Static version key (brew-v1) - increment manually when brew dependencies change
+    # Cache Homebrew's download cache only. The old /usr/local/Homebrew entry
+    # was a no-op on the arm64 macos runners (brew lives in /opt/homebrew) and
+    # caching the whole prefix would be huge — key bumped to v2 so stale
+    # archives with the dead path aren't restored.
+    # Note: Static version key (brew-v2) - increment manually when brew dependencies change
     - name: Cache Homebrew packages
       uses: actions/cache@2c8a9bd7457de244a408f35966fab2fb45fda9c8 # v6.0.0
       with:
-        path: |
-          ~/Library/Caches/Homebrew
-          /usr/local/Homebrew
-        key: ${{ runner.os }}-brew-v1
-        restore-keys: |
-          ${{ runner.os }}-brew-
+        path: ~/Library/Caches/Homebrew
+        key: ${{ runner.os }}-brew-v2
 
     # Cache Mint packages
     # Note: Static version key (mint-v1) - increment manually when mint dependencies change
@@ -129,266 +128,17 @@ jobs:
         echo "Checking Localizable.strings key parity across en/pt/es..."
         python3 scripts/check-localization-parity.py .
 
+  # Shared audit body lives in reusable-security-audit.yml (also called by the
+  # nightly with tool-channel: latest). Pinned tools here for reproducible PR
+  # gating. The required check context is "Security Audit / Checks".
   security-audit:
     name: Security Audit
-    runs-on: ubuntu-latest
-    timeout-minutes: 20
-
+    uses: ./.github/workflows/reusable-security-audit.yml
     permissions:
       contents: read
-
-    steps:
-    - name: Harden runner
-      uses: step-security/harden-runner@9af89fc71515a100421586dfdb3dc9c984fbf411 # v2.19.4
-      with:
-        egress-policy: audit
-
-    - name: Checkout code
-      uses: actions/checkout@9c091bb21b7c1c1d1991bb908d89e4e9dddfe3e0 # v7.0.0
-      with:
-        fetch-depth: 0
-        persist-credentials: false
-
-    # Requires GitHub Advanced Security on private repos — skipped gracefully if unavailable
-    # Force Node.js 24 until upstream publishes a node24 release (deprecation notice
-    # starting June 2026; v4.9.0 still declares `using: node20`)
-    - name: Dependency review
-      id: dependency-review
-      continue-on-error: true
-      uses: actions/dependency-review-action@a1d282b36b6f3519aa1f3fc636f609c47dddb294 # v5.0.0
-      env:
-        FORCE_JAVASCRIPT_ACTIONS_TO_NODE24: 'true'
-      with:
-        fail-on-severity: critical
-
-    # Secret scanning is owned by the conformance "PII Scan" jobs, which run
-    # gitleaks with the real ruleset (.github/lgpd-gdpr-rules.toml: extend.useDefault
-    # + the CPF/CNPJ/IBAN/SSN PII rules) on every PR AND push to master. A second
-    # gitleaks run here pointed at the rule-less root .gitleaks.toml (allowlist only,
-    # no extend.useDefault) detected nothing — so it was removed rather than left as
-    # a no-op that implied coverage it didn't provide.
-
-    # mobsfscan: iOS/Swift-specific SAST (OWASP MASTG patterns)
-    - name: Install mobsfscan
-      run: pip install 'mobsfscan>=0.3,<1.0'
-
-    - name: Run mobsfscan iOS security analysis
-      id: mobsfscan
-      continue-on-error: true
-      run: |
-        echo "============================================"
-        echo "  MobSF Static Analysis (iOS/Swift SAST)"
-        echo "============================================"
-        echo ""
-        mobsfscan Pulse/
-
-    - name: Verify HTTPS-only network calls
-      id: https-check
-      continue-on-error: true
-      run: |
-        echo "============================================"
-        echo "  HTTPS Enforcement Check"
-        echo "============================================"
-        echo ""
-
-        INSECURE=$(grep -rn --include="*.swift" 'http://' Pulse/ 2>/dev/null \
-          | grep -v 'localhost' \
-          | grep -v '127\.0\.0\.1' \
-          | grep -v '// .*http://' \
-          | grep -v 'NSAppTransportSecurity' \
-          | grep -v '"http"' \
-          || true)
-
-        if [ -n "$INSECURE" ]; then
-          echo "::error::Insecure HTTP URLs found:"
-          echo "$INSECURE"
-          exit 1
-        fi
-        echo "All URLs use HTTPS"
-
-    - name: Validate privacy manifest
-      id: privacy-manifest
-      continue-on-error: true
-      run: |
-        echo "============================================"
-        echo "  Privacy Manifest Validation"
-        echo "============================================"
-        echo ""
-
-        if [ ! -f "Pulse/PrivacyInfo.xcprivacy" ]; then
-          echo "::error::PrivacyInfo.xcprivacy not found"
-          exit 1
-        fi
-
-        # xmllint may not be available on ubuntu-latest — fall back to Python
-        if command -v xmllint &>/dev/null; then
-          xmllint --noout Pulse/PrivacyInfo.xcprivacy || { echo "::error::Privacy manifest has invalid XML"; exit 1; }
-        else
-          python3 -c "import xml.etree.ElementTree as ET; ET.parse('Pulse/PrivacyInfo.xcprivacy')" || { echo "::error::Privacy manifest has invalid XML"; exit 1; }
-        fi
-        echo "Valid XML structure"
-
-        for KEY in NSPrivacyAccessedAPITypes NSPrivacyCollectedDataTypes NSPrivacyTracking; do
-          if grep -q "$KEY" Pulse/PrivacyInfo.xcprivacy; then
-            echo "$KEY: declared"
-          else
-            echo "::warning::$KEY not found in privacy manifest"
-          fi
-        done
-
-        # Verify API type entries have reason codes
-        API_TYPES=$(grep -c "<key>NSPrivacyAccessedAPIType</key>" Pulse/PrivacyInfo.xcprivacy || echo "0")
-        REASONS=$(grep -c "NSPrivacyAccessedAPITypeReasons" Pulse/PrivacyInfo.xcprivacy || echo "0")
-        echo "API type declarations: $API_TYPES, Reason code declarations: $REASONS"
-        if [ "$API_TYPES" -gt 0 ] && [ "$REASONS" -eq 0 ]; then
-          echo "::error::API types declared without reason codes — will be rejected by App Store"
-          exit 1
-        fi
-
-    - name: Check App Transport Security exceptions
-      id: ats-check
-      continue-on-error: true
-      run: |
-        echo "============================================"
-        echo "  ATS Exception Check"
-        echo "============================================"
-        echo ""
-
-        FOUND=0
-        for plist in $(find . -name "Info.plist" -not -path "*/DerivedData/*" -not -path "*/.build/*" 2>/dev/null); do
-          if grep -q "NSAllowsArbitraryLoads" "$plist" 2>/dev/null; then
-            echo "::error::NSAllowsArbitraryLoads found in $plist"
-            FOUND=1
-          fi
-          if grep -q "NSAllowsArbitraryLoadsInWebContent" "$plist" 2>/dev/null; then
-            echo "::warning::NSAllowsArbitraryLoadsInWebContent found in $plist"
-          fi
-          if grep -q "NSExceptionDomains" "$plist" 2>/dev/null; then
-            echo "::warning::NSExceptionDomains found in $plist — verify domains are necessary:"
-            grep -A 5 "NSExceptionDomains" "$plist"
-          fi
-        done
-
-        if [ -f "project.yml" ] && grep -q "NSAllowsArbitraryLoads" project.yml 2>/dev/null; then
-          echo "::error::NSAllowsArbitraryLoads declared in project.yml"
-          FOUND=1
-        fi
-
-        [ $FOUND -eq 0 ] && echo "No ATS exceptions found"
-        [ $FOUND -gt 0 ] && exit 1
-        true
-
-    - name: Audit entitlements
-      id: entitlements
-      continue-on-error: true
-      run: |
-        echo "============================================"
-        echo "  Entitlements Audit"
-        echo "============================================"
-        echo ""
-
-        SENSITIVE_ENTITLEMENTS=(
-          "com.apple.security.get-task-allow"
-          "com.apple.security.cs.disable-library-validation"
-          "com.apple.security.cs.allow-dyld-environment-variables"
-          "com.apple.security.cs.allow-unsigned-executable-memory"
-        )
-
-        FOUND=0
-        for ent_file in $(find . -name "*.entitlements" -not -path "*/DerivedData/*" 2>/dev/null); do
-          echo "Checking $ent_file..."
-          for ent in "${SENSITIVE_ENTITLEMENTS[@]}"; do
-            if grep -q "$ent" "$ent_file" 2>/dev/null; then
-              echo "::warning::Sensitive entitlement '$ent' found in $ent_file"
-              FOUND=1
-            fi
-          done
-        done
-
-        [ $FOUND -eq 0 ] && echo "No sensitive entitlements found"
-        [ $FOUND -gt 0 ] && exit 1
-        true
-
-    - name: Audit file permissions
-      id: file-perms
-      continue-on-error: true
-      run: |
-        echo "============================================"
-        echo "  File Permission Audit"
-        echo "============================================"
-        echo ""
-
-        ISSUES=0
-
-        UNSAFE=$(find Pulse/ -type f -perm -o+w 2>/dev/null || true)
-        if [ -n "$UNSAFE" ]; then
-          echo "::warning::World-writable files found:"
-          echo "$UNSAFE"
-          ISSUES=$((ISSUES + 1))
-        else
-          echo "No world-writable files found"
-        fi
-
-        EXEC=$(find Pulse/ -name "*.swift" -type f -executable 2>/dev/null || true)
-        if [ -n "$EXEC" ]; then
-          echo "::warning::Executable Swift files found (unusual):"
-          echo "$EXEC"
-          ISSUES=$((ISSUES + 1))
-        else
-          echo "No executable Swift files"
-        fi
-
-        [ $ISSUES -gt 0 ] && exit 1
-        true
-
-    - name: Security audit summary
-      if: always()
-      env:
-        DEPENDENCY: ${{ steps.dependency-review.outcome }}
-        EVENT: ${{ github.event_name }}
-        MOBSFSCAN: ${{ steps.mobsfscan.outcome }}
-        HTTPS_CHECK: ${{ steps.https-check.outcome }}
-        PRIVACY: ${{ steps.privacy-manifest.outcome }}
-        ATS: ${{ steps.ats-check.outcome }}
-        ENTITLEMENTS: ${{ steps.entitlements.outcome }}
-        FILE_PERMS: ${{ steps.file-perms.outcome }}
-      run: |
-        echo ""
-        echo "============================================"
-        echo "  Security Audit Summary"
-        echo "============================================"
-
-        # dependency-review-action only runs on pull_request; on push it errors
-        # ("event not supported") and continue-on-error swallows it, so don't let
-        # that count as a failure on push — only gate on it for PRs.
-        [ "$EVENT" != "pull_request" ] && DEPENDENCY="skipped"
-
-        echo "## Security Audit Results" >> "$GITHUB_STEP_SUMMARY"
-        echo "" >> "$GITHUB_STEP_SUMMARY"
-        echo "| Check | Result |" >> "$GITHUB_STEP_SUMMARY"
-        echo "|-------|--------|" >> "$GITHUB_STEP_SUMMARY"
-
-        FAILURES=0
-        for check in "Dependency Review:$DEPENDENCY" "mobsfscan:$MOBSFSCAN" "HTTPS Enforcement:$HTTPS_CHECK" "Privacy Manifest:$PRIVACY" "ATS Exceptions:$ATS" "Entitlements:$ENTITLEMENTS" "File Permissions:$FILE_PERMS"; do
-          name="${check%%:*}"
-          result="${check##*:}"
-          if [ "$result" = "failure" ]; then
-            FAILURES=$((FAILURES + 1))
-            echo "| $name | FAILED |" >> "$GITHUB_STEP_SUMMARY"
-          else
-            echo "| $name | Passed |" >> "$GITHUB_STEP_SUMMARY"
-          fi
-          echo "$name: $result"
-        done
-
-        if [ $FAILURES -gt 0 ]; then
-          echo ""
-          echo "::error::$FAILURES security check(s) failed — review findings above"
-          exit 1
-        fi
-
-        echo ""
-        echo "All security checks passed"
+    with:
+      tool-channel: pinned
+      run-dependency-review: true
 
   build:
     name: Build Project
@@ -454,11 +204,15 @@ jobs:
           -skipMacroValidation \
           ENABLE_ONLY_ACTIVE_RESOURCES=NO
 
+    # Only Build/Products is uploaded — that's all test-without-building needs
+    # (the .xctestrun files and app/test bundles live there). The rest of
+    # DerivedData (Intermediates.noindex, ModuleCache, SourcePackages) is the
+    # bulk of the directory and dead weight for the four downstream downloads.
     - name: Upload build artifacts
       uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
       with:
         name: build-products
-        path: ./DerivedData
+        path: ./DerivedData/Build/Products
         retention-days: 1
 
   # The matrix above compiles Debug. Release exercises a genuinely different
@@ -540,7 +294,7 @@ jobs:
       uses: actions/download-artifact@3e5f45b2cfb9172054b4087a40e8e0b5a5461e7c # v8.0.1
       with:
         name: build-products
-        path: ./DerivedData
+        path: ./DerivedData/Build/Products
 
     - name: Run Unit Tests
       timeout-minutes: 60
@@ -580,100 +334,7 @@ jobs:
 
     - name: Extract and display test failures
       if: failure()
-      run: |
-        echo ""
-        echo "============================================"
-        echo "          FAILED TESTS SUMMARY"
-        echo "============================================"
-        echo ""
-
-        # Check if xcresult exists
-        if [ ! -d "$RESULT_BUNDLE" ]; then
-          echo "::warning::Test result bundle not found at $RESULT_BUNDLE"
-          echo "Falling back to log parsing..."
-          echo ""
-          grep -E "(✘|Test Case.*failed|FAIL|Assertion)" /tmp/test_output.log 2>/dev/null | head -50 || echo "No failures found in log"
-          exit 0
-        fi
-
-        # Write header to job summary
-        echo "## Failed: ${TEST_NAME}" >> $GITHUB_STEP_SUMMARY
-        echo "" >> $GITHUB_STEP_SUMMARY
-
-        # Extract test failures using xcresulttool (requires --legacy flag on newer Xcode)
-        python3 << 'PYTHON_SCRIPT'
-        import json
-        import subprocess
-        import sys
-        import os
-
-        result_bundle = os.environ.get('RESULT_BUNDLE', 'test-results/test.xcresult')
-        summary_file = os.environ.get('GITHUB_STEP_SUMMARY', '/dev/null')
-
-        # Try new format first, then legacy
-        data = None
-        for legacy_flag in ["", "--legacy"]:
-            try:
-                cmd = ["xcrun", "xcresulttool", "get", "object"]
-                if legacy_flag:
-                    cmd.append(legacy_flag)
-                cmd.extend(["--path", result_bundle, "--format", "json"])
-
-                result = subprocess.run(cmd, capture_output=True, text=True)
-                if result.returncode == 0 and result.stdout.strip():
-                    data = json.loads(result.stdout)
-                    break
-            except Exception:
-                continue
-
-        if data is None:
-            print("Could not parse xcresult bundle")
-            sys.exit(0)
-
-        # Navigate to test failure summaries
-        actions = data.get('actions', {}).get('_values', [])
-        if not actions:
-            print("No actions found in xcresult")
-            sys.exit(0)
-
-        action = actions[0]
-        issues = action.get('actionResult', {}).get('issues', {})
-        failures = issues.get('testFailureSummaries', {}).get('_values', [])
-
-        if not failures:
-            print("No test failures found in xcresult (test may have crashed)")
-            sys.exit(0)
-
-        print(f"Found {len(failures)} test failure(s):")
-        print("")
-
-        # Also write to GITHUB_STEP_SUMMARY
-        with open(summary_file, "a") as summary:
-            summary.write("| Test | Failure Message |\n")
-            summary.write("|------|----------------|\n")
-
-            for f in failures:
-                test_name = f.get('testCaseName', {}).get('_value', 'Unknown Test')
-                message = f.get('message', {}).get('_value', 'No message')
-
-                # Clean up message for display
-                message_short = message[:150] + "..." if len(message) > 150 else message
-                message_escaped = message_short.replace("|", "\\|").replace("\n", " ")
-
-                # Print to console
-                print(f"❌ {test_name}")
-                print(f"   {message_short}")
-                print("")
-
-                # GitHub Actions error annotation
-                print(f"::error title={test_name}::{message_short}")
-
-                # Write to summary
-                summary.write(f"| `{test_name}` | {message_escaped} |\n")
-
-        print("")
-        print("See the uploaded .xcresult artifact for full details.")
-        PYTHON_SCRIPT
+      run: python3 scripts/extract-test-failures.py
       env:
         RESULT_BUNDLE: test-results/unit-test-results.xcresult
         TEST_NAME: Unit Tests
@@ -710,7 +371,7 @@ jobs:
       uses: actions/download-artifact@3e5f45b2cfb9172054b4087a40e8e0b5a5461e7c # v8.0.1
       with:
         name: build-products
-        path: ./DerivedData
+        path: ./DerivedData/Build/Products
 
     - name: Run Snapshot Tests
       timeout-minutes: 60
@@ -750,100 +411,7 @@ jobs:
 
     - name: Extract and display test failures
       if: failure()
-      run: |
-        echo ""
-        echo "============================================"
-        echo "          FAILED TESTS SUMMARY"
-        echo "============================================"
-        echo ""
-
-        # Check if xcresult exists
-        if [ ! -d "$RESULT_BUNDLE" ]; then
-          echo "::warning::Test result bundle not found at $RESULT_BUNDLE"
-          echo "Falling back to log parsing..."
-          echo ""
-          grep -E "(✘|Test Case.*failed|FAIL|Assertion)" /tmp/test_output.log 2>/dev/null | head -50 || echo "No failures found in log"
-          exit 0
-        fi
-
-        # Write header to job summary
-        echo "## Failed: ${TEST_NAME}" >> $GITHUB_STEP_SUMMARY
-        echo "" >> $GITHUB_STEP_SUMMARY
-
-        # Extract test failures using xcresulttool (requires --legacy flag on newer Xcode)
-        python3 << 'PYTHON_SCRIPT'
-        import json
-        import subprocess
-        import sys
-        import os
-
-        result_bundle = os.environ.get('RESULT_BUNDLE', 'test-results/test.xcresult')
-        summary_file = os.environ.get('GITHUB_STEP_SUMMARY', '/dev/null')
-
-        # Try new format first, then legacy
-        data = None
-        for legacy_flag in ["", "--legacy"]:
-            try:
-                cmd = ["xcrun", "xcresulttool", "get", "object"]
-                if legacy_flag:
-                    cmd.append(legacy_flag)
-                cmd.extend(["--path", result_bundle, "--format", "json"])
-
-                result = subprocess.run(cmd, capture_output=True, text=True)
-                if result.returncode == 0 and result.stdout.strip():
-                    data = json.loads(result.stdout)
-                    break
-            except Exception:
-                continue
-
-        if data is None:
-            print("Could not parse xcresult bundle")
-            sys.exit(0)
-
-        # Navigate to test failure summaries
-        actions = data.get('actions', {}).get('_values', [])
-        if not actions:
-            print("No actions found in xcresult")
-            sys.exit(0)
-
-        action = actions[0]
-        issues = action.get('actionResult', {}).get('issues', {})
-        failures = issues.get('testFailureSummaries', {}).get('_values', [])
-
-        if not failures:
-            print("No test failures found in xcresult (test may have crashed)")
-            sys.exit(0)
-
-        print(f"Found {len(failures)} test failure(s):")
-        print("")
-
-        # Also write to GITHUB_STEP_SUMMARY
-        with open(summary_file, "a") as summary:
-            summary.write("| Test | Failure Message |\n")
-            summary.write("|------|----------------|\n")
-
-            for f in failures:
-                test_name = f.get('testCaseName', {}).get('_value', 'Unknown Test')
-                message = f.get('message', {}).get('_value', 'No message')
-
-                # Clean up message for display
-                message_short = message[:150] + "..." if len(message) > 150 else message
-                message_escaped = message_short.replace("|", "\\|").replace("\n", " ")
-
-                # Print to console
-                print(f"❌ {test_name}")
-                print(f"   {message_short}")
-                print("")
-
-                # GitHub Actions error annotation
-                print(f"::error title={test_name}::{message_short}")
-
-                # Write to summary
-                summary.write(f"| `{test_name}` | {message_escaped} |\n")
-
-        print("")
-        print("See the uploaded .xcresult artifact for full details.")
-        PYTHON_SCRIPT
+      run: python3 scripts/extract-test-failures.py
       env:
         RESULT_BUNDLE: test-results/snapshot-test-results.xcresult
         TEST_NAME: Snapshot Tests
@@ -911,7 +479,7 @@ jobs:
       uses: actions/download-artifact@3e5f45b2cfb9172054b4087a40e8e0b5a5461e7c # v8.0.1
       with:
         name: build-products
-        path: ./DerivedData
+        path: ./DerivedData/Build/Products
 
     - name: Run ${{ matrix.test-name }}
       timeout-minutes: ${{ matrix.timeout }}
@@ -939,6 +507,9 @@ jobs:
         DEST="platform=iOS Simulator,name=$DEVICE,OS=latest"
         echo "Test destination: $DEST"
 
+        # No -enableCodeCoverage here: patch-coverage only consumes the unit +
+        # snapshot xcresults, so collecting coverage on the slowest legs was
+        # pure overhead.
         xcodebuild test-without-building \
           -project Pulse.xcodeproj \
           -scheme "$SCHEME" \
@@ -946,7 +517,6 @@ jobs:
           -destination "$DEST" \
           -derivedDataPath ./DerivedData \
           -resultBundlePath "test-results/${ARTIFACT_NAME}.xcresult" \
-          -enableCodeCoverage YES \
           -disableAutomaticPackageResolution \
           -retry-tests-on-failure \
           2>&1 | tee /tmp/test_output.log
@@ -963,100 +533,7 @@ jobs:
 
     - name: Extract and display test failures
       if: failure()
-      run: |
-        echo ""
-        echo "============================================"
-        echo "          FAILED TESTS SUMMARY"
-        echo "============================================"
-        echo ""
-
-        # Check if xcresult exists
-        if [ ! -d "$RESULT_BUNDLE" ]; then
-          echo "::warning::Test result bundle not found at $RESULT_BUNDLE"
-          echo "Falling back to log parsing..."
-          echo ""
-          grep -E "(✘|Test Case.*failed|FAIL|Assertion)" /tmp/test_output.log 2>/dev/null | head -50 || echo "No failures found in log"
-          exit 0
-        fi
-
-        # Write header to job summary
-        echo "## Failed: ${TEST_NAME}" >> $GITHUB_STEP_SUMMARY
-        echo "" >> $GITHUB_STEP_SUMMARY
-
-        # Extract test failures using xcresulttool (requires --legacy flag on newer Xcode)
-        python3 << 'PYTHON_SCRIPT'
-        import json
-        import subprocess
-        import sys
-        import os
-
-        result_bundle = os.environ.get('RESULT_BUNDLE', 'test-results/test.xcresult')
-        summary_file = os.environ.get('GITHUB_STEP_SUMMARY', '/dev/null')
-
-        # Try new format first, then legacy
-        data = None
-        for legacy_flag in ["", "--legacy"]:
-            try:
-                cmd = ["xcrun", "xcresulttool", "get", "object"]
-                if legacy_flag:
-                    cmd.append(legacy_flag)
-                cmd.extend(["--path", result_bundle, "--format", "json"])
-
-                result = subprocess.run(cmd, capture_output=True, text=True)
-                if result.returncode == 0 and result.stdout.strip():
-                    data = json.loads(result.stdout)
-                    break
-            except Exception:
-                continue
-
-        if data is None:
-            print("Could not parse xcresult bundle")
-            sys.exit(0)
-
-        # Navigate to test failure summaries
-        actions = data.get('actions', {}).get('_values', [])
-        if not actions:
-            print("No actions found in xcresult")
-            sys.exit(0)
-
-        action = actions[0]
-        issues = action.get('actionResult', {}).get('issues', {})
-        failures = issues.get('testFailureSummaries', {}).get('_values', [])
-
-        if not failures:
-            print("No test failures found in xcresult (test may have crashed)")
-            sys.exit(0)
-
-        print(f"Found {len(failures)} test failure(s):")
-        print("")
-
-        # Also write to GITHUB_STEP_SUMMARY
-        with open(summary_file, "a") as summary:
-            summary.write("| Test | Failure Message |\n")
-            summary.write("|------|----------------|\n")
-
-            for f in failures:
-                test_name = f.get('testCaseName', {}).get('_value', 'Unknown Test')
-                message = f.get('message', {}).get('_value', 'No message')
-
-                # Clean up message for display
-                message_short = message[:150] + "..." if len(message) > 150 else message
-                message_escaped = message_short.replace("|", "\\|").replace("\n", " ")
-
-                # Print to console
-                print(f"❌ {test_name}")
-                print(f"   {message_short}")
-                print("")
-
-                # GitHub Actions error annotation
-                print(f"::error title={test_name}::{message_short}")
-
-                # Write to summary
-                summary.write(f"| `{test_name}` | {message_escaped} |\n")
-
-        print("")
-        print("See the uploaded .xcresult artifact for full details.")
-        PYTHON_SCRIPT
+      run: python3 scripts/extract-test-failures.py
       env:
         RESULT_BUNDLE: test-results/${{ matrix.artifact-name }}.xcresult
         TEST_NAME: ${{ matrix.test-name }}
@@ -1089,6 +566,9 @@ jobs:
       uses: actions/checkout@9c091bb21b7c1c1d1991bb908d89e4e9dddfe3e0 # v7.0.0
       with:
         fetch-depth: 0
+        # The base-ref fetch below works unauthenticated (public repo), so no
+        # credential needs to persist in .git/config.
+        persist-credentials: false
 
     - name: Ensure base ref is present
       run: git fetch --no-tags --depth=200 origin "$BASE_SHA" || true

@@ -29,7 +29,7 @@ Open a PR from the current branch following the project's commit and body conven
    - `Pulse/Info.plist`
    - `PulseShareExtension/**`
 
-   The privacy conformance workflows (`lgpd-conformance.yml`, `gdpr-conformance.yml`) check the code itself — no body markers required. If a new SDK that collects data is being added, remind the user to update `Pulse/PrivacyInfo.xcprivacy`'s `NSPrivacyCollectedDataTypes` so the **Structural Integrity** job passes. If a new email literal is being introduced, remind them to add it to `.github/pii-allowlist.txt` so the **PII Scan** job passes.
+   The privacy conformance workflow (`privacy-conformance.yml`) checks the code itself — no body markers required. If a new SDK that collects data is being added, remind the user to update `Pulse/PrivacyInfo.xcprivacy`'s `NSPrivacyCollectedDataTypes` so the **Structural Integrity** job passes. If a new email literal is being introduced, remind them to add it to `.github/pii-allowlist.txt` so the **PII Scan** job passes.
 
 4. **Draft the PR body** following `.github/PULL_REQUEST_TEMPLATE.md`:
    - **Summary**: read the actual diffs and write 1-3 bullets covering what + why.

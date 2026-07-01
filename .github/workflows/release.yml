@@ -45,6 +45,9 @@ jobs:
   release:
     name: Build & Release
     runs-on: macos-26
+    # Generous ceiling for the (dormant) device archive + upload path; the
+    # GitHub-Release-only path finishes in minutes.
+    timeout-minutes: 90
 
     permissions:
       contents: write   # version-bump commit, tag push, GitHub Release
@@ -163,16 +166,15 @@ jobs:
     # ----- Device archive + App Store Connect upload (dormant until secrets) -----
     # Everything from here to the upload runs only when both credentials exist.
 
+    # Download cache only — /usr/local/Homebrew was a no-op on the arm64
+    # runners (brew lives in /opt/homebrew); key matches the v2 entries
+    # elsewhere so the cache is shared.
     - name: Cache Homebrew packages
       if: steps.creds.outputs.enabled == 'true'
       uses: actions/cache@2c8a9bd7457de244a408f35966fab2fb45fda9c8 # v6.0.0
       with:
-        path: |
-          ~/Library/Caches/Homebrew
-          /usr/local/Homebrew
-        key: ${{ runner.os }}-brew-v1
-        restore-keys: |
-          ${{ runner.os }}-brew-
+        path: ~/Library/Caches/Homebrew
+        key: ${{ runner.os }}-brew-v2
 
     - name: Cache SPM dependencies
       if: steps.creds.outputs.enabled == 'true'

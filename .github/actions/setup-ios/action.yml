@@ -61,15 +61,14 @@ runs:
           xcrun simctl list runtimes | grep -E '^iOS [0-9]'
         fi
 
+    # Cache Homebrew's download cache only. The old /usr/local/Homebrew entry
+    # was a no-op on the arm64 macos runners (brew lives in /opt/homebrew) —
+    # key bumped to v2 so stale archives with the dead path aren't restored.
     - name: Cache Homebrew packages
-      uses: actions/cache@27d5ce7f107fe9357f9df03efb73ab90386fccae # v5.0.5
+      uses: actions/cache@2c8a9bd7457de244a408f35966fab2fb45fda9c8 # v6.0.0
       with:
-        path: |
-          ~/Library/Caches/Homebrew
-          /usr/local/Homebrew
-        key: ${{ runner.os }}-brew-v1
-        restore-keys: |
-          ${{ runner.os }}-brew-
+        path: ~/Library/Caches/Homebrew
+        key: ${{ runner.os }}-brew-v2
 
     # Keyed on the git-tracked Package.resolved so the cache auto-invalidates
     # when a dependency changes — no more manual version-key bumps. The
@@ -77,7 +76,7 @@ runs:
     # in the resolve/build steps forces resolution from the checked-out
     # Package.resolved, so a partially-stale restore is corrected, not trusted.
     - name: Cache SPM dependencies
-      uses: actions/cache@27d5ce7f107fe9357f9df03efb73ab90386fccae # v5.0.5
+      uses: actions/cache@2c8a9bd7457de244a408f35966fab2fb45fda9c8 # v6.0.0
       with:
         path: |
           Pulse.xcodeproj/project.xcworkspace/xcshareddata/swiftpm

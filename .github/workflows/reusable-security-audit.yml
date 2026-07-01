@@ -1,0 +1,327 @@
+name: Reusable Security Audit
+
+# Shared body of the security audit that was previously copy-pasted between
+# ci.yml (security-audit) and scheduled-tests.yml (Nightly Security Audit).
+# The two callers differ only in tool-version strategy and one extra scanner
+# each, expressed as inputs:
+#   - ci.yml:              tool-channel=pinned  + run-dependency-review
+#     (pinned for reproducible PR gating)
+#   - scheduled-tests.yml: tool-channel=latest  + run-gitleaks
+#     (latest so newly-added detector rules re-scan already-merged code that
+#     the pinned PR gate would never re-evaluate)
+#
+# NOTE: the caller's job name prefixes the check context — ci.yml's caller job
+# is named "Security Audit", so the required status check in the master
+# ruleset is "Security Audit / Checks".
+
+on:
+  workflow_call:
+    inputs:
+      tool-channel:
+        description: "Scanner versions: 'pinned' (reproducible gating) or 'latest' (drift detection)"
+        type: string
+        default: "pinned"
+      run-dependency-review:
+        description: "Run actions/dependency-review-action (pull_request only)"
+        type: boolean
+        default: false
+      run-gitleaks:
+        description: "Run gitleaks (latest) with the root .gitleaks.toml"
+        type: boolean
+        default: false
+
+permissions: {}
+
+jobs:
+  checks:
+    name: Checks
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+
+    permissions:
+      contents: read
+
+    steps:
+    - name: Harden runner
+      uses: step-security/harden-runner@9af89fc71515a100421586dfdb3dc9c984fbf411 # v2.19.4
+      with:
+        egress-policy: audit
+
+    - name: Checkout code
+      uses: actions/checkout@9c091bb21b7c1c1d1991bb908d89e4e9dddfe3e0 # v7.0.0
+      with:
+        fetch-depth: 0
+        persist-credentials: false
+
+    # Requires GitHub Advanced Security on private repos — skipped gracefully if unavailable
+    # Force Node.js 24 until upstream publishes a node24 release (deprecation notice
+    # starting June 2026; v4.9.0 still declares `using: node20`)
+    - name: Dependency review
+      id: dependency-review
+      if: inputs.run-dependency-review
+      continue-on-error: true
+      uses: actions/dependency-review-action@a1d282b36b6f3519aa1f3fc636f609c47dddb294 # v5.0.0
+      env:
+        FORCE_JAVASCRIPT_ACTIONS_TO_NODE24: 'true'
+      with:
+        fail-on-severity: critical
+
+    # Secret scanning on PRs is owned by the privacy-conformance "PII Scan" job,
+    # which runs gitleaks with .github/lgpd-gdpr-rules.toml on every PR AND push
+    # to master. The nightly additionally runs the LATEST gitleaks with the root
+    # .gitleaks.toml (extend.useDefault + allowlist) so newly-classified detector
+    # rules re-scan already-merged history.
+    - name: Install gitleaks (latest)
+      if: inputs.run-gitleaks
+      run: |
+        GITLEAKS_VERSION=$(curl -sSfL https://api.github.com/repos/gitleaks/gitleaks/releases/latest | jq -r '.tag_name' | sed 's/^v//')
+        echo "Installing latest gitleaks: v${GITLEAKS_VERSION}"
+        curl -sSfL "https://github.com/gitleaks/gitleaks/releases/download/v${GITLEAKS_VERSION}/gitleaks_${GITLEAKS_VERSION}_linux_x64.tar.gz" | tar xz
+        sudo mv gitleaks /usr/local/bin/
+
+    - name: Run gitleaks secret scanning
+      id: gitleaks
+      if: inputs.run-gitleaks
+      continue-on-error: true
+      run: |
+        echo "============================================"
+        echo "  Gitleaks Secret Scanning"
+        echo "============================================"
+        echo ""
+        gitleaks detect --source . --redact --verbose --no-banner --config .gitleaks.toml
+
+    # mobsfscan: iOS/Swift-specific SAST (OWASP MASTG patterns)
+    - name: Install mobsfscan
+      env:
+        CHANNEL: ${{ inputs.tool-channel }}
+      run: |
+        if [ "$CHANNEL" = "latest" ]; then
+          pip install --upgrade mobsfscan
+        else
+          pip install 'mobsfscan>=0.3,<1.0'
+        fi
+
+    - name: Run mobsfscan iOS security analysis
+      id: mobsfscan
+      continue-on-error: true
+      run: |
+        echo "============================================"
+        echo "  MobSF Static Analysis (iOS/Swift SAST)"
+        echo "============================================"
+        echo ""
+        mobsfscan Pulse/
+
+    - name: Verify HTTPS-only network calls
+      id: https-check
+      continue-on-error: true
+      run: |
+        echo "============================================"
+        echo "  HTTPS Enforcement Check"
+        echo "============================================"
+        echo ""
+
+        INSECURE=$(grep -rn --include="*.swift" 'http://' Pulse/ 2>/dev/null \
+          | grep -v 'localhost' \
+          | grep -v '127\.0\.0\.1' \
+          | grep -v '// .*http://' \
+          | grep -v 'NSAppTransportSecurity' \
+          | grep -v '"http"' \
+          || true)
+
+        if [ -n "$INSECURE" ]; then
+          echo "::error::Insecure HTTP URLs found:"
+          echo "$INSECURE"
+          exit 1
+        fi
+        echo "All URLs use HTTPS"
+
+    - name: Validate privacy manifest
+      id: privacy-manifest
+      continue-on-error: true
+      run: |
+        echo "============================================"
+        echo "  Privacy Manifest Validation"
+        echo "============================================"
+        echo ""
+
+        if [ ! -f "Pulse/PrivacyInfo.xcprivacy" ]; then
+          echo "::error::PrivacyInfo.xcprivacy not found"
+          exit 1
+        fi
+
+        # xmllint may not be available on ubuntu-latest — fall back to Python
+        if command -v xmllint &>/dev/null; then
+          xmllint --noout Pulse/PrivacyInfo.xcprivacy || { echo "::error::Privacy manifest has invalid XML"; exit 1; }
+        else
+          python3 -c "import xml.etree.ElementTree as ET; ET.parse('Pulse/PrivacyInfo.xcprivacy')" || { echo "::error::Privacy manifest has invalid XML"; exit 1; }
+        fi
+        echo "Valid XML structure"
+
+        for KEY in NSPrivacyAccessedAPITypes NSPrivacyCollectedDataTypes NSPrivacyTracking; do
+          if grep -q "$KEY" Pulse/PrivacyInfo.xcprivacy; then
+            echo "$KEY: declared"
+          else
+            echo "::warning::$KEY not found in privacy manifest"
+          fi
+        done
+
+        # Verify API type entries have reason codes
+        API_TYPES=$(grep -c "<key>NSPrivacyAccessedAPIType</key>" Pulse/PrivacyInfo.xcprivacy || echo "0")
+        REASONS=$(grep -c "NSPrivacyAccessedAPITypeReasons" Pulse/PrivacyInfo.xcprivacy || echo "0")
+        echo "API type declarations: $API_TYPES, Reason code declarations: $REASONS"
+        if [ "$API_TYPES" -gt 0 ] && [ "$REASONS" -eq 0 ]; then
+          echo "::error::API types declared without reason codes — will be rejected by App Store"
+          exit 1
+        fi
+
+    - name: Check App Transport Security exceptions
+      id: ats-check
+      continue-on-error: true
+      run: |
+        echo "============================================"
+        echo "  ATS Exception Check"
+        echo "============================================"
+        echo ""
+
+        FOUND=0
+        for plist in $(find . -name "Info.plist" -not -path "*/DerivedData/*" -not -path "*/.build/*" 2>/dev/null); do
+          if grep -q "NSAllowsArbitraryLoads" "$plist" 2>/dev/null; then
+            echo "::error::NSAllowsArbitraryLoads found in $plist"
+            FOUND=1
+          fi
+          if grep -q "NSAllowsArbitraryLoadsInWebContent" "$plist" 2>/dev/null; then
+            echo "::warning::NSAllowsArbitraryLoadsInWebContent found in $plist"
+          fi
+          if grep -q "NSExceptionDomains" "$plist" 2>/dev/null; then
+            echo "::warning::NSExceptionDomains found in $plist — verify domains are necessary:"
+            grep -A 5 "NSExceptionDomains" "$plist"
+          fi
+        done
+
+        if [ -f "project.yml" ] && grep -q "NSAllowsArbitraryLoads" project.yml 2>/dev/null; then
+          echo "::error::NSAllowsArbitraryLoads declared in project.yml"
+          FOUND=1
+        fi
+
+        [ $FOUND -eq 0 ] && echo "No ATS exceptions found"
+        [ $FOUND -gt 0 ] && exit 1
+        true
+
+    - name: Audit entitlements
+      id: entitlements
+      continue-on-error: true
+      run: |
+        echo "============================================"
+        echo "  Entitlements Audit"
+        echo "============================================"
+        echo ""
+
+        SENSITIVE_ENTITLEMENTS=(
+          "com.apple.security.get-task-allow"
+          "com.apple.security.cs.disable-library-validation"
+          "com.apple.security.cs.allow-dyld-environment-variables"
+          "com.apple.security.cs.allow-unsigned-executable-memory"
+        )
+
+        FOUND=0
+        for ent_file in $(find . -name "*.entitlements" -not -path "*/DerivedData/*" 2>/dev/null); do
+          echo "Checking $ent_file..."
+          for ent in "${SENSITIVE_ENTITLEMENTS[@]}"; do
+            if grep -q "$ent" "$ent_file" 2>/dev/null; then
+              echo "::warning::Sensitive entitlement '$ent' found in $ent_file"
+              FOUND=1
+            fi
+          done
+        done
+
+        [ $FOUND -eq 0 ] && echo "No sensitive entitlements found"
+        [ $FOUND -gt 0 ] && exit 1
+        true
+
+    - name: Audit file permissions
+      id: file-perms
+      continue-on-error: true
+      run: |
+        echo "============================================"
+        echo "  File Permission Audit"
+        echo "============================================"
+        echo ""
+
+        ISSUES=0
+
+        UNSAFE=$(find Pulse/ -type f -perm -o+w 2>/dev/null || true)
+        if [ -n "$UNSAFE" ]; then
+          echo "::warning::World-writable files found:"
+          echo "$UNSAFE"
+          ISSUES=$((ISSUES + 1))
+        else
+          echo "No world-writable files found"
+        fi
+
+        EXEC=$(find Pulse/ -name "*.swift" -type f -executable 2>/dev/null || true)
+        if [ -n "$EXEC" ]; then
+          echo "::warning::Executable Swift files found (unusual):"
+          echo "$EXEC"
+          ISSUES=$((ISSUES + 1))
+        else
+          echo "No executable Swift files"
+        fi
+
+        [ $ISSUES -gt 0 ] && exit 1
+        true
+
+    - name: Security audit summary
+      if: always()
+      env:
+        DEPENDENCY: ${{ steps.dependency-review.outcome }}
+        GITLEAKS: ${{ steps.gitleaks.outcome }}
+        EVENT: ${{ github.event_name }}
+        MOBSFSCAN: ${{ steps.mobsfscan.outcome }}
+        HTTPS_CHECK: ${{ steps.https-check.outcome }}
+        PRIVACY: ${{ steps.privacy-manifest.outcome }}
+        ATS: ${{ steps.ats-check.outcome }}
+        ENTITLEMENTS: ${{ steps.entitlements.outcome }}
+        FILE_PERMS: ${{ steps.file-perms.outcome }}
+      run: |
+        echo ""
+        echo "============================================"
+        echo "  Security Audit Summary"
+        echo "============================================"
+
+        # dependency-review-action only runs on pull_request; on push it errors
+        # ("event not supported") and continue-on-error swallows it, so don't let
+        # that count as a failure on push — only gate on it for PRs.
+        [ "$EVENT" != "pull_request" ] && DEPENDENCY="skipped"
+
+        echo "## Security Audit Results" >> "$GITHUB_STEP_SUMMARY"
+        echo "" >> "$GITHUB_STEP_SUMMARY"
+        echo "| Check | Result |" >> "$GITHUB_STEP_SUMMARY"
+        echo "|-------|--------|" >> "$GITHUB_STEP_SUMMARY"
+
+        FAILURES=0
+        for check in "Dependency Review:$DEPENDENCY" "Gitleaks:$GITLEAKS" "mobsfscan:$MOBSFSCAN" "HTTPS Enforcement:$HTTPS_CHECK" "Privacy Manifest:$PRIVACY" "ATS Exceptions:$ATS" "Entitlements:$ENTITLEMENTS" "File Permissions:$FILE_PERMS"; do
+          name="${check%%:*}"
+          result="${check##*:}"
+          case "$result" in
+            failure)
+              FAILURES=$((FAILURES + 1))
+              echo "| $name | FAILED |" >> "$GITHUB_STEP_SUMMARY"
+              ;;
+            skipped|"")
+              echo "| $name | Skipped |" >> "$GITHUB_STEP_SUMMARY"
+              ;;
+            *)
+              echo "| $name | Passed |" >> "$GITHUB_STEP_SUMMARY"
+              ;;
+          esac
+          echo "$name: ${result:-skipped}"
+        done
+
+        if [ $FAILURES -gt 0 ]; then
+          echo ""
+          echo "::error::$FAILURES security check(s) failed — review findings above"
+          exit 1
+        fi
+
+        echo ""
+        echo "All security checks passed"

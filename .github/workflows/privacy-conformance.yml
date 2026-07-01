@@ -1,29 +1,38 @@
-name: LGPD Conformance
+name: Privacy Conformance
 
-# Conformance guard rails for the Lei Geral de Proteção de Dados Pessoais
-# (LGPD — Lei nº 13.709/2018). Mirrors the structure of the same-named
-# workflow in pulse-backend so the iOS and backend repos stay in lockstep
-# on what counts as a privacy-relevant change.
+# Combined privacy guard rails covering all three regimes:
+#   - LGPD (Lei Geral de Proteção de Dados Pessoais, Lei nº 13.709/2018)
+#   - GDPR (EU Regulation 2016/679)
+#   - CCPA / CPRA (California Consumer Privacy Act + Privacy Rights Act,
+#     Cal. Civ. Code §1798.100 et seq.)
+#
+# Formerly two workflows (lgpd-conformance.yml + gdpr-conformance.yml) that
+# were ~85% identical and ran their shared jobs twice on every PR. Folded into
+# one for the same reason GDPR and CCPA were originally folded together: the
+# regimes overlap ~80%, and the deltas are individual steps (CPF/CNPJ vs SSN
+# pattern bans, the GDPR-specific engagement-events check), not whole jobs.
 #
 # Four parallel jobs:
-#   - pii-scan              Bans CPF/CNPJ patterns, non-allowlisted emails,
-#                           and runs gitleaks with the repo-wide custom rules.
+#   - pii-scan              Bans CPF/CNPJ (LGPD) and US SSN (CCPA) patterns,
+#                           non-allowlisted emails, and runs gitleaks with the
+#                           repo-wide custom rules (CPF/CNPJ/IBAN/SSN + the
+#                           upstream secret ruleset).
 #   - docs-presence         Required docs (README, AGENTS, CLAUDE,
 #                           PrivacyInfo.xcprivacy) exist and are non-empty.
 #   - operational-controls  Sign-out / account-deletion data wipe is wired,
-#                           env-var API-key fallbacks are #if DEBUG-gated,
-#                           networking config has no plaintext http://, and
-#                           CloudKit container is .private(...).
-#   - structural-integrity  PrivacyInfo.xcprivacy is a valid plist with
-#                           required keys, every NSPrivacyCollectedDataType
-#                           declares a purpose, and *UsageDescription strings
-#                           in app + extension Info.plists are non-empty.
+#                           env-var fallbacks are #if DEBUG-gated, networking
+#                           uses https, CloudKit container is .private(...),
+#                           and the engagement-events container is non-CloudKit.
+#   - structural-integrity  PrivacyInfo.xcprivacy is valid, every collected
+#                           data type declares a purpose, sensitive categories
+#                           are flagged for human review, and *UsageDescription
+#                           strings are non-empty.
 
 on:
   push:
     branches: [master]
   pull_request:
-    branches: [develop, master, main]
+    branches: [master]
   schedule:
     # Weekly defense-in-depth — catches drift from upstream / dependency
     # changes that wouldn't otherwise trigger a PR run.
@@ -41,11 +50,11 @@ concurrency:
 
 jobs:
   # ---------------------------------------------------------------------------
-  # PII scan: CPF + CNPJ patterns, email allowlist, gitleaks over full
-  # git history with the custom rules in .github/lgpd-gdpr-rules.toml.
+  # PII scan: CPF/CNPJ + US SSN pattern bans, email allowlist, gitleaks over
+  # full git history with the custom rules in .github/lgpd-gdpr-rules.toml.
   # ---------------------------------------------------------------------------
   pii-scan:
-    name: PII Scan (LGPD)
+    name: PII Scan
     runs-on: ubuntu-latest
     timeout-minutes: 10
     steps:
@@ -67,7 +76,7 @@ jobs:
       - name: Ensure ripgrep is available
         run: command -v rg >/dev/null 2>&1 || (sudo apt-get update -qq && sudo apt-get install -y -qq ripgrep)
 
-      - name: CPF / CNPJ pattern ban
+      - name: CPF / CNPJ pattern ban (LGPD)
         id: cpf-cnpj-ban
         shell: bash
         run: |
@@ -81,8 +90,7 @@ jobs:
           if rg --pcre2 \
               -g '!.github/lgpd-gdpr-rules.toml' \
               -g '!.github/pii-allowlist.txt' \
-              -g '!.github/workflows/lgpd-conformance.yml' \
-              -g '!.github/workflows/gdpr-conformance.yml' \
+              -g '!.github/workflows/privacy-conformance.yml' \
               -g '!build/**' \
               -g '!DerivedData/**' \
               -e "$CPF_RE" -e "$CNPJ_RE" \
@@ -91,6 +99,28 @@ jobs:
             exit 1
           fi
           echo "OK: no CPF/CNPJ patterns."
+
+      - name: US SSN pattern ban (CCPA / CPRA)
+        id: ssn-ban
+        shell: bash
+        run: |
+          set -euo pipefail
+          # XXX-XX-XXXX. Same exclusion set as the CPF/CNPJ scan so illustrative
+          # examples in conformance docs / configs are permitted.
+          SSN_RE='\b[0-9]{3}-[0-9]{2}-[0-9]{4}\b'
+
+          if rg --pcre2 \
+              -g '!.github/lgpd-gdpr-rules.toml' \
+              -g '!.github/pii-allowlist.txt' \
+              -g '!.github/workflows/privacy-conformance.yml' \
+              -g '!build/**' \
+              -g '!DerivedData/**' \
+              -e "$SSN_RE" \
+              .; then
+            echo "::error::US SSN pattern found. CCPA / CPRA: no US Social Security Numbers may be stored in this repo."
+            exit 1
+          fi
+          echo "OK: no US SSN patterns."
 
       - name: Email allowlist enforcement
         id: email-allowlist
@@ -158,6 +188,7 @@ jobs:
         if: always()
         env:
           CPF_CNPJ: ${{ steps.cpf-cnpj-ban.outcome }}
+          SSN: ${{ steps.ssn-ban.outcome }}
           EMAILS: ${{ steps.email-allowlist.outcome }}
           GITLEAKS: ${{ steps.gitleaks.outcome }}
         run: |
@@ -168,6 +199,7 @@ jobs:
             echo "|-------|--------|"
           } >> "$GITHUB_STEP_SUMMARY"
           for row in "CPF / CNPJ pattern ban:$CPF_CNPJ" \
+                     "US SSN pattern ban:$SSN" \
                      "Email allowlist enforcement:$EMAILS" \
                      "Gitleaks (custom rules):$GITLEAKS"; do
             name="${row%%:*}"
@@ -185,7 +217,7 @@ jobs:
   # must exist and be non-empty.
   # ---------------------------------------------------------------------------
   docs-presence:
-    name: Docs Presence (LGPD)
+    name: Docs Presence
     runs-on: ubuntu-latest
     timeout-minutes: 5
     steps:
@@ -208,7 +240,7 @@ jobs:
           fail=0
           for f in "${required[@]}"; do
             if [ ! -s "$f" ]; then
-              echo "::error file=$f::Missing or empty — required by LGPD conformance workflow."
+              echo "::error file=$f::Missing or empty — required by the privacy conformance workflow."
               fail=1
             fi
           done
@@ -251,12 +283,12 @@ jobs:
           done
 
   # ---------------------------------------------------------------------------
-  # Operational controls: load-bearing runtime invariants that keep the LGPD
-  # posture true. Any of these failing means a code change has broken the
-  # contract documented in CLAUDE.md / AGENTS.md.
+  # Operational controls: load-bearing runtime invariants that keep the
+  # privacy posture true. Any of these failing means a code change has broken
+  # the contract documented in CLAUDE.md / AGENTS.md.
   # ---------------------------------------------------------------------------
   operational-controls:
-    name: Operational Controls (LGPD)
+    name: Operational Controls
     runs-on: ubuntu-latest
     timeout-minutes: 5
     steps:
@@ -281,17 +313,15 @@ jobs:
           set -euo pipefail
           # SettingsViewModel.clearAllUserData() is the single private orchestrator
           # that wipes SwiftData + L1/L2 + keychain + UserDefaults + ThemeManager
-          # + widget data. It's called internally from the sign-out and
-          # account-deletion handlers in the same file, so the invariant we
-          # check is structural: the function exists AND both handlers reference
-          # it within SettingsViewModel.swift.
+          # + widget data. Structural check: function exists AND both the
+          # sign-out and account-deletion handlers reference it.
           svm="Pulse/Settings/ViewModel/SettingsViewModel.swift"
           if [ ! -f "$svm" ]; then
             echo "::error file=$svm::SettingsViewModel.swift missing."
             exit 1
           fi
           if ! rg -q 'func clearAllUserData' "$svm"; then
-            echo "::error file=$svm::clearAllUserData() not defined. LGPD Art. 18 (right to erasure) requires a single entry point that wipes all local user data."
+            echo "::error file=$svm::clearAllUserData() not defined. LGPD Art. 18 / GDPR Art. 17 / CCPA §1798.105 (right to erasure) require a single entry point that wipes all local user data."
             exit 1
           fi
           # Accept three call forms — all of which still satisfy the
@@ -318,7 +348,8 @@ jobs:
           # load-bearing erasure work lives in SignOutCleanup: wipeKeychain()
           # purges credential storage and deletePrivateCloudKitZones() removes
           # the user's private CloudKit data. Both must be invoked from
-          # SettingsViewModel (LGPD Art. 18 — eliminação dos dados pessoais).
+          # SettingsViewModel (LGPD Art. 18 / GDPR Art. 17 / CCPA §1798.105 —
+          # right to erasure).
           svm="Pulse/Settings/ViewModel/SettingsViewModel.swift"
           if [ ! -f "$svm" ]; then
             echo "::error file=$svm::SettingsViewModel.swift missing."
@@ -409,12 +440,28 @@ jobs:
           set -euo pipefail
           # SwiftData ModelConfiguration must scope CloudKit to the user's
           # private database, not .public or omitted. .private is the
-          # invariant CLAUDE.md documents under the CloudKit section.
+          # invariant CLAUDE.md documents under the CloudKit section; .public
+          # would expose user data across users.
           if ! rg -t swift -q 'cloudKitDatabase:[[:space:]]*\.private' Pulse/; then
-            echo "::error::ModelConfiguration no longer uses cloudKitDatabase: .private(...). LGPD posture requires the user's private CloudKit DB; .public would expose data across users."
+            echo "::error::ModelConfiguration no longer uses cloudKitDatabase: .private(...). LGPD / GDPR / CCPA require user data to be scoped to that user; .public would expose it across users."
             exit 1
           fi
           echo "OK: CloudKit container scoped to .private."
+
+      - name: Engagement-events container is NOT CloudKit-synced
+        id: engagement-non-cloudkit
+        shell: bash
+        run: |
+          set -euo pipefail
+          # PendingEngagementEvent must live in a separate non-CloudKit
+          # ModelContainer (per AGENTS.md item 26 + 31). If the file ever
+          # picks up a `cloudKitDatabase:` argument, the per-device guarantee
+          # for engagement signals is broken.
+          if rg -t swift -q 'cloudKitDatabase' Pulse/Personalization/API/LiveEngagementEventsService.swift 2>/dev/null; then
+            echo "::error file=Pulse/Personalization/API/LiveEngagementEventsService.swift::Engagement-events ModelContainer must NOT use cloudKitDatabase. Engagement signals are per-device by design (GDPR Art. 5(1)(c) / LGPD Art. 6 — data minimization)."
+            exit 1
+          fi
+          echo "OK: engagement-events container is non-CloudKit."
 
       - name: Operational controls summary
         if: always()
@@ -424,6 +471,7 @@ jobs:
           DEBUG_GATED_KEYS: ${{ steps.debug-gated-keys.outcome }}
           HTTPS_ONLY: ${{ steps.https-only.outcome }}
           CLOUDKIT_PRIVATE: ${{ steps.cloudkit-private.outcome }}
+          ENGAGEMENT_LOCAL: ${{ steps.engagement-non-cloudkit.outcome }}
         run: |
           {
             echo "## Operational Controls"
@@ -435,7 +483,8 @@ jobs:
                      "Right-to-erasure cleanup wired:$ERASURE_CLEANUP" \
                      "API-key fallbacks DEBUG-gated:$DEBUG_GATED_KEYS" \
                      "No plaintext HTTP URLs:$HTTPS_ONLY" \
-                     "CloudKit container .private:$CLOUDKIT_PRIVATE"; do
+                     "CloudKit container .private:$CLOUDKIT_PRIVATE" \
+                     "Engagement-events non-CloudKit:$ENGAGEMENT_LOCAL"; do
             name="${row%%:*}"
             result="${row##*:}"
             case "$result" in
@@ -452,7 +501,7 @@ jobs:
   # cross-reference it against Info.plist consent strings.
   # ---------------------------------------------------------------------------
   structural-integrity:
-    name: Structural Integrity (LGPD)
+    name: Structural Integrity
     runs-on: ubuntu-latest
     timeout-minutes: 5
     steps:
@@ -481,27 +530,29 @@ jobs:
           missing = [k for k in required_top if k not in data]
           if missing:
               for k in missing:
-                  print(f"::error file={path}::Missing required key for LGPD: {k}")
+                  print(f"::error file={path}::Missing required key for LGPD / GDPR / CCPA: {k}")
               sys.exit(1)
 
-          # LGPD Art. 6 (data minimization): every collected type needs a purpose.
+          # LGPD Art. 6 / GDPR Art. 5(1)(c) / CCPA §1798.100(b): every
+          # collected type needs a purpose.
           for entry in data.get("NSPrivacyCollectedDataTypes", []):
               dtype = entry.get("NSPrivacyCollectedDataType", "<unknown>")
               if not (entry.get("NSPrivacyCollectedDataTypePurposes") or []):
-                  print(f"::error file={path}::Collected data type {dtype} has no declared purpose (LGPD Art. 6 — finalidade)")
+                  print(f"::error file={path}::Collected data type {dtype} has no declared purpose (LGPD Art. 6 / GDPR Art. 5(1)(b)/(c))")
                   sys.exit(1)
 
-          # If tracking is enabled, NSPrivacyTrackingDomains must be non-empty.
           if data.get("NSPrivacyTracking") and not data.get("NSPrivacyTrackingDomains"):
-              print(f"::error file={path}::NSPrivacyTracking=true but NSPrivacyTrackingDomains is empty")
+              print(f"::error file={path}::NSPrivacyTracking=true but NSPrivacyTrackingDomains is empty (GDPR Art. 7)")
               sys.exit(1)
 
-          # LGPD Art. 11 — dados pessoais sensíveis require explicit consent.
+          # Sensitive categories under LGPD Art. 11, GDPR Art. 9 AND CPRA
+          # §1798.121 require an explicit-consent / opt-out path. Flag for
+          # human review.
           sensitive = {"NSPrivacyCollectedDataTypeHealth", "NSPrivacyCollectedDataTypeFitness",
                        "NSPrivacyCollectedDataTypeSensitiveInfo", "NSPrivacyCollectedDataTypePreciseLocation"}
           for entry in data.get("NSPrivacyCollectedDataTypes", []):
               if entry.get("NSPrivacyCollectedDataType") in sensitive:
-                  print(f"::warning file={path}::Sensitive category {entry['NSPrivacyCollectedDataType']} declared — verify LGPD Art. 11 explicit-consent path")
+                  print(f"::warning file={path}::Sensitive category {entry['NSPrivacyCollectedDataType']} declared — verify LGPD Art. 11 / GDPR Art. 9 explicit-consent path AND CPRA §1798.121 right-to-limit affordance")
 
           print(f"OK: privacy manifest declares {len(data.get('NSPrivacyCollectedDataTypes', []))} data types, all with purposes.")
           PY
@@ -522,10 +573,10 @@ jobs:
                  if k.endswith("UsageDescription") and (not isinstance(v, str) or not v.strip())]
           if bad:
               for k in bad:
-                  print(f"::error file={path}::{k} is empty — LGPD Art. 8 requires explicit purpose for consent")
+                  print(f"::error file={path}::{k} is empty — LGPD Art. 8 / GDPR Art. 13 require informing the user of the purpose")
               sys.exit(1)
           if "NSUserTrackingUsageDescription" in data:
-              print(f"::notice file={path}::NSUserTrackingUsageDescription present — confirm Pulse/PrivacyInfo.xcprivacy NSPrivacyTracking=true")
+              print(f"::notice file={path}::NSUserTrackingUsageDescription present — confirm Pulse/PrivacyInfo.xcprivacy NSPrivacyTracking=true and consent UI exists")
           print(f"OK: {path} consent strings non-empty.")
           PY
           done
