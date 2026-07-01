@@ -25,6 +25,9 @@ permissions: {}
 # speeds installs); the pinned CLI tools are already on the runner image.
 env:
   HOMEBREW_NO_AUTO_UPDATE: "1"
+  # Suppress Homebrew tap-trust warnings that flood CI output and can cause
+  # runner OOM / lost-communication crashes during long test runs (UI Tests = 180 min).
+  HOMEBREW_NO_REQUIRE_TAP_TRUST: "1"
 
 jobs:
   code-quality:
@@ -595,6 +598,10 @@ jobs:
         DEST="platform=iOS Simulator,name=$DEVICE,OS=latest"
         echo "Test destination: $DEST"
 
+        # Run tests with a safety net for runner instability.
+        # -retry-tests-on-failure is intentionally omitted: it causes xcodebuild
+        # to retry indefinitely when the runner OOMs / loses network, which
+        # masks the real failure and burns minutes on a dead process.
         xcodebuild test-without-building \
           -project Pulse.xcodeproj \
           -scheme "$SCHEME" \
@@ -604,10 +611,16 @@ jobs:
           -resultBundlePath "test-results/${ARTIFACT_NAME}.xcresult" \
           -enableCodeCoverage YES \
           -disableAutomaticPackageResolution \
-          -retry-tests-on-failure \
-          2>&1 | tee /tmp/test_output.log
+          > /tmp/test_output.log 2>&1
 
-        TEST_EXIT_CODE=${PIPESTATUS[0]}
+        TEST_EXIT_CODE=$?
+
+        if [ $TEST_EXIT_CODE -ne 0 ]; then
+          echo "xcodebuild exited with code $TEST_EXIT_CODE"
+          # Print the last 200 lines of log for debugging runner crashes
+          echo "=== Last 200 lines of test output ==="
+          tail -200 /tmp/test_output.log
+        fi
 
         echo ""
         echo "============================================"
