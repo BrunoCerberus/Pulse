@@ -480,7 +480,7 @@ private extension FeedDomainInteractor {
         briefingTask = Task { @MainActor [weak self] in
             let language = AppLocalization.shared.language
             let digestItem = PlaybackItem.digest(digest, language: language)
-            let topN = await settingsBox?.value.fetchMorningBriefingArticleCount() ?? 10
+            let topN = await settingsBox?.value.fetchPreferencesOnce()?.morningBriefingArticleCount ?? 10
 
             var articleItems: [PlaybackItem] = []
             if let forYouService = forYouBox.value {
@@ -490,32 +490,6 @@ private extension FeedDomainInteractor {
 
             guard self != nil, !Task.isCancelled else { return }
             playbackBox.value.play(items: [digestItem] + articleItems, mode: .briefing)
-        }
-    }
-}
-
-private extension SettingsService {
-    /// Fetches only the briefing article count, defaulting to 10 when the
-    /// preferences store is unavailable or empty.
-    func fetchMorningBriefingArticleCount() async -> Int {
-        await withCheckedContinuation { continuation in
-            var cancellable: AnyCancellable?
-            var didResume = false
-            cancellable = fetchPreferences()
-                .first()
-                .sink(
-                    receiveCompletion: { _ in
-                        if !didResume {
-                            didResume = true
-                            continuation.resume(returning: 10)
-                        }
-                        cancellable?.cancel()
-                    },
-                    receiveValue: { preferences in
-                        didResume = true
-                        continuation.resume(returning: preferences.morningBriefingArticleCount)
-                    }
-                )
         }
     }
 }

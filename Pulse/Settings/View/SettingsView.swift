@@ -251,6 +251,7 @@ struct SettingsView: View {
                     in: 3 ... 15
                 )
                 .accessibilityLabel(Constants.morningBriefingArticleCount)
+                .accessibilityValue("\(viewModel.viewState.morningBriefingArticleCount)")
             }
         }
     }
