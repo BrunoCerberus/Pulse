@@ -8,6 +8,7 @@ import Foundation
 final class LivePlaybackQueueService: PlaybackQueueService {
     private let ttsService: TextToSpeechService
     private let analyticsService: AnalyticsService?
+    private let engagementEventsService: EngagementEventsService?
     /// Injectable so tests can post AVAudioSession notifications without leaking them.
     private let notificationCenter: NotificationCenter
     private let nowPlayingController = NowPlayingController()
@@ -38,10 +39,12 @@ final class LivePlaybackQueueService: PlaybackQueueService {
     init(
         ttsService: TextToSpeechService,
         analyticsService: AnalyticsService?,
+        engagementEventsService: EngagementEventsService? = nil,
         notificationCenter: NotificationCenter = .default
     ) {
         self.ttsService = ttsService
         self.analyticsService = analyticsService
+        self.engagementEventsService = engagementEventsService
         self.notificationCenter = notificationCenter
         nowPlayingController.attach(to: self)
         setupTTSBindings()
@@ -101,21 +104,33 @@ final class LivePlaybackQueueService: PlaybackQueueService {
 
     func next() {
         guard currentState.hasNext, let index = currentState.currentIndex else { return }
-        if currentState.mode == .briefing { analyticsService?.logEvent(.briefingItemSkipped) }
+        if currentState.mode == .briefing {
+            analyticsService?.logEvent(.briefingItemSkipped)
+            recordSkipEngagement()
+        }
         advance(to: index + 1)
     }
 
     func previous() {
         guard currentState.hasPrevious, let index = currentState.currentIndex else { return }
+        // Unlike `next()`, going backward isn't a disinterest signal — a
+        // listener hits "previous" to replay something, not to skip past
+        // it — so this only logs analytics, never `recordSkipEngagement()`.
         if currentState.mode == .briefing { analyticsService?.logEvent(.briefingItemSkipped) }
         advance(to: index - 1)
     }
 
     func skip(to itemID: String) {
         guard let target = currentState.items.firstIndex(where: { $0.id == itemID }),
-              target != currentState.currentIndex
+              let currentIndex = currentState.currentIndex,
+              target != currentIndex
         else { return }
-        if currentState.mode == .briefing { analyticsService?.logEvent(.briefingItemSkipped) }
+        if currentState.mode == .briefing {
+            analyticsService?.logEvent(.briefingItemSkipped)
+            // Same rationale as `previous()`: only a forward jump reflects
+            // disinterest in the item being left; jumping backward doesn't.
+            if target > currentIndex { recordSkipEngagement() }
+        }
         advance(to: target)
     }
 
@@ -156,6 +171,20 @@ final class LivePlaybackQueueService: PlaybackQueueService {
     }
 
     // MARK: - Playback Internals
+
+    /// Feeds a skipped-away-from article back into personalization as a
+    /// negative signal. Only articles carry a signal — skipping past the
+    /// digest narration isn't a statement about topic interest.
+    private func recordSkipEngagement() {
+        guard let engagementEventsService,
+              case let .article(article) = currentState.currentItem?.kind
+        else { return }
+        let event = EngagementEvent(from: article, kind: .dismissed)
+        let service = UncheckedSendableBox(value: engagementEventsService)
+        Task {
+            await service.value.record(event)
+        }
+    }
 
     private func speakCurrentItem() {
         guard let item = currentState.currentItem else { return }

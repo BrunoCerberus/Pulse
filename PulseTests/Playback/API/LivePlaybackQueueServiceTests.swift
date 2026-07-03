@@ -10,6 +10,7 @@ import Testing
 struct LivePlaybackQueueServiceTests {
     let mockTTSService: MockTextToSpeechService
     let mockAnalyticsService: MockAnalyticsService
+    let mockEngagementEventsService: MockEngagementEventsService
     /// Per-test center so posted AVAudioSession notifications never leak into
     /// other parallel-running service instances.
     let notificationCenter: NotificationCenter
@@ -18,10 +19,12 @@ struct LivePlaybackQueueServiceTests {
     init() {
         mockTTSService = MockTextToSpeechService()
         mockAnalyticsService = MockAnalyticsService()
+        mockEngagementEventsService = MockEngagementEventsService()
         notificationCenter = NotificationCenter()
         sut = LivePlaybackQueueService(
             ttsService: mockTTSService,
             analyticsService: mockAnalyticsService,
+            engagementEventsService: mockEngagementEventsService,
             notificationCenter: notificationCenter
         )
     }
@@ -212,6 +215,77 @@ struct LivePlaybackQueueServiceTests {
             return false
         }.count
         #expect(skippedCount == 1)
+    }
+
+    // MARK: - Skip Engagement Signal
+
+    @Test("next in briefing mode records a dismissed engagement for the skipped article")
+    func nextRecordsDismissedEngagement() async throws {
+        sut.play(items: makeItems(3), mode: .briefing)
+
+        sut.next()
+        try await waitForStateUpdate(duration: TestWaitDuration.short)
+
+        #expect(mockEngagementEventsService.recordedEvents.count == 1)
+        #expect(mockEngagementEventsService.recordedEvents.first?.kind == .dismissed)
+        #expect(mockEngagementEventsService.recordedEvents.first?.articleID == Article.mockArticles[0].id)
+    }
+
+    @Test("previous in briefing mode records no engagement signal — replaying isn't disinterest")
+    func previousRecordsNoEngagement() async throws {
+        sut.play(items: makeItems(3), mode: .briefing)
+        sut.next()
+
+        sut.previous()
+        try await waitForStateUpdate(duration: TestWaitDuration.short)
+
+        // Only `next()`'s forward move should have recorded a signal.
+        #expect(mockEngagementEventsService.recordedEvents.count == 1)
+    }
+
+    @Test("skip(to:) forward in briefing mode records a dismissed engagement for the skipped article")
+    func skipToForwardRecordsDismissedEngagement() async throws {
+        sut.play(items: makeItems(3), mode: .briefing)
+
+        sut.skip(to: "item-2")
+        try await waitForStateUpdate(duration: TestWaitDuration.short)
+
+        #expect(mockEngagementEventsService.recordedEvents.count == 1)
+        #expect(mockEngagementEventsService.recordedEvents.first?.articleID == Article.mockArticles[0].id)
+    }
+
+    @Test("skip(to:) backward in briefing mode records no engagement signal")
+    func skipToBackwardRecordsNoEngagement() async throws {
+        sut.play(items: makeItems(3), mode: .briefing)
+        sut.skip(to: "item-2")
+
+        sut.skip(to: "item-0")
+        try await waitForStateUpdate(duration: TestWaitDuration.short)
+
+        // Only the initial forward skip should have recorded a signal.
+        #expect(mockEngagementEventsService.recordedEvents.count == 1)
+    }
+
+    @Test("skipping past the digest item records no engagement signal")
+    func skipPastDigestRecordsNoEngagement() async throws {
+        let digest = DailyDigest(id: "digest-1", summary: "Today's summary", sourceArticles: [], generatedAt: Date())
+        let digestItem = PlaybackItem.digest(digest, language: "en")
+        sut.play(items: [digestItem] + makeItems(2), mode: .briefing)
+
+        sut.next()
+        try await waitForStateUpdate(duration: TestWaitDuration.short)
+
+        #expect(mockEngagementEventsService.recordedEvents.isEmpty)
+    }
+
+    @Test("next in single-article mode records no engagement signal")
+    func nextSingleArticleRecordsNoEngagement() async throws {
+        sut.play(items: makeItems(2), mode: .singleArticle)
+
+        sut.next()
+        try await waitForStateUpdate(duration: TestWaitDuration.short)
+
+        #expect(mockEngagementEventsService.recordedEvents.isEmpty)
     }
 
     // MARK: - Toggle / Stop

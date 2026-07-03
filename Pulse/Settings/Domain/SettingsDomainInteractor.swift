@@ -77,6 +77,8 @@ final class SettingsDomainInteractor: CombineInteractor {
             Task { @MainActor in await toggleMorningBriefing(enabled) }
         case let .changeMorningBriefingTime(hour, minute):
             Task { @MainActor in await changeMorningBriefingTime(hour: hour, minute: minute) }
+        case let .changeMorningBriefingArticleCount(count):
+            changeMorningBriefingArticleCount(count)
         case let .changeLanguage(language):
             changeLanguage(language)
         case .addMutedSource, .removeMutedSource, .addMutedKeyword, .removeMutedKeyword:
@@ -288,6 +290,12 @@ final class SettingsDomainInteractor: CombineInteractor {
         savePreferences(preferences)
     }
 
+    private func changeMorningBriefingArticleCount(_ count: Int) {
+        var preferences = currentState.preferences
+        preferences.morningBriefingArticleCount = count
+        savePreferences(preferences)
+    }
+
     private func changeLanguage(_ language: String) {
         var preferences = currentState.preferences
         preferences.preferredLanguage = language
@@ -373,6 +381,7 @@ enum SettingsDomainAction: Equatable {
     case toggleBreakingNews(Bool)
     case toggleMorningBriefing(Bool)
     case changeMorningBriefingTime(hour: Int, minute: Int)
+    case changeMorningBriefingArticleCount(Int)
     case changeLanguage(String)
     case addMutedSource(String)
     case removeMutedSource(String)

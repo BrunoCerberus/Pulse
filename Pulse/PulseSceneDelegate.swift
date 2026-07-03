@@ -453,18 +453,19 @@ private extension PulseSceneDelegate {
         serviceLocator.register(AppLockService.self, instance: LiveAppLockService())
         serviceLocator.register(AnalyticsService.self, instance: LiveAnalyticsService())
         serviceLocator.register(OnboardingService.self, instance: LiveOnboardingService())
+        serviceLocator.register(EngagementEventsService.self, instance: LiveEngagementEventsService())
         let ttsService = LiveTextToSpeechService()
         serviceLocator.register(TextToSpeechService.self, instance: ttsService)
         serviceLocator.register(
             PlaybackQueueService.self,
             instance: LivePlaybackQueueService(
                 ttsService: ttsService,
-                analyticsService: try? serviceLocator.retrieve(AnalyticsService.self)
+                analyticsService: try? serviceLocator.retrieve(AnalyticsService.self),
+                engagementEventsService: try? serviceLocator.retrieve(EngagementEventsService.self)
             )
         )
         serviceLocator.register(NotificationService.self, instance: LiveNotificationService.shared)
         serviceLocator.register(SharedURLImportService.self, instance: LiveSharedURLImportService())
-        serviceLocator.register(EngagementEventsService.self, instance: LiveEngagementEventsService())
         serviceLocator.register(
             InterestProfileService.self,
             instance: LiveInterestProfileService(modelContainer: storageService.modelContainer)

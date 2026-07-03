@@ -87,6 +87,30 @@ struct FeedBriefingTests {
         #expect(mockForYouService.lastTopN == 10)
     }
 
+    @Test("Briefing article count follows the user's configured preference")
+    func briefingUsesConfiguredArticleCount() async {
+        let locator = ServiceLocator()
+        let settingsService = MockSettingsService()
+        settingsService.preferences.morningBriefingArticleCount = 5
+        locator.register(FeedService.self, instance: MockFeedService())
+        locator.register(NewsService.self, instance: MockNewsService())
+        locator.register(StoreKitService.self, instance: MockStoreKitService(isPremium: true))
+        locator.register(ForYouService.self, instance: mockForYouService)
+        locator.register(PlaybackQueueService.self, instance: mockPlaybackQueueService)
+        locator.register(SettingsService.self, instance: settingsService)
+        let interactor = FeedDomainInteractor(serviceLocator: locator)
+
+        interactor.dispatch(action: .digestCompleted(makeDigest(id: "daily-1")))
+        interactor.dispatch(action: .latestArticlesLoaded([makeArticle(id: "a1")]))
+        interactor.dispatch(action: .startAudioBriefing)
+
+        let played = await waitForCondition { @MainActor in
+            self.mockPlaybackQueueService.playCallCount > 0
+        }
+        #expect(played)
+        #expect(mockForYouService.lastTopN == 5)
+    }
+
     @Test("Media items are filtered out of the personalization pool")
     func briefingFiltersMediaFromPool() async {
         let article = makeArticle(id: "a1")

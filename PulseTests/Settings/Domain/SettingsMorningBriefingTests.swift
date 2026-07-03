@@ -128,4 +128,23 @@ struct SettingsMorningBriefingTests {
         #expect(sut.currentState.preferences.morningBriefingHour == 8)
         #expect(notificationService.scheduleMorningBriefingCallCount == 0)
     }
+
+    @Test("Changing article count persists the preference without touching scheduling")
+    func changingArticleCountPersists() async throws {
+        let (sut, mock, notificationService) = createMorningBriefingSUT()
+        mock.preferences = UserPreferences(
+            followedTopics: [], mutedSources: [], mutedKeywords: [],
+            preferredLanguage: "en", notificationsEnabled: true, breakingNewsNotifications: true,
+            morningBriefingEnabled: true, morningBriefingHour: 7, morningBriefingMinute: 0,
+            morningBriefingArticleCount: 10
+        )
+        sut.dispatch(action: .loadPreferences)
+        try await Task.sleep(nanoseconds: 200_000_000)
+
+        sut.dispatch(action: .changeMorningBriefingArticleCount(5))
+        try await Task.sleep(nanoseconds: 300_000_000)
+
+        #expect(sut.currentState.preferences.morningBriefingArticleCount == 5)
+        #expect(notificationService.scheduleMorningBriefingCallCount == 0)
+    }
 }

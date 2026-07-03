@@ -108,7 +108,10 @@ final class MorningBriefingPrefetcher {
             if let forYouService {
                 let forYouBox = UncheckedSendableBox(value: forYouService)
                 let nonMediaPool = pool.filter { !$0.isMedia }
-                let scored = (try? await forYouBox.value.scoredArticles(from: nonMediaPool, topN: 10)) ?? []
+                let scored = (try? await forYouBox.value.scoredArticles(
+                    from: nonMediaPool,
+                    topN: preferences.morningBriefingArticleCount
+                )) ?? []
                 queueArticles = scored.map(\.article)
             }
 
@@ -148,28 +151,7 @@ final class MorningBriefingPrefetcher {
     }
 
     private func fetchPreferences() async -> UserPreferences? {
-        await withCheckedContinuation { continuation in
-            var cancellable: AnyCancellable?
-            var didResume = false
-            cancellable = settingsService.fetchPreferences()
-                .first()
-                .sink(
-                    receiveCompletion: { _ in
-                        // Reached on `.failure`, or on `.finished` without a
-                        // prior `receiveValue` (e.g. an empty store) — either
-                        // way the continuation must resume or the task hangs
-                        // forever, permanently blocking future prefetches.
-                        if !didResume {
-                            didResume = true
-                            continuation.resume(returning: nil)
-                        }
-                        cancellable?.cancel()
-                    },
-                    receiveValue: { preferences in
-                        didResume = true
-                        continuation.resume(returning: preferences)
-                    }
-                )
-        }
+        let service = UncheckedSendableBox(value: settingsService)
+        return await service.value.fetchPreferencesOnce()
     }
 }

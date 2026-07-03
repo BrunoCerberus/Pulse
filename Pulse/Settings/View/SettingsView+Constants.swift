@@ -76,6 +76,14 @@ extension SettingsView {
             AppLocalization.localized("settings.morning_briefing.time")
         }
 
+        static var morningBriefingArticleCount: String {
+            AppLocalization.localized("settings.morning_briefing.article_count")
+        }
+
+        static func morningBriefingArticleCountValue(_ count: Int) -> String {
+            String(format: AppLocalization.localized("settings.morning_briefing.article_count_value"), count)
+        }
+
         static var contentLanguage: String {
             AppLocalization.localized("settings.content_language")
         }

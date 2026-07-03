@@ -42,6 +42,21 @@ extension PlaybackItem {
         )
     }
 
+    /// Builds a briefing-queue article item, prefixed with a spoken "Next up,
+    /// from <source>" transition so consecutive items don't hard-cut into
+    /// each other. Distinct from `article(_:language:)` so the single-article
+    /// "Listen" entry point (Article Detail) never picks up briefing framing.
+    static func briefingArticle(_ article: Article, language: String) -> PlaybackItem {
+        PlaybackItem(
+            id: article.id,
+            kind: .article(article),
+            title: article.title,
+            sourceName: article.source.name,
+            speechText: SpeechTextBuilder.briefingSpeechText(for: article),
+            language: language
+        )
+    }
+
     /// Builds the narration item for the AI daily digest.
     static func digest(_ digest: DailyDigest, language: String) -> PlaybackItem {
         PlaybackItem(

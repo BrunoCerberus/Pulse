@@ -157,6 +157,8 @@
 "settings.morning_briefing" = "Resumo Matinal";
 "settings.morning_briefing.enable" = "Resumo de Áudio Diário";
 "settings.morning_briefing.time" = "Horário do Resumo";
+"settings.morning_briefing.article_count" = "Número de Artigos";
+"settings.morning_briefing.article_count_value" = "%d Artigos";
 "briefing.notification.title" = "Seu Resumo Matinal está Pronto";
 "briefing.notification.body" = "Toque para ouvir seu resumo de notícias personalizado.";
 
@@ -321,6 +323,7 @@
 "briefing.intro" = "Aqui está o seu boletim Pulse.";
 "speech.by_author" = "Por %@";
 "briefing.digest_item_title" = "Resumo de Hoje";
+"briefing.next_up_from" = "A seguir, de %@.";
 
 "feed.listen_briefing" = "Ouvir Boletim";
 "feed.listen_briefing_hint" = "Lê em voz alta seu resumo e principais notícias";

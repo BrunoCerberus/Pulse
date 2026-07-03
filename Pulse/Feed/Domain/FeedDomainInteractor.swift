@@ -40,6 +40,9 @@ final class FeedDomainInteractor: CombineInteractor {
     /// written by `MorningBriefingPrefetcher`. Optional: when missing, the
     /// scheduled briefing falls back to on-demand generation.
     private let briefingCacheService: BriefingCacheService?
+    /// Source of the user-configured briefing article count. Optional: when
+    /// missing, `startAudioBriefing()` falls back to the default of 10.
+    private let settingsService: SettingsService?
     private let stateSubject = CurrentValueSubject<DomainState, Never>(.initial)
     private var cancellables = Set<AnyCancellable>()
     private var generationTask: Task<Void, Never>?
@@ -69,6 +72,7 @@ final class FeedDomainInteractor: CombineInteractor {
         forYouService = try? serviceLocator.retrieve(ForYouService.self)
         playbackQueueService = try? serviceLocator.retrieve(PlaybackQueueService.self)
         briefingCacheService = try? serviceLocator.retrieve(BriefingCacheService.self)
+        settingsService = try? serviceLocator.retrieve(SettingsService.self)
 
         setupModelStatusBinding()
     }
@@ -442,7 +446,7 @@ private extension FeedDomainInteractor {
         guard let playbackQueueService else { return }
         let language = AppLocalization.shared.language
         let digestItem = PlaybackItem.digest(cached.digest, language: language)
-        let articleItems = cached.queueArticles.map { PlaybackItem.article($0, language: language) }
+        let articleItems = cached.queueArticles.map { PlaybackItem.briefingArticle($0, language: language) }
         playbackQueueService.play(items: [digestItem] + articleItems, mode: .briefing)
     }
 
@@ -470,16 +474,18 @@ private extension FeedDomainInteractor {
         let pool = currentState.latestArticles.filter { !$0.isMedia }
         let forYouBox = UncheckedSendableBox(value: forYouService)
         let playbackBox = UncheckedSendableBox(value: playbackQueueService)
+        let settingsBox = settingsService.map { UncheckedSendableBox(value: $0) }
 
         briefingTask?.cancel()
         briefingTask = Task { @MainActor [weak self] in
             let language = AppLocalization.shared.language
             let digestItem = PlaybackItem.digest(digest, language: language)
+            let topN = await settingsBox?.value.fetchPreferencesOnce()?.morningBriefingArticleCount ?? 10
 
             var articleItems: [PlaybackItem] = []
             if let forYouService = forYouBox.value {
-                let scored = (try? await forYouService.scoredArticles(from: pool, topN: 10)) ?? []
-                articleItems = scored.map { PlaybackItem.article($0.article, language: language) }
+                let scored = (try? await forYouService.scoredArticles(from: pool, topN: topN)) ?? []
+                articleItems = scored.map { PlaybackItem.briefingArticle($0.article, language: language) }
             }
 
             guard self != nil, !Task.isCancelled else { return }
