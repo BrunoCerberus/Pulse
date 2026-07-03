@@ -113,20 +113,23 @@ final class LivePlaybackQueueService: PlaybackQueueService {
 
     func previous() {
         guard currentState.hasPrevious, let index = currentState.currentIndex else { return }
-        if currentState.mode == .briefing {
-            analyticsService?.logEvent(.briefingItemSkipped)
-            recordSkipEngagement()
-        }
+        // Unlike `next()`, going backward isn't a disinterest signal — a
+        // listener hits "previous" to replay something, not to skip past
+        // it — so this only logs analytics, never `recordSkipEngagement()`.
+        if currentState.mode == .briefing { analyticsService?.logEvent(.briefingItemSkipped) }
         advance(to: index - 1)
     }
 
     func skip(to itemID: String) {
         guard let target = currentState.items.firstIndex(where: { $0.id == itemID }),
-              target != currentState.currentIndex
+              let currentIndex = currentState.currentIndex,
+              target != currentIndex
         else { return }
         if currentState.mode == .briefing {
             analyticsService?.logEvent(.briefingItemSkipped)
-            recordSkipEngagement()
+            // Same rationale as `previous()`: only a forward jump reflects
+            // disinterest in the item being left; jumping backward doesn't.
+            if target > currentIndex { recordSkipEngagement() }
         }
         advance(to: target)
     }

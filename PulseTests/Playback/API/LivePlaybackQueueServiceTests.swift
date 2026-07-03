@@ -231,20 +231,20 @@ struct LivePlaybackQueueServiceTests {
         #expect(mockEngagementEventsService.recordedEvents.first?.articleID == Article.mockArticles[0].id)
     }
 
-    @Test("previous in briefing mode records a dismissed engagement for the skipped article")
-    func previousRecordsDismissedEngagement() async throws {
+    @Test("previous in briefing mode records no engagement signal — replaying isn't disinterest")
+    func previousRecordsNoEngagement() async throws {
         sut.play(items: makeItems(3), mode: .briefing)
         sut.next()
 
         sut.previous()
         try await waitForStateUpdate(duration: TestWaitDuration.short)
 
-        #expect(mockEngagementEventsService.recordedEvents.count == 2)
-        #expect(mockEngagementEventsService.recordedEvents.last?.kind == .dismissed)
+        // Only `next()`'s forward move should have recorded a signal.
+        #expect(mockEngagementEventsService.recordedEvents.count == 1)
     }
 
-    @Test("skip(to:) in briefing mode records a dismissed engagement for the skipped article")
-    func skipToRecordsDismissedEngagement() async throws {
+    @Test("skip(to:) forward in briefing mode records a dismissed engagement for the skipped article")
+    func skipToForwardRecordsDismissedEngagement() async throws {
         sut.play(items: makeItems(3), mode: .briefing)
 
         sut.skip(to: "item-2")
@@ -252,6 +252,18 @@ struct LivePlaybackQueueServiceTests {
 
         #expect(mockEngagementEventsService.recordedEvents.count == 1)
         #expect(mockEngagementEventsService.recordedEvents.first?.articleID == Article.mockArticles[0].id)
+    }
+
+    @Test("skip(to:) backward in briefing mode records no engagement signal")
+    func skipToBackwardRecordsNoEngagement() async throws {
+        sut.play(items: makeItems(3), mode: .briefing)
+        sut.skip(to: "item-2")
+
+        sut.skip(to: "item-0")
+        try await waitForStateUpdate(duration: TestWaitDuration.short)
+
+        // Only the initial forward skip should have recorded a signal.
+        #expect(mockEngagementEventsService.recordedEvents.count == 1)
     }
 
     @Test("skipping past the digest item records no engagement signal")
