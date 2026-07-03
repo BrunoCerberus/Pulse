@@ -131,6 +131,30 @@ struct MorningBriefingPrefetcherTests {
         #expect(mockFeedService.loadModelCallCount > 0)
     }
 
+    @Test("Prefetch scores articles using the user's configured briefing article count")
+    func prefetchUsesConfiguredArticleCount() async {
+        mockFeedService.loadDelay = 0.01
+        mockFeedService.generateDelay = 0.005
+        mockNewsService.topHeadlinesResult = .success([
+            Article(
+                id: "a1", title: "Title", description: "Desc", content: "Content",
+                source: ArticleSource(id: nil, name: "Source"), url: "https://example.com/a1",
+                publishedAt: Date()
+            ),
+        ])
+        var preferences = enabledPreferences(hoursFromNow: 2)
+        preferences.morningBriefingArticleCount = 4
+        let sut = makeSUT(preferences: preferences)
+
+        sut.prefetchIfNeeded()
+
+        let stored = await waitForCondition(timeout: 3_000_000_000) { @MainActor in
+            self.mockBriefingCacheService.storeCallCount > 0
+        }
+        #expect(stored)
+        #expect(mockForYouService.lastTopN == 4)
+    }
+
     @Test("A generation failure (e.g. the shared LLM busy gate) is swallowed silently")
     func generationFailureIsSwallowed() async {
         mockFeedService.shouldFail = true

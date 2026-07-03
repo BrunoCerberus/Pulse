@@ -37,6 +37,15 @@ enum SpeechTextBuilder {
         return parts.joined(separator: ". ")
     }
 
+    /// `speechText(for:)` prefixed with a spoken transition naming the
+    /// article's source, for items placed after another item in a briefing
+    /// queue. Kept separate from `speechText(for:)` so single-article
+    /// "Listen" playback (Article Detail) never picks up briefing framing.
+    nonisolated static func briefingSpeechText(for article: Article) -> String {
+        let transition = String(format: AppLocalization.localized("briefing.next_up_from"), article.source.name)
+        return "\(transition) \(speechText(for: article))"
+    }
+
     /// Narration text for the AI daily digest: a localized spoken intro
     /// followed by the digest summary with all markdown formatting removed
     /// (the LLM emits `**Category**` headers, which would otherwise be read

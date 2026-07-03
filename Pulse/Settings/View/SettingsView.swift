@@ -241,6 +241,16 @@ struct SettingsView: View {
                     ),
                     displayedComponents: .hourAndMinute
                 )
+
+                Stepper(
+                    Constants.morningBriefingArticleCountValue(viewModel.viewState.morningBriefingArticleCount),
+                    value: Binding(
+                        get: { viewModel.viewState.morningBriefingArticleCount },
+                        set: { viewModel.handle(event: .onMorningBriefingArticleCountChanged($0)) }
+                    ),
+                    in: 3 ... 15
+                )
+                .accessibilityLabel(Constants.morningBriefingArticleCount)
             }
         }
     }

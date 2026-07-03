@@ -157,6 +157,8 @@
 "settings.morning_briefing" = "Morning Briefing";
 "settings.morning_briefing.enable" = "Daily Audio Briefing";
 "settings.morning_briefing.time" = "Briefing Time";
+"settings.morning_briefing.article_count" = "Number of Articles";
+"settings.morning_briefing.article_count_value" = "%d Articles";
 "briefing.notification.title" = "Your Morning Briefing is Ready";
 "briefing.notification.body" = "Tap to listen to your personalized news briefing.";
 
@@ -321,6 +323,7 @@
 "briefing.intro" = "Here's your Pulse briefing.";
 "speech.by_author" = "By %@";
 "briefing.digest_item_title" = "Today's Digest";
+"briefing.next_up_from" = "Next up, from %@.";
 
 "feed.listen_briefing" = "Listen to Briefing";
 "feed.listen_briefing_hint" = "Plays your digest and top stories aloud";

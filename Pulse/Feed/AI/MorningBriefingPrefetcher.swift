@@ -108,7 +108,10 @@ final class MorningBriefingPrefetcher {
             if let forYouService {
                 let forYouBox = UncheckedSendableBox(value: forYouService)
                 let nonMediaPool = pool.filter { !$0.isMedia }
-                let scored = (try? await forYouBox.value.scoredArticles(from: nonMediaPool, topN: 10)) ?? []
+                let scored = (try? await forYouBox.value.scoredArticles(
+                    from: nonMediaPool,
+                    topN: preferences.morningBriefingArticleCount
+                )) ?? []
                 queueArticles = scored.map(\.article)
             }
 

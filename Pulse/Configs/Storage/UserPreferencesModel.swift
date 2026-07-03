@@ -25,6 +25,8 @@ final class UserPreferencesModel {
     var morningBriefingHour: Int = 7
     /// Minute (0-59) at which the daily briefing notification fires.
     var morningBriefingMinute: Int = 0
+    /// Number of For You articles included in the briefing, after the digest.
+    var morningBriefingArticleCount: Int = 10
 
     /// Creates a persistence model from domain preferences.
     /// - Parameter preferences: The domain preferences to persist.
@@ -38,6 +40,7 @@ final class UserPreferencesModel {
         morningBriefingEnabled = preferences.morningBriefingEnabled
         morningBriefingHour = preferences.morningBriefingHour
         morningBriefingMinute = preferences.morningBriefingMinute
+        morningBriefingArticleCount = preferences.morningBriefingArticleCount
     }
 
     /// Converts this persisted model back to domain preferences.
@@ -52,7 +55,8 @@ final class UserPreferencesModel {
             breakingNewsNotifications: breakingNewsNotifications,
             morningBriefingEnabled: morningBriefingEnabled,
             morningBriefingHour: morningBriefingHour,
-            morningBriefingMinute: morningBriefingMinute
+            morningBriefingMinute: morningBriefingMinute,
+            morningBriefingArticleCount: morningBriefingArticleCount
         )
     }
 }

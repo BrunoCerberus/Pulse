@@ -82,6 +82,28 @@ struct SpeechTextBuilderTests {
         #expect(text == "Test Title")
     }
 
+    // MARK: - Briefing Article Speech Text
+
+    @Test("briefing speech text prepends a transition naming the source")
+    func briefingSpeechTextHasTransition() {
+        let article = makeArticle(description: "A description.")
+
+        let text = SpeechTextBuilder.briefingSpeechText(for: article)
+
+        #expect(text.contains(String(format: AppLocalization.localized("briefing.next_up_from"), "Test Source")))
+        #expect(text.contains("Test Title"))
+        #expect(text.contains("A description."))
+    }
+
+    @Test("plain article speech text never contains the briefing transition")
+    func plainSpeechTextHasNoTransition() {
+        let article = makeArticle()
+
+        let text = SpeechTextBuilder.speechText(for: article)
+
+        #expect(!text.contains(String(format: AppLocalization.localized("briefing.next_up_from"), "Test Source")))
+    }
+
     // MARK: - Digest Speech Text
 
     @Test("digest speech text prepends the localized intro")
@@ -138,5 +160,19 @@ struct SpeechTextBuilderTests {
         } else {
             Issue.record("Expected .article kind")
         }
+    }
+
+    @Test("briefingArticle factory prepends the transition; article factory does not")
+    func briefingArticleFactoryAddsTransition() {
+        let article = makeArticle(description: "Desc.")
+
+        let plainItem = PlaybackItem.article(article, language: "en")
+        let briefingItem = PlaybackItem.briefingArticle(article, language: "en")
+
+        let transition = String(format: AppLocalization.localized("briefing.next_up_from"), "Test Source")
+        #expect(!plainItem.speechText.contains(transition))
+        #expect(briefingItem.speechText.contains(transition))
+        #expect(briefingItem.id == article.id)
+        #expect(briefingItem.language == "en")
     }
 }

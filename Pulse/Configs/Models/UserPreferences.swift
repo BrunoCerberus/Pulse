@@ -10,6 +10,7 @@ struct UserPreferences: Equatable, Codable {
     var morningBriefingEnabled: Bool = false
     var morningBriefingHour: Int = 7
     var morningBriefingMinute: Int = 0
+    var morningBriefingArticleCount: Int = 10
 
     static var `default`: UserPreferences {
         UserPreferences(
@@ -21,7 +22,8 @@ struct UserPreferences: Equatable, Codable {
             breakingNewsNotifications: true,
             morningBriefingEnabled: false,
             morningBriefingHour: 7,
-            morningBriefingMinute: 0
+            morningBriefingMinute: 0,
+            morningBriefingArticleCount: 10
         )
     }
 }
