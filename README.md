@@ -19,7 +19,7 @@ See also [`CLAUDE.md`](CLAUDE.md) for the key-files table and [`AGENTS.md`](AGEN
 - **Authentication** — Firebase (Google + Apple) with in-app account deletion and reauthentication.
 - **Home / Media / Feed** — breaking news, in-app video + podcast playback, AI Daily Digest (**Premium**).
 - **AI on-device** — article summarization and Daily Digest via Gemma 3 1B (**Premium**); personalized For You from on-device topic extraction.
-- **Text-to-Speech** — speed presets, language-aware voices, Lock Screen + Dynamic Island Live Activities.
+- **Playback** — global queue with a persistent mini player; on-device TTS (speed presets, language-aware voices), Lock Screen + Dynamic Island Live Activities, and a scheduled Premium **Morning Briefing** (AI digest + personalized For You articles, played back-to-back).
 - **Offline-first** — tiered L1 (memory) + L2 (disk) cache, retry/backoff, `NWPathMonitor`, offline banner.
 - **iCloud sync** — bookmarks, reading history, preferences, interest topics via CloudKit (always-on, zero-UI).
 - **Localization** — English, Portuguese, Spanish (UI + content), no app restart; full accessibility + Dynamic Type.
@@ -75,6 +75,7 @@ For DEBUG builds you can override the Supabase URL via `export SUPABASE_URL="...
 | `pulse://article?id=path/to/article` | specific article |
 | `pulse://media?type=video` (or `podcast`) | media tab filtered by type |
 | `pulse://shared` | drain the Share Extension queue |
+| `pulse://briefing` | switch to Feed and start playing the Morning Briefing |
 
 The deprecated `pulse://category` redirect and the push-notification payload formats are documented in [Architecture → Deeplinks](docs-guide/architecture.md#deeplinks).
 

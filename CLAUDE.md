@@ -42,8 +42,9 @@ Pulse/
 │   ├── Feed/                     # AI Daily Digest (Premium)
 │   ├── Digest/                   # On-device LLM (Gemma 3 1B via SwiftLlama)
 │   ├── Summarization/            # Article summarization (Premium)
-│   ├── ArticleDetail/            # Article + TTS + related articles
+│   ├── ArticleDetail/            # Article + related articles; TTS lives in Playback/
 │   │   └── LiveActivities/       # TTSActivityAttributes, TTSLiveActivityController
+│   ├── Playback/                 # Global playback queue: TTS + Morning Briefing narration + mini player
 │   ├── Intents/                  # AppIntents + PulseAppShortcuts
 │   ├── QuickActions/             # Home-screen long-press shortcuts
 │   ├── SharedURL/                # Drains Share Extension App Group queue
@@ -94,8 +95,9 @@ Pulse/
 | **CloudSync** | `CloudSyncService.swift`, `LiveCloudSyncService.swift`, `CloudSyncDomainInteractor.swift`, `CloudSyncNotifications.swift` | Bridges `NSPersistentCloudKitContainer.eventChangedNotification` + `CKAccountChanged` into Combine |
 | **LLM** | `LLMService.swift`, `LiveLLMService.swift`, `LLMModelManager.swift`, `LLMConfiguration.swift` | SwiftLlama, pinned thread + CFRunLoop, Metal 32 GPU layers |
 | **StoreKit** | `StoreKitService.swift`, `LiveStoreKitService.swift`, `MockStoreKitService.swift`, `PremiumGateView.swift` (has `PremiumFeature` enum), `PaywallView.swift` | StoreKit 2; `MOCK_PREMIUM` env var for UI tests |
-| **TTS** | `TextToSpeechService.swift`, `LiveTextToSpeechService.swift`, `SpeechPlayerBarView.swift` | `AVSpeechSynthesizer` + Now Playing + remote commands |
-| **Live Activities** | `TTSActivityAttributes.swift`, `TTSLiveActivityController.swift`, `TTSLockScreenView.swift`, `PulseWidgetExtension/LiveActivities/TTSLiveActivity.swift` | Driven by `ArticleDetailDomainInteractor` |
+| **Playback** | `PlaybackQueueService.swift`, `LivePlaybackQueueService.swift`, `TextToSpeechService.swift`, `LiveTextToSpeechService.swift`, `NowPlayingController.swift`, `PlaybackDomainInteractor.swift`, `PlaybackViewModel.swift`, `MiniPlayerView.swift`, `PlaybackQueueSheet.swift`, `SpeechTextBuilder.swift` | Global playback queue (single-article "Listen" + Premium Morning Briefing digest→For-You narration); `AVSpeechSynthesizer` + Now Playing + remote commands; app-lifetime instance owned by `Coordinator.playbackViewModel` |
+| **Live Activities** | `TTSActivityAttributes.swift`, `TTSLiveActivityController.swift`, `TTSLockScreenView.swift`, `PulseWidgetExtension/LiveActivities/TTSLiveActivity.swift` | Driven by `LivePlaybackQueueService` in lockstep with the playback queue |
+| **Morning Briefing** | `LiveNotificationService.swift` (`Notifications/API/`), `MorningBriefingPrefetcher.swift`, `BriefingCacheService.swift` (`Feed/API/`) | Daily local notification (`UNCalendarNotificationTrigger`, not `BGTaskScheduler`) opening `pulse://briefing`; foreground prefetch pre-generates the digest so playback starts instantly; Premium-gated via the existing `.dailyDigest` entitlement |
 | **Share Ext** | `PulseShareExtension/{ShareViewController,ShareRootView,SharedURLQueue}.swift`, `SharedURLImportService.swift`, `LiveSharedURLImportService.swift` | `public.url` → App Group queue → `pulse://shared` |
 | **Intents / QA** | `Pulse/Intents/*.swift`, `PulseAppShortcuts.swift`, `QuickActionType.swift`, `QuickActionHandler.swift` | Route via `DeeplinkManager`; titles registered at scene-connect |
 | **Analytics** | `AnalyticsService.swift`, `LiveAnalyticsService.swift`, `MockAnalyticsService.swift` | Firebase events + Crashlytics breadcrumbs |
@@ -136,6 +138,7 @@ Two independent providers:
 | `pulse://article?id=path/to/article` | specific article |
 | `pulse://media?type=video` (or `podcast`) | media tab filtered by type |
 | `pulse://shared` | drain Share Extension queue |
+| `pulse://briefing` | switch to Feed and start playing the Morning Briefing |
 | `pulse://category?name=<category>` | **deprecated** — redirects to home tab |
 
 **Push payloads:**
