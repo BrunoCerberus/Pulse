@@ -30,7 +30,7 @@ Coordinator + per-tab `NavigationPath`, size-class adaptive: `AnimatedTabView` o
 Pulse/
 ├── Pulse/                        # app source
 │   ├── Authentication/ Home/ Media/ MediaDetail/ Feed/ Digest/
-│   ├── Summarization/ ArticleDetail/ Intents/ QuickActions/ SharedURL/
+│   ├── Summarization/ ArticleDetail/ Playback/ Intents/ QuickActions/ SharedURL/
 │   ├── Bookmarks/ ReadingHistory/ CloudSync/ Search/ Settings/
 │   ├── Notifications/ AppLock/ Onboarding/ Paywall/ SplashScreen/
 │   ├── ForYou/ ForYouSettings/ Personalization/
@@ -62,6 +62,7 @@ All system integrations (App Intents, Quick Actions, Share Extension, push handl
 | `pulse://article?id=path/to/article` | specific article |
 | `pulse://media?type=video` (or `podcast`) | media tab filtered by type |
 | `pulse://shared` | drain the Share Extension's App Group URL queue |
+| `pulse://briefing` | switch to Feed and start playing the Morning Briefing |
 | `pulse://category?name=<category>` | **deprecated** — redirects to the Home tab (kept for backward compatibility) |
 
 ### Push payloads

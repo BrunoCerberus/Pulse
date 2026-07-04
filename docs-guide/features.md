@@ -10,7 +10,8 @@ The app uses iOS 26 Liquid Glass on the root `TabView` (iPhone) and `NavigationS
 - **Home / Media / Feed** — breaking news carousel, category filters, recently-read; Videos + Podcasts with in-app playback (YouTube opens externally, podcasts use `AVPlayer`); AI-powered Daily Digest (**Premium**).
 - **Personalized For You** — on-device topic extraction from reading history surfaces a recommended-articles carousel on Home; opt-in/out and topic controls via For You Settings.
 - **Article Summarization** — on-device summaries via Gemma 3 1B (**Premium**).
-- **Text-to-Speech** — `AVSpeechSynthesizer`, speed presets (1×/1.25×/1.5×/2×), language-aware voices, floating mini-player, AirPods/CarPlay/Lock Screen controls.
+- **Playback** — global playback queue (`AVSpeechSynthesizer`), speed presets (1×/1.25×/1.5×/2×), language-aware voices, floating mini-player + expandable queue sheet, AirPods/CarPlay/Lock Screen controls. Single-article "Listen" and the Morning Briefing (below) share this same queue.
+- **Morning Briefing** (**Premium**) — daily local notification at a user-chosen time opens a pre-generated AI Daily Digest followed by personalized For You articles for hands-free listening; foreground prefetch pre-generates the audio so playback starts instantly, and a skip signals negative engagement to personalization.
 - **Offline** — tiered L1 (memory) + L2 (disk) cache, retry with exponential backoff, `NWPathMonitor`, offline banner, graceful degradation.
 - **Bookmarks + Reading History** — SwiftData, read indicators, dedicated history view.
 - **Search** — full-text with 300ms debounce, suggestions, sort options.
@@ -29,4 +30,4 @@ The app uses iOS 26 Liquid Glass on the root `TabView` (iPhone) and `NavigationS
 
 ## Premium
 
-StoreKit 2. Two AI features require a subscription: **AI Daily Digest** and **Article Summarization**. Non-premium users see `PremiumGateView` on Feed or a native StoreKit paywall sheet when tapping the summarize button. The premium-gated set is defined by the `PremiumFeature` enum (`dailyDigest`, `articleSummarization`).
+StoreKit 2. Two AI features require a subscription: **AI Daily Digest** and **Article Summarization**. Non-premium users see `PremiumGateView` on Feed or a native StoreKit paywall sheet when tapping the summarize button. The premium-gated set is defined by the `PremiumFeature` enum (`dailyDigest`, `articleSummarization`, `audioBriefing`); Morning Briefing rides on the existing `dailyDigest` entitlement rather than its own gate.
