@@ -59,7 +59,7 @@ jobs:
     # archives with the dead path aren't restored.
     # Note: Static version key (brew-v2) - increment manually when brew dependencies change
     - name: Cache Homebrew packages
-      uses: actions/cache@2c8a9bd7457de244a408f35966fab2fb45fda9c8 # v6.0.0
+      uses: actions/cache@55cc8345863c7cc4c66a329aec7e433d2d1c52a9 # v6.1.0
       with:
         path: ~/Library/Caches/Homebrew
         key: ${{ runner.os }}-brew-v2
@@ -67,7 +67,7 @@ jobs:
     # Cache Mint packages
     # Note: Static version key (mint-v1) - increment manually when mint dependencies change
     - name: Cache Mint packages
-      uses: actions/cache@2c8a9bd7457de244a408f35966fab2fb45fda9c8 # v6.0.0
+      uses: actions/cache@55cc8345863c7cc4c66a329aec7e433d2d1c52a9 # v6.1.0
       with:
         path: ~/.mint
         key: ${{ runner.os }}-mint-v1
