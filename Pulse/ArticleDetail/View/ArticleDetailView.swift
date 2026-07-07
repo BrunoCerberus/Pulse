@@ -41,6 +41,7 @@ struct ArticleDetailView: View {
     }
 
     var body: some View {
+        let url = heroImageURL
         ZStack(alignment: .bottom) {
             GeometryReader { proxy in
                 ZStack(alignment: .top) {
@@ -49,7 +50,7 @@ struct ArticleDetailView: View {
 
                     ScrollView {
                         VStack(alignment: .leading, spacing: 0) {
-                            if let url = heroImageURL {
+                            if let url {
                                 heroHeader(url: url)
                             }
 
@@ -66,10 +67,10 @@ struct ArticleDetailView: View {
                     // global minY is 0 at rest — otherwise the hero loads pre-stretched
                     // by the safe-area inset. Without a hero, keep the safe area so the
                     // content card doesn't slide under the toolbar.
-                    .ignoresSafeArea(edges: heroImageURL != nil ? .top : [])
+                    .ignoresSafeArea(edges: url != nil ? .top : [])
                     // The system adds a soft scrim once content extends under the
                     // status bar; hide it so the hero stays edge-to-edge clean.
-                    .scrollEdgeEffectHidden(heroImageURL != nil, for: .top)
+                    .scrollEdgeEffectHidden(url != nil, for: .top)
                 }
             }
         }
@@ -242,6 +243,7 @@ struct ArticleDetailView: View {
                             .scaleEffect(stretchScale)
                     }
                     .frame(width: geo.size.width, height: geo.size.height)
+                    .clipped()
                 }
             } placeholder: {
                 Rectangle()
