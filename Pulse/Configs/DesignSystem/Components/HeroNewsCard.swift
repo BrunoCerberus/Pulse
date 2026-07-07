@@ -28,8 +28,10 @@ struct HeroNewsCard: View {
     @Environment(\.accessibilityReduceMotion) private var reduceMotion
     @Environment(\.dynamicTypeSize) private var dynamicTypeSize
 
+    // 40:21 matches the og:image crop (1200×630) the backend extracts for hero
+    // images, so `.fill` doesn't crop the sides
     private var cardHeight: CGFloat {
-        cardWidth * (200.0 / 300.0)
+        cardWidth * (21.0 / 40.0)
     }
 
     var body: some View {

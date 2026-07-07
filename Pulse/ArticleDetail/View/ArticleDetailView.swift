@@ -36,6 +36,10 @@ struct ArticleDetailView: View {
         _paywallViewModel = StateObject(wrappedValue: PaywallViewModel(serviceLocator: serviceLocator))
     }
 
+    private var heroImageURL: URL? {
+        viewModel.viewState.article.heroImageURL.flatMap(URL.init(string:))
+    }
+
     var body: some View {
         ZStack(alignment: .bottom) {
             GeometryReader { proxy in
@@ -45,14 +49,8 @@ struct ArticleDetailView: View {
 
                     ScrollView {
                         VStack(alignment: .leading, spacing: 0) {
-                            if let imageURL = viewModel.viewState.article.heroImageURL,
-                               let url = URL(string: imageURL)
-                            {
-                                StretchyAsyncImage(
-                                    url: url,
-                                    baseHeight: heroBaseHeight,
-                                    accessibilityLabel: viewModel.viewState.article.title
-                                )
+                            if let url = heroImageURL {
+                                heroHeader(url: url)
                             }
 
                             HStack(spacing: 0) {
@@ -64,6 +62,14 @@ struct ArticleDetailView: View {
                         }
                     }
                     .accessibilityIdentifier("articleDetailScrollView")
+                    // Anchor the scroll content at the physical top so StretchyHeader's
+                    // global minY is 0 at rest — otherwise the hero loads pre-stretched
+                    // by the safe-area inset. Without a hero, keep the safe area so the
+                    // content card doesn't slide under the toolbar.
+                    .ignoresSafeArea(edges: heroImageURL != nil ? .top : [])
+                    // The system adds a soft scrim once content extends under the
+                    // status bar; hide it so the hero stays edge-to-edge clean.
+                    .scrollEdgeEffectHidden(heroImageURL != nil, for: .top)
                 }
             }
         }
@@ -205,6 +211,44 @@ struct ArticleDetailView: View {
     /// Sizes the card to fill below the hero so `.regularMaterial` doesn't expose the gradient at the bottom.
     private func contentCardMinHeight(in proxy: GeometryProxy) -> CGFloat {
         max(proxy.size.height - heroBaseHeight + Spacing.lg, 0)
+    }
+
+    /// Shows the whole hero image (the backend's 40:21 og:image is wider than the
+    /// 280pt header) fitted inside the header, with a blurred copy filling the
+    /// space above and below so the header stays tall and edge-to-edge.
+    private func heroHeader(url: URL) -> some View {
+        StretchyHeader(baseHeight: heroBaseHeight) {
+            CachedAsyncImage(
+                url: url,
+                accessibilityLabel: viewModel.viewState.article.title
+            ) { image in
+                GeometryReader { geo in
+                    // geo.size.height grows past baseHeight while the header is
+                    // pulled down; zoom the photo by the same ratio so the
+                    // stretch reads as the classic hero zoom, not extra blur.
+                    let stretchScale = max(1, geo.size.height / heroBaseHeight)
+                    ZStack {
+                        image
+                            .resizable()
+                            .scaledToFill()
+                            .frame(width: geo.size.width, height: geo.size.height)
+                            .blur(radius: 24, opaque: true)
+                            .clipped()
+
+                        image
+                            .resizable()
+                            .scaledToFit()
+                            .frame(width: geo.size.width)
+                            .scaleEffect(stretchScale)
+                    }
+                    .frame(width: geo.size.width, height: geo.size.height)
+                }
+            } placeholder: {
+                Rectangle()
+                    .fill(Color.primary.opacity(0.05))
+                    .overlay { ProgressView() }
+            }
+        }
     }
 
     // swiftlint:disable:next function_body_length
