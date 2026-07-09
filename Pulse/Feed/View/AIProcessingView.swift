@@ -340,7 +340,9 @@ private struct FloatingParticles: View {
             await animateParticles()
         }
         .onChange(of: isGenerating) { _, newValue in
-            if newValue { intensifyParticles() }
+            if newValue {
+                intensifyParticles()
+            }
         }
     }
 

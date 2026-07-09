@@ -153,15 +153,25 @@ final class Coordinator: ObservableObject {
     func pop() {
         switch selectedTab {
         case .home:
-            if !homePath.isEmpty { homePath.removeLast() }
+            if !homePath.isEmpty {
+                homePath.removeLast()
+            }
         case .media:
-            if !mediaPath.isEmpty { mediaPath.removeLast() }
+            if !mediaPath.isEmpty {
+                mediaPath.removeLast()
+            }
         case .feed:
-            if !feedPath.isEmpty { feedPath.removeLast() }
+            if !feedPath.isEmpty {
+                feedPath.removeLast()
+            }
         case .bookmarks:
-            if !bookmarksPath.isEmpty { bookmarksPath.removeLast() }
+            if !bookmarksPath.isEmpty {
+                bookmarksPath.removeLast()
+            }
         case .search:
-            if !searchPath.isEmpty { searchPath.removeLast() }
+            if !searchPath.isEmpty {
+                searchPath.removeLast()
+            }
         }
     }
 

@@ -93,13 +93,17 @@ struct LivePlaybackQueueServiceTests {
     func playLogsAnalytics() {
         sut.play(items: makeItems(3), mode: .briefing)
         #expect(mockAnalyticsService.loggedEvents.contains { event in
-            if case let .briefingStarted(itemCount) = event { return itemCount == 3 }
+            if case let .briefingStarted(itemCount) = event {
+                return itemCount == 3
+            }
             return false
         })
 
         sut.play(items: makeItems(1), mode: .singleArticle)
         #expect(mockAnalyticsService.loggedEvents.contains { event in
-            if case .ttsStarted = event { return true }
+            if case .ttsStarted = event {
+                return true
+            }
             return false
         })
     }
@@ -130,7 +134,9 @@ struct LivePlaybackQueueServiceTests {
         #expect(sut.currentState.items.isEmpty)
         #expect(mockTTSService.stopCallCount >= 1)
         #expect(mockAnalyticsService.loggedEvents.contains { event in
-            if case .briefingCompleted = event { return true }
+            if case .briefingCompleted = event {
+                return true
+            }
             return false
         })
     }
@@ -144,7 +150,9 @@ struct LivePlaybackQueueServiceTests {
 
         #expect(sut.currentState.currentIndex == nil)
         #expect(!mockAnalyticsService.loggedEvents.contains { event in
-            if case .briefingCompleted = event { return true }
+            if case .briefingCompleted = event {
+                return true
+            }
             return false
         })
     }
@@ -211,7 +219,9 @@ struct LivePlaybackQueueServiceTests {
         sut.next()
 
         let skippedCount = mockAnalyticsService.loggedEvents.filter { event in
-            if case .briefingItemSkipped = event { return true }
+            if case .briefingItemSkipped = event {
+                return true
+            }
             return false
         }.count
         #expect(skippedCount == 1)
@@ -323,7 +333,9 @@ struct LivePlaybackQueueServiceTests {
         #expect(sut.currentState.items.isEmpty)
         #expect(mockTTSService.stopCallCount == 1)
         #expect(mockAnalyticsService.loggedEvents.contains { event in
-            if case let .briefingStopped(itemsPlayed) = event { return itemsPlayed == 1 }
+            if case let .briefingStopped(itemsPlayed) = event {
+                return itemsPlayed == 1
+            }
             return false
         })
     }
@@ -335,7 +347,9 @@ struct LivePlaybackQueueServiceTests {
         sut.stop()
 
         #expect(mockAnalyticsService.loggedEvents.contains { event in
-            if case .ttsStopped = event { return true }
+            if case .ttsStopped = event {
+                return true
+            }
             return false
         })
     }

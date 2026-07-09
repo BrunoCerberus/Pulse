@@ -18,12 +18,16 @@ struct MediaViewEventTests {
 
     @Test("onMediaTapped event") func onMediaTapped() {
         let event = MediaViewEvent.onMediaTapped(mediaId: "id")
-        if case let .onMediaTapped(mediaId) = event { #expect(mediaId == "id") }
+        if case let .onMediaTapped(mediaId) = event {
+            #expect(mediaId == "id")
+        }
     }
 
     @Test("onMediaTypeSelected event") func onMediaTypeSelected() {
         let event = MediaViewEvent.onMediaTypeSelected(.video)
-        if case let .onMediaTypeSelected(type) = event { #expect(type == .video) }
+        if case let .onMediaTypeSelected(type) = event {
+            #expect(type == .video)
+        }
     }
 
     @Test("onMediaNavigated event") func onMediaNavigated() {
@@ -32,7 +36,9 @@ struct MediaViewEventTests {
 
     @Test("onShareTapped event") func onShareTapped() {
         let event = MediaViewEvent.onShareTapped(mediaId: "id")
-        if case let .onShareTapped(mediaId) = event { #expect(mediaId == "id") }
+        if case let .onShareTapped(mediaId) = event {
+            #expect(mediaId == "id")
+        }
     }
 
     @Test("onShareDismissed event") func onShareDismissed() {
@@ -41,7 +47,9 @@ struct MediaViewEventTests {
 
     @Test("onPlayTapped event") func onPlayTapped() {
         let event = MediaViewEvent.onPlayTapped(mediaId: "id")
-        if case let .onPlayTapped(mediaId) = event { #expect(mediaId == "id") }
+        if case let .onPlayTapped(mediaId) = event {
+            #expect(mediaId == "id")
+        }
     }
 
     @Test("onPlayDismissed event") func onPlayDismissed() {

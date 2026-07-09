@@ -96,7 +96,11 @@ final class LivePlaybackQueueService: PlaybackQueueService {
         case .playing:
             ttsService.pause()
         case .paused:
-            if needsRespeakOnResume { speakCurrentItem() } else { ttsService.resume() }
+            if needsRespeakOnResume {
+                speakCurrentItem()
+            } else {
+                ttsService.resume()
+            }
         case .idle:
             break
         }
@@ -116,7 +120,9 @@ final class LivePlaybackQueueService: PlaybackQueueService {
         // Unlike `next()`, going backward isn't a disinterest signal — a
         // listener hits "previous" to replay something, not to skip past
         // it — so this only logs analytics, never `recordSkipEngagement()`.
-        if currentState.mode == .briefing { analyticsService?.logEvent(.briefingItemSkipped) }
+        if currentState.mode == .briefing {
+            analyticsService?.logEvent(.briefingItemSkipped)
+        }
         advance(to: index - 1)
     }
 
@@ -129,7 +135,9 @@ final class LivePlaybackQueueService: PlaybackQueueService {
             analyticsService?.logEvent(.briefingItemSkipped)
             // Same rationale as `previous()`: only a forward jump reflects
             // disinterest in the item being left; jumping backward doesn't.
-            if target > currentIndex { recordSkipEngagement() }
+            if target > currentIndex {
+                recordSkipEngagement()
+            }
         }
         advance(to: target)
     }
@@ -138,7 +146,9 @@ final class LivePlaybackQueueService: PlaybackQueueService {
         let nextPreset = currentState.speedPreset.next()
         updateState { state in
             state.speedPreset = nextPreset
-            if state.currentIndex != nil { state.itemProgress = 0.0 }
+            if state.currentIndex != nil {
+                state.itemProgress = 0.0
+            }
         }
 
         guard currentState.currentIndex != nil else {
@@ -254,7 +264,9 @@ final class LivePlaybackQueueService: PlaybackQueueService {
                 if self.currentState.hasNext {
                     self.advance(to: index + 1)
                 } else {
-                    if self.currentState.mode == .briefing { self.analyticsService?.logEvent(.briefingCompleted) }
+                    if self.currentState.mode == .briefing {
+                        self.analyticsService?.logEvent(.briefingCompleted)
+                    }
                     self.teardownPlayback()
                 }
             }
@@ -305,7 +317,9 @@ final class LivePlaybackQueueService: PlaybackQueueService {
 
         switch type {
         case .began:
-            if currentState.playbackState == .playing { ttsService.pause(); pausedByInterruption = true }
+            if currentState.playbackState == .playing {
+                ttsService.pause(); pausedByInterruption = true
+            }
         case .ended:
             let optionsValue = notification.userInfo?[AVAudioSessionInterruptionOptionKey] as? UInt
             let options = AVAudioSession.InterruptionOptions(rawValue: optionsValue ?? 0)
@@ -314,7 +328,11 @@ final class LivePlaybackQueueService: PlaybackQueueService {
             if options.contains(.shouldResume), wasInterruptionPause,
                currentState.playbackState == .paused
             {
-                if needsRespeakOnResume { speakCurrentItem() } else { ttsService.resume() }
+                if needsRespeakOnResume {
+                    speakCurrentItem()
+                } else {
+                    ttsService.resume()
+                }
             }
         @unknown default: break
         }
@@ -348,6 +366,8 @@ final class LivePlaybackQueueService: PlaybackQueueService {
         stateSubject.send(state)
         // Skip the MPNowPlayingInfoCenter XPC write unless rendered fields changed.
         beforeNowPlaying.itemProgress = state.itemProgress
-        if beforeNowPlaying != state { nowPlayingController.update(with: state) }
+        if beforeNowPlaying != state {
+            nowPlayingController.update(with: state)
+        }
     }
 }

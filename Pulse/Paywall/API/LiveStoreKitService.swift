@@ -231,7 +231,9 @@ final class LiveStoreKitService: StoreKitService, @unchecked Sendable {
                 state.isUpdating = false
                 return false
             }
-            if !shouldRerun { break }
+            if !shouldRerun {
+                break
+            }
         }
     }
 
@@ -246,7 +248,9 @@ final class LiveStoreKitService: StoreKitService, @unchecked Sendable {
 
                 if transaction.productType == .autoRenewable {
                     hasActiveSubscription = transaction.revocationDate == nil
-                    if hasActiveSubscription { break }
+                    if hasActiveSubscription {
+                        break
+                    }
                 }
             } catch {
                 Logger.shared.error("Failed to verify entitlement: \(error)")

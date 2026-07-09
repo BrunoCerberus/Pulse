@@ -14,7 +14,9 @@ final class MockForYouService: ForYouService, @unchecked Sendable {
     }
 
     func explanation(for matchedTopics: [String]) -> String {
-        if let explanationOverride { return explanationOverride }
+        if let explanationOverride {
+            return explanationOverride
+        }
         return matchedTopics.joined(separator: ", ")
     }
 }

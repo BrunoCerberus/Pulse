@@ -118,7 +118,9 @@ struct SummarizationViewModelTests {
 
         // Wait for error state with longer timeout
         let hasError = await waitForCondition(timeout: 3_000_000_000) { @MainActor [sut] in
-            if case .error = sut.viewState.summarizationState { return true }
+            if case .error = sut.viewState.summarizationState {
+                return true
+            }
             return false
         }
 

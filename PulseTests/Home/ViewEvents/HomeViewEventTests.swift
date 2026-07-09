@@ -18,17 +18,23 @@ struct HomeViewEventTests {
 
     @Test("onArticleTapped event") func onArticleTapped() {
         let event = HomeViewEvent.onArticleTapped(articleId: "id")
-        if case let .onArticleTapped(id) = event { #expect(id == "id") }
+        if case let .onArticleTapped(id) = event {
+            #expect(id == "id")
+        }
     }
 
     @Test("onBookmarkTapped event") func onBookmarkTapped() {
         let event = HomeViewEvent.onBookmarkTapped(articleId: "id")
-        if case let .onBookmarkTapped(id) = event { #expect(id == "id") }
+        if case let .onBookmarkTapped(id) = event {
+            #expect(id == "id")
+        }
     }
 
     @Test("onShareTapped event") func onShareTapped() {
         let event = HomeViewEvent.onShareTapped(articleId: "id")
-        if case let .onShareTapped(id) = event { #expect(id == "id") }
+        if case let .onShareTapped(id) = event {
+            #expect(id == "id")
+        }
     }
 
     @Test("onShareDismissed event") func onShareDismissed() {
@@ -37,6 +43,8 @@ struct HomeViewEventTests {
 
     @Test("onCategorySelected event") func onCategorySelected() {
         let event = HomeViewEvent.onCategorySelected(.technology)
-        if case let .onCategorySelected(cat) = event { #expect(cat == .technology) }
+        if case let .onCategorySelected(cat) = event {
+            #expect(cat == .technology)
+        }
     }
 }

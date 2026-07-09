@@ -51,12 +51,24 @@ final class MediaDetailDomainInteractor: CombineInteractor {
     }
 
     func dispatch(action: DomainAction) {
-        if handleLifecycle(action) { return }
-        if handlePlaybackControl(action) { return }
-        if handlePlaybackEvents(action) { return }
-        if handleShareSheet(action) { return }
-        if handleBookmark(action) { return }
-        if handleBrowser(action) { return }
+        if handleLifecycle(action) {
+            return
+        }
+        if handlePlaybackControl(action) {
+            return
+        }
+        if handlePlaybackEvents(action) {
+            return
+        }
+        if handleShareSheet(action) {
+            return
+        }
+        if handleBookmark(action) {
+            return
+        }
+        if handleBrowser(action) {
+            return
+        }
     }
 
     private func handleLifecycle(_ action: DomainAction) -> Bool {

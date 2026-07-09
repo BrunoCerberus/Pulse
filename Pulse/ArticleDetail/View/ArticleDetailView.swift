@@ -135,13 +135,21 @@ struct ArticleDetailView: View {
         }
         .sheet(isPresented: Binding(
             get: { viewModel.viewState.showShareSheet },
-            set: { if !$0 { viewModel.handle(event: .onShareSheetDismissed) } }
+            set: {
+                if !$0 {
+                    viewModel.handle(event: .onShareSheetDismissed)
+                }
+            }
         )) {
             ShareSheet(activityItems: ShareItemsBuilder.activityItems(for: viewModel.viewState.article))
         }
         .sheet(isPresented: Binding(
             get: { viewModel.viewState.showSummarizationSheet },
-            set: { if !$0 { viewModel.handle(event: .onSummarizationSheetDismissed) } }
+            set: {
+                if !$0 {
+                    viewModel.handle(event: .onSummarizationSheetDismissed)
+                }
+            }
         )) {
             SummarizationSheet(
                 viewModel: SummarizationViewModel(
@@ -235,6 +243,7 @@ struct ArticleDetailView: View {
                             .frame(width: geo.size.width, height: geo.size.height)
                             .blur(radius: 24, opaque: true)
                             .clipped()
+                            .accessibilityHidden(true)
 
                         image
                             .resizable()

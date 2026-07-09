@@ -200,7 +200,9 @@ struct VideoPlayerView: UIViewRepresentable {
         /// is unit-testable without a live `WKWebView`.
         static func allowsDirectVideoNavigation(to url: URL?, host: String?) -> Bool {
             guard let url else { return false }
-            if url.scheme == "about" { return true }
+            if url.scheme == "about" {
+                return true
+            }
             guard SafeMediaURL.isSafe(url), let host else { return false }
             return url.host?.lowercased() == host
         }

@@ -158,7 +158,9 @@ final class TopicExtractionDrainer {
         // "double-count forever". Per-event (vs. batched at end-of-drain) keeps
         // any single failure from forfeiting the whole batch.
         for event in pending {
-            if Task.isCancelled { break }
+            if Task.isCancelled {
+                break
+            }
             do {
                 let tags = try await extraction.value.extractTopics(
                     title: event.articleTitle,

@@ -52,7 +52,9 @@ final class AudioPlayerManager: ObservableObject {
     /// `@MainActor`-isolated / non-Sendable, so a nonisolated deinit can't touch
     /// them — the `onDisappear → cleanup()` path invalidates those.
     deinit {
-        if let timeObserver { player?.removeTimeObserver(timeObserver) }
+        if let timeObserver {
+            player?.removeTimeObserver(timeObserver)
+        }
     }
 
     // MARK: - Audio Session

@@ -36,7 +36,9 @@ struct ForYouSettingsView: View {
             isPresented: Binding(
                 get: { viewModel.viewState.showResetConfirmation },
                 set: { newValue in
-                    if !newValue { viewModel.handle(event: .onResetCancelled) }
+                    if !newValue {
+                        viewModel.handle(event: .onResetCancelled)
+                    }
                 }
             )
         ) {

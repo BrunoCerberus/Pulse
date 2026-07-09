@@ -207,7 +207,9 @@ struct LivePlaybackQueueServiceEventTests {
         sut.play(items: makeItems(2), mode: .briefing)
 
         #expect(mockAnalyticsService.loggedEvents.contains { event in
-            if case let .briefingStopped(itemsPlayed) = event { return itemsPlayed == 1 }
+            if case let .briefingStopped(itemsPlayed) = event {
+                return itemsPlayed == 1
+            }
             return false
         })
     }
@@ -223,7 +225,9 @@ struct LivePlaybackQueueServiceEventTests {
         // item-0 and item-1 actually reached the synthesizer; revisiting
         // item-0 must not double-count, and position (1) must not undercount.
         #expect(mockAnalyticsService.loggedEvents.contains { event in
-            if case let .briefingStopped(itemsPlayed) = event { return itemsPlayed == 2 }
+            if case let .briefingStopped(itemsPlayed) = event {
+                return itemsPlayed == 2
+            }
             return false
         })
     }
@@ -235,7 +239,9 @@ struct LivePlaybackQueueServiceEventTests {
         sut.previous()
 
         let skippedCount = mockAnalyticsService.loggedEvents.filter { event in
-            if case .briefingItemSkipped = event { return true }
+            if case .briefingItemSkipped = event {
+                return true
+            }
             return false
         }.count
         #expect(skippedCount == 2)

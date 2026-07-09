@@ -107,7 +107,9 @@ struct SummarizationDomainInteractorTests {
 
         // Wait for error state
         let hasError = await waitForCondition(timeout: 1_000_000_000) { @MainActor [sut] in
-            if case .error = sut.currentState.summarizationState { return true }
+            if case .error = sut.currentState.summarizationState {
+                return true
+            }
             return false
         }
 
