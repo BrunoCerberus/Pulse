@@ -108,6 +108,54 @@ struct CoordinatorTests {
         #expect(sut.homePath.count == 1)
     }
 
+    @Test("Pop removes last page from media tab")
+    func popRemovesLastPageFromMediaTab() {
+        let article = Article.mockArticles[0]
+        sut.push(page: .articleDetail(article), in: .media)
+        sut.switchTab(to: .media)
+        #expect(sut.mediaPath.count == 1)
+
+        sut.pop()
+
+        #expect(sut.mediaPath.isEmpty)
+    }
+
+    @Test("Pop removes last page from feed tab")
+    func popRemovesLastPageFromFeedTab() {
+        let article = Article.mockArticles[0]
+        sut.push(page: .articleDetail(article), in: .feed)
+        sut.switchTab(to: .feed)
+        #expect(sut.feedPath.count == 1)
+
+        sut.pop()
+
+        #expect(sut.feedPath.isEmpty)
+    }
+
+    @Test("Pop removes last page from bookmarks tab")
+    func popRemovesLastPageFromBookmarksTab() {
+        let article = Article.mockArticles[0]
+        sut.push(page: .articleDetail(article), in: .bookmarks)
+        sut.switchTab(to: .bookmarks)
+        #expect(sut.bookmarksPath.count == 1)
+
+        sut.pop()
+
+        #expect(sut.bookmarksPath.isEmpty)
+    }
+
+    @Test("Pop removes last page from search tab")
+    func popRemovesLastPageFromSearchTab() {
+        let article = Article.mockArticles[0]
+        sut.push(page: .articleDetail(article), in: .search)
+        sut.switchTab(to: .search)
+        #expect(sut.searchPath.count == 1)
+
+        sut.pop()
+
+        #expect(sut.searchPath.isEmpty)
+    }
+
     // MARK: - Pop To Root Tests
 
     @Test("Pop to root clears current tab path")
