@@ -4,6 +4,9 @@ import SwiftUI
 // MARK: - Hero News Card
 
 struct HeroNewsCard: View {
+    /// Matches the og:image crop (1200×630) the backend extracts for hero images.
+    static let heroImageAspectRatio: CGFloat = 40.0 / 21.0
+
     private enum Constants {
         static var breakingNewsAccessibilityLabelFormat: String {
             AppLocalization.localized("breaking_news.accessibility_label")
@@ -29,7 +32,7 @@ struct HeroNewsCard: View {
     @Environment(\.dynamicTypeSize) private var dynamicTypeSize
 
     private var cardHeight: CGFloat {
-        cardWidth * (200.0 / 300.0)
+        cardWidth / Self.heroImageAspectRatio
     }
 
     var body: some View {

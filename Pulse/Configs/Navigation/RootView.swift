@@ -98,7 +98,9 @@ struct RootView: View {
         guard isAppLockEnabled else { return false }
         guard case .authenticated = authState else { return false }
         guard scenePhase != .active else { return false }
-        if isAuthenticating { return false }
+        if isAuthenticating {
+            return false
+        }
         return true
     }
 

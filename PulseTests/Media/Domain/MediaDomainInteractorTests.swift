@@ -261,7 +261,9 @@ struct MediaDomainInteractorTests {
         let loaded = await waitForCondition(timeout: 500_000_000) { @MainActor in
             let state = self.sut.currentState
             guard state.hasLoadedInitialData else { return false }
-            if !state.mediaItems.isEmpty { return true }
+            if !state.mediaItems.isEmpty {
+                return true
+            }
             return !state.featuredMedia.isEmpty
         }
         #expect(loaded, "Media should have loaded within timeout")

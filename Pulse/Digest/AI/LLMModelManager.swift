@@ -81,7 +81,9 @@ final class LLMModelManager: @unchecked Sendable {
     /// Load the GGUF model into memory
     func loadModel(progressHandler: @escaping @Sendable (Double) -> Void) async throws {
         let alreadyLoaded = lock.withLock { llamaService != nil }
-        if alreadyLoaded { return }
+        if alreadyLoaded {
+            return
+        }
 
         let memoryTier = MemoryTier.current
         logMemoryTier(memoryTier)
@@ -236,7 +238,9 @@ final class LLMModelManager: @unchecked Sendable {
             // `Task {}` only schedules the closure, so the lock is released
             // before `runInference` runs (no re-entrant deadlock).
             let didAcquire = self.lock.withLock { () -> Bool in
-                if self.isGenerating { return false }
+                if self.isGenerating {
+                    return false
+                }
                 self.isGenerating = true
                 self.generationTask = Task {
                     await self.runInference(

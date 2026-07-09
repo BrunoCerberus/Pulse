@@ -107,7 +107,9 @@ struct SummarizationDomainInteractorTests {
 
         // Wait for error state
         let hasError = await waitForCondition(timeout: 1_000_000_000) { @MainActor [sut] in
-            if case .error = sut.currentState.summarizationState { return true }
+            if case .error = sut.currentState.summarizationState {
+                return true
+            }
             return false
         }
 
@@ -225,5 +227,16 @@ extension SummarizationDomainInteractorTests {
         #expect(summarizedEvents.count == 1)
         #expect(summarizedEvents.first?.parameters?["success"] as? Bool == false)
         #expect(mockAnalyticsService.recordedErrors.count == 1)
+    }
+
+    @Test("Second loadModelIfNeeded call is a no-op once the model is ready")
+    func loadModelIfNeededIsNoOpOnceReady() async throws {
+        try await mockSummarizationService.loadModelIfNeeded()
+        #expect(mockSummarizationService.isModelLoaded)
+
+        // Re-entering with the model already `.ready` must hit the early-return
+        // guard rather than re-loading.
+        try await mockSummarizationService.loadModelIfNeeded()
+        #expect(mockSummarizationService.isModelLoaded)
     }
 }

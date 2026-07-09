@@ -14,7 +14,9 @@ struct MediaDetailViewEventTests {
 
     @Test("onSeek event") func onSeek() {
         let event = MediaDetailViewEvent.onSeek(progress: 0.5)
-        if case let .onSeek(progress) = event { #expect(progress == 0.5) }
+        if case let .onSeek(progress) = event {
+            #expect(progress == 0.5)
+        }
     }
 
     @Test("onSkipBackwardTapped event") func onSkipBackwardTapped() {

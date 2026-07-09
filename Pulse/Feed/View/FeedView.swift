@@ -32,7 +32,9 @@ struct FeedView<R: FeedNavigationRouter>: View {
     }
 
     private var isProcessing: Bool {
-        if case .processing = viewModel.viewState.displayState { return true }
+        if case .processing = viewModel.viewState.displayState {
+            return true
+        }
         return false
     }
 

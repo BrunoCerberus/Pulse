@@ -188,7 +188,9 @@ struct OnboardingDomainInteractorTests {
         try await waitForStateUpdate(duration: TestWaitDuration.short)
 
         let event = mockAnalyticsService.loggedEvents.first { event in
-            if case .onboardingTopicsSelected = event { return true }
+            if case .onboardingTopicsSelected = event {
+                return true
+            }
             return false
         }
         guard case let .onboardingTopicsSelected(count, topics) = event else {
@@ -207,7 +209,9 @@ struct OnboardingDomainInteractorTests {
         try await waitForStateUpdate(duration: TestWaitDuration.short)
 
         let hasTopicsEvent = mockAnalyticsService.loggedEvents.contains { event in
-            if case .onboardingTopicsSelected = event { return true }
+            if case .onboardingTopicsSelected = event {
+                return true
+            }
             return false
         }
         #expect(hasTopicsEvent == false)

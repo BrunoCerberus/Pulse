@@ -103,7 +103,7 @@ extension HomeView {
                             viewModel.handle(event: .onArticleTapped(articleId: item.id))
                         }
                     }
-                    .aspectRatio(300.0 / 200.0, contentMode: .fit)
+                    .aspectRatio(HeroNewsCard.heroImageAspectRatio, contentMode: .fit)
                     .fadeIn(delay: Double(item.animationIndex) * 0.1)
                 }
             }

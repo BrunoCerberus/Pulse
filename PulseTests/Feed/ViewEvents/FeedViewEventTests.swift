@@ -15,7 +15,9 @@ struct FeedViewEventTests {
     @Test("onArticleTapped event") func onArticleTapped() {
         let article = Article.mockArticles[0]
         let event = FeedViewEvent.onArticleTapped(article)
-        if case let .onArticleTapped(tappedArticle) = event { #expect(tappedArticle.id == article.id) }
+        if case let .onArticleTapped(tappedArticle) = event {
+            #expect(tappedArticle.id == article.id)
+        }
     }
 
     @Test("onArticleNavigated event") func onArticleNavigated() {

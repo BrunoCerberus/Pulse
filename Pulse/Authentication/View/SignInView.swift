@@ -55,7 +55,11 @@ struct SignInView: View {
             Constants.error,
             isPresented: Binding(
                 get: { pendingCleanupError != nil },
-                set: { if !$0 { dismissPendingCleanupError() } }
+                set: {
+                    if !$0 {
+                        dismissPendingCleanupError()
+                    }
+                }
             )
         ) {
             Button(Constants.okButton) { dismissPendingCleanupError() }

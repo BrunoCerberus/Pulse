@@ -272,7 +272,9 @@ final class MockSummarizationService: SummarizationService, @unchecked Sendable 
     }
 
     var isModelLoaded: Bool {
-        if case .ready = modelStatusSubject.value { return true }
+        if case .ready = modelStatusSubject.value {
+            return true
+        }
         return false
     }
 
@@ -335,7 +337,9 @@ final class MockLLMService: LLMService, @unchecked Sendable {
 
     var isModelLoaded: Bool {
         get {
-            if case .ready = modelStatusSubject.value { return true }
+            if case .ready = modelStatusSubject.value {
+                return true
+            }
             return false
         }
         set {

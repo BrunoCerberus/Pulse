@@ -71,8 +71,12 @@ struct FeedViewModelTests {
         // Wait for generation to be in progress or completed
         let success = await waitForCondition(timeout: 2_000_000_000) { @MainActor [sut] in
             let state = sut.viewState.displayState
-            if case .processing = state { return true }
-            if case .completed = state { return true }
+            if case .processing = state {
+                return true
+            }
+            if case .completed = state {
+                return true
+            }
             return false
         }
         #expect(success)

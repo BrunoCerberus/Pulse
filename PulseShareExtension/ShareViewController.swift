@@ -111,8 +111,12 @@ final class ShareViewController: UIViewController {
                     // Extract Sendable types before hopping to the main actor —
                     // `value` is `Any?` and cannot be safely sent across isolation.
                     let extractedURL: URL? = {
-                        if let url = value as? URL { return url }
-                        if let urlString = value as? String { return URL(string: urlString) }
+                        if let url = value as? URL {
+                            return url
+                        }
+                        if let urlString = value as? String {
+                            return URL(string: urlString)
+                        }
                         return nil
                     }()
                     let capturedError = error

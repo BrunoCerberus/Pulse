@@ -77,7 +77,11 @@ struct MediaDetailView: View {
         }
         .sheet(isPresented: Binding(
             get: { viewModel.viewState.showShareSheet },
-            set: { if !$0 { viewModel.handle(event: .onShareDismissed) } }
+            set: {
+                if !$0 {
+                    viewModel.handle(event: .onShareDismissed)
+                }
+            }
         )) {
             if let safeURL = SafeMediaURL.validated(viewModel.viewState.article.url) {
                 ShareSheet(activityItems: [safeURL])

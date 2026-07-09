@@ -103,7 +103,11 @@ struct SettingsView: View {
             AppLocalization.localized("common.error"),
             isPresented: Binding(
                 get: { viewModel.viewState.errorMessage != nil },
-                set: { if !$0 { viewModel.handle(event: .onDismissError) } }
+                set: {
+                    if !$0 {
+                        viewModel.handle(event: .onDismissError)
+                    }
+                }
             )
         ) {
             Button(AppLocalization.localized("common.ok"), role: .cancel) {
@@ -116,7 +120,11 @@ struct SettingsView: View {
             AppLocalization.localized("settings.notifications_denied.title"),
             isPresented: Binding(
                 get: { viewModel.viewState.showNotificationsDeniedAlert },
-                set: { if !$0 { viewModel.handle(event: .onDismissNotificationsDeniedAlert) } }
+                set: {
+                    if !$0 {
+                        viewModel.handle(event: .onDismissNotificationsDeniedAlert)
+                    }
+                }
             )
         ) {
             Button(AppLocalization.localized("common.cancel"), role: .cancel) {

@@ -36,7 +36,9 @@ final class LiveLLMService: LLMService, @unchecked Sendable {
     }
 
     var isModelLoaded: Bool {
-        if case .ready = modelStatusSubject.value { return true }
+        if case .ready = modelStatusSubject.value {
+            return true
+        }
         return false
     }
 
@@ -102,7 +104,9 @@ final class LiveLLMService: LLMService, @unchecked Sendable {
                     do {
                         var result = ""
                         for try await token in stream.value {
-                            if Task.isCancelled { break }
+                            if Task.isCancelled {
+                                break
+                            }
                             result += token
                         }
                         promise.value(.success(result))
@@ -154,7 +158,9 @@ final class LiveLLMService: LLMService, @unchecked Sendable {
                         )
 
                         for try await token in tokens {
-                            if Task.isCancelled { break }
+                            if Task.isCancelled {
+                                break
+                            }
                             continuation.yield(token)
                         }
                         continuation.finish()
