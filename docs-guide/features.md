@@ -12,6 +12,7 @@ The app uses iOS 26 Liquid Glass on the root `TabView` (iPhone) and `NavigationS
 - **Article Summarization** — on-device summaries via Gemma 3 1B (**Premium**).
 - **Playback** — global playback queue (`AVSpeechSynthesizer`), speed presets (1×/1.25×/1.5×/2×), language-aware voices, floating mini-player + expandable queue sheet, AirPods/CarPlay/Lock Screen controls. Single-article "Listen" and the Morning Briefing (below) share this same queue.
 - **Morning Briefing** (**Premium**) — daily local notification at a user-chosen time opens a pre-generated AI Daily Digest followed by personalized For You articles for hands-free listening; foreground prefetch pre-generates the audio so playback starts instantly, and a skip signals negative engagement to personalization.
+- **Smart Briefing** (**Premium**) — on-demand card on Home (next to For You) that builds a personalized audio queue of unread articles ranked by the interest profile, no digest text generated. Defaults to articles published since the last Smart Briefing run, widening to all-unread if that scope comes up empty; a "Start Fresh" action ignores the cutoff entirely. Hands off to the same global playback queue as Morning Briefing (`mode: .briefing`), so skips still feed personalization.
 - **Offline** — tiered L1 (memory) + L2 (disk) cache, retry with exponential backoff, `NWPathMonitor`, offline banner, graceful degradation.
 - **Bookmarks + Reading History** — SwiftData, read indicators, dedicated history view.
 - **Search** — full-text with 300ms debounce, suggestions, sort options.
@@ -30,4 +31,4 @@ The app uses iOS 26 Liquid Glass on the root `TabView` (iPhone) and `NavigationS
 
 ## Premium
 
-StoreKit 2. Two AI features require a subscription: **AI Daily Digest** and **Article Summarization**. Non-premium users see `PremiumGateView` on Feed or a native StoreKit paywall sheet when tapping the summarize button. The premium-gated set is defined by the `PremiumFeature` enum (`dailyDigest`, `articleSummarization`, `audioBriefing`); Morning Briefing rides on the existing `dailyDigest` entitlement rather than its own gate.
+StoreKit 2. Three AI/audio features require a subscription: **AI Daily Digest**, **Article Summarization**, and **Smart Briefing**. Non-premium users see `PremiumGateView` on Feed or a native StoreKit paywall sheet when tapping the summarize button; the Smart Briefing card is hidden entirely for non-premium users rather than shown gated (Feed remains the canonical upsell surface). The premium-gated set is defined by the `PremiumFeature` enum (`dailyDigest`, `articleSummarization`, `audioBriefing`) — Morning Briefing rides on the existing `dailyDigest` entitlement, while Smart Briefing is the first feature to use the standalone `audioBriefing` case.

@@ -19,7 +19,7 @@ See also [`CLAUDE.md`](CLAUDE.md) for the key-files table and [`AGENTS.md`](AGEN
 - **Authentication** — Firebase (Google + Apple) with in-app account deletion and reauthentication.
 - **Home / Media / Feed** — breaking news, in-app video + podcast playback, AI Daily Digest (**Premium**).
 - **AI on-device** — article summarization and Daily Digest via Gemma 3 1B (**Premium**); personalized For You from on-device topic extraction.
-- **Playback** — global queue with a persistent mini player; on-device TTS (speed presets, language-aware voices), Lock Screen + Dynamic Island Live Activities, and a scheduled Premium **Morning Briefing** (AI digest + personalized For You articles, played back-to-back).
+- **Playback** — global queue with a persistent mini player; on-device TTS (speed presets, language-aware voices), Lock Screen + Dynamic Island Live Activities, a scheduled Premium **Morning Briefing** (AI digest + personalized For You articles, played back-to-back), and an on-demand Premium **Smart Briefing** card on Home (personalized unread-article queue, no digest text).
 - **Offline-first** — tiered L1 (memory) + L2 (disk) cache, retry/backoff, `NWPathMonitor`, offline banner.
 - **iCloud sync** — bookmarks, reading history, preferences, interest topics via CloudKit (always-on, zero-UI).
 - **Localization** — English, Portuguese, Spanish (UI + content), no app restart; full accessibility + Dynamic Type.

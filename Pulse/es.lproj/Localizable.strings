@@ -340,6 +340,7 @@
 "smart_briefing.build_button" = "Crear Mi Briefing";
 "smart_briefing.start_fresh_button" = "Empezar de Nuevo";
 "smart_briefing.first_run_caption" = "Crea tu primer briefing";
+"smart_briefing.building_caption" = "Preparando tu briefing…";
 "smart_briefing.last_served_caption" = "Último briefing %@";
 "smart_briefing.ready_message" = "%d artículos en cola";
 "smart_briefing.empty_message" = "No hay nada nuevo por ahora — vuelve más tarde.";

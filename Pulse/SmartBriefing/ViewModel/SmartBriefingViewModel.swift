@@ -14,10 +14,24 @@ final class SmartBriefingViewModel: CombineViewModel, ObservableObject {
     @Published private(set) var viewState: SmartBriefingViewState = .initial
 
     private let interactor: SmartBriefingDomainInteractor
+    private var cancellables = Set<AnyCancellable>()
+    /// Auto-dismisses the transient `statusMessage` a few seconds after a
+    /// build completes. Without this, since this ViewModel is a
+    /// Coordinator-level singleton, the message would linger indefinitely
+    /// across every subsequent `HomeView` appearance.
+    private var statusDismissalTask: Task<Void, Never>?
+    private let statusDismissalDelay: Duration
 
-    init(serviceLocator: ServiceLocator) {
+    /// - Parameter statusDismissalDelay: Overridable only so unit tests can
+    ///   shrink the wait; production call sites always use the default.
+    init(serviceLocator: ServiceLocator, statusDismissalDelay: Duration = .seconds(4)) {
         interactor = SmartBriefingDomainInteractor(serviceLocator: serviceLocator)
+        self.statusDismissalDelay = statusDismissalDelay
         setupBindings()
+    }
+
+    deinit {
+        statusDismissalTask?.cancel()
     }
 
     func handle(event: SmartBriefingViewEvent) {
@@ -43,7 +57,26 @@ final class SmartBriefingViewModel: CombineViewModel, ObservableObject {
             }
             .removeDuplicates()
             .receive(on: DispatchQueue.main)
-            .assign(to: &$viewState)
+            .sink { [weak self] viewState in
+                self?.viewState = viewState
+                self?.scheduleStatusDismissal(for: viewState)
+            }
+            .store(in: &cancellables)
+    }
+
+    /// Schedules `.dismissStatus` a few seconds after a terminal
+    /// (ready/empty/error) status message appears, so it reads as a toast
+    /// rather than a permanent label. Cancelled and rescheduled on every
+    /// state change so a new build restarts the timer.
+    private func scheduleStatusDismissal(for viewState: SmartBriefingViewState) {
+        statusDismissalTask?.cancel()
+        guard viewState.statusMessage != nil else { return }
+        let delay = statusDismissalDelay
+        statusDismissalTask = Task { [weak self] in
+            try? await Task.sleep(for: delay)
+            guard !Task.isCancelled else { return }
+            self?.interactor.dispatch(action: .dismissStatus)
+        }
     }
 
     private static func statusMessage(for buildState: SmartBriefingBuildState) -> String? {

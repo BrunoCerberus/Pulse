@@ -72,6 +72,8 @@ final class SmartBriefingDomainInteractor: CombineInteractor {
             }
         case let .buildFailed(message):
             updateState { $0.buildState = .error(message) }
+        case .dismissStatus:
+            updateState { $0.buildState = .idle }
         }
     }
 
