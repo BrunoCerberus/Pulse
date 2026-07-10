@@ -56,4 +56,55 @@ struct SmartBriefingViewModelTests {
         }
         #expect(messageCleared, "Status message should auto-dismiss after the configured delay")
     }
+
+    @Test("onStartFreshTapped reaches the interactor and builds a queue")
+    func onStartFreshTappedBuildsQueue() async {
+        mockNewsService.topHeadlinesResult = .success(Article.mockArticles)
+        mockForYouService.scoredArticlesResult = .success(
+            Article.mockArticles.map { ScoredArticle(article: $0, score: 1.0, matchedTopics: []) }
+        )
+        let sut = SmartBriefingViewModel(serviceLocator: serviceLocator)
+
+        sut.handle(event: .onStartFreshTapped)
+
+        let success = await waitForCondition(timeout: 2_000_000_000) { @MainActor [mockPlaybackQueueService] in
+            mockPlaybackQueueService.playCallCount > 0
+        }
+        #expect(success, "onStartFreshTapped should dispatch .startBriefing(scope: .allUnread) through to playback")
+    }
+
+    @Test("An empty build result surfaces the localized empty-state status message")
+    func emptyResultSurfacesEmptyMessage() async {
+        mockNewsService.topHeadlinesResult = .success(Article.mockArticles)
+        mockForYouService.scoredArticlesResult = .success([])
+        let sut = SmartBriefingViewModel(serviceLocator: serviceLocator)
+
+        sut.handle(event: .onBuildBriefingTapped)
+
+        let success = await waitForCondition(timeout: 2_000_000_000) { @MainActor in
+            sut.viewState.statusMessage != nil
+        }
+        #expect(success)
+        #expect(sut.viewState.statusMessage == AppLocalization.localized("smart_briefing.empty_message"))
+    }
+
+    @Test("A scoring error surfaces its message as the status message")
+    func errorResultSurfacesErrorMessage() async {
+        mockNewsService.topHeadlinesResult = .success(Article.mockArticles)
+        struct ScoringError: Error, LocalizedError {
+            var errorDescription: String? {
+                "Scoring blew up"
+            }
+        }
+        mockForYouService.scoredArticlesResult = .failure(ScoringError())
+        let sut = SmartBriefingViewModel(serviceLocator: serviceLocator)
+
+        sut.handle(event: .onBuildBriefingTapped)
+
+        let success = await waitForCondition(timeout: 2_000_000_000) { @MainActor in
+            sut.viewState.statusMessage != nil
+        }
+        #expect(success)
+        #expect(sut.viewState.statusMessage == "Scoring blew up")
+    }
 }

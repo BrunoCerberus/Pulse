@@ -164,4 +164,15 @@ struct SmartBriefingDomainInteractorTests {
         #expect(failed, "A thrown scoring error should dispatch .buildFailed, not resolve to .empty")
         #expect(mockPlaybackQueueService.playCallCount == 0)
     }
+
+    @Test("clear() wipes the mock cache's fetch result and recorded state")
+    func clearWipesMockCacheState() {
+        mockCacheService.fetchResult = SmartBriefingServedRecord(servedAt: .now, servedArticleIDs: ["1"])
+        mockCacheService.recordServed(["1"], at: .now)
+
+        mockCacheService.clear()
+
+        #expect(mockCacheService.fetchResult == nil)
+        #expect(mockCacheService.lastRecordedServedIDs == nil)
+    }
 }
