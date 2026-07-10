@@ -2,13 +2,19 @@ import EntropyCore
 import Foundation
 
 extension SmartBriefingDomainInteractor {
+    // swiftlint:disable function_body_length
+
     /// Builds a personalized queue of unread articles and hands it straight
     /// to the global playback queue — no digest text, no `.digest` item.
     /// Falls back to widening the scope to `.allUnread` when the default
     /// "since last briefing" scope yields nothing, so the button almost
     /// always produces audio (mirrors `FeedDomainInteractor.startAudioBriefing()`'s
     /// "always produces audio" guarantee).
-    // swiftlint:disable:next function_body_length
+    ///
+    /// - Note: Length is inherent to the do/catch scoring flow (fetch pool,
+    ///   score, widen-on-empty, persist, dispatch) — kept as one Task body
+    ///   rather than split, since the pieces share too much local state
+    ///   (`lastServed`, `topN`, boxed services) to factor out cleanly.
     func startBriefing(scope: SmartBriefingScope) {
         // Defense-in-depth: re-verify Premium at the service boundary. The UI
         // entry point already hides the card entirely for non-premium users
@@ -101,4 +107,6 @@ extension SmartBriefingDomainInteractor {
             }
         }
     }
+
+    // swiftlint:enable function_body_length
 }

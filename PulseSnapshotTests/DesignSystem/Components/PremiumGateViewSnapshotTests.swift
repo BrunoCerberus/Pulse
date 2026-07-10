@@ -69,7 +69,7 @@ final class PremiumGateViewSnapshotTests: XCTestCase {
         assertSnapshot(
             of: controller,
             as: .image(on: SnapshotConfig.iPhoneAir, precision: SnapshotConfig.standardPrecision),
-            record: true
+            record: false
         )
     }
 
