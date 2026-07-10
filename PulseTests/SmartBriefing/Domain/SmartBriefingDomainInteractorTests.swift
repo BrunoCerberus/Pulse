@@ -141,4 +141,27 @@ struct SmartBriefingDomainInteractorTests {
         #expect(resolved)
         #expect(mockPlaybackQueueService.playCallCount == 0)
     }
+
+    @Test("A thrown scoring error surfaces as buildFailed, not a silent empty result")
+    func scoringErrorSurfacesAsBuildFailed() async {
+        mockNewsService.topHeadlinesResult = .success(Article.mockArticles)
+        struct ScoringError: Error, LocalizedError {
+            var errorDescription: String? {
+                "Scoring blew up"
+            }
+        }
+        mockForYouService.scoredArticlesResult = .failure(ScoringError())
+
+        sut.dispatch(action: .startBriefing(scope: .unreadSinceLastBriefing))
+
+        let failed = await waitForCondition(timeout: 2_000_000_000) { @MainActor in
+            if case .error = sut.currentState.buildState {
+                return true
+            }
+            return false
+        }
+
+        #expect(failed, "A thrown scoring error should dispatch .buildFailed, not resolve to .empty")
+        #expect(mockPlaybackQueueService.playCallCount == 0)
+    }
 }
