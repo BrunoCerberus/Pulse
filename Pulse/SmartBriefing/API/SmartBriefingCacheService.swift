@@ -7,8 +7,13 @@ import Foundation
 /// a single, disposable record, device-local — each device tracks its own
 /// "already heard" set rather than syncing it via CloudKit.
 protocol SmartBriefingCacheService {
-    /// Persists a run's served record, replacing any prior entry.
-    func store(_ record: SmartBriefingServedRecord)
+    /// Records a run's outcome: only the article IDs served *this run*
+    /// (a delta), not the accumulated history — the service merges them
+    /// into its existing ordered history internally. Passing the full
+    /// accumulated set here would destroy the true insertion order FIFO
+    /// eviction depends on, since re-deriving order from a `Set` on every
+    /// call isn't stable.
+    func recordServed(_ newlyServedArticleIDs: Set<String>, at servedAt: Date)
 
     /// Returns the most recent served record, or `nil` if Smart Briefing has
     /// never been run.
@@ -44,15 +49,20 @@ final class LiveSmartBriefingCacheService: SmartBriefingCacheService {
         self.defaults = defaults
     }
 
-    func store(_ record: SmartBriefingServedRecord) {
+    func recordServed(_ newlyServedArticleIDs: Set<String>, at servedAt: Date) {
         var orderedIDs = fetchOrderedServedIDs()
-        orderedIDs.removeAll { record.servedArticleIDs.contains($0) }
-        orderedIDs.append(contentsOf: record.servedArticleIDs)
+        // Only append IDs not already tracked — existing entries keep their
+        // original position, so eviction below still drops the oldest ones
+        // first. `newlyServedArticleIDs` iterates in an unstable Set order,
+        // but that only affects the relative order *within this run's*
+        // batch, which is immaterial since they're all served simultaneously.
+        let newIDs = newlyServedArticleIDs.subtracting(orderedIDs)
+        orderedIDs.append(contentsOf: newIDs)
         if orderedIDs.count > maxServedIDs {
             orderedIDs.removeFirst(orderedIDs.count - maxServedIDs)
         }
 
-        let stored = StoredRecord(servedAt: record.servedAt, orderedServedArticleIDs: orderedIDs)
+        let stored = StoredRecord(servedAt: servedAt, orderedServedArticleIDs: orderedIDs)
         guard let data = try? JSONEncoder().encode(stored) else { return }
         defaults.set(data, forKey: Self.storageKey)
     }

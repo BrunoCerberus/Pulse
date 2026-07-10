@@ -69,7 +69,7 @@ struct SmartBriefingDomainInteractorTests {
         #expect(success, "Should have played a queue")
         #expect(mockPlaybackQueueService.lastPlayedMode == .briefing)
         #expect(mockPlaybackQueueService.lastPlayedItems?.isEmpty == false)
-        #expect(mockCacheService.storeCallCount == 1)
+        #expect(mockCacheService.recordServedCallCount == 1)
     }
 
     @Test("Empty 'since last briefing' scope widens to allUnread")

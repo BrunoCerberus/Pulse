@@ -89,14 +89,11 @@ extension SmartBriefingDomainInteractor {
                 playbackBox.value.play(items: items, mode: .briefing)
 
                 let servedIDs = Set(scored.map { $0.article.id })
-                let record = SmartBriefingServedRecord(
-                    servedAt: .now,
-                    servedArticleIDs: (lastServed?.servedArticleIDs ?? []).union(servedIDs)
-                )
-                cacheBox?.value.store(record)
+                let servedAt = Date.now
+                cacheBox?.value.recordServed(servedIDs, at: servedAt)
 
                 self?.analyticsService?.logEvent(.smartBriefingStarted(itemCount: items.count))
-                self?.dispatch(action: .buildSucceeded(itemCount: items.count, servedAt: record.servedAt))
+                self?.dispatch(action: .buildSucceeded(itemCount: items.count, servedAt: servedAt))
             } catch {
                 guard !Task.isCancelled else { return }
                 Logger.shared.error(
