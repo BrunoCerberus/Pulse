@@ -112,7 +112,8 @@ final class HomeViewSnapshotTests: XCTestCase {
         let view = HomeView(
             router: HomeNavigationRouter(),
             viewModel: HomeViewModel(serviceLocator: serviceLocator),
-            forYouViewModel: ForYouViewModel(serviceLocator: serviceLocator)
+            forYouViewModel: ForYouViewModel(serviceLocator: serviceLocator),
+            smartBriefingViewModel: SmartBriefingViewModel(serviceLocator: serviceLocator)
         )
         let controller = UIHostingController(rootView: view)
 
@@ -134,7 +135,8 @@ final class HomeViewSnapshotTests: XCTestCase {
             HomeView(
                 router: HomeNavigationRouter(),
                 viewModel: viewModel,
-                forYouViewModel: ForYouViewModel(serviceLocator: serviceLocator)
+                forYouViewModel: ForYouViewModel(serviceLocator: serviceLocator),
+                smartBriefingViewModel: SmartBriefingViewModel(serviceLocator: serviceLocator)
             )
         }
         let controller = UIHostingController(rootView: view)

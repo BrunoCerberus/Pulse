@@ -56,6 +56,23 @@ final class PremiumGateViewSnapshotTests: XCTestCase {
         )
     }
 
+    // MARK: - Audio Briefing Feature Gate
+
+    func testPremiumGateViewAudioBriefing() {
+        let view = PremiumGateView(
+            feature: .audioBriefing,
+            serviceLocator: serviceLocator
+        )
+
+        let controller = UIHostingController(rootView: view)
+
+        assertSnapshot(
+            of: controller,
+            as: .image(on: SnapshotConfig.iPhoneAir, precision: SnapshotConfig.standardPrecision),
+            record: false
+        )
+    }
+
     // MARK: - Light Mode Tests
 
     func testPremiumGateViewDailyDigestLightMode() {

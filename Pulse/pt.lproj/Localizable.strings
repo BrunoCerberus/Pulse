@@ -332,6 +332,19 @@
 "premium_gate.audio_briefing.description" = "Ouça seu resumo de IA e as principais notícias personalizadas, lidas em voz alta como um podcast.";
 
 /* ==================== */
+/* MARK: - Smart Briefing */
+/* ==================== */
+
+"smart_briefing.section_title" = "Briefing Inteligente";
+"smart_briefing.headline" = "Seu trajeto, com curadoria";
+"smart_briefing.build_button" = "Criar Meu Briefing";
+"smart_briefing.start_fresh_button" = "Começar do Zero";
+"smart_briefing.first_run_caption" = "Crie seu primeiro briefing";
+"smart_briefing.last_served_caption" = "Último briefing %@";
+"smart_briefing.ready_message" = "%d artigos na fila";
+"smart_briefing.empty_message" = "Nada de novo por enquanto — volte mais tarde.";
+
+/* ==================== */
 /* MARK: - Feed         */
 /* ==================== */
 

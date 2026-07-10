@@ -37,6 +37,11 @@ struct HomeView<R: HomeNavigationRouter>: View {
     /// signal yet won't see it.
     @ObservedObject var forYouViewModel: ForYouViewModel
 
+    /// ViewModel for the embedded Smart Briefing card (Premium). Hidden
+    /// entirely for non-premium users — the Feed tab is the canonical
+    /// upsell surface, so Home doesn't duplicate the nag.
+    @ObservedObject var smartBriefingViewModel: SmartBriefingViewModel
+
     /// Namespace for matched geometry animation in category tabs
     @Namespace private var categoryAnimation
 
@@ -55,15 +60,22 @@ struct HomeView<R: HomeNavigationRouter>: View {
     }
 
     /// Creates the view with a router, host ViewModel, and the
-    /// personalization-carousel ViewModel.
+    /// personalization-carousel and Smart Briefing ViewModels.
     /// - Parameters:
     ///   - router: Navigation router for routing actions
     ///   - viewModel: ViewModel for managing data and actions
     ///   - forYouViewModel: ViewModel powering the embedded For You section
-    init(router: R, viewModel: HomeViewModel, forYouViewModel: ForYouViewModel) {
+    ///   - smartBriefingViewModel: ViewModel powering the embedded Smart Briefing card
+    init(
+        router: R,
+        viewModel: HomeViewModel,
+        forYouViewModel: ForYouViewModel,
+        smartBriefingViewModel: SmartBriefingViewModel
+    ) {
         self.router = router
         self.viewModel = viewModel
         self.forYouViewModel = forYouViewModel
+        self.smartBriefingViewModel = smartBriefingViewModel
     }
 
     var body: some View {
@@ -130,6 +142,7 @@ struct HomeView<R: HomeNavigationRouter>: View {
         }
         .task {
             viewModel.handle(event: .onAppear)
+            smartBriefingViewModel.handle(event: .onAppear)
         }
         .onChange(of: viewModel.viewState.selectedArticle) { _, newValue in
             if let article = newValue {
@@ -289,6 +302,26 @@ struct HomeView<R: HomeNavigationRouter>: View {
                     }
                 }
 
+                // Smart Briefing card — Premium only, hidden entirely
+                // otherwise (the Feed tab is the canonical upsell surface).
+                if viewModel.viewState.selectedCategory == nil
+                    && smartBriefingViewModel.viewState.isVisible
+                {
+                    Section {
+                        SmartBriefingCardView(
+                            viewState: smartBriefingViewModel.viewState,
+                            onBuildBriefingTapped: {
+                                smartBriefingViewModel.handle(event: .onBuildBriefingTapped)
+                            },
+                            onStartFreshTapped: {
+                                smartBriefingViewModel.handle(event: .onStartFreshTapped)
+                            }
+                        )
+                    } header: {
+                        GlassSectionHeader(SmartBriefingCardView.Constants.sectionTitle)
+                    }
+                }
+
                 if viewModel.viewState.selectedCategory == nil
                     && !viewModel.viewState.recentlyRead.isEmpty
                 {
@@ -387,7 +420,8 @@ struct HomeView<R: HomeNavigationRouter>: View {
         HomeView(
             router: HomeNavigationRouter(),
             viewModel: HomeViewModel(serviceLocator: .preview),
-            forYouViewModel: ForYouViewModel(serviceLocator: .preview)
+            forYouViewModel: ForYouViewModel(serviceLocator: .preview),
+            smartBriefingViewModel: SmartBriefingViewModel(serviceLocator: .preview)
         )
     }
 }
