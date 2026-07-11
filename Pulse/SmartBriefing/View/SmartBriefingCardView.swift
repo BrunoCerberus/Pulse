@@ -50,6 +50,8 @@ struct SmartBriefingCardView: View {
     let onBuildBriefingTapped: () -> Void
     let onStartFreshTapped: () -> Void
 
+    @Environment(\.dynamicTypeSize) private var dynamicTypeSize
+
     private var caption: String {
         if viewState.isBuilding {
             return Constants.buildingCaption
@@ -81,36 +83,15 @@ struct SmartBriefingCardView: View {
                     .font(Typography.labelMedium)
                     .foregroundStyle(.tertiary)
 
-                HStack(spacing: Spacing.sm) {
-                    Button {
-                        HapticManager.shared.buttonPress()
-                        onBuildBriefingTapped()
-                    } label: {
-                        if viewState.isBuilding {
-                            ProgressView()
-                                .frame(maxWidth: .infinity)
-                        } else {
-                            Label(Constants.buildButton, systemImage: "headphones")
-                                .font(Typography.labelLarge)
-                                .frame(maxWidth: .infinity)
-                        }
+                if dynamicTypeSize.isAccessibilitySize {
+                    VStack(spacing: Spacing.sm) {
+                        buildButton
+                        startFreshButton
                     }
-                    .buttonStyle(.glassProminent)
-                    .disabled(viewState.isBuilding)
-                    .accessibilityIdentifier("smartBriefingBuildButton")
-                    .accessibilityLabel(Constants.buildButton)
-
-                    if viewState.lastServedAt != nil {
-                        Button {
-                            HapticManager.shared.tap()
-                            onStartFreshTapped()
-                        } label: {
-                            Text(Constants.startFreshButton)
-                                .font(Typography.labelMedium)
-                        }
-                        .buttonStyle(.glass)
-                        .disabled(viewState.isBuilding)
-                        .accessibilityIdentifier("smartBriefingStartFreshButton")
+                } else {
+                    HStack(spacing: Spacing.sm) {
+                        buildButton
+                        startFreshButton
                     }
                 }
             }
@@ -119,6 +100,42 @@ struct SmartBriefingCardView: View {
         }
         .padding(.horizontal, Spacing.md)
         .padding(.vertical, Spacing.sm)
+    }
+
+    private var buildButton: some View {
+        Button {
+            HapticManager.shared.buttonPress()
+            onBuildBriefingTapped()
+        } label: {
+            if viewState.isBuilding {
+                ProgressView()
+                    .frame(maxWidth: .infinity)
+            } else {
+                Label(Constants.buildButton, systemImage: "headphones")
+                    .font(Typography.labelLarge)
+                    .frame(maxWidth: .infinity)
+            }
+        }
+        .buttonStyle(.glassProminent)
+        .disabled(viewState.isBuilding)
+        .accessibilityIdentifier("smartBriefingBuildButton")
+        .accessibilityLabel(Constants.buildButton)
+    }
+
+    @ViewBuilder
+    private var startFreshButton: some View {
+        if viewState.lastServedAt != nil {
+            Button {
+                HapticManager.shared.tap()
+                onStartFreshTapped()
+            } label: {
+                Text(Constants.startFreshButton)
+                    .font(Typography.labelMedium)
+            }
+            .buttonStyle(.glass)
+            .disabled(viewState.isBuilding)
+            .accessibilityIdentifier("smartBriefingStartFreshButton")
+        }
     }
 
     private static let relativeFormatter: RelativeDateTimeFormatter = {

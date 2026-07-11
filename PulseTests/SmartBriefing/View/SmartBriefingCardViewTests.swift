@@ -1,6 +1,8 @@
 import Foundation
 @testable import Pulse
+import SwiftUI
 import Testing
+import UIKit
 
 /// Visual regression coverage for Liquid Glass materials can't be verified
 /// via snapshot tests here (see `AGENTS.md` rule 37 — `.buttonStyle(.glassProminent)`
@@ -84,5 +86,47 @@ struct SmartBriefingCardViewTests {
 
         #expect(buildTapped)
         #expect(startFreshTapped)
+    }
+
+    /// `@Environment(\.dynamicTypeSize)` only resolves to a non-default value
+    /// under a real render pass, so `_ = view.body` can't exercise the
+    /// accessibility-size branch — this forces one via `UIHostingController`
+    /// (mirrors `PatchCoverageRenderingTests.render`), asserting only that
+    /// layout completes without crashing, not pixel content.
+    @Test("Buttons stack vertically instead of truncating at an accessibility Dynamic Type size")
+    func buttonsStackVerticallyAtAccessibilitySize() {
+        let view = SmartBriefingCardView(
+            viewState: SmartBriefingViewState(
+                isVisible: true,
+                isBuilding: false,
+                lastServedAt: .now,
+                statusMessage: nil
+            ),
+            onBuildBriefingTapped: {},
+            onStartFreshTapped: {}
+        )
+        Self.render(view.environment(\.dynamicTypeSize, .accessibility3))
+    }
+
+    private static func render(_ view: some View, size: CGSize = CGSize(width: 393, height: 300)) {
+        guard let windowScene = UIApplication.shared.connectedScenes.compactMap({ $0 as? UIWindowScene }).first else {
+            Issue.record("Expected an active window scene for rendering")
+            return
+        }
+
+        let window = UIWindow(windowScene: windowScene)
+        window.frame = CGRect(origin: .zero, size: size)
+        let controller = UIHostingController(rootView: view)
+        controller.view.frame = CGRect(origin: .zero, size: size)
+
+        window.rootViewController = controller
+        window.makeKeyAndVisible()
+        window.setNeedsLayout()
+        window.layoutIfNeeded()
+        controller.view.setNeedsLayout()
+        controller.view.layoutIfNeeded()
+        withExtendedLifetime(window) {
+            RunLoop.current.run(until: Date().addingTimeInterval(0.1))
+        }
     }
 }
