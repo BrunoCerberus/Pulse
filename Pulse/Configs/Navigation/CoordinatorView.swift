@@ -79,7 +79,8 @@ struct CoordinatorView: View {
                     HomeView(
                         router: HomeNavigationRouter(coordinator: coordinator),
                         viewModel: coordinator.homeViewModel,
-                        forYouViewModel: coordinator.forYouViewModel
+                        forYouViewModel: coordinator.forYouViewModel,
+                        smartBriefingViewModel: coordinator.smartBriefingViewModel
                     )
                     .navigationDestination(for: Page.self) { page in
                         coordinator.build(page: page)

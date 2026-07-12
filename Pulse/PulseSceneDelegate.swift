@@ -387,6 +387,7 @@ private extension PulseSceneDelegate {
             serviceLocator.register(TopicExtractionService.self, instance: MockTopicExtractionService())
             serviceLocator.register(ForYouService.self, instance: MockForYouService())
             serviceLocator.register(BriefingCacheService.self, instance: MockBriefingCacheService())
+            serviceLocator.register(SmartBriefingCacheService.self, instance: MockSmartBriefingCacheService())
             let mockOnboarding = MockOnboardingService(hasCompletedOnboarding: true)
             serviceLocator.register(OnboardingService.self, instance: mockOnboarding)
 
@@ -486,6 +487,7 @@ private extension PulseSceneDelegate {
             )
         }
         serviceLocator.register(BriefingCacheService.self, instance: LiveBriefingCacheService())
+        serviceLocator.register(SmartBriefingCacheService.self, instance: LiveSmartBriefingCacheService())
     }
 }
 

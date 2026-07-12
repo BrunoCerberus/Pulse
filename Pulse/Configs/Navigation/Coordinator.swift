@@ -100,6 +100,11 @@ final class Coordinator: ObservableObject {
     /// subscription across `HomeView` re-instantiations.
     lazy var forYouViewModel: ForYouViewModel = .init(serviceLocator: serviceLocator)
 
+    /// Shared SmartBriefingViewModel instance for the Smart Briefing card
+    /// embedded in `HomeView`. Lives at the Coordinator level so its
+    /// premium-status subscription persists across `HomeView` re-instantiations.
+    lazy var smartBriefingViewModel: SmartBriefingViewModel = .init(serviceLocator: serviceLocator)
+
     /// Shared MediaViewModel instance
     lazy var mediaViewModel: MediaViewModel = .init(serviceLocator: serviceLocator)
 

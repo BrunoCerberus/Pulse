@@ -332,6 +332,20 @@
 "premium_gate.audio_briefing.description" = "Listen to your AI digest and top personalized stories, read aloud like a podcast.";
 
 /* ==================== */
+/* MARK: - Smart Briefing */
+/* ==================== */
+
+"smart_briefing.section_title" = "Smart Briefing";
+"smart_briefing.headline" = "Your commute, curated";
+"smart_briefing.build_button" = "Build My Briefing";
+"smart_briefing.start_fresh_button" = "Start Fresh";
+"smart_briefing.first_run_caption" = "Build your first briefing";
+"smart_briefing.building_caption" = "Building your briefing…";
+"smart_briefing.last_served_caption" = "Last briefed %@";
+"smart_briefing.ready_message" = "Queued %d articles";
+"smart_briefing.empty_message" = "Nothing new to hear right now — check back later.";
+
+/* ==================== */
 /* MARK: - Feed         */
 /* ==================== */
 

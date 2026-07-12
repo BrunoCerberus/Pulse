@@ -53,6 +53,7 @@ enum AnalyticsEvent {
     case briefingCompleted
     case briefingStopped(itemsPlayed: Int)
     case briefingItemSkipped
+    case smartBriefingStarted(itemCount: Int)
     case cloudSyncStarted
     case cloudSyncSucceeded
     case cloudSyncFailed(error: String)
@@ -87,6 +88,7 @@ enum AnalyticsEvent {
         case .briefingCompleted: "briefing_completed"
         case .briefingStopped: "briefing_stopped"
         case .briefingItemSkipped: "briefing_item_skipped"
+        case .smartBriefingStarted: "smart_briefing_started"
         case .cloudSyncStarted: "cloud_sync_started"
         case .cloudSyncSucceeded: "cloud_sync_succeeded"
         case .cloudSyncFailed: "cloud_sync_failed"
@@ -113,6 +115,8 @@ enum AnalyticsEvent {
              .cloudSyncSucceeded:
             nil
         case let .briefingStarted(itemCount):
+            ["item_count": itemCount]
+        case let .smartBriefingStarted(itemCount):
             ["item_count": itemCount]
         case let .briefingStopped(itemsPlayed):
             ["items_played": itemsPlayed]

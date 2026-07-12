@@ -51,6 +51,7 @@ Pulse/
 │   ├── Bookmarks/  ReadingHistory/
 │   ├── ForYou/                   # Personalized carousel (embedded in Home)
 │   ├── ForYouSettings/           # User controls for personalization
+│   ├── SmartBriefing/            # On-demand personalized audio playlist (Premium, embedded in Home)
 │   ├── Personalization/          # On-device topic extraction + engagement signals
 │   ├── Notifications/  AppLock/  Onboarding/  Paywall/  SplashScreen/
 │   ├── CloudSync/                # CloudKit lifecycle (no UI)
@@ -98,6 +99,7 @@ Pulse/
 | **Playback** | `PlaybackQueueService.swift`, `LivePlaybackQueueService.swift`, `TextToSpeechService.swift`, `LiveTextToSpeechService.swift`, `NowPlayingController.swift`, `PlaybackDomainInteractor.swift`, `PlaybackViewModel.swift`, `MiniPlayerView.swift`, `PlaybackQueueSheet.swift`, `SpeechTextBuilder.swift` | Global playback queue (single-article "Listen" + Premium Morning Briefing digest→For-You narration); `AVSpeechSynthesizer` + Now Playing + remote commands; app-lifetime instance owned by `Coordinator.playbackViewModel` |
 | **Live Activities** | `TTSActivityAttributes.swift`, `TTSLiveActivityController.swift`, `TTSLockScreenView.swift`, `PulseWidgetExtension/LiveActivities/TTSLiveActivity.swift` | Driven by `LivePlaybackQueueService` in lockstep with the playback queue |
 | **Morning Briefing** | `LiveNotificationService.swift` (`Notifications/API/`), `MorningBriefingPrefetcher.swift`, `BriefingCacheService.swift` (`Feed/API/`) | Daily local notification (`UNCalendarNotificationTrigger`, not `BGTaskScheduler`) opening `pulse://briefing`; foreground prefetch pre-generates the digest so playback starts instantly; Premium-gated via the existing `.dailyDigest` entitlement |
+| **Smart Briefing** | `SmartBriefingDomainInteractor(+Build).swift`, `SmartBriefingQueueBuilder.swift`, `SmartBriefingCacheService.swift`, `SmartBriefingViewModel.swift`, `SmartBriefingCardView.swift` | On-demand personalized audio playlist (no digest text): reuses `ForYouService.scoredArticles` for ranking and hands off to the same `PlaybackQueueService` (`mode: .briefing`) as Morning Briefing; "since last briefing" scoping is a client-side `publishedAt` cutoff, widening to all-unread on an empty result; gated by the standalone `.audioBriefing` entitlement, card hidden entirely (not upsold) for non-premium users |
 | **Share Ext** | `PulseShareExtension/{ShareViewController,ShareRootView,SharedURLQueue}.swift`, `SharedURLImportService.swift`, `LiveSharedURLImportService.swift` | `public.url` → App Group queue → `pulse://shared` |
 | **Intents / QA** | `Pulse/Intents/*.swift`, `PulseAppShortcuts.swift`, `QuickActionType.swift`, `QuickActionHandler.swift` | Route via `DeeplinkManager`; titles registered at scene-connect |
 | **Analytics** | `AnalyticsService.swift`, `LiveAnalyticsService.swift`, `MockAnalyticsService.swift` | Firebase events + Crashlytics breadcrumbs |

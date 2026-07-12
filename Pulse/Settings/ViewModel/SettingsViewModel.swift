@@ -417,6 +417,9 @@ final class SettingsViewModel: CombineViewModel, ObservableObject {
         // ForYou queue) — leaving it would leak into the next signed-in
         // account on a shared device.
         defaults.removeObject(forKey: LiveBriefingCacheService.storageKey)
+        // Smart Briefing's "last served" record is likewise personalized
+        // and device-local, not tied to sign-in state on shared devices.
+        defaults.removeObject(forKey: LiveSmartBriefingCacheService.storageKey)
 
         // 6. Reset ThemeManager to system defaults
         themeManager.useSystemTheme = true
