@@ -19,7 +19,6 @@ import Foundation
 /// ## Dependencies
 /// - `MediaService`: Fetches media content from Supabase
 @MainActor
-// swiftlint:disable:next type_body_length
 final class MediaDomainInteractor: CombineInteractor {
     typealias DomainState = MediaDomainState
     typealias DomainAction = MediaDomainAction
@@ -121,7 +120,7 @@ final class MediaDomainInteractor: CombineInteractor {
                     if case let .failure(error) = completion {
                         Logger.shared.service(
                             "MediaDomainInteractor: Failed to load preferences: \(error)",
-                            level: .warning
+                            level: .warning,
                         )
                         // Still fetch media with default language on preference load failure
                         self?.fetchInitialMedia(selectedType: selectedType)
@@ -129,9 +128,9 @@ final class MediaDomainInteractor: CombineInteractor {
                 },
                 receiveValue: { [weak self] preferences in
                     guard let self else { return }
-                    self.preferredLanguage = preferences.preferredLanguage
-                    self.fetchInitialMedia(selectedType: selectedType)
-                }
+                    preferredLanguage = preferences.preferredLanguage
+                    fetchInitialMedia(selectedType: selectedType)
+                },
             )
             .store(in: &cancellables)
     }
@@ -143,7 +142,7 @@ final class MediaDomainInteractor: CombineInteractor {
         mediaFetchCancellable?.cancel()
         mediaFetchCancellable = Publishers.Zip(
             mediaService.fetchFeaturedMedia(type: selectedType, language: language),
-            mediaService.fetchMedia(type: selectedType, language: language, page: 1)
+            mediaService.fetchMedia(type: selectedType, language: language, page: 1),
         )
         .receive(on: DispatchQueue.main)
         .sink { [weak self] completion in
@@ -190,8 +189,8 @@ final class MediaDomainInteractor: CombineInteractor {
                 }
             } receiveValue: { [weak self] media in
                 guard let self else { return }
-                self.updateState { state in
-                    let existingIDs = Set(state.mediaItems.map { $0.id } + state.featuredMedia.map { $0.id })
+                updateState { state in
+                    let existingIDs = Set(state.mediaItems.map(\.id) + state.featuredMedia.map(\.id))
                     let newMedia = media.filter { !existingIDs.contains($0.id) }
                     state.mediaItems.append(contentsOf: newMedia)
                     state.isLoadingMore = false
@@ -223,7 +222,7 @@ final class MediaDomainInteractor: CombineInteractor {
         mediaFetchCancellable?.cancel()
         mediaFetchCancellable = Publishers.Zip(
             mediaService.fetchFeaturedMedia(type: selectedType, language: language),
-            mediaService.fetchMedia(type: selectedType, language: language, page: 1)
+            mediaService.fetchMedia(type: selectedType, language: language, page: 1),
         )
         .receive(on: DispatchQueue.main)
         .sink { [weak self] completion in
@@ -270,7 +269,7 @@ final class MediaDomainInteractor: CombineInteractor {
         mediaFetchCancellable?.cancel()
         mediaFetchCancellable = Publishers.Zip(
             mediaService.fetchFeaturedMedia(type: type, language: language),
-            mediaService.fetchMedia(type: type, language: language, page: 1)
+            mediaService.fetchMedia(type: type, language: language, page: 1),
         )
         .receive(on: DispatchQueue.main)
         .sink { [weak self] completion in

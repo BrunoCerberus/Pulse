@@ -19,7 +19,6 @@ import Foundation
 /// - `SearchService`: Performs search queries
 /// - `StorageService`: Persists reading history
 @MainActor
-// swiftlint:disable:next type_body_length
 final class SearchDomainInteractor: CombineInteractor {
     typealias DomainState = SearchDomainState
     typealias DomainAction = SearchDomainAction
@@ -79,7 +78,7 @@ final class SearchDomainInteractor: CombineInteractor {
             .removeDuplicates()
             .sink { [weak self] query in
                 guard let self, !query.isEmpty else { return }
-                self.fetchSuggestions(for: query)
+                fetchSuggestions(for: query)
             }
             .store(in: &cancellables)
     }
@@ -180,7 +179,7 @@ final class SearchDomainInteractor: CombineInteractor {
         searchCancellable = searchService.search(
             query: query,
             page: 1,
-            sortBy: currentState.sortBy.rawValue
+            sortBy: currentState.sortBy.rawValue,
         )
         .receive(on: DispatchQueue.main)
         .sink { [weak self] completion in
@@ -219,7 +218,7 @@ final class SearchDomainInteractor: CombineInteractor {
         searchCancellable = searchService.search(
             query: currentState.query,
             page: nextPage,
-            sortBy: currentState.sortBy.rawValue
+            sortBy: currentState.sortBy.rawValue,
         )
         .receive(on: DispatchQueue.main)
         .sink { [weak self] completion in
@@ -230,7 +229,7 @@ final class SearchDomainInteractor: CombineInteractor {
             }
         } receiveValue: { [weak self] articles in
             self?.updateState { state in
-                let existingIDs = Set(state.results.map { $0.id })
+                let existingIDs = Set(state.results.map(\.id))
                 let newArticles = articles.filter { !existingIDs.contains($0.id) }
                 state.results.append(contentsOf: newArticles)
                 state.isLoadingMore = false
@@ -278,7 +277,7 @@ final class SearchDomainInteractor: CombineInteractor {
         searchCancellable = searchService.search(
             query: query,
             page: 1,
-            sortBy: currentState.sortBy.rawValue
+            sortBy: currentState.sortBy.rawValue,
         )
         .receive(on: DispatchQueue.main)
         .sink { [weak self] completion in

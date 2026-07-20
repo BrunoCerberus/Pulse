@@ -83,7 +83,7 @@ final class MockMediaService: MediaService {
             mediaType: .video,
             mediaURL: "https://youtube.com/watch?v=video1",
             mediaDuration: 1245,
-            mediaMimeType: "video/youtube"
+            mediaMimeType: "video/youtube",
         ),
         Article(
             id: "video-2",
@@ -100,7 +100,7 @@ final class MockMediaService: MediaService {
             mediaType: .video,
             mediaURL: "https://youtube.com/watch?v=video2",
             mediaDuration: 960,
-            mediaMimeType: "video/youtube"
+            mediaMimeType: "video/youtube",
         ),
         Article(
             id: "video-3",
@@ -117,7 +117,7 @@ final class MockMediaService: MediaService {
             mediaType: .video,
             mediaURL: "https://youtube.com/watch?v=video3",
             mediaDuration: 100,
-            mediaMimeType: "video/youtube"
+            mediaMimeType: "video/youtube",
         ),
 
         // Podcasts
@@ -136,7 +136,7 @@ final class MockMediaService: MediaService {
             mediaType: .podcast,
             mediaURL: "https://feeds.simplecast.com/audio1.mp3",
             mediaDuration: 1823,
-            mediaMimeType: "audio/mpeg"
+            mediaMimeType: "audio/mpeg",
         ),
         Article(
             id: "podcast-2",
@@ -153,7 +153,7 @@ final class MockMediaService: MediaService {
             mediaType: .podcast,
             mediaURL: "https://feeds.megaphone.fm/huberman.mp3",
             mediaDuration: 7200,
-            mediaMimeType: "audio/mpeg"
+            mediaMimeType: "audio/mpeg",
         ),
         Article(
             id: "podcast-3",
@@ -170,7 +170,7 @@ final class MockMediaService: MediaService {
             mediaType: .podcast,
             mediaURL: "https://traffic.libsyn.com/atp.mp3",
             mediaDuration: 5400,
-            mediaMimeType: "audio/mpeg"
+            mediaMimeType: "audio/mpeg",
         ),
         Article(
             id: "podcast-4",
@@ -187,7 +187,7 @@ final class MockMediaService: MediaService {
             mediaType: .podcast,
             mediaURL: "https://feeds.megaphone.fm/darknet.mp3",
             mediaDuration: 4200,
-            mediaMimeType: "audio/mpeg"
+            mediaMimeType: "audio/mpeg",
         ),
     ]
 }

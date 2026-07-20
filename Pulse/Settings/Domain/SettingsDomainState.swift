@@ -48,7 +48,7 @@ struct SettingsDomainState: Equatable {
             isDeletingAccount: false,
             newMutedSource: "",
             newMutedKeyword: "",
-            showNotificationsDeniedAlert: false
+            showNotificationsDeniedAlert: false,
         )
     }
 }

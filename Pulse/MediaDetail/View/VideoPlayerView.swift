@@ -23,7 +23,7 @@ struct VideoPlayerView: UIViewRepresentable {
         Coordinator(
             onLoadingStarted: onLoadingStarted,
             onLoadingFinished: onLoadingFinished,
-            onError: onError
+            onError: onError,
         )
     }
 
@@ -210,7 +210,7 @@ struct VideoPlayerView: UIViewRepresentable {
         init(
             onLoadingStarted: (() -> Void)?,
             onLoadingFinished: (() -> Void)?,
-            onError: ((String) -> Void)?
+            onError: ((String) -> Void)?,
         ) {
             self.onLoadingStarted = onLoadingStarted
             self.onLoadingFinished = onLoadingFinished
@@ -259,7 +259,7 @@ extension VideoPlayerView.Coordinator {
         _: WKWebView,
         decidePolicyFor navigationAction: WKNavigationAction,
         preferences: WKWebpagePreferences,
-        decisionHandler: @escaping (WKNavigationActionPolicy, WKWebpagePreferences) -> Void
+        decisionHandler: @escaping (WKNavigationActionPolicy, WKWebpagePreferences) -> Void,
     ) {
         switch loadMode {
         case .youTube:
@@ -269,7 +269,7 @@ extension VideoPlayerView.Coordinator {
             preferences.allowsContentJavaScript = false
             let allowed = Self.allowsDirectVideoNavigation(
                 to: navigationAction.request.url,
-                host: host
+                host: host,
             )
             decisionHandler(allowed ? .allow : .cancel, preferences)
         }

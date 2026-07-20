@@ -6,7 +6,6 @@ import Testing
 
 @Suite("OnboardingDomainInteractor Tests")
 @MainActor
-// swiftlint:disable:next type_body_length
 struct OnboardingDomainInteractorTests {
     let mockOnboardingService: MockOnboardingService
     let mockAnalyticsService: MockAnalyticsService
@@ -225,7 +224,7 @@ struct OnboardingDomainInteractorTests {
             mutedKeywords: ["keyword1"],
             preferredLanguage: "pt",
             notificationsEnabled: false,
-            breakingNewsNotifications: false
+            breakingNewsNotifications: false,
         )
 
         // Rebuild sut so the new preference seed is loaded on init.
@@ -259,7 +258,7 @@ struct OnboardingDomainInteractorTests {
             mutedKeywords: [],
             preferredLanguage: "en",
             notificationsEnabled: true,
-            breakingNewsNotifications: true
+            breakingNewsNotifications: true,
         )
 
         let serviceLocator = ServiceLocator()
@@ -281,7 +280,7 @@ struct OnboardingDomainInteractorTests {
             mutedKeywords: [],
             preferredLanguage: "en",
             notificationsEnabled: true,
-            breakingNewsNotifications: true
+            breakingNewsNotifications: true,
         )
         mockSettingsService.fetchPreferencesDelay = 0.1
 
@@ -309,7 +308,7 @@ struct OnboardingDomainInteractorTests {
             mutedKeywords: ["keyword1"],
             preferredLanguage: "pt",
             notificationsEnabled: false,
-            breakingNewsNotifications: false
+            breakingNewsNotifications: false,
         )
         // Keep the initial fetchPreferences in flight when user taps Get Started.
         mockSettingsService.fetchPreferencesDelay = 0.15

@@ -31,7 +31,7 @@ final class ArticleDetailViewModel: CombineViewModel, ObservableObject {
         article: Article,
         serviceLocator: ServiceLocator,
         eventActionMap: ArticleDetailEventActionMap = ArticleDetailEventActionMap(),
-        viewStateReducer: ArticleDetailViewStateReducer = ArticleDetailViewStateReducer()
+        viewStateReducer: ArticleDetailViewStateReducer = ArticleDetailViewStateReducer(),
     ) {
         self.eventActionMap = eventActionMap
         self.viewStateReducer = viewStateReducer

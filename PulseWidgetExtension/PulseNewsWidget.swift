@@ -162,8 +162,8 @@ struct ArticleRowView: View {
                         LinearGradient(
                             colors: [Color.blue.opacity(0.4), Color.blue.opacity(0.2)],
                             startPoint: .topLeading,
-                            endPoint: .bottomTrailing
-                        )
+                            endPoint: .bottomTrailing,
+                        ),
                     )
 
                 Image(systemName: "newspaper.fill")
@@ -182,13 +182,13 @@ struct ArticleRowView: View {
             id: "1",
             title: "Breaking: Major Tech Announcement",
             source: "TechNews",
-            imageData: nil
+            imageData: nil,
         ),
     ]
     NewsTimelineEntry(
         date: Date(),
         articles: sampleArticles,
-        family: .systemSmall
+        family: .systemSmall,
     )
 }
 
@@ -200,19 +200,19 @@ struct ArticleRowView: View {
             id: "1",
             title: "Breaking: Major Tech Announcement",
             source: "TechNews",
-            imageData: nil
+            imageData: nil,
         ),
         WidgetArticle(
             id: "2",
             title: "Markets Rally on Economic News",
             source: "Financial Times",
-            imageData: nil
+            imageData: nil,
         ),
     ]
     NewsTimelineEntry(
         date: Date(),
         articles: sampleArticles,
-        family: .systemMedium
+        family: .systemMedium,
     )
 }
 
@@ -224,24 +224,24 @@ struct ArticleRowView: View {
             id: "1",
             title: "Breaking: Major Tech Announcement",
             source: "TechNews",
-            imageData: nil
+            imageData: nil,
         ),
         WidgetArticle(
             id: "2",
             title: "Markets Rally on Economic News",
             source: "Financial Times",
-            imageData: nil
+            imageData: nil,
         ),
         WidgetArticle(
             id: "3",
             title: "Sports Update: Championship Finals",
             source: "ESPN",
-            imageData: nil
+            imageData: nil,
         ),
     ]
     NewsTimelineEntry(
         date: Date(),
         articles: sampleArticles,
-        family: .systemLarge
+        family: .systemLarge,
     )
 }

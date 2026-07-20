@@ -12,7 +12,7 @@ final class ArticleDetailViewSnapshotTests: XCTestCase {
     private let iPhoneAirConfig = ViewImageConfig(
         safeArea: UIEdgeInsets(top: 59, left: 0, bottom: 34, right: 0),
         size: CGSize(width: 393, height: 852),
-        traits: UITraitCollection(userInterfaceStyle: .dark)
+        traits: UITraitCollection(userInterfaceStyle: .dark),
     )
 
     override func setUp() async throws {
@@ -33,7 +33,7 @@ final class ArticleDetailViewSnapshotTests: XCTestCase {
             url: "https://example.com/1",
             imageURL: nil,
             publishedAt: Date(timeIntervalSince1970: 1_672_531_200), // Jan 1, 2023 00:00:00 UTC
-            category: .technology
+            category: .technology,
         )
     }
 
@@ -46,7 +46,7 @@ final class ArticleDetailViewSnapshotTests: XCTestCase {
         assertSnapshot(
             of: controller,
             as: SnapshotConfig.snapshotting(on: iPhoneAirConfig),
-            record: false
+            record: false,
         )
     }
 }

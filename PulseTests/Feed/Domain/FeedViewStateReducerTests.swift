@@ -18,7 +18,7 @@ struct FeedViewStateReducerTests {
             modelStatus: .notLoaded,
             hasLoadedInitialData: true,
             selectedArticle: nil,
-            isOfflineError: false
+            isOfflineError: false,
         )
 
         let viewState = sut.reduce(domainState: domainState)
@@ -37,7 +37,7 @@ struct FeedViewStateReducerTests {
             modelStatus: .notLoaded,
             hasLoadedInitialData: true,
             selectedArticle: nil,
-            isOfflineError: false
+            isOfflineError: false,
         )
 
         let viewState = sut.reduce(domainState: domainState)
@@ -56,7 +56,7 @@ struct FeedViewStateReducerTests {
             modelStatus: .notLoaded,
             hasLoadedInitialData: false,
             selectedArticle: nil,
-            isOfflineError: false
+            isOfflineError: false,
         )
 
         let viewState = sut.reduce(domainState: domainState)
@@ -75,7 +75,7 @@ struct FeedViewStateReducerTests {
             modelStatus: .ready,
             hasLoadedInitialData: true,
             selectedArticle: nil,
-            isOfflineError: false
+            isOfflineError: false,
         )
 
         let viewState = sut.reduce(domainState: domainState)
@@ -90,7 +90,7 @@ struct FeedViewStateReducerTests {
             id: "1",
             summary: "Test summary",
             sourceArticles: Article.mockArticles,
-            generatedAt: Date()
+            generatedAt: Date(),
         )
 
         let domainState = FeedDomainState(
@@ -101,7 +101,7 @@ struct FeedViewStateReducerTests {
             modelStatus: .ready,
             hasLoadedInitialData: true,
             selectedArticle: nil,
-            isOfflineError: false
+            isOfflineError: false,
         )
 
         let viewState = sut.reduce(domainState: domainState)
@@ -121,7 +121,7 @@ struct FeedViewStateReducerTests {
             modelStatus: .error("Model failed"),
             hasLoadedInitialData: true,
             selectedArticle: nil,
-            isOfflineError: false
+            isOfflineError: false,
         )
 
         let viewState = sut.reduce(domainState: domainState)
@@ -142,7 +142,7 @@ struct FeedViewStateReducerTests {
             modelStatus: .notLoaded,
             hasLoadedInitialData: true,
             selectedArticle: nil,
-            isOfflineError: false
+            isOfflineError: false,
         )
 
         let viewState = sut.reduce(domainState: domainState)
@@ -167,7 +167,7 @@ struct FeedViewStateReducerTests {
             modelStatus: .notLoaded,
             hasLoadedInitialData: true,
             selectedArticle: nil,
-            isOfflineError: false
+            isOfflineError: false,
         )
 
         let viewState = sut.reduce(domainState: domainState)
@@ -188,7 +188,7 @@ struct FeedViewStateReducerTests {
             modelStatus: .notLoaded,
             hasLoadedInitialData: true,
             selectedArticle: article,
-            isOfflineError: false
+            isOfflineError: false,
         )
 
         let viewState = sut.reduce(domainState: domainState)
@@ -223,8 +223,8 @@ struct DigestViewItemParsingTests {
                 id: "test",
                 summary: summary,
                 sourceArticles: articles,
-                generatedAt: Date()
-            )
+                generatedAt: Date(),
+            ),
         )
 
         let sourceArticles = articles.map { FeedSourceArticle(from: $0) }
@@ -268,8 +268,8 @@ struct DigestViewItemParsingTests {
                 id: "test",
                 summary: summary,
                 sourceArticles: articles,
-                generatedAt: Date()
-            )
+                generatedAt: Date(),
+            ),
         )
 
         let sourceArticles = articles.map { FeedSourceArticle(from: $0) }
@@ -299,8 +299,8 @@ struct DigestViewItemParsingTests {
                 id: "test",
                 summary: summary,
                 sourceArticles: articles,
-                generatedAt: Date()
-            )
+                generatedAt: Date(),
+            ),
         )
 
         let sourceArticles = articles.map { FeedSourceArticle(from: $0) }
@@ -328,8 +328,8 @@ struct DigestViewItemParsingTests {
                 id: "test",
                 summary: summary,
                 sourceArticles: articles,
-                generatedAt: Date()
-            )
+                generatedAt: Date(),
+            ),
         )
 
         let sourceArticles = articles.map { FeedSourceArticle(from: $0) }
@@ -355,8 +355,8 @@ struct DigestViewItemParsingTests {
                 id: "test",
                 summary: summary,
                 sourceArticles: articles,
-                generatedAt: Date()
-            )
+                generatedAt: Date(),
+            ),
         )
 
         let sourceArticles = articles.map { FeedSourceArticle(from: $0) }
@@ -384,8 +384,8 @@ struct DigestViewItemParsingTests {
                 id: "test",
                 summary: summary,
                 sourceArticles: articles,
-                generatedAt: Date()
-            )
+                generatedAt: Date(),
+            ),
         )
 
         let sourceArticles = articles.map { FeedSourceArticle(from: $0) }
@@ -414,8 +414,8 @@ struct DigestViewItemParsingTests {
                 id: "test",
                 summary: summary,
                 sourceArticles: articles,
-                generatedAt: Date()
-            )
+                generatedAt: Date(),
+            ),
         )
 
         let sourceArticles = articles.map { FeedSourceArticle(from: $0) }
@@ -437,8 +437,8 @@ struct DigestViewItemParsingTests {
                 id: "test",
                 summary: summary,
                 sourceArticles: [],
-                generatedAt: Date()
-            )
+                generatedAt: Date(),
+            ),
         )
 
         let sections = digest.parseSections(with: [])
@@ -464,8 +464,8 @@ struct DigestViewItemParsingTests {
                 id: "test",
                 summary: summary,
                 sourceArticles: articles,
-                generatedAt: Date()
-            )
+                generatedAt: Date(),
+            ),
         )
 
         let sourceArticles = articles.map { FeedSourceArticle(from: $0) }
@@ -501,8 +501,8 @@ struct DigestViewItemParsingTests {
                 id: "test",
                 summary: summary,
                 sourceArticles: articles,
-                generatedAt: Date()
-            )
+                generatedAt: Date(),
+            ),
         )
 
         let sourceArticles = articles.map { FeedSourceArticle(from: $0) }
@@ -541,8 +541,8 @@ struct DigestViewItemParsingTests {
                 id: "test",
                 summary: summary,
                 sourceArticles: articles,
-                generatedAt: Date()
-            )
+                generatedAt: Date(),
+            ),
         )
 
         let sourceArticles = articles.map { FeedSourceArticle(from: $0) }
@@ -576,8 +576,8 @@ struct DigestViewItemParsingTests {
                 id: "test",
                 summary: summary,
                 sourceArticles: articles,
-                generatedAt: Date()
-            )
+                generatedAt: Date(),
+            ),
         )
 
         let sourceArticles = articles.map { FeedSourceArticle(from: $0) }
@@ -621,8 +621,8 @@ struct DigestViewItemParsingTests {
                 id: "test",
                 summary: summary,
                 sourceArticles: articles,
-                generatedAt: Date()
-            )
+                generatedAt: Date(),
+            ),
         )
 
         let sourceArticles = articles.map { FeedSourceArticle(from: $0) }
@@ -663,8 +663,8 @@ struct DigestViewItemParsingTests {
                 id: "test",
                 summary: summary,
                 sourceArticles: articles,
-                generatedAt: Date()
-            )
+                generatedAt: Date(),
+            ),
         )
 
         let sourceArticles = articles.map { FeedSourceArticle(from: $0) }
@@ -702,8 +702,8 @@ struct DigestViewItemParsingTests {
                 id: "test",
                 summary: summary,
                 sourceArticles: articles,
-                generatedAt: Date()
-            )
+                generatedAt: Date(),
+            ),
         )
 
         let sourceArticles = articles.map { FeedSourceArticle(from: $0) }
@@ -738,8 +738,8 @@ struct DigestViewItemParsingTests {
                 id: "test",
                 summary: summary,
                 sourceArticles: articles,
-                generatedAt: Date()
-            )
+                generatedAt: Date(),
+            ),
         )
 
         let sourceArticles = articles.map { FeedSourceArticle(from: $0) }
@@ -763,7 +763,7 @@ struct DigestViewItemParsingTests {
             source: ArticleSource(id: "test", name: "Test Source"),
             url: "https://example.com",
             publishedAt: Date(),
-            category: category
+            category: category,
         )
     }
 }

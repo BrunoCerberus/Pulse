@@ -42,7 +42,7 @@ struct Article: Identifiable, Equatable, Codable, Hashable {
         mediaType: MediaType? = nil,
         mediaURL: String? = nil,
         mediaDuration: Int? = nil,
-        mediaMimeType: String? = nil
+        mediaMimeType: String? = nil,
     ) {
         self.id = id
         self.title = title

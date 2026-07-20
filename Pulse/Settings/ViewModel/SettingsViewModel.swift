@@ -24,7 +24,7 @@ final class SettingsViewModel: CombineViewModel, ObservableObject {
         serviceLocator: ServiceLocator,
         themeManager: ThemeManager? = nil,
         authenticationManager: AuthenticationManager? = nil,
-        viewControllerProvider: (() -> UIViewController?)? = nil
+        viewControllerProvider: (() -> UIViewController?)? = nil,
     ) {
         self.serviceLocator = serviceLocator
         interactor = SettingsDomainInteractor(serviceLocator: serviceLocator)
@@ -134,7 +134,7 @@ final class SettingsViewModel: CombineViewModel, ObservableObject {
             let components = Calendar.current.dateComponents([.hour, .minute], from: time)
             interactor.dispatch(action: .changeMorningBriefingTime(
                 hour: components.hour ?? 7,
-                minute: components.minute ?? 0
+                minute: components.minute ?? 0,
             ))
         case let .onMorningBriefingArticleCountChanged(count):
             interactor.dispatch(action: .changeMorningBriefingArticleCount(count))
@@ -165,22 +165,22 @@ final class SettingsViewModel: CombineViewModel, ObservableObject {
                     // ever runs. A `[weak self]` Task here would silently
                     // skip the cleanup — exactly the orphan-PII bug this PR
                     // is supposed to prevent.
-                    let serviceLocator = self.serviceLocator
-                    let themeManager = self.themeManager
-                    let interactor = self.interactor
+                    let serviceLocator = serviceLocator
+                    let themeManager = themeManager
+                    let interactor = interactor
                     Task { @MainActor in
                         let failures = await Self.clearAllUserData(
                             serviceLocator: serviceLocator,
-                            themeManager: themeManager
+                            themeManager: themeManager,
                         )
                         if !failures.isEmpty {
                             Self.surfacePartialCleanupFailure(
                                 key: "account.sign_out.cleanup_partial_failure",
-                                interactor: interactor
+                                interactor: interactor,
                             )
                         }
                     }
-                }
+                },
             )
             .store(in: &cancellables)
     }
@@ -211,30 +211,30 @@ final class SettingsViewModel: CombineViewModel, ObservableObject {
                 },
                 receiveValue: { [weak self] _ in
                     guard let self else { return }
-                    self.analyticsService?.logEvent(.deleteAccount)
+                    analyticsService?.logEvent(.deleteAccount)
                     // Same rationale as `handleSignOut`: capture deps strongly
                     // so cleanup doesn't get cancelled by the auth-state flip
                     // releasing this view model. Worse here than sign-out
                     // because the Firebase account is already gone — leaving
                     // local data orphan would be a direct LGPD / GDPR
                     // right-to-erasure violation.
-                    let serviceLocator = self.serviceLocator
-                    let themeManager = self.themeManager
-                    let interactor = self.interactor
+                    let serviceLocator = serviceLocator
+                    let themeManager = themeManager
+                    let interactor = interactor
                     Task { @MainActor in
                         let failures = await Self.clearAllUserData(
                             serviceLocator: serviceLocator,
-                            themeManager: themeManager
+                            themeManager: themeManager,
                         )
                         interactor.dispatch(action: .setIsDeletingAccount(false))
                         if !failures.isEmpty {
                             Self.surfacePartialCleanupFailure(
                                 key: "account.delete.cleanup_partial_failure",
-                                interactor: interactor
+                                interactor: interactor,
                             )
                         }
                     }
-                }
+                },
             )
             .store(in: &cancellables)
     }
@@ -253,7 +253,7 @@ final class SettingsViewModel: CombineViewModel, ObservableObject {
     private static func surfacePartialCleanupFailure(
         key: String,
         interactor: SettingsDomainInteractor,
-        defaults: UserDefaults = .standard
+        defaults: UserDefaults = .standard,
     ) {
         let message = AppLocalization.shared.localized(key)
         defaults.set(message, forKey: pendingCleanupErrorKey)
@@ -302,12 +302,12 @@ final class SettingsViewModel: CombineViewModel, ObservableObject {
     @MainActor
     static func clearAllUserData(
         serviceLocator: ServiceLocator,
-        themeManager: ThemeManager
+        themeManager: ThemeManager,
     ) async -> [String] {
         guard !isClearingUserData else {
             Logger.shared.service(
                 "clearAllUserData already in progress; skipping re-entrant call",
-                level: .debug
+                level: .debug,
             )
             return []
         }
@@ -355,7 +355,7 @@ final class SettingsViewModel: CombineViewModel, ObservableObject {
             } catch {
                 Logger.shared.service(
                     "Failed to clear interest profile on sign-out: \(error)",
-                    level: .warning
+                    level: .warning,
                 )
                 failures.append("interest_profile")
             }
@@ -367,7 +367,7 @@ final class SettingsViewModel: CombineViewModel, ObservableObject {
             } catch {
                 Logger.shared.service(
                     "Failed to clear engagement queue on sign-out: \(error)",
-                    level: .warning
+                    level: .warning,
                 )
                 failures.append("engagement")
             }
@@ -449,7 +449,7 @@ final class SettingsViewModel: CombineViewModel, ObservableObject {
         } else {
             Logger.shared.service(
                 "Cleared local user data with failures: \(failures.joined(separator: ", "))",
-                level: .warning
+                level: .warning,
             )
         }
         return failures
@@ -463,7 +463,7 @@ final class SettingsViewModel: CombineViewModel, ObservableObject {
             interactor.statePublisher,
             themeManager.$isDarkMode.removeDuplicates(),
             themeManager.$useSystemTheme.removeDuplicates(),
-            authenticationManager.authStatePublisher.removeDuplicates()
+            authenticationManager.authStatePublisher.removeDuplicates(),
         )
         // Debounce rapid changes to prevent excessive UI updates during theme toggling
         .debounce(for: .milliseconds(16), scheduler: DispatchQueue.main)
@@ -478,7 +478,7 @@ final class SettingsViewModel: CombineViewModel, ObservableObject {
                 bySettingHour: state.preferences.morningBriefingHour,
                 minute: state.preferences.morningBriefingMinute,
                 second: 0,
-                of: Date()
+                of: Date(),
             ) ?? Date()
             return SettingsViewState(
                 mutedSources: state.preferences.mutedSources,
@@ -499,7 +499,7 @@ final class SettingsViewModel: CombineViewModel, ObservableObject {
                 showNotificationsDeniedAlert: state.showNotificationsDeniedAlert,
                 newMutedSource: state.newMutedSource,
                 newMutedKeyword: state.newMutedKeyword,
-                selectedLanguage: state.preferences.preferredLanguage
+                selectedLanguage: state.preferences.preferredLanguage,
             )
         }
         .removeDuplicates()
@@ -549,7 +549,7 @@ struct SettingsViewState: Equatable {
             showNotificationsDeniedAlert: false,
             newMutedSource: "",
             newMutedKeyword: "",
-            selectedLanguage: "en"
+            selectedLanguage: "en",
         )
     }
 }

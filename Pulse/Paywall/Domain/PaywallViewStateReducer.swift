@@ -50,7 +50,7 @@ struct PaywallViewStateReducer: PaywallViewStateReducing {
             isRestoring: domainState.isRestoring,
             purchaseSuccessful: domainState.purchaseSuccessful,
             restoreSuccessful: domainState.restoreSuccessful,
-            shouldDismiss: domainState.shouldDismiss
+            shouldDismiss: domainState.shouldDismiss,
         )
 
         return .success(dataViewState)

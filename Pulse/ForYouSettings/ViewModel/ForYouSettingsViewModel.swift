@@ -43,7 +43,7 @@ final class ForYouSettingsViewModel: CombineViewModel, ObservableObject {
                     isLoading: state.isLoading,
                     showEmptyState: !state.isLoading && state.topics.isEmpty,
                     showResetConfirmation: state.showResetConfirmation,
-                    errorMessage: state.error
+                    errorMessage: state.error,
                 )
             }
             .removeDuplicates()
@@ -67,7 +67,7 @@ struct ForYouSettingsViewState: Equatable {
             isLoading: false,
             showEmptyState: false,
             showResetConfirmation: false,
-            errorMessage: nil
+            errorMessage: nil,
         )
     }
 }

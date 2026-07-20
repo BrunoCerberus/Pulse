@@ -298,7 +298,7 @@ private final class FailingMockLLMService: LLMService {
     func generate(
         prompt _: String,
         systemPrompt _: String?,
-        config _: LLMInferenceConfig
+        config _: LLMInferenceConfig,
     ) -> AnyPublisher<String, Error> {
         Fail(error: LoadError.alwaysFails).eraseToAnyPublisher()
     }
@@ -306,7 +306,7 @@ private final class FailingMockLLMService: LLMService {
     func generateStream(
         prompt _: String,
         systemPrompt _: String?,
-        config _: LLMInferenceConfig
+        config _: LLMInferenceConfig,
     ) -> AsyncThrowingStream<String, Error> {
         AsyncThrowingStream { continuation in
             continuation.finish(throwing: LoadError.alwaysFails)
@@ -335,7 +335,7 @@ private final class ErrorMockLLMService: LLMService {
     func generate(
         prompt _: String,
         systemPrompt _: String?,
-        config _: LLMInferenceConfig
+        config _: LLMInferenceConfig,
     ) -> AnyPublisher<String, Error> {
         Fail(error: TestError()).eraseToAnyPublisher()
     }
@@ -343,7 +343,7 @@ private final class ErrorMockLLMService: LLMService {
     func generateStream(
         prompt _: String,
         systemPrompt _: String?,
-        config _: LLMInferenceConfig
+        config _: LLMInferenceConfig,
     ) -> AsyncThrowingStream<String, Error> {
         AsyncThrowingStream { continuation in
             continuation.finish(throwing: TestError())

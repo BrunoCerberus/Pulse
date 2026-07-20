@@ -54,7 +54,7 @@ struct FeaturedMediaCardSkeleton: View {
         .clipShape(RoundedRectangle(cornerRadius: CornerRadius.lg, style: .continuous))
         .overlay(
             RoundedRectangle(cornerRadius: CornerRadius.lg, style: .continuous)
-                .stroke(Color.Border.glass, lineWidth: 0.5)
+                .stroke(Color.Border.glass, lineWidth: 0.5),
         )
         .shimmer(isActive: isAnimating)
         .onAppear {

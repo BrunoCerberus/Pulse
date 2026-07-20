@@ -7,7 +7,7 @@ struct OnboardingViewStateReducer: ViewStateReducing {
             currentPage: domainState.currentPage,
             isLastPage: domainState.currentPage == OnboardingPage.allCases.last,
             selectedTopics: domainState.selectedTopics,
-            isCompleted: domainState.isCompleted
+            isCompleted: domainState.isCompleted,
         )
     }
 }

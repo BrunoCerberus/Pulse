@@ -15,8 +15,8 @@ final class HeroNewsCardAccessibilitySnapshotTests: XCTestCase {
                 source: ArticleSource(id: nil, name: "Reuters"),
                 url: "https://example.com",
                 imageURL: nil,
-                publishedAt: Date(timeIntervalSince1970: 1_672_531_200)
-            )
+                publishedAt: Date(timeIntervalSince1970: 1_672_531_200),
+            ),
         )
     }
 
@@ -30,7 +30,7 @@ final class HeroNewsCardAccessibilitySnapshotTests: XCTestCase {
             HeroNewsCard(
                 item: article,
                 cardWidth: proxy.size.width,
-                onTap: {}
+                onTap: {},
             )
         }
         .aspectRatio(300.0 / 200.0, contentMode: .fit)
@@ -42,14 +42,14 @@ final class HeroNewsCardAccessibilitySnapshotTests: XCTestCase {
         assertSnapshot(
             of: controller,
             as: SnapshotConfig.snapshotting(on: SnapshotConfig.iPhoneAirAccessibility),
-            record: false
+            record: false,
         )
     }
 
     func testHeroNewsCardExtraExtraLargeSize() {
         let view = HeroNewsCard(
             item: snapshotArticle,
-            onTap: {}
+            onTap: {},
         )
         .padding()
         .background(LinearGradient.meshFallback)
@@ -59,7 +59,7 @@ final class HeroNewsCardAccessibilitySnapshotTests: XCTestCase {
         assertSnapshot(
             of: controller,
             as: SnapshotConfig.snapshotting(on: SnapshotConfig.iPhoneAirExtraExtraLarge),
-            record: false
+            record: false,
         )
     }
 }

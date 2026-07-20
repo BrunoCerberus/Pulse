@@ -97,7 +97,7 @@ struct FeedDomainInteractorTests {
             id: "cached",
             summary: "Cached summary",
             sourceArticles: Article.mockArticles,
-            generatedAt: Date()
+            generatedAt: Date(),
         )
         mockFeedService.cachedDigest = cachedDigest
         mockNewsService.topHeadlinesResult = .success(Article.mockArticles)
@@ -215,7 +215,7 @@ struct FeedDomainInteractorTests {
             id: "cached",
             summary: "Cached summary",
             sourceArticles: Article.mockArticles,
-            generatedAt: Date()
+            generatedAt: Date(),
         )
         mockFeedService.cachedDigest = cachedDigest
         mockNewsService.topHeadlinesResult = .success(Article.mockArticles)
@@ -333,7 +333,7 @@ extension FeedDomainInteractorTests {
             id: "test",
             summary: "Test summary",
             sourceArticles: Article.mockArticles,
-            generatedAt: Date()
+            generatedAt: Date(),
         )
         sut.dispatch(action: .digestCompleted(digest))
 

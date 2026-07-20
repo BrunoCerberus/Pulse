@@ -28,7 +28,7 @@ final class FeedViewModel: CombineViewModel, ObservableObject {
     init(
         serviceLocator: ServiceLocator,
         eventActionMap: FeedEventActionMap = FeedEventActionMap(),
-        viewStateReducer: FeedViewStateReducer = FeedViewStateReducer()
+        viewStateReducer: FeedViewStateReducer = FeedViewStateReducer(),
     ) {
         self.eventActionMap = eventActionMap
         self.viewStateReducer = viewStateReducer

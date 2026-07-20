@@ -11,7 +11,7 @@ struct SearchDomainStateTests {
                 title: "Article 1",
                 source: ArticleSource(id: "source-1", name: "Source 1"),
                 url: "https://example.com/1",
-                publishedAt: Date()
+                publishedAt: Date(),
             ),
         ]
     }

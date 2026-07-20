@@ -13,7 +13,7 @@ final class GlassCategoryChipAccessibilitySnapshotTests: XCTestCase {
         let view = GlassCategoryButton(
             category: .technology,
             isSelected: false,
-            action: {}
+            action: {},
         )
         .frame(width: 375)
         .padding()
@@ -24,7 +24,7 @@ final class GlassCategoryChipAccessibilitySnapshotTests: XCTestCase {
         assertSnapshot(
             of: controller,
             as: SnapshotConfig.snapshotting(on: SnapshotConfig.iPhoneAirAccessibility),
-            record: false
+            record: false,
         )
     }
 
@@ -32,7 +32,7 @@ final class GlassCategoryChipAccessibilitySnapshotTests: XCTestCase {
         let view = GlassCategoryButton(
             category: .technology,
             isSelected: false,
-            action: {}
+            action: {},
         )
         .frame(width: 375)
         .padding()
@@ -43,7 +43,7 @@ final class GlassCategoryChipAccessibilitySnapshotTests: XCTestCase {
         assertSnapshot(
             of: controller,
             as: SnapshotConfig.snapshotting(on: SnapshotConfig.iPhoneAirExtraExtraLarge),
-            record: false
+            record: false,
         )
     }
 
@@ -51,7 +51,7 @@ final class GlassCategoryChipAccessibilitySnapshotTests: XCTestCase {
         let view = GlassCategoryButton(
             category: .technology,
             isSelected: true,
-            action: {}
+            action: {},
         )
         .frame(width: 375)
         .padding()
@@ -62,7 +62,7 @@ final class GlassCategoryChipAccessibilitySnapshotTests: XCTestCase {
         assertSnapshot(
             of: controller,
             as: SnapshotConfig.snapshotting(on: SnapshotConfig.iPhoneAirAccessibility),
-            record: false
+            record: false,
         )
     }
 }

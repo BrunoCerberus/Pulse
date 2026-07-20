@@ -31,7 +31,7 @@ final class UserPreferencesModel {
     /// Creates a persistence model from domain preferences.
     /// - Parameter preferences: The domain preferences to persist.
     init(from preferences: UserPreferences) {
-        followedTopics = preferences.followedTopics.map { $0.rawValue }
+        followedTopics = preferences.followedTopics.map(\.rawValue)
         mutedSources = preferences.mutedSources
         mutedKeywords = preferences.mutedKeywords
         preferredLanguage = preferences.preferredLanguage
@@ -56,7 +56,7 @@ final class UserPreferencesModel {
             morningBriefingEnabled: morningBriefingEnabled,
             morningBriefingHour: morningBriefingHour,
             morningBriefingMinute: morningBriefingMinute,
-            morningBriefingArticleCount: morningBriefingArticleCount
+            morningBriefingArticleCount: morningBriefingArticleCount,
         )
     }
 }

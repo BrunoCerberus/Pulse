@@ -14,7 +14,7 @@ struct AuthUserTests {
             email: "test@example.com",
             displayName: "John Doe",
             photoURL: photoURL,
-            provider: .google
+            provider: .google,
         )
 
         #expect(user.uid == "test-uid-123")
@@ -31,7 +31,7 @@ struct AuthUserTests {
             email: nil,
             displayName: nil,
             photoURL: nil,
-            provider: .apple
+            provider: .apple,
         )
 
         #expect(user.uid == "test-uid")
@@ -49,7 +49,7 @@ struct AuthUserTests {
             email: "encode@test.com",
             displayName: "Test User",
             photoURL: URL(string: "https://example.com/photo.jpg"),
-            provider: .google
+            provider: .google,
         )
 
         let encoder = JSONEncoder()
@@ -73,7 +73,7 @@ struct AuthUserTests {
             email: nil,
             displayName: nil,
             photoURL: nil,
-            provider: .apple
+            provider: .apple,
         )
 
         let encoder = JSONEncoder()
@@ -96,7 +96,7 @@ struct AuthUserTests {
             email: "same@email.com",
             displayName: "Same Name",
             photoURL: nil,
-            provider: .google
+            provider: .google,
         )
 
         let user2 = AuthUser(
@@ -104,7 +104,7 @@ struct AuthUserTests {
             email: "same@email.com",
             displayName: "Same Name",
             photoURL: nil,
-            provider: .google
+            provider: .google,
         )
 
         let user3 = AuthUser(
@@ -112,7 +112,7 @@ struct AuthUserTests {
             email: "same@email.com",
             displayName: "Same Name",
             photoURL: nil,
-            provider: .google
+            provider: .google,
         )
 
         #expect(user1 == user2)

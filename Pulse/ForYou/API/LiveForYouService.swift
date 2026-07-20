@@ -45,7 +45,7 @@ final class LiveForYouService: ForYouService {
             scored
                 .filter { $0.score > 0 }
                 .sorted { $0.score > $1.score }
-                .prefix(topN)
+                .prefix(topN),
         )
     }
 

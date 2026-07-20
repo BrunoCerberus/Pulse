@@ -22,7 +22,7 @@ final class LiveNewsService: APIRequest, NewsService {
         category: NewsCategory,
         language: String,
         country _: String,
-        page: Int
+        page: Int,
     ) -> AnyPublisher<[Article], Error> {
         guard isConfigured else { return backendNotConfigured() }
         return fetchFromSupabase(language: language, category: category, page: page)
@@ -49,7 +49,7 @@ final class LiveNewsService: APIRequest, NewsService {
     private func fetchFromSupabase(language: String, page: Int) -> AnyPublisher<[Article], Error> {
         fetchRequest(
             target: SupabaseAPI.articles(language: language, page: page, pageSize: 20),
-            dataType: [SupabaseArticle].self
+            dataType: [SupabaseArticle].self,
         )
         .map { $0.map { $0.toArticle() } }
         .handleEvents(receiveOutput: { articles in
@@ -62,16 +62,16 @@ final class LiveNewsService: APIRequest, NewsService {
     private func fetchFromSupabase(
         language: String,
         category: NewsCategory,
-        page: Int
+        page: Int,
     ) -> AnyPublisher<[Article], Error> {
         fetchRequest(
             target: SupabaseAPI.articlesByCategory(
                 language: language,
                 category: category.rawValue,
                 page: page,
-                pageSize: 20
+                pageSize: 20,
             ),
-            dataType: [SupabaseArticle].self
+            dataType: [SupabaseArticle].self,
         )
         .map { $0.map { $0.toArticle() } }
         .handleEvents(receiveOutput: { articles in
@@ -86,7 +86,7 @@ final class LiveNewsService: APIRequest, NewsService {
     private func fetchBreakingFromSupabase(language: String) -> AnyPublisher<[Article], Error> {
         fetchRequest(
             target: SupabaseAPI.breakingNews(language: language, limit: 10),
-            dataType: [SupabaseArticle].self
+            dataType: [SupabaseArticle].self,
         )
         .map { $0.map { $0.toArticle() } }
         .receive(on: DispatchQueue.main)
@@ -96,7 +96,7 @@ final class LiveNewsService: APIRequest, NewsService {
     private func fetchArticleFromSupabase(id: String) -> AnyPublisher<Article, Error> {
         fetchRequest(
             target: SupabaseAPI.article(id: id),
-            dataType: [SupabaseArticle].self
+            dataType: [SupabaseArticle].self,
         )
         .tryMap { response in
             guard let article = response.first else {

@@ -88,7 +88,7 @@ struct ReadingHistoryView<R: ReadingHistoryNavigationRouter>: View {
         }
         .sheet(item: Binding(
             get: { viewModel.viewState.articleToShare },
-            set: { _ in viewModel.handle(event: .onShareDismissed) }
+            set: { _ in viewModel.handle(event: .onShareDismissed) },
         )) { article in
             ShareSheet(activityItems: ShareItemsBuilder.activityItems(for: article))
         }
@@ -175,7 +175,7 @@ struct ReadingHistoryView<R: ReadingHistoryNavigationRouter>: View {
                 if horizontalSizeClass == .regular {
                     LazyVGrid(
                         columns: [GridItem(.adaptive(minimum: 360), spacing: Spacing.md)],
-                        spacing: Spacing.md
+                        spacing: Spacing.md,
                     ) {
                         ForEach(viewModel.viewState.articles) { item in
                             historyCard(item)
@@ -206,7 +206,7 @@ struct ReadingHistoryView<R: ReadingHistoryNavigationRouter>: View {
             },
             onShare: {
                 viewModel.handle(event: .onShareTapped(articleId: item.id))
-            }
+            },
         )
         .fadeIn(delay: Double(item.animationIndex) * 0.03)
     }

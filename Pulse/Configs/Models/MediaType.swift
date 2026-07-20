@@ -17,9 +17,9 @@ enum MediaType: String, Codable, CaseIterable, Identifiable, Equatable, Hashable
     var displayName: String {
         switch self {
         case .video:
-            return AppLocalization.localized("media.type.videos")
+            AppLocalization.localized("media.type.videos")
         case .podcast:
-            return AppLocalization.localized("media.type.podcasts")
+            AppLocalization.localized("media.type.podcasts")
         }
     }
 
@@ -27,9 +27,9 @@ enum MediaType: String, Codable, CaseIterable, Identifiable, Equatable, Hashable
     var icon: String {
         switch self {
         case .video:
-            return "play.rectangle.fill"
+            "play.rectangle.fill"
         case .podcast:
-            return "headphones"
+            "headphones"
         }
     }
 
@@ -37,9 +37,9 @@ enum MediaType: String, Codable, CaseIterable, Identifiable, Equatable, Hashable
     var color: Color {
         switch self {
         case .video:
-            return .red // YouTube brand recognition
+            .red // YouTube brand recognition
         case .podcast:
-            return Color.Accent.secondary
+            Color.Accent.secondary
         }
     }
 
@@ -47,9 +47,9 @@ enum MediaType: String, Codable, CaseIterable, Identifiable, Equatable, Hashable
     var categorySlug: String {
         switch self {
         case .video:
-            return "videos"
+            "videos"
         case .podcast:
-            return "podcasts"
+            "podcasts"
         }
     }
 

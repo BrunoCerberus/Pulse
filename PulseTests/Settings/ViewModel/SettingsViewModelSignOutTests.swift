@@ -43,7 +43,7 @@ struct SettingsViewModelSignOutTests {
     private func createSUT() -> SettingsViewModel {
         SettingsViewModel(
             serviceLocator: serviceLocator,
-            viewControllerProvider: { UIViewController() }
+            viewControllerProvider: { UIViewController() },
         )
     }
 
@@ -109,7 +109,7 @@ struct SettingsViewModelSignOutTests {
     @Test("Sign out failure still dismisses confirmation")
     func signOutFailureDismissesConfirmation() async throws {
         mockAuthService.signOutResult = .failure(
-            NSError(domain: "test", code: 1, userInfo: [NSLocalizedDescriptionKey: "Sign out failed"])
+            NSError(domain: "test", code: 1, userInfo: [NSLocalizedDescriptionKey: "Sign out failed"]),
         )
 
         let sut = createSUT()
@@ -216,7 +216,7 @@ struct SettingsViewModelSignOutTests {
     @Test("Delete account failure clears loading state")
     func deleteAccountFailureClearsLoadingState() async throws {
         mockAuthService.deleteAccountResult = .failure(
-            NSError(domain: "test", code: 1, userInfo: [NSLocalizedDescriptionKey: "Delete failed"])
+            NSError(domain: "test", code: 1, userInfo: [NSLocalizedDescriptionKey: "Delete failed"]),
         )
 
         let sut = createSUT()
@@ -262,7 +262,7 @@ struct SettingsViewModelSignOutTests {
     @Test("Sign-out surfaces an error message when local cleanup partially fails")
     func signOutPartialFailureSurfacesError() async throws {
         mockStorageService.clearReadingHistoryError = NSError(
-            domain: "test", code: 1, userInfo: [NSLocalizedDescriptionKey: "disk full"]
+            domain: "test", code: 1, userInfo: [NSLocalizedDescriptionKey: "disk full"],
         )
 
         // Seed the key so the post-cleanup assertion is not vacuous —
@@ -306,7 +306,7 @@ struct SettingsViewModelSignOutTests {
     @Test("Delete-account surfaces an error message when local cleanup partially fails")
     func deleteAccountPartialFailureSurfacesError() async throws {
         mockStorageService.clearReadingHistoryError = NSError(
-            domain: "test", code: 1, userInfo: [NSLocalizedDescriptionKey: "disk full"]
+            domain: "test", code: 1, userInfo: [NSLocalizedDescriptionKey: "disk full"],
         )
 
         let sut = createSUT()
@@ -331,7 +331,7 @@ struct SettingsViewModelSignOutTests {
     func signOutStopsActivePlayback() async throws {
         mockPlaybackQueueService.play(
             items: [makePlaybackItem()],
-            mode: .briefing
+            mode: .briefing,
         )
         #expect(mockPlaybackQueueService.currentState.currentIndex != nil)
 
@@ -351,7 +351,7 @@ struct SettingsViewModelSignOutTests {
     func deleteAccountStopsActivePlayback() async throws {
         mockPlaybackQueueService.play(
             items: [makePlaybackItem()],
-            mode: .singleArticle
+            mode: .singleArticle,
         )
         #expect(mockPlaybackQueueService.currentState.currentIndex != nil)
 
@@ -374,7 +374,7 @@ struct SettingsViewModelSignOutTests {
             title: "Title",
             sourceName: "Source",
             speechText: "Text",
-            language: "en"
+            language: "en",
         )
     }
 
@@ -414,7 +414,7 @@ struct SettingsViewModelSignOutTests {
             mutedKeywords: [],
             preferredLanguage: "en",
             notificationsEnabled: true,
-            breakingNewsNotifications: true
+            breakingNewsNotifications: true,
         )
 
         let sut = createSUT()
@@ -436,7 +436,7 @@ struct SettingsViewModelSignOutTests {
             mutedKeywords: ["keyword1", "keyword2"],
             preferredLanguage: "en",
             notificationsEnabled: true,
-            breakingNewsNotifications: true
+            breakingNewsNotifications: true,
         )
 
         let sut = createSUT()

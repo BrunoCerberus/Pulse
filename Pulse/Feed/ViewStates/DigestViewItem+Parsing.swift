@@ -92,7 +92,7 @@ extension DigestViewItem {
                 content: finalContent,
                 category: category,
                 relatedArticles: Array(articles.prefix(3)),
-                isHighlight: false
+                isHighlight: false,
             ))
         }
 
@@ -169,17 +169,17 @@ extension DigestViewItem {
             result = result.replacingOccurrences(
                 of: "\\*\\*\(category)\\*\\*:?",
                 with: "",
-                options: [.regularExpression, .caseInsensitive]
+                options: [.regularExpression, .caseInsensitive],
             )
             result = result.replacingOccurrences(
                 of: "#{1,3} \(category)",
                 with: "",
-                options: [.regularExpression, .caseInsensitive]
+                options: [.regularExpression, .caseInsensitive],
             )
             result = result.replacingOccurrences(
                 of: "\\[\(category)\\]:?",
                 with: "",
-                options: [.regularExpression, .caseInsensitive]
+                options: [.regularExpression, .caseInsensitive],
             )
         }
 
@@ -193,12 +193,12 @@ extension DigestViewItem {
         let wordsLHS = Set(
             lhs.lowercased()
                 .split(whereSeparator: { !$0.isLetter })
-                .filter { $0.count > 3 }
+                .filter { $0.count > 3 },
         )
         let wordsRHS = Set(
             rhs.lowercased()
                 .split(whereSeparator: { !$0.isLetter })
-                .filter { $0.count > 3 }
+                .filter { $0.count > 3 },
         )
         guard !wordsLHS.isEmpty, !wordsRHS.isEmpty else { return 0 }
         let intersection = wordsLHS.intersection(wordsRHS).count
@@ -255,7 +255,7 @@ extension DigestViewItem {
 
             if uniqueSentences.count < sentences.count {
                 var result = uniqueSentences.joined(separator: ". ")
-                if !result.hasSuffix(".") && !result.hasSuffix("?") && !result.hasSuffix("!") {
+                if !result.hasSuffix("."), !result.hasSuffix("?"), !result.hasSuffix("!") {
                     result += "."
                 }
                 return result
@@ -299,12 +299,10 @@ extension DigestViewItem {
 
         for (index, current) in categoryPositions.enumerated() {
             let startIndex = current.range.upperBound
-            let endIndex: String.Index
-
-            if index + 1 < categoryPositions.count {
-                endIndex = categoryPositions[index + 1].range.lowerBound
+            let endIndex: String.Index = if index + 1 < categoryPositions.count {
+                categoryPositions[index + 1].range.lowerBound
             } else {
-                endIndex = normalizedText.endIndex
+                normalizedText.endIndex
             }
 
             if startIndex < endIndex {

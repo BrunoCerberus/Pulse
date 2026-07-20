@@ -13,7 +13,7 @@ enum SmartBriefingQueueBuilder {
         _ pool: [Article],
         scope: SmartBriefingScope,
         lastServedAt: Date?,
-        servedArticleIDs: Set<String>
+        servedArticleIDs: Set<String>,
     ) -> [Article] {
         var candidates = pool
         if scope == .unreadSinceLastBriefing, let lastServedAt {

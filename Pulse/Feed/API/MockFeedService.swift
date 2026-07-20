@@ -128,7 +128,7 @@ final class MockFeedService: FeedService, @unchecked Sendable {
             id: "mock-digest",
             summary: "This is a sample daily digest summarizing your recent reading activity.",
             sourceArticles: Article.mockArticles,
-            generatedAt: .now
+            generatedAt: .now,
         )
         return service
     }

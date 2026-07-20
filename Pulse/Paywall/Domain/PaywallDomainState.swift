@@ -54,7 +54,7 @@ struct PaywallDomainState: Equatable {
         error: nil,
         purchaseSuccessful: false,
         restoreSuccessful: false,
-        shouldDismiss: false
+        shouldDismiss: false,
     )
 
     static func == (lhs: PaywallDomainState, rhs: PaywallDomainState) -> Bool {
@@ -88,7 +88,7 @@ extension PaywallDomainState {
         error: String?? = nil,
         purchaseSuccessful: Bool? = nil,
         restoreSuccessful: Bool? = nil,
-        shouldDismiss: Bool? = nil
+        shouldDismiss: Bool? = nil,
     ) -> PaywallDomainState {
         PaywallDomainState(
             products: products ?? self.products,
@@ -100,7 +100,7 @@ extension PaywallDomainState {
             error: error ?? self.error,
             purchaseSuccessful: purchaseSuccessful ?? self.purchaseSuccessful,
             restoreSuccessful: restoreSuccessful ?? self.restoreSuccessful,
-            shouldDismiss: shouldDismiss ?? self.shouldDismiss
+            shouldDismiss: shouldDismiss ?? self.shouldDismiss,
         )
     }
 }

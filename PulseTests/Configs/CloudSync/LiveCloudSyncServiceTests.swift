@@ -11,7 +11,7 @@ struct LiveCloudSyncServiceTests {
             notificationCenter: notificationCenter,
             accountStatusProvider: { completion in
                 completion(.available, nil)
-            }
+            },
         )
     }
 
@@ -31,7 +31,7 @@ struct LiveCloudSyncServiceTests {
             accountStatusProvider: { completion in
                 providerCallCount += 1
                 completion(.available, nil)
-            }
+            },
         )
 
         sut.refreshAccountStatus()
@@ -48,7 +48,7 @@ struct LiveCloudSyncServiceTests {
             notificationCenter: NotificationCenter(),
             accountStatusProvider: { completion in
                 completion(.couldNotDetermine, TestError())
-            }
+            },
         )
 
         sut.refreshAccountStatus()
@@ -141,7 +141,7 @@ struct LiveCloudSyncServiceTests {
         notificationCenter.post(
             name: NSPersistentCloudKitContainer.eventChangedNotification,
             object: nil,
-            userInfo: [:]
+            userInfo: [:],
         )
         try await Task.sleep(nanoseconds: TestWaitDuration.standard)
 

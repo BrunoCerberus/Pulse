@@ -187,21 +187,21 @@ struct PaywallView: View {
                     icon: "sparkles",
                     iconColor: .purple,
                     title: Localizable.paywall.feature1Title,
-                    description: Localizable.paywall.feature1Description
+                    description: Localizable.paywall.feature1Description,
                 )
 
                 FeatureRow(
                     icon: "wand.and.stars",
                     iconColor: .blue,
                     title: Localizable.paywall.feature2Title,
-                    description: Localizable.paywall.feature2Description
+                    description: Localizable.paywall.feature2Description,
                 )
 
                 FeatureRow(
                     icon: "lock.shield.fill",
                     iconColor: .green,
                     title: Localizable.paywall.feature3Title,
-                    description: Localizable.paywall.feature3Description
+                    description: Localizable.paywall.feature3Description,
                 )
             }
             .padding(.horizontal, Spacing.lg)
@@ -244,7 +244,7 @@ struct PaywallView: View {
                             product: product,
                             isSelected: viewModel.selectedProduct?.id == product.id,
                             onSelect: { viewModel.handle(event: .productSelected(product)) },
-                            onPurchase: { viewModel.handle(event: .purchaseRequested(product)) }
+                            onPurchase: { viewModel.handle(event: .purchaseRequested(product)) },
                         )
                     }
                 }
@@ -257,7 +257,7 @@ struct PaywallView: View {
                         Text(Localizable.paywall.restorePurchases)
                             .font(.caption)
                             .foregroundStyle(.secondary)
-                    }
+                    },
                 )
                 .padding(.bottom, 20)
             }
@@ -283,7 +283,7 @@ struct PaywallView: View {
                 Color(.systemGray6).opacity(0.3),
             ]),
             startPoint: .top,
-            endPoint: .bottom
+            endPoint: .bottom,
         )
         .ignoresSafeArea()
     }
@@ -371,8 +371,8 @@ private struct ProductButton: View {
                 RoundedRectangle(cornerRadius: CornerRadius.lg, style: .continuous)
                     .stroke(
                         isSelected ? Color.Accent.primary : Color.Border.adaptive(for: colorScheme),
-                        lineWidth: isSelected ? 2 : 0.5
-                    )
+                        lineWidth: isSelected ? 2 : 0.5,
+                    ),
             )
             .depthShadow(isSelected ? .medium : .subtle)
         }

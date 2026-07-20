@@ -57,7 +57,7 @@ struct SmartBriefingDomainInteractorTests {
     func premiumBuildsQueue() async {
         mockNewsService.topHeadlinesResult = .success(Article.mockArticles)
         mockForYouService.scoredArticlesResult = .success(
-            Article.mockArticles.map { ScoredArticle(article: $0, score: 1.0, matchedTopics: []) }
+            Article.mockArticles.map { ScoredArticle(article: $0, score: 1.0, matchedTopics: []) },
         )
 
         sut.dispatch(action: .startBriefing(scope: .unreadSinceLastBriefing))
@@ -105,10 +105,10 @@ struct SmartBriefingDomainInteractorTests {
         let previouslyServedID = Article.mockArticles[0].id
         mockCacheService.fetchResult = SmartBriefingServedRecord(
             servedAt: .now.addingTimeInterval(-3600),
-            servedArticleIDs: [previouslyServedID]
+            servedArticleIDs: [previouslyServedID],
         )
         mockForYouService.scoredArticlesResult = .success(
-            Article.mockArticles.map { ScoredArticle(article: $0, score: 1.0, matchedTopics: []) }
+            Article.mockArticles.map { ScoredArticle(article: $0, score: 1.0, matchedTopics: []) },
         )
 
         sut.dispatch(action: .startBriefing(scope: .unreadSinceLastBriefing))

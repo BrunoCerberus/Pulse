@@ -38,10 +38,10 @@ final class PaywallViewModel: ObservableObject, CombineViewModel {
     init(
         serviceLocator: ServiceLocator,
         domainInteractor: PaywallDomainInteractor? = nil,
-        viewStateReducer: PaywallViewStateReducing? = nil
+        viewStateReducer: PaywallViewStateReducing? = nil,
     ) {
         self.domainInteractor = domainInteractor ?? PaywallDomainInteractor(
-            serviceLocator: serviceLocator
+            serviceLocator: serviceLocator,
         )
 
         self.viewStateReducer = viewStateReducer ?? PaywallViewStateReducer()

@@ -141,7 +141,7 @@ struct SettingsViewModelExtendedTests {
             mutedKeywords: ["keyword1"],
             preferredLanguage: "es",
             notificationsEnabled: false,
-            breakingNewsNotifications: false
+            breakingNewsNotifications: false,
         )
 
         let sut = createSUT()

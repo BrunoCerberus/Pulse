@@ -42,7 +42,7 @@ extension SettingsService {
                     receiveValue: { preferences in
                         didResume = true
                         continuation.resume(returning: preferences)
-                    }
+                    },
                 )
         }
     }

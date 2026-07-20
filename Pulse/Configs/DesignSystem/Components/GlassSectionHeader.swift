@@ -17,7 +17,7 @@ struct GlassSectionHeader: View {
         subtitle: String? = nil,
         actionTitle: String? = nil,
         style: GlassStyle = .ultraThin,
-        action: (() -> Void)? = nil
+        action: (() -> Void)? = nil,
     ) {
         self.title = title
         self.subtitle = subtitle
@@ -110,7 +110,7 @@ struct StickySectionHeader: View {
             GlassSectionHeader(
                 "Top Stories",
                 subtitle: "Updated 5 minutes ago",
-                actionTitle: "See All"
+                actionTitle: "See All",
             ) {
                 Logger.shared.debug("See all tapped", category: "UI")
             }

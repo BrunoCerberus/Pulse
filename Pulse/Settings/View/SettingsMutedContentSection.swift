@@ -94,7 +94,7 @@ struct SettingsMutedContentSection: View {
         onAddMutedSource: {},
         onRemoveMutedSource: { _ in },
         onAddMutedKeyword: {},
-        onRemoveMutedKeyword: { _ in }
+        onRemoveMutedKeyword: { _ in },
     )
     .preferredColorScheme(.dark)
 }

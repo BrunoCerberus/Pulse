@@ -26,13 +26,13 @@ struct SharedDataManagerTests {
                 id: "1",
                 title: "Test Article 1",
                 source: "Source 1",
-                imageURL: "https://example.com/image1.jpg"
+                imageURL: "https://example.com/image1.jpg",
             ),
             SharedArticle(
                 id: "2",
                 title: "Test Article 2",
                 source: "Source 2",
-                imageURL: "https://example.com/image2.jpg"
+                imageURL: "https://example.com/image2.jpg",
             ),
         ]
 
@@ -59,7 +59,7 @@ struct SharedDataManagerTests {
                 id: String(index),
                 title: "Test Article \(index)",
                 source: "Source \(index)",
-                imageURL: "https://example.com/image\(index).jpg"
+                imageURL: "https://example.com/image\(index).jpg",
             )
         }
 
@@ -81,7 +81,7 @@ struct SharedDataManagerTests {
                 id: String(index),
                 title: "Test Article \(index)",
                 source: "Source \(index)",
-                imageURL: "https://example.com/image\(index).jpg"
+                imageURL: "https://example.com/image\(index).jpg",
             )
         }
 

@@ -76,7 +76,7 @@ struct FeedDomainState: Equatable {
             hasLoadedInitialData: false,
             selectedArticle: nil,
             isOfflineError: false,
-            autoPlayBriefingOnCompletion: false
+            autoPlayBriefingOnCompletion: false,
         )
     }
 

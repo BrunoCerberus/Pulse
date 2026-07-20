@@ -29,7 +29,7 @@ final class SummarizationViewModel: CombineViewModel, ObservableObject {
         article: Article,
         serviceLocator: ServiceLocator,
         eventActionMap: SummarizationEventActionMap = SummarizationEventActionMap(),
-        viewStateReducer: SummarizationViewStateReducer = SummarizationViewStateReducer()
+        viewStateReducer: SummarizationViewStateReducer = SummarizationViewStateReducer(),
     ) {
         self.eventActionMap = eventActionMap
         self.viewStateReducer = viewStateReducer

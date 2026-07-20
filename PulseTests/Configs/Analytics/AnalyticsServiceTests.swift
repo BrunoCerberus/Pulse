@@ -202,11 +202,11 @@ struct LiveAnalyticsServiceSanitizerTests {
         let error = NSError(
             domain: "TestDomain",
             code: 42,
-            userInfo: [NSLocalizedDescriptionKey: "Failed to auth user@example.com"]
+            userInfo: [NSLocalizedDescriptionKey: "Failed to auth user@example.com"],
         )
         let result = LiveAnalyticsService.buildSanitizedUserInfo(
             error: error,
-            userInfo: ["original": "value"]
+            userInfo: ["original": "value"],
         )
         #expect(result["domain"] as? String == "TestDomain")
         #expect(result["code"] as? Int == 42)
@@ -224,7 +224,7 @@ struct LiveAnalyticsServiceSanitizerTests {
         // Mirrors `LiveAnalyticsService.logEvent`'s new step:
         // `event.parameters.map { $0.mapValues(Self.sanitize(any:)) }`.
         let event = AnalyticsEvent.cloudSyncFailed(
-            error: "Sync failed for user@example.com via https://api.example.com/x?token=abc123"
+            error: "Sync failed for user@example.com via https://api.example.com/x?token=abc123",
         )
         let sanitized = (event.parameters ?? [:]).mapValues(LiveAnalyticsService.sanitize(any:))
         let errorValue = sanitized["error"] as? String ?? ""

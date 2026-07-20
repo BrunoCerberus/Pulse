@@ -44,7 +44,7 @@ final class FeedUITests: BaseUITestCase {
         let navTitle = app.navigationBars["Daily Digest"]
         XCTAssertTrue(
             safeWaitForExistence(navTitle, timeout: Self.defaultTimeout),
-            "Navigation title 'Daily Digest' should exist"
+            "Navigation title 'Daily Digest' should exist",
         )
 
         // iOS 26+ occasionally reports stale tab selection accessibility state in CI.
@@ -96,7 +96,7 @@ final class FeedUITests: BaseUITestCase {
         navigateToFeed()
         XCTAssertTrue(
             safeWaitForExistence(navTitle, timeout: Self.defaultTimeout),
-            "Feed should be visible after tab switch"
+            "Feed should be visible after tab switch",
         )
 
         // --- Pull to Refresh ---
@@ -108,7 +108,7 @@ final class FeedUITests: BaseUITestCase {
 
         XCTAssertTrue(
             safeWaitForExistence(navTitle, timeout: Self.shortTimeout),
-            "View should remain functional after refresh"
+            "View should remain functional after refresh",
         )
     }
 
@@ -163,7 +163,7 @@ final class FeedUITests: BaseUITestCase {
 
             // Look for article rows with chevron.right (source article rows have this indicator)
             let chevronButtons = app.buttons.matching(
-                NSPredicate(format: "label CONTAINS[c] 'chevron' OR identifier CONTAINS[c] 'sourceArticle'")
+                NSPredicate(format: "label CONTAINS[c] 'chevron' OR identifier CONTAINS[c] 'sourceArticle'"),
             )
 
             // Try to find and tap a source article button
@@ -185,7 +185,7 @@ final class FeedUITests: BaseUITestCase {
                         let navTitle = app.navigationBars["Daily Digest"]
                         XCTAssertTrue(
                             safeWaitForExistence(navTitle, timeout: Self.defaultTimeout),
-                            "Should return to Feed"
+                            "Should return to Feed",
                         )
                     }
                 }

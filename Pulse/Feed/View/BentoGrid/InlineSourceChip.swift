@@ -63,7 +63,7 @@ struct InlineSourceChip: View {
         .accessibilityElement(children: .combine)
         .accessibilityLabel(String(
             format: Constants.articleAccessibilityLabel,
-            article.title, article.source, article.formattedDate
+            article.title, article.source, article.formattedDate,
         ))
         .accessibilityHint(Constants.readArticleHint)
     }
@@ -112,12 +112,12 @@ struct InlineSourceChip: View {
     VStack(spacing: Spacing.md) {
         InlineSourceChip(
             article: FeedSourceArticle(from: Article.mockArticles[0]),
-            onTap: {}
+            onTap: {},
         )
 
         InlineSourceChip(
             article: FeedSourceArticle(from: Article.mockArticles[1]),
-            onTap: {}
+            onTap: {},
         )
     }
     .padding()

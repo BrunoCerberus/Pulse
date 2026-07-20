@@ -29,7 +29,7 @@ final class MediaViewModel: CombineViewModel, ObservableObject {
     init(
         serviceLocator: ServiceLocator,
         reducer: MediaViewStateReducer = MediaViewStateReducer(),
-        eventMap: MediaEventActionMap = MediaEventActionMap()
+        eventMap: MediaEventActionMap = MediaEventActionMap(),
     ) {
         interactor = MediaDomainInteractor(serviceLocator: serviceLocator)
         self.reducer = reducer

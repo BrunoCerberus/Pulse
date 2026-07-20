@@ -19,7 +19,7 @@ struct ArticleMediaAndImagesTests {
             thumbnailURL: "https://example.com/thumb.jpg",
             publishedAt: fixedDate,
             mediaType: .video,
-            mediaURL: "https://www.youtube.com/watch?v=dQw4w9WgXcQ"
+            mediaURL: "https://www.youtube.com/watch?v=dQw4w9WgXcQ",
         )
 
         #expect(article.displayImageURL == "https://img.youtube.com/vi/dQw4w9WgXcQ/maxresdefault.jpg")
@@ -33,7 +33,7 @@ struct ArticleMediaAndImagesTests {
             url: "https://example.com",
             imageURL: "https://example.com/image.jpg",
             thumbnailURL: "https://example.com/thumb.jpg",
-            publishedAt: fixedDate
+            publishedAt: fixedDate,
         )
 
         #expect(article.displayImageURL == "https://example.com/thumb.jpg")
@@ -46,7 +46,7 @@ struct ArticleMediaAndImagesTests {
             source: testSource,
             url: "https://example.com",
             imageURL: "https://example.com/image.jpg",
-            publishedAt: fixedDate
+            publishedAt: fixedDate,
         )
 
         #expect(article.displayImageURL == "https://example.com/image.jpg")
@@ -60,7 +60,7 @@ struct ArticleMediaAndImagesTests {
             url: "https://podcasts.example.com/episode",
             publishedAt: fixedDate,
             mediaType: .podcast,
-            mediaURL: "https://audio.example.com/episode.mp3"
+            mediaURL: "https://audio.example.com/episode.mp3",
         )
 
         #expect(article.displayImageURL == "https://www.google.com/s2/favicons?domain=podcasts.example.com&sz=128")
@@ -72,7 +72,7 @@ struct ArticleMediaAndImagesTests {
             title: "Test Article",
             source: testSource,
             url: "https://example.com/article",
-            publishedAt: fixedDate
+            publishedAt: fixedDate,
         )
 
         #expect(article.displayImageURL == nil)
@@ -90,7 +90,7 @@ struct ArticleMediaAndImagesTests {
             thumbnailURL: "https://example.com/thumb.jpg",
             publishedAt: fixedDate,
             mediaType: .video,
-            mediaURL: "https://youtu.be/dQw4w9WgXcQ"
+            mediaURL: "https://youtu.be/dQw4w9WgXcQ",
         )
 
         #expect(article.heroImageURL == "https://img.youtube.com/vi/dQw4w9WgXcQ/maxresdefault.jpg")
@@ -104,7 +104,7 @@ struct ArticleMediaAndImagesTests {
             url: "https://example.com",
             imageURL: "https://example.com/full-image.jpg",
             thumbnailURL: "https://example.com/thumb.jpg",
-            publishedAt: fixedDate
+            publishedAt: fixedDate,
         )
 
         #expect(article.heroImageURL == "https://example.com/full-image.jpg")
@@ -117,7 +117,7 @@ struct ArticleMediaAndImagesTests {
             source: testSource,
             url: "https://example.com",
             thumbnailURL: "https://example.com/thumb.jpg",
-            publishedAt: fixedDate
+            publishedAt: fixedDate,
         )
 
         #expect(article.heroImageURL == "https://example.com/thumb.jpg")
@@ -131,7 +131,7 @@ struct ArticleMediaAndImagesTests {
             url: "https://videos.example.com/watch",
             publishedAt: fixedDate,
             mediaType: .video,
-            mediaURL: "https://videos.example.com/video.mp4"
+            mediaURL: "https://videos.example.com/video.mp4",
         )
 
         #expect(article.heroImageURL == "https://www.google.com/s2/favicons?domain=videos.example.com&sz=128")
@@ -143,7 +143,7 @@ struct ArticleMediaAndImagesTests {
             title: "Test Article",
             source: testSource,
             url: "https://example.com/article",
-            publishedAt: fixedDate
+            publishedAt: fixedDate,
         )
 
         #expect(article.heroImageURL == nil)
@@ -158,7 +158,7 @@ struct ArticleMediaAndImagesTests {
             source: testSource,
             url: "https://example.com",
             publishedAt: fixedDate,
-            mediaType: .video
+            mediaType: .video,
         )
 
         #expect(article.isMedia == true)
@@ -171,7 +171,7 @@ struct ArticleMediaAndImagesTests {
             source: testSource,
             url: "https://example.com",
             publishedAt: fixedDate,
-            mediaType: .podcast
+            mediaType: .podcast,
         )
 
         #expect(article.isMedia == true)
@@ -183,7 +183,7 @@ struct ArticleMediaAndImagesTests {
             title: "Test Article",
             source: testSource,
             url: "https://example.com",
-            publishedAt: fixedDate
+            publishedAt: fixedDate,
         )
 
         #expect(article.isMedia == false)

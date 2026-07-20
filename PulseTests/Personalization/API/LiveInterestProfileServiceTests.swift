@@ -26,7 +26,7 @@ struct LiveInterestProfileServiceTests {
             displayName: "AI",
             weightDelta: 2.0,
             source: .extracted,
-            category: nil
+            category: nil,
         )
 
         let profile = try await sut.fetchProfile()
@@ -41,11 +41,11 @@ struct LiveInterestProfileServiceTests {
     func upsertAccumulatesWeight() async throws {
         try await sut.upsert(
             topicID: "ai", displayName: "AI",
-            weightDelta: 1.0, source: .extracted, category: nil
+            weightDelta: 1.0, source: .extracted, category: nil,
         )
         try await sut.upsert(
             topicID: "ai", displayName: "AI",
-            weightDelta: 2.5, source: .extracted, category: nil
+            weightDelta: 2.5, source: .extracted, category: nil,
         )
 
         let profile = try await sut.fetchProfile()
@@ -63,12 +63,12 @@ struct LiveInterestProfileServiceTests {
         let older = InterestTopicModel(from: InterestTopic(
             topicID: "ai", displayName: "AI", weight: 2.0, category: nil,
             lastReinforcedAt: Date(timeIntervalSince1970: 1000),
-            createdAt: Date(timeIntervalSince1970: 1000), source: .extracted
+            createdAt: Date(timeIntervalSince1970: 1000), source: .extracted,
         ))
         let newer = InterestTopicModel(from: InterestTopic(
             topicID: "ai", displayName: "AI", weight: 3.0, category: nil,
             lastReinforcedAt: Date(timeIntervalSince1970: 2000),
-            createdAt: Date(timeIntervalSince1970: 2000), source: .extracted
+            createdAt: Date(timeIntervalSince1970: 2000), source: .extracted,
         ))
         context.insert(older)
         context.insert(newer)
@@ -88,7 +88,7 @@ struct LiveInterestProfileServiceTests {
     func deduplicateNoOpWhenUnique() async throws {
         try await sut.upsert(
             topicID: "ai", displayName: "AI",
-            weightDelta: 1.0, source: .extracted, category: nil
+            weightDelta: 1.0, source: .extracted, category: nil,
         )
         let changed = try await sut.deduplicate()
         #expect(changed == false)
@@ -98,14 +98,14 @@ struct LiveInterestProfileServiceTests {
     func upsertPreservesOriginalSource() async throws {
         try await sut.upsert(
             topicID: "ai", displayName: "AI",
-            weightDelta: 1.0, source: .seed, category: NewsCategory.technology.rawValue
+            weightDelta: 1.0, source: .seed, category: NewsCategory.technology.rawValue,
         )
         let originalCreatedAt = try await sut.fetchProfile().first?.createdAt
 
         // A later .extracted upsert should NOT downgrade source from .seed.
         try await sut.upsert(
             topicID: "ai", displayName: "AI",
-            weightDelta: 0.5, source: .extracted, category: nil
+            weightDelta: 0.5, source: .extracted, category: nil,
         )
 
         let profile = try await sut.fetchProfile()
@@ -117,11 +117,11 @@ struct LiveInterestProfileServiceTests {
     func upsertPreservesDisplayName() async throws {
         try await sut.upsert(
             topicID: "ai", displayName: "AI",
-            weightDelta: 1.0, source: .seed, category: nil
+            weightDelta: 1.0, source: .seed, category: nil,
         )
         try await sut.upsert(
             topicID: "ai", displayName: "Artificial Intelligence",
-            weightDelta: 0.5, source: .extracted, category: nil
+            weightDelta: 0.5, source: .extracted, category: nil,
         )
         let profile = try await sut.fetchProfile()
         // Original "AI" wins — onboarding labels shouldn't get flipped
@@ -133,11 +133,11 @@ struct LiveInterestProfileServiceTests {
     func upsertFillsEmptyDisplayName() async throws {
         try await sut.upsert(
             topicID: "ai", displayName: "",
-            weightDelta: 1.0, source: .seed, category: nil
+            weightDelta: 1.0, source: .seed, category: nil,
         )
         try await sut.upsert(
             topicID: "ai", displayName: "Artificial Intelligence",
-            weightDelta: 0.5, source: .extracted, category: nil
+            weightDelta: 0.5, source: .extracted, category: nil,
         )
         let profile = try await sut.fetchProfile()
         #expect(profile.first?.displayName == "Artificial Intelligence")

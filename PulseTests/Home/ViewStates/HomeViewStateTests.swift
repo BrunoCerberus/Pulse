@@ -82,7 +82,7 @@ struct ArticleViewItemTests {
             source: ArticleSource(id: nil, name: "Test"),
             url: "https://example.com",
             imageURL: "https://example.com/image.jpg",
-            publishedAt: Date()
+            publishedAt: Date(),
         )
         let viewItem = ArticleViewItem(from: article)
 
@@ -97,7 +97,7 @@ struct ArticleViewItemTests {
             description: nil,
             source: ArticleSource(id: nil, name: "Test"),
             url: "https://example.com",
-            publishedAt: Date()
+            publishedAt: Date(),
         )
         let viewItem = ArticleViewItem(from: article)
 
@@ -139,7 +139,7 @@ struct ArticleViewItemTests {
             description: "<p>Breaking <strong>news</strong>: market &amp; economy</p>",
             source: ArticleSource(id: "test", name: "Test"),
             url: "https://example.com",
-            publishedAt: Date()
+            publishedAt: Date(),
         )
         let viewItem = ArticleViewItem(from: article)
 
@@ -159,7 +159,7 @@ struct ArticleViewItemTests {
             description: nil,
             source: ArticleSource(id: nil, name: "Test"),
             url: "https://example.com",
-            publishedAt: Date()
+            publishedAt: Date(),
         )
         let viewItem = ArticleViewItem(from: article)
 

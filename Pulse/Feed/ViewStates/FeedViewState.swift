@@ -87,7 +87,7 @@ struct FeedViewState: Equatable {
             sourceArticles: [],
             errorMessage: nil,
             selectedArticle: nil,
-            isOfflineError: false
+            isOfflineError: false,
         )
     }
 }
@@ -205,7 +205,7 @@ struct DigestSection: Identifiable, Equatable {
         content: String,
         category: NewsCategory? = nil,
         relatedArticles: [FeedSourceArticle] = [],
-        isHighlight: Bool = false
+        isHighlight: Bool = false,
     ) {
         self.id = id
         self.title = title

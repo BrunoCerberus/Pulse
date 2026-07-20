@@ -71,7 +71,7 @@ struct LiveFeedServiceTests {
             id: UUID().uuidString,
             summary: "Today's summary",
             sourceArticles: Article.mockArticles,
-            generatedAt: Date()
+            generatedAt: Date(),
         )
         sut.saveDigest(todayDigest)
 
@@ -90,7 +90,7 @@ struct LiveFeedServiceTests {
             id: UUID().uuidString,
             summary: "Yesterday's summary",
             sourceArticles: Article.mockArticles,
-            generatedAt: yesterday
+            generatedAt: yesterday,
         )
         sut.saveDigest(yesterdayDigest)
 
@@ -107,7 +107,7 @@ struct LiveFeedServiceTests {
             id: UUID().uuidString,
             summary: "   ",
             sourceArticles: Article.mockArticles,
-            generatedAt: Date()
+            generatedAt: Date(),
         )
         sut.saveDigest(emptyDigest)
 
@@ -126,7 +126,7 @@ struct LiveFeedServiceTests {
             id: UUID().uuidString,
             summary: "Valid summary content",
             sourceArticles: Article.mockArticles,
-            generatedAt: Date()
+            generatedAt: Date(),
         )
         sut.saveDigest(validDigest)
 
@@ -143,7 +143,7 @@ struct LiveFeedServiceTests {
             id: UUID().uuidString,
             summary: "",
             sourceArticles: Article.mockArticles,
-            generatedAt: Date()
+            generatedAt: Date(),
         )
         sut.saveDigest(emptyDigest)
 
@@ -159,7 +159,7 @@ struct LiveFeedServiceTests {
             id: UUID().uuidString,
             summary: "   \n\t  ",
             sourceArticles: Article.mockArticles,
-            generatedAt: Date()
+            generatedAt: Date(),
         )
         sut.saveDigest(whitespaceDigest)
 

@@ -14,7 +14,7 @@ struct HomeDomainStateTests {
                 source: ArticleSource(id: "source-1", name: "Source 1"),
                 url: "https://example.com/1",
                 publishedAt: Self.referenceDate,
-                category: .technology
+                category: .technology,
             ),
             Article(
                 id: "article-2",
@@ -22,7 +22,7 @@ struct HomeDomainStateTests {
                 source: ArticleSource(id: "source-2", name: "Source 2"),
                 url: "https://example.com/2",
                 publishedAt: Self.referenceDate.addingTimeInterval(-3600),
-                category: .business
+                category: .business,
             ),
         ]
     }

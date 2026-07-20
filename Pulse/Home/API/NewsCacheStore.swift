@@ -32,17 +32,17 @@ enum NewsCacheKey: Hashable {
     var stringKey: String {
         switch self {
         case let .breakingNews(language, country):
-            return "\(language)_breaking_\(country)"
+            "\(language)_breaking_\(country)"
         case let .topHeadlines(language, country, page):
-            return "\(language)_headlines_\(country)_p\(page)"
+            "\(language)_headlines_\(country)_p\(page)"
         case let .categoryHeadlines(language, category, country, page):
-            return "\(language)_category_\(category.rawValue)_\(country)_p\(page)"
+            "\(language)_category_\(category.rawValue)_\(country)_p\(page)"
         case let .article(id):
-            return "article_\(id)"
+            "article_\(id)"
         case let .media(language, type, page):
-            return "\(language)_media_\(type ?? "all")_p\(page)"
+            "\(language)_media_\(type ?? "all")_p\(page)"
         case let .featuredMedia(language, type):
-            return "\(language)_featured_media_\(type ?? "all")"
+            "\(language)_featured_media_\(type ?? "all")"
         }
     }
 }
@@ -68,7 +68,7 @@ protocol NewsCacheStore: AnyObject {
     /// - Parameters:
     ///   - entry: The cache entry to store
     ///   - key: The cache key to associate with the entry
-    func set<T>(_ entry: CacheEntry<T>, for key: NewsCacheKey)
+    func set(_ entry: CacheEntry<some Any>, for key: NewsCacheKey)
 
     /// Removes a specific cached entry.
     /// - Parameter key: The cache key to remove
@@ -105,7 +105,7 @@ final class LiveNewsCacheStore: NewsCacheStore, @unchecked Sendable {
         memoryWarningObserver = NotificationCenter.default.addObserver(
             forName: UIApplication.didReceiveMemoryWarningNotification,
             object: nil,
-            queue: .main
+            queue: .main,
         ) { [weak self] _ in
             self?.removeAll()
             Logger.shared.service("News cache cleared due to memory warning", level: .info)
@@ -128,7 +128,7 @@ final class LiveNewsCacheStore: NewsCacheStore, @unchecked Sendable {
         return entry
     }
 
-    func set<T>(_ entry: CacheEntry<T>, for key: NewsCacheKey) {
+    func set(_ entry: CacheEntry<some Any>, for key: NewsCacheKey) {
         let nsKey = key.stringKey as NSString
         let wrapper = CacheEntryWrapper(entry: entry)
         // Estimate cost based on data type
@@ -150,11 +150,11 @@ final class LiveNewsCacheStore: NewsCacheStore, @unchecked Sendable {
         switch data {
         case let articles as [Article]:
             // ~4KB per article (title, description, URLs, source data)
-            return articles.count * 4096
+            articles.count * 4096
         case _ as Article:
-            return 4096
+            4096
         default:
-            return 1024
+            1024
         }
     }
 }

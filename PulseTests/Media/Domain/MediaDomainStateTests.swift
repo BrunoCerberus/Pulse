@@ -15,7 +15,7 @@ struct MediaDomainStateTests {
                 url: "https://youtube.com/watch?v=1",
                 publishedAt: Self.referenceDate,
                 category: .technology,
-                mediaType: .video
+                mediaType: .video,
             ),
             Article(
                 id: "podcast-1",
@@ -24,7 +24,7 @@ struct MediaDomainStateTests {
                 url: "https://spotify.com/episode/1",
                 publishedAt: Self.referenceDate.addingTimeInterval(-3600),
                 category: .business,
-                mediaType: .podcast
+                mediaType: .podcast,
             ),
         ]
     }

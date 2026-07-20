@@ -118,7 +118,7 @@ struct ArticleDetailViewStateReducerTests {
             showShareSheet: true,
             showSummarizationSheet: false,
             relatedArticles: [],
-            isLoadingRelatedArticles: false
+            isLoadingRelatedArticles: false,
         )
 
         let viewState = sut.reduce(domainState: domainState)

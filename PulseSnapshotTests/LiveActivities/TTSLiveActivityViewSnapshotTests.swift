@@ -9,7 +9,7 @@ final class TTSLiveActivityViewSnapshotTests: XCTestCase {
     private let lockScreenConfig = ViewImageConfig(
         safeArea: UIEdgeInsets(top: 0, left: 0, bottom: 0, right: 0),
         size: CGSize(width: 393, height: 160),
-        traits: UITraitCollection(userInterfaceStyle: .dark)
+        traits: UITraitCollection(userInterfaceStyle: .dark),
     )
 
     private func makeView(
@@ -18,7 +18,7 @@ final class TTSLiveActivityViewSnapshotTests: XCTestCase {
         speedLabel: String = "1x",
         articleTitle: String = "SwiftUI 6.0 Brings Revolutionary New Features",
         sourceName: String = "TechCrunch",
-        queuePosition: String? = nil
+        queuePosition: String? = nil,
     ) -> some View {
         TTSLockScreenView(
             state: .init(
@@ -27,8 +27,8 @@ final class TTSLiveActivityViewSnapshotTests: XCTestCase {
                 speedLabel: speedLabel,
                 currentTitle: articleTitle,
                 currentSource: sourceName,
-                queuePosition: queuePosition
-            )
+                queuePosition: queuePosition,
+            ),
         )
         .padding()
         .frame(maxWidth: .infinity)
@@ -42,7 +42,7 @@ final class TTSLiveActivityViewSnapshotTests: XCTestCase {
         assertSnapshot(
             of: controller,
             as: SnapshotConfig.snapshotting(on: lockScreenConfig),
-            record: false
+            record: false,
         )
     }
 
@@ -53,7 +53,7 @@ final class TTSLiveActivityViewSnapshotTests: XCTestCase {
         assertSnapshot(
             of: controller,
             as: SnapshotConfig.snapshotting(on: lockScreenConfig),
-            record: false
+            record: false,
         )
     }
 
@@ -62,14 +62,14 @@ final class TTSLiveActivityViewSnapshotTests: XCTestCase {
             progress: 0.5,
             articleTitle: "This Is An Extremely Long Article Title That Should "
                 + "Test How The Live Activity Lock Screen View Handles Text "
-                + "Truncation When Rendered At The Standard Width"
+                + "Truncation When Rendered At The Standard Width",
         )
         let controller = UIHostingController(rootView: view)
 
         assertSnapshot(
             of: controller,
             as: SnapshotConfig.snapshotting(on: lockScreenConfig),
-            record: false
+            record: false,
         )
     }
 
@@ -80,7 +80,7 @@ final class TTSLiveActivityViewSnapshotTests: XCTestCase {
         assertSnapshot(
             of: controller,
             as: SnapshotConfig.snapshotting(on: lockScreenConfig),
-            record: false
+            record: false,
         )
     }
 
@@ -91,7 +91,7 @@ final class TTSLiveActivityViewSnapshotTests: XCTestCase {
         assertSnapshot(
             of: controller,
             as: SnapshotConfig.snapshotting(on: lockScreenConfig),
-            record: false
+            record: false,
         )
     }
 }

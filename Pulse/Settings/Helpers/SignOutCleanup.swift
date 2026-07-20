@@ -36,15 +36,14 @@ enum SignOutCleanup {
                 ]
                 let status = SecItemDelete(query as CFDictionary)
                 guard status != errSecSuccess, status != errSecItemNotFound else { continue }
-                let className: String
-                switch keychainClass {
-                case kSecClassGenericPassword: className = "genericPassword"
-                case kSecClassInternetPassword: className = "internetPassword"
-                default: className = "(unknown)"
+                let className = switch keychainClass {
+                case kSecClassGenericPassword: "genericPassword"
+                case kSecClassInternetPassword: "internetPassword"
+                default: "(unknown)"
                 }
                 Logger.shared.service(
                     "Failed to wipe keychain service \(service), class \(className): OSStatus \(status)",
-                    level: .warning
+                    level: .warning,
                 )
             }
         }
@@ -78,12 +77,12 @@ enum SignOutCleanup {
                 _ = try await database.modifyRecordZones(saving: [], deleting: zoneIDs)
                 Logger.shared.service(
                     "CloudKit private zones deleted on sign-out (\(zoneIDs.count))",
-                    level: .info
+                    level: .info,
                 )
             } catch {
                 Logger.shared.service(
                     "CloudKit zone delete failed (non-fatal): \(error.localizedDescription)",
-                    level: .warning
+                    level: .warning,
                 )
             }
         }

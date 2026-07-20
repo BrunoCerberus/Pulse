@@ -34,7 +34,7 @@ final class HomeViewModel: CombineViewModel, ObservableObject {
     init(
         serviceLocator: ServiceLocator,
         reducer: HomeViewStateReducer = HomeViewStateReducer(),
-        eventMap: HomeEventActionMap = HomeEventActionMap()
+        eventMap: HomeEventActionMap = HomeEventActionMap(),
     ) {
         interactor = HomeDomainInteractor(serviceLocator: serviceLocator)
         self.reducer = reducer

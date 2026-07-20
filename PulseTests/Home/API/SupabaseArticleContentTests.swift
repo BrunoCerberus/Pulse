@@ -21,7 +21,7 @@ struct SupabaseArticleContentTests {
             mediaType: nil,
             mediaUrl: nil,
             mediaDuration: nil,
-            mediaMimeType: nil
+            mediaMimeType: nil,
         )
 
         let article = supabaseArticle.toArticle()
@@ -47,7 +47,7 @@ struct SupabaseArticleContentTests {
             mediaType: nil,
             mediaUrl: nil,
             mediaDuration: nil,
-            mediaMimeType: nil
+            mediaMimeType: nil,
         )
 
         let article = supabaseArticle.toArticle()

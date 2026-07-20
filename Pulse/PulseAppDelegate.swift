@@ -28,7 +28,7 @@ final class PulseAppDelegate: UIResponder, UIApplicationDelegate {
      */
     func application(
         _ application: UIApplication,
-        didFinishLaunchingWithOptions _: [UIApplication.LaunchOptionsKey: Any]? = nil
+        didFinishLaunchingWithOptions _: [UIApplication.LaunchOptionsKey: Any]? = nil,
     ) -> Bool {
         // Skip configuration during unit tests to prevent hanging
         guard ProcessInfo.processInfo.environment["XCTestConfigurationFilePath"] == nil else {
@@ -65,7 +65,7 @@ final class PulseAppDelegate: UIResponder, UIApplicationDelegate {
     func application(
         _: UIApplication,
         open url: URL,
-        options _: [UIApplication.OpenURLOptionsKey: Any] = [:]
+        options _: [UIApplication.OpenURLOptionsKey: Any] = [:],
     ) -> Bool {
         // Handle Google Sign-In callback
         if GIDSignIn.sharedInstance.handle(url) {
@@ -91,7 +91,7 @@ final class PulseAppDelegate: UIResponder, UIApplicationDelegate {
     func application(
         _: UIApplication,
         configurationForConnecting connectingSceneSession: UISceneSession,
-        options _: UIScene.ConnectionOptions
+        options _: UIScene.ConnectionOptions,
     ) -> UISceneConfiguration {
         // Return the default scene configuration
         UISceneConfiguration(name: "Default Configuration", sessionRole: connectingSceneSession.role)
@@ -111,7 +111,7 @@ extension PulseAppDelegate {
     @objc func userNotificationCenter(
         _: UNUserNotificationCenter,
         willPresent _: UNNotification,
-        withCompletionHandler completionHandler: @escaping (UNNotificationPresentationOptions) -> Void
+        withCompletionHandler completionHandler: @escaping (UNNotificationPresentationOptions) -> Void,
     ) {
         // Respect the in-app notification preference (mirrored to UserDefaults by LiveSettingsService)
         let notificationsEnabled = UserDefaults.standard.object(forKey: "pulse.notificationsEnabled") as? Bool ?? true
@@ -128,7 +128,7 @@ extension PulseAppDelegate {
 extension PulseAppDelegate: @preconcurrency UNUserNotificationCenterDelegate {
     func userNotificationCenter(
         _: UNUserNotificationCenter,
-        didReceive response: UNNotificationResponse
+        didReceive response: UNNotificationResponse,
     ) async {
         let userInfo = response.notification.request.content.userInfo
 
@@ -143,7 +143,7 @@ extension PulseAppDelegate: @preconcurrency UNUserNotificationCenterDelegate {
 
     func application(
         _: UIApplication,
-        didRegisterForRemoteNotificationsWithDeviceToken deviceToken: Data
+        didRegisterForRemoteNotificationsWithDeviceToken deviceToken: Data,
     ) {
         // Store token for future backend integration (FCM or custom push server).
         // LiveNotificationService is @MainActor, so hop to main actor explicitly.
@@ -154,7 +154,7 @@ extension PulseAppDelegate: @preconcurrency UNUserNotificationCenterDelegate {
 
     func application(
         _: UIApplication,
-        didFailToRegisterForRemoteNotificationsWithError error: Error
+        didFailToRegisterForRemoteNotificationsWithError error: Error,
     ) {
         Logger.shared.network("Failed to register for notifications: \(error.localizedDescription)", level: .warning)
     }

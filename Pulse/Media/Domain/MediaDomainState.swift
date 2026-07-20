@@ -64,7 +64,7 @@ struct MediaDomainState: Equatable {
             selectedMedia: nil,
             mediaToShare: nil,
             mediaToPlay: nil,
-            isOfflineError: false
+            isOfflineError: false,
         )
     }
 }

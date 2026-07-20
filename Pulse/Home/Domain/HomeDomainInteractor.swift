@@ -75,7 +75,7 @@ final class HomeDomainInteractor: CombineInteractor {
             .receive(on: DispatchQueue.main)
             .sink { [weak self] note in
                 guard let self, (note.object as AnyObject?) !== self else { return }
-                self.loadFollowedTopicsAndCheckLanguage()
+                loadFollowedTopicsAndCheckLanguage()
             }
             .store(in: &cancellables)
 
@@ -218,12 +218,12 @@ private extension HomeDomainInteractor {
                 },
                 receiveValue: { [weak self] preferences in
                     guard let self else { return }
-                    self.preferredLanguage = preferences.preferredLanguage
-                    self.updateState { state in
+                    preferredLanguage = preferences.preferredLanguage
+                    updateState { state in
                         state.followedTopics = preferences.followedTopics
                     }
-                    self.fetchHeadlinesForCurrentCategory(page: 1)
-                }
+                    fetchHeadlinesForCurrentCategory(page: 1)
+                },
             )
             .store(in: &cancellables)
     }
@@ -241,16 +241,15 @@ private extension HomeDomainInteractor {
         let nextPage = currentState.currentPage + 1
         let selectedCategory = currentState.selectedCategory
 
-        let headlinesPublisher: AnyPublisher<[Article], Error>
-        if let category = selectedCategory {
-            headlinesPublisher = newsService.fetchTopHeadlines(
+        let headlinesPublisher: AnyPublisher<[Article], Error> = if let category = selectedCategory {
+            newsService.fetchTopHeadlines(
                 category: category,
                 language: language,
                 country: country,
-                page: nextPage
+                page: nextPage,
             )
         } else {
-            headlinesPublisher = newsService.fetchTopHeadlines(language: language, country: country, page: nextPage)
+            newsService.fetchTopHeadlines(language: language, country: country, page: nextPage)
         }
 
         headlinesPublisher
@@ -264,10 +263,10 @@ private extension HomeDomainInteractor {
                 }
             } receiveValue: { [weak self] articles in
                 guard let self else { return }
-                self.updateState { state in
+                updateState { state in
                     // Filter out media items (videos/podcasts) - they belong in MediaView
                     let nonMediaArticles = articles.filter { !$0.isMedia }
-                    let existingIDs = Set(state.headlines.map { $0.id } + state.breakingNews.map { $0.id })
+                    let existingIDs = Set(state.headlines.map(\.id) + state.breakingNews.map(\.id))
                     let newArticles = nonMediaArticles.filter { !existingIDs.contains($0.id) }
                     state.headlines.append(contentsOf: newArticles)
                     // Cap headlines to prevent unbounded memory growth during infinite scroll
@@ -315,7 +314,7 @@ extension HomeDomainInteractor {
                 category: category,
                 country: country,
                 page: page,
-                isRefreshing: isRefreshing
+                isRefreshing: isRefreshing,
             )
             .sink { _ in }
         } else {
@@ -404,7 +403,7 @@ private extension HomeDomainInteractor {
         let service = UncheckedSendableBox(value: storageService)
         trackBackgroundTask { [weak self] in
             guard let self else { return }
-            let articles = (try? await service.value.fetchReadArticles()) ?? []
+            let articles = await (try? service.value.fetchReadArticles()) ?? []
             let recent = Array(articles.filter { !$0.isMedia }.prefix(10))
             await MainActor.run {
                 self.updateState { state in

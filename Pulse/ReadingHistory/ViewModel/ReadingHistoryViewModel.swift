@@ -49,7 +49,7 @@ final class ReadingHistoryViewModel: CombineViewModel, ObservableObject {
                     errorMessage: state.error,
                     showEmptyState: !state.isLoading && state.articles.isEmpty,
                     selectedArticle: state.selectedArticle,
-                    articleToShare: state.articleToShare
+                    articleToShare: state.articleToShare,
                 )
             }
             .removeDuplicates()

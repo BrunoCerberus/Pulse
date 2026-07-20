@@ -9,13 +9,13 @@ final class SettingsViewsSnapshotTests: XCTestCase {
     private let iPhoneAirConfig = ViewImageConfig(
         safeArea: UIEdgeInsets(top: 59, left: 0, bottom: 34, right: 0),
         size: CGSize(width: 393, height: 852),
-        traits: UITraitCollection(userInterfaceStyle: .dark)
+        traits: UITraitCollection(userInterfaceStyle: .dark),
     )
 
     private let iPhoneAirLightConfig = ViewImageConfig(
         safeArea: UIEdgeInsets(top: 59, left: 0, bottom: 34, right: 0),
         size: CGSize(width: 393, height: 852),
-        traits: UITraitCollection(userInterfaceStyle: .light)
+        traits: UITraitCollection(userInterfaceStyle: .light),
     )
 
     // MARK: - SettingsPremiumSection Tests
@@ -23,7 +23,7 @@ final class SettingsViewsSnapshotTests: XCTestCase {
     func testSettingsPremiumSectionNotPremium() {
         let view = SettingsPremiumSection(
             isPremium: false,
-            onUpgradeTapped: {}
+            onUpgradeTapped: {},
         )
 
         let controller = UIHostingController(rootView: view)
@@ -31,14 +31,14 @@ final class SettingsViewsSnapshotTests: XCTestCase {
         assertSnapshot(
             of: controller,
             as: SnapshotConfig.snapshotting(on: iPhoneAirConfig),
-            record: false
+            record: false,
         )
     }
 
     func testSettingsPremiumSectionLightMode() {
         let view = SettingsPremiumSection(
             isPremium: false,
-            onUpgradeTapped: {}
+            onUpgradeTapped: {},
         )
 
         let controller = UIHostingController(rootView: view)
@@ -46,14 +46,14 @@ final class SettingsViewsSnapshotTests: XCTestCase {
         assertSnapshot(
             of: controller,
             as: SnapshotConfig.snapshotting(on: iPhoneAirLightConfig),
-            record: false
+            record: false,
         )
     }
 
     func testSettingsPremiumSectionIsPremium() {
         let view = SettingsPremiumSection(
             isPremium: true,
-            onUpgradeTapped: {}
+            onUpgradeTapped: {},
         )
 
         let controller = UIHostingController(rootView: view)
@@ -61,7 +61,7 @@ final class SettingsViewsSnapshotTests: XCTestCase {
         assertSnapshot(
             of: controller,
             as: SnapshotConfig.snapshotting(on: iPhoneAirConfig),
-            record: false
+            record: false,
         )
     }
 
@@ -79,7 +79,7 @@ final class SettingsViewsSnapshotTests: XCTestCase {
             onAddMutedSource: {},
             onRemoveMutedSource: { _ in },
             onAddMutedKeyword: {},
-            onRemoveMutedKeyword: { _ in }
+            onRemoveMutedKeyword: { _ in },
         )
 
         let controller = UIHostingController(rootView: view)
@@ -87,7 +87,7 @@ final class SettingsViewsSnapshotTests: XCTestCase {
         assertSnapshot(
             of: controller,
             as: SnapshotConfig.snapshotting(on: iPhoneAirConfig),
-            record: false
+            record: false,
         )
     }
 
@@ -103,7 +103,7 @@ final class SettingsViewsSnapshotTests: XCTestCase {
             onAddMutedSource: {},
             onRemoveMutedSource: { _ in },
             onAddMutedKeyword: {},
-            onRemoveMutedKeyword: { _ in }
+            onRemoveMutedKeyword: { _ in },
         )
 
         let controller = UIHostingController(rootView: view)
@@ -111,7 +111,7 @@ final class SettingsViewsSnapshotTests: XCTestCase {
         assertSnapshot(
             of: controller,
             as: SnapshotConfig.snapshotting(on: iPhoneAirLightConfig),
-            record: false
+            record: false,
         )
     }
 
@@ -127,7 +127,7 @@ final class SettingsViewsSnapshotTests: XCTestCase {
             onAddMutedSource: {},
             onRemoveMutedSource: { _ in },
             onAddMutedKeyword: {},
-            onRemoveMutedKeyword: { _ in }
+            onRemoveMutedKeyword: { _ in },
         )
 
         let controller = UIHostingController(rootView: view)
@@ -135,7 +135,7 @@ final class SettingsViewsSnapshotTests: XCTestCase {
         assertSnapshot(
             of: controller,
             as: SnapshotConfig.snapshotting(on: iPhoneAirConfig),
-            record: false
+            record: false,
         )
     }
 
@@ -151,7 +151,7 @@ final class SettingsViewsSnapshotTests: XCTestCase {
             onAddMutedSource: {},
             onRemoveMutedSource: { _ in },
             onAddMutedKeyword: {},
-            onRemoveMutedKeyword: { _ in }
+            onRemoveMutedKeyword: { _ in },
         )
 
         let controller = UIHostingController(rootView: view)
@@ -159,7 +159,7 @@ final class SettingsViewsSnapshotTests: XCTestCase {
         assertSnapshot(
             of: controller,
             as: SnapshotConfig.snapshotting(on: iPhoneAirConfig),
-            record: false
+            record: false,
         )
     }
 }

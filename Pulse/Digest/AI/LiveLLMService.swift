@@ -83,7 +83,7 @@ final class LiveLLMService: LLMService, @unchecked Sendable {
     func generate(
         prompt: String,
         systemPrompt: String?,
-        config: LLMInferenceConfig
+        config: LLMInferenceConfig,
     ) -> AnyPublisher<String, Error> {
         Future { [weak self] promise in
             guard let self else {
@@ -91,15 +91,15 @@ final class LiveLLMService: LLMService, @unchecked Sendable {
                 return
             }
 
-            let stream = UncheckedSendableBox(value: self.generateStream(
+            let stream = UncheckedSendableBox(value: generateStream(
                 prompt: prompt,
                 systemPrompt: systemPrompt,
-                config: config
+                config: config,
             ))
             let promise = UncheckedSendableBox(value: promise)
 
             // H4/H5: store the task under the lock so teardown can cancel it.
-            self.lock.withLock {
+            lock.withLock {
                 self.futureGenerationTask = Task {
                     do {
                         var result = ""
@@ -127,7 +127,7 @@ final class LiveLLMService: LLMService, @unchecked Sendable {
     func generateStream(
         prompt: String,
         systemPrompt: String?,
-        config: LLMInferenceConfig
+        config: LLMInferenceConfig,
     ) -> AsyncThrowingStream<String, Error> {
         AsyncThrowingStream { [weak self] continuation in
             guard let self else {
@@ -136,7 +136,7 @@ final class LiveLLMService: LLMService, @unchecked Sendable {
             }
 
             // H4: assign the streaming task under the lock.
-            self.lock.withLock {
+            lock.withLock {
                 self.generationTask = Task {
                     do {
                         // Check if model is loaded
@@ -154,7 +154,7 @@ final class LiveLLMService: LLMService, @unchecked Sendable {
                             maxTokens: config.maxTokens,
                             stopSequences: config.stopSequences,
                             temperature: config.temperature,
-                            topP: config.topP
+                            topP: config.topP,
                         )
 
                         for try await token in tokens {

@@ -18,7 +18,7 @@ struct DailyDigestTests {
                 source: ArticleSource(id: "tech", name: "TechCrunch"),
                 url: "https://example.com/1",
                 publishedAt: fixedDate,
-                category: .technology
+                category: .technology,
             ),
             Article(
                 id: "2",
@@ -26,7 +26,7 @@ struct DailyDigestTests {
                 source: ArticleSource(id: "biz", name: "Reuters"),
                 url: "https://example.com/2",
                 publishedAt: fixedDate,
-                category: .business
+                category: .business,
             ),
             Article(
                 id: "3",
@@ -34,7 +34,7 @@ struct DailyDigestTests {
                 source: ArticleSource(id: "tech2", name: "Wired"),
                 url: "https://example.com/3",
                 publishedAt: fixedDate,
-                category: .technology
+                category: .technology,
             ),
         ]
     }
@@ -50,7 +50,7 @@ struct DailyDigestTests {
             id: "test-digest",
             summary: "Test summary",
             sourceArticles: [],
-            generatedAt: testDate
+            generatedAt: testDate,
         )
 
         let formattedDate = digest.formattedDate
@@ -69,7 +69,7 @@ struct DailyDigestTests {
             id: "test-digest",
             summary: "Test summary",
             sourceArticles: mockArticles,
-            generatedAt: fixedDate
+            generatedAt: fixedDate,
         )
 
         #expect(digest.articleCount == 3)
@@ -81,7 +81,7 @@ struct DailyDigestTests {
             id: "test-digest",
             summary: "Test summary",
             sourceArticles: [],
-            generatedAt: fixedDate
+            generatedAt: fixedDate,
         )
 
         #expect(digest.articleCount == 0)
@@ -95,7 +95,7 @@ struct DailyDigestTests {
             id: "test-digest",
             summary: "Test summary",
             sourceArticles: mockArticles,
-            generatedAt: fixedDate
+            generatedAt: fixedDate,
         )
 
         let breakdown = digest.categoryBreakdown
@@ -114,7 +114,7 @@ struct DailyDigestTests {
                 source: ArticleSource(id: "test", name: "Test"),
                 url: "https://example.com/1",
                 publishedAt: fixedDate,
-                category: .world
+                category: .world,
             ),
             Article(
                 id: "2",
@@ -122,7 +122,7 @@ struct DailyDigestTests {
                 source: ArticleSource(id: "test", name: "Test"),
                 url: "https://example.com/2",
                 publishedAt: fixedDate,
-                category: nil
+                category: nil,
             ),
         ]
 
@@ -130,7 +130,7 @@ struct DailyDigestTests {
             id: "test-digest",
             summary: "Test summary",
             sourceArticles: articlesWithNilCategories,
-            generatedAt: fixedDate
+            generatedAt: fixedDate,
         )
 
         let breakdown = digest.categoryBreakdown
@@ -146,7 +146,7 @@ struct DailyDigestTests {
             id: "test-digest",
             summary: "Test summary",
             sourceArticles: [],
-            generatedAt: fixedDate
+            generatedAt: fixedDate,
         )
 
         let breakdown = digest.categoryBreakdown
@@ -162,21 +162,21 @@ struct DailyDigestTests {
             id: "same-id",
             summary: "Summary",
             sourceArticles: [],
-            generatedAt: fixedDate
+            generatedAt: fixedDate,
         )
 
         let digest2 = DailyDigest(
             id: "same-id",
             summary: "Summary",
             sourceArticles: [],
-            generatedAt: fixedDate
+            generatedAt: fixedDate,
         )
 
         let digest3 = DailyDigest(
             id: "different-id",
             summary: "Summary",
             sourceArticles: [],
-            generatedAt: fixedDate
+            generatedAt: fixedDate,
         )
 
         #expect(digest1 == digest2)
@@ -191,7 +191,7 @@ struct DailyDigestTests {
             id: "unique-digest-id",
             summary: "Test summary",
             sourceArticles: [],
-            generatedAt: fixedDate
+            generatedAt: fixedDate,
         )
 
         #expect(digest.id == "unique-digest-id")

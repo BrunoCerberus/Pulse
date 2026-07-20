@@ -87,7 +87,7 @@ struct MediaViewItemTests {
             source: ArticleSource(id: nil, name: "Test"),
             url: "https://example.com",
             imageURL: "https://example.com/image.jpg",
-            publishedAt: Date()
+            publishedAt: Date(),
         )
         let viewItem = MediaViewItem(from: article)
 
@@ -101,7 +101,7 @@ struct MediaViewItemTests {
             description: nil,
             source: ArticleSource(id: nil, name: "Test"),
             url: "https://example.com",
-            publishedAt: Date()
+            publishedAt: Date(),
         )
         let viewItem = MediaViewItem(from: article)
 

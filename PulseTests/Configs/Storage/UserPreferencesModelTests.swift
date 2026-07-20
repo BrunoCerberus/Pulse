@@ -14,7 +14,7 @@ struct UserPreferencesModelTests {
             mutedKeywords: [],
             preferredLanguage: "en",
             notificationsEnabled: true,
-            breakingNewsNotifications: true
+            breakingNewsNotifications: true,
         )
 
         let sut = UserPreferencesModel(from: preferences)
@@ -33,7 +33,7 @@ struct UserPreferencesModelTests {
             mutedKeywords: [],
             preferredLanguage: "en",
             notificationsEnabled: true,
-            breakingNewsNotifications: true
+            breakingNewsNotifications: true,
         )
 
         let sut = UserPreferencesModel(from: preferences)
@@ -50,7 +50,7 @@ struct UserPreferencesModelTests {
             mutedKeywords: ["politics", "celebrity"],
             preferredLanguage: "en",
             notificationsEnabled: true,
-            breakingNewsNotifications: true
+            breakingNewsNotifications: true,
         )
 
         let sut = UserPreferencesModel(from: preferences)
@@ -67,7 +67,7 @@ struct UserPreferencesModelTests {
             mutedKeywords: [],
             preferredLanguage: "de",
             notificationsEnabled: true,
-            breakingNewsNotifications: true
+            breakingNewsNotifications: true,
         )
 
         let sut = UserPreferencesModel(from: preferences)
@@ -84,7 +84,7 @@ struct UserPreferencesModelTests {
             mutedKeywords: [],
             preferredLanguage: "en",
             notificationsEnabled: false,
-            breakingNewsNotifications: true
+            breakingNewsNotifications: true,
         )
 
         let sut = UserPreferencesModel(from: preferences)
@@ -101,7 +101,7 @@ struct UserPreferencesModelTests {
             mutedKeywords: [],
             preferredLanguage: "en",
             notificationsEnabled: true,
-            breakingNewsNotifications: false
+            breakingNewsNotifications: false,
         )
 
         let sut = UserPreferencesModel(from: preferences)
@@ -120,7 +120,7 @@ struct UserPreferencesModelTests {
             mutedKeywords: [],
             preferredLanguage: "en",
             notificationsEnabled: true,
-            breakingNewsNotifications: true
+            breakingNewsNotifications: true,
         )
 
         let sut = UserPreferencesModel(from: preferences)
@@ -138,7 +138,7 @@ struct UserPreferencesModelTests {
             mutedKeywords: [],
             preferredLanguage: "en",
             notificationsEnabled: true,
-            breakingNewsNotifications: true
+            breakingNewsNotifications: true,
         )
 
         let sut = UserPreferencesModel(from: preferences)

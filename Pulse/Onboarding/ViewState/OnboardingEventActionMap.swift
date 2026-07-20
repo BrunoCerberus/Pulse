@@ -5,13 +5,13 @@ struct OnboardingEventActionMap: DomainEventActionMap {
     func map(event: OnboardingViewEvent) -> OnboardingDomainAction? {
         switch event {
         case .onNextTapped:
-            return .nextPage
+            .nextPage
         case .onSkipTapped:
-            return .skip
+            .skip
         case let .onPageChanged(page):
-            return .goToPage(page)
+            .goToPage(page)
         case let .onToggleTopic(category):
-            return .toggleTopic(category)
+            .toggleTopic(category)
         }
     }
 }

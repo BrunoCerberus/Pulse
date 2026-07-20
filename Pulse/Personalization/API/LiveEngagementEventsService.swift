@@ -20,13 +20,13 @@ final class LiveEngagementEventsService: EngagementEventsService {
             let schema = Schema([PendingEngagementEvent.self])
             let configuration = ModelConfiguration(
                 schema: schema,
-                isStoredInMemoryOnly: inMemory
+                isStoredInMemoryOnly: inMemory,
             )
             modelContainer = try ModelContainer(for: schema, configurations: [configuration])
         } catch {
             Logger.shared.service(
                 "Failed to create EngagementEvents container: \(error)",
-                level: .warning
+                level: .warning,
             )
             modelContainer = nil
         }
@@ -39,7 +39,7 @@ final class LiveEngagementEventsService: EngagementEventsService {
 
         let eventID = event.id.uuidString
         let descriptor = FetchDescriptor<PendingEngagementEvent>(
-            predicate: #Predicate { $0.eventID == eventID }
+            predicate: #Predicate { $0.eventID == eventID },
         )
         if (try? context.fetch(descriptor).first) != nil {
             return
@@ -51,7 +51,7 @@ final class LiveEngagementEventsService: EngagementEventsService {
         } catch {
             Logger.shared.service(
                 "EngagementEvents save failed: \(error)",
-                level: .debug
+                level: .debug,
             )
         }
     }
@@ -62,7 +62,7 @@ final class LiveEngagementEventsService: EngagementEventsService {
         let context = container.mainContext
 
         var descriptor = FetchDescriptor<PendingEngagementEvent>(
-            sortBy: [SortDescriptor(\.occurredAt, order: .forward)]
+            sortBy: [SortDescriptor(\.occurredAt, order: .forward)],
         )
         descriptor.fetchLimit = limit
 
@@ -75,9 +75,9 @@ final class LiveEngagementEventsService: EngagementEventsService {
         guard let container = modelContainer, !eventIDs.isEmpty else { return }
         let context = container.mainContext
 
-        let ids = Set(eventIDs.map { $0.uuidString })
+        let ids = Set(eventIDs.map(\.uuidString))
         let descriptor = FetchDescriptor<PendingEngagementEvent>(
-            predicate: #Predicate { ids.contains($0.eventID) }
+            predicate: #Predicate { ids.contains($0.eventID) },
         )
         let rows = try context.fetch(descriptor)
         for row in rows {

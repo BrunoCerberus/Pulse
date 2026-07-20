@@ -11,13 +11,13 @@ struct SummarizationViewStateReducerTests {
         article: Article = Article.mockArticles[0],
         summarizationState: SummarizationState = .idle,
         generatedSummary: String = "",
-        modelStatus: LLMModelStatus = .notLoaded
+        modelStatus: LLMModelStatus = .notLoaded,
     ) -> SummarizationDomainState {
         SummarizationDomainState(
             article: article,
             summarizationState: summarizationState,
             generatedSummary: generatedSummary,
-            modelStatus: modelStatus
+            modelStatus: modelStatus,
         )
     }
 
@@ -30,7 +30,7 @@ struct SummarizationViewStateReducerTests {
             article: article,
             summarizationState: .completed,
             generatedSummary: "Test summary",
-            modelStatus: .ready
+            modelStatus: .ready,
         )
 
         let viewState = sut.reduce(domainState: domainState)

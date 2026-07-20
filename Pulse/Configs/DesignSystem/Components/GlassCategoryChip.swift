@@ -18,33 +18,33 @@ struct GlassCategoryChip: View {
 
         var font: Font {
             switch self {
-            case .small: return Typography.labelSmall
-            case .medium: return Typography.labelMedium
-            case .large: return Typography.labelLarge
+            case .small: Typography.labelSmall
+            case .medium: Typography.labelMedium
+            case .large: Typography.labelLarge
             }
         }
 
         var horizontalPadding: CGFloat {
             switch self {
-            case .small: return Spacing.xs
-            case .medium: return Spacing.sm
-            case .large: return Spacing.md
+            case .small: Spacing.xs
+            case .medium: Spacing.sm
+            case .large: Spacing.md
             }
         }
 
         var verticalPadding: CGFloat {
             switch self {
-            case .small: return Spacing.xxs
-            case .medium: return Spacing.xs
-            case .large: return Spacing.sm
+            case .small: Spacing.xxs
+            case .medium: Spacing.xs
+            case .large: Spacing.sm
             }
         }
 
         var iconSize: CGFloat {
             switch self {
-            case .small: return IconSize.xs
-            case .medium: return IconSize.sm
-            case .large: return IconSize.md
+            case .small: IconSize.xs
+            case .medium: IconSize.sm
+            case .large: IconSize.md
             }
         }
     }
@@ -53,7 +53,7 @@ struct GlassCategoryChip: View {
         category: NewsCategory,
         style: ChipStyle = .medium,
         isSelected: Bool = false,
-        showIcon: Bool = false
+        showIcon: Bool = false,
     ) {
         self.category = category
         self.style = style
@@ -98,7 +98,7 @@ struct GlassCategoryButton: View {
     init(
         category: NewsCategory,
         isSelected: Bool = false,
-        action: @escaping () -> Void
+        action: @escaping () -> Void,
     ) {
         self.category = category
         self.isSelected = isSelected
@@ -117,7 +117,7 @@ struct GlassCategoryButton: View {
                         .frame(width: 56, height: 56)
                         .glassEffect(
                             .regular.tint(category.color),
-                            in: .rect(cornerRadius: CornerRadius.md)
+                            in: .rect(cornerRadius: CornerRadius.md),
                         )
 
                     Image(systemName: category.icon)
@@ -136,7 +136,7 @@ struct GlassCategoryButton: View {
             .padding(Spacing.sm)
             .glassEffect(
                 isSelected ? .regular.tint(category.color).interactive() : .regular.interactive(),
-                in: .rect(cornerRadius: CornerRadius.lg)
+                in: .rect(cornerRadius: CornerRadius.lg),
             )
         }
         .pressEffect(scale: 0.95)
@@ -157,7 +157,7 @@ struct GlassTopicChip: View {
         topic: String,
         isSelected: Bool = false,
         color: Color = .blue,
-        action: @escaping () -> Void
+        action: @escaping () -> Void,
     ) {
         self.topic = topic
         self.isSelected = isSelected
@@ -214,7 +214,7 @@ struct GlassTopicChip: View {
                     ForEach(NewsCategory.allCases, id: \.self) { category in
                         GlassCategoryButton(
                             category: category,
-                            isSelected: category == .technology
+                            isSelected: category == .technology,
                         ) {}
                     }
                 }

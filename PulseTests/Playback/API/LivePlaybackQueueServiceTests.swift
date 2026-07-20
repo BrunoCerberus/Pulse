@@ -25,7 +25,7 @@ struct LivePlaybackQueueServiceTests {
             ttsService: mockTTSService,
             analyticsService: mockAnalyticsService,
             engagementEventsService: mockEngagementEventsService,
-            notificationCenter: notificationCenter
+            notificationCenter: notificationCenter,
         )
     }
 
@@ -37,7 +37,7 @@ struct LivePlaybackQueueServiceTests {
                 title: "Title \(index)",
                 sourceName: "Source \(index)",
                 speechText: "Speech text \(index)",
-                language: "en"
+                language: "en",
             )
         }
     }
@@ -77,7 +77,7 @@ struct LivePlaybackQueueServiceTests {
                 title: "Replacement",
                 sourceName: "Source",
                 speechText: "Replacement text",
-                language: "en"
+                language: "en",
             ),
         ]
 
@@ -218,12 +218,12 @@ struct LivePlaybackQueueServiceTests {
         sut.play(items: makeItems(3), mode: .briefing)
         sut.next()
 
-        let skippedCount = mockAnalyticsService.loggedEvents.filter { event in
+        let skippedCount = mockAnalyticsService.loggedEvents.count(where: { event in
             if case .briefingItemSkipped = event {
                 return true
             }
             return false
-        }.count
+        })
         #expect(skippedCount == 1)
     }
 

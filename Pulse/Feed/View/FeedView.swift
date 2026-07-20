@@ -45,7 +45,7 @@ struct FeedView<R: FeedNavigationRouter>: View {
             } else {
                 PremiumGateView(
                     feature: .dailyDigest,
-                    serviceLocator: serviceLocator
+                    serviceLocator: serviceLocator,
                 )
                 .navigationTitle(Constants.title)
                 .navigationBarTitleDisplayMode(.large)
@@ -143,7 +143,7 @@ struct FeedView<R: FeedNavigationRouter>: View {
             digestContent
                 .transition(.asymmetric(
                     insertion: .opacity.combined(with: .scale(scale: 0.95)).animation(.easeOut(duration: 0.4)),
-                    removal: .opacity
+                    removal: .opacity,
                 ))
         case .empty:
             emptyStateView
@@ -159,7 +159,7 @@ struct FeedView<R: FeedNavigationRouter>: View {
     private func processingView(phase: AIProcessingPhase) -> some View {
         AIProcessingView(
             phase: phase,
-            streamingText: ""
+            streamingText: "",
         )
     }
 
@@ -181,14 +181,14 @@ struct FeedView<R: FeedNavigationRouter>: View {
                         sourceArticles: viewModel.viewState.sourceArticles,
                         onArticleTapped: { article in
                             viewModel.handle(event: .onArticleTapped(article.article))
-                        }
+                        },
                     )
                     .padding(.horizontal, Spacing.md)
                     .transition(.asymmetric(
                         insertion: .opacity
                             .combined(with: .scale(scale: 0.95))
                             .animation(.easeOut(duration: 0.4)),
-                        removal: .opacity
+                        removal: .opacity,
                     ))
                 }
             }
@@ -328,7 +328,7 @@ struct FeedView<R: FeedNavigationRouter>: View {
         FeedView(
             router: FeedNavigationRouter(),
             viewModel: FeedViewModel(serviceLocator: .preview),
-            serviceLocator: .preview
+            serviceLocator: .preview,
         )
     }
     .preferredColorScheme(.dark)

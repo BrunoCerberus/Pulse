@@ -15,7 +15,7 @@ final class SettingsAccountSectionAccessibilitySnapshotTests: XCTestCase {
                 currentUser: AuthUser.mock,
                 isDeletingAccount: false,
                 onSignOutTapped: {},
-                onDeleteAccountTapped: {}
+                onDeleteAccountTapped: {},
             )
         }
         .frame(width: 375)
@@ -27,7 +27,7 @@ final class SettingsAccountSectionAccessibilitySnapshotTests: XCTestCase {
         assertSnapshot(
             of: controller,
             as: SnapshotConfig.snapshotting(on: SnapshotConfig.iPhoneAirAccessibility),
-            record: false
+            record: false,
         )
     }
 
@@ -37,7 +37,7 @@ final class SettingsAccountSectionAccessibilitySnapshotTests: XCTestCase {
                 currentUser: AuthUser.mock,
                 isDeletingAccount: false,
                 onSignOutTapped: {},
-                onDeleteAccountTapped: {}
+                onDeleteAccountTapped: {},
             )
         }
         .frame(width: 375)
@@ -49,7 +49,7 @@ final class SettingsAccountSectionAccessibilitySnapshotTests: XCTestCase {
         assertSnapshot(
             of: controller,
             as: SnapshotConfig.snapshotting(on: SnapshotConfig.iPhoneAirExtraExtraLarge),
-            record: false
+            record: false,
         )
     }
 
@@ -60,7 +60,7 @@ final class SettingsAccountSectionAccessibilitySnapshotTests: XCTestCase {
                 currentUser: AuthUser.mock,
                 isDeletingAccount: true,
                 onSignOutTapped: {},
-                onDeleteAccountTapped: {}
+                onDeleteAccountTapped: {},
             )
         }
         .frame(width: 375)
@@ -72,7 +72,7 @@ final class SettingsAccountSectionAccessibilitySnapshotTests: XCTestCase {
         assertSnapshot(
             of: controller,
             as: SnapshotConfig.snapshotting(on: SnapshotConfig.iPhoneAir),
-            record: false
+            record: false,
         )
     }
 }

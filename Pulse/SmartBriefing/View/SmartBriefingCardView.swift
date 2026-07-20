@@ -151,7 +151,7 @@ struct SmartBriefingCardView: View {
     SmartBriefingCardView(
         viewState: .initial,
         onBuildBriefingTapped: {},
-        onStartFreshTapped: {}
+        onStartFreshTapped: {},
     )
     .preferredColorScheme(.dark)
 }
@@ -162,10 +162,10 @@ struct SmartBriefingCardView: View {
             isVisible: true,
             isBuilding: false,
             lastServedAt: .now.addingTimeInterval(-3 * 3600),
-            statusMessage: nil
+            statusMessage: nil,
         ),
         onBuildBriefingTapped: {},
-        onStartFreshTapped: {}
+        onStartFreshTapped: {},
     )
     .preferredColorScheme(.dark)
 }

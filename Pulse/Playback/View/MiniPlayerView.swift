@@ -43,7 +43,7 @@ struct MiniPlayerView: View {
                     .tint(Color.Accent.gradient)
                     .accessibilityLabel(Constants.progress)
                     .accessibilityValue(
-                        String(format: Constants.progressValue, Int(viewModel.viewState.itemProgress * 100))
+                        String(format: Constants.progressValue, Int(viewModel.viewState.itemProgress * 100)),
                     )
 
                 HStack(spacing: Spacing.md) {
@@ -85,7 +85,7 @@ struct MiniPlayerView: View {
                             .padding(.vertical, Spacing.xxs)
                             .glassEffect(
                                 .regular.interactive(),
-                                in: .rect(cornerRadius: CornerRadius.sm)
+                                in: .rect(cornerRadius: CornerRadius.sm),
                             )
                     }
                     .frame(minWidth: 44, minHeight: 44)
@@ -155,7 +155,7 @@ struct MiniPlayerView: View {
                 if !isPresented {
                     viewModel.handle(event: .onQueueSheetDismissed)
                 }
-            }
+            },
         )
     }
 }

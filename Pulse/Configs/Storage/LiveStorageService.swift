@@ -41,13 +41,12 @@ final class LiveStorageService: StorageService {
                 ReadArticle.self,
                 InterestTopicModel.self,
             ])
-            let modelConfiguration: ModelConfiguration
-            if inMemory || !enableCloudKit {
-                modelConfiguration = ModelConfiguration(schema: schema, isStoredInMemoryOnly: inMemory)
+            let modelConfiguration = if inMemory || !enableCloudKit {
+                ModelConfiguration(schema: schema, isStoredInMemoryOnly: inMemory)
             } else {
-                modelConfiguration = ModelConfiguration(
+                ModelConfiguration(
                     schema: schema,
-                    cloudKitDatabase: .private(Self.cloudKitContainerIdentifier)
+                    cloudKitDatabase: .private(Self.cloudKitContainerIdentifier),
                 )
             }
             let container = try ModelContainer(for: schema, configurations: [modelConfiguration])
@@ -62,7 +61,7 @@ final class LiveStorageService: StorageService {
         let context = modelContainer.mainContext
         let articleID = article.id
         let descriptor = FetchDescriptor<BookmarkedArticle>(
-            predicate: #Predicate { $0.articleID == articleID }
+            predicate: #Predicate { $0.articleID == articleID },
         )
         if try context.fetch(descriptor).first != nil {
             return
@@ -77,7 +76,7 @@ final class LiveStorageService: StorageService {
         let context = modelContainer.mainContext
         let articleID = article.id
         let descriptor = FetchDescriptor<BookmarkedArticle>(
-            predicate: #Predicate { $0.articleID == articleID }
+            predicate: #Predicate { $0.articleID == articleID },
         )
         if let existing = try context.fetch(descriptor).first {
             context.delete(existing)
@@ -89,7 +88,7 @@ final class LiveStorageService: StorageService {
     func fetchBookmarkedArticles() async throws -> [Article] {
         let context = modelContainer.mainContext
         let descriptor = FetchDescriptor<BookmarkedArticle>(
-            sortBy: [SortDescriptor(\.savedAt, order: .reverse)]
+            sortBy: [SortDescriptor(\.savedAt, order: .reverse)],
         )
         let bookmarked = try context.fetch(descriptor)
         return bookmarked.map { $0.toArticle() }
@@ -99,7 +98,7 @@ final class LiveStorageService: StorageService {
     func isBookmarked(_ articleID: String) async -> Bool {
         let context = modelContainer.mainContext
         let descriptor = FetchDescriptor<BookmarkedArticle>(
-            predicate: #Predicate { $0.articleID == articleID }
+            predicate: #Predicate { $0.articleID == articleID },
         )
         return ((try? context.fetchCount(descriptor)) ?? 0) > 0
     }
@@ -127,7 +126,7 @@ final class LiveStorageService: StorageService {
         let context = modelContainer.mainContext
         let articleID = article.id
         let descriptor = FetchDescriptor<ReadArticle>(
-            predicate: #Predicate { $0.articleID == articleID }
+            predicate: #Predicate { $0.articleID == articleID },
         )
         if let existing = try context.fetch(descriptor).first {
             existing.readAt = .now
@@ -141,7 +140,7 @@ final class LiveStorageService: StorageService {
     func isRead(_ articleID: String) async -> Bool {
         let context = modelContainer.mainContext
         let descriptor = FetchDescriptor<ReadArticle>(
-            predicate: #Predicate { $0.articleID == articleID }
+            predicate: #Predicate { $0.articleID == articleID },
         )
         return ((try? context.fetchCount(descriptor)) ?? 0) > 0
     }
@@ -158,7 +157,7 @@ final class LiveStorageService: StorageService {
     func fetchReadArticles() async throws -> [Article] {
         let context = modelContainer.mainContext
         let descriptor = FetchDescriptor<ReadArticle>(
-            sortBy: [SortDescriptor(\.readAt, order: .reverse)]
+            sortBy: [SortDescriptor(\.readAt, order: .reverse)],
         )
         let readArticles = try context.fetch(descriptor)
         return readArticles.map { $0.toArticle() }

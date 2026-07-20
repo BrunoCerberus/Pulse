@@ -31,7 +31,7 @@ struct GlassArticleCard: View {
         isRead: Bool = false,
         onTap: @escaping () -> Void,
         onBookmark: @escaping () -> Void,
-        onShare: @escaping () -> Void
+        onShare: @escaping () -> Void,
     ) {
         self.title = title
         self.description = description
@@ -67,7 +67,7 @@ struct GlassArticleCard: View {
             } label: {
                 Label(
                     isBookmarked ? Constants.removeBookmark : Constants.bookmark,
-                    systemImage: isBookmarked ? "bookmark.fill" : "bookmark"
+                    systemImage: isBookmarked ? "bookmark.fill" : "bookmark",
                 )
             }
 
@@ -200,7 +200,7 @@ extension GlassArticleCard {
         isBookmarked: Bool = false,
         onTap: @escaping () -> Void,
         onBookmark: @escaping () -> Void,
-        onShare: @escaping () -> Void
+        onShare: @escaping () -> Void,
     ) {
         self.init(
             title: item.title,
@@ -213,7 +213,7 @@ extension GlassArticleCard {
             isRead: item.isRead,
             onTap: onTap,
             onBookmark: onBookmark,
-            onShare: onShare
+            onShare: onShare,
         )
     }
 }
@@ -295,7 +295,7 @@ struct GlassArticleCardCompact: View {
                     isBookmarked: false,
                     onTap: {},
                     onBookmark: {},
-                    onShare: {}
+                    onShare: {},
                 )
 
                 GlassArticleCard(
@@ -308,14 +308,14 @@ struct GlassArticleCardCompact: View {
                     isBookmarked: true,
                     onTap: {},
                     onBookmark: {},
-                    onShare: {}
+                    onShare: {},
                 )
 
                 GlassArticleCardCompact(
                     title: "Quick Update on Markets",
                     sourceName: "Bloomberg",
                     imageURL: URL(string: "https://picsum.photos/100"),
-                    onTap: {}
+                    onTap: {},
                 )
             }
             .padding()

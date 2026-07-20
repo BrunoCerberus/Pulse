@@ -36,7 +36,7 @@ struct HomeViewSmartBriefingCoverageTests {
             router: HomeNavigationRouter(),
             viewModel: homeViewModel,
             forYouViewModel: forYouViewModel,
-            smartBriefingViewModel: smartBriefingViewModel
+            smartBriefingViewModel: smartBriefingViewModel,
         )
         _ = view.body
     }

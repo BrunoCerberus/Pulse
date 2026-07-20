@@ -21,8 +21,8 @@ final class FeaturedMediaCardAccessibilitySnapshotTests: XCTestCase {
                 publishedAt: Date(timeIntervalSince1970: 1_672_531_200),
                 mediaType: .video,
                 mediaURL: "https://youtube.com",
-                mediaDuration: 1245
-            )
+                mediaDuration: 1245,
+            ),
         )
     }
 
@@ -34,7 +34,7 @@ final class FeaturedMediaCardAccessibilitySnapshotTests: XCTestCase {
         let view = FeaturedMediaCard(
             item: snapshotMediaItem,
             cardWidth: 345,
-            onTap: {}
+            onTap: {},
         )
         .frame(width: 375)
         .padding()
@@ -46,14 +46,14 @@ final class FeaturedMediaCardAccessibilitySnapshotTests: XCTestCase {
         assertSnapshot(
             of: controller,
             as: SnapshotConfig.snapshotting(on: SnapshotConfig.iPhoneAirAccessibility),
-            record: false
+            record: false,
         )
     }
 
     func testFeaturedMediaCardExtraExtraLargeSize() {
         let view = FeaturedMediaCard(
             item: snapshotMediaItem,
-            onTap: {}
+            onTap: {},
         )
         .frame(width: 375)
         .padding()
@@ -65,7 +65,7 @@ final class FeaturedMediaCardAccessibilitySnapshotTests: XCTestCase {
         assertSnapshot(
             of: controller,
             as: SnapshotConfig.snapshotting(on: SnapshotConfig.iPhoneAirExtraExtraLarge),
-            record: false
+            record: false,
         )
     }
 }

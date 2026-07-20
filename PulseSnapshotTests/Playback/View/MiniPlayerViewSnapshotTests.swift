@@ -9,13 +9,13 @@ final class MiniPlayerViewSnapshotTests: XCTestCase {
     private let compactConfig = ViewImageConfig(
         safeArea: UIEdgeInsets(top: 0, left: 0, bottom: 0, right: 0),
         size: CGSize(width: 393, height: 120),
-        traits: UITraitCollection(userInterfaceStyle: .dark)
+        traits: UITraitCollection(userInterfaceStyle: .dark),
     )
 
     private let compactLightConfig = ViewImageConfig(
         safeArea: UIEdgeInsets(top: 0, left: 0, bottom: 0, right: 0),
         size: CGSize(width: 393, height: 120),
-        traits: UITraitCollection(userInterfaceStyle: .light)
+        traits: UITraitCollection(userInterfaceStyle: .light),
     )
 
     private let compactAccessibilityConfig: ViewImageConfig = {
@@ -26,7 +26,7 @@ final class MiniPlayerViewSnapshotTests: XCTestCase {
         return ViewImageConfig(
             safeArea: UIEdgeInsets(top: 0, left: 0, bottom: 0, right: 0),
             size: CGSize(width: 393, height: 180),
-            traits: traits
+            traits: traits,
         )
     }()
 
@@ -40,8 +40,8 @@ final class MiniPlayerViewSnapshotTests: XCTestCase {
                     title: "Today's Digest",
                     sourceName: "Pulse",
                     speechText: "Digest narration",
-                    language: "en"
-                )
+                    language: "en",
+                ),
             )
         }
         for index in 0 ..< count {
@@ -52,8 +52,8 @@ final class MiniPlayerViewSnapshotTests: XCTestCase {
                     title: "SwiftUI 6.0 Brings Revolutionary New Features to Apple Platforms",
                     sourceName: "TechCrunch",
                     speechText: "Article narration",
-                    language: "en"
-                )
+                    language: "en",
+                ),
             )
         }
         return items
@@ -105,7 +105,7 @@ final class MiniPlayerViewSnapshotTests: XCTestCase {
         assertSnapshot(
             of: viewController,
             as: SnapshotConfig.snapshotting(on: compactConfig),
-            record: false
+            record: false,
         )
     }
 
@@ -115,7 +115,7 @@ final class MiniPlayerViewSnapshotTests: XCTestCase {
         assertSnapshot(
             of: viewController,
             as: SnapshotConfig.snapshotting(on: compactLightConfig),
-            record: false
+            record: false,
         )
     }
 
@@ -125,7 +125,7 @@ final class MiniPlayerViewSnapshotTests: XCTestCase {
         assertSnapshot(
             of: viewController,
             as: SnapshotConfig.snapshotting(on: compactConfig),
-            record: false
+            record: false,
         )
     }
 
@@ -135,7 +135,7 @@ final class MiniPlayerViewSnapshotTests: XCTestCase {
         assertSnapshot(
             of: viewController,
             as: SnapshotConfig.snapshotting(on: compactConfig),
-            record: false
+            record: false,
         )
     }
 
@@ -145,7 +145,7 @@ final class MiniPlayerViewSnapshotTests: XCTestCase {
         assertSnapshot(
             of: viewController,
             as: SnapshotConfig.snapshotting(on: compactAccessibilityConfig),
-            record: false
+            record: false,
         )
     }
 }

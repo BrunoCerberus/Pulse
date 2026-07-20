@@ -32,25 +32,25 @@ struct MediaDetailEventActionMap: DomainEventActionMap {
     private func mapSimple(event: MediaDetailViewEvent) -> MediaDetailDomainAction? {
         switch event {
         case .onAppear:
-            return .onAppear
+            .onAppear
         case .onSkipBackwardTapped:
-            return .skipBackward(seconds: 15)
+            .skipBackward(seconds: 15)
         case .onSkipForwardTapped:
-            return .skipForward(seconds: 30)
+            .skipForward(seconds: 30)
         case .onPlayerLoading:
-            return .playerLoading
+            .playerLoading
         case .onPlayerReady:
-            return .playerReady
+            .playerReady
         case .onShareTapped:
-            return .showShareSheet
+            .showShareSheet
         case .onShareDismissed:
-            return .dismissShareSheet
+            .dismissShareSheet
         case .onBookmarkTapped:
-            return .toggleBookmark
+            .toggleBookmark
         case .onOpenInBrowserTapped:
-            return .openInBrowser
+            .openInBrowser
         default:
-            return nil
+            nil
         }
     }
 }

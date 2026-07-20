@@ -21,15 +21,15 @@ final class InlineSourceChipSnapshotTests: XCTestCase {
                 url: "https://example.com/1",
                 imageURL: nil,
                 publishedAt: Date(timeIntervalSince1970: 1_672_531_200),
-                category: .technology
-            )
+                category: .technology,
+            ),
         )
     }
 
     func testInlineSourceChipDefault() {
         let view = InlineSourceChip(
             article: testArticle,
-            onTap: {}
+            onTap: {},
         )
         .padding()
         .background(Color(.systemBackground))
@@ -39,14 +39,14 @@ final class InlineSourceChipSnapshotTests: XCTestCase {
         assertSnapshot(
             of: controller,
             as: SnapshotConfig.snapshotting(on: darkConfig),
-            record: false
+            record: false,
         )
     }
 
     func testInlineSourceChipLightMode() {
         let view = InlineSourceChip(
             article: testArticle,
-            onTap: {}
+            onTap: {},
         )
         .padding()
         .background(Color(.systemBackground))
@@ -56,7 +56,7 @@ final class InlineSourceChipSnapshotTests: XCTestCase {
         assertSnapshot(
             of: controller,
             as: SnapshotConfig.snapshotting(on: lightConfig),
-            record: false
+            record: false,
         )
     }
 
@@ -72,13 +72,13 @@ final class InlineSourceChipSnapshotTests: XCTestCase {
                 url: "https://example.com/2",
                 imageURL: nil,
                 publishedAt: Date(timeIntervalSince1970: 1_672_531_200),
-                category: .business
-            )
+                category: .business,
+            ),
         )
 
         let view = InlineSourceChip(
             article: article,
-            onTap: {}
+            onTap: {},
         )
         .padding()
         .background(Color(.systemBackground))
@@ -88,7 +88,7 @@ final class InlineSourceChipSnapshotTests: XCTestCase {
         assertSnapshot(
             of: controller,
             as: SnapshotConfig.snapshotting(on: darkConfig),
-            record: false
+            record: false,
         )
     }
 }

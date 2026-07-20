@@ -23,7 +23,7 @@ extension SmartBriefingDomainInteractor {
         guard storeKitService?.isPremium != false else {
             Logger.shared.service(
                 "Smart Briefing blocked: Premium entitlement not active",
-                level: .warning
+                level: .warning,
             )
             return
         }
@@ -56,7 +56,7 @@ extension SmartBriefingDomainInteractor {
                         pool,
                         scope: scope,
                         lastServedAt: scope == .unreadSinceLastBriefing ? lastServed?.servedAt : nil,
-                        servedArticleIDs: lastServed?.servedArticleIDs ?? []
+                        servedArticleIDs: lastServed?.servedArticleIDs ?? [],
                     )
                     scored = try await forYouService.scoredArticles(from: scopedPool, topN: topN)
 
@@ -68,7 +68,7 @@ extension SmartBriefingDomainInteractor {
                             pool,
                             scope: .allUnread,
                             lastServedAt: nil,
-                            servedArticleIDs: lastServed?.servedArticleIDs ?? []
+                            servedArticleIDs: lastServed?.servedArticleIDs ?? [],
                         )
                         scored = try await forYouService.scoredArticles(from: widenedPool, topN: topN)
                     }
@@ -88,7 +88,7 @@ extension SmartBriefingDomainInteractor {
                 let items = scored.map { PlaybackItem.briefingArticle($0.article, language: language) }
                 playbackBox.value.play(items: items, mode: .briefing)
 
-                let servedIDs = Set(scored.map { $0.article.id })
+                let servedIDs = Set(scored.map(\.article.id))
                 let servedAt = Date.now
                 cacheBox?.value.recordServed(servedIDs, at: servedAt)
 
@@ -98,7 +98,7 @@ extension SmartBriefingDomainInteractor {
                 guard !Task.isCancelled else { return }
                 Logger.shared.error(
                     "Smart Briefing scoring failed: \(error)",
-                    category: "SmartBriefingDomainInteractor"
+                    category: "SmartBriefingDomainInteractor",
                 )
                 self?.dispatch(action: .buildFailed(error.localizedDescription))
             }

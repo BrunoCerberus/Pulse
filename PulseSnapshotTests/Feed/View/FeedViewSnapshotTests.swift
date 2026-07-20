@@ -14,7 +14,7 @@ final class FeedViewSnapshotTests: XCTestCase {
     private let iPhoneAirConfig = ViewImageConfig(
         safeArea: UIEdgeInsets(top: 59, left: 0, bottom: 34, right: 0),
         size: CGSize(width: 393, height: 852),
-        traits: UITraitCollection(userInterfaceStyle: .dark)
+        traits: UITraitCollection(userInterfaceStyle: .dark),
     )
 
     /// Fixed date article for snapshot stability
@@ -29,7 +29,7 @@ final class FeedViewSnapshotTests: XCTestCase {
             url: "https://example.com/1",
             imageURL: nil,
             publishedAt: Date(timeIntervalSince1970: 1_672_531_200),
-            category: .technology
+            category: .technology,
         )
     }
 
@@ -46,7 +46,7 @@ final class FeedViewSnapshotTests: XCTestCase {
                 url: "https://example.com/2",
                 imageURL: nil,
                 publishedAt: Date(timeIntervalSince1970: 1_672_534_800),
-                category: .business
+                category: .business,
             ),
         ]
     }
@@ -69,14 +69,14 @@ final class FeedViewSnapshotTests: XCTestCase {
         let view = FeedView(
             router: FeedNavigationRouter(),
             viewModel: viewModel,
-            serviceLocator: serviceLocator
+            serviceLocator: serviceLocator,
         )
         let controller = UIHostingController(rootView: view)
 
         assertSnapshot(
             of: controller,
             as: SnapshotConfig.snapshotting(on: iPhoneAirConfig),
-            record: false
+            record: false,
         )
     }
 
@@ -90,14 +90,14 @@ final class FeedViewSnapshotTests: XCTestCase {
         let view = FeedView(
             router: FeedNavigationRouter(),
             viewModel: viewModel,
-            serviceLocator: serviceLocator
+            serviceLocator: serviceLocator,
         )
         let controller = UIHostingController(rootView: view)
 
         assertSnapshot(
             of: controller,
             as: SnapshotConfig.snapshotting(on: iPhoneAirConfig),
-            record: false
+            record: false,
         )
     }
 
@@ -116,7 +116,7 @@ final class FeedViewSnapshotTests: XCTestCase {
             id: "test",
             summary: summary,
             sourceArticles: snapshotArticles,
-            generatedAt: Date(timeIntervalSince1970: 1_672_531_200)
+            generatedAt: Date(timeIntervalSince1970: 1_672_531_200),
         )
         mockFeedService.cachedDigest = digest
         mockNewsService.topHeadlinesResult = .success(snapshotArticles)
@@ -127,14 +127,14 @@ final class FeedViewSnapshotTests: XCTestCase {
         let view = FeedView(
             router: FeedNavigationRouter(),
             viewModel: viewModel,
-            serviceLocator: serviceLocator
+            serviceLocator: serviceLocator,
         )
         let controller = UIHostingController(rootView: view)
 
         assertSnapshot(
             of: controller,
             as: SnapshotConfig.snapshotting(on: iPhoneAirConfig),
-            record: false
+            record: false,
         )
     }
 
@@ -145,7 +145,7 @@ final class FeedViewSnapshotTests: XCTestCase {
             summary: "Today's reading focused on technology and business topics. "
                 + "You explored developments in AI and market trends.",
             sourceArticles: snapshotArticles,
-            generatedAt: Date(timeIntervalSince1970: 1_672_531_200)
+            generatedAt: Date(timeIntervalSince1970: 1_672_531_200),
         )
         mockFeedService.cachedDigest = digest
         mockNewsService.topHeadlinesResult = .success(snapshotArticles)
@@ -156,14 +156,14 @@ final class FeedViewSnapshotTests: XCTestCase {
         let view = FeedView(
             router: FeedNavigationRouter(),
             viewModel: viewModel,
-            serviceLocator: serviceLocator
+            serviceLocator: serviceLocator,
         )
         let controller = UIHostingController(rootView: view)
 
         assertSnapshot(
             of: controller,
             as: SnapshotConfig.snapshotting(on: iPhoneAirConfig),
-            record: false
+            record: false,
         )
     }
 }

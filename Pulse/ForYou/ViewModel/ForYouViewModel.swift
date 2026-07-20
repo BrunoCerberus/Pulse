@@ -43,7 +43,7 @@ final class ForYouViewModel: CombineViewModel, ObservableObject {
                     ForYouCardItem(
                         from: scored,
                         index: index,
-                        explanation: service?.explanation(for: scored.matchedTopics) ?? ""
+                        explanation: service?.explanation(for: scored.matchedTopics) ?? "",
                     )
                 }
                 return ForYouViewState(
@@ -53,7 +53,7 @@ final class ForYouViewModel: CombineViewModel, ObservableObject {
                     // we're not actively loading — keeps Home uncluttered
                     // for cold-start users with no profile signal yet.
                     isVisible: state.isLoading || !cards.isEmpty,
-                    errorMessage: state.error
+                    errorMessage: state.error,
                 )
             }
             .removeDuplicates()

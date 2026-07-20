@@ -13,6 +13,6 @@ struct PlaybackDomainState: Equatable {
 
     static let initial = PlaybackDomainState(
         queueState: .idle,
-        isQueueSheetPresented: false
+        isQueueSheetPresented: false,
     )
 }

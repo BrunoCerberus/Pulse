@@ -236,12 +236,12 @@ struct MalformedNetworkResponseTests {
             cacheStore: mockL1,
             diskCacheStore: diskL2,
             networkMonitor: MockNetworkMonitorService(isConnected: true),
-            networkResilienceEnabled: false
+            networkResilienceEnabled: false,
         )
         defer { try? FileManager.default.removeItem(at: testDirectory) }
 
         let result = try await awaitPublisher(
-            sut.fetchTopHeadlines(language: "en", country: "us", page: 1)
+            sut.fetchTopHeadlines(language: "en", country: "us", page: 1),
         )
 
         #expect(result.isEmpty)
@@ -257,12 +257,12 @@ struct MalformedNetworkResponseTests {
             cacheStore: MockNewsCacheStore(),
             diskCacheStore: nil,
             networkMonitor: MockNetworkMonitorService(isConnected: true),
-            networkResilienceEnabled: false
+            networkResilienceEnabled: false,
         )
 
         do {
             _ = try await awaitPublisher(
-                sut.fetchTopHeadlines(language: "en", country: "us", page: 1)
+                sut.fetchTopHeadlines(language: "en", country: "us", page: 1),
             )
             Issue.record("Expected error")
         } catch {

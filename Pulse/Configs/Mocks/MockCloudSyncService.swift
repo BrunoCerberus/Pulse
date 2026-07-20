@@ -34,7 +34,7 @@ final class MockCloudSyncService: CloudSyncService {
 
     init(
         accountStatus: CloudSyncAccountStatus = .available,
-        syncState: CloudSyncState = .idle
+        syncState: CloudSyncState = .idle,
     ) {
         accountStatusSubject = CurrentValueSubject(accountStatus)
         syncStateSubject = CurrentValueSubject(syncState)

@@ -50,7 +50,7 @@ struct ShareItemsBuilderTests {
             mediaType: nil,
             mediaURL: nil,
             mediaDuration: nil,
-            mediaMimeType: nil
+            mediaMimeType: nil,
         )
 
         let items = ShareItemsBuilder.activityItems(for: article)
@@ -76,7 +76,7 @@ struct ShareItemsBuilderTests {
             mediaType: nil,
             mediaURL: nil,
             mediaDuration: nil,
-            mediaMimeType: nil
+            mediaMimeType: nil,
         )
 
         let items = ShareItemsBuilder.activityItems(for: article)
@@ -102,7 +102,7 @@ struct ShareItemsBuilderTests {
             mediaType: nil,
             mediaURL: nil,
             mediaDuration: nil,
-            mediaMimeType: nil
+            mediaMimeType: nil,
         )
 
         let items = ShareItemsBuilder.activityItems(for: article)

@@ -10,7 +10,7 @@ struct ArticleSummaryPromptBuilderTests {
     func buildPromptIncludesTitle() {
         let article = Article(
             title: "Test Article Title",
-            source: ArticleSource(id: "test", name: "Test Source")
+            source: ArticleSource(id: "test", name: "Test Source"),
         )
 
         let prompt = ArticleSummaryPromptBuilder.buildPrompt(for: article)
@@ -22,7 +22,7 @@ struct ArticleSummaryPromptBuilderTests {
     func buildPromptIncludesSourceName() {
         let article = Article(
             title: "Test Article",
-            source: ArticleSource(id: "test", name: "The Guardian")
+            source: ArticleSource(id: "test", name: "The Guardian"),
         )
 
         let prompt = ArticleSummaryPromptBuilder.buildPrompt(for: article)
@@ -35,7 +35,7 @@ struct ArticleSummaryPromptBuilderTests {
         let article = Article(
             title: "Test Article",
             description: "This is a <strong>test</strong> description.",
-            source: ArticleSource(id: "test", name: "Test Source")
+            source: ArticleSource(id: "test", name: "Test Source"),
         )
 
         let prompt = ArticleSummaryPromptBuilder.buildPrompt(for: article)
@@ -49,7 +49,7 @@ struct ArticleSummaryPromptBuilderTests {
         let article = Article(
             title: "Test Article",
             source: ArticleSource(id: "test", name: "Test Source"),
-            content: longContent
+            content: longContent,
         )
 
         let prompt = ArticleSummaryPromptBuilder.buildPrompt(for: article)
@@ -63,7 +63,7 @@ struct ArticleSummaryPromptBuilderTests {
     func buildPromptWithMinimalArticle() {
         let article = Article(
             title: "Minimal Article",
-            source: ArticleSource(id: "minimal", name: "Minimal Source")
+            source: ArticleSource(id: "minimal", name: "Minimal Source"),
         )
 
         let prompt = ArticleSummaryPromptBuilder.buildPrompt(for: article)
@@ -80,7 +80,7 @@ struct ArticleSummaryPromptBuilderTests {
             title: "Full Article Title",
             description: "A detailed description",
             source: ArticleSource(id: "full", name: "Full Source"),
-            content: "The full article content here."
+            content: "The full article content here.",
         )
 
         let prompt = ArticleSummaryPromptBuilder.buildPrompt(for: article)
@@ -97,7 +97,7 @@ struct ArticleSummaryPromptBuilderTests {
             title: "Article with Empty Fields",
             description: "",
             source: ArticleSource(id: "empty", name: "Empty Source"),
-            content: ""
+            content: "",
         )
 
         let prompt = ArticleSummaryPromptBuilder.buildPrompt(for: article)
@@ -111,7 +111,7 @@ struct ArticleSummaryPromptBuilderTests {
     func buildPromptIncludesHeader() {
         let article = Article(
             title: "Test Article",
-            source: ArticleSource(id: "test", name: "Test Source")
+            source: ArticleSource(id: "test", name: "Test Source"),
         )
 
         let prompt = ArticleSummaryPromptBuilder.buildPrompt(for: article)
@@ -126,7 +126,7 @@ struct ArticleSummaryPromptBuilderTests {
         let article = Article(
             title: "Test Article",
             description: "<p>This is a <strong>test</strong> with <em>HTML</em> tags.</p>",
-            source: ArticleSource(id: "test", name: "Test Source")
+            source: ArticleSource(id: "test", name: "Test Source"),
         )
 
         let prompt = ArticleSummaryPromptBuilder.buildPrompt(for: article)
@@ -142,7 +142,7 @@ struct ArticleSummaryPromptBuilderTests {
         let article = Article(
             title: "Test Article",
             source: ArticleSource(id: "test", name: "Test Source"),
-            content: "<div><h1>Header</h1><p>Paragraph content</p></div>"
+            content: "<div><h1>Header</h1><p>Paragraph content</p></div>",
         )
 
         let prompt = ArticleSummaryPromptBuilder.buildPrompt(for: article)
@@ -158,7 +158,7 @@ struct ArticleSummaryPromptBuilderTests {
         let article = Article(
             title: "Test Article",
             description: "Text with&nbsp;non-breaking&nbsp;spaces",
-            source: ArticleSource(id: "test", name: "Test Source")
+            source: ArticleSource(id: "test", name: "Test Source"),
         )
 
         let prompt = ArticleSummaryPromptBuilder.buildPrompt(for: article)
@@ -172,7 +172,7 @@ struct ArticleSummaryPromptBuilderTests {
         let article = Article(
             title: "Test Article",
             description: "Apple &amp; Google partnership",
-            source: ArticleSource(id: "test", name: "Test Source")
+            source: ArticleSource(id: "test", name: "Test Source"),
         )
 
         let prompt = ArticleSummaryPromptBuilder.buildPrompt(for: article)
@@ -186,7 +186,7 @@ struct ArticleSummaryPromptBuilderTests {
         let article = Article(
             title: "Test Article",
             description: "Use &lt;script&gt; tags carefully",
-            source: ArticleSource(id: "test", name: "Test Source")
+            source: ArticleSource(id: "test", name: "Test Source"),
         )
 
         let prompt = ArticleSummaryPromptBuilder.buildPrompt(for: article)
@@ -200,7 +200,7 @@ struct ArticleSummaryPromptBuilderTests {
         let article = Article(
             title: "Test Article",
             description: "Value is &gt; 100",
-            source: ArticleSource(id: "test", name: "Test Source")
+            source: ArticleSource(id: "test", name: "Test Source"),
         )
 
         let prompt = ArticleSummaryPromptBuilder.buildPrompt(for: article)
@@ -214,7 +214,7 @@ struct ArticleSummaryPromptBuilderTests {
         let article = Article(
             title: "Test Article",
             description: "He said &quot;Hello World&quot;",
-            source: ArticleSource(id: "test", name: "Test Source")
+            source: ArticleSource(id: "test", name: "Test Source"),
         )
 
         let prompt = ArticleSummaryPromptBuilder.buildPrompt(for: article)
@@ -228,7 +228,7 @@ struct ArticleSummaryPromptBuilderTests {
         let article = Article(
             title: "Test Article",
             description: "It&#39;s a great day",
-            source: ArticleSource(id: "test", name: "Test Source")
+            source: ArticleSource(id: "test", name: "Test Source"),
         )
 
         let prompt = ArticleSummaryPromptBuilder.buildPrompt(for: article)
@@ -242,7 +242,7 @@ struct ArticleSummaryPromptBuilderTests {
         let article = Article(
             title: "Test Article",
             description: "&lt;div&gt;Apple &amp; Google&#39;s &quot;partnership&quot;&lt;/div&gt;",
-            source: ArticleSource(id: "test", name: "Test Source")
+            source: ArticleSource(id: "test", name: "Test Source"),
         )
 
         let prompt = ArticleSummaryPromptBuilder.buildPrompt(for: article)
@@ -255,7 +255,7 @@ struct ArticleSummaryPromptBuilderTests {
         let article = Article(
             title: "Test Article",
             description: "Text   with    multiple     spaces",
-            source: ArticleSource(id: "test", name: "Test Source")
+            source: ArticleSource(id: "test", name: "Test Source"),
         )
 
         let prompt = ArticleSummaryPromptBuilder.buildPrompt(for: article)
@@ -298,7 +298,7 @@ private extension Article {
         title: String,
         description: String? = nil,
         source: ArticleSource,
-        content: String? = nil
+        content: String? = nil,
     ) {
         self.init(
             id: id,
@@ -310,7 +310,7 @@ private extension Article {
             url: "https://example.com/\(id)",
             imageURL: nil,
             publishedAt: Date(),
-            category: nil
+            category: nil,
         )
     }
 }

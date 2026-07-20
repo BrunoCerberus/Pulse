@@ -59,7 +59,7 @@ struct BreakingNewsCard: View {
                 LinearGradient(
                     colors: [.clear, .black.opacity(0.8)],
                     startPoint: .top,
-                    endPoint: .bottom
+                    endPoint: .bottom,
                 )
 
                 VStack(alignment: .leading, spacing: 4) {
@@ -109,8 +109,8 @@ struct BreakingNewsCard: View {
                 format: Constants.accessibilityLabel,
                 item.title,
                 item.sourceName,
-                item.formattedDate
-            )
+                item.formattedDate,
+            ),
         )
         .accessibilityHint(Constants.readArticle)
     }
@@ -124,10 +124,10 @@ struct BreakingNewsCard: View {
                 source: ArticleSource(id: nil, name: "News Source"),
                 url: "https://example.com",
                 imageURL: "https://picsum.photos/300/200",
-                publishedAt: Date()
-            )
+                publishedAt: Date(),
+            ),
         ),
-        onTap: {}
+        onTap: {},
     )
     .padding()
     .preferredColorScheme(.dark)

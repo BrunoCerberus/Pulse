@@ -89,7 +89,7 @@ struct NetworkMonitorServiceTests {
         try await waitForStateUpdate(duration: TestWaitDuration.short)
 
         // Should only have one true value due to removeDuplicates
-        let trueCount = values.filter { $0 }.count
+        let trueCount = values.count(where: { $0 })
         #expect(trueCount == 1)
     }
 

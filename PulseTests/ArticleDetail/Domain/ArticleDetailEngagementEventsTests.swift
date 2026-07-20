@@ -23,7 +23,7 @@ struct ArticleDetailEngagementEventsTests {
     private func createSUT(article: Article? = nil) -> ArticleDetailDomainInteractor {
         ArticleDetailDomainInteractor(
             article: article ?? testArticle,
-            serviceLocator: serviceLocator
+            serviceLocator: serviceLocator,
         )
     }
 

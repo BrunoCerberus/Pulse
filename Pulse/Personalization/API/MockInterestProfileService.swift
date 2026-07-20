@@ -46,7 +46,7 @@ final class MockInterestProfileService: InterestProfileService, @unchecked Senda
         displayName: String,
         weightDelta: Double,
         source: InterestTopic.Source,
-        category: String?
+        category: String?,
     ) async throws {
         if let upsertError {
             throw upsertError
@@ -63,7 +63,7 @@ final class MockInterestProfileService: InterestProfileService, @unchecked Senda
                 category: existing.category ?? category,
                 lastReinforcedAt: .now,
                 createdAt: existing.createdAt,
-                source: existing.source
+                source: existing.source,
             )
         } else {
             storage[topicID] = InterestTopic(
@@ -73,7 +73,7 @@ final class MockInterestProfileService: InterestProfileService, @unchecked Senda
                 category: category,
                 lastReinforcedAt: .now,
                 createdAt: .now,
-                source: source
+                source: source,
             )
         }
         broadcastChange()
@@ -107,7 +107,7 @@ final class MockInterestProfileService: InterestProfileService, @unchecked Senda
                 displayName: category.displayName,
                 weightDelta: 1.0,
                 source: .seed,
-                category: category.rawValue
+                category: category.rawValue,
             )
         }
     }

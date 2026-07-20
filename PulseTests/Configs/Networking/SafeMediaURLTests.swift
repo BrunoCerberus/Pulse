@@ -19,7 +19,7 @@ struct SafeMediaURLTests {
             ("ftp://example.com/clip.mp4", false),
             ("pulse://home", false),
             ("/relative/path.mp4", false), // no scheme
-        ]
+        ],
     )
     func validatesOnlyHTTPS(urlString: String, expected: Bool) {
         #expect((SafeMediaURL.validated(urlString) != nil) == expected)

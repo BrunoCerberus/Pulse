@@ -10,7 +10,7 @@ final class GlassArticleCardSnapshotTests: XCTestCase {
     private let iPhoneAirConfig = ViewImageConfig(
         safeArea: UIEdgeInsets(top: 59, left: 0, bottom: 34, right: 0),
         size: CGSize(width: 393, height: 852),
-        traits: UITraitCollection(userInterfaceStyle: .dark)
+        traits: UITraitCollection(userInterfaceStyle: .dark),
     )
 
     /// Fixed date article for snapshot stability (Jan 1, 2023 - will always show consistent relative time)
@@ -26,7 +26,7 @@ final class GlassArticleCardSnapshotTests: XCTestCase {
             url: "https://example.com/1",
             imageURL: nil,
             publishedAt: Date(timeIntervalSince1970: 1_672_531_200), // Jan 1, 2023 00:00:00 UTC
-            category: .technology
+            category: .technology,
         )
     }
 
@@ -41,7 +41,7 @@ final class GlassArticleCardSnapshotTests: XCTestCase {
             url: "https://example.com/2",
             imageURL: nil,
             publishedAt: Date(timeIntervalSince1970: 1_672_531_200),
-            category: .world
+            category: .world,
         )
     }
 
@@ -56,7 +56,7 @@ final class GlassArticleCardSnapshotTests: XCTestCase {
             url: "https://example.com/3",
             imageURL: nil,
             publishedAt: Date(timeIntervalSince1970: 1_672_531_200),
-            category: .health
+            category: .health,
         )
     }
 
@@ -69,7 +69,7 @@ final class GlassArticleCardSnapshotTests: XCTestCase {
             isBookmarked: false,
             onTap: {},
             onBookmark: {},
-            onShare: {}
+            onShare: {},
         )
         .frame(width: 375)
         .padding()
@@ -80,7 +80,7 @@ final class GlassArticleCardSnapshotTests: XCTestCase {
         assertSnapshot(
             of: controller,
             as: SnapshotConfig.snapshotting(on: iPhoneAirConfig),
-            record: false
+            record: false,
         )
     }
 
@@ -91,7 +91,7 @@ final class GlassArticleCardSnapshotTests: XCTestCase {
             isBookmarked: true,
             onTap: {},
             onBookmark: {},
-            onShare: {}
+            onShare: {},
         )
         .frame(width: 375)
         .padding()
@@ -102,7 +102,7 @@ final class GlassArticleCardSnapshotTests: XCTestCase {
         assertSnapshot(
             of: controller,
             as: SnapshotConfig.snapshotting(on: iPhoneAirConfig),
-            record: false
+            record: false,
         )
     }
 
@@ -113,7 +113,7 @@ final class GlassArticleCardSnapshotTests: XCTestCase {
             isBookmarked: false,
             onTap: {},
             onBookmark: {},
-            onShare: {}
+            onShare: {},
         )
         .frame(width: 375)
         .padding()
@@ -124,7 +124,7 @@ final class GlassArticleCardSnapshotTests: XCTestCase {
         assertSnapshot(
             of: controller,
             as: SnapshotConfig.snapshotting(on: iPhoneAirConfig),
-            record: false
+            record: false,
         )
     }
 
@@ -135,7 +135,7 @@ final class GlassArticleCardSnapshotTests: XCTestCase {
             isBookmarked: false,
             onTap: {},
             onBookmark: {},
-            onShare: {}
+            onShare: {},
         )
         .frame(width: 375)
         .padding()
@@ -146,7 +146,7 @@ final class GlassArticleCardSnapshotTests: XCTestCase {
         assertSnapshot(
             of: controller,
             as: SnapshotConfig.snapshotting(on: iPhoneAirConfig),
-            record: false
+            record: false,
         )
     }
 
@@ -161,7 +161,7 @@ final class GlassArticleCardSnapshotTests: XCTestCase {
                 source: ArticleSource(id: nil, name: "Test Source"),
                 url: "https://example.com",
                 publishedAt: Date(timeIntervalSince1970: 1_672_531_200),
-                category: category
+                category: category,
             )
             let item = ArticleViewItem(from: article)
             let view = GlassArticleCard(
@@ -169,7 +169,7 @@ final class GlassArticleCardSnapshotTests: XCTestCase {
                 isBookmarked: false,
                 onTap: {},
                 onBookmark: {},
-                onShare: {}
+                onShare: {},
             )
             .frame(width: 375)
             .padding()
@@ -181,7 +181,7 @@ final class GlassArticleCardSnapshotTests: XCTestCase {
                 of: controller,
                 as: SnapshotConfig.snapshotting(on: iPhoneAirConfig),
                 record: false,
-                testName: "testGlassArticleCard_\(category.rawValue)"
+                testName: "testGlassArticleCard_\(category.rawValue)",
             )
         }
     }
@@ -193,7 +193,7 @@ final class GlassArticleCardSnapshotTests: XCTestCase {
             title: "Quick Update on Markets Today",
             sourceName: "Bloomberg",
             imageURL: nil,
-            onTap: {}
+            onTap: {},
         )
         .frame(width: 375)
         .padding()
@@ -204,7 +204,7 @@ final class GlassArticleCardSnapshotTests: XCTestCase {
         assertSnapshot(
             of: controller,
             as: SnapshotConfig.snapshotting(on: iPhoneAirConfig),
-            record: false
+            record: false,
         )
     }
 
@@ -213,7 +213,7 @@ final class GlassArticleCardSnapshotTests: XCTestCase {
             title: "Quick Update on Markets Today",
             sourceName: "Bloomberg",
             imageURL: nil,
-            onTap: {}
+            onTap: {},
         )
         .frame(width: 375)
         .padding()
@@ -224,7 +224,7 @@ final class GlassArticleCardSnapshotTests: XCTestCase {
         assertSnapshot(
             of: controller,
             as: SnapshotConfig.snapshotting(on: iPhoneAirConfig),
-            record: false
+            record: false,
         )
     }
 }

@@ -204,7 +204,7 @@ class BaseUITestCase: XCTestCase {
             throw XCTSkip(
                 "App is not running (state: \(app.state.rawValue)). Skipping remainder of test.",
                 file: file,
-                line: line
+                line: line,
             )
         }
         return true

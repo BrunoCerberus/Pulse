@@ -17,7 +17,7 @@ struct SourceArticlesSection: View {
                 articlesList
                     .transition(.asymmetric(
                         insertion: .opacity.combined(with: .scale(scale: 0.95, anchor: .top)),
-                        removal: .opacity.combined(with: .scale(scale: 0.95, anchor: .top))
+                        removal: .opacity.combined(with: .scale(scale: 0.95, anchor: .top)),
                     ))
             }
         }
@@ -120,7 +120,12 @@ private struct SourceArticleRow: View {
         .pressEffect()
         .accessibilityElement(children: .combine)
         .accessibilityLabel(
-            String(format: SourceArticlesSection.Constants.articleAccessibilityLabel, article.title, article.source, "")
+            String(
+                format: SourceArticlesSection.Constants.articleAccessibilityLabel,
+                article.title,
+                article.source,
+                "",
+            ),
         )
         .accessibilityHint(SourceArticlesSection.Constants.readArticleHint)
     }
@@ -169,7 +174,7 @@ private struct SourceArticleRow: View {
             FeedSourceArticle(from: Article.mockArticles[0]),
             FeedSourceArticle(from: Article.mockArticles[1]),
         ],
-        onArticleTapped: { _ in }
+        onArticleTapped: { _ in },
     )
     .padding()
     .preferredColorScheme(.dark)

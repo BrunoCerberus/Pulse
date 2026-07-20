@@ -27,7 +27,7 @@ struct LiveSettingsServiceTests {
             mutedKeywords: ["keyword1"],
             preferredLanguage: "en",
             notificationsEnabled: true,
-            breakingNewsNotifications: false
+            breakingNewsNotifications: false,
         )
         mockStorageService.userPreferences = testPreferences
         let sut = createSUT()
@@ -47,7 +47,7 @@ struct LiveSettingsServiceTests {
                     },
                     receiveValue: { preferences in
                         receivedPreferences = preferences
-                    }
+                    },
                 )
                 .store(in: &cancellables)
         }
@@ -75,7 +75,7 @@ struct LiveSettingsServiceTests {
                     },
                     receiveValue: { preferences in
                         receivedPreferences = preferences
-                    }
+                    },
                 )
                 .store(in: &cancellables)
         }
@@ -103,7 +103,7 @@ struct LiveSettingsServiceTests {
                         }
                         continuation.resume(returning: ())
                     },
-                    receiveValue: { _ in }
+                    receiveValue: { _ in },
                 )
                 .store(in: &cancellables)
         }
@@ -123,7 +123,7 @@ struct LiveSettingsServiceTests {
             mutedKeywords: [],
             preferredLanguage: "en",
             notificationsEnabled: false,
-            breakingNewsNotifications: true
+            breakingNewsNotifications: true,
         )
 
         var cancellables = Set<AnyCancellable>()
@@ -142,7 +142,7 @@ struct LiveSettingsServiceTests {
                         }
                         continuation.resume(returning: ())
                     },
-                    receiveValue: { _ in }
+                    receiveValue: { _ in },
                 )
                 .store(in: &cancellables)
         }
@@ -175,7 +175,7 @@ struct LiveSettingsServiceTests {
                         }
                         continuation.resume(returning: ())
                     },
-                    receiveValue: { _ in }
+                    receiveValue: { _ in },
                 )
                 .store(in: &cancellables)
         }

@@ -16,7 +16,7 @@ final class BookmarksUITests: BaseUITestCase {
         let navTitle = app.navigationBars["Bookmarks"]
         XCTAssertTrue(
             safeWaitForExistence(navTitle, timeout: Self.defaultTimeout),
-            "Navigation title 'Bookmarks' should exist"
+            "Navigation title 'Bookmarks' should exist",
         )
 
         // Verify tab is selected after navigation is confirmed
@@ -25,7 +25,7 @@ final class BookmarksUITests: BaseUITestCase {
         // --- Content Loading ---
         let noBookmarksText = app.staticTexts["No Bookmarks"]
         let savedArticlesText = app.staticTexts.matching(
-            NSPredicate(format: "label CONTAINS[c] 'saved articles'")
+            NSPredicate(format: "label CONTAINS[c] 'saved articles'"),
         ).firstMatch
         let loadingText = app.staticTexts["Loading bookmarks..."]
         let errorText = app.staticTexts["Unable to Load Bookmarks"]
@@ -33,7 +33,7 @@ final class BookmarksUITests: BaseUITestCase {
 
         let contentLoaded = waitForAny(
             [noBookmarksText, savedArticlesText, loadingText, errorText],
-            timeout: Self.defaultTimeout
+            timeout: Self.defaultTimeout,
         )
 
         XCTAssertTrue(contentLoaded, "Bookmarks view should show empty state, loading, or bookmarks list")
@@ -96,7 +96,7 @@ final class BookmarksUITests: BaseUITestCase {
         if noBookmarksExists {
             XCTAssertTrue(
                 safeWaitForExistence(app.staticTexts["No Bookmarks"], timeout: 10),
-                "Empty state should be preserved"
+                "Empty state should be preserved",
             )
         }
 
@@ -129,7 +129,7 @@ final class BookmarksUITests: BaseUITestCase {
                 app.staticTexts["No News Available"].exists
             XCTAssertTrue(
                 errorState,
-                "Home should show an empty or error state when articles are unavailable"
+                "Home should show an empty or error state when articles are unavailable",
             )
         }
 
@@ -142,7 +142,7 @@ final class BookmarksUITests: BaseUITestCase {
         XCTAssertTrue(safeWaitForExistence(bookmarksNav, timeout: Self.shortTimeout), "Should be on Bookmarks")
 
         let savedArticlesTextAfter = app.staticTexts.matching(
-            NSPredicate(format: "label CONTAINS[c] 'saved articles'")
+            NSPredicate(format: "label CONTAINS[c] 'saved articles'"),
         ).firstMatch
         let noBookmarksTextAfter = app.staticTexts["No Bookmarks"]
         let loadingTextAfter = app.staticTexts["Loading bookmarks..."]

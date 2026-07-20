@@ -121,7 +121,7 @@ struct HomeViewModelTests {
             isEditingTopics: false,
             isOfflineError: false,
             readArticleIDs: [],
-            recentlyRead: []
+            recentlyRead: [],
         )
 
         let viewState = reducer.reduce(domainState: domainState)

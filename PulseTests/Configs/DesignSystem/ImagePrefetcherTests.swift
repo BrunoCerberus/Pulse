@@ -141,7 +141,7 @@ struct ImagePrefetcherTests {
         await withTaskGroup(of: Void.self) { group in
             for _ in 0 ..< 10 {
                 group.addTask {
-                    let urls = (0 ..< 5).map { _ in self.uniqueURL() }
+                    let urls = (0 ..< 5).map { _ in uniqueURL() }
                     await prefetcher.prefetch(urls: urls)
                 }
             }

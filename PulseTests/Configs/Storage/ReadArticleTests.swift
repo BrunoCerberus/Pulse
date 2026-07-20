@@ -15,7 +15,7 @@ struct ReadArticleTests {
         url: String = "https://example.com/article",
         imageURL: String? = "https://example.com/image.jpg",
         publishedAt: Date = Date(timeIntervalSince1970: 1_000_000),
-        category: NewsCategory? = .technology
+        category: NewsCategory? = .technology,
     ) -> Article {
         Article(
             id: id,
@@ -27,7 +27,7 @@ struct ReadArticleTests {
             url: url,
             imageURL: imageURL,
             publishedAt: publishedAt,
-            category: category
+            category: category,
         )
     }
 
@@ -56,7 +56,7 @@ struct ReadArticleTests {
             author: nil,
             sourceID: nil,
             imageURL: nil,
-            category: nil
+            category: nil,
         )
         let readArticle = ReadArticle(from: article)
 

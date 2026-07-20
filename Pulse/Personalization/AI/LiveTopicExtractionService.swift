@@ -20,12 +20,12 @@ final class LiveTopicExtractionService: TopicExtractionService {
     func extractTopics(title: String, summary: String?) async throws -> [String] {
         let userPrompt = TopicExtractionPromptBuilder.buildPrompt(
             title: title,
-            summary: summary
+            summary: summary,
         )
         let stream = llmService.generateStream(
             prompt: userPrompt,
             systemPrompt: TopicExtractionPromptBuilder.systemPrompt,
-            config: .topicExtraction
+            config: .topicExtraction,
         )
 
         // Hard cap. `LLMInferenceConfig.topicExtraction.maxTokens = 80` is
@@ -56,7 +56,7 @@ extension LLMInferenceConfig {
             maxTokens: 80,
             temperature: 0.2,
             topP: 0.9,
-            stopSequences: ["\n\n", "</tags>"]
+            stopSequences: ["\n\n", "</tags>"],
         )
     }
 }

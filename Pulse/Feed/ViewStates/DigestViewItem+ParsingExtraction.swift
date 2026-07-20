@@ -19,7 +19,7 @@ extension DigestViewItem {
                 let afterMarkerNormalized = String(normalizedText[markerRange.upperBound...])
                 let content = extractContentUntilNextCategory(
                     afterMarkerOriginal,
-                    normalizedText: afterMarkerNormalized
+                    normalizedText: afterMarkerNormalized,
                 )
                 if !content.isEmpty {
                     return cleanCategoryContent(content)
@@ -128,7 +128,7 @@ extension DigestViewItem {
         result = result.replacingOccurrences(
             of: #"\([^)]*(?:News|Guardian|BBC|Reuters|CNN|Times)[^)]*\)"#,
             with: "",
-            options: .regularExpression
+            options: .regularExpression,
         )
 
         // Process line by line: strip bullets but preserve paragraph structure
@@ -145,7 +145,7 @@ extension DigestViewItem {
                     // Strip numbered list prefixes (e.g. "1. ", "2. ")
                     if let range = cleaned.range(
                         of: #"^\d+\.\s+"#,
-                        options: .regularExpression
+                        options: .regularExpression,
                     ) {
                         cleaned = String(cleaned[range.upperBound...])
                     }
@@ -175,7 +175,7 @@ extension DigestViewItem {
         }
 
         let topArticles = Array(articles.prefix(3))
-        let sources = Set(topArticles.map { $0.source }).joined(separator: ", ")
+        let sources = Set(topArticles.map(\.source)).joined(separator: ", ")
         let articleCount = articles.count
 
         let defaultIntros = ["You read about", "Your reading covered", "Notable stories included"]

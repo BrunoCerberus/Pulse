@@ -28,7 +28,7 @@ final class LiveInterestProfileService: InterestProfileService {
     func fetchProfile() async throws -> [InterestTopic] {
         let context = modelContainer.mainContext
         let descriptor = FetchDescriptor<InterestTopicModel>(
-            sortBy: [SortDescriptor(\.weight, order: .reverse)]
+            sortBy: [SortDescriptor(\.weight, order: .reverse)],
         )
         let rows = try context.fetch(descriptor)
         return rows.compactMap { $0.toTopic() }
@@ -42,7 +42,7 @@ final class LiveInterestProfileService: InterestProfileService {
         displayName: String,
         weightDelta: Double,
         source: InterestTopic.Source,
-        category: String?
+        category: String?,
     ) async throws {
         let context = modelContainer.mainContext
         try upsertWithoutSave(
@@ -51,7 +51,7 @@ final class LiveInterestProfileService: InterestProfileService {
             displayName: displayName,
             weightDelta: weightDelta,
             source: source,
-            category: category
+            category: category,
         )
         try context.save()
         broadcastChange()
@@ -72,7 +72,7 @@ final class LiveInterestProfileService: InterestProfileService {
                 displayName: topic.displayName,
                 weightDelta: topic.weightDelta,
                 source: topic.source,
-                category: topic.category
+                category: topic.category,
             )
         }
         try context.save()
@@ -92,11 +92,11 @@ final class LiveInterestProfileService: InterestProfileService {
         displayName: String,
         weightDelta: Double,
         source: InterestTopic.Source,
-        category: String?
+        category: String?,
     ) throws {
         let id = topicID
         let descriptor = FetchDescriptor<InterestTopicModel>(
-            predicate: #Predicate { $0.topicID == id }
+            predicate: #Predicate { $0.topicID == id },
         )
 
         let matches = try context.fetch(descriptor)
@@ -130,7 +130,7 @@ final class LiveInterestProfileService: InterestProfileService {
                 category: category,
                 lastReinforcedAt: .now,
                 createdAt: .now,
-                source: source
+                source: source,
             )
             context.insert(InterestTopicModel(from: topic))
         }
@@ -141,7 +141,7 @@ final class LiveInterestProfileService: InterestProfileService {
         let context = modelContainer.mainContext
         let id = topicID
         let descriptor = FetchDescriptor<InterestTopicModel>(
-            predicate: #Predicate { $0.topicID == id }
+            predicate: #Predicate { $0.topicID == id },
         )
         if let existing = try context.fetch(descriptor).first {
             context.delete(existing)
@@ -210,9 +210,9 @@ final class LiveInterestProfileService: InterestProfileService {
                     displayName: category.displayName,
                     weightDelta: 1.0,
                     source: .seed,
-                    category: category.rawValue
+                    category: category.rawValue,
                 )
-            }
+            },
         )
     }
 

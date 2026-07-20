@@ -48,7 +48,7 @@ final class PulseSettingsUITests: BaseUITestCase {
         let navigationTitle = app.navigationBars["Settings"]
         XCTAssertTrue(
             safeWaitForExistence(navigationTitle, timeout: Self.defaultTimeout),
-            "Settings navigation should exist"
+            "Settings navigation should exist",
         )
 
         let accountSection = app.staticTexts["Account"]
@@ -58,7 +58,7 @@ final class PulseSettingsUITests: BaseUITestCase {
         XCTAssertTrue(safeWaitForExistence(subscriptionSection, timeout: 5), "Subscription section should exist")
 
         let goPremiumText = app.staticTexts.matching(
-            NSPredicate(format: "label CONTAINS[c] 'Premium' OR label CONTAINS[c] 'premium'")
+            NSPredicate(format: "label CONTAINS[c] 'Premium' OR label CONTAINS[c] 'premium'"),
         ).firstMatch
         XCTAssertTrue(safeWaitForExistence(goPremiumText, timeout: 5), "Premium section should be visible")
 
@@ -105,7 +105,7 @@ final class PulseSettingsUITests: BaseUITestCase {
         let notificationsToggleAfter = app.switches["Enable Notifications"]
         XCTAssertTrue(
             scrollToElement(notificationsToggleAfter, in: settingsScrollContainer()),
-            "Notifications toggle should exist"
+            "Notifications toggle should exist",
         )
 
         let persistedValue = isSwitchOn(notificationsToggleAfter)
@@ -119,7 +119,7 @@ final class PulseSettingsUITests: BaseUITestCase {
         let appearanceSection = app.staticTexts["Appearance"]
         XCTAssertTrue(
             scrollToElement(appearanceSection, in: settingsScrollContainer()),
-            "Appearance section should exist"
+            "Appearance section should exist",
         )
 
         let systemThemeToggle = app.switches["Use System Theme"]
@@ -139,23 +139,23 @@ final class PulseSettingsUITests: BaseUITestCase {
         // --- Content Filters Section ---
         let container = settingsScrollContainer()
         let mutedSourcesText = app.staticTexts.matching(
-            NSPredicate(format: "label CONTAINS[c] 'Muted Sources'")
+            NSPredicate(format: "label CONTAINS[c] 'Muted Sources'"),
         ).firstMatch
         XCTAssertTrue(
             scrollToElement(mutedSourcesText, in: container),
-            "Muted Sources section should exist"
+            "Muted Sources section should exist",
         )
 
         let mutedKeywordsText = app.staticTexts.matching(
-            NSPredicate(format: "label CONTAINS[c] 'Muted Keywords'")
+            NSPredicate(format: "label CONTAINS[c] 'Muted Keywords'"),
         ).firstMatch
         XCTAssertTrue(
             scrollToElement(mutedKeywordsText, in: container),
-            "Muted Keywords section should exist"
+            "Muted Keywords section should exist",
         )
 
         let mutedSourcesButton = app.buttons.matching(
-            NSPredicate(format: "label CONTAINS[c] 'Muted Sources'")
+            NSPredicate(format: "label CONTAINS[c] 'Muted Sources'"),
         ).firstMatch
         if safeWaitForExistence(mutedSourcesButton, timeout: 3) {
             mutedSourcesButton.tap()
@@ -166,7 +166,7 @@ final class PulseSettingsUITests: BaseUITestCase {
         app.swipeUp()
 
         let mutedKeywordsButton = app.buttons.matching(
-            NSPredicate(format: "label CONTAINS[c] 'Muted Keywords'")
+            NSPredicate(format: "label CONTAINS[c] 'Muted Keywords'"),
         ).firstMatch
         if safeWaitForExistence(mutedKeywordsButton, timeout: 3) {
             mutedKeywordsButton.tap()

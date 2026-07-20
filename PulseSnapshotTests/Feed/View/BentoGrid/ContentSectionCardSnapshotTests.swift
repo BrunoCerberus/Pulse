@@ -22,8 +22,8 @@ final class ContentSectionCardSnapshotTests: XCTestCase {
                     url: "https://example.com/1",
                     imageURL: nil,
                     publishedAt: Date(timeIntervalSince1970: 1_672_531_200),
-                    category: .technology
-                )
+                    category: .technology,
+                ),
             ),
             FeedSourceArticle(
                 from: Article(
@@ -36,8 +36,8 @@ final class ContentSectionCardSnapshotTests: XCTestCase {
                     url: "https://example.com/2",
                     imageURL: nil,
                     publishedAt: Date(timeIntervalSince1970: 1_672_534_800),
-                    category: .technology
-                )
+                    category: .technology,
+                ),
             ),
         ]
     }
@@ -49,12 +49,12 @@ final class ContentSectionCardSnapshotTests: XCTestCase {
             content: "The technology sector saw significant developments "
                 + "with new AI models being announced and companies pivoting their strategies.",
             category: .technology,
-            relatedArticles: testArticles
+            relatedArticles: testArticles,
         )
 
         let view = ContentSectionCard(
             section: section,
-            onArticleTapped: { _ in }
+            onArticleTapped: { _ in },
         )
         .padding()
         .frame(width: 360)
@@ -65,7 +65,7 @@ final class ContentSectionCardSnapshotTests: XCTestCase {
         assertSnapshot(
             of: controller,
             as: SnapshotConfig.snapshotting(on: darkConfig),
-            record: false
+            record: false,
         )
     }
 
@@ -75,12 +75,12 @@ final class ContentSectionCardSnapshotTests: XCTestCase {
             title: "Technology",
             content: "The technology sector saw significant developments with new AI models being announced.",
             category: .technology,
-            relatedArticles: testArticles
+            relatedArticles: testArticles,
         )
 
         let view = ContentSectionCard(
             section: section,
-            onArticleTapped: { _ in }
+            onArticleTapped: { _ in },
         )
         .padding()
         .frame(width: 360)
@@ -91,7 +91,7 @@ final class ContentSectionCardSnapshotTests: XCTestCase {
         assertSnapshot(
             of: controller,
             as: SnapshotConfig.snapshotting(on: lightConfig),
-            record: false
+            record: false,
         )
     }
 
@@ -102,12 +102,12 @@ final class ContentSectionCardSnapshotTests: XCTestCase {
             content: "Business markets responded positively to the tech developments, "
                 + "with stock prices reflecting investor optimism.",
             category: .business,
-            relatedArticles: []
+            relatedArticles: [],
         )
 
         let view = ContentSectionCard(
             section: section,
-            onArticleTapped: { _ in }
+            onArticleTapped: { _ in },
         )
         .padding()
         .frame(width: 360)
@@ -118,7 +118,7 @@ final class ContentSectionCardSnapshotTests: XCTestCase {
         assertSnapshot(
             of: controller,
             as: SnapshotConfig.snapshotting(on: darkConfig),
-            record: false
+            record: false,
         )
     }
 
@@ -128,12 +128,12 @@ final class ContentSectionCardSnapshotTests: XCTestCase {
             title: "Deep Dive",
             content: "This section explores various topics without a specific category focus.",
             category: nil,
-            relatedArticles: testArticles
+            relatedArticles: testArticles,
         )
 
         let view = ContentSectionCard(
             section: section,
-            onArticleTapped: { _ in }
+            onArticleTapped: { _ in },
         )
         .padding()
         .frame(width: 360)
@@ -144,7 +144,7 @@ final class ContentSectionCardSnapshotTests: XCTestCase {
         assertSnapshot(
             of: controller,
             as: SnapshotConfig.snapshotting(on: darkConfig),
-            record: false
+            record: false,
         )
     }
 
@@ -154,12 +154,12 @@ final class ContentSectionCardSnapshotTests: XCTestCase {
             title: "World",
             content: "International coverage highlighted diplomatic relations and global economic trends.",
             category: .world,
-            relatedArticles: []
+            relatedArticles: [],
         )
 
         let view = ContentSectionCard(
             section: section,
-            onArticleTapped: { _ in }
+            onArticleTapped: { _ in },
         )
         .padding()
         .frame(width: 360)
@@ -170,7 +170,7 @@ final class ContentSectionCardSnapshotTests: XCTestCase {
         assertSnapshot(
             of: controller,
             as: SnapshotConfig.snapshotting(on: darkConfig),
-            record: false
+            record: false,
         )
     }
 }

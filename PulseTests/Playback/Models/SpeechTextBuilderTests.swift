@@ -8,7 +8,7 @@ struct SpeechTextBuilderTests {
         title: String = "Test Title",
         description: String? = nil,
         content: String? = nil,
-        author: String? = nil
+        author: String? = nil,
     ) -> Article {
         Article(
             title: title,
@@ -17,7 +17,7 @@ struct SpeechTextBuilderTests {
             author: author,
             source: ArticleSource(id: nil, name: "Test Source"),
             url: "https://example.com/article",
-            publishedAt: Date(timeIntervalSince1970: 1_700_000_000)
+            publishedAt: Date(timeIntervalSince1970: 1_700_000_000),
         )
     }
 
@@ -28,7 +28,7 @@ struct SpeechTextBuilderTests {
         let article = makeArticle(
             description: "A description.",
             content: "Full content here.",
-            author: "Jane Doe"
+            author: "Jane Doe",
         )
 
         let text = SpeechTextBuilder.speechText(for: article)
@@ -53,7 +53,7 @@ struct SpeechTextBuilderTests {
     @Test("article speech text strips HTML and entities")
     func articleSpeechTextStripsHTML() {
         let article = makeArticle(
-            description: "<p>Hello &amp; <b>world</b></p>"
+            description: "<p>Hello &amp; <b>world</b></p>",
         )
 
         let text = SpeechTextBuilder.speechText(for: article)

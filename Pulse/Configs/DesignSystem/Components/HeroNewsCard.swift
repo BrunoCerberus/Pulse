@@ -59,7 +59,7 @@ struct HeroNewsCard: View {
         .accessibilityElement(children: .combine)
         .accessibilityLabel(String(
             format: Constants.breakingNewsAccessibilityLabelFormat,
-            item.title, item.sourceName, item.formattedDate
+            item.title, item.sourceName, item.formattedDate,
         ))
         .accessibilityHint(Constants.accessibilityHint)
         .onAppear {
@@ -104,7 +104,7 @@ struct HeroNewsCard: View {
                 Color.blue.opacity(0.4),
             ],
             startPoint: .topLeading,
-            endPoint: .bottomTrailing
+            endPoint: .bottomTrailing,
         )
     }
 
@@ -129,8 +129,8 @@ struct HeroNewsCard: View {
             LinearGradient(
                 colors: [.clear, .black.opacity(0.6)],
                 startPoint: .top,
-                endPoint: .bottom
-            )
+                endPoint: .bottom,
+            ),
         )
     }
 
@@ -151,7 +151,7 @@ struct HeroNewsCard: View {
         .padding(.vertical, Spacing.xxs)
         .background(
             Capsule()
-                .fill(.red)
+                .fill(.red),
         )
         .glowEffect(color: .red, radius: isPulsing ? 8 : 4)
     }
@@ -181,7 +181,7 @@ struct HeroNewsCard: View {
         } else {
             withAnimation(
                 .easeInOut(duration: 1.0)
-                    .repeatForever(autoreverses: true)
+                    .repeatForever(autoreverses: true),
             ) {
                 isPulsing = true
             }
@@ -236,7 +236,7 @@ struct FeaturedArticleCard: View {
         .accessibilityElement(children: .combine)
         .accessibilityLabel(String(
             format: Constants.accessibilityLabelFormat,
-            item.title, item.sourceName, item.formattedDate
+            item.title, item.sourceName, item.formattedDate,
         ))
         .accessibilityHint(Constants.accessibilityHint)
     }
@@ -315,10 +315,10 @@ struct FeaturedArticleCard: View {
                             source: ArticleSource(id: nil, name: "Reuters"),
                             url: "https://example.com",
                             imageURL: "https://picsum.photos/400/300",
-                            publishedAt: Date()
-                        )
+                            publishedAt: Date(),
+                        ),
                     ),
-                    onTap: {}
+                    onTap: {},
                 )
 
                 HeroNewsCard(
@@ -328,10 +328,10 @@ struct FeaturedArticleCard: View {
                             source: ArticleSource(id: nil, name: "TechCrunch"),
                             url: "https://example.com",
                             imageURL: nil,
-                            publishedAt: Date()
-                        )
+                            publishedAt: Date(),
+                        ),
                     ),
-                    onTap: {}
+                    onTap: {},
                 )
             }
             .padding()

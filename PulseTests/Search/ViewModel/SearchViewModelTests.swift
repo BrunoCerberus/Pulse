@@ -170,7 +170,7 @@ struct SearchViewModelTests {
                 url: "https://example.com/\(index)",
                 imageURL: nil,
                 publishedAt: Date(),
-                category: .technology
+                category: .technology,
             )
         }
         mockSearchService.searchResult = .success(initialArticles)
@@ -193,7 +193,7 @@ struct SearchViewModelTests {
             url: "https://example.com/new-21",
             imageURL: nil,
             publishedAt: Date(),
-            category: .technology
+            category: .technology,
         )
         mockSearchService.searchResult = .success([newArticle])
 

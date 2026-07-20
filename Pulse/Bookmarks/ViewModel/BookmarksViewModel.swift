@@ -56,7 +56,7 @@ final class BookmarksViewModel: CombineViewModel, ObservableObject {
                     errorMessage: state.error,
                     showEmptyState: !state.isLoading && !state.isRefreshing && state.bookmarks.isEmpty,
                     selectedArticle: state.selectedArticle,
-                    articleToShare: state.articleToShare
+                    articleToShare: state.articleToShare,
                 )
             }
             .removeDuplicates()
@@ -100,7 +100,7 @@ struct BookmarksViewState: Equatable {
             errorMessage: nil,
             showEmptyState: false,
             selectedArticle: nil,
-            articleToShare: nil
+            articleToShare: nil,
         )
     }
 }

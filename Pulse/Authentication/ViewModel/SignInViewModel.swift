@@ -44,7 +44,7 @@ final class SignInViewModel: CombineViewModel, ObservableObject {
             .map { state in
                 SignInViewState(
                     isLoading: state.isLoading,
-                    errorMessage: state.error
+                    errorMessage: state.error,
                 )
             }
             .receive(on: DispatchQueue.main)

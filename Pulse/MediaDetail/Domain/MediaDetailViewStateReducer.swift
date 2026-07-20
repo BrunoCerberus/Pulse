@@ -13,7 +13,7 @@ struct MediaDetailViewStateReducer: ViewStateReducing {
             isLoading: domainState.isLoading,
             errorMessage: domainState.error,
             showShareSheet: domainState.showShareSheet,
-            isBookmarked: domainState.isBookmarked
+            isBookmarked: domainState.isBookmarked,
         )
     }
 

@@ -11,7 +11,7 @@ struct TopicExtractionDrainerTests {
         articleID: String = "a",
         title: String = "Article",
         kind: EngagementEvent.Kind = .read30s,
-        offset: TimeInterval = 0
+        offset: TimeInterval = 0,
     ) -> EngagementEvent {
         EngagementEvent(
             id: UUID(),
@@ -21,7 +21,7 @@ struct TopicExtractionDrainerTests {
             categoryRaw: NewsCategory.technology.rawValue,
             kind: kind,
             weight: nil,
-            occurredAt: Self.baseDate.addingTimeInterval(offset)
+            occurredAt: Self.baseDate.addingTimeInterval(offset),
         )
     }
 
@@ -39,7 +39,7 @@ struct TopicExtractionDrainerTests {
         let drainer = TopicExtractionDrainer(
             engagementService: engagement,
             extractionService: extraction,
-            profileService: profile
+            profileService: profile,
         )
         return Setup(engagement: engagement, extraction: extraction, profile: profile, sut: drainer)
     }

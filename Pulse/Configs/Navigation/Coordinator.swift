@@ -223,7 +223,7 @@ final class Coordinator: ObservableObject {
                 serviceLocator: serviceLocator,
                 onRelatedArticleTapped: { [weak self] relatedArticle in
                     self?.push(page: .articleDetail(relatedArticle))
-                }
+                },
             )
 
         case let .mediaDetail(article):
@@ -235,12 +235,12 @@ final class Coordinator: ObservableObject {
         case .readingHistory:
             ReadingHistoryView(
                 router: ReadingHistoryNavigationRouter(coordinator: self),
-                viewModel: ReadingHistoryViewModel(serviceLocator: serviceLocator)
+                viewModel: ReadingHistoryViewModel(serviceLocator: serviceLocator),
             )
 
         case .forYouSettings:
             ForYouSettingsView(
-                viewModel: ForYouSettingsViewModel(serviceLocator: serviceLocator)
+                viewModel: ForYouSettingsViewModel(serviceLocator: serviceLocator),
             )
         }
     }

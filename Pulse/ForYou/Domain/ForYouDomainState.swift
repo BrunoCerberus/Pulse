@@ -21,7 +21,7 @@ struct ForYouDomainState: Equatable {
         ForYouDomainState(
             scoredArticles: [],
             isLoading: false,
-            error: nil
+            error: nil,
         )
     }
 }

@@ -39,7 +39,7 @@ enum QuickActionType: String, CaseIterable {
             type: shortcutType,
             localizedTitle: localizedTitle,
             localizedSubtitle: nil,
-            icon: UIApplicationShortcutIcon(systemImageName: systemImageName)
+            icon: UIApplicationShortcutIcon(systemImageName: systemImageName),
         )
     }
 

@@ -33,7 +33,7 @@ enum RemoteConfigError: Error, LocalizedError {
     var errorDescription: String? {
         switch self {
         case .fetchFailed:
-            return "Failed to fetch remote configuration"
+            "Failed to fetch remote configuration"
         }
     }
 }

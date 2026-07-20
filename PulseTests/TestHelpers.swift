@@ -43,7 +43,7 @@ func waitForStateUpdate(duration: UInt64 = TestWaitDuration.standard) async thro
 func waitForCondition(
     timeout: UInt64 = 500_000_000,
     interval: UInt64 = 10_000_000,
-    condition: @escaping @MainActor () -> Bool
+    condition: @escaping @MainActor () -> Bool,
 ) async -> Bool {
     let deadline = DispatchTime.now().uptimeNanoseconds + timeout
     while DispatchTime.now().uptimeNanoseconds < deadline {
@@ -58,7 +58,7 @@ func waitForCondition(
 func waitForCondition(
     timeout: UInt64 = 500_000_000,
     interval: UInt64 = 10_000_000,
-    condition: sending @escaping () -> Bool
+    condition: sending @escaping () -> Bool,
 ) async -> Bool {
     let deadline = DispatchTime.now().uptimeNanoseconds + timeout
     while DispatchTime.now().uptimeNanoseconds < deadline {
@@ -107,7 +107,7 @@ func awaitPublisher<T>(_ publisher: AnyPublisher<T, Error>) async throws -> T {
                     resumed = true
                     nonisolated(unsafe) let value = value
                     continuation.resume(returning: value)
-                }
+                },
             )
     }
 }
@@ -168,7 +168,7 @@ enum TestServiceLocatorFactory {
         return TestMockServices(
             serviceLocator: serviceLocator,
             newsService: newsService,
-            storageService: storageService
+            storageService: storageService,
         )
     }
 }

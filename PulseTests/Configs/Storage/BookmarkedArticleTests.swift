@@ -18,7 +18,7 @@ struct BookmarkedArticleTests {
             url: "https://example.com/article",
             imageURL: "https://example.com/image.jpg",
             publishedAt: Date(timeIntervalSince1970: 1_700_000_000),
-            category: .technology
+            category: .technology,
         )
     }
 
@@ -126,7 +126,7 @@ struct BookmarkedArticleTests {
             url: "https://example.com",
             imageURL: nil,
             publishedAt: Date(),
-            category: nil
+            category: nil,
         )
 
         let bookmarked = BookmarkedArticle(from: articleWithNilDescription)
@@ -146,7 +146,7 @@ struct BookmarkedArticleTests {
             url: "https://example.com",
             imageURL: nil,
             publishedAt: Date(),
-            category: nil
+            category: nil,
         )
 
         let bookmarked = BookmarkedArticle(from: articleWithNilContent)
@@ -166,7 +166,7 @@ struct BookmarkedArticleTests {
             url: "https://example.com",
             imageURL: nil,
             publishedAt: Date(),
-            category: nil
+            category: nil,
         )
 
         let bookmarked = BookmarkedArticle(from: articleWithNilAuthor)
@@ -186,7 +186,7 @@ struct BookmarkedArticleTests {
             url: "https://example.com",
             imageURL: nil,
             publishedAt: Date(),
-            category: nil
+            category: nil,
         )
 
         let bookmarked = BookmarkedArticle(from: articleWithNilSourceId)
@@ -206,7 +206,7 @@ struct BookmarkedArticleTests {
             url: "https://example.com",
             imageURL: nil,
             publishedAt: Date(),
-            category: nil
+            category: nil,
         )
 
         let bookmarked = BookmarkedArticle(from: articleWithNilImageUrl)
@@ -226,7 +226,7 @@ struct BookmarkedArticleTests {
             url: "https://example.com",
             imageURL: nil,
             publishedAt: Date(),
-            category: nil
+            category: nil,
         )
 
         let bookmarked = BookmarkedArticle(from: articleWithNilCategory)
@@ -266,7 +266,7 @@ struct BookmarkedArticleTests {
             url: "https://example.com",
             imageURL: nil,
             publishedAt: Date(),
-            category: nil
+            category: nil,
         )
 
         let bookmarked = BookmarkedArticle(from: articleWithNilCategory)
@@ -290,7 +290,7 @@ struct BookmarkedArticleTests {
                 url: "https://example.com/\(category.rawValue)",
                 imageURL: nil,
                 publishedAt: Date(),
-                category: category
+                category: category,
             )
 
             let bookmarked = BookmarkedArticle(from: article)

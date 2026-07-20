@@ -154,33 +154,33 @@ struct MediaDetailDomainActionTests {
         #expect(MediaDetailDomainAction.pause == MediaDetailDomainAction.pause)
         #expect(
             MediaDetailDomainAction.seek(progress: 0.5) ==
-                MediaDetailDomainAction.seek(progress: 0.5)
+                MediaDetailDomainAction.seek(progress: 0.5),
         )
         #expect(
             MediaDetailDomainAction.skipBackward(seconds: 15) ==
-                MediaDetailDomainAction.skipBackward(seconds: 15)
+                MediaDetailDomainAction.skipBackward(seconds: 15),
         )
         #expect(
             MediaDetailDomainAction.skipForward(seconds: 30) ==
-                MediaDetailDomainAction.skipForward(seconds: 30)
+                MediaDetailDomainAction.skipForward(seconds: 30),
         )
         #expect(
             MediaDetailDomainAction.playbackProgressUpdated(progress: 0.5, currentTime: 60) ==
-                MediaDetailDomainAction.playbackProgressUpdated(progress: 0.5, currentTime: 60)
+                MediaDetailDomainAction.playbackProgressUpdated(progress: 0.5, currentTime: 60),
         )
         #expect(MediaDetailDomainAction.durationLoaded(120) == MediaDetailDomainAction.durationLoaded(120))
         #expect(MediaDetailDomainAction.playerLoading == MediaDetailDomainAction.playerLoading)
         #expect(MediaDetailDomainAction.playerReady == MediaDetailDomainAction.playerReady)
         #expect(
             MediaDetailDomainAction.playbackError("test") ==
-                MediaDetailDomainAction.playbackError("test")
+                MediaDetailDomainAction.playbackError("test"),
         )
         #expect(MediaDetailDomainAction.showShareSheet == MediaDetailDomainAction.showShareSheet)
         #expect(MediaDetailDomainAction.dismissShareSheet == MediaDetailDomainAction.dismissShareSheet)
         #expect(MediaDetailDomainAction.toggleBookmark == MediaDetailDomainAction.toggleBookmark)
         #expect(
             MediaDetailDomainAction.bookmarkStatusLoaded(true) ==
-                MediaDetailDomainAction.bookmarkStatusLoaded(true)
+                MediaDetailDomainAction.bookmarkStatusLoaded(true),
         )
         #expect(MediaDetailDomainAction.openInBrowser == MediaDetailDomainAction.openInBrowser)
     }
@@ -190,26 +190,26 @@ struct MediaDetailDomainActionTests {
         #expect(MediaDetailDomainAction.play != MediaDetailDomainAction.pause)
         #expect(
             MediaDetailDomainAction.seek(progress: 0.5) !=
-                MediaDetailDomainAction.seek(progress: 0.6)
+                MediaDetailDomainAction.seek(progress: 0.6),
         )
         #expect(
             MediaDetailDomainAction.skipBackward(seconds: 15) !=
-                MediaDetailDomainAction.skipBackward(seconds: 30)
+                MediaDetailDomainAction.skipBackward(seconds: 30),
         )
         #expect(
             MediaDetailDomainAction.skipForward(seconds: 10) !=
-                MediaDetailDomainAction.skipForward(seconds: 20)
+                MediaDetailDomainAction.skipForward(seconds: 20),
         )
         #expect(
             MediaDetailDomainAction.playbackProgressUpdated(progress: 0.5, currentTime: 60) !=
-                MediaDetailDomainAction.playbackProgressUpdated(progress: 0.6, currentTime: 60)
+                MediaDetailDomainAction.playbackProgressUpdated(progress: 0.6, currentTime: 60),
         )
         #expect(MediaDetailDomainAction.durationLoaded(120) != MediaDetailDomainAction.durationLoaded(180))
         #expect(MediaDetailDomainAction.playbackError("a") != MediaDetailDomainAction.playbackError("b"))
         #expect(MediaDetailDomainAction.showShareSheet != MediaDetailDomainAction.dismissShareSheet)
         #expect(
             MediaDetailDomainAction.bookmarkStatusLoaded(true) !=
-                MediaDetailDomainAction.bookmarkStatusLoaded(false)
+                MediaDetailDomainAction.bookmarkStatusLoaded(false),
         )
     }
 }

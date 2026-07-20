@@ -5,7 +5,7 @@ import Foundation
 struct OpenBookmarksIntent: AppIntent {
     static let title: LocalizedStringResource = "Show Saved Articles"
     static let description = IntentDescription(
-        "Opens Pulse on the Bookmarks tab so you can read your saved articles."
+        "Opens Pulse on the Bookmarks tab so you can read your saved articles.",
     )
 
     static let openAppWhenRun: Bool = true

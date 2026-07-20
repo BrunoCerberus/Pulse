@@ -33,7 +33,7 @@ struct PremiumGateViewTests {
         let view = PremiumGateView(
             feature: .dailyDigest,
             serviceLocator: serviceLocator,
-            onUnlockTapped: {}
+            onUnlockTapped: {},
         )
         #expect(view.onUnlockTapped != nil)
     }

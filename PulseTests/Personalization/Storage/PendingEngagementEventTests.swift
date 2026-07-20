@@ -15,7 +15,7 @@ struct PendingEngagementEventTests {
             categoryRaw: NewsCategory.science.rawValue,
             kind: kind,
             weight: 2.5,
-            occurredAt: Self.referenceDate
+            occurredAt: Self.referenceDate,
         )
     }
 

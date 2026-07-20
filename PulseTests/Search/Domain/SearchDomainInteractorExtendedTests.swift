@@ -200,7 +200,7 @@ struct SearchDomainInteractorExtendedTests {
 
         // Now make search fail
         mockSearchService.searchResult = .failure(
-            NSError(domain: "test", code: 1, userInfo: [NSLocalizedDescriptionKey: "Sort failed"])
+            NSError(domain: "test", code: 1, userInfo: [NSLocalizedDescriptionKey: "Sort failed"]),
         )
 
         sut.dispatch(action: .setSortOption(.popularity))
@@ -322,7 +322,7 @@ struct SearchDomainInteractorExtendedTests {
                 url: "https://example.com/\(index)",
                 imageURL: nil,
                 publishedAt: Date(),
-                category: nil
+                category: nil,
             )
         }
         mockSearchService.searchResult = .success(articles)

@@ -72,7 +72,7 @@ struct BookmarksDomainActionTests {
     func removeBookmarkSameIdAreEqual() {
         #expect(
             BookmarksDomainAction.removeBookmark(articleId: "article-123") ==
-                BookmarksDomainAction.removeBookmark(articleId: "article-123")
+                BookmarksDomainAction.removeBookmark(articleId: "article-123"),
         )
     }
 
@@ -80,7 +80,7 @@ struct BookmarksDomainActionTests {
     func removeBookmarkDifferentIdsAreNotEqual() {
         #expect(
             BookmarksDomainAction.removeBookmark(articleId: "article-123") !=
-                BookmarksDomainAction.removeBookmark(articleId: "article-456")
+                BookmarksDomainAction.removeBookmark(articleId: "article-456"),
         )
     }
 
@@ -88,7 +88,7 @@ struct BookmarksDomainActionTests {
     func selectArticleSameIdAreEqual() {
         #expect(
             BookmarksDomainAction.selectArticle(articleId: "article-123") ==
-                BookmarksDomainAction.selectArticle(articleId: "article-123")
+                BookmarksDomainAction.selectArticle(articleId: "article-123"),
         )
     }
 
@@ -96,7 +96,7 @@ struct BookmarksDomainActionTests {
     func selectArticleDifferentIdsAreNotEqual() {
         #expect(
             BookmarksDomainAction.selectArticle(articleId: "article-123") !=
-                BookmarksDomainAction.selectArticle(articleId: "article-456")
+                BookmarksDomainAction.selectArticle(articleId: "article-456"),
         )
     }
 
@@ -104,7 +104,7 @@ struct BookmarksDomainActionTests {
     func removeBookmarkNotEqualToSelectArticle() {
         #expect(
             BookmarksDomainAction.removeBookmark(articleId: "article-123") !=
-                BookmarksDomainAction.selectArticle(articleId: "article-123")
+                BookmarksDomainAction.selectArticle(articleId: "article-123"),
         )
     }
 

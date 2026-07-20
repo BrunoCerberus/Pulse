@@ -13,14 +13,14 @@ struct BookmarksDomainStateTests {
                 title: "Article 1",
                 source: ArticleSource(id: "source-1", name: "Source 1"),
                 url: "https://example.com/1",
-                publishedAt: Self.referenceDate
+                publishedAt: Self.referenceDate,
             ),
             Article(
                 id: "article-2",
                 title: "Article 2",
                 source: ArticleSource(id: "source-2", name: "Source 2"),
                 url: "https://example.com/2",
-                publishedAt: Self.referenceDate.addingTimeInterval(-3600)
+                publishedAt: Self.referenceDate.addingTimeInterval(-3600),
             ),
         ]
     }

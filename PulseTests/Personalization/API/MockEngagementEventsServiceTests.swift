@@ -8,7 +8,7 @@ struct MockEngagementEventsServiceTests {
 
     private func makeEvent(
         articleID: String = "a",
-        offset: TimeInterval = 0
+        offset: TimeInterval = 0,
     ) -> EngagementEvent {
         EngagementEvent(
             id: UUID(),
@@ -18,7 +18,7 @@ struct MockEngagementEventsServiceTests {
             categoryRaw: nil,
             kind: .read30s,
             weight: nil,
-            occurredAt: Self.baseDate.addingTimeInterval(offset)
+            occurredAt: Self.baseDate.addingTimeInterval(offset),
         )
     }
 

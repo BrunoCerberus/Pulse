@@ -6,7 +6,6 @@ import Testing
 
 @Suite("SearchDomainInteractor Tests")
 @MainActor
-// swiftlint:disable:next type_body_length
 struct SearchDomainInteractorTests {
     let mockSearchService: MockSearchService
     let mockStorageService: MockStorageService
@@ -40,7 +39,7 @@ struct SearchDomainInteractorTests {
                 url: "https://example.com/\(idPrefix)/\(index)",
                 imageURL: nil,
                 publishedAt: Date(),
-                category: .technology
+                category: .technology,
             )
         }
     }

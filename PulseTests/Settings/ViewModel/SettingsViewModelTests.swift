@@ -37,7 +37,7 @@ struct SettingsViewModelTests {
             mutedKeywords: ["keyword1"],
             preferredLanguage: "en",
             notificationsEnabled: true,
-            breakingNewsNotifications: false
+            breakingNewsNotifications: false,
         )
 
         sut.handle(event: .onAppear)
@@ -129,7 +129,7 @@ struct SettingsViewModelTests {
             mutedKeywords: [],
             preferredLanguage: "en",
             notificationsEnabled: true,
-            breakingNewsNotifications: true
+            breakingNewsNotifications: true,
         )
 
         sut.handle(event: .onAppear)
@@ -151,7 +151,7 @@ struct SettingsViewModelTests {
             mutedKeywords: ["keyword1", "keyword2"],
             preferredLanguage: "en",
             notificationsEnabled: true,
-            breakingNewsNotifications: true
+            breakingNewsNotifications: true,
         )
 
         sut.handle(event: .onAppear)

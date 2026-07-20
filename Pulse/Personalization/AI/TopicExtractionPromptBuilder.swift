@@ -43,7 +43,7 @@ enum TopicExtractionPromptBuilder {
         trimmed = trimmed.replacingOccurrences(
             of: "^```[a-zA-Z]*\\s*",
             with: "",
-            options: .regularExpression
+            options: .regularExpression,
         )
         trimmed = trimmed.replacingOccurrences(of: "```", with: "")
 

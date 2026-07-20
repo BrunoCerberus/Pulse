@@ -71,7 +71,7 @@ struct HomeViewState: Equatable {
             allTopics: NewsCategory.allCases,
             isEditingTopics: false,
             isOfflineError: false,
-            recentlyRead: []
+            recentlyRead: [],
         )
     }
 }

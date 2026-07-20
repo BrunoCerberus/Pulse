@@ -40,7 +40,7 @@ final class LivePlaybackQueueService: PlaybackQueueService {
         ttsService: TextToSpeechService,
         analyticsService: AnalyticsService?,
         engagementEventsService: EngagementEventsService? = nil,
-        notificationCenter: NotificationCenter = .default
+        notificationCenter: NotificationCenter = .default,
     ) {
         self.ttsService = ttsService
         self.analyticsService = analyticsService
@@ -76,7 +76,7 @@ final class LivePlaybackQueueService: PlaybackQueueService {
             TTSLiveActivityController.shared.start(
                 displayInfo: .init(title: item.title, source: item.sourceName,
                                    position: currentState.queuePositionLabel),
-                speedLabel: currentState.speedPreset.label
+                speedLabel: currentState.speedPreset.label,
             )
         }
 
@@ -238,18 +238,18 @@ final class LivePlaybackQueueService: PlaybackQueueService {
             .removeDuplicates()
             .receive(on: DispatchQueue.main)
             .sink { [weak self] ttsState in
-                guard let self, self.currentState.currentIndex != nil else { return }
+                guard let self, currentState.currentIndex != nil else { return }
                 guard ttsState == .playing || ttsState == .paused else { return }
-                self.updateState { $0.playbackState = ttsState }
+                updateState { $0.playbackState = ttsState }
                 // Progress events stop while paused; push play/pause to Activity immediately.
-                self.syncLiveActivity()
+                syncLiveActivity()
             }
             .store(in: &cancellables)
         ttsService.progressPublisher
             .receive(on: DispatchQueue.main)
             .sink { [weak self] progress in
-                guard let self, self.currentState.currentIndex != nil else { return }
-                self.updateState { $0.itemProgress = progress }
+                guard let self, currentState.currentIndex != nil else { return }
+                updateState { $0.itemProgress = progress }
             }
             .store(in: &cancellables)
         ttsService.didFinishUtterancePublisher
@@ -259,15 +259,15 @@ final class LivePlaybackQueueService: PlaybackQueueService {
                 // Finish event is delivered one runloop hop after sending. If a new
                 // utterance started in that window (queue was replaced), the event
                 // belongs to the previous queue — acting on it would skip ahead.
-                guard self.ttsService.currentPlaybackState == .idle else { return }
-                guard let index = self.currentState.currentIndex else { return }
-                if self.currentState.hasNext {
-                    self.advance(to: index + 1)
+                guard ttsService.currentPlaybackState == .idle else { return }
+                guard let index = currentState.currentIndex else { return }
+                if currentState.hasNext {
+                    advance(to: index + 1)
                 } else {
-                    if self.currentState.mode == .briefing {
-                        self.analyticsService?.logEvent(.briefingCompleted)
+                    if currentState.mode == .briefing {
+                        analyticsService?.logEvent(.briefingCompleted)
                     }
-                    self.teardownPlayback()
+                    teardownPlayback()
                 }
             }
             .store(in: &cancellables)
@@ -299,12 +299,12 @@ final class LivePlaybackQueueService: PlaybackQueueService {
         notificationCenter.publisher(for: AVAudioSession.routeChangeNotification)
             .receive(on: DispatchQueue.main)
             .sink { [weak self] notification in
-                guard let self, self.currentState.playbackState == .playing,
+                guard let self, currentState.playbackState == .playing,
                       let reasonValue = notification.userInfo?[AVAudioSessionRouteChangeReasonKey] as? UInt,
                       let reason = AVAudioSession.RouteChangeReason(rawValue: reasonValue),
                       reason == .oldDeviceUnavailable
                 else { return }
-                self.ttsService.pause()
+                ttsService.pause()
             }
             .store(in: &cancellables)
     }
@@ -348,12 +348,12 @@ final class LivePlaybackQueueService: PlaybackQueueService {
         let generation = liveActivitySyncGeneration, previousTask = liveActivitySyncTask
         liveActivitySyncTask = Task { @MainActor [weak self] in
             await previousTask?.value
-            guard let self, generation == self.liveActivitySyncGeneration else { return }
+            guard let self, generation == liveActivitySyncGeneration else { return }
             await TTSLiveActivityController.shared.update(
                 isPlaying: state.playbackState == .playing, progress: state.itemProgress,
                 speedLabel: state.speedPreset.label,
                 displayInfo: .init(title: item.title, source: item.sourceName,
-                                   position: state.queuePositionLabel)
+                                   position: state.queuePositionLabel),
             )
         }
     }

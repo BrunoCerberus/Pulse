@@ -26,7 +26,7 @@ struct TTSLiveActivityControllerTests {
         // The call must complete without throwing or crashing.
         controller.start(
             displayInfo: .init(title: "Test article", source: "Test source", position: "1/5"),
-            speedLabel: "1x"
+            speedLabel: "1x",
         )
 
         // Whether or not the activity actually started depends on the
@@ -60,11 +60,11 @@ struct TTSLiveActivityControllerTests {
 
         await controller.update(
             isPlaying: true, progress: 0.5, speedLabel: "1x",
-            displayInfo: .init(title: "Title", source: "Source", position: nil)
+            displayInfo: .init(title: "Title", source: "Source", position: nil),
         )
         await controller.update(
             isPlaying: false, progress: 1.0, speedLabel: "2x",
-            displayInfo: .init(title: "Other title", source: "Other source", position: "3/7")
+            displayInfo: .init(title: "Other title", source: "Other source", position: "3/7"),
         )
 
         #expect(controller.isActive == false)
@@ -83,7 +83,7 @@ struct TTSActivityAttributesTests {
             speedLabel: "1.25x",
             currentTitle: "SwiftUI 6.0 Brings Revolutionary New Features",
             currentSource: "TechCrunch",
-            queuePosition: "2/11"
+            queuePosition: "2/11",
         )
 
         let encoder = JSONEncoder()
@@ -108,7 +108,7 @@ struct TTSActivityAttributesTests {
             speedLabel: "1x",
             currentTitle: "Title",
             currentSource: "Source",
-            queuePosition: nil
+            queuePosition: nil,
         )
 
         let data = try JSONEncoder().encode(original)
@@ -125,7 +125,7 @@ struct TTSActivityAttributesTests {
             progress: Double = 0.35,
             speedLabel: String = "1x",
             currentTitle: String = "Title",
-            queuePosition: String? = "2/11"
+            queuePosition: String? = "2/11",
         ) -> TTSActivityAttributes.ContentState {
             TTSActivityAttributes.ContentState(
                 isPlaying: isPlaying,
@@ -133,7 +133,7 @@ struct TTSActivityAttributesTests {
                 speedLabel: speedLabel,
                 currentTitle: currentTitle,
                 currentSource: "Source",
-                queuePosition: queuePosition
+                queuePosition: queuePosition,
             )
         }
 
@@ -153,7 +153,7 @@ struct TTSActivityAttributesTests {
             speedLabel: "1.5x",
             currentTitle: "Title",
             currentSource: "Source",
-            queuePosition: "4/9"
+            queuePosition: "4/9",
         )
         let stateB = TTSActivityAttributes.ContentState(
             isPlaying: true,
@@ -161,7 +161,7 @@ struct TTSActivityAttributesTests {
             speedLabel: "1.5x",
             currentTitle: "Title",
             currentSource: "Source",
-            queuePosition: "4/9"
+            queuePosition: "4/9",
         )
 
         var hasherA = Hasher()

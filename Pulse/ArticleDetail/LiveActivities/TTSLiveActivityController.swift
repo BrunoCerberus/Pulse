@@ -40,7 +40,7 @@ final class TTSLiveActivityController {
             .init(
                 title: PromptSanitizer.sanitize(title, maxLength: Self.maxLabelLength),
                 source: PromptSanitizer.sanitize(source, maxLength: Self.maxLabelLength),
-                position: position
+                position: position,
             )
         }
 
@@ -71,7 +71,7 @@ final class TTSLiveActivityController {
         guard ActivityAuthorizationInfo().areActivitiesEnabled else {
             Logger.shared.service(
                 "TTSLiveActivityController: Live Activities not enabled, skipping start",
-                level: .info
+                level: .info,
             )
             return
         }
@@ -80,11 +80,11 @@ final class TTSLiveActivityController {
             isPlaying: true,
             progress: 0.0,
             speedLabel: speedLabel,
-            displayInfo: displayInfo
+            displayInfo: displayInfo,
         )
         let content = ActivityContent(
             state: initialState,
-            staleDate: Date().addingTimeInterval(Self.staleInterval)
+            staleDate: Date().addingTimeInterval(Self.staleInterval),
         )
 
         // Replacing a session: await the old activity's end before requesting
@@ -107,12 +107,12 @@ final class TTSLiveActivityController {
             currentActivity = try Activity<TTSActivityAttributes>.request(
                 attributes: TTSActivityAttributes(),
                 content: content,
-                pushType: nil
+                pushType: nil,
             )
         } catch {
             Logger.shared.service(
                 "TTSLiveActivityController: failed to start activity: \(error)",
-                level: .warning
+                level: .warning,
             )
         }
     }
@@ -128,7 +128,7 @@ final class TTSLiveActivityController {
         isPlaying: Bool,
         progress: Double,
         speedLabel: String,
-        displayInfo: PlaybackDisplayInfo
+        displayInfo: PlaybackDisplayInfo,
     ) async {
         guard let activity = currentActivity else { return }
 
@@ -136,7 +136,7 @@ final class TTSLiveActivityController {
             isPlaying: isPlaying,
             progress: progress,
             speedLabel: speedLabel,
-            displayInfo: displayInfo
+            displayInfo: displayInfo,
         )
 
         // Refresh the stale date on every update so a live, actively-updating
@@ -165,7 +165,7 @@ final class TTSLiveActivityController {
         isPlaying: Bool,
         progress: Double,
         speedLabel: String,
-        displayInfo: PlaybackDisplayInfo
+        displayInfo: PlaybackDisplayInfo,
     ) -> TTSActivityAttributes.ContentState {
         let trimmed = displayInfo.trimmed()
         return TTSActivityAttributes.ContentState(
@@ -174,7 +174,7 @@ final class TTSLiveActivityController {
             speedLabel: speedLabel,
             currentTitle: trimmed.title,
             currentSource: trimmed.source,
-            queuePosition: trimmed.position
+            queuePosition: trimmed.position,
         )
     }
 }

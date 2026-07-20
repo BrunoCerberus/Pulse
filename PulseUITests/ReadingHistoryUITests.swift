@@ -70,7 +70,7 @@ final class ReadingHistoryUITests: BaseUITestCase {
         let readingHistoryNav = app.navigationBars["Reading History"]
         XCTAssertTrue(
             safeWaitForExistence(readingHistoryNav, timeout: Self.defaultTimeout),
-            "Navigation title 'Reading History' should exist"
+            "Navigation title 'Reading History' should exist",
         )
 
         // --- Wait for content ---
@@ -102,7 +102,7 @@ final class ReadingHistoryUITests: BaseUITestCase {
                         detailBack.tap()
                         XCTAssertTrue(
                             safeWaitForExistence(readingHistoryNav, timeout: Self.defaultTimeout),
-                            "Should return to Reading History"
+                            "Should return to Reading History",
                         )
                     }
                 }

@@ -17,7 +17,7 @@ final class ArticleDetailUITests: BaseUITestCase {
 
         // Find and tap first article card
         let articleCards = app.buttons.matching(
-            NSPredicate(format: "label CONTAINS[c] 'ago' OR label CONTAINS[c] 'hour' OR label CONTAINS[c] 'minute'")
+            NSPredicate(format: "label CONTAINS[c] 'ago' OR label CONTAINS[c] 'hour' OR label CONTAINS[c] 'minute'"),
         )
 
         guard ObjCExceptionCatcher.safeCount(for: articleCards) > 0 else {
@@ -53,7 +53,7 @@ final class ArticleDetailUITests: BaseUITestCase {
         let backButton = app.buttons["backButton"]
         XCTAssertTrue(
             safeWaitForExistence(backButton, timeout: 3),
-            "Back button should exist in navigation bar"
+            "Back button should exist in navigation bar",
         )
 
         let bookmarkButton = app.navigationBars.buttons["bookmark"]
@@ -69,18 +69,18 @@ final class ArticleDetailUITests: BaseUITestCase {
             bookmarkButton.tap()
             XCTAssertTrue(
                 safeWaitForExistence(bookmarkFilledButton, timeout: 3),
-                "Bookmark should become filled after tapping"
+                "Bookmark should become filled after tapping",
             )
         } else if safeExists(bookmarkFilledButton) {
             bookmarkFilledButton.tap()
             XCTAssertTrue(
                 safeWaitForExistence(bookmarkButton, timeout: 3),
-                "Bookmark should become unfilled after tapping"
+                "Bookmark should become unfilled after tapping",
             )
             bookmarkButton.tap()
             XCTAssertTrue(
                 safeWaitForExistence(bookmarkFilledButton, timeout: 3),
-                "Bookmark should become filled after tapping again"
+                "Bookmark should become filled after tapping again",
             )
         }
 
@@ -110,7 +110,7 @@ final class ArticleDetailUITests: BaseUITestCase {
         let backButtonAfterShare = app.buttons["backButton"]
         XCTAssertTrue(
             safeWaitForExistence(backButtonAfterShare, timeout: 10),
-            "Back button should exist after share sheet dismissed"
+            "Back button should exist after share sheet dismissed",
         )
 
         // --- Article Content ---
@@ -118,7 +118,7 @@ final class ArticleDetailUITests: BaseUITestCase {
         XCTAssertTrue(ObjCExceptionCatcher.safeCount(for: staticTexts) > 0, "Article detail should have text content")
 
         let hasMetadata = ObjCExceptionCatcher.safeCount(for: staticTexts.matching(
-            NSPredicate(format: "label CONTAINS[c] 'By' OR label CONTAINS[c] 'ago' OR label CONTAINS[c] 'hour'")
+            NSPredicate(format: "label CONTAINS[c] 'By' OR label CONTAINS[c] 'ago' OR label CONTAINS[c] 'hour'"),
         )) > 0
         XCTAssertTrue(hasMetadata, "Article should display metadata (author, source, or date)")
 
@@ -133,11 +133,11 @@ final class ArticleDetailUITests: BaseUITestCase {
         }
 
         let readFullButton = app.buttons.matching(
-            NSPredicate(format: "label CONTAINS[c] 'Read Full Article'")
+            NSPredicate(format: "label CONTAINS[c] 'Read Full Article'"),
         ).firstMatch
         XCTAssertTrue(
             safeWaitForExistence(readFullButton, timeout: 3),
-            "Read Full Article button should be visible after scrolling"
+            "Read Full Article button should be visible after scrolling",
         )
 
         // Scroll to top by repeated swipe down gestures
@@ -162,7 +162,7 @@ final class ArticleDetailUITests: BaseUITestCase {
         var backButtonIsReady = false
         let backPollDeadline = Date().addingTimeInterval(5)
         while Date() < backPollDeadline {
-            if safeExists(backButtonAfterShare) && !backButtonAfterShare.frame.isEmpty {
+            if safeExists(backButtonAfterShare), !backButtonAfterShare.frame.isEmpty {
                 backButtonIsReady = true
                 break
             }

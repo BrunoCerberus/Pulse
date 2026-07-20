@@ -32,7 +32,7 @@ struct MemoryTierTests {
         // Should be one of the valid cases
         #expect(
             current == .constrained || current == .standard || current == .high,
-            "Current memory tier should be a valid case"
+            "Current memory tier should be a valid case",
         )
     }
 }

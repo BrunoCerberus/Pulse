@@ -17,7 +17,7 @@ struct ArticleDetailDomainStateTests {
             url: "https://example.com/article",
             imageURL: "https://example.com/image.jpg",
             publishedAt: Self.referenceDate,
-            category: .technology
+            category: .technology,
         )
     }
 
@@ -43,7 +43,7 @@ struct ArticleDetailDomainStateTests {
             title: "Custom Title",
             source: ArticleSource(id: "source", name: "Source"),
             url: "https://example.com",
-            publishedAt: Date()
+            publishedAt: Date(),
         )
 
         let state = ArticleDetailDomainState.initial(article: customArticle)
@@ -159,7 +159,7 @@ struct ArticleDetailDomainStateTests {
             title: "Different Title",
             source: ArticleSource(id: "source", name: "Source"),
             url: "https://example.com",
-            publishedAt: Date()
+            publishedAt: Date(),
         )
         let state2 = ArticleDetailDomainState.initial(article: differentArticle)
 

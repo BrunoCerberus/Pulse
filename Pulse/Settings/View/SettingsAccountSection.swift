@@ -172,7 +172,7 @@ private struct InitialPlaceholderView: View {
         currentUser: AuthUser.mock,
         isDeletingAccount: false,
         onSignOutTapped: {},
-        onDeleteAccountTapped: {}
+        onDeleteAccountTapped: {},
     )
     .preferredColorScheme(.dark)
 }
@@ -182,7 +182,7 @@ private struct InitialPlaceholderView: View {
         currentUser: nil,
         isDeletingAccount: false,
         onSignOutTapped: {},
-        onDeleteAccountTapped: {}
+        onDeleteAccountTapped: {},
     )
     .preferredColorScheme(.dark)
 }

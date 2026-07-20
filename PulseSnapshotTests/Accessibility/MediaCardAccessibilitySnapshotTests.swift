@@ -20,8 +20,8 @@ final class MediaCardAccessibilitySnapshotTests: XCTestCase {
                 publishedAt: Date(timeIntervalSince1970: 1_672_531_200),
                 mediaType: .video,
                 mediaURL: "https://youtube.com",
-                mediaDuration: 1245
-            )
+                mediaDuration: 1245,
+            ),
         )
     }
 
@@ -30,7 +30,7 @@ final class MediaCardAccessibilitySnapshotTests: XCTestCase {
             item: snapshotMediaItem,
             onTap: {},
             onPlay: {},
-            onShare: {}
+            onShare: {},
         )
         .frame(width: 375)
         .padding()
@@ -41,7 +41,7 @@ final class MediaCardAccessibilitySnapshotTests: XCTestCase {
         assertSnapshot(
             of: controller,
             as: SnapshotConfig.snapshotting(on: SnapshotConfig.iPhoneAirAccessibility),
-            record: false
+            record: false,
         )
     }
 
@@ -50,7 +50,7 @@ final class MediaCardAccessibilitySnapshotTests: XCTestCase {
             item: snapshotMediaItem,
             onTap: {},
             onPlay: {},
-            onShare: {}
+            onShare: {},
         )
         .frame(width: 375)
         .padding()
@@ -61,7 +61,7 @@ final class MediaCardAccessibilitySnapshotTests: XCTestCase {
         assertSnapshot(
             of: controller,
             as: SnapshotConfig.snapshotting(on: SnapshotConfig.iPhoneAirExtraExtraLarge),
-            record: false
+            record: false,
         )
     }
 }

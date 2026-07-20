@@ -19,25 +19,25 @@ struct ArticleDetailEventActionMap: DomainEventActionMap {
     func map(event: ArticleDetailViewEvent) -> ArticleDetailDomainAction? {
         switch event {
         case .onAppear:
-            return .onAppear
+            .onAppear
         case .onBookmarkTapped:
-            return .toggleBookmark
+            .toggleBookmark
         case .onShareTapped:
-            return .showShareSheet
+            .showShareSheet
         case .onSummarizeTapped:
-            return .showSummarizationSheet
+            .showSummarizationSheet
         case .onReadFullTapped:
-            return .openInBrowser
+            .openInBrowser
         case .onListenTapped:
-            return .listen
+            .listen
         case .onShareSheetDismissed:
-            return .dismissShareSheet
+            .dismissShareSheet
         case .onSummarizationSheetDismissed:
-            return .dismissSummarizationSheet
+            .dismissSummarizationSheet
         case .onDisappear:
             // Deliberately unmapped: playback lives in the global queue and
             // must survive navigating away from the article.
-            return nil
+            nil
         }
     }
 }

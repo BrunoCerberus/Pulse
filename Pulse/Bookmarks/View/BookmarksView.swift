@@ -40,7 +40,7 @@ struct BookmarksView<R: BookmarksNavigationRouter>: View {
         }
         .sheet(item: Binding(
             get: { viewModel.viewState.articleToShare },
-            set: { _ in viewModel.handle(event: .onShareDismissed) }
+            set: { _ in viewModel.handle(event: .onShareDismissed) },
         )) { article in
             ShareSheet(activityItems: ShareItemsBuilder.activityItems(for: article))
         }
@@ -146,7 +146,7 @@ struct BookmarksView<R: BookmarksNavigationRouter>: View {
         if horizontalSizeClass == .regular {
             LazyVGrid(
                 columns: [GridItem(.adaptive(minimum: 360), spacing: Spacing.md)],
-                spacing: Spacing.md
+                spacing: Spacing.md,
             ) {
                 ForEach(bookmarks) { item in
                     bookmarkCard(item)
@@ -172,7 +172,7 @@ struct BookmarksView<R: BookmarksNavigationRouter>: View {
             },
             onShare: {
                 viewModel.handle(event: .onShareTapped(articleId: item.id))
-            }
+            },
         )
         .fadeIn(delay: Double(item.animationIndex) * 0.03)
     }
@@ -183,7 +183,7 @@ struct BookmarksView<R: BookmarksNavigationRouter>: View {
                 .foregroundStyle(Color.Accent.primary)
             Text(String(
                 format: Constants.savedCountFormat(for: viewModel.viewState.bookmarks.count),
-                viewModel.viewState.bookmarks.count
+                viewModel.viewState.bookmarks.count,
             ))
             .font(Typography.captionLarge)
             .foregroundStyle(.secondary)
@@ -200,7 +200,7 @@ struct BookmarksView<R: BookmarksNavigationRouter>: View {
     NavigationStack {
         BookmarksView(
             router: BookmarksNavigationRouter(),
-            viewModel: BookmarksViewModel(serviceLocator: .preview)
+            viewModel: BookmarksViewModel(serviceLocator: .preview),
         )
     }
     .preferredColorScheme(.dark)

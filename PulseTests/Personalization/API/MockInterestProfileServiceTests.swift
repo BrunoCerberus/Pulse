@@ -10,7 +10,7 @@ struct MockInterestProfileServiceTests {
         let sut = MockInterestProfileService()
         try await sut.upsert(
             topicID: "ai", displayName: "AI",
-            weightDelta: 1.5, source: .extracted, category: nil
+            weightDelta: 1.5, source: .extracted, category: nil,
         )
         #expect(sut.topics.count == 1)
         #expect(sut.topics.first?.weight == 1.5)
@@ -22,11 +22,11 @@ struct MockInterestProfileServiceTests {
         let sut = MockInterestProfileService()
         try await sut.upsert(
             topicID: "ai", displayName: "AI",
-            weightDelta: 1.0, source: .seed, category: nil
+            weightDelta: 1.0, source: .seed, category: nil,
         )
         try await sut.upsert(
             topicID: "ai", displayName: "AI",
-            weightDelta: 2.0, source: .extracted, category: nil
+            weightDelta: 2.0, source: .extracted, category: nil,
         )
         #expect(sut.topics.first?.weight == 3.0)
         #expect(sut.topics.first?.source == .seed)

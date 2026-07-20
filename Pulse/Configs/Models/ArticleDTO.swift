@@ -44,7 +44,7 @@ struct ArticleDTO: Codable {
             url: url,
             imageURL: urlToImage,
             publishedAt: date,
-            category: category
+            category: category,
         )
     }
 

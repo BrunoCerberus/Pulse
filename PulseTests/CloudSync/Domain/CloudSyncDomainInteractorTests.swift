@@ -24,7 +24,7 @@ struct CloudSyncDomainInteractorTests {
 
         sut = CloudSyncDomainInteractor(
             serviceLocator: serviceLocator,
-            notificationCenter: notificationCenter
+            notificationCenter: notificationCenter,
         )
     }
 

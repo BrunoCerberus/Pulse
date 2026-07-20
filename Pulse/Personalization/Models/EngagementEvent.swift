@@ -36,7 +36,7 @@ struct EngagementEvent: Equatable, Codable, Identifiable {
         categoryRaw: String?,
         kind: Kind,
         weight: Double? = nil,
-        occurredAt: Date = .now
+        occurredAt: Date = .now,
     ) {
         self.id = id
         self.articleID = articleID
@@ -73,7 +73,7 @@ extension EngagementEvent {
             categoryRaw: article.category?.rawValue,
             kind: kind,
             weight: weight,
-            occurredAt: occurredAt
+            occurredAt: occurredAt,
         )
     }
 }

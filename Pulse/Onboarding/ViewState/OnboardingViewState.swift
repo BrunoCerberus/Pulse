@@ -11,7 +11,7 @@ struct OnboardingViewState: Equatable {
             currentPage: .welcome,
             isLastPage: false,
             selectedTopics: [],
-            isCompleted: false
+            isCompleted: false,
         )
     }
 }

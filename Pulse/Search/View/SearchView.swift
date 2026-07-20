@@ -3,7 +3,6 @@ import SwiftUI
 
 // MARK: - SearchView
 
-// swiftlint:disable:next type_body_length
 struct SearchView<R: SearchNavigationRouter>: View {
     /// Router responsible for navigation actions
     private var router: R
@@ -38,10 +37,10 @@ struct SearchView<R: SearchNavigationRouter>: View {
         .searchable(
             text: Binding(
                 get: { viewModel.viewState.query },
-                set: { viewModel.handle(event: .onQueryChanged($0)) }
+                set: { viewModel.handle(event: .onQueryChanged($0)) },
             ),
             placement: .navigationBarDrawer(displayMode: .always),
-            prompt: Constants.prompt
+            prompt: Constants.prompt,
         )
         .onSubmit(of: .search) {
             HapticManager.shared.tap()
@@ -49,7 +48,7 @@ struct SearchView<R: SearchNavigationRouter>: View {
         }
         .sheet(item: Binding(
             get: { viewModel.viewState.articleToShare },
-            set: { _ in viewModel.handle(event: .onShareDismissed) }
+            set: { _ in viewModel.handle(event: .onShareDismissed) },
         )) { article in
             ShareSheet(activityItems: ShareItemsBuilder.activityItems(for: article))
         }
@@ -306,7 +305,7 @@ private extension SearchView {
         if horizontalSizeClass == .regular {
             LazyVGrid(
                 columns: [GridItem(.adaptive(minimum: 360), spacing: Spacing.md)],
-                spacing: Spacing.md
+                spacing: Spacing.md,
             ) {
                 ForEach(results) { item in
                     resultCard(item, lastItemId: lastItemId)
@@ -333,7 +332,7 @@ private extension SearchView {
             },
             onShare: {
                 viewModel.handle(event: .onShareTapped(articleId: item.id))
-            }
+            },
         )
         .fadeIn(delay: Double(item.animationIndex) * 0.03)
         .onAppear {
@@ -353,7 +352,7 @@ private extension SearchView {
             set: {
                 HapticManager.shared.selectionChanged()
                 viewModel.handle(event: .onSortChanged($0))
-            }
+            },
         )) {
             ForEach(SearchSortOption.allCases) { option in
                 Text(option.displayName).tag(option)
@@ -367,7 +366,7 @@ private extension SearchView {
     NavigationStack {
         SearchView(
             router: SearchNavigationRouter(),
-            viewModel: SearchViewModel(serviceLocator: .preview)
+            viewModel: SearchViewModel(serviceLocator: .preview),
         )
     }
     .preferredColorScheme(.dark)

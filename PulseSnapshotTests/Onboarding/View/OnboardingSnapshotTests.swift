@@ -24,7 +24,7 @@ final class OnboardingSnapshotTests: XCTestCase {
         assertSnapshot(
             of: controller,
             as: SnapshotConfig.snapshotting(on: SnapshotConfig.iPhoneAir),
-            record: false
+            record: false,
         )
     }
 
@@ -38,7 +38,7 @@ final class OnboardingSnapshotTests: XCTestCase {
         assertSnapshot(
             of: controller,
             as: SnapshotConfig.snapshotting(on: SnapshotConfig.iPhoneAir),
-            record: false
+            record: false,
         )
     }
 
@@ -50,7 +50,7 @@ final class OnboardingSnapshotTests: XCTestCase {
         assertSnapshot(
             of: controller,
             as: SnapshotConfig.snapshotting(on: SnapshotConfig.iPhoneAirLight),
-            record: false
+            record: false,
         )
     }
 
@@ -64,7 +64,7 @@ final class OnboardingSnapshotTests: XCTestCase {
         assertSnapshot(
             of: controller,
             as: SnapshotConfig.snapshotting(on: SnapshotConfig.iPhoneAir),
-            record: false
+            record: false,
         )
     }
 
@@ -81,7 +81,7 @@ final class OnboardingSnapshotTests: XCTestCase {
         assertSnapshot(
             of: controller,
             as: SnapshotConfig.snapshotting(on: SnapshotConfig.iPhoneAir),
-            record: false
+            record: false,
         )
     }
 }

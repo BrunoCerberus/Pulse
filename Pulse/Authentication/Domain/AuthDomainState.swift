@@ -19,7 +19,7 @@ struct AuthDomainState: Equatable {
         AuthDomainState(
             isLoading: false,
             error: nil,
-            user: nil
+            user: nil,
         )
     }
 }

@@ -77,7 +77,7 @@ final class DiskNewsCacheStore: NewsCacheStore {
         do {
             try fileManager.setAttributes(
                 [.protectionKey: FileProtectionType.complete],
-                ofItemAtPath: directory.path
+                ofItemAtPath: directory.path,
             )
         } catch {
             Logger.shared.service("Failed to set file protection on cache directory: \(error)", level: .warning)
@@ -86,19 +86,19 @@ final class DiskNewsCacheStore: NewsCacheStore {
         guard let contents = try? fileManager.contentsOfDirectory(
             at: directory,
             includingPropertiesForKeys: nil,
-            options: [.skipsHiddenFiles, .skipsSubdirectoryDescendants]
+            options: [.skipsHiddenFiles, .skipsSubdirectoryDescendants],
         ) else { return }
 
         for url in contents {
             do {
                 try fileManager.setAttributes(
                     [.protectionKey: FileProtectionType.complete],
-                    ofItemAtPath: url.path
+                    ofItemAtPath: url.path,
                 )
             } catch {
                 Logger.shared.service(
                     "Failed to upgrade file protection on \(url.lastPathComponent): \(error)",
-                    level: .warning
+                    level: .warning,
                 )
             }
         }
@@ -126,7 +126,7 @@ final class DiskNewsCacheStore: NewsCacheStore {
         }
     }
 
-    func set<T>(_ entry: CacheEntry<T>, for key: NewsCacheKey) {
+    func set(_ entry: CacheEntry<some Any>, for key: NewsCacheKey) {
         ioQueue.sync {
             guard let payloadData = encodePayload(entry.data) else { return }
 
@@ -170,7 +170,7 @@ final class DiskNewsCacheStore: NewsCacheStore {
             do {
                 files = try fileManager.contentsOfDirectory(
                     at: cacheDirectory,
-                    includingPropertiesForKeys: nil
+                    includingPropertiesForKeys: nil,
                 )
             } catch {
                 Logger.shared.service("Failed to list disk cache directory: \(error)", level: .warning)
@@ -183,7 +183,7 @@ final class DiskNewsCacheStore: NewsCacheStore {
                 } catch {
                     Logger.shared.service(
                         "Disk cache cleanup failed for \(file.lastPathComponent): \(error)",
-                        level: .debug
+                        level: .debug,
                     )
                 }
             }

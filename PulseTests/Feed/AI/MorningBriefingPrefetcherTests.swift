@@ -25,7 +25,7 @@ struct MorningBriefingPrefetcherTests {
 
     private func makeSUT(
         isPremium: Bool? = true,
-        preferences: UserPreferences
+        preferences: UserPreferences,
     ) -> MorningBriefingPrefetcher {
         mockSettingsService.preferences = preferences
         return MorningBriefingPrefetcher(
@@ -35,7 +35,7 @@ struct MorningBriefingPrefetcherTests {
             settingsService: mockSettingsService,
             briefingCacheService: mockBriefingCacheService,
             notificationService: mockNotificationService,
-            storeKitService: isPremium.map { MockStoreKitService(isPremium: $0) }
+            storeKitService: isPremium.map { MockStoreKitService(isPremium: $0) },
         )
     }
 
@@ -47,7 +47,7 @@ struct MorningBriefingPrefetcherTests {
             preferredLanguage: "en", notificationsEnabled: true, breakingNewsNotifications: true,
             morningBriefingEnabled: true,
             morningBriefingHour: components.hour ?? 7,
-            morningBriefingMinute: components.minute ?? 0
+            morningBriefingMinute: components.minute ?? 0,
         )
     }
 
@@ -99,7 +99,7 @@ struct MorningBriefingPrefetcherTests {
         mockBriefingCacheService.fetchResult = PregeneratedBriefing(
             digest: DailyDigest(id: "cached", summary: "s", sourceArticles: [], generatedAt: Date()),
             queueArticles: [],
-            generatedAt: Date()
+            generatedAt: Date(),
         )
         let sut = makeSUT(preferences: enabledPreferences(hoursFromNow: 2))
 
@@ -117,7 +117,7 @@ struct MorningBriefingPrefetcherTests {
             Article(
                 id: "a1", title: "Title", description: "Desc", content: "Content",
                 source: ArticleSource(id: nil, name: "Source"), url: "https://example.com/a1",
-                publishedAt: Date()
+                publishedAt: Date(),
             ),
         ])
         let sut = makeSUT(preferences: enabledPreferences(hoursFromNow: 2))
@@ -125,7 +125,7 @@ struct MorningBriefingPrefetcherTests {
         sut.prefetchIfNeeded()
 
         let stored = await waitForCondition(timeout: 3_000_000_000) { @MainActor in
-            self.mockBriefingCacheService.storeCallCount > 0
+            mockBriefingCacheService.storeCallCount > 0
         }
         #expect(stored)
         #expect(mockFeedService.loadModelCallCount > 0)
@@ -139,7 +139,7 @@ struct MorningBriefingPrefetcherTests {
             Article(
                 id: "a1", title: "Title", description: "Desc", content: "Content",
                 source: ArticleSource(id: nil, name: "Source"), url: "https://example.com/a1",
-                publishedAt: Date()
+                publishedAt: Date(),
             ),
         ])
         var preferences = enabledPreferences(hoursFromNow: 2)
@@ -149,7 +149,7 @@ struct MorningBriefingPrefetcherTests {
         sut.prefetchIfNeeded()
 
         let stored = await waitForCondition(timeout: 3_000_000_000) { @MainActor in
-            self.mockBriefingCacheService.storeCallCount > 0
+            mockBriefingCacheService.storeCallCount > 0
         }
         #expect(stored)
         #expect(mockForYouService.lastTopN == 4)
@@ -162,7 +162,7 @@ struct MorningBriefingPrefetcherTests {
             Article(
                 id: "a1", title: "Title", description: "Desc", content: "Content",
                 source: ArticleSource(id: nil, name: "Source"), url: "https://example.com/a1",
-                publishedAt: Date()
+                publishedAt: Date(),
             ),
         ])
         let sut = makeSUT(preferences: enabledPreferences(hoursFromNow: 2))
@@ -186,7 +186,7 @@ struct MorningBriefingPrefetcherTests {
             Article(
                 id: "a1", title: "Title", description: "Desc", content: "Content",
                 source: ArticleSource(id: nil, name: "Source"), url: "https://example.com/a1",
-                publishedAt: Date()
+                publishedAt: Date(),
             ),
         ])
         let sut = makeSUT(preferences: enabledPreferences(hoursFromNow: 2))
@@ -195,7 +195,7 @@ struct MorningBriefingPrefetcherTests {
         sut.prefetchIfNeeded()
 
         _ = await waitForCondition(timeout: 3_000_000_000) { @MainActor in
-            self.mockBriefingCacheService.storeCallCount > 0
+            mockBriefingCacheService.storeCallCount > 0
         }
         #expect(mockBriefingCacheService.storeCallCount == 1)
     }

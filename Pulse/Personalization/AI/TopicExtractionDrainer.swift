@@ -45,7 +45,7 @@ final class TopicExtractionDrainer {
     init(
         engagementService: EngagementEventsService,
         extractionService: TopicExtractionService,
-        profileService: InterestProfileService
+        profileService: InterestProfileService,
     ) {
         self.engagementService = engagementService
         self.extractionService = extractionService
@@ -59,7 +59,7 @@ final class TopicExtractionDrainer {
         observer = NotificationCenter.default.addObserver(
             forName: UIApplication.didEnterBackgroundNotification,
             object: nil,
-            queue: .main
+            queue: .main,
         ) { [weak self] _ in
             // Hop to MainActor (the notification queue is already main, but
             // the closure isn't isolated — explicit hop satisfies the type
@@ -100,9 +100,9 @@ final class TopicExtractionDrainer {
             // inside `performDrain` still apply per pass — both leave the queue
             // intact for a later attempt.
             repeat {
-                self.rerunRequested = false
-                await self.performDrain(batchSize: batchSize)
-            } while self.rerunRequested && !Task.isCancelled
+                rerunRequested = false
+                await performDrain(batchSize: batchSize)
+            } while rerunRequested && !Task.isCancelled
         }
         currentDrainTask = task
         await task.value
@@ -133,7 +133,7 @@ final class TopicExtractionDrainer {
         } catch {
             Logger.shared.service(
                 "TopicExtractionDrainer: failed to fetch pending events: \(error)",
-                level: .warning
+                level: .warning,
             )
             return
         }
@@ -145,7 +145,7 @@ final class TopicExtractionDrainer {
             // then drain on the next background notification.
             Logger.shared.service(
                 "TopicExtractionDrainer: model not loaded, deferring \(pending.count) event(s)",
-                level: .debug
+                level: .debug,
             )
             return
         }
@@ -164,7 +164,7 @@ final class TopicExtractionDrainer {
             do {
                 let tags = try await extraction.value.extractTopics(
                     title: event.articleTitle,
-                    summary: event.articleSummary
+                    summary: event.articleSummary,
                 )
                 do {
                     try await engagement.value.markProcessed([event.id])
@@ -172,7 +172,7 @@ final class TopicExtractionDrainer {
                 } catch {
                     Logger.shared.service(
                         "TopicExtractionDrainer: markProcessed failed for \(event.articleID); skipping apply: \(error)",
-                        level: .warning
+                        level: .warning,
                     )
                     break
                 }
@@ -184,7 +184,7 @@ final class TopicExtractionDrainer {
                 // retries them instead of dropping the engagement signal.
                 Logger.shared.service(
                     "TopicExtractionDrainer: transient LLM error (\(error)), stopping batch",
-                    level: .warning
+                    level: .warning,
                 )
                 break
             } catch {
@@ -192,7 +192,7 @@ final class TopicExtractionDrainer {
                 // the same poison-pill event forever), continue.
                 Logger.shared.service(
                     "TopicExtractionDrainer: extraction failed for \(event.articleID): \(error)",
-                    level: .debug
+                    level: .debug,
                 )
                 try? await engagement.value.markProcessed([event.id])
             }
@@ -202,7 +202,7 @@ final class TopicExtractionDrainer {
     private func applyTags(
         _ tags: [String],
         for event: EngagementEvent,
-        profile: UncheckedSendableBox<InterestProfileService>
+        profile: UncheckedSendableBox<InterestProfileService>,
     ) async {
         guard !tags.isEmpty else { return }
         let perTagWeight = event.weight / Double(tags.count)
@@ -220,7 +220,7 @@ final class TopicExtractionDrainer {
                     displayName: TopicExtractionPromptBuilder.displayName(for: tag),
                     weightDelta: perTagWeight,
                     source: .extracted,
-                    category: event.categoryRaw
+                    category: event.categoryRaw,
                 )
             }
             try? await live.upsertMany(upserts)
@@ -233,7 +233,7 @@ final class TopicExtractionDrainer {
                 displayName: TopicExtractionPromptBuilder.displayName(for: tag),
                 weightDelta: perTagWeight,
                 source: .extracted,
-                category: event.categoryRaw
+                category: event.categoryRaw,
             )
         }
     }

@@ -22,7 +22,7 @@ struct OnboardingViewStateReducerTests {
         let domainState = OnboardingDomainState(
             currentPage: .getStarted,
             selectedTopics: [],
-            isCompleted: false
+            isCompleted: false,
         )
         let viewState = sut.reduce(domainState: domainState)
 
@@ -34,7 +34,7 @@ struct OnboardingViewStateReducerTests {
         let domainState = OnboardingDomainState(
             currentPage: .aiPowered,
             selectedTopics: [],
-            isCompleted: false
+            isCompleted: false,
         )
         let viewState = sut.reduce(domainState: domainState)
 
@@ -46,7 +46,7 @@ struct OnboardingViewStateReducerTests {
         let domainState = OnboardingDomainState(
             currentPage: .chooseTopics,
             selectedTopics: [],
-            isCompleted: false
+            isCompleted: false,
         )
         let viewState = sut.reduce(domainState: domainState)
 
@@ -58,7 +58,7 @@ struct OnboardingViewStateReducerTests {
         let domainState = OnboardingDomainState(
             currentPage: .chooseTopics,
             selectedTopics: [.technology, .science],
-            isCompleted: false
+            isCompleted: false,
         )
         let viewState = sut.reduce(domainState: domainState)
 
@@ -70,7 +70,7 @@ struct OnboardingViewStateReducerTests {
         let domainState = OnboardingDomainState(
             currentPage: .getStarted,
             selectedTopics: [],
-            isCompleted: true
+            isCompleted: true,
         )
         let viewState = sut.reduce(domainState: domainState)
 

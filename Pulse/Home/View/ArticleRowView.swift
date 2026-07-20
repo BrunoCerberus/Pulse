@@ -107,8 +107,8 @@ struct ArticleRowView: View {
                 format: Constants.accessibilityLabel,
                 item.title,
                 item.sourceName,
-                item.formattedDate
-            )
+                item.formattedDate,
+            ),
         )
         .accessibilityHint(Constants.readArticle)
         .contextMenu {
@@ -140,12 +140,12 @@ struct ArticleRowView: View {
                 url: "https://example.com",
                 imageURL: "https://picsum.photos/200",
                 publishedAt: Date(),
-                category: .technology
-            )
+                category: .technology,
+            ),
         ),
         onTap: {},
         onBookmark: {},
-        onShare: {}
+        onShare: {},
     )
     .preferredColorScheme(.dark)
 }

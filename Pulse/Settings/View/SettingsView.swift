@@ -30,12 +30,12 @@ struct SettingsView: View {
                     currentUser: viewModel.viewState.currentUser,
                     isDeletingAccount: viewModel.viewState.isDeletingAccount,
                     onSignOutTapped: { viewModel.handle(event: .onSignOutTapped) },
-                    onDeleteAccountTapped: { viewModel.handle(event: .onDeleteAccountTapped) }
+                    onDeleteAccountTapped: { viewModel.handle(event: .onDeleteAccountTapped) },
                 )
 
                 SettingsPremiumSection(
                     isPremium: isPremium,
-                    onUpgradeTapped: { isPaywallPresented = true }
+                    onUpgradeTapped: { isPaywallPresented = true },
                 )
 
                 personalizationSection
@@ -51,16 +51,16 @@ struct SettingsView: View {
                     mutedKeywords: viewModel.viewState.mutedKeywords,
                     newMutedSource: Binding(
                         get: { viewModel.viewState.newMutedSource },
-                        set: { viewModel.handle(event: .onNewMutedSourceChanged($0)) }
+                        set: { viewModel.handle(event: .onNewMutedSourceChanged($0)) },
                     ),
                     newMutedKeyword: Binding(
                         get: { viewModel.viewState.newMutedKeyword },
-                        set: { viewModel.handle(event: .onNewMutedKeywordChanged($0)) }
+                        set: { viewModel.handle(event: .onNewMutedKeywordChanged($0)) },
                     ),
                     onAddMutedSource: { viewModel.handle(event: .onAddMutedSource) },
                     onRemoveMutedSource: { viewModel.handle(event: .onRemoveMutedSource($0)) },
                     onAddMutedKeyword: { viewModel.handle(event: .onAddMutedKeyword) },
-                    onRemoveMutedKeyword: { viewModel.handle(event: .onRemoveMutedKeyword($0)) }
+                    onRemoveMutedKeyword: { viewModel.handle(event: .onRemoveMutedKeyword($0)) },
                 )
 
                 legalSection
@@ -71,7 +71,7 @@ struct SettingsView: View {
         .navigationTitle(Constants.title)
         .alert(Constants.signOut, isPresented: Binding(
             get: { viewModel.viewState.showSignOutConfirmation },
-            set: { _ in viewModel.handle(event: .onCancelSignOut) }
+            set: { _ in viewModel.handle(event: .onCancelSignOut) },
         )) {
             Button(Constants.cancel, role: .cancel) {
                 HapticManager.shared.tap()
@@ -86,7 +86,7 @@ struct SettingsView: View {
         }
         .alert(Constants.deleteAccountTitle, isPresented: Binding(
             get: { viewModel.viewState.showDeleteAccountConfirmation },
-            set: { _ in viewModel.handle(event: .onCancelDeleteAccount) }
+            set: { _ in viewModel.handle(event: .onCancelDeleteAccount) },
         )) {
             Button(Constants.cancel, role: .cancel) {
                 HapticManager.shared.tap()
@@ -107,8 +107,8 @@ struct SettingsView: View {
                     if !$0 {
                         viewModel.handle(event: .onDismissError)
                     }
-                }
-            )
+                },
+            ),
         ) {
             Button(AppLocalization.localized("common.ok"), role: .cancel) {
                 viewModel.handle(event: .onDismissError)
@@ -124,8 +124,8 @@ struct SettingsView: View {
                     if !$0 {
                         viewModel.handle(event: .onDismissNotificationsDeniedAlert)
                     }
-                }
-            )
+                },
+            ),
         ) {
             Button(AppLocalization.localized("common.cancel"), role: .cancel) {
                 viewModel.handle(event: .onDismissNotificationsDeniedAlert)
@@ -158,7 +158,7 @@ struct SettingsView: View {
             onDismiss: {
                 Task { await refreshPremiumStatus() }
             },
-            content: { PaywallView(viewModel: paywallViewModel) }
+            content: { PaywallView(viewModel: paywallViewModel) },
         )
     }
 
@@ -211,14 +211,14 @@ struct SettingsView: View {
                 Constants.enableNotifications,
                 isOn: Binding(
                     get: { viewModel.viewState.notificationsEnabled },
-                    set: { viewModel.handle(event: .onToggleNotifications($0)) }
-                )
+                    set: { viewModel.handle(event: .onToggleNotifications($0)) },
+                ),
             )
 
             Toggle(Constants.breakingNewsAlerts, isOn: Binding(
                 // Preserves child preference when parent toggle is disabled.
                 get: { viewModel.viewState.notificationsEnabled && viewModel.viewState.breakingNewsEnabled },
-                set: { viewModel.handle(event: .onToggleBreakingNews($0)) }
+                set: { viewModel.handle(event: .onToggleBreakingNews($0)) },
             ))
             .disabled(!viewModel.viewState.notificationsEnabled)
         }
@@ -236,8 +236,8 @@ struct SettingsView: View {
                             return
                         }
                         viewModel.handle(event: .onToggleMorningBriefing(newValue))
-                    }
-                )
+                    },
+                ),
             )
 
             if viewModel.viewState.morningBriefingEnabled {
@@ -245,18 +245,18 @@ struct SettingsView: View {
                     Constants.morningBriefingTime,
                     selection: Binding(
                         get: { viewModel.viewState.morningBriefingTime },
-                        set: { viewModel.handle(event: .onMorningBriefingTimeChanged($0)) }
+                        set: { viewModel.handle(event: .onMorningBriefingTimeChanged($0)) },
                     ),
-                    displayedComponents: .hourAndMinute
+                    displayedComponents: .hourAndMinute,
                 )
 
                 Stepper(
                     Constants.morningBriefingArticleCountValue(viewModel.viewState.morningBriefingArticleCount),
                     value: Binding(
                         get: { viewModel.viewState.morningBriefingArticleCount },
-                        set: { viewModel.handle(event: .onMorningBriefingArticleCountChanged($0)) }
+                        set: { viewModel.handle(event: .onMorningBriefingArticleCountChanged($0)) },
                     ),
-                    in: 3 ... 15
+                    in: 3 ... 15,
                 )
                 .accessibilityLabel(Constants.morningBriefingArticleCount)
                 .accessibilityValue("\(viewModel.viewState.morningBriefingArticleCount)")
@@ -270,8 +270,8 @@ struct SettingsView: View {
                 Constants.contentLanguageLabel,
                 selection: Binding(
                     get: { viewModel.viewState.selectedLanguage },
-                    set: { viewModel.handle(event: .onLanguageChanged($0)) }
-                )
+                    set: { viewModel.handle(event: .onLanguageChanged($0)) },
+                ),
             ) {
                 ForEach(ContentLanguage.allCases, id: \.self) { language in
                     Text("\(language.flag) \(language.displayName)")
@@ -285,13 +285,13 @@ struct SettingsView: View {
         Section(Constants.appearance) {
             Toggle(Constants.useSystemTheme, isOn: Binding(
                 get: { viewModel.viewState.useSystemTheme },
-                set: { viewModel.handle(event: .onToggleSystemTheme($0)) }
+                set: { viewModel.handle(event: .onToggleSystemTheme($0)) },
             ))
 
             if !viewModel.viewState.useSystemTheme {
                 Toggle(Constants.darkMode, isOn: Binding(
                     get: { viewModel.viewState.isDarkMode },
-                    set: { viewModel.handle(event: .onToggleDarkMode($0)) }
+                    set: { viewModel.handle(event: .onToggleDarkMode($0)) },
                 ))
             }
         }
@@ -302,7 +302,7 @@ struct SettingsView: View {
             NavigationLink(value: Page.readingHistory) {
                 Label(
                     Constants.readingHistory,
-                    systemImage: "clock.arrow.circlepath"
+                    systemImage: "clock.arrow.circlepath",
                 )
             }
         }

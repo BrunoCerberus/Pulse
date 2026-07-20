@@ -58,7 +58,7 @@ final class InterestTopicModel {
             category: category,
             lastReinforcedAt: lastReinforcedAt,
             createdAt: createdAt,
-            source: source
+            source: source,
         )
     }
 }

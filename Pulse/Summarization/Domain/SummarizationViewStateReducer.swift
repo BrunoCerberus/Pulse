@@ -20,7 +20,7 @@ struct SummarizationViewStateReducer: ViewStateReducing {
             article: domainState.article,
             summarizationState: domainState.summarizationState,
             generatedSummary: domainState.generatedSummary,
-            modelStatus: domainState.modelStatus
+            modelStatus: domainState.modelStatus,
         )
     }
 }

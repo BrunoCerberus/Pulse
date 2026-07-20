@@ -16,7 +16,7 @@ struct LiveBriefingCacheServiceTests {
         PregeneratedBriefing(
             digest: DailyDigest(id: "d1", summary: "Summary", sourceArticles: [], generatedAt: generatedAt),
             queueArticles: [],
-            generatedAt: generatedAt
+            generatedAt: generatedAt,
         )
     }
 
@@ -54,8 +54,8 @@ struct LiveBriefingCacheServiceTests {
             PregeneratedBriefing(
                 digest: DailyDigest(id: "d2", summary: "Newer", sourceArticles: [], generatedAt: Date()),
                 queueArticles: [],
-                generatedAt: Date()
-            )
+                generatedAt: Date(),
+            ),
         )
 
         #expect(sut.fetchIfFreshToday()?.digest.id == "d2")

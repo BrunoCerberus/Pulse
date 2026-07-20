@@ -11,13 +11,13 @@ final class MediaDetailViewSnapshotTests: XCTestCase {
     private let iPhoneAirConfig = ViewImageConfig(
         safeArea: UIEdgeInsets(top: 59, left: 0, bottom: 34, right: 0),
         size: CGSize(width: 393, height: 852),
-        traits: UITraitCollection(userInterfaceStyle: .dark)
+        traits: UITraitCollection(userInterfaceStyle: .dark),
     )
 
     private let iPhoneAirLightConfig = ViewImageConfig(
         safeArea: UIEdgeInsets(top: 59, left: 0, bottom: 34, right: 0),
         size: CGSize(width: 393, height: 852),
-        traits: UITraitCollection(userInterfaceStyle: .light)
+        traits: UITraitCollection(userInterfaceStyle: .light),
     )
 
     private let fixedDate = Date(timeIntervalSince1970: 1_672_531_200)
@@ -38,7 +38,7 @@ final class MediaDetailViewSnapshotTests: XCTestCase {
             mediaType: .video,
             mediaURL: "https://www.youtube.com/watch?v=example",
             mediaDuration: 1845,
-            mediaMimeType: "video/mp4"
+            mediaMimeType: "video/mp4",
         )
     }
 
@@ -58,7 +58,7 @@ final class MediaDetailViewSnapshotTests: XCTestCase {
             mediaType: .podcast,
             mediaURL: "https://audio.example.com/podcast.mp3",
             mediaDuration: 2700,
-            mediaMimeType: "audio/mpeg"
+            mediaMimeType: "audio/mpeg",
         )
     }
 
@@ -80,7 +80,7 @@ final class MediaDetailViewSnapshotTests: XCTestCase {
             mediaType: .video,
             mediaURL: "https://www.youtube.com/watch?v=verylongvideo",
             mediaDuration: 7200,
-            mediaMimeType: "video/mp4"
+            mediaMimeType: "video/mp4",
         )
     }
 
@@ -102,7 +102,7 @@ final class MediaDetailViewSnapshotTests: XCTestCase {
         assertSnapshot(
             of: controller,
             as: SnapshotConfig.snapshotting(on: iPhoneAirConfig),
-            record: false
+            record: false,
         )
     }
 
@@ -115,7 +115,7 @@ final class MediaDetailViewSnapshotTests: XCTestCase {
         assertSnapshot(
             of: controller,
             as: SnapshotConfig.snapshotting(on: iPhoneAirLightConfig),
-            record: false
+            record: false,
         )
     }
 
@@ -128,7 +128,7 @@ final class MediaDetailViewSnapshotTests: XCTestCase {
         assertSnapshot(
             of: controller,
             as: SnapshotConfig.snapshotting(on: iPhoneAirConfig),
-            record: false
+            record: false,
         )
     }
 
@@ -141,7 +141,7 @@ final class MediaDetailViewSnapshotTests: XCTestCase {
         assertSnapshot(
             of: controller,
             as: SnapshotConfig.snapshotting(on: iPhoneAirConfig),
-            record: false
+            record: false,
         )
     }
 
@@ -150,7 +150,7 @@ final class MediaDetailViewSnapshotTests: XCTestCase {
     func testYouTubeThumbnailView() {
         let view = YouTubeThumbnailView(
             urlString: "https://www.youtube.com/watch?v=dQw4w9WgXcQ",
-            articleImageURL: nil
+            articleImageURL: nil,
         )
         .frame(width: 375)
 
@@ -159,14 +159,14 @@ final class MediaDetailViewSnapshotTests: XCTestCase {
         assertSnapshot(
             of: controller,
             as: SnapshotConfig.snapshotting(on: iPhoneAirConfig),
-            record: false
+            record: false,
         )
     }
 
     func testYouTubeThumbnailViewLightMode() {
         let view = YouTubeThumbnailView(
             urlString: "https://www.youtube.com/watch?v=dQw4w9WgXcQ",
-            articleImageURL: nil
+            articleImageURL: nil,
         )
         .frame(width: 375)
 
@@ -175,14 +175,14 @@ final class MediaDetailViewSnapshotTests: XCTestCase {
         assertSnapshot(
             of: controller,
             as: SnapshotConfig.snapshotting(on: iPhoneAirLightConfig),
-            record: false
+            record: false,
         )
     }
 
     func testYouTubeThumbnailViewWithArticleImage() {
         let view = YouTubeThumbnailView(
             urlString: "https://www.youtube.com/watch?v=dQw4w9WgXcQ",
-            articleImageURL: "https://picsum.photos/800/450"
+            articleImageURL: "https://picsum.photos/800/450",
         )
         .frame(width: 375)
 
@@ -191,14 +191,14 @@ final class MediaDetailViewSnapshotTests: XCTestCase {
         assertSnapshot(
             of: controller,
             as: SnapshotConfig.snapshotting(on: iPhoneAirConfig),
-            record: false
+            record: false,
         )
     }
 
     func testYouTubeThumbnailViewShortURL() {
         let view = YouTubeThumbnailView(
             urlString: "https://youtu.be/dQw4w9WgXcQ",
-            articleImageURL: nil
+            articleImageURL: nil,
         )
         .frame(width: 375)
 
@@ -207,7 +207,7 @@ final class MediaDetailViewSnapshotTests: XCTestCase {
         assertSnapshot(
             of: controller,
             as: SnapshotConfig.snapshotting(on: iPhoneAirConfig),
-            record: false
+            record: false,
         )
     }
 }

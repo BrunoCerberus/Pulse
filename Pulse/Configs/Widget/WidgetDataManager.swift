@@ -43,7 +43,7 @@ final class WidgetDataManager: @unchecked Sendable {
                 id: article.id,
                 title: article.title,
                 source: article.source.name,
-                imageURL: article.displayImageURL
+                imageURL: article.displayImageURL,
             )
         }
 

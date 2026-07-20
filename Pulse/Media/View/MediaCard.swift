@@ -163,7 +163,7 @@ struct MediaCard: View {
         .clipShape(RoundedRectangle(cornerRadius: CornerRadius.sm, style: .continuous))
         .overlay(
             RoundedRectangle(cornerRadius: CornerRadius.sm, style: .continuous)
-                .stroke(Color.Border.adaptive(for: colorScheme), lineWidth: 0.5)
+                .stroke(Color.Border.adaptive(for: colorScheme), lineWidth: 0.5),
         )
     }
 
@@ -243,12 +243,12 @@ struct MediaCard: View {
                             publishedAt: Date(),
                             mediaType: .video,
                             mediaURL: "https://youtube.com",
-                            mediaDuration: 1245
-                        )
+                            mediaDuration: 1245,
+                        ),
                     ),
                     onTap: {},
                     onPlay: {},
-                    onShare: {}
+                    onShare: {},
                 )
 
                 MediaCard(
@@ -263,12 +263,12 @@ struct MediaCard: View {
                             publishedAt: Date().addingTimeInterval(-3600),
                             mediaType: .podcast,
                             mediaURL: "https://feeds.simplecast.com/audio.mp3",
-                            mediaDuration: 1823
-                        )
+                            mediaDuration: 1823,
+                        ),
                     ),
                     onTap: {},
                     onPlay: {},
-                    onShare: {}
+                    onShare: {},
                 )
             }
             .padding()

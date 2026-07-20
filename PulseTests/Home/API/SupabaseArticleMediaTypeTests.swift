@@ -21,7 +21,7 @@ struct SupabaseArticleMediaTypeTests {
             mediaType: "podcast",
             mediaUrl: "https://example.com/audio.mp3",
             mediaDuration: 3600,
-            mediaMimeType: "audio/mpeg"
+            mediaMimeType: "audio/mpeg",
         )
 
         let article = supabaseArticle.toArticle()
@@ -48,7 +48,7 @@ struct SupabaseArticleMediaTypeTests {
             mediaType: "video",
             mediaUrl: "https://example.com/video.mp4",
             mediaDuration: 600,
-            mediaMimeType: "video/mp4"
+            mediaMimeType: "video/mp4",
         )
 
         let article = supabaseArticle.toArticle()
@@ -73,7 +73,7 @@ struct SupabaseArticleMediaTypeTests {
             mediaType: nil,
             mediaUrl: nil,
             mediaDuration: nil,
-            mediaMimeType: nil
+            mediaMimeType: nil,
         )
 
         let article = podcastArticle.toArticle()
@@ -94,7 +94,7 @@ struct SupabaseArticleMediaTypeTests {
             mediaType: nil,
             mediaUrl: nil,
             mediaDuration: nil,
-            mediaMimeType: nil
+            mediaMimeType: nil,
         )
 
         let videoResult = videoArticle.toArticle()
@@ -118,7 +118,7 @@ struct SupabaseArticleMediaTypeTests {
             mediaType: "unknown",
             mediaUrl: nil,
             mediaDuration: nil,
-            mediaMimeType: nil
+            mediaMimeType: nil,
         )
 
         let article = supabaseArticle.toArticle()
@@ -142,7 +142,7 @@ struct SupabaseArticleMediaTypeTests {
             mediaType: nil,
             mediaUrl: nil,
             mediaDuration: nil,
-            mediaMimeType: nil
+            mediaMimeType: nil,
         )
 
         let article = supabaseArticle.toArticle()

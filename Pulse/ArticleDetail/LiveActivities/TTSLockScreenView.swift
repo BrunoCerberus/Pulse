@@ -72,8 +72,8 @@ struct TTSLockScreenView: View {
             speedLabel: "1x",
             currentTitle: "SwiftUI 6.0 Brings Revolutionary New Features",
             currentSource: "TechCrunch",
-            queuePosition: "2/11"
-        )
+            queuePosition: "2/11",
+        ),
     )
     .padding()
     .background(Color.black)
@@ -87,8 +87,8 @@ struct TTSLockScreenView: View {
             speedLabel: "1.25x",
             currentTitle: "Markets Rally on Economic News",
             currentSource: "Financial Times",
-            queuePosition: nil
-        )
+            queuePosition: nil,
+        ),
     )
     .padding()
     .background(Color.black)

@@ -32,7 +32,7 @@ final class LiveNotificationService: NotificationService {
     /// `UserDefaults`. Production code should still go through `.shared`.
     init(
         keychain: KeychainStore = KeychainManager(service: keychainService),
-        defaults: UserDefaults = .standard
+        defaults: UserDefaults = .standard,
     ) {
         self.keychain = keychain
         self.defaults = defaults
@@ -97,7 +97,7 @@ final class LiveNotificationService: NotificationService {
         let request = UNNotificationRequest(
             identifier: Self.morningBriefingIdentifier,
             content: content,
-            trigger: trigger
+            trigger: trigger,
         )
 
         do {

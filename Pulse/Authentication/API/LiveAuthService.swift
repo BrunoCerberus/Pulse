@@ -7,7 +7,6 @@ import FirebaseCore
 import GoogleSignIn
 import UIKit
 
-// swiftlint:disable:next type_body_length
 final class LiveAuthService: NSObject, AuthService {
     private let authStateSubject = CurrentValueSubject<AuthUser?, Never>(nil)
     private var authStateHandle: AuthStateDidChangeListenerHandle?
@@ -64,7 +63,7 @@ final class LiveAuthService: NSObject, AuthService {
 
                     let credential = GoogleAuthProvider.credential(
                         withIDToken: idToken,
-                        accessToken: result.user.accessToken.tokenString
+                        accessToken: result.user.accessToken.tokenString,
                     )
 
                     let authResult = try await Auth.auth().signIn(with: credential)
@@ -103,17 +102,17 @@ final class LiveAuthService: NSObject, AuthService {
 
             let nonce: String
             do {
-                nonce = try self.randomNonceString()
+                nonce = try randomNonceString()
             } catch {
                 promise(.failure(error))
                 return
             }
-            self.currentNonce = nonce
+            currentNonce = nonce
 
             let provider = ASAuthorizationAppleIDProvider()
             let request = provider.createRequest()
             request.requestedScopes = [.email, .fullName]
-            request.nonce = self.sha256(nonce)
+            request.nonce = sha256(nonce)
 
             let controller = ASAuthorizationController(authorizationRequests: [request])
             controller.delegate = self
@@ -240,13 +239,13 @@ final class LiveAuthService: NSObject, AuthService {
             // ~5 minutes) shouldn't trigger during the same App Review pass.
             if isAnonymous {
                 throw AuthError.unknown(
-                    "Anonymous session can't be re-authenticated; sign out and try again."
+                    "Anonymous session can't be re-authenticated; sign out and try again.",
                 )
             }
 
             let credential = try await freshCredentialForCurrentUser(
                 presenting: viewController,
-                expectedUID: uid
+                expectedUID: uid,
             )
             try await reauthenticateCurrentFirebaseUser(with: credential, expectedUID: uid)
             try await deleteCurrentFirebaseUser(expectedUID: uid)
@@ -265,7 +264,7 @@ final class LiveAuthService: NSObject, AuthService {
             if let error {
                 Logger.shared.service(
                     "GoogleSignIn disconnect after delete failed: \(error.localizedDescription)",
-                    level: .warning
+                    level: .warning,
                 )
             }
         }
@@ -297,7 +296,7 @@ final class LiveAuthService: NSObject, AuthService {
     @MainActor
     private func reauthenticateCurrentFirebaseUser(
         with credential: AuthCredential,
-        expectedUID: String
+        expectedUID: String,
     ) async throws {
         try await withCheckedThrowingContinuation { (continuation: CheckedContinuation<Void, Error>) in
             guard let user = Auth.auth().currentUser, user.uid == expectedUID else {
@@ -317,7 +316,7 @@ final class LiveAuthService: NSObject, AuthService {
     @MainActor
     private func freshCredentialForCurrentUser(
         presenting viewController: UIViewController,
-        expectedUID: String
+        expectedUID: String,
     ) async throws -> AuthCredential {
         guard let user = Auth.auth().currentUser, user.uid == expectedUID else {
             throw AuthError.noCurrentUser
@@ -335,7 +334,7 @@ final class LiveAuthService: NSObject, AuthService {
 
     @MainActor
     private func obtainGoogleCredentialForReauth(
-        presenting viewController: UIViewController
+        presenting viewController: UIViewController,
     ) async throws -> AuthCredential {
         guard let clientID = FirebaseApp.app()?.options.clientID else {
             throw AuthError.unknown("Missing Firebase client ID")
@@ -349,7 +348,7 @@ final class LiveAuthService: NSObject, AuthService {
         }
         return GoogleAuthProvider.credential(
             withIDToken: idToken,
-            accessToken: result.user.accessToken.tokenString
+            accessToken: result.user.accessToken.tokenString,
         )
     }
 
@@ -396,7 +395,7 @@ final class LiveAuthService: NSObject, AuthService {
 extension LiveAuthService: ASAuthorizationControllerDelegate {
     func authorizationController(
         controller _: ASAuthorizationController,
-        didCompleteWithAuthorization authorization: ASAuthorization
+        didCompleteWithAuthorization authorization: ASAuthorization,
     ) {
         guard let appleCredential = authorization.credential as? ASAuthorizationAppleIDCredential,
               let nonce = currentNonce,
@@ -424,7 +423,7 @@ extension LiveAuthService: ASAuthorizationControllerDelegate {
         let credential = OAuthProvider.appleCredential(
             withIDToken: idTokenString,
             rawNonce: nonce,
-            fullName: appleCredential.fullName
+            fullName: appleCredential.fullName,
         )
 
         // Re-authentication path (delete account): hand the raw credential back

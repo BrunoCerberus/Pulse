@@ -75,7 +75,7 @@ struct SupabaseArticle: Codable {
             mediaType: derivedMediaType,
             mediaURL: mediaUrl ?? url,
             mediaDuration: mediaDuration,
-            mediaMimeType: mediaMimeType
+            mediaMimeType: mediaMimeType,
         )
     }
 
@@ -176,7 +176,7 @@ struct SupabaseSearchResult: Codable {
             mediaType: derivedMediaType,
             mediaURL: mediaUrl ?? url,
             mediaDuration: mediaDuration,
-            mediaMimeType: mediaMimeType
+            mediaMimeType: mediaMimeType,
         )
     }
 

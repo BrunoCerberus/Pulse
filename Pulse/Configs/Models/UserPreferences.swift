@@ -23,7 +23,7 @@ struct UserPreferences: Equatable, Codable {
             morningBriefingEnabled: false,
             morningBriefingHour: 7,
             morningBriefingMinute: 0,
-            morningBriefingArticleCount: 10
+            morningBriefingArticleCount: 10,
         )
     }
 }

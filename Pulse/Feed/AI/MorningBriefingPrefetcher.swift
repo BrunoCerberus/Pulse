@@ -28,7 +28,7 @@ final class MorningBriefingPrefetcher {
         settingsService: SettingsService,
         briefingCacheService: BriefingCacheService,
         notificationService: NotificationService?,
-        storeKitService: StoreKitService?
+        storeKitService: StoreKitService?,
     ) {
         self.feedService = feedService
         self.newsService = newsService
@@ -69,7 +69,7 @@ final class MorningBriefingPrefetcher {
 
         guard isBeforeScheduledTime(
             hour: preferences.morningBriefingHour,
-            minute: preferences.morningBriefingMinute
+            minute: preferences.morningBriefingMinute,
         ) else {
             return
         }
@@ -79,7 +79,7 @@ final class MorningBriefingPrefetcher {
         let newsServiceBox = UncheckedSendableBox(value: newsService)
         let pool = await FeedArticlePoolBuilder.fetchPool(
             newsService: newsServiceBox.value,
-            language: AppLocalization.shared.language
+            language: AppLocalization.shared.language,
         )
         guard !pool.isEmpty else { return }
 
@@ -101,22 +101,22 @@ final class MorningBriefingPrefetcher {
                 id: UUID().uuidString,
                 summary: summary,
                 sourceArticles: articlesToProcess,
-                generatedAt: .now
+                generatedAt: .now,
             )
 
             var queueArticles: [Article] = []
             if let forYouService {
                 let forYouBox = UncheckedSendableBox(value: forYouService)
                 let nonMediaPool = pool.filter { !$0.isMedia }
-                let scored = (try? await forYouBox.value.scoredArticles(
+                let scored = await (try? forYouBox.value.scoredArticles(
                     from: nonMediaPool,
-                    topN: preferences.morningBriefingArticleCount
+                    topN: preferences.morningBriefingArticleCount,
                 )) ?? []
                 queueArticles = scored.map(\.article)
             }
 
             briefingCacheService.store(
-                PregeneratedBriefing(digest: digest, queueArticles: queueArticles, generatedAt: .now)
+                PregeneratedBriefing(digest: digest, queueArticles: queueArticles, generatedAt: .now),
             )
         } catch {
             // Every generation error — including LLMError.busy from the
@@ -124,7 +124,7 @@ final class MorningBriefingPrefetcher {
             // skip silently, try again on the next foreground activation.
             Logger.shared.service(
                 "MorningBriefingPrefetcher: generation skipped (\(error))",
-                level: .debug
+                level: .debug,
             )
         }
     }
@@ -135,7 +135,7 @@ final class MorningBriefingPrefetcher {
             bySettingHour: hour,
             minute: minute,
             second: 0,
-            of: now
+            of: now,
         ) else {
             return false
         }

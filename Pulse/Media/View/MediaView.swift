@@ -49,7 +49,7 @@ struct MediaView<R: MediaNavigationRouter>: View {
         }
         .sheet(item: Binding(
             get: { viewModel.viewState.mediaToShare },
-            set: { _ in viewModel.handle(event: .onShareDismissed) }
+            set: { _ in viewModel.handle(event: .onShareDismissed) },
         )) { article in
             ShareSheet(activityItems: ShareItemsBuilder.activityItems(for: article))
         }
@@ -159,7 +159,7 @@ struct MediaView<R: MediaNavigationRouter>: View {
         ContentUnavailableView(
             Constants.emptyTitle,
             systemImage: "play.rectangle.on.rectangle",
-            description: Text(Constants.emptyMessage)
+            description: Text(Constants.emptyMessage),
         )
     }
 
@@ -211,7 +211,7 @@ struct MediaView<R: MediaNavigationRouter>: View {
             onSelect: { type in
                 HapticManager.shared.selectionChanged()
                 viewModel.handle(event: .onMediaTypeSelected(type))
-            }
+            },
         )
         .padding(.horizontal, Spacing.md)
         .padding(.vertical, Spacing.sm)
@@ -240,12 +240,12 @@ struct MediaView<R: MediaNavigationRouter>: View {
     @ViewBuilder
     private func mediaItemsContainer(
         mediaItems: [MediaViewItem],
-        lastItemId: String?
+        lastItemId: String?,
     ) -> some View {
         if horizontalSizeClass == .regular {
             LazyVGrid(
                 columns: [GridItem(.adaptive(minimum: 360), spacing: Spacing.md)],
-                spacing: Spacing.md
+                spacing: Spacing.md,
             ) {
                 ForEach(mediaItems) { item in
                     mediaItemCard(item, lastItemId: lastItemId)
@@ -271,7 +271,7 @@ struct MediaView<R: MediaNavigationRouter>: View {
             },
             onShare: {
                 viewModel.handle(event: .onShareTapped(mediaId: item.id))
-            }
+            },
         )
         .fadeIn(delay: Double(item.animationIndex) * 0.03)
         .onAppear {
@@ -296,7 +296,7 @@ struct MediaView<R: MediaNavigationRouter>: View {
     NavigationStack {
         MediaView(
             router: MediaNavigationRouter(),
-            viewModel: MediaViewModel(serviceLocator: .preview)
+            viewModel: MediaViewModel(serviceLocator: .preview),
         )
     }
     .preferredColorScheme(.dark)

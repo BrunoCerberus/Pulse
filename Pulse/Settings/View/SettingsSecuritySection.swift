@@ -34,7 +34,7 @@ struct SettingsSecuritySection: View {
                     get: { lockManager.isAppLockEnabled },
                     set: { newValue in
                         Task { await lockManager.toggleAppLock(enabled: newValue) }
-                    }
+                    },
                 ))
             } else {
                 HStack {

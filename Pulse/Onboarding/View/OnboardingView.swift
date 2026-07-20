@@ -34,7 +34,7 @@ struct OnboardingView: View {
                                     selectedTopics: viewModel.viewState.selectedTopics,
                                     onToggle: { category in
                                         viewModel.handle(event: .onToggleTopic(category))
-                                    }
+                                    },
                                 )
                             } else {
                                 OnboardingPageView(page: page)
@@ -60,7 +60,7 @@ struct OnboardingView: View {
                 Color.black,
             ],
             startPoint: .topLeading,
-            endPoint: .bottomTrailing
+            endPoint: .bottomTrailing,
         )
         .ignoresSafeArea()
     }
@@ -106,7 +106,7 @@ struct OnboardingView: View {
                     .fill(page == viewModel.viewState.currentPage ? Color.white : Color.white.opacity(0.3))
                     .frame(
                         width: page == viewModel.viewState.currentPage ? 24 : 8,
-                        height: 8
+                        height: 8,
                     )
                     .animation(reduceMotion ? nil : .easeInOut(duration: 0.3), value: viewModel.viewState.currentPage)
             }
@@ -135,12 +135,12 @@ struct OnboardingView: View {
             .background(
                 viewModel.viewState.isLastPage
                     ? AnyShapeStyle(Color.Accent.warmGradient)
-                    : AnyShapeStyle(Color.white.opacity(0.15))
+                    : AnyShapeStyle(Color.white.opacity(0.15)),
             )
             .clipShape(RoundedRectangle(cornerRadius: CornerRadius.md, style: .continuous))
             .overlay(
                 RoundedRectangle(cornerRadius: CornerRadius.md, style: .continuous)
-                    .stroke(Color.white.opacity(viewModel.viewState.isLastPage ? 0 : 0.2), lineWidth: 1)
+                    .stroke(Color.white.opacity(viewModel.viewState.isLastPage ? 0 : 0.2), lineWidth: 1),
             )
         }
         .pressEffect()
@@ -151,7 +151,7 @@ struct OnboardingView: View {
     private var pageBinding: Binding<OnboardingPage> {
         Binding(
             get: { viewModel.viewState.currentPage },
-            set: { viewModel.handle(event: .onPageChanged($0)) }
+            set: { viewModel.handle(event: .onPageChanged($0)) },
         )
     }
 }

@@ -13,11 +13,11 @@ enum ContentLanguage: String, CaseIterable, Codable, Equatable {
     var displayName: String {
         switch self {
         case .english:
-            return AppLocalization.localized("language.english")
+            AppLocalization.localized("language.english")
         case .portuguese:
-            return AppLocalization.localized("language.portuguese")
+            AppLocalization.localized("language.portuguese")
         case .spanish:
-            return AppLocalization.localized("language.spanish")
+            AppLocalization.localized("language.spanish")
         }
     }
 
@@ -25,11 +25,11 @@ enum ContentLanguage: String, CaseIterable, Codable, Equatable {
     var flag: String {
         switch self {
         case .english:
-            return "🇺🇸"
+            "🇺🇸"
         case .portuguese:
-            return "🇧🇷"
+            "🇧🇷"
         case .spanish:
-            return "🇪🇸"
+            "🇪🇸"
         }
     }
 }

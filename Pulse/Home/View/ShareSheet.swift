@@ -8,7 +8,7 @@ struct ShareSheet: UIViewControllerRepresentable {
     func makeUIViewController(context _: Context) -> UIActivityViewController {
         UIActivityViewController(
             activityItems: activityItems,
-            applicationActivities: applicationActivities
+            applicationActivities: applicationActivities,
         )
     }
 

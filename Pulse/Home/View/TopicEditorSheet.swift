@@ -41,7 +41,7 @@ struct TopicEditorSheet: View {
                         .accessibilityHint(
                             followedTopics.contains(topic)
                                 ? Constants.unfollowHint
-                                : Constants.followHint
+                                : Constants.followHint,
                         )
                     }
                 } footer: {
@@ -70,7 +70,7 @@ struct TopicEditorSheet: View {
         allTopics: NewsCategory.allCases,
         followedTopics: [.technology, .science, .business],
         onToggleTopic: { _ in },
-        onDismiss: {}
+        onDismiss: {},
     )
     .preferredColorScheme(.dark)
 }
@@ -80,7 +80,7 @@ struct TopicEditorSheet: View {
         allTopics: NewsCategory.allCases,
         followedTopics: [],
         onToggleTopic: { _ in },
-        onDismiss: {}
+        onDismiss: {},
     )
     .preferredColorScheme(.dark)
 }
@@ -90,7 +90,7 @@ struct TopicEditorSheet: View {
         allTopics: NewsCategory.allCases,
         followedTopics: NewsCategory.allCases,
         onToggleTopic: { _ in },
-        onDismiss: {}
+        onDismiss: {},
     )
     .preferredColorScheme(.dark)
 }

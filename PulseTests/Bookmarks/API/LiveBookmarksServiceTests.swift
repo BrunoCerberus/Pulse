@@ -38,7 +38,7 @@ struct LiveBookmarksServiceTests {
                     },
                     receiveValue: { articles in
                         receivedArticles = articles
-                    }
+                    },
                 )
                 .store(in: &cancellables)
         }
@@ -64,7 +64,7 @@ struct LiveBookmarksServiceTests {
                     },
                     receiveValue: { articles in
                         receivedArticles = articles
-                    }
+                    },
                 )
                 .store(in: &cancellables)
         }
@@ -90,7 +90,7 @@ struct LiveBookmarksServiceTests {
                         }
                         continuation.resume(returning: ())
                     },
-                    receiveValue: { _ in }
+                    receiveValue: { _ in },
                 )
                 .store(in: &cancellables)
         }
@@ -122,7 +122,7 @@ struct LiveBookmarksServiceTests {
                         }
                         continuation.resume(returning: ())
                     },
-                    receiveValue: { _ in }
+                    receiveValue: { _ in },
                 )
                 .store(in: &cancellables)
         }
@@ -153,7 +153,7 @@ struct LiveBookmarksServiceTests {
                         }
                         continuation.resume(returning: ())
                     },
-                    receiveValue: { _ in }
+                    receiveValue: { _ in },
                 )
                 .store(in: &cancellables)
         }

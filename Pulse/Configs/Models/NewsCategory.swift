@@ -15,37 +15,37 @@ enum NewsCategory: String, CaseIterable, Codable, Identifiable {
 
     var displayName: String {
         switch self {
-        case .world: return AppLocalization.localized("category.world")
-        case .business: return AppLocalization.localized("category.business")
-        case .technology: return AppLocalization.localized("category.technology")
-        case .science: return AppLocalization.localized("category.science")
-        case .health: return AppLocalization.localized("category.health")
-        case .sports: return AppLocalization.localized("category.sports")
-        case .entertainment: return AppLocalization.localized("category.entertainment")
+        case .world: AppLocalization.localized("category.world")
+        case .business: AppLocalization.localized("category.business")
+        case .technology: AppLocalization.localized("category.technology")
+        case .science: AppLocalization.localized("category.science")
+        case .health: AppLocalization.localized("category.health")
+        case .sports: AppLocalization.localized("category.sports")
+        case .entertainment: AppLocalization.localized("category.entertainment")
         }
     }
 
     var icon: String {
         switch self {
-        case .world: return "globe"
-        case .business: return "chart.line.uptrend.xyaxis"
-        case .technology: return "cpu"
-        case .science: return "atom"
-        case .health: return "heart.text.square"
-        case .sports: return "sportscourt"
-        case .entertainment: return "film"
+        case .world: "globe"
+        case .business: "chart.line.uptrend.xyaxis"
+        case .technology: "cpu"
+        case .science: "atom"
+        case .health: "heart.text.square"
+        case .sports: "sportscourt"
+        case .entertainment: "film"
         }
     }
 
     var apiParameter: String {
         switch self {
-        case .world: return "general"
-        case .business: return "business"
-        case .technology: return "technology"
-        case .science: return "science"
-        case .health: return "health"
-        case .sports: return "sports"
-        case .entertainment: return "entertainment"
+        case .world: "general"
+        case .business: "business"
+        case .technology: "technology"
+        case .science: "science"
+        case .health: "health"
+        case .sports: "sports"
+        case .entertainment: "entertainment"
         }
     }
 }

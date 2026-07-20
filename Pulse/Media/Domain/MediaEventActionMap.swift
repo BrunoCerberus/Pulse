@@ -9,25 +9,25 @@ struct MediaEventActionMap: DomainEventActionMap {
     func map(event: MediaViewEvent) -> MediaDomainAction? {
         switch event {
         case .onAppear:
-            return .loadInitialData
+            .loadInitialData
         case .onRefresh:
-            return .refresh
+            .refresh
         case .onLoadMore:
-            return .loadMoreMedia
+            .loadMoreMedia
         case let .onMediaTypeSelected(type):
-            return .selectMediaType(type)
+            .selectMediaType(type)
         case let .onMediaTapped(mediaId):
-            return .selectMedia(mediaId: mediaId)
+            .selectMedia(mediaId: mediaId)
         case .onMediaNavigated:
-            return .clearSelectedMedia
+            .clearSelectedMedia
         case let .onShareTapped(mediaId):
-            return .shareMedia(mediaId: mediaId)
+            .shareMedia(mediaId: mediaId)
         case .onShareDismissed:
-            return .clearMediaToShare
+            .clearMediaToShare
         case let .onPlayTapped(mediaId):
-            return .playMedia(mediaId: mediaId)
+            .playMedia(mediaId: mediaId)
         case .onPlayDismissed:
-            return .clearMediaToPlay
+            .clearMediaToPlay
         }
     }
 }

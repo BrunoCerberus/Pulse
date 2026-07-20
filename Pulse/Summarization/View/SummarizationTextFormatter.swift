@@ -43,28 +43,28 @@ enum SummarizationTextFormatter {
 
         return components.map { component in
             if component.hasPrefix("•") {
-                return FormattedParagraph(
+                FormattedParagraph(
                     text: String(component.dropFirst()).trimmingCharacters(in: .whitespaces),
                     isHeading: false,
-                    isBullet: true
+                    isBullet: true,
                 )
             } else if component.hasPrefix("**"), component.hasSuffix("**"), component.count > 4 {
-                return FormattedParagraph(
+                FormattedParagraph(
                     text: String(component.dropFirst(2).dropLast(2)),
                     isHeading: true,
-                    isBullet: false
+                    isBullet: false,
                 )
             } else if isHeading(component) {
-                return FormattedParagraph(
+                FormattedParagraph(
                     text: component,
                     isHeading: true,
-                    isBullet: false
+                    isBullet: false,
                 )
             } else {
-                return FormattedParagraph(
+                FormattedParagraph(
                     text: component,
                     isHeading: false,
-                    isBullet: false
+                    isBullet: false,
                 )
             }
         }

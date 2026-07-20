@@ -17,7 +17,7 @@ final class SplashScreenViewSnapshotTests: XCTestCase {
         assertSnapshot(
             of: controller,
             as: SnapshotConfig.snapshotting(on: SnapshotConfig.iPhoneAir),
-            record: false
+            record: false,
         )
     }
 
@@ -31,7 +31,7 @@ final class SplashScreenViewSnapshotTests: XCTestCase {
         assertSnapshot(
             of: controller,
             as: SnapshotConfig.snapshotting(on: SnapshotConfig.iPhoneAir),
-            record: false
+            record: false,
         )
     }
 }

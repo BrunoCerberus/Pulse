@@ -21,7 +21,7 @@ final class BentoDigestGridSnapshotTests: XCTestCase {
                 url: "https://example.com/1",
                 imageURL: nil,
                 publishedAt: Date(timeIntervalSince1970: 1_672_531_200),
-                category: .technology
+                category: .technology,
             ),
             Article(
                 id: "test-2",
@@ -33,7 +33,7 @@ final class BentoDigestGridSnapshotTests: XCTestCase {
                 url: "https://example.com/2",
                 imageURL: nil,
                 publishedAt: Date(timeIntervalSince1970: 1_672_534_800),
-                category: .business
+                category: .business,
             ),
             Article(
                 id: "test-3",
@@ -45,7 +45,7 @@ final class BentoDigestGridSnapshotTests: XCTestCase {
                 url: "https://example.com/3",
                 imageURL: nil,
                 publishedAt: Date(timeIntervalSince1970: 1_672_538_400),
-                category: .world
+                category: .world,
             ),
         ]
     }
@@ -68,15 +68,15 @@ final class BentoDigestGridSnapshotTests: XCTestCase {
                 id: "test-digest",
                 summary: summary,
                 sourceArticles: testArticles,
-                generatedAt: Date(timeIntervalSince1970: 1_672_531_200)
-            )
+                generatedAt: Date(timeIntervalSince1970: 1_672_531_200),
+            ),
         )
 
         let view = ScrollView {
             BentoDigestGrid(
                 digest: digest,
                 sourceArticles: testSourceArticles,
-                onArticleTapped: { _ in }
+                onArticleTapped: { _ in },
             )
             .padding()
         }
@@ -87,7 +87,7 @@ final class BentoDigestGridSnapshotTests: XCTestCase {
         assertSnapshot(
             of: controller,
             as: SnapshotConfig.snapshotting(on: darkConfig),
-            record: false
+            record: false,
         )
     }
 
@@ -103,15 +103,15 @@ final class BentoDigestGridSnapshotTests: XCTestCase {
                 id: "test-digest-light",
                 summary: summary,
                 sourceArticles: testArticles,
-                generatedAt: Date(timeIntervalSince1970: 1_672_531_200)
-            )
+                generatedAt: Date(timeIntervalSince1970: 1_672_531_200),
+            ),
         )
 
         let view = ScrollView {
             BentoDigestGrid(
                 digest: digest,
                 sourceArticles: testSourceArticles,
-                onArticleTapped: { _ in }
+                onArticleTapped: { _ in },
             )
             .padding()
         }
@@ -122,7 +122,7 @@ final class BentoDigestGridSnapshotTests: XCTestCase {
         assertSnapshot(
             of: controller,
             as: SnapshotConfig.snapshotting(on: lightConfig),
-            record: false
+            record: false,
         )
     }
 
@@ -135,15 +135,15 @@ final class BentoDigestGridSnapshotTests: XCTestCase {
                 id: "test-digest-single",
                 summary: summary,
                 sourceArticles: testArticles,
-                generatedAt: Date(timeIntervalSince1970: 1_672_531_200)
-            )
+                generatedAt: Date(timeIntervalSince1970: 1_672_531_200),
+            ),
         )
 
         let view = ScrollView {
             BentoDigestGrid(
                 digest: digest,
                 sourceArticles: testSourceArticles,
-                onArticleTapped: { _ in }
+                onArticleTapped: { _ in },
             )
             .padding()
         }
@@ -154,7 +154,7 @@ final class BentoDigestGridSnapshotTests: XCTestCase {
         assertSnapshot(
             of: controller,
             as: SnapshotConfig.snapshotting(on: darkConfig),
-            record: false
+            record: false,
         )
     }
 
@@ -170,15 +170,15 @@ final class BentoDigestGridSnapshotTests: XCTestCase {
                 id: "test-digest-no-sources",
                 summary: summary,
                 sourceArticles: [],
-                generatedAt: Date(timeIntervalSince1970: 1_672_531_200)
-            )
+                generatedAt: Date(timeIntervalSince1970: 1_672_531_200),
+            ),
         )
 
         let view = ScrollView {
             BentoDigestGrid(
                 digest: digest,
                 sourceArticles: [],
-                onArticleTapped: { _ in }
+                onArticleTapped: { _ in },
             )
             .padding()
         }
@@ -189,7 +189,7 @@ final class BentoDigestGridSnapshotTests: XCTestCase {
         assertSnapshot(
             of: controller,
             as: SnapshotConfig.snapshotting(on: darkConfig),
-            record: false
+            record: false,
         )
     }
 }

@@ -40,7 +40,7 @@ final class PaywallDomainInteractor: CombineInteractor {
 
     init(
         serviceLocator: ServiceLocator,
-        initialState: DomainState = .initial
+        initialState: DomainState = .initial,
     ) {
         currentStateSubject = CurrentValueSubject(initialState)
 
@@ -98,7 +98,7 @@ final class PaywallDomainInteractor: CombineInteractor {
                     if case let .failure(error) = completion {
                         updateState(currentState.copy(
                             isLoadingProducts: false,
-                            error: error.localizedDescription
+                            error: error.localizedDescription,
                         ))
                     }
                 },
@@ -106,9 +106,9 @@ final class PaywallDomainInteractor: CombineInteractor {
                     guard let self else { return }
                     updateState(currentState.copy(
                         products: products,
-                        isLoadingProducts: false
+                        isLoadingProducts: false,
                     ))
-                }
+                },
             )
             .store(in: &cancellables)
     }
@@ -128,11 +128,11 @@ final class PaywallDomainInteractor: CombineInteractor {
                     guard let self else { return }
                     if case let .failure(error) = completion {
                         analyticsService?.logEvent(
-                            .purchaseFailed(productId: product.id, error: error.localizedDescription)
+                            .purchaseFailed(productId: product.id, error: error.localizedDescription),
                         )
                         updateState(currentState.copy(
                             isPurchasing: false,
-                            error: error.localizedDescription
+                            error: error.localizedDescription,
                         ))
                     }
                 },
@@ -145,9 +145,9 @@ final class PaywallDomainInteractor: CombineInteractor {
                         isPremium: success,
                         isPurchasing: false,
                         purchaseSuccessful: success,
-                        shouldDismiss: success
+                        shouldDismiss: success,
                     ))
-                }
+                },
             )
             .store(in: &cancellables)
     }
@@ -163,7 +163,7 @@ final class PaywallDomainInteractor: CombineInteractor {
                     if case let .failure(error) = completion {
                         updateState(currentState.copy(
                             isRestoring: false,
-                            error: error.localizedDescription
+                            error: error.localizedDescription,
                         ))
                     }
                 },
@@ -173,9 +173,9 @@ final class PaywallDomainInteractor: CombineInteractor {
                         isPremium: hasPurchases,
                         isRestoring: false,
                         restoreSuccessful: true,
-                        shouldDismiss: currentState.shouldDismiss || hasPurchases
+                        shouldDismiss: currentState.shouldDismiss || hasPurchases,
                     ))
-                }
+                },
             )
             .store(in: &cancellables)
     }
@@ -191,7 +191,7 @@ final class PaywallDomainInteractor: CombineInteractor {
                 guard let self else { return }
                 updateState(currentState.copy(
                     isPremium: isPremium,
-                    shouldDismiss: currentState.shouldDismiss || isPremium
+                    shouldDismiss: currentState.shouldDismiss || isPremium,
                 ))
             }
             .store(in: &cancellables)

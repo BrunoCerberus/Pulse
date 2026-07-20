@@ -22,7 +22,7 @@ struct SharedURLQueueTests {
     func sharedURLItemRoundTrip() throws {
         let original = SharedURLItem(
             url: "https://example.com/article",
-            sharedAt: Date(timeIntervalSince1970: 1_700_000_000)
+            sharedAt: Date(timeIntervalSince1970: 1_700_000_000),
         )
 
         let data = try JSONEncoder().encode(original)
@@ -128,7 +128,7 @@ struct SharedURLQueueTests {
         for index in 0 ..< total {
             sut.enqueue(SharedURLItem(
                 url: "https://example.com/\(index)",
-                sharedAt: Date(timeIntervalSince1970: TimeInterval(index))
+                sharedAt: Date(timeIntervalSince1970: TimeInterval(index)),
             ))
         }
 
@@ -148,7 +148,7 @@ struct SharedURLQueueTests {
         let items = (0 ..< total).map { index in
             SharedURLItem(
                 url: "https://example.com/\(index)",
-                sharedAt: Date(timeIntervalSince1970: TimeInterval(index))
+                sharedAt: Date(timeIntervalSince1970: TimeInterval(index)),
             )
         }
         let encoded = try JSONEncoder().encode(items)

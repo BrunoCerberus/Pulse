@@ -15,7 +15,7 @@ struct MediaDetailViewModelTests {
             url: "https://youtube.com/watch?v=1",
             publishedAt: Date(),
             category: .technology,
-            mediaType: .video
+            mediaType: .video,
         )
     }
 
@@ -27,7 +27,7 @@ struct MediaDetailViewModelTests {
             url: "https://spotify.com/episode/1",
             publishedAt: Date(),
             category: .business,
-            mediaType: .podcast
+            mediaType: .podcast,
         )
     }
 

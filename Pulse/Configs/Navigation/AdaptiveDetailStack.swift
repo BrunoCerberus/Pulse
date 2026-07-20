@@ -16,7 +16,7 @@ struct AdaptiveDetailStack: View {
                     router: HomeNavigationRouter(coordinator: coordinator),
                     viewModel: coordinator.homeViewModel,
                     forYouViewModel: coordinator.forYouViewModel,
-                    smartBriefingViewModel: coordinator.smartBriefingViewModel
+                    smartBriefingViewModel: coordinator.smartBriefingViewModel,
                 )
                 .navigationDestination(for: Page.self) { page in
                     coordinator.build(page: page)
@@ -27,7 +27,7 @@ struct AdaptiveDetailStack: View {
             NavigationStack(path: $coordinator.mediaPath) {
                 MediaView(
                     router: MediaNavigationRouter(coordinator: coordinator),
-                    viewModel: coordinator.mediaViewModel
+                    viewModel: coordinator.mediaViewModel,
                 )
                 .navigationDestination(for: Page.self) { page in
                     coordinator.build(page: page)
@@ -39,7 +39,7 @@ struct AdaptiveDetailStack: View {
                 FeedView(
                     router: FeedNavigationRouter(coordinator: coordinator),
                     viewModel: coordinator.feedViewModel,
-                    serviceLocator: coordinator.serviceLocator
+                    serviceLocator: coordinator.serviceLocator,
                 )
                 .navigationDestination(for: Page.self) { page in
                     coordinator.build(page: page)
@@ -50,7 +50,7 @@ struct AdaptiveDetailStack: View {
             NavigationStack(path: $coordinator.bookmarksPath) {
                 BookmarksView(
                     router: BookmarksNavigationRouter(coordinator: coordinator),
-                    viewModel: coordinator.bookmarksViewModel
+                    viewModel: coordinator.bookmarksViewModel,
                 )
                 .navigationDestination(for: Page.self) { page in
                     coordinator.build(page: page)
@@ -61,7 +61,7 @@ struct AdaptiveDetailStack: View {
             NavigationStack(path: $coordinator.searchPath) {
                 SearchView(
                     router: SearchNavigationRouter(coordinator: coordinator),
-                    viewModel: coordinator.searchViewModel
+                    viewModel: coordinator.searchViewModel,
                 )
                 .navigationDestination(for: Page.self) { page in
                     coordinator.build(page: page)

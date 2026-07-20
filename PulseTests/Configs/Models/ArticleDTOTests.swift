@@ -13,7 +13,7 @@ struct ArticleDTOTests {
             ("2024-01-15T10:30:00Z", true), // Without fractional seconds
             ("invalid-date", false), // Invalid format
             ("", false), // Empty string
-        ]
+        ],
     )
     func dateParsingHandlesVariousFormats(dateString: String, shouldSucceed: Bool) {
         let dto = ArticleDTO(
@@ -24,7 +24,7 @@ struct ArticleDTOTests {
             url: "https://example.com/article",
             urlToImage: "https://example.com/image.jpg",
             publishedAt: dateString,
-            content: "Content"
+            content: "Content",
         )
 
         let article = dto.toArticle()
@@ -49,7 +49,7 @@ struct ArticleDTOTests {
             url: "https://example.com/unique-article-url",
             urlToImage: nil,
             publishedAt: "2024-01-15T10:30:00Z",
-            content: "Content"
+            content: "Content",
         )
 
         let article = dto.toArticle()
@@ -70,7 +70,7 @@ struct ArticleDTOTests {
             url: "https://example.com/article",
             urlToImage: "https://example.com/image.jpg",
             publishedAt: "2024-01-15T10:30:00Z",
-            content: "Full article content"
+            content: "Full article content",
         )
 
         // Test without optional fields
@@ -82,7 +82,7 @@ struct ArticleDTOTests {
             url: "https://example.com/article2",
             urlToImage: nil,
             publishedAt: "2024-01-15T10:30:00Z",
-            content: nil
+            content: nil,
         )
 
         let articleWithFields = dtoWithAllFields.toArticle()
@@ -113,7 +113,7 @@ struct ArticleDTOTests {
             url: "https://example.com/article",
             urlToImage: nil,
             publishedAt: "2024-01-15T10:30:00Z",
-            content: nil
+            content: nil,
         )
 
         // Test without category
@@ -139,7 +139,7 @@ struct ArticleDTOTests {
             url: "https://example.com/article1",
             urlToImage: nil,
             publishedAt: "2024-01-15T10:30:00Z",
-            content: nil
+            content: nil,
         )
 
         let dtoWithNilSourceId = ArticleDTO(
@@ -150,7 +150,7 @@ struct ArticleDTOTests {
             url: "https://example.com/article2",
             urlToImage: nil,
             publishedAt: "2024-01-15T10:30:00Z",
-            content: nil
+            content: nil,
         )
 
         let articleWithSourceId = dtoWithSourceId.toArticle()
@@ -174,7 +174,7 @@ struct ArticleDTOTests {
             url: "https://example.com/test-article",
             urlToImage: "https://example.com/test-image.jpg",
             publishedAt: "2024-06-15T14:30:00.123Z",
-            content: "Full article content here"
+            content: "Full article content here",
         )
 
         let article = dto.toArticle(category: .science)

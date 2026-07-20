@@ -16,8 +16,8 @@ struct StreamingTextView: View {
                     LinearGradient(
                         colors: [Color.Accent.primary, Color.Accent.primary.opacity(0.5)],
                         startPoint: .top,
-                        endPoint: .bottom
-                    )
+                        endPoint: .bottom,
+                    ),
                 )
                 .frame(width: 3)
                 .padding(.trailing, Spacing.md)
@@ -88,7 +88,7 @@ private struct BlinkingCursor: View {
 
 #Preview {
     StreamingTextView(
-        text: "Today's reading covered a variety of topics including technology, business, and science..."
+        text: "Today's reading covered a variety of topics including technology, business, and science...",
     )
     .padding()
     .preferredColorScheme(.dark)

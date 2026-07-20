@@ -11,7 +11,7 @@ struct ArticleDetailDomainActionTests {
             source: ArticleSource(id: "test-source", name: "Test Source"),
             url: "https://example.com/article",
             publishedAt: Date(),
-            category: .technology
+            category: .technology,
         )
     }
 
@@ -84,7 +84,7 @@ struct ArticleDetailDomainActionTests {
 
         let action = ArticleDetailDomainAction.contentProcessingCompleted(
             content: content,
-            description: description
+            description: description,
         )
 
         if case let .contentProcessingCompleted(actionContent, actionDescription) = action {
@@ -101,7 +101,7 @@ struct ArticleDetailDomainActionTests {
     func contentProcessingCompletedWithNil() {
         let action = ArticleDetailDomainAction.contentProcessingCompleted(
             content: nil,
-            description: nil
+            description: nil,
         )
 
         if case let .contentProcessingCompleted(actionContent, actionDescription) = action {
@@ -138,7 +138,7 @@ struct ArticleDetailDomainActionTests {
         #expect(ArticleDetailDomainAction.showSummarizationSheet == ArticleDetailDomainAction.showSummarizationSheet)
         #expect(
             ArticleDetailDomainAction.dismissSummarizationSheet ==
-                ArticleDetailDomainAction.dismissSummarizationSheet
+                ArticleDetailDomainAction.dismissSummarizationSheet,
         )
     }
 
@@ -153,7 +153,7 @@ struct ArticleDetailDomainActionTests {
     func bookmarkStatusLoadedDifferentValues() {
         #expect(
             ArticleDetailDomainAction.bookmarkStatusLoaded(true) !=
-                ArticleDetailDomainAction.bookmarkStatusLoaded(false)
+                ArticleDetailDomainAction.bookmarkStatusLoaded(false),
         )
     }
 
@@ -161,11 +161,11 @@ struct ArticleDetailDomainActionTests {
     func bookmarkStatusLoadedSameValues() {
         #expect(
             ArticleDetailDomainAction.bookmarkStatusLoaded(true) ==
-                ArticleDetailDomainAction.bookmarkStatusLoaded(true)
+                ArticleDetailDomainAction.bookmarkStatusLoaded(true),
         )
         #expect(
             ArticleDetailDomainAction.bookmarkStatusLoaded(false) ==
-                ArticleDetailDomainAction.bookmarkStatusLoaded(false)
+                ArticleDetailDomainAction.bookmarkStatusLoaded(false),
         )
     }
 }

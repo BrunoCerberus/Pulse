@@ -13,7 +13,7 @@ struct CachingNewsServiceCacheInvalidationTests {
         mockNewsService = MockNewsService()
         mockCacheStore = MockNewsCacheStore()
         sut = CachingNewsService(
-            wrapping: mockNewsService, cacheStore: mockCacheStore, diskCacheStore: nil, networkResilienceEnabled: false
+            wrapping: mockNewsService, cacheStore: mockCacheStore, diskCacheStore: nil, networkResilienceEnabled: false,
         )
     }
 
@@ -22,11 +22,11 @@ struct CachingNewsServiceCacheInvalidationTests {
         let articles = Article.mockArticles
         mockCacheStore.set(
             CacheEntry(data: articles, timestamp: Date()),
-            for: .breakingNews(language: "en", country: "us")
+            for: .breakingNews(language: "en", country: "us"),
         )
         mockCacheStore.set(
             CacheEntry(data: articles, timestamp: Date()),
-            for: .topHeadlines(language: "en", country: "us", page: 1)
+            for: .topHeadlines(language: "en", country: "us", page: 1),
         )
         mockCacheStore.removeAllCallCount = 0
 

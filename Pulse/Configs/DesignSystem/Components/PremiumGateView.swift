@@ -24,44 +24,44 @@ enum PremiumFeature {
     var icon: String {
         switch self {
         case .dailyDigest:
-            return "sparkles"
+            "sparkles"
         case .articleSummarization:
-            return "doc.text.magnifyingglass"
+            "doc.text.magnifyingglass"
         case .audioBriefing:
-            return "headphones"
+            "headphones"
         }
     }
 
     var iconColor: Color {
         switch self {
         case .dailyDigest:
-            return .purple
+            .purple
         case .articleSummarization:
-            return .blue
+            .blue
         case .audioBriefing:
-            return .orange
+            .orange
         }
     }
 
     var title: String {
         switch self {
         case .dailyDigest:
-            return AppLocalization.localized("premium_gate.daily_digest.title")
+            AppLocalization.localized("premium_gate.daily_digest.title")
         case .articleSummarization:
-            return AppLocalization.localized("premium_gate.summarization.title")
+            AppLocalization.localized("premium_gate.summarization.title")
         case .audioBriefing:
-            return AppLocalization.localized("premium_gate.audio_briefing.title")
+            AppLocalization.localized("premium_gate.audio_briefing.title")
         }
     }
 
     var description: String {
         switch self {
         case .dailyDigest:
-            return AppLocalization.localized("premium_gate.daily_digest.description")
+            AppLocalization.localized("premium_gate.daily_digest.description")
         case .articleSummarization:
-            return AppLocalization.localized("premium_gate.summarization.description")
+            AppLocalization.localized("premium_gate.summarization.description")
         case .audioBriefing:
-            return AppLocalization.localized("premium_gate.audio_briefing.description")
+            AppLocalization.localized("premium_gate.audio_briefing.description")
         }
     }
 }
@@ -99,7 +99,7 @@ struct PremiumGateView: View {
     init(
         feature: PremiumFeature,
         serviceLocator: ServiceLocator,
-        onUnlockTapped: (() -> Void)? = nil
+        onUnlockTapped: (() -> Void)? = nil,
     ) {
         self.feature = feature
         self.serviceLocator = serviceLocator
@@ -117,14 +117,14 @@ struct PremiumGateView: View {
                     .fill(feature.iconColor.opacity(0.15))
                     .frame(
                         width: dynamicTypeSize.isAccessibilitySize ? 80 : 120,
-                        height: dynamicTypeSize.isAccessibilitySize ? 80 : 120
+                        height: dynamicTypeSize.isAccessibilitySize ? 80 : 120,
                     )
 
                 Circle()
                     .fill(feature.iconColor.gradient)
                     .frame(
                         width: dynamicTypeSize.isAccessibilitySize ? 64 : 100,
-                        height: dynamicTypeSize.isAccessibilitySize ? 64 : 100
+                        height: dynamicTypeSize.isAccessibilitySize ? 64 : 100,
                     )
 
                 Image(systemName: feature.icon)
@@ -201,7 +201,7 @@ struct PremiumGateView: View {
 #Preview {
     PremiumGateView(
         feature: .dailyDigest,
-        serviceLocator: .preview
+        serviceLocator: .preview,
     )
     .preferredColorScheme(.dark)
 }
@@ -209,7 +209,7 @@ struct PremiumGateView: View {
 #Preview("Summarization Gate") {
     PremiumGateView(
         feature: .articleSummarization,
-        serviceLocator: .preview
+        serviceLocator: .preview,
     )
     .preferredColorScheme(.dark)
 }

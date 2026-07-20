@@ -95,7 +95,7 @@ final class SummarizationDomainInteractor: CombineInteractor {
         guard storeKitService?.isPremium != false else {
             Logger.shared.service(
                 "Summarization blocked: Premium entitlement not active",
-                level: .warning
+                level: .warning,
             )
             return
         }
