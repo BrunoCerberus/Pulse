@@ -18,7 +18,7 @@ final class SummarizationSheetSnapshotTests: XCTestCase {
         assertSnapshot(
             of: controller,
             as: SnapshotConfig.snapshotting(on: SnapshotConfig.iPhoneAir),
-            record: false
+            record: false,
         )
     }
 
@@ -33,7 +33,7 @@ final class SummarizationSheetSnapshotTests: XCTestCase {
         assertSnapshot(
             of: controller,
             as: SnapshotConfig.snapshotting(on: SnapshotConfig.iPhoneAir),
-            record: false
+            record: false,
         )
     }
 
@@ -48,7 +48,7 @@ final class SummarizationSheetSnapshotTests: XCTestCase {
         assertSnapshot(
             of: controller,
             as: SnapshotConfig.snapshotting(on: SnapshotConfig.iPhoneAir),
-            record: false
+            record: false,
         )
     }
 
@@ -63,7 +63,7 @@ final class SummarizationSheetSnapshotTests: XCTestCase {
         assertSnapshot(
             of: controller,
             as: SnapshotConfig.snapshotting(on: SnapshotConfig.iPhoneAir),
-            record: false
+            record: false,
         )
     }
 
@@ -78,7 +78,7 @@ final class SummarizationSheetSnapshotTests: XCTestCase {
         assertSnapshot(
             of: controller,
             as: SnapshotConfig.snapshotting(on: SnapshotConfig.iPhoneAir),
-            record: false
+            record: false,
         )
     }
 }
@@ -423,7 +423,7 @@ private struct SummarizationCompletedPreview: View {
         .padding(Spacing.md)
         .overlay(
             RoundedRectangle(cornerRadius: CornerRadius.lg, style: .continuous)
-                .stroke(Color.Accent.primary.opacity(0.2), lineWidth: 1)
+                .stroke(Color.Accent.primary.opacity(0.2), lineWidth: 1),
         )
         .glassBackground(style: .thin, cornerRadius: CornerRadius.lg)
     }

@@ -10,9 +10,9 @@ enum MemoryOperation {
     var minimumMemory: UInt64 {
         switch self {
         case .modelLoad:
-            return LLMConfiguration.minimumAvailableMemory
+            LLMConfiguration.minimumAvailableMemory
         case .inference:
-            return LLMConfiguration.minimumInferenceMemory
+            LLMConfiguration.minimumInferenceMemory
         }
     }
 }

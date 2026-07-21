@@ -133,7 +133,7 @@ struct TopicsBreakdownCard: View {
             (.technology, 3),
             (.business, 2),
             (.world, 1),
-        ]
+        ],
     )
     .padding()
     .background(LinearGradient.subtleBackground)

@@ -12,7 +12,7 @@ enum PulseError: Error, LocalizedError {
     var isOfflineError: Bool {
         switch self {
         case .offlineNoCache:
-            return true
+            true
         }
     }
 
@@ -22,7 +22,7 @@ enum PulseError: Error, LocalizedError {
             // `errorDescription` is `nonisolated`; use the `nonisolated static`
             // shorthand rather than `AppLocalization.shared` (a @MainActor static)
             // so this compiles under Swift 6.2 strict concurrency.
-            return AppLocalization.localized("error.offline.no_cache")
+            AppLocalization.localized("error.offline.no_cache")
         }
     }
 }

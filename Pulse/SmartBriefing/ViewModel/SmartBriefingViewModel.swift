@@ -52,7 +52,7 @@ final class SmartBriefingViewModel: CombineViewModel, ObservableObject {
                     isVisible: state.isPremium,
                     isBuilding: state.buildState == .building,
                     lastServedAt: state.lastServedAt,
-                    statusMessage: Self.statusMessage(for: state.buildState)
+                    statusMessage: Self.statusMessage(for: state.buildState),
                 )
             }
             .removeDuplicates()
@@ -109,7 +109,7 @@ struct SmartBriefingViewState: Equatable {
         isVisible: false,
         isBuilding: false,
         lastServedAt: nil,
-        statusMessage: nil
+        statusMessage: nil,
     )
 }
 

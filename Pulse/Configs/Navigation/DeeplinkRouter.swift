@@ -168,7 +168,7 @@ final class DeeplinkRouter {
         guard let importService = try? coordinator.serviceLocator.retrieve(SharedURLImportService.self) else {
             Logger.shared.warning(
                 "SharedURLImportService not registered — pulse://shared dropped",
-                category: "Navigation"
+                category: "Navigation",
             )
             return
         }
@@ -213,14 +213,14 @@ final class DeeplinkRouter {
                     if case let .failure(error) = completion {
                         Logger.shared.error(
                             "Failed to fetch article \(id): \(error.localizedDescription)",
-                            category: "Navigation"
+                            category: "Navigation",
                         )
                     }
                 },
                 receiveValue: { [weak coordinator] article in
                     Logger.shared.debug("Successfully fetched article: \(article.title)", category: "Navigation")
                     coordinator?.push(page: .articleDetail(article))
-                }
+                },
             )
     }
 }

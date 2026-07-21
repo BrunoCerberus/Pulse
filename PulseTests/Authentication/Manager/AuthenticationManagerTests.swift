@@ -43,7 +43,7 @@ struct AuthenticationManagerTests {
             email: "test@example.com",
             displayName: "Test User",
             photoURL: nil,
-            provider: .google
+            provider: .google,
         )
         mockAuthService.mockCurrentUser = testUser
 
@@ -84,7 +84,7 @@ struct AuthenticationManagerTests {
             email: "user@example.com",
             displayName: "New User",
             photoURL: nil,
-            provider: .apple
+            provider: .apple,
         )
 
         // Simulate auth service publishing a new user
@@ -122,7 +122,7 @@ struct AuthenticationManagerTests {
             email: "another@example.com",
             displayName: "Another User",
             photoURL: nil,
-            provider: .google
+            provider: .google,
         )
 
         mockAuthService.simulateSignedIn(testUser)
@@ -142,7 +142,7 @@ struct AuthenticationManagerTests {
             email: "logout@example.com",
             displayName: "Logout User",
             photoURL: nil,
-            provider: .google
+            provider: .google,
         )
         mockAuthService.mockCurrentUser = testUser
         sut.configure(with: mockAuthService)
@@ -174,7 +174,7 @@ struct AuthenticationManagerTests {
             email: "update@example.com",
             displayName: "Update User",
             photoURL: nil,
-            provider: .apple
+            provider: .apple,
         )
 
         mockAuthService.simulateSignedIn(testUser)
@@ -199,7 +199,7 @@ struct AuthenticationManagerTests {
             email: "authcheck@example.com",
             displayName: "Auth Check User",
             photoURL: nil,
-            provider: .google
+            provider: .google,
         )
         sut.setAuthenticatedForTesting(testUser)
         #expect(sut.isAuthenticated)
@@ -216,31 +216,31 @@ struct AuthenticationManagerTests {
             email: "user1@example.com",
             displayName: "User 1",
             photoURL: nil,
-            provider: .google
+            provider: .google,
         )
         let user2 = AuthUser(
             uid: "user-2",
             email: "user2@example.com",
             displayName: "User 2",
             photoURL: nil,
-            provider: .apple
+            provider: .apple,
         )
 
         #expect(AuthenticationManager.AuthState.loading == AuthenticationManager.AuthState.loading)
         #expect(
             AuthenticationManager.AuthState.unauthenticated == AuthenticationManager.AuthState
-                .unauthenticated
+                .unauthenticated,
         )
         #expect(
             AuthenticationManager.AuthState.authenticated(user1) == AuthenticationManager.AuthState
-                .authenticated(user1)
+                .authenticated(user1),
         )
         #expect(
             AuthenticationManager.AuthState.authenticated(user1) != AuthenticationManager.AuthState
-                .authenticated(user2)
+                .authenticated(user2),
         )
         #expect(
-            AuthenticationManager.AuthState.loading != AuthenticationManager.AuthState.unauthenticated
+            AuthenticationManager.AuthState.loading != AuthenticationManager.AuthState.unauthenticated,
         )
     }
 
@@ -251,7 +251,7 @@ struct AuthenticationManagerTests {
             email: "helper@example.com",
             displayName: "Helper User",
             photoURL: nil,
-            provider: .google
+            provider: .google,
         )
 
         sut.setAuthenticatedForTesting(testUser)
@@ -272,7 +272,7 @@ struct AuthenticationManagerTests {
             email: "cleanup@example.com",
             displayName: "Cleanup User",
             photoURL: nil,
-            provider: .google
+            provider: .google,
         )
         mockAuthService.mockCurrentUser = user
         sut.configure(with: mockAuthService)

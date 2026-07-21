@@ -23,7 +23,7 @@ final class ReadingHistoryViewSnapshotTests: XCTestCase {
         let view = NavigationStack {
             ReadingHistoryView(
                 router: ReadingHistoryNavigationRouter(),
-                viewModel: ReadingHistoryViewModel(serviceLocator: serviceLocator)
+                viewModel: ReadingHistoryViewModel(serviceLocator: serviceLocator),
             )
         }
         let controller = UIHostingController(rootView: view)
@@ -31,7 +31,7 @@ final class ReadingHistoryViewSnapshotTests: XCTestCase {
         assertSnapshot(
             of: controller,
             as: SnapshotConfig.snapshotting(on: SnapshotConfig.iPhoneAir),
-            record: false
+            record: false,
         )
     }
 
@@ -39,7 +39,7 @@ final class ReadingHistoryViewSnapshotTests: XCTestCase {
         let view = NavigationStack {
             ReadingHistoryView(
                 router: ReadingHistoryNavigationRouter(),
-                viewModel: ReadingHistoryViewModel(serviceLocator: serviceLocator)
+                viewModel: ReadingHistoryViewModel(serviceLocator: serviceLocator),
             )
         }
         let controller = UIHostingController(rootView: view)
@@ -47,7 +47,7 @@ final class ReadingHistoryViewSnapshotTests: XCTestCase {
         assertSnapshot(
             of: controller,
             as: SnapshotConfig.snapshotting(on: SnapshotConfig.iPhoneAirLight),
-            record: false
+            record: false,
         )
     }
 
@@ -72,7 +72,7 @@ final class ReadingHistoryViewSnapshotTests: XCTestCase {
         assertSnapshot(
             of: controller,
             as: SnapshotConfig.snapshotting(on: SnapshotConfig.iPad),
-            record: false
+            record: false,
         )
     }
 
@@ -87,7 +87,7 @@ final class ReadingHistoryViewSnapshotTests: XCTestCase {
         assertSnapshot(
             of: controller,
             as: SnapshotConfig.snapshotting(on: SnapshotConfig.iPhoneAir),
-            record: false
+            record: false,
         )
     }
 
@@ -102,7 +102,7 @@ final class ReadingHistoryViewSnapshotTests: XCTestCase {
         assertSnapshot(
             of: controller,
             as: SnapshotConfig.snapshotting(on: SnapshotConfig.iPhoneAir),
-            record: false
+            record: false,
         )
     }
 
@@ -117,7 +117,7 @@ final class ReadingHistoryViewSnapshotTests: XCTestCase {
         assertSnapshot(
             of: controller,
             as: SnapshotConfig.snapshotting(on: SnapshotConfig.iPhoneAir),
-            record: false
+            record: false,
         )
     }
 
@@ -130,7 +130,7 @@ final class ReadingHistoryViewSnapshotTests: XCTestCase {
         assertSnapshot(
             of: controller,
             as: SnapshotConfig.snapshotting(on: SnapshotConfig.iPhoneAirLight),
-            record: false
+            record: false,
         )
     }
 }
@@ -237,7 +237,7 @@ private struct ReadingHistoryPopulatedPreview: View {
                 url: "https://example.com/1",
                 imageURL: nil,
                 publishedAt: fixedDate,
-                category: .technology
+                category: .technology,
             ), isRead: true),
             ArticleViewItem(from: Article(
                 id: "2",
@@ -247,7 +247,7 @@ private struct ReadingHistoryPopulatedPreview: View {
                 url: "https://example.com/2",
                 imageURL: nil,
                 publishedAt: fixedDate,
-                category: .world
+                category: .world,
             ), isRead: true),
             ArticleViewItem(from: Article(
                 id: "3",
@@ -257,7 +257,7 @@ private struct ReadingHistoryPopulatedPreview: View {
                 url: "https://example.com/3",
                 imageURL: nil,
                 publishedAt: fixedDate,
-                category: .health
+                category: .health,
             ), isRead: true),
             ArticleViewItem(from: Article(
                 id: "4",
@@ -267,7 +267,7 @@ private struct ReadingHistoryPopulatedPreview: View {
                 url: "https://example.com/4",
                 imageURL: nil,
                 publishedAt: fixedDate,
-                category: .sports
+                category: .sports,
             ), isRead: true),
         ]
     }
@@ -284,7 +284,7 @@ private struct ReadingHistoryPopulatedPreview: View {
                             item: item,
                             onTap: {},
                             onBookmark: {},
-                            onShare: {}
+                            onShare: {},
                         )
                     }
                 }

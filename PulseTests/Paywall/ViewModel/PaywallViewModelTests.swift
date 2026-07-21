@@ -116,7 +116,7 @@ struct PaywallViewModelTests {
             error: nil,
             purchaseSuccessful: false,
             restoreSuccessful: false,
-            shouldDismiss: false
+            shouldDismiss: false,
         )
 
         let viewState = reducer.reduce(domainState)
@@ -146,7 +146,7 @@ struct PaywallViewModelTests {
             error: nil,
             purchaseSuccessful: false,
             restoreSuccessful: false,
-            shouldDismiss: false
+            shouldDismiss: false,
         )
 
         let viewState = reducer.reduce(domainState)
@@ -171,7 +171,7 @@ struct PaywallViewModelTests {
             error: "Test error",
             purchaseSuccessful: false,
             restoreSuccessful: false,
-            shouldDismiss: false
+            shouldDismiss: false,
         )
 
         let viewState = reducer.reduce(domainState)

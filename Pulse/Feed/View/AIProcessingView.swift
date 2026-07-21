@@ -55,8 +55,8 @@ struct AIProcessingView: View {
                         ],
                         center: .center,
                         startRadius: 40,
-                        endRadius: 100
-                    )
+                        endRadius: 100,
+                    ),
                 )
                 .frame(width: 200, height: 200)
                 .blur(radius: 20)
@@ -67,7 +67,7 @@ struct AIProcessingView: View {
                     index: index,
                     progress: phase.progress,
                     isGenerating: phase.isGenerating,
-                    reduceMotion: reduceMotion
+                    reduceMotion: reduceMotion,
                 )
             }
 
@@ -75,13 +75,13 @@ struct AIProcessingView: View {
             CentralOrb(
                 progress: phase.progress,
                 isGenerating: phase.isGenerating,
-                reduceMotion: reduceMotion
+                reduceMotion: reduceMotion,
             )
 
             // Floating particles
             if !reduceMotion {
                 FloatingParticles(
-                    isGenerating: phase.isGenerating
+                    isGenerating: phase.isGenerating,
                 )
             }
         }
@@ -116,7 +116,7 @@ struct AIProcessingView: View {
         }
         .transition(.asymmetric(
             insertion: .opacity.combined(with: .move(edge: .bottom)),
-            removal: .opacity
+            removal: .opacity,
         ))
     }
 }
@@ -156,8 +156,8 @@ private struct CentralOrb: View {
                         ],
                         center: .center,
                         startRadius: 10,
-                        endRadius: 35
-                    )
+                        endRadius: 35,
+                    ),
                 )
                 .frame(width: 70, height: 70)
                 .blur(radius: 8)
@@ -176,9 +176,9 @@ private struct CentralOrb: View {
                                 ],
                                 center: UnitPoint(x: 0.35, y: 0.35),
                                 startRadius: 0,
-                                endRadius: 20
-                            )
-                        )
+                                endRadius: 20,
+                            ),
+                        ),
                 )
                 .scaleEffect(pulseScale)
                 .shadow(color: Color.Accent.primary.opacity(0.5), radius: 15)
@@ -207,7 +207,7 @@ private struct CentralOrb: View {
         let scale = isGenerating ? Constants.pulseScaleGenerating : Constants.pulseScaleNormal
         withAnimation(
             .easeInOut(duration: duration)
-                .repeatForever(autoreverses: true)
+                .repeatForever(autoreverses: true),
         ) {
             pulseScale = scale
         }
@@ -272,9 +272,9 @@ private struct OrbitRing: View {
                         ],
                         center: .center,
                         startAngle: .degrees(0),
-                        endAngle: .degrees(360)
+                        endAngle: .degrees(360),
                     ),
-                    style: StrokeStyle(lineWidth: strokeWidth, lineCap: .round)
+                    style: StrokeStyle(lineWidth: strokeWidth, lineCap: .round),
                 )
                 .frame(width: ringSize, height: ringSize)
                 .rotationEffect(.degrees(rotation))
@@ -305,7 +305,7 @@ private struct OrbitRing: View {
     private func startRotation() {
         withAnimation(
             .linear(duration: rotationSpeed)
-                .repeatForever(autoreverses: false)
+                .repeatForever(autoreverses: false),
         ) {
             rotation = 360
         }
@@ -357,7 +357,7 @@ private struct FloatingParticles: View {
                 size: CGFloat.random(in: 3 ... 6),
                 opacity: Double.random(in: 0.3 ... 0.7),
                 color: [Color.Accent.primary, Color.Accent.secondary, Color.Accent.tertiary]
-                    .randomElement() ?? Color.Accent.primary
+                    .randomElement() ?? Color.Accent.primary,
             )
         }
     }

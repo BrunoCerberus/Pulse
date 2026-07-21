@@ -14,7 +14,7 @@ struct InterestTopicModelTests {
             category: NewsCategory.technology.rawValue,
             lastReinforcedAt: Self.baseDate,
             createdAt: Self.baseDate.addingTimeInterval(-3600),
-            source: source
+            source: source,
         )
     }
 

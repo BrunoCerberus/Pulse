@@ -10,7 +10,7 @@ struct WidgetArticleTests {
             id: "1",
             title: "Test Article",
             source: "Test Source",
-            imageData: nil
+            imageData: nil,
         )
         #expect(article.id == "1")
     }
@@ -21,7 +21,7 @@ struct WidgetArticleTests {
             id: "1",
             title: "Test Article",
             source: "Test Source",
-            imageData: nil
+            imageData: nil,
         )
         #expect(article.displayTitle == "Test Article")
     }
@@ -32,7 +32,7 @@ struct WidgetArticleTests {
             id: "1",
             title: "",
             source: "Test Source",
-            imageData: nil
+            imageData: nil,
         )
         #expect(article.displayTitle == "Untitled")
     }

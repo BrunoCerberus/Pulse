@@ -61,7 +61,7 @@ struct LiveAppLockServiceTests {
         // Transient / unexpected LA failures must NOT disable the lock (fail-closed).
         let biometryNotAvailable = NSError(
             domain: LAError.errorDomain,
-            code: LAError.Code.biometryNotAvailable.rawValue
+            code: LAError.Code.biometryNotAvailable.rawValue,
         )
         #expect(!LiveAppLockService.isUnenforceableLockError(biometryNotAvailable))
 

@@ -69,7 +69,7 @@ struct LiveNewsCacheStoreTests {
         sut.set(CacheEntry(data: articles, timestamp: Date()), for: .breakingNews(language: "en", country: "us"))
         sut.set(
             CacheEntry(data: articles, timestamp: Date()),
-            for: .topHeadlines(language: "en", country: "us", page: 1)
+            for: .topHeadlines(language: "en", country: "us", page: 1),
         )
 
         sut.removeAll()

@@ -23,7 +23,7 @@ struct OnboardingTopicsPageView: View {
                             onTap: {
                                 HapticManager.shared.selectionChanged()
                                 onToggle(category)
-                            }
+                            },
                         )
                     }
                 }
@@ -102,7 +102,7 @@ private struct TopicCell: View {
         .accessibilityHint(
             isSelected
                 ? AppLocalization.localized("topic_editor.unfollow_hint")
-                : AppLocalization.localized("topic_editor.follow_hint")
+                : AppLocalization.localized("topic_editor.follow_hint"),
         )
     }
 
@@ -111,7 +111,7 @@ private struct TopicCell: View {
             .fill(
                 isSelected
                     ? AnyShapeStyle(category.color.gradient)
-                    : AnyShapeStyle(Color.white.opacity(0.08))
+                    : AnyShapeStyle(Color.white.opacity(0.08)),
             )
     }
 
@@ -119,7 +119,7 @@ private struct TopicCell: View {
         RoundedRectangle(cornerRadius: CornerRadius.md, style: .continuous)
             .stroke(
                 isSelected ? Color.white.opacity(0.4) : Color.white.opacity(0.15),
-                lineWidth: 1
+                lineWidth: 1,
             )
     }
 }
@@ -129,7 +129,7 @@ private struct TopicCell: View {
         LinearGradient(
             colors: [Color.purple.opacity(0.3), Color.blue.opacity(0.2), Color.black],
             startPoint: .topLeading,
-            endPoint: .bottomTrailing
+            endPoint: .bottomTrailing,
         )
         .ignoresSafeArea()
 
@@ -143,13 +143,13 @@ private struct TopicCell: View {
         LinearGradient(
             colors: [Color.purple.opacity(0.3), Color.blue.opacity(0.2), Color.black],
             startPoint: .topLeading,
-            endPoint: .bottomTrailing
+            endPoint: .bottomTrailing,
         )
         .ignoresSafeArea()
 
         OnboardingTopicsPageView(
             selectedTopics: [.technology, .science, .business],
-            onToggle: { _ in }
+            onToggle: { _ in },
         )
     }
     .preferredColorScheme(.dark)

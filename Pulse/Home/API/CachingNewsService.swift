@@ -37,7 +37,7 @@ final class CachingNewsService: NewsService {
         cacheStore: NewsCacheStore = LiveNewsCacheStore(),
         diskCacheStore: NewsCacheStore? = DiskNewsCacheStore(),
         networkMonitor: NetworkMonitorService? = nil,
-        networkResilienceEnabled: Bool = true
+        networkResilienceEnabled: Bool = true,
     ) {
         self.wrapped = wrapped
         memoryCacheStore = cacheStore
@@ -52,7 +52,7 @@ final class CachingNewsService: NewsService {
         let cacheKey = NewsCacheKey.topHeadlines(language: language, country: country, page: page)
         return fetchWithTieredCache(
             key: cacheKey,
-            label: "headlines (lang: \(language), country: \(country), page: \(page))"
+            label: "headlines (lang: \(language), country: \(country), page: \(page))",
         ) {
             self.wrapped.fetchTopHeadlines(language: language, country: country, page: page)
         }
@@ -62,17 +62,17 @@ final class CachingNewsService: NewsService {
         category: NewsCategory,
         language: String,
         country: String,
-        page: Int
+        page: Int,
     ) -> AnyPublisher<[Article], Error> {
         let cacheKey = NewsCacheKey.categoryHeadlines(
             language: language,
             category: category,
             country: country,
-            page: page
+            page: page,
         )
         return fetchWithTieredCache(
             key: cacheKey,
-            label: "category headlines (lang: \(language), category: \(category.rawValue), page: \(page))"
+            label: "category headlines (lang: \(language), category: \(category.rawValue), page: \(page))",
         ) {
             self.wrapped.fetchTopHeadlines(category: category, language: language, country: country, page: page)
         }
@@ -128,7 +128,7 @@ final class CachingNewsService: NewsService {
     private func fetchWithTieredCache<T>(
         key: NewsCacheKey,
         label: String,
-        networkFetch: @escaping () -> AnyPublisher<T, Error>
+        networkFetch: @escaping () -> AnyPublisher<T, Error>,
     ) -> AnyPublisher<T, Error> {
         // 1. Check L1 (memory) cache
         if let cached: CacheEntry<T> = memoryCacheStore.get(for: key),
@@ -176,7 +176,7 @@ final class CachingNewsService: NewsService {
                 {
                     Logger.shared.service(
                         "Network error, serving bounded-stale L2 for \(label): \(error)",
-                        level: .warning
+                        level: .warning,
                     )
                     return Just(staleL2.data)
                         .setFailureType(to: Error.self)

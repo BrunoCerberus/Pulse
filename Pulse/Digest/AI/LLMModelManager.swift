@@ -130,7 +130,7 @@ final class LLMModelManager: @unchecked Sendable {
 
     private func createAndWarmUpService(
         modelURL: URL,
-        progressHandler: @escaping @Sendable (Double) -> Void
+        progressHandler: @escaping @Sendable (Double) -> Void,
     ) async throws -> LlamaService {
         progressHandler(0.5)
 
@@ -144,7 +144,7 @@ final class LLMModelManager: @unchecked Sendable {
         let config = LlamaConfig(
             batchSize: 512,
             maxTokenCount: UInt32(LLMConfiguration.contextSize),
-            useGPU: useGPU
+            useGPU: useGPU,
         )
 
         let service = LlamaService(modelUrl: modelURL, config: config)
@@ -223,7 +223,7 @@ final class LLMModelManager: @unchecked Sendable {
         maxTokens: Int,
         stopSequences: [String],
         temperature: Float = LLMConfiguration.temperature,
-        topP: Float = 0.95
+        topP: Float = 0.95,
     ) -> AsyncThrowingStream<String, Error> {
         AsyncThrowingStream { [weak self] continuation in
             guard let self else {
@@ -237,7 +237,7 @@ final class LLMModelManager: @unchecked Sendable {
             // inference start on a model the caller believed it had cancelled.
             // `Task {}` only schedules the closure, so the lock is released
             // before `runInference` runs (no re-entrant deadlock).
-            let didAcquire = self.lock.withLock { () -> Bool in
+            let didAcquire = lock.withLock { () -> Bool in
                 if self.isGenerating {
                     return false
                 }
@@ -250,15 +250,15 @@ final class LLMModelManager: @unchecked Sendable {
                         stopSequences: stopSequences,
                         temperature: temperature,
                         topP: topP,
-                        continuation: continuation
+                        continuation: continuation,
                     )
                 }
                 return true
             }
             guard didAcquire else {
-                self.logger.warning(
+                logger.warning(
                     "Generation already in progress — rejecting concurrent request",
-                    category: self.logCategory
+                    category: logCategory,
                 )
                 continuation.finish(throwing: LLMError.busy)
                 return
@@ -302,7 +302,7 @@ final class LLMModelManager: @unchecked Sendable {
             let requiredMB = operation.minimumMemory / (1024 * 1024)
             logger.warning(
                 "Memory check failed: \(availableMB)MB available, \(requiredMB)MB required for \(operation)",
-                category: logCategory
+                category: logCategory,
             )
         }
 
@@ -339,10 +339,10 @@ final class LLMModelManager: @unchecked Sendable {
             memoryWarningObserverToken = NotificationCenter.default.addObserver(
                 forName: UIApplication.didReceiveMemoryWarningNotification,
                 object: nil,
-                queue: .main
+                queue: .main,
             ) { [weak self] _ in
                 guard let self else { return }
-                self.logger.warning("Memory warning received - unloading model", category: self.logCategory)
+                logger.warning("Memory warning received - unloading model", category: logCategory)
                 Task {
                     await self.unloadModelForMemoryPressure()
                 }
@@ -362,7 +362,7 @@ private extension LLMModelManager {
         stopSequences: [String],
         temperature: Float,
         topP: Float,
-        continuation: AsyncThrowingStream<String, Error>.Continuation
+        continuation: AsyncThrowingStream<String, Error>.Continuation,
     ) async {
         // H3: release the generation gate when this inference finishes for ANY
         // reason (success, throw, cancellation, memory-pressure teardown), and
@@ -393,14 +393,14 @@ private extension LLMModelManager {
         let estimatedPromptTokens = (systemPrompt.count + prompt.count) / 4
         logger.info(
             "Starting inference... (estimated prompt tokens: \(estimatedPromptTokens))",
-            category: logCategory
+            category: logCategory,
         )
 
         if estimatedPromptTokens > LLMConfiguration.contextSize - LLMConfiguration.reservedContextTokens {
             logger.warning(
                 // swiftlint:disable:next line_length
                 "Prompt may exceed safe context size (\(estimatedPromptTokens) estimated vs \(LLMConfiguration.contextSize) max)",
-                category: logCategory
+                category: logCategory,
             )
         }
 
@@ -418,13 +418,13 @@ private extension LLMModelManager {
             let samplingConfig = LlamaSamplingConfig(
                 temperature: temperature,
                 seed: UInt32.random(in: 0 ..< UInt32.max),
-                topP: topP
+                topP: topP,
             )
 
             let boxedService = UncheckedSendableBox(value: service)
             let responseStream = try await boxedService.value.streamCompletion(
                 of: messages,
-                samplingConfig: samplingConfig
+                samplingConfig: samplingConfig,
             )
 
             // L10: stop-sequence detection across chunk boundaries. Markers can

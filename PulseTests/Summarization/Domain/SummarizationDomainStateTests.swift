@@ -13,7 +13,7 @@ struct SummarizationDomainStateTests {
             source: ArticleSource(id: "source", name: "Source"),
             url: "https://example.com/article",
             publishedAt: Self.referenceDate,
-            category: .technology
+            category: .technology,
         )
     }
 
@@ -100,7 +100,7 @@ struct SummarizationDomainStateTests {
             title: "Different Article",
             source: ArticleSource(id: "source", name: "Source"),
             url: "https://example.com/other",
-            publishedAt: Date()
+            publishedAt: Date(),
         )
 
         let state1 = SummarizationDomainState.initial(article: testArticle)

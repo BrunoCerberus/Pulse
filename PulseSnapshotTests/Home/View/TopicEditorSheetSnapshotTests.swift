@@ -9,13 +9,13 @@ final class TopicEditorSheetSnapshotTests: XCTestCase {
     private let iPhoneAirConfig = ViewImageConfig(
         safeArea: UIEdgeInsets(top: 59, left: 0, bottom: 34, right: 0),
         size: CGSize(width: 393, height: 600),
-        traits: UITraitCollection(userInterfaceStyle: .dark)
+        traits: UITraitCollection(userInterfaceStyle: .dark),
     )
 
     private let iPhoneAirLightConfig = ViewImageConfig(
         safeArea: UIEdgeInsets(top: 59, left: 0, bottom: 34, right: 0),
         size: CGSize(width: 393, height: 600),
-        traits: UITraitCollection(userInterfaceStyle: .light)
+        traits: UITraitCollection(userInterfaceStyle: .light),
     )
 
     // MARK: - TopicEditorSheet Tests
@@ -25,7 +25,7 @@ final class TopicEditorSheetSnapshotTests: XCTestCase {
             allTopics: NewsCategory.allCases,
             followedTopics: [.technology, .science, .business],
             onToggleTopic: { _ in },
-            onDismiss: {}
+            onDismiss: {},
         )
 
         let controller = UIHostingController(rootView: view)
@@ -33,7 +33,7 @@ final class TopicEditorSheetSnapshotTests: XCTestCase {
         assertSnapshot(
             of: controller,
             as: SnapshotConfig.snapshotting(on: iPhoneAirConfig),
-            record: false
+            record: false,
         )
     }
 
@@ -42,7 +42,7 @@ final class TopicEditorSheetSnapshotTests: XCTestCase {
             allTopics: NewsCategory.allCases,
             followedTopics: [.technology, .science, .business],
             onToggleTopic: { _ in },
-            onDismiss: {}
+            onDismiss: {},
         )
 
         let controller = UIHostingController(rootView: view)
@@ -50,7 +50,7 @@ final class TopicEditorSheetSnapshotTests: XCTestCase {
         assertSnapshot(
             of: controller,
             as: SnapshotConfig.snapshotting(on: iPhoneAirLightConfig),
-            record: false
+            record: false,
         )
     }
 
@@ -59,7 +59,7 @@ final class TopicEditorSheetSnapshotTests: XCTestCase {
             allTopics: NewsCategory.allCases,
             followedTopics: [],
             onToggleTopic: { _ in },
-            onDismiss: {}
+            onDismiss: {},
         )
 
         let controller = UIHostingController(rootView: view)
@@ -67,7 +67,7 @@ final class TopicEditorSheetSnapshotTests: XCTestCase {
         assertSnapshot(
             of: controller,
             as: SnapshotConfig.snapshotting(on: iPhoneAirConfig),
-            record: false
+            record: false,
         )
     }
 
@@ -76,7 +76,7 @@ final class TopicEditorSheetSnapshotTests: XCTestCase {
             allTopics: NewsCategory.allCases,
             followedTopics: NewsCategory.allCases,
             onToggleTopic: { _ in },
-            onDismiss: {}
+            onDismiss: {},
         )
 
         let controller = UIHostingController(rootView: view)
@@ -84,7 +84,7 @@ final class TopicEditorSheetSnapshotTests: XCTestCase {
         assertSnapshot(
             of: controller,
             as: SnapshotConfig.snapshotting(on: iPhoneAirConfig),
-            record: false
+            record: false,
         )
     }
 
@@ -93,7 +93,7 @@ final class TopicEditorSheetSnapshotTests: XCTestCase {
             allTopics: NewsCategory.allCases,
             followedTopics: [.technology],
             onToggleTopic: { _ in },
-            onDismiss: {}
+            onDismiss: {},
         )
 
         let controller = UIHostingController(rootView: view)
@@ -101,7 +101,7 @@ final class TopicEditorSheetSnapshotTests: XCTestCase {
         assertSnapshot(
             of: controller,
             as: SnapshotConfig.snapshotting(on: iPhoneAirConfig),
-            record: false
+            record: false,
         )
     }
 }

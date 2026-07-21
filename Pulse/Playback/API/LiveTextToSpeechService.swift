@@ -161,7 +161,7 @@ final class LiveTextToSpeechService: NSObject, TextToSpeechService, @unchecked S
             // Non-fatal: speech will still work without explicit session config.
             Logger.shared.warning(
                 "TTS audio session activation failed: \(error.localizedDescription)",
-                category: "Audio"
+                category: "Audio",
             )
         }
     }
@@ -173,7 +173,7 @@ final class LiveTextToSpeechService: NSObject, TextToSpeechService, @unchecked S
             // Non-fatal.
             Logger.shared.warning(
                 "TTS audio session deactivation failed: \(error.localizedDescription)",
-                category: "Audio"
+                category: "Audio",
             )
         }
     }
@@ -185,7 +185,7 @@ extension LiveTextToSpeechService: AVSpeechSynthesizerDelegate {
     func speechSynthesizer(
         _: AVSpeechSynthesizer,
         willSpeakRangeOfSpeechString characterRange: NSRange,
-        utterance: AVSpeechUtterance
+        utterance: AVSpeechUtterance,
     ) {
         guard isActiveUtterance(utterance), totalTextLength > 0 else { return }
         let progress = Double(characterRange.location + characterRange.length) / Double(totalTextLength)

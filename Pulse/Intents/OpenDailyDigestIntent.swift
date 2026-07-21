@@ -5,7 +5,7 @@ import Foundation
 struct OpenDailyDigestIntent: AppIntent {
     static let title: LocalizedStringResource = "Show Daily Digest"
     static let description = IntentDescription(
-        "Opens Pulse on the Feed tab showing your AI-powered Daily Digest."
+        "Opens Pulse on the Feed tab showing your AI-powered Daily Digest.",
     )
 
     static let openAppWhenRun: Bool = true

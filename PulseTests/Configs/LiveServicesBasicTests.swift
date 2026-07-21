@@ -43,7 +43,7 @@ struct LiveServicesBasicTests {
         publisher
             .sink(
                 receiveCompletion: { _ in },
-                receiveValue: { (_: [Article]) in }
+                receiveValue: { (_: [Article]) in },
             )
             .store(in: &cancellables)
 
@@ -62,7 +62,7 @@ struct LiveServicesBasicTests {
         publisher
             .sink(
                 receiveCompletion: { _ in },
-                receiveValue: { (_: [Article]) in }
+                receiveValue: { (_: [Article]) in },
             )
             .store(in: &cancellables)
 
@@ -80,7 +80,7 @@ struct LiveServicesBasicTests {
         publisher
             .sink(
                 receiveCompletion: { _ in },
-                receiveValue: { (_: [Article]) in }
+                receiveValue: { (_: [Article]) in },
             )
             .store(in: &cancellables)
 
@@ -109,7 +109,7 @@ struct LiveServicesBasicTests {
         publisher
             .sink(
                 receiveCompletion: { _ in },
-                receiveValue: { (_: [Article]) in }
+                receiveValue: { (_: [Article]) in },
             )
             .store(in: &cancellables)
 
@@ -136,7 +136,7 @@ struct LiveServicesBasicTests {
         publisher
             .sink(
                 receiveCompletion: { _ in },
-                receiveValue: { (_: UserPreferences) in }
+                receiveValue: { (_: UserPreferences) in },
             )
             .store(in: &cancellables)
 
@@ -156,7 +156,7 @@ struct LiveServicesBasicTests {
         publisher
             .sink(
                 receiveCompletion: { _ in },
-                receiveValue: { (_: Void) in }
+                receiveValue: { (_: Void) in },
             )
             .store(in: &cancellables)
 

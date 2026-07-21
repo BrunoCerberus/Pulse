@@ -36,7 +36,7 @@ struct MediaDetailDomainInteractorTests {
             mediaType: .video,
             mediaURL: "https://www.youtube.com/watch?v=test123",
             mediaDuration: 600,
-            mediaMimeType: "video/youtube"
+            mediaMimeType: "video/youtube",
         )
 
         sut = MediaDetailDomainInteractor(article: testArticle, serviceLocator: serviceLocator)

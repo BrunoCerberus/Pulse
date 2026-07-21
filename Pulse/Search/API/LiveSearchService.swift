@@ -40,7 +40,7 @@ final class LiveSearchService: APIRequest, SearchService {
         let pageSize = 20
         return fetchRequest(
             target: SupabaseAPI.search(query: query, page: page, pageSize: pageSize),
-            dataType: [SupabaseSearchResult].self
+            dataType: [SupabaseSearchResult].self,
         )
         .map { results in
             results.map { $0.toArticle() }

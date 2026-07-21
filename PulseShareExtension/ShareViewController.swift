@@ -20,10 +20,10 @@ final class ShareViewController: UIViewController {
             guard let self else { return }
             switch result {
             case let .success(url):
-                self.sharedURL = url
-                self.installRootView(for: url)
+                sharedURL = url
+                installRootView(for: url)
             case .failure:
-                self.dismissWithError()
+                dismissWithError()
             }
         }
     }
@@ -34,7 +34,7 @@ final class ShareViewController: UIViewController {
         let rootView = ShareRootView(
             url: url,
             onSummarize: { [weak self] in self?.handleSummarize() },
-            onCancel: { [weak self] in self?.handleCancel() }
+            onCancel: { [weak self] in self?.handleCancel() },
         )
         let host = UIHostingController(rootView: rootView)
         addChild(host)
@@ -81,8 +81,8 @@ final class ShareViewController: UIViewController {
             withError: NSError(
                 domain: "PulseShareExtension",
                 code: 0,
-                userInfo: [NSLocalizedDescriptionKey: "User cancelled."]
-            )
+                userInfo: [NSLocalizedDescriptionKey: "User cancelled."],
+            ),
         )
     }
 
@@ -91,8 +91,8 @@ final class ShareViewController: UIViewController {
             withError: NSError(
                 domain: "PulseShareExtension",
                 code: 1,
-                userInfo: [NSLocalizedDescriptionKey: "No shareable URL found."]
-            )
+                userInfo: [NSLocalizedDescriptionKey: "No shareable URL found."],
+            ),
         )
     }
 

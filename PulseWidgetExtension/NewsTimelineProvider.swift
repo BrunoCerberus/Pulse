@@ -12,7 +12,7 @@ struct NewsTimelineProvider: TimelineProvider {
         NewsTimelineEntry(
             date: Date(),
             articles: nil,
-            family: context.family
+            family: context.family,
         )
     }
 
@@ -29,7 +29,7 @@ struct NewsTimelineProvider: TimelineProvider {
                 id: article.id,
                 title: article.title,
                 source: article.source,
-                imageData: nil
+                imageData: nil,
             )
         }
         completion(NewsTimelineEntry(date: Date(), articles: widgetArticles, family: context.family))
@@ -46,12 +46,11 @@ struct NewsTimelineProvider: TimelineProvider {
         }
 
         // Limit articles based on widget family
-        let articleLimit: Int
-        switch context.family {
-        case .systemSmall: articleLimit = 1
-        case .systemMedium: articleLimit = 2
-        case .systemLarge: articleLimit = 3
-        default: articleLimit = 2
+        let articleLimit = switch context.family {
+        case .systemSmall: 1
+        case .systemMedium: 2
+        case .systemLarge: 3
+        default: 2
         }
 
         let articlesToFetch = Array(sharedArticles.prefix(articleLimit))
@@ -61,7 +60,7 @@ struct NewsTimelineProvider: TimelineProvider {
             let entry = NewsTimelineEntry(
                 date: Date(),
                 articles: widgetArticles,
-                family: context.family
+                family: context.family,
             )
 
             let nextUpdate = Calendar.current.date(byAdding: .hour, value: 1, to: Date()) ?? Date()
@@ -87,7 +86,7 @@ struct NewsTimelineProvider: TimelineProvider {
             let task = URLSession.shared.dataTask(with: url) { data, response, _ in
                 defer { group.leave() }
 
-                guard let data = data,
+                guard let data,
                       let httpResponse = response as? HTTPURLResponse,
                       httpResponse.statusCode == 200
                 else {
@@ -106,7 +105,7 @@ struct NewsTimelineProvider: TimelineProvider {
                     id: article.id,
                     title: article.title,
                     source: article.source,
-                    imageData: snapshot[article.id]
+                    imageData: snapshot[article.id],
                 )
             }
             completion(widgetArticles)

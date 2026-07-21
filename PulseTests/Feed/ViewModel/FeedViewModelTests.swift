@@ -149,7 +149,7 @@ struct FeedViewModelTests {
             id: "cached",
             summary: "Cached summary",
             sourceArticles: Article.mockArticles,
-            generatedAt: Date()
+            generatedAt: Date(),
         )
         mockFeedService.cachedDigest = cachedDigest
         mockNewsService.topHeadlinesResult = .success(Article.mockArticles)

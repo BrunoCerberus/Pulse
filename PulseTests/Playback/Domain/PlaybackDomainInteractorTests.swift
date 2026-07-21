@@ -27,7 +27,7 @@ struct PlaybackDomainInteractorTests {
                 title: "Title",
                 sourceName: "Source",
                 speechText: "Text",
-                language: "en"
+                language: "en",
             ),
         ]
         state.currentIndex = 0

@@ -104,7 +104,7 @@ final class PremiumGatingNonPremiumUITests: BaseUITestCase {
 
         // Find and tap first article card
         let articleCardsQuery = app.buttons.matching(
-            NSPredicate(format: "label CONTAINS[c] 'ago' OR label CONTAINS[c] 'hour' OR label CONTAINS[c] 'minute'")
+            NSPredicate(format: "label CONTAINS[c] 'ago' OR label CONTAINS[c] 'hour' OR label CONTAINS[c] 'minute'"),
         )
 
         guard articleCardsQuery.count > 0 else {
@@ -198,7 +198,7 @@ final class PremiumGatingPremiumUITests: BaseUITestCase {
         // Use longer timeout for CI - LLM model initialization can be slow
         let hasSummarizationUI = waitForAny(
             [summarizeTitle, generateButton, loadingText, generatingText, modelLoadingIndicator],
-            timeout: 10
+            timeout: 10,
         )
         // Note: In CI, the summarization sheet may show but model loading can be slow
         // We accept seeing any summarization-related UI as success
@@ -227,7 +227,7 @@ final class PremiumGatingPremiumUITests: BaseUITestCase {
 
         // Try multiple strategies to find article cards
         let articleCardsQuery = app.buttons.matching(
-            NSPredicate(format: "label CONTAINS[c] 'ago' OR label CONTAINS[c] 'hour' OR label CONTAINS[c] 'minute'")
+            NSPredicate(format: "label CONTAINS[c] 'ago' OR label CONTAINS[c] 'hour' OR label CONTAINS[c] 'minute'"),
         )
 
         // Also try finding cards by accessibility identifier

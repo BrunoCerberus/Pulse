@@ -54,7 +54,7 @@ struct OnboardingPageView: View {
         LinearGradient(
             colors: [Color.purple.opacity(0.3), Color.blue.opacity(0.2), Color.black],
             startPoint: .topLeading,
-            endPoint: .bottomTrailing
+            endPoint: .bottomTrailing,
         )
         .ignoresSafeArea()
 
@@ -68,7 +68,7 @@ struct OnboardingPageView: View {
         LinearGradient(
             colors: [Color.purple.opacity(0.3), Color.blue.opacity(0.2), Color.black],
             startPoint: .topLeading,
-            endPoint: .bottomTrailing
+            endPoint: .bottomTrailing,
         )
         .ignoresSafeArea()
 

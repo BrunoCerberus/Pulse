@@ -5,7 +5,7 @@ import Foundation
 struct SearchPulseIntent: AppIntent {
     static let title: LocalizedStringResource = "Search News in Pulse"
     static let description = IntentDescription(
-        "Searches Pulse for news articles matching your query."
+        "Searches Pulse for news articles matching your query.",
     )
 
     static let openAppWhenRun: Bool = true

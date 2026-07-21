@@ -13,7 +13,7 @@ struct WidgetDataManagerTests {
             id: "test-id",
             title: "Test Title",
             source: "Test Source",
-            imageURL: "https://example.com/image.jpg"
+            imageURL: "https://example.com/image.jpg",
         )
 
         let encoded = try JSONEncoder().encode(article)
@@ -31,7 +31,7 @@ struct WidgetDataManagerTests {
             id: "test-id",
             title: "Test Title",
             source: nil,
-            imageURL: "https://example.com/image.jpg"
+            imageURL: "https://example.com/image.jpg",
         )
 
         let encoded = try JSONEncoder().encode(article)
@@ -46,7 +46,7 @@ struct WidgetDataManagerTests {
             id: "test-id",
             title: "Test Title",
             source: "Source",
-            imageURL: nil
+            imageURL: nil,
         )
 
         let encoded = try JSONEncoder().encode(article)
@@ -78,7 +78,7 @@ struct WidgetDataManagerTests {
             id: "test-id",
             title: "Breaking: \"Special\" chars & symbols <test>",
             source: "Source's Name",
-            imageURL: nil
+            imageURL: nil,
         )
 
         let encoded = try JSONEncoder().encode(article)
@@ -94,7 +94,7 @@ struct WidgetDataManagerTests {
             id: "test-id",
             title: "日本語ニュース 🇯🇵 Breaking 中文",
             source: "国際ニュース",
-            imageURL: nil
+            imageURL: nil,
         )
 
         let encoded = try JSONEncoder().encode(article)
@@ -110,7 +110,7 @@ struct WidgetDataManagerTests {
             id: "test-id",
             title: "",
             source: "Source",
-            imageURL: nil
+            imageURL: nil,
         )
 
         let encoded = try JSONEncoder().encode(article)
@@ -129,7 +129,7 @@ struct WidgetDataManagerTests {
             id: article.id,
             title: article.title,
             source: article.source.name,
-            imageURL: article.imageURL
+            imageURL: article.imageURL,
         )
 
         #expect(shared.id == article.id)
@@ -147,7 +147,7 @@ struct WidgetDataManagerTests {
                 id: article.id,
                 title: article.title,
                 source: article.source.name,
-                imageURL: article.imageURL
+                imageURL: article.imageURL,
             )
         }
 
@@ -171,7 +171,7 @@ struct WidgetDataManagerTests {
                 url: "https://example.com/\(index)",
                 imageURL: nil,
                 publishedAt: Date(),
-                category: nil
+                category: nil,
             )
         }
 
@@ -181,7 +181,7 @@ struct WidgetDataManagerTests {
                 id: article.id,
                 title: article.title,
                 source: article.source.name,
-                imageURL: article.imageURL
+                imageURL: article.imageURL,
             )
         }
 

@@ -18,7 +18,7 @@ struct LiveForYouServiceTests {
             url: "https://example.com/\(id)",
             imageURL: nil,
             publishedAt: Self.baseDate,
-            category: category
+            category: category,
         )
     }
 
@@ -50,7 +50,7 @@ struct LiveForYouServiceTests {
         let profileService = MockInterestProfileService()
         try await profileService.upsert(
             topicID: "technology", displayName: "Technology",
-            weightDelta: 1, source: .seed, category: "technology"
+            weightDelta: 1, source: .seed, category: "technology",
         )
         let sut = LiveForYouService(profileService: profileService)
 
@@ -71,15 +71,15 @@ struct LiveForYouServiceTests {
         // produces a different score.
         try await profileService.upsert(
             topicID: "technology", displayName: "Technology",
-            weightDelta: 5, source: .seed, category: "technology"
+            weightDelta: 5, source: .seed, category: "technology",
         )
         try await profileService.upsert(
             topicID: "science", displayName: "Science",
-            weightDelta: 3, source: .seed, category: "science"
+            weightDelta: 3, source: .seed, category: "science",
         )
         try await profileService.upsert(
             topicID: "health", displayName: "Health",
-            weightDelta: 1, source: .seed, category: "health"
+            weightDelta: 1, source: .seed, category: "health",
         )
         let sut = LiveForYouService(profileService: profileService)
 
@@ -99,7 +99,7 @@ struct LiveForYouServiceTests {
         let profileService = MockInterestProfileService()
         try await profileService.upsert(
             topicID: "technology", displayName: "Technology",
-            weightDelta: 1, source: .seed, category: "technology"
+            weightDelta: 1, source: .seed, category: "technology",
         )
         let sut = LiveForYouService(profileService: profileService)
 
@@ -142,7 +142,7 @@ struct LiveForYouServiceTests {
         let profileService = MockInterestProfileService()
         try await profileService.upsert(
             topicID: "technology", displayName: "Technology",
-            weightDelta: 1, source: .seed, category: "technology"
+            weightDelta: 1, source: .seed, category: "technology",
         )
         let storageService = MockStorageService()
         let alreadyRead = makeArticle(id: "read", category: .technology)
@@ -151,7 +151,7 @@ struct LiveForYouServiceTests {
 
         let sut = LiveForYouService(
             profileService: profileService,
-            storageService: storageService
+            storageService: storageService,
         )
 
         let result = try await sut.scoredArticles(from: [alreadyRead, unread], topN: 5)
@@ -163,7 +163,7 @@ struct LiveForYouServiceTests {
         let profileService = MockInterestProfileService()
         try await profileService.upsert(
             topicID: "technology", displayName: "Technology",
-            weightDelta: 1, source: .seed, category: "technology"
+            weightDelta: 1, source: .seed, category: "technology",
         )
         let storageService = MockStorageService()
         let bookmarked = makeArticle(id: "saved", category: .technology)
@@ -172,7 +172,7 @@ struct LiveForYouServiceTests {
 
         let sut = LiveForYouService(
             profileService: profileService,
-            storageService: storageService
+            storageService: storageService,
         )
 
         let result = try await sut.scoredArticles(from: [bookmarked, fresh], topN: 5)
@@ -184,7 +184,7 @@ struct LiveForYouServiceTests {
         let profileService = MockInterestProfileService()
         try await profileService.upsert(
             topicID: "technology", displayName: "Technology",
-            weightDelta: 1, source: .seed, category: "technology"
+            weightDelta: 1, source: .seed, category: "technology",
         )
         let sut = LiveForYouService(profileService: profileService)
 

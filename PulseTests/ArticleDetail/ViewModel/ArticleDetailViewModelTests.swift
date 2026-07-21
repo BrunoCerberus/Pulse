@@ -10,7 +10,7 @@ import Testing
 private func createTestArticle(
     id: String = "test-article-1",
     content: String? = "This is the full article content with some text.",
-    description: String? = "Test article description"
+    description: String? = "Test article description",
 ) -> Article {
     Article(
         id: id,
@@ -22,7 +22,7 @@ private func createTestArticle(
         url: "https://example.com/article",
         imageURL: "https://example.com/image.jpg",
         publishedAt: Date(),
-        category: .technology
+        category: .technology,
     )
 }
 
@@ -88,7 +88,7 @@ struct ArticleDetailVMHTMLTests {
     func htmlTagsStripped() async {
         let (serviceLocator, _) = createTestServiceLocator()
         let article = createTestArticle(
-            content: "<p>This is <strong>bold</strong> and <em>italic</em> text.</p>"
+            content: "<p>This is <strong>bold</strong> and <em>italic</em> text.</p>",
         )
         let sut = ArticleDetailViewModel(article: article, serviceLocator: serviceLocator)
         await waitForContentProcessing(sut)
@@ -158,7 +158,7 @@ struct ArticleDetailVMContentTests {
     func truncationMarkerRemoved() async {
         let (serviceLocator, _) = createTestServiceLocator()
         let article = createTestArticle(
-            content: "This is the beginning of the article... [+1234 chars]"
+            content: "This is the beginning of the article... [+1234 chars]",
         )
         let sut = ArticleDetailViewModel(article: article, serviceLocator: serviceLocator)
         await waitForContentProcessing(sut)

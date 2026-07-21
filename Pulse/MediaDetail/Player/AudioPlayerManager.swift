@@ -71,7 +71,7 @@ final class AudioPlayerManager: ObservableObject {
             // Log but don't fail - some devices may have restrictions
             Logger.shared.warning(
                 "Audio session configuration warning: \(error.localizedDescription)",
-                category: "Audio"
+                category: "Audio",
             )
         }
     }
@@ -220,7 +220,7 @@ final class AudioPlayerManager: ObservableObject {
             do {
                 let loadedDuration = try await playerItem.asset.load(.duration)
                 let seconds = loadedDuration.seconds
-                if seconds.isFinite && seconds > 0 {
+                if seconds.isFinite, seconds > 0 {
                     await MainActor.run {
                         self.duration = seconds
                     }

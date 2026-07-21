@@ -126,7 +126,7 @@ struct TopicExtractionPromptBuilderTests {
     func buildPromptIncludesBoth() {
         let prompt = TopicExtractionPromptBuilder.buildPrompt(
             title: "Apple announces M4",
-            summary: "Apple unveiled its new chip."
+            summary: "Apple unveiled its new chip.",
         )
         #expect(prompt.contains("Apple announces M4"))
         #expect(prompt.contains("Apple unveiled its new chip."))

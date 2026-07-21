@@ -345,7 +345,7 @@ struct DeeplinkRouterTests {
         sut.setCoordinator(coordinator)
 
         let importService = try #require(
-            try? serviceLocator.retrieve(SharedURLImportService.self) as? MockSharedURLImportService
+            try? serviceLocator.retrieve(SharedURLImportService.self) as? MockSharedURLImportService,
         )
         let initialCount = importService.processCallCount
 

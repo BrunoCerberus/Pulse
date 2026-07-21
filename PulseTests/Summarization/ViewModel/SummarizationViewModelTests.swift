@@ -137,7 +137,7 @@ struct SummarizationViewModelTests {
             article: article,
             summarizationState: .generating,
             generatedSummary: "Partial summary...",
-            modelStatus: .ready
+            modelStatus: .ready,
         )
 
         let viewState = reducer.reduce(domainState: domainState)

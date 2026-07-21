@@ -78,7 +78,7 @@ final class PulseSearchUITests: BaseUITestCase {
         XCTAssertTrue(searchUILoaded, "Search UI should load (search field or empty state)")
         XCTAssertTrue(
             searchForNews.exists || searchSubtitle.exists || searchField.exists,
-            "Initial empty state should show search prompt"
+            "Initial empty state should show search prompt",
         )
 
         if searchField.exists {

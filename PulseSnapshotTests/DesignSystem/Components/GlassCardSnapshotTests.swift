@@ -28,7 +28,7 @@ final class GlassCardSnapshotTests: XCTestCase {
         assertSnapshot(
             of: controller,
             as: SnapshotConfig.snapshotting(on: SnapshotConfig.iPhoneAir),
-            record: false
+            record: false,
         )
     }
 
@@ -46,7 +46,7 @@ final class GlassCardSnapshotTests: XCTestCase {
         assertSnapshot(
             of: controller,
             as: SnapshotConfig.snapshotting(on: SnapshotConfig.iPhoneAir),
-            record: false
+            record: false,
         )
     }
 
@@ -64,7 +64,7 @@ final class GlassCardSnapshotTests: XCTestCase {
         assertSnapshot(
             of: controller,
             as: SnapshotConfig.snapshotting(on: SnapshotConfig.iPhoneAir),
-            record: false
+            record: false,
         )
     }
 
@@ -80,7 +80,7 @@ final class GlassCardSnapshotTests: XCTestCase {
                         .font(Typography.labelLarge)
                 }
                 .frame(maxWidth: .infinity)
-            }
+            },
         )
         .frame(width: 375)
         .padding()
@@ -91,7 +91,7 @@ final class GlassCardSnapshotTests: XCTestCase {
         assertSnapshot(
             of: controller,
             as: SnapshotConfig.snapshotting(on: SnapshotConfig.iPhoneAir),
-            record: false
+            record: false,
         )
     }
 
@@ -115,7 +115,7 @@ final class GlassCardSnapshotTests: XCTestCase {
         assertSnapshot(
             of: controller,
             as: SnapshotConfig.snapshotting(on: SnapshotConfig.iPhoneAir),
-            record: false
+            record: false,
         )
     }
 }

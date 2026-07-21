@@ -17,7 +17,7 @@ struct PulseAppShortcuts: AppShortcutsProvider {
                 "Show me the news in \(.applicationName)",
             ],
             shortTitle: "Open Pulse",
-            systemImageName: "newspaper"
+            systemImageName: "newspaper",
         )
 
         AppShortcut(
@@ -28,7 +28,7 @@ struct PulseAppShortcuts: AppShortcutsProvider {
                 "What's in my \(.applicationName) digest",
             ],
             shortTitle: "Daily Digest",
-            systemImageName: "text.document"
+            systemImageName: "text.document",
         )
 
         AppShortcut(
@@ -39,7 +39,7 @@ struct PulseAppShortcuts: AppShortcutsProvider {
                 "Show saved articles in \(.applicationName)",
             ],
             shortTitle: "Saved Articles",
-            systemImageName: "bookmark"
+            systemImageName: "bookmark",
         )
 
         // Note: App Shortcut phrases only support `\(.applicationName)` and
@@ -55,7 +55,7 @@ struct PulseAppShortcuts: AppShortcutsProvider {
                 "Find articles in \(.applicationName)",
             ],
             shortTitle: "Search News",
-            systemImageName: "magnifyingglass"
+            systemImageName: "magnifyingglass",
         )
 
         AppShortcut(
@@ -66,7 +66,7 @@ struct PulseAppShortcuts: AppShortcutsProvider {
                 "Change \(.applicationName) preferences",
             ],
             shortTitle: "Pulse Settings",
-            systemImageName: "gearshape"
+            systemImageName: "gearshape",
         )
     }
 }

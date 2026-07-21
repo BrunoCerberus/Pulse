@@ -92,7 +92,7 @@ struct DigestViewItemTests {
             id: "digest-1",
             summary: "Test summary content",
             sourceArticles: Article.mockArticles,
-            generatedAt: Date()
+            generatedAt: Date(),
         )
 
         let viewItem = DigestViewItem(from: digest)
@@ -108,7 +108,7 @@ struct DigestViewItemTests {
             id: "unique-id",
             summary: "Summary",
             sourceArticles: [],
-            generatedAt: Date()
+            generatedAt: Date(),
         )
 
         let viewItem = DigestViewItem(from: digest)
@@ -168,7 +168,7 @@ struct DigestSectionTests {
     func defaultValues() {
         let section = DigestSection(
             title: "Technology",
-            content: "Tech content"
+            content: "Tech content",
         )
 
         #expect(section.title == "Technology")
@@ -188,7 +188,7 @@ struct DigestSectionTests {
             content: "Business content",
             category: .business,
             relatedArticles: [article],
-            isHighlight: true
+            isHighlight: true,
         )
 
         #expect(section.id == "custom-id")
@@ -202,7 +202,7 @@ struct DigestSectionTests {
         let section = DigestSection(
             id: "test-id",
             title: "Title",
-            content: "Content"
+            content: "Content",
         )
 
         #expect(section.id == "test-id")
@@ -213,12 +213,12 @@ struct DigestSectionTests {
         let section1 = DigestSection(
             id: "same-id",
             title: "Title",
-            content: "Content"
+            content: "Content",
         )
         let section2 = DigestSection(
             id: "same-id",
             title: "Title",
-            content: "Content"
+            content: "Content",
         )
 
         #expect(section1 == section2)

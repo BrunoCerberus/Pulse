@@ -9,7 +9,7 @@ struct PulseNewsWidgetEntryViewTests {
         let entry = NewsTimelineEntry(
             date: Date(),
             articles: nil,
-            family: .systemSmall
+            family: .systemSmall,
         )
         let view = PulseNewsWidgetEntryView(entry: entry)
         #expect(view.entry.family == .systemSmall)
@@ -20,7 +20,7 @@ struct PulseNewsWidgetEntryViewTests {
         let entry = NewsTimelineEntry(
             date: Date(),
             articles: nil,
-            family: .systemSmall
+            family: .systemSmall,
         )
         let view = PulseNewsWidgetEntryView(entry: entry)
         #expect(view.headerSpacing == 6)
@@ -31,7 +31,7 @@ struct PulseNewsWidgetEntryViewTests {
         let entry = NewsTimelineEntry(
             date: Date(),
             articles: nil,
-            family: .systemMedium
+            family: .systemMedium,
         )
         let view = PulseNewsWidgetEntryView(entry: entry)
         #expect(view.headerSpacing == 8)
@@ -42,7 +42,7 @@ struct PulseNewsWidgetEntryViewTests {
         let entry = NewsTimelineEntry(
             date: Date(),
             articles: nil,
-            family: .systemSmall
+            family: .systemSmall,
         )
         let view = PulseNewsWidgetEntryView(entry: entry)
         #expect(view.contentSpacing == 8)
@@ -53,7 +53,7 @@ struct PulseNewsWidgetEntryViewTests {
         let entry = NewsTimelineEntry(
             date: Date(),
             articles: nil,
-            family: .systemMedium
+            family: .systemMedium,
         )
         let view = PulseNewsWidgetEntryView(entry: entry)
         #expect(view.contentSpacing == 10)
@@ -64,7 +64,7 @@ struct PulseNewsWidgetEntryViewTests {
         let entry = NewsTimelineEntry(
             date: Date(),
             articles: nil,
-            family: .systemSmall
+            family: .systemSmall,
         )
         let view = PulseNewsWidgetEntryView(entry: entry)
         #expect(view.articleLimit(for: .systemSmall) == 1)
@@ -75,7 +75,7 @@ struct PulseNewsWidgetEntryViewTests {
         let entry = NewsTimelineEntry(
             date: Date(),
             articles: nil,
-            family: .systemMedium
+            family: .systemMedium,
         )
         let view = PulseNewsWidgetEntryView(entry: entry)
         #expect(view.articleLimit(for: .systemMedium) == 2)
@@ -86,7 +86,7 @@ struct PulseNewsWidgetEntryViewTests {
         let entry = NewsTimelineEntry(
             date: Date(),
             articles: nil,
-            family: .systemLarge
+            family: .systemLarge,
         )
         let view = PulseNewsWidgetEntryView(entry: entry)
         #expect(view.articleLimit(for: .systemLarge) == 3)

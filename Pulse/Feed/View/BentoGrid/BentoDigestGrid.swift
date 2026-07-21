@@ -22,7 +22,7 @@ private extension View {
         background(
             GeometryReader { geometry in
                 Color.clear.preference(key: CardHeightPreferenceKey.self, value: geometry.size.height)
-            }
+            },
         )
     }
 }
@@ -80,7 +80,7 @@ struct BentoDigestGrid: View {
         let statsCard = StatsCard(
             articleCount: digest.articleCount,
             topicsCount: topicsBreakdown.count,
-            minHeight: dynamicTypeSize.isAccessibilitySize ? nil : (cardRowHeight > 0 ? cardRowHeight : nil)
+            minHeight: dynamicTypeSize.isAccessibilitySize ? nil : (cardRowHeight > 0 ? cardRowHeight : nil),
         )
         .measureHeight()
         .opacity(showStats ? 1 : 0)
@@ -89,7 +89,7 @@ struct BentoDigestGrid: View {
 
         let topicsCard = TopicsBreakdownCard(
             breakdown: topicsBreakdown,
-            minHeight: dynamicTypeSize.isAccessibilitySize ? nil : (cardRowHeight > 0 ? cardRowHeight : nil)
+            minHeight: dynamicTypeSize.isAccessibilitySize ? nil : (cardRowHeight > 0 ? cardRowHeight : nil),
         )
         .measureHeight()
         .opacity(showTopics ? 1 : 0)
@@ -125,7 +125,7 @@ struct BentoDigestGrid: View {
 
         return ContentSectionCard(
             section: section,
-            onArticleTapped: onArticleTapped
+            onArticleTapped: onArticleTapped,
         )
         .opacity(isVisible ? 1 : 0)
         .offset(y: isVisible ? 0 : 20)
@@ -182,15 +182,15 @@ struct BentoDigestGrid: View {
             id: "preview",
             summary: previewSummary,
             sourceArticles: Article.mockArticles,
-            generatedAt: .now
-        )
+            generatedAt: .now,
+        ),
     )
 
     return ScrollView {
         BentoDigestGrid(
             digest: mockDigest,
             sourceArticles: Article.mockArticles.map { FeedSourceArticle(from: $0) },
-            onArticleTapped: { _ in }
+            onArticleTapped: { _ in },
         )
         .padding(.horizontal, Spacing.md)
     }

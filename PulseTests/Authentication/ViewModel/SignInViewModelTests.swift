@@ -214,7 +214,7 @@ struct SignInViewModelTests {
         try await Task.sleep(nanoseconds: 300_000_000)
 
         // Should have captured loading state transitions
-        let loadingStates = states.filter { $0.isLoading }
+        let loadingStates = states.filter(\.isLoading)
         #expect(!loadingStates.isEmpty)
     }
 

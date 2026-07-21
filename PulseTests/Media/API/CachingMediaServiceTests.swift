@@ -17,7 +17,7 @@ struct CachingMediaServiceTests {
             wrapping: mockMediaService,
             cacheStore: mockCacheStore,
             diskCacheStore: nil,
-            networkResilienceEnabled: false
+            networkResilienceEnabled: false,
         )
     }
 
@@ -41,7 +41,7 @@ struct CachingMediaServiceTests {
                 receiveCompletion: { _ in },
                 receiveValue: { articles in
                     receivedArticles = articles
-                }
+                },
             )
             .store(in: &cancellables)
 
@@ -62,7 +62,7 @@ struct CachingMediaServiceTests {
                 receiveCompletion: { _ in },
                 receiveValue: { articles in
                     receivedArticles = articles
-                }
+                },
             )
             .store(in: &cancellables)
 
@@ -95,7 +95,7 @@ struct CachingMediaServiceTests {
                 receiveCompletion: { _ in },
                 receiveValue: { articles in
                     receivedArticles = articles
-                }
+                },
             )
             .store(in: &cancellables)
 
@@ -122,7 +122,7 @@ struct CachingMediaServiceTests {
                 receiveCompletion: { _ in },
                 receiveValue: { articles in
                     receivedArticles = articles
-                }
+                },
             )
             .store(in: &cancellables)
 
@@ -152,7 +152,7 @@ struct CachingMediaServiceTests {
                 receiveCompletion: { _ in },
                 receiveValue: { articles in
                     receivedArticles = articles
-                }
+                },
             )
             .store(in: &cancellables)
 
@@ -173,7 +173,7 @@ struct CachingMediaServiceTests {
                 receiveCompletion: { _ in },
                 receiveValue: { articles in
                     receivedArticles = articles
-                }
+                },
             )
             .store(in: &cancellables)
 
@@ -222,7 +222,7 @@ struct CachingMediaServiceTests {
             wrapping: mockMediaService,
             cacheStore: mockCacheStore,
             diskCacheStore: nil,
-            networkMonitor: mockNetworkMonitor
+            networkMonitor: mockNetworkMonitor,
         )
 
         // Store expired data in L1
@@ -241,7 +241,7 @@ struct CachingMediaServiceTests {
                 receiveCompletion: { _ in },
                 receiveValue: { articles in
                     receivedArticles = articles
-                }
+                },
             )
             .store(in: &cancellables)
 
@@ -257,7 +257,7 @@ struct CachingMediaServiceTests {
             wrapping: mockMediaService,
             cacheStore: mockCacheStore,
             diskCacheStore: nil,
-            networkMonitor: mockNetworkMonitor
+            networkMonitor: mockNetworkMonitor,
         )
 
         var receivedError: Error?
@@ -270,7 +270,7 @@ struct CachingMediaServiceTests {
                         receivedError = error
                     }
                 },
-                receiveValue: { _ in }
+                receiveValue: { _ in },
             )
             .store(in: &cancellables)
 

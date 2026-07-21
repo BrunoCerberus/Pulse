@@ -205,7 +205,7 @@ private extension FeedDomainInteractor {
                 // Preloading failure is non-fatal; generation will retry loading
                 Logger.shared.debug(
                     "Model preload failed (will retry on generation): \(error)",
-                    category: "FeedDomainInteractor"
+                    category: "FeedDomainInteractor",
                 )
             }
         }
@@ -215,7 +215,7 @@ private extension FeedDomainInteractor {
         fetchArticlesTask?.cancel()
         updateState { $0.generationState = .loadingArticles }
 
-        let newsService = UncheckedSendableBox(value: self.newsService)
+        let newsService = UncheckedSendableBox(value: newsService)
 
         fetchArticlesTask = Task { @MainActor [weak self] in
             guard let self else { return }
@@ -223,18 +223,18 @@ private extension FeedDomainInteractor {
 
             let allArticles = await FeedArticlePoolBuilder.fetchPool(
                 newsService: newsService.value,
-                language: AppLocalization.shared.language
+                language: AppLocalization.shared.language,
             )
             guard !Task.isCancelled else { return }
 
             if allArticles.isEmpty {
-                let isOffline = self.networkMonitor?.isConnected == false
+                let isOffline = networkMonitor?.isConnected == false
                 let message = isOffline
                     ? "You're offline. Connect to the internet to generate your daily digest."
                     : "Unable to fetch news"
-                self.dispatch(action: .latestArticlesFailed(message, isOffline: isOffline))
+                dispatch(action: .latestArticlesFailed(message, isOffline: isOffline))
             } else {
-                self.dispatch(action: .latestArticlesLoaded(allArticles))
+                dispatch(action: .latestArticlesLoaded(allArticles))
             }
         }
     }
@@ -269,7 +269,7 @@ private extension FeedDomainInteractor {
         guard storeKitService?.isPremium != false else {
             Logger.shared.service(
                 "Digest generation blocked: Premium entitlement not active",
-                level: .warning
+                level: .warning,
             )
             return
         }
@@ -289,7 +289,7 @@ private extension FeedDomainInteractor {
         if totalArticles > cappedCount {
             Logger.shared.info(
                 "Digest: capped articles from \(totalArticles) to \(cappedCount) for context safety",
-                category: "FeedDomainInteractor"
+                category: "FeedDomainInteractor",
             )
         }
 
@@ -335,13 +335,13 @@ private extension FeedDomainInteractor {
                 // Log generation result for debugging
                 Logger.shared.info(
                     "Digest generation: raw=\(fullText.count) chars, cleaned=\(finalSummary.count) chars",
-                    category: "FeedDomainInteractor"
+                    category: "FeedDomainInteractor",
                 )
                 #if DEBUG
                     // Log first 500 chars of output for debugging parsing issues
                     Logger.shared.debug(
                         "Digest output preview: \(String(finalSummary.prefix(500)))",
-                        category: "FeedDomainInteractor"
+                        category: "FeedDomainInteractor",
                     )
                 #endif
 
@@ -349,7 +349,7 @@ private extension FeedDomainInteractor {
                 guard !finalSummary.isEmpty else {
                     Logger.shared.warning(
                         "Empty digest after cleaning. Raw output: \(fullText.prefix(200))",
-                        category: "FeedDomainInteractor"
+                        category: "FeedDomainInteractor",
                     )
                     dispatch(action: .digestFailed("Unable to generate summary. Please try again."))
                     return
@@ -359,7 +359,7 @@ private extension FeedDomainInteractor {
                     id: UUID().uuidString,
                     summary: finalSummary,
                     sourceArticles: articlesToProcess,
-                    generatedAt: .now
+                    generatedAt: .now,
                 )
                 feedServiceBox.value.saveDigest(digest)
                 dispatch(action: .digestCompleted(digest))
@@ -368,7 +368,7 @@ private extension FeedDomainInteractor {
                 guard !Task.isCancelled else { return }
                 Logger.shared.error(
                     "Digest generation failed: \(error)",
-                    category: "FeedDomainInteractor"
+                    category: "FeedDomainInteractor",
                 )
                 dispatch(action: .digestFailed(error.localizedDescription))
             }
@@ -402,7 +402,7 @@ private extension FeedDomainInteractor {
         guard storeKitService?.isPremium != false else {
             Logger.shared.service(
                 "Morning Briefing blocked: Premium entitlement not active",
-                level: .warning
+                level: .warning,
             )
             return
         }
@@ -462,7 +462,7 @@ private extension FeedDomainInteractor {
         guard storeKitService?.isPremium != false else {
             Logger.shared.service(
                 "Audio briefing blocked: Premium entitlement not active",
-                level: .warning
+                level: .warning,
             )
             return
         }
@@ -484,7 +484,7 @@ private extension FeedDomainInteractor {
 
             var articleItems: [PlaybackItem] = []
             if let forYouService = forYouBox.value {
-                let scored = (try? await forYouService.scoredArticles(from: pool, topN: topN)) ?? []
+                let scored = await (try? forYouService.scoredArticles(from: pool, topN: topN)) ?? []
                 articleItems = scored.map { PlaybackItem.briefingArticle($0.article, language: language) }
             }
 

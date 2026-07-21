@@ -17,7 +17,7 @@ struct EngagementEventTests {
             url: "https://example.com/1",
             imageURL: nil,
             publishedAt: Self.referenceDate,
-            category: .technology
+            category: .technology,
         )
     }
 
@@ -66,7 +66,7 @@ struct EngagementEventTests {
             source: ArticleSource(id: nil, name: "src"),
             url: "https://x",
             publishedAt: Self.referenceDate,
-            category: nil
+            category: nil,
         )
         let event = EngagementEvent(from: articleNoCategory, kind: .read30s)
         #expect(event.categoryRaw == nil)

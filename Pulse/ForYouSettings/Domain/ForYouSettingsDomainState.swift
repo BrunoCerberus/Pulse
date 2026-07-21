@@ -23,7 +23,7 @@ struct ForYouSettingsDomainState: Equatable {
             topics: [],
             isLoading: false,
             error: nil,
-            showResetConfirmation: false
+            showResetConfirmation: false,
         )
     }
 }

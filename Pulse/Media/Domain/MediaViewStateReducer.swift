@@ -24,7 +24,7 @@ struct MediaViewStateReducer: ViewStateReducing {
             selectedMedia: domainState.selectedMedia,
             mediaToShare: domainState.mediaToShare,
             mediaToPlay: domainState.mediaToPlay,
-            isOfflineError: domainState.isOfflineError
+            isOfflineError: domainState.isOfflineError,
         )
     }
 }

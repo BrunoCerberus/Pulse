@@ -28,13 +28,13 @@ struct FeedDigestPromptBuilderTests {
         let maxPerCat = LLMConfiguration.maxArticlesPerCategory
         let techArticles = generateMockArticles(count: 10, category: .technology)
         let worldArticles = generateMockArticles(
-            count: 10, category: .world, idPrefix: "world"
+            count: 10, category: .world, idPrefix: "world",
         )
         let all = (techArticles + worldArticles).sorted { $0.publishedAt > $1.publishedAt }
         let capped = FeedDigestPromptBuilder.cappedArticles(from: all)
 
-        let techCount = capped.filter { $0.category == .technology }.count
-        let worldCount = capped.filter { $0.category == .world }.count
+        let techCount = capped.count(where: { $0.category == .technology })
+        let worldCount = capped.count(where: { $0.category == .world })
 
         // Each category should get at least maxPerCategory articles
         #expect(techCount >= maxPerCat)
@@ -135,7 +135,7 @@ struct FeedDigestPromptBuilderTests {
     private func generateMockArticles(
         count: Int,
         category: NewsCategory = .technology,
-        idPrefix: String = "test"
+        idPrefix: String = "test",
     ) -> [Article] {
         (0 ..< count).map { index in
             Article(
@@ -148,7 +148,7 @@ struct FeedDigestPromptBuilderTests {
                 url: "https://example.com/\(idPrefix)-\(index)",
                 imageURL: nil,
                 publishedAt: Date().addingTimeInterval(Double(-index * 3600)),
-                category: category
+                category: category,
             )
         }
     }

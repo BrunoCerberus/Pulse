@@ -33,7 +33,7 @@ protocol InterestProfileService {
         displayName: String,
         weightDelta: Double,
         source: InterestTopic.Source,
-        category: String?
+        category: String?,
     ) async throws
 
     /// Removes a single topic. No-op if `topicID` doesn't exist.

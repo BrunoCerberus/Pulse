@@ -64,7 +64,7 @@ final class BookmarkedArticle {
             url: url,
             imageURL: imageURL,
             publishedAt: publishedAt,
-            category: category.flatMap { NewsCategory(rawValue: $0) }
+            category: category.flatMap { NewsCategory(rawValue: $0) },
         )
     }
 }

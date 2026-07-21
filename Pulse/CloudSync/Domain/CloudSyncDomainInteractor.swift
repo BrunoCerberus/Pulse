@@ -38,7 +38,7 @@ final class CloudSyncDomainInteractor: CombineInteractor {
 
     init(
         serviceLocator: ServiceLocator,
-        notificationCenter: NotificationCenter = .default
+        notificationCenter: NotificationCenter = .default,
     ) {
         do {
             cloudSyncService = try serviceLocator.retrieve(CloudSyncService.self)
@@ -123,8 +123,8 @@ final class CloudSyncDomainInteractor: CombineInteractor {
                 NSError(
                     domain: "CloudSync",
                     code: -1,
-                    userInfo: [NSLocalizedDescriptionKey: message]
-                )
+                    userInfo: [NSLocalizedDescriptionKey: message],
+                ),
             )
         case .idle:
             break
@@ -166,11 +166,11 @@ final class CloudSyncDomainInteractor: CombineInteractor {
 private extension CloudSyncAccountStatus {
     var analyticsValue: String {
         switch self {
-        case .available: return "available"
-        case .noAccount: return "no_account"
-        case .restricted: return "restricted"
-        case .temporarilyUnavailable: return "temporarily_unavailable"
-        case .couldNotDetermine: return "could_not_determine"
+        case .available: "available"
+        case .noAccount: "no_account"
+        case .restricted: "restricted"
+        case .temporarilyUnavailable: "temporarily_unavailable"
+        case .couldNotDetermine: "could_not_determine"
         }
     }
 }

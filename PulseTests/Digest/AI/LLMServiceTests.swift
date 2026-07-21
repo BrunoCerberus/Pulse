@@ -12,7 +12,7 @@ struct LLMInferenceConfigTests {
             maxTokens: 512,
             temperature: 0.5,
             topP: 0.8,
-            stopSequences: ["STOP", "END"]
+            stopSequences: ["STOP", "END"],
         )
 
         #expect(config.maxTokens == 512)
@@ -45,21 +45,21 @@ struct LLMInferenceConfigTests {
             maxTokens: 1024,
             temperature: 0.7,
             topP: 0.9,
-            stopSequences: ["</digest>"]
+            stopSequences: ["</digest>"],
         )
 
         let config2 = LLMInferenceConfig(
             maxTokens: 1024,
             temperature: 0.7,
             topP: 0.9,
-            stopSequences: ["</digest>"]
+            stopSequences: ["</digest>"],
         )
 
         let config3 = LLMInferenceConfig(
             maxTokens: 512,
             temperature: 0.5,
             topP: 0.8,
-            stopSequences: ["STOP"]
+            stopSequences: ["STOP"],
         )
 
         #expect(config1 == config2)
@@ -75,7 +75,7 @@ struct LLMInferenceConfigTests {
             maxTokens: 2048,
             temperature: baseConfig.temperature,
             topP: baseConfig.topP,
-            stopSequences: baseConfig.stopSequences
+            stopSequences: baseConfig.stopSequences,
         )
         #expect(baseConfig != differentMaxTokens)
 
@@ -83,7 +83,7 @@ struct LLMInferenceConfigTests {
             maxTokens: baseConfig.maxTokens,
             temperature: 0.5,
             topP: baseConfig.topP,
-            stopSequences: baseConfig.stopSequences
+            stopSequences: baseConfig.stopSequences,
         )
         #expect(baseConfig != differentTemperature)
 
@@ -91,7 +91,7 @@ struct LLMInferenceConfigTests {
             maxTokens: baseConfig.maxTokens,
             temperature: baseConfig.temperature,
             topP: 0.5,
-            stopSequences: baseConfig.stopSequences
+            stopSequences: baseConfig.stopSequences,
         )
         #expect(baseConfig != differentTopP)
 
@@ -99,7 +99,7 @@ struct LLMInferenceConfigTests {
             maxTokens: baseConfig.maxTokens,
             temperature: baseConfig.temperature,
             topP: baseConfig.topP,
-            stopSequences: ["EOF"]
+            stopSequences: ["EOF"],
         )
         #expect(baseConfig != differentStopSequences)
     }
@@ -311,28 +311,28 @@ struct LLMErrorTests {
     @Test("LLMError Equatable works for modelLoadFailed with same reason")
     func equatableForModelLoadFailedSameReason() {
         #expect(
-            LLMError.modelLoadFailed("same reason") == LLMError.modelLoadFailed("same reason")
+            LLMError.modelLoadFailed("same reason") == LLMError.modelLoadFailed("same reason"),
         )
     }
 
     @Test("LLMError Equatable works for modelLoadFailed with different reasons")
     func equatableForModelLoadFailedDifferentReasons() {
         #expect(
-            LLMError.modelLoadFailed("reason1") != LLMError.modelLoadFailed("reason2")
+            LLMError.modelLoadFailed("reason1") != LLMError.modelLoadFailed("reason2"),
         )
     }
 
     @Test("LLMError Equatable works for generationFailed with same reason")
     func equatableForGenerationFailedSameReason() {
         #expect(
-            LLMError.generationFailed("same reason") == LLMError.generationFailed("same reason")
+            LLMError.generationFailed("same reason") == LLMError.generationFailed("same reason"),
         )
     }
 
     @Test("LLMError Equatable works for generationFailed with different reasons")
     func equatableForGenerationFailedDifferentReasons() {
         #expect(
-            LLMError.generationFailed("reason1") != LLMError.generationFailed("reason2")
+            LLMError.generationFailed("reason1") != LLMError.generationFailed("reason2"),
         )
     }
 

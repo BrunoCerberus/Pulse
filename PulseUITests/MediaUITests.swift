@@ -67,7 +67,7 @@ final class MediaUITests: BaseUITestCase {
             let podcastsButton = app.buttons["Podcasts"]
             XCTAssertTrue(
                 safeWaitForExistence(videosButton, timeout: 5) || safeWaitForExistence(podcastsButton, timeout: 5),
-                "Media segmented control should be visible"
+                "Media segmented control should be visible",
             )
         }
     }
@@ -295,7 +295,7 @@ final class MediaUITests: BaseUITestCase {
         navigateToMediaTab()
         XCTAssertTrue(
             safeWaitForExistence(app.navigationBars["Media"], timeout: Self.defaultTimeout),
-            "Media tab should be visible"
+            "Media tab should be visible",
         )
 
         // Switch to Bookmarks
@@ -303,7 +303,7 @@ final class MediaUITests: BaseUITestCase {
         XCTAssertTrue(
             safeWaitForExistence(app.navigationBars["Bookmarks"], timeout: Self.shortTimeout) ||
                 app.tabBars.buttons["Bookmarks"].isSelected,
-            "Bookmarks tab should be visible"
+            "Bookmarks tab should be visible",
         )
     }
 

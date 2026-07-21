@@ -24,7 +24,7 @@ struct UserPreferencesTests {
             mutedKeywords: ["spam"],
             preferredLanguage: "en",
             notificationsEnabled: true,
-            breakingNewsNotifications: true
+            breakingNewsNotifications: true,
         )
 
         #expect(prefs.followedTopics.count == 2)

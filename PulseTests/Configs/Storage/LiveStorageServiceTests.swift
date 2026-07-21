@@ -21,7 +21,7 @@ struct LiveStorageServiceTests {
             url: "https://example.com/article",
             imageURL: "https://example.com/image.jpg",
             publishedAt: Self.referenceDate,
-            category: .technology
+            category: .technology,
         )
     }
 
@@ -32,7 +32,7 @@ struct LiveStorageServiceTests {
             source: ArticleSource(id: "another-source", name: "Another Source"),
             url: "https://example.com/another",
             publishedAt: Self.referenceDate.addingTimeInterval(-3600),
-            category: .business
+            category: .business,
         )
     }
 

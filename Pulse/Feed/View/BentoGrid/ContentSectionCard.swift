@@ -49,7 +49,7 @@ struct ContentSectionCard: View {
                 color.opacity(0.03),
             ],
             startPoint: .topLeading,
-            endPoint: .bottomTrailing
+            endPoint: .bottomTrailing,
         )
     }
 
@@ -63,9 +63,9 @@ struct ContentSectionCard: View {
                 LinearGradient(
                     colors: [color.opacity(0.3), color.opacity(0.1)],
                     startPoint: .topLeading,
-                    endPoint: .bottomTrailing
+                    endPoint: .bottomTrailing,
                 ),
-                lineWidth: 0.5
+                lineWidth: 0.5,
             )
     }
 
@@ -175,7 +175,7 @@ struct ContentSectionCard: View {
         .accessibilityElement(children: .combine)
         .accessibilityLabel(String(
             format: Constants.articleAccessibilityLabel,
-            article.title, article.source, article.formattedDate
+            article.title, article.source, article.formattedDate,
         ))
         .accessibilityHint(Constants.readArticleHint)
     }
@@ -254,13 +254,13 @@ struct ContentSectionCard: View {
             FeedSourceArticle(from: Article.mockArticles[0]),
             FeedSourceArticle(from: Article.mockArticles[1]),
             FeedSourceArticle(from: Article.mockArticles[2]),
-        ]
+        ],
     )
 
     return ScrollView {
         ContentSectionCard(
             section: previewSection,
-            onArticleTapped: { _ in }
+            onArticleTapped: { _ in },
         )
         .padding()
     }

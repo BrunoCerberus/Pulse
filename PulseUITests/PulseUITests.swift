@@ -27,7 +27,7 @@ final class PulseUITests: BaseUITestCase {
 
         // --- Search Tab (verify exists) ---
         let searchTab = app.tabBars.buttons.matching(
-            NSPredicate(format: "label CONTAINS[c] 'search' OR identifier CONTAINS[c] 'search'")
+            NSPredicate(format: "label CONTAINS[c] 'search' OR identifier CONTAINS[c] 'search'"),
         ).firstMatch
         XCTAssertTrue(safeWaitForExistence(searchTab, timeout: 5), "Search tab should exist")
 

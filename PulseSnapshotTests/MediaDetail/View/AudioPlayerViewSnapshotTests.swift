@@ -9,13 +9,13 @@ final class AudioPlayerViewSnapshotTests: XCTestCase {
     private let iPhoneAirConfig = ViewImageConfig(
         safeArea: UIEdgeInsets(top: 59, left: 0, bottom: 34, right: 0),
         size: CGSize(width: 393, height: 500),
-        traits: UITraitCollection(userInterfaceStyle: .dark)
+        traits: UITraitCollection(userInterfaceStyle: .dark),
     )
 
     private let iPhoneAirLightConfig = ViewImageConfig(
         safeArea: UIEdgeInsets(top: 59, left: 0, bottom: 34, right: 0),
         size: CGSize(width: 393, height: 500),
-        traits: UITraitCollection(userInterfaceStyle: .light)
+        traits: UITraitCollection(userInterfaceStyle: .light),
     )
 
     private let fixedDate = Date(timeIntervalSince1970: 1_672_531_200)
@@ -36,7 +36,7 @@ final class AudioPlayerViewSnapshotTests: XCTestCase {
             mediaType: .podcast,
             mediaURL: "https://example.com/audio.mp3",
             mediaDuration: 3600,
-            mediaMimeType: "audio/mpeg"
+            mediaMimeType: "audio/mpeg",
         )
     }
 
@@ -57,7 +57,7 @@ final class AudioPlayerViewSnapshotTests: XCTestCase {
             mediaType: .podcast,
             mediaURL: "https://example.com/audio.mp3",
             mediaDuration: 7200,
-            mediaMimeType: "audio/mpeg"
+            mediaMimeType: "audio/mpeg",
         )
     }
 
@@ -70,7 +70,7 @@ final class AudioPlayerViewSnapshotTests: XCTestCase {
             onDurationLoaded: { _ in },
             onError: { _ in },
             onLoadingChanged: { _ in },
-            onPlayStateChanged: { _ in }
+            onPlayStateChanged: { _ in },
         )
         .frame(width: 375)
 
@@ -79,7 +79,7 @@ final class AudioPlayerViewSnapshotTests: XCTestCase {
         assertSnapshot(
             of: controller,
             as: SnapshotConfig.snapshotting(on: iPhoneAirConfig),
-            record: false
+            record: false,
         )
     }
 
@@ -90,7 +90,7 @@ final class AudioPlayerViewSnapshotTests: XCTestCase {
             onDurationLoaded: { _ in },
             onError: { _ in },
             onLoadingChanged: { _ in },
-            onPlayStateChanged: { _ in }
+            onPlayStateChanged: { _ in },
         )
         .frame(width: 375)
 
@@ -99,7 +99,7 @@ final class AudioPlayerViewSnapshotTests: XCTestCase {
         assertSnapshot(
             of: controller,
             as: SnapshotConfig.snapshotting(on: iPhoneAirLightConfig),
-            record: false
+            record: false,
         )
     }
 
@@ -110,7 +110,7 @@ final class AudioPlayerViewSnapshotTests: XCTestCase {
             onDurationLoaded: { _ in },
             onError: { _ in },
             onLoadingChanged: { _ in },
-            onPlayStateChanged: { _ in }
+            onPlayStateChanged: { _ in },
         )
         .frame(width: 375)
 
@@ -119,7 +119,7 @@ final class AudioPlayerViewSnapshotTests: XCTestCase {
         assertSnapshot(
             of: controller,
             as: SnapshotConfig.snapshotting(on: iPhoneAirConfig),
-            record: false
+            record: false,
         )
     }
 
@@ -138,7 +138,7 @@ final class AudioPlayerViewSnapshotTests: XCTestCase {
             mediaType: .podcast,
             mediaURL: "https://example.com/audio.mp3",
             mediaDuration: 1800,
-            mediaMimeType: "audio/mpeg"
+            mediaMimeType: "audio/mpeg",
         )
 
         let view = AudioPlayerView(
@@ -147,7 +147,7 @@ final class AudioPlayerViewSnapshotTests: XCTestCase {
             onDurationLoaded: { _ in },
             onError: { _ in },
             onLoadingChanged: { _ in },
-            onPlayStateChanged: { _ in }
+            onPlayStateChanged: { _ in },
         )
         .frame(width: 375)
 
@@ -156,7 +156,7 @@ final class AudioPlayerViewSnapshotTests: XCTestCase {
         assertSnapshot(
             of: controller,
             as: SnapshotConfig.snapshotting(on: iPhoneAirConfig),
-            record: false
+            record: false,
         )
     }
 }

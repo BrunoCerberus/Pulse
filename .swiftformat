@@ -1,7 +1,16 @@
 # SwiftFormat Configuration
 
+# Match the project's SWIFT_VERSION in clean checkouts and CI.
+--swiftversion 6.2
+
 # Disable rules that remove Swift Testing @Suite annotations
 --disable redundantSwiftTestingSuite
 
 # Disable test case name rewriting (testFoo -> foo)
 --disable swiftTestingTestCaseNames
+
+# Disable preferKeyPath for Swift Testing #expect compatibility (keyPaths throw in #expect context)
+--disable preferKeyPath
+
+# Exclude generated/external code
+--exclude DerivedData Pods .build build

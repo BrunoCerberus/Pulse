@@ -245,7 +245,7 @@ final class SettingsDomainInteractor: CombineInteractor {
         guard storeKitService?.isPremium != false else {
             Logger.shared.service(
                 "Morning Briefing enable blocked: Premium entitlement not active",
-                level: .warning
+                level: .warning,
             )
             return
         }
@@ -275,7 +275,7 @@ final class SettingsDomainInteractor: CombineInteractor {
         preferences.morningBriefingEnabled = true
         await notificationService.scheduleMorningBriefingNotification(
             hour: preferences.morningBriefingHour,
-            minute: preferences.morningBriefingMinute
+            minute: preferences.morningBriefingMinute,
         )
         savePreferences(preferences)
     }

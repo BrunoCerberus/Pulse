@@ -49,7 +49,7 @@ struct FeedBriefingTests {
         gated.dispatch(action: .startAudioBriefing)
 
         let played = await waitForCondition(timeout: 300_000_000) { @MainActor in
-            self.mockPlaybackQueueService.playCallCount > 0
+            mockPlaybackQueueService.playCallCount > 0
         }
         #expect(!played, "Premium gate should block briefing before any playback")
     }
@@ -60,7 +60,7 @@ struct FeedBriefingTests {
         sut.dispatch(action: .startAudioBriefing)
 
         let played = await waitForCondition(timeout: 300_000_000) { @MainActor in
-            self.mockPlaybackQueueService.playCallCount > 0
+            mockPlaybackQueueService.playCallCount > 0
         }
         #expect(!played, "Briefing without a digest should not start playback")
     }
@@ -105,7 +105,7 @@ struct FeedBriefingTests {
         interactor.dispatch(action: .startAudioBriefing)
 
         let played = await waitForCondition { @MainActor in
-            self.mockPlaybackQueueService.playCallCount > 0
+            mockPlaybackQueueService.playCallCount > 0
         }
         #expect(played)
         #expect(mockForYouService.lastTopN == 5)
@@ -158,7 +158,7 @@ struct FeedBriefingTests {
         interactor.dispatch(action: .startAudioBriefing)
 
         let played = await waitForCondition { @MainActor in
-            self.mockPlaybackQueueService.playCallCount > 0
+            mockPlaybackQueueService.playCallCount > 0
         }
         #expect(played)
         let items = try #require(mockPlaybackQueueService.lastPlayedItems)
@@ -176,7 +176,7 @@ struct FeedBriefingTests {
             **Technology** advances continue.
             - First story about chips
             * Second story about software
-            """
+            """,
         )
         mockForYouService.scoredArticlesResult = .success([])
 
@@ -205,27 +205,27 @@ struct FeedBriefingTests {
         sut.dispatch(action: .startAudioBriefing)
 
         let played = await waitForCondition { @MainActor in
-            self.mockPlaybackQueueService.playCallCount > 0
+            mockPlaybackQueueService.playCallCount > 0
         }
         #expect(played, "Briefing should reach the playback queue service")
     }
 
     private func makeDigest(
         id: String = "digest-id",
-        summary: String = "**World** news summary."
+        summary: String = "**World** news summary.",
     ) -> DailyDigest {
         DailyDigest(
             id: id,
             summary: summary,
             sourceArticles: [],
-            generatedAt: Date()
+            generatedAt: Date(),
         )
     }
 
     private func makeArticle(
         id: String,
         title: String = "Title",
-        mediaType: MediaType? = nil
+        mediaType: MediaType? = nil,
     ) -> Article {
         Article(
             id: id,
@@ -236,7 +236,7 @@ struct FeedBriefingTests {
             url: "https://example.com/\(id)",
             publishedAt: Date(),
             mediaType: mediaType,
-            mediaURL: mediaType == nil ? nil : "https://example.com/\(id).mp4"
+            mediaURL: mediaType == nil ? nil : "https://example.com/\(id).mp4",
         )
     }
 }

@@ -12,7 +12,7 @@ final class PremiumGateViewAccessibilitySnapshotTests: XCTestCase {
     func testPremiumGateViewAccessibilitySize() {
         let view = PremiumGateView(
             feature: .dailyDigest,
-            serviceLocator: .preview
+            serviceLocator: .preview,
         )
         .frame(width: 375)
         .padding()
@@ -23,14 +23,14 @@ final class PremiumGateViewAccessibilitySnapshotTests: XCTestCase {
         assertSnapshot(
             of: controller,
             as: SnapshotConfig.snapshotting(on: SnapshotConfig.iPhoneAirAccessibility),
-            record: false
+            record: false,
         )
     }
 
     func testPremiumGateViewExtraExtraLargeSize() {
         let view = PremiumGateView(
             feature: .dailyDigest,
-            serviceLocator: .preview
+            serviceLocator: .preview,
         )
         .frame(width: 375)
         .padding()
@@ -41,7 +41,7 @@ final class PremiumGateViewAccessibilitySnapshotTests: XCTestCase {
         assertSnapshot(
             of: controller,
             as: SnapshotConfig.snapshotting(on: SnapshotConfig.iPhoneAirExtraExtraLarge),
-            record: false
+            record: false,
         )
     }
 }

@@ -16,7 +16,7 @@ struct LiveEngagementEventsServiceTests {
     private func makeEvent(
         articleID: String = "article-1",
         kind: EngagementEvent.Kind = .read30s,
-        offset: TimeInterval = 0
+        offset: TimeInterval = 0,
     ) -> EngagementEvent {
         EngagementEvent(
             id: UUID(),
@@ -26,7 +26,7 @@ struct LiveEngagementEventsServiceTests {
             categoryRaw: NewsCategory.technology.rawValue,
             kind: kind,
             weight: nil,
-            occurredAt: Self.baseDate.addingTimeInterval(offset)
+            occurredAt: Self.baseDate.addingTimeInterval(offset),
         )
     }
 

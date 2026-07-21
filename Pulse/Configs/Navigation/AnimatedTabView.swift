@@ -15,7 +15,7 @@ struct AnimatedTabView<Selection: AnimatedTabSelectable, Content: TabContent<Sel
     init(
         selection: Binding<Selection>,
         @TabContentBuilder<Selection> content: () -> Content,
-        effects: @escaping (Selection) -> any DiscreteSymbolEffect & SymbolEffect
+        effects: @escaping (Selection) -> any DiscreteSymbolEffect & SymbolEffect,
     ) {
         _selection = selection
         self.content = content()

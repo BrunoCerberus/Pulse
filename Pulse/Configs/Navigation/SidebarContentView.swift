@@ -14,7 +14,7 @@ struct SidebarContentView: View {
                 if let newValue {
                     selectedTab = newValue
                 }
-            }
+            },
         )
     }
 

@@ -12,7 +12,7 @@ final class BookmarksViewSnapshotTests: XCTestCase {
     private let iPhoneAirConfig = ViewImageConfig(
         safeArea: UIEdgeInsets(top: 59, left: 0, bottom: 34, right: 0),
         size: CGSize(width: 393, height: 852),
-        traits: UITraitCollection(userInterfaceStyle: .dark)
+        traits: UITraitCollection(userInterfaceStyle: .dark),
     )
 
     /// Fixed date for snapshot stability
@@ -29,7 +29,7 @@ final class BookmarksViewSnapshotTests: XCTestCase {
     private let iPhoneAirLightConfig = ViewImageConfig(
         safeArea: UIEdgeInsets(top: 59, left: 0, bottom: 34, right: 0),
         size: CGSize(width: 393, height: 852),
-        traits: UITraitCollection(userInterfaceStyle: .light)
+        traits: UITraitCollection(userInterfaceStyle: .light),
     )
 
     // MARK: - Empty State
@@ -38,7 +38,7 @@ final class BookmarksViewSnapshotTests: XCTestCase {
         let view = NavigationStack {
             BookmarksView(
                 router: BookmarksNavigationRouter(),
-                viewModel: BookmarksViewModel(serviceLocator: serviceLocator)
+                viewModel: BookmarksViewModel(serviceLocator: serviceLocator),
             )
         }
         let controller = UIHostingController(rootView: view)
@@ -46,7 +46,7 @@ final class BookmarksViewSnapshotTests: XCTestCase {
         assertSnapshot(
             of: controller,
             as: SnapshotConfig.snapshotting(on: iPhoneAirConfig),
-            record: false
+            record: false,
         )
     }
 
@@ -54,7 +54,7 @@ final class BookmarksViewSnapshotTests: XCTestCase {
         let view = NavigationStack {
             BookmarksView(
                 router: BookmarksNavigationRouter(),
-                viewModel: BookmarksViewModel(serviceLocator: serviceLocator)
+                viewModel: BookmarksViewModel(serviceLocator: serviceLocator),
             )
         }
         let controller = UIHostingController(rootView: view)
@@ -62,7 +62,7 @@ final class BookmarksViewSnapshotTests: XCTestCase {
         assertSnapshot(
             of: controller,
             as: SnapshotConfig.snapshotting(on: iPhoneAirLightConfig),
-            record: false
+            record: false,
         )
     }
 
@@ -77,7 +77,7 @@ final class BookmarksViewSnapshotTests: XCTestCase {
         assertSnapshot(
             of: controller,
             as: SnapshotConfig.snapshotting(on: iPhoneAirConfig),
-            record: false
+            record: false,
         )
     }
 
@@ -92,7 +92,7 @@ final class BookmarksViewSnapshotTests: XCTestCase {
         assertSnapshot(
             of: controller,
             as: SnapshotConfig.snapshotting(on: iPhoneAirConfig),
-            record: false
+            record: false,
         )
     }
 
@@ -107,7 +107,7 @@ final class BookmarksViewSnapshotTests: XCTestCase {
         assertSnapshot(
             of: controller,
             as: SnapshotConfig.snapshotting(on: iPhoneAirConfig),
-            record: false
+            record: false,
         )
     }
 
@@ -120,7 +120,7 @@ final class BookmarksViewSnapshotTests: XCTestCase {
         assertSnapshot(
             of: controller,
             as: SnapshotConfig.snapshotting(on: iPhoneAirLightConfig),
-            record: false
+            record: false,
         )
     }
 
@@ -150,7 +150,7 @@ final class BookmarksViewSnapshotTests: XCTestCase {
         assertSnapshot(
             of: controller,
             as: SnapshotConfig.snapshotting(on: SnapshotConfig.iPad),
-            record: false
+            record: false,
         )
     }
 
@@ -165,7 +165,7 @@ final class BookmarksViewSnapshotTests: XCTestCase {
         assertSnapshot(
             of: controller,
             as: SnapshotConfig.snapshotting(on: iPhoneAirConfig),
-            record: false
+            record: false,
         )
     }
 }
@@ -272,7 +272,7 @@ private struct BookmarksPopulatedPreview: View {
                 url: "https://example.com/1",
                 imageURL: nil,
                 publishedAt: fixedDate,
-                category: .technology
+                category: .technology,
             )),
             ArticleViewItem(from: Article(
                 id: "2",
@@ -282,7 +282,7 @@ private struct BookmarksPopulatedPreview: View {
                 url: "https://example.com/2",
                 imageURL: nil,
                 publishedAt: fixedDate,
-                category: .world
+                category: .world,
             )),
             ArticleViewItem(from: Article(
                 id: "3",
@@ -292,7 +292,7 @@ private struct BookmarksPopulatedPreview: View {
                 url: "https://example.com/3",
                 imageURL: nil,
                 publishedAt: fixedDate,
-                category: .health
+                category: .health,
             )),
             ArticleViewItem(from: Article(
                 id: "4",
@@ -302,7 +302,7 @@ private struct BookmarksPopulatedPreview: View {
                 url: "https://example.com/4",
                 imageURL: nil,
                 publishedAt: fixedDate,
-                category: .sports
+                category: .sports,
             )),
         ]
     }
@@ -331,7 +331,7 @@ private struct BookmarksPopulatedPreview: View {
                             isBookmarked: true,
                             onTap: {},
                             onBookmark: {},
-                            onShare: {}
+                            onShare: {},
                         )
                     }
                 }

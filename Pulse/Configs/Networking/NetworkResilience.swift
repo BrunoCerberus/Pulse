@@ -15,7 +15,7 @@ extension Publisher where Failure == Error {
         maxRetries: Int = 2,
         baseDelay: TimeInterval = 1.0,
         timeout: TimeInterval = 15.0,
-        scheduler: some Scheduler = DispatchQueue.global()
+        scheduler: some Scheduler = DispatchQueue.global(),
     ) -> AnyPublisher<Output, Failure> {
         self
             .timeout(.seconds(timeout), scheduler: scheduler, customError: { URLError(.timedOut) })
@@ -33,7 +33,7 @@ extension Publisher {
     func retryWithBackoff(
         maxRetries: Int,
         baseDelay: TimeInterval,
-        scheduler: some Scheduler
+        scheduler: some Scheduler,
     ) -> AnyPublisher<Output, Failure> {
         self.catch { error -> AnyPublisher<Output, Failure> in
             // Only retry transient network conditions. Deterministic failures
@@ -43,14 +43,14 @@ extension Publisher {
             guard maxRetries > 0, Self.isRetryable(error) else {
                 Logger.shared.service(
                     maxRetries > 0 ? "Network error not retryable, propagating" : "Network retry exhausted",
-                    level: .debug
+                    level: .debug,
                 )
                 return Fail(error: error).eraseToAnyPublisher()
             }
 
             Logger.shared.service(
                 "Network retry, \(maxRetries) attempt(s) remaining after \(baseDelay)s delay",
-                level: .debug
+                level: .debug,
             )
 
             return Just(())
@@ -59,7 +59,7 @@ extension Publisher {
                     self.retryWithBackoff(
                         maxRetries: maxRetries - 1,
                         baseDelay: baseDelay * 2,
-                        scheduler: scheduler
+                        scheduler: scheduler,
                     )
                 }
                 .eraseToAnyPublisher()

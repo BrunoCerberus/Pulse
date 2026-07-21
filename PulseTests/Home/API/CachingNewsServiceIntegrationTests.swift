@@ -24,7 +24,7 @@ struct CachingNewsServiceIntegrationTests {
             cacheStore: mockL1,
             diskCacheStore: diskL2,
             networkMonitor: mockNetwork,
-            networkResilienceEnabled: false
+            networkResilienceEnabled: false,
         )
     }
 
@@ -44,7 +44,7 @@ struct CachingNewsServiceIntegrationTests {
         mockL1.set(entry, for: key)
 
         let result = try await awaitPublisher(
-            sut.fetchTopHeadlines(language: "en", country: "us", page: 1)
+            sut.fetchTopHeadlines(language: "en", country: "us", page: 1),
         )
 
         #expect(result.count == articles.count)
@@ -65,7 +65,7 @@ struct CachingNewsServiceIntegrationTests {
         let initialSetCount = mockL1.setCallCount
 
         let result = try await awaitPublisher(
-            sut.fetchTopHeadlines(language: "en", country: "us", page: 1)
+            sut.fetchTopHeadlines(language: "en", country: "us", page: 1),
         )
 
         #expect(result.count == articles.count)
@@ -83,7 +83,7 @@ struct CachingNewsServiceIntegrationTests {
         let initialL1SetCount = mockL1.setCallCount
 
         let result = try await awaitPublisher(
-            sut.fetchTopHeadlines(language: "en", country: "us", page: 1)
+            sut.fetchTopHeadlines(language: "en", country: "us", page: 1),
         )
 
         #expect(result.count == Article.mockArticles.count)
@@ -109,7 +109,7 @@ struct CachingNewsServiceIntegrationTests {
         mockNetwork.simulateOffline()
 
         let result = try await awaitPublisher(
-            sut.fetchTopHeadlines(language: "en", country: "us", page: 1)
+            sut.fetchTopHeadlines(language: "en", country: "us", page: 1),
         )
 
         #expect(result.count == Article.mockArticles.count)
@@ -129,7 +129,7 @@ struct CachingNewsServiceIntegrationTests {
         mockNetwork.simulateOffline()
 
         let result = try await awaitPublisher(
-            sut.fetchBreakingNews(language: "en", country: "us")
+            sut.fetchBreakingNews(language: "en", country: "us"),
         )
 
         #expect(result.count == 2)
@@ -143,7 +143,7 @@ struct CachingNewsServiceIntegrationTests {
 
         do {
             _ = try await awaitPublisher(
-                sut.fetchTopHeadlines(language: "en", country: "us", page: 1)
+                sut.fetchTopHeadlines(language: "en", country: "us", page: 1),
             )
             Issue.record("Expected offlineNoCache error")
         } catch {
@@ -166,7 +166,7 @@ struct CachingNewsServiceIntegrationTests {
         mockWrapped.topHeadlinesResult = .failure(URLError(.notConnectedToInternet))
 
         let result = try await awaitPublisher(
-            sut.fetchTopHeadlines(language: "en", country: "us", page: 1)
+            sut.fetchTopHeadlines(language: "en", country: "us", page: 1),
         )
 
         #expect(result.count == 3)
@@ -180,7 +180,7 @@ struct CachingNewsServiceIntegrationTests {
 
         do {
             _ = try await awaitPublisher(
-                sut.fetchTopHeadlines(language: "en", country: "us", page: 1)
+                sut.fetchTopHeadlines(language: "en", country: "us", page: 1),
             )
             Issue.record("Expected error to propagate")
         } catch {
@@ -232,7 +232,7 @@ struct CachingNewsServiceIntegrationTests {
         let key = NewsCacheKey.article(id: article.id)
 
         let result = try await awaitPublisher(
-            sut.fetchArticle(id: article.id)
+            sut.fetchArticle(id: article.id),
         )
 
         #expect(result.id == article.id)
@@ -249,10 +249,10 @@ struct CachingNewsServiceIntegrationTests {
         defer { cleanup() }
 
         _ = try await awaitPublisher(
-            sut.fetchTopHeadlines(category: .technology, language: "en", country: "us", page: 1)
+            sut.fetchTopHeadlines(category: .technology, language: "en", country: "us", page: 1),
         )
         _ = try await awaitPublisher(
-            sut.fetchTopHeadlines(category: .sports, language: "en", country: "us", page: 1)
+            sut.fetchTopHeadlines(category: .sports, language: "en", country: "us", page: 1),
         )
 
         let techKey = NewsCacheKey.categoryHeadlines(language: "en", category: .technology, country: "us", page: 1)

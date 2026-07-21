@@ -12,7 +12,7 @@ final class SignInViewSnapshotTests: XCTestCase {
     private let iPhoneAirConfig = ViewImageConfig(
         safeArea: UIEdgeInsets(top: 59, left: 0, bottom: 34, right: 0),
         size: CGSize(width: 393, height: 852),
-        traits: UITraitCollection(userInterfaceStyle: .dark)
+        traits: UITraitCollection(userInterfaceStyle: .dark),
     )
 
     override func setUp() async throws {
@@ -28,7 +28,7 @@ final class SignInViewSnapshotTests: XCTestCase {
         assertSnapshot(
             of: controller,
             as: SnapshotConfig.snapshotting(on: iPhoneAirConfig),
-            record: false
+            record: false,
         )
     }
 
@@ -45,7 +45,7 @@ final class SignInViewSnapshotTests: XCTestCase {
         assertSnapshot(
             of: controller,
             as: SnapshotConfig.snapshotting(on: iPhoneAirConfig),
-            record: false
+            record: false,
         )
     }
 
@@ -53,7 +53,7 @@ final class SignInViewSnapshotTests: XCTestCase {
         let lightModeConfig = ViewImageConfig(
             safeArea: UIEdgeInsets(top: 59, left: 0, bottom: 34, right: 0),
             size: CGSize(width: 393, height: 852),
-            traits: UITraitCollection(userInterfaceStyle: .light)
+            traits: UITraitCollection(userInterfaceStyle: .light),
         )
 
         let view = SignInView(serviceLocator: serviceLocator)
@@ -62,7 +62,7 @@ final class SignInViewSnapshotTests: XCTestCase {
         assertSnapshot(
             of: controller,
             as: SnapshotConfig.snapshotting(on: lightModeConfig),
-            record: false
+            record: false,
         )
     }
 
@@ -70,7 +70,7 @@ final class SignInViewSnapshotTests: XCTestCase {
         let iPadConfig = ViewImageConfig(
             safeArea: UIEdgeInsets(top: 24, left: 0, bottom: 20, right: 0),
             size: CGSize(width: 820, height: 1180),
-            traits: UITraitCollection(userInterfaceStyle: .dark)
+            traits: UITraitCollection(userInterfaceStyle: .dark),
         )
 
         let view = SignInView(serviceLocator: serviceLocator)
@@ -79,7 +79,7 @@ final class SignInViewSnapshotTests: XCTestCase {
         assertSnapshot(
             of: controller,
             as: SnapshotConfig.snapshotting(on: iPadConfig),
-            record: false
+            record: false,
         )
     }
 }

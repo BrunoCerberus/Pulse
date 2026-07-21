@@ -66,7 +66,7 @@ enum PromptSanitizer {
         result = result.replacingOccurrences(
             of: #"\s+"#,
             with: " ",
-            options: .regularExpression
+            options: .regularExpression,
         ).trimmingCharacters(in: .whitespaces)
 
         if result.count > maxLength {

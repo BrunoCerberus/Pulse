@@ -175,8 +175,8 @@ final class LiveStoreKitService: StoreKitService, @unchecked Sendable {
                 guard !Task.isCancelled, let self else { break }
 
                 do {
-                    let transaction = try self.checkVerified(result)
-                    await self.updateSubscriptionStatus()
+                    let transaction = try checkVerified(result)
+                    await updateSubscriptionStatus()
                     await transaction.finish()
                 } catch {
                     Logger.shared.error("Transaction verification failed: \(error)")

@@ -10,7 +10,7 @@ struct NewsCategoryTests {
     @Test("All seven categories exist with unique raw values")
     func allCategoriesExistWithUniqueRawValues() {
         #expect(NewsCategory.allCases.count == 7)
-        let rawValues = NewsCategory.allCases.map { $0.rawValue }
+        let rawValues = NewsCategory.allCases.map(\.rawValue)
         let uniqueRawValues = Set(rawValues)
         #expect(rawValues.count == uniqueRawValues.count)
     }
@@ -27,13 +27,13 @@ struct NewsCategoryTests {
             (NewsCategory.health, "heart.text.square", Color.red, "health"),
             (NewsCategory.sports, "sportscourt", Color.cyan, "sports"),
             (NewsCategory.entertainment, "film", Color.pink, "entertainment"),
-        ]
+        ],
     )
     func categoryPropertiesAreCorrect(
         category: NewsCategory,
         expectedIcon: String,
         expectedColor: Color,
-        expectedApiParam: String
+        expectedApiParam: String,
     ) {
         #expect(category.icon == expectedIcon)
         #expect(category.color == expectedColor)
@@ -42,7 +42,7 @@ struct NewsCategoryTests {
 
     @Test("All categories have unique icons")
     func allCategoriesHaveUniqueIcons() {
-        let icons = NewsCategory.allCases.map { $0.icon }
+        let icons = NewsCategory.allCases.map(\.icon)
         let uniqueIcons = Set(icons)
         #expect(icons.count == uniqueIcons.count)
     }

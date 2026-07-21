@@ -10,7 +10,7 @@ struct WidgetArticleRowViewTests {
             id: "1",
             title: "Test Article",
             source: "Test Source",
-            imageData: nil
+            imageData: nil,
         )
         let view = ArticleRowView(article: article, family: .systemSmall)
         #expect(view.article.id == "1")
@@ -24,7 +24,7 @@ struct WidgetArticleRowViewTests {
             id: "1",
             title: "Test Article",
             source: "Test Source",
-            imageData: nil
+            imageData: nil,
         )
         let view = ArticleRowView(article: article, family: .systemSmall)
         #expect(view.article.imageData == nil)
@@ -37,7 +37,7 @@ struct WidgetArticleRowViewTests {
             id: "1",
             title: "Test Article",
             source: "Test Source",
-            imageData: imageData
+            imageData: imageData,
         )
         let view = ArticleRowView(article: article, family: .systemSmall)
         #expect(view.article.imageData == imageData)

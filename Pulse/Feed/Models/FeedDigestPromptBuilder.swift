@@ -63,7 +63,7 @@ enum FeedDigestPromptBuilder {
     static func buildPrompt(for articles: [Article]) -> String {
         let grouped = Dictionary(grouping: articles) { $0.category ?? .world }
         let categoryNames = grouped.sorted { $0.value.count > $1.value.count }
-            .map { $0.key.displayName }
+            .map(\.key.displayName)
 
         let articleList = articles.enumerated().map { index, article in
             // All untrusted (RSS-sourced) fields pass through `PromptSanitizer`

@@ -40,7 +40,7 @@ struct SmartBriefingViewModelTests {
     func statusMessageAutoDismisses() async {
         mockNewsService.topHeadlinesResult = .success(Article.mockArticles)
         mockForYouService.scoredArticlesResult = .success(
-            Article.mockArticles.map { ScoredArticle(article: $0, score: 1.0, matchedTopics: []) }
+            Article.mockArticles.map { ScoredArticle(article: $0, score: 1.0, matchedTopics: []) },
         )
         let sut = SmartBriefingViewModel(serviceLocator: serviceLocator, statusDismissalDelay: .milliseconds(50))
 
@@ -61,7 +61,7 @@ struct SmartBriefingViewModelTests {
     func onStartFreshTappedBuildsQueue() async {
         mockNewsService.topHeadlinesResult = .success(Article.mockArticles)
         mockForYouService.scoredArticlesResult = .success(
-            Article.mockArticles.map { ScoredArticle(article: $0, score: 1.0, matchedTopics: []) }
+            Article.mockArticles.map { ScoredArticle(article: $0, score: 1.0, matchedTopics: []) },
         )
         let sut = SmartBriefingViewModel(serviceLocator: serviceLocator)
 

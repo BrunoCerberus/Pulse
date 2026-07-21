@@ -59,8 +59,8 @@ struct SignInView: View {
                     if !$0 {
                         dismissPendingCleanupError()
                     }
-                }
-            )
+                },
+            ),
         ) {
             Button(Constants.okButton) { dismissPendingCleanupError() }
         } message: {
@@ -94,7 +94,7 @@ struct SignInView: View {
                     Color.black,
                 ],
                 startPoint: .topLeading,
-                endPoint: .bottomTrailing
+                endPoint: .bottomTrailing,
             )
         }
     }
@@ -183,8 +183,8 @@ struct SignInView: View {
                 .linearGradient(
                     colors: [.red, .yellow, .green, .blue],
                     startPoint: .topLeading,
-                    endPoint: .bottomTrailing
-                )
+                    endPoint: .bottomTrailing,
+                ),
             )
     }
 
@@ -201,7 +201,7 @@ struct SignInView: View {
         let formatted = String(
             format: Constants.termsMarkdownFormat,
             LegalURLs.termsOfService.absoluteString,
-            LegalURLs.privacyPolicy.absoluteString
+            LegalURLs.privacyPolicy.absoluteString,
         )
         if let attributed = try? AttributedString(markdown: formatted) {
             return attributed

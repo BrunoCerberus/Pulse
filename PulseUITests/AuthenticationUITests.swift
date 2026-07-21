@@ -67,7 +67,7 @@ final class AuthenticationUITests: BaseUITestCase {
             XCTAssertLessThan(
                 signInWithGoogleButton.frame.maxY,
                 termsText.frame.minY + 50,
-                "Buttons should be above terms"
+                "Buttons should be above terms",
             )
 
             XCTAssertTrue(signInWithAppleButton.isEnabled, "Sign in with Apple button should be enabled")

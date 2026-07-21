@@ -12,7 +12,7 @@ final class SearchViewSnapshotTests: XCTestCase {
     private let iPhoneAirConfig = ViewImageConfig(
         safeArea: UIEdgeInsets(top: 59, left: 0, bottom: 34, right: 0),
         size: CGSize(width: 393, height: 852),
-        traits: UITraitCollection(userInterfaceStyle: .dark)
+        traits: UITraitCollection(userInterfaceStyle: .dark),
     )
 
     /// Fixed date for snapshot stability
@@ -33,7 +33,7 @@ final class SearchViewSnapshotTests: XCTestCase {
         let view = NavigationStack {
             SearchView(
                 router: SearchNavigationRouter(),
-                viewModel: SearchViewModel(serviceLocator: serviceLocator)
+                viewModel: SearchViewModel(serviceLocator: serviceLocator),
             )
         }
         let controller = UIHostingController(rootView: view)
@@ -41,7 +41,7 @@ final class SearchViewSnapshotTests: XCTestCase {
         assertSnapshot(
             of: controller,
             as: SnapshotConfig.snapshotting(on: iPhoneAirConfig),
-            record: false
+            record: false,
         )
     }
 
@@ -67,7 +67,7 @@ final class SearchViewSnapshotTests: XCTestCase {
         assertSnapshot(
             of: controller,
             as: SnapshotConfig.snapshotting(on: SnapshotConfig.iPad),
-            record: false
+            record: false,
         )
     }
 
@@ -82,7 +82,7 @@ final class SearchViewSnapshotTests: XCTestCase {
         assertSnapshot(
             of: controller,
             as: SnapshotConfig.snapshotting(on: iPhoneAirConfig),
-            record: false
+            record: false,
         )
     }
 
@@ -97,7 +97,7 @@ final class SearchViewSnapshotTests: XCTestCase {
         assertSnapshot(
             of: controller,
             as: SnapshotConfig.snapshotting(on: iPhoneAirConfig),
-            record: false
+            record: false,
         )
     }
 
@@ -112,7 +112,7 @@ final class SearchViewSnapshotTests: XCTestCase {
         assertSnapshot(
             of: controller,
             as: SnapshotConfig.snapshotting(on: iPhoneAirConfig),
-            record: false
+            record: false,
         )
     }
 
@@ -127,7 +127,7 @@ final class SearchViewSnapshotTests: XCTestCase {
         assertSnapshot(
             of: controller,
             as: SnapshotConfig.snapshotting(on: iPhoneAirConfig),
-            record: false
+            record: false,
         )
     }
 
@@ -142,7 +142,7 @@ final class SearchViewSnapshotTests: XCTestCase {
         assertSnapshot(
             of: controller,
             as: SnapshotConfig.snapshotting(on: iPhoneAirConfig),
-            record: false
+            record: false,
         )
     }
 }
@@ -248,7 +248,7 @@ private struct SearchResultsPreview: View {
                 url: "https://example.com/1",
                 imageURL: nil,
                 publishedAt: fixedDate,
-                category: .technology
+                category: .technology,
             )),
             ArticleViewItem(from: Article(
                 id: "2",
@@ -258,7 +258,7 @@ private struct SearchResultsPreview: View {
                 url: "https://example.com/2",
                 imageURL: nil,
                 publishedAt: fixedDate,
-                category: .technology
+                category: .technology,
             )),
             ArticleViewItem(from: Article(
                 id: "3",
@@ -268,7 +268,7 @@ private struct SearchResultsPreview: View {
                 url: "https://example.com/3",
                 imageURL: nil,
                 publishedAt: fixedDate,
-                category: .technology
+                category: .technology,
             )),
         ]
     }
@@ -294,7 +294,7 @@ private struct SearchResultsPreview: View {
                                 item: item,
                                 onTap: {},
                                 onBookmark: {},
-                                onShare: {}
+                                onShare: {},
                             )
                         }
                     }

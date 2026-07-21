@@ -20,9 +20,15 @@ file_length:
   warning: 800
   error: 1000
 
+# Set type body length limits
+type_body_length:
+  warning: 320
+  error: 400
+
 # Exclude generated/external code
 excluded:
   - Pods
   - .build
   - build
   - DerivedData
+  - .claude/worktrees

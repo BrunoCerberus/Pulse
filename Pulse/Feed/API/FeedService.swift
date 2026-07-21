@@ -11,13 +11,13 @@ enum FeedServiceError: Error, LocalizedError {
     var errorDescription: String? {
         switch self {
         case .noArticles:
-            return "No articles available to summarize"
+            "No articles available to summarize"
         case let .generationFailed(reason):
-            return "Failed to generate digest: \(reason)"
+            "Failed to generate digest: \(reason)"
         case .modelNotReady:
-            return "AI model is not ready"
+            "AI model is not ready"
         case .insufficientMemory:
-            return "Not enough memory to generate digest"
+            "Not enough memory to generate digest"
         }
     }
 }

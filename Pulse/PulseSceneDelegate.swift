@@ -45,7 +45,7 @@ final class PulseSceneDelegate: UIResponder, UIWindowSceneDelegate {
     func scene(
         _ scene: UIScene,
         willConnectTo _: UISceneSession,
-        options connectionOptions: UIScene.ConnectionOptions
+        options connectionOptions: UIScene.ConnectionOptions,
     ) {
         // Prevent scene delegate execution during unit tests to avoid conflicts
         guard !TestEnvironment.isRunningUnitTests else { return }
@@ -136,7 +136,7 @@ final class PulseSceneDelegate: UIResponder, UIWindowSceneDelegate {
     func windowScene(
         _: UIWindowScene,
         performActionFor shortcutItem: UIApplicationShortcutItem,
-        completionHandler: @escaping (Bool) -> Void
+        completionHandler: @escaping (Bool) -> Void,
     ) {
         let handled = QuickActionHandler.shared.handle(shortcutItem: shortcutItem)
         completionHandler(handled)
@@ -176,7 +176,7 @@ private extension PulseSceneDelegate {
     func configureAuthenticationManager() {
         do {
             nonisolated(unsafe) let authService = try serviceLocator.retrieve(AuthService.self)
-            nonisolated(unsafe) let locator = serviceLocator
+            let locator = serviceLocator
             MainActor.assumeIsolated {
                 AuthenticationManager.shared.configure(with: authService)
                 // Safety net for server-driven sign-outs (token revoked, account
@@ -188,7 +188,7 @@ private extension PulseSceneDelegate {
                 AuthenticationManager.shared.configureSessionCleanup {
                     _ = await SettingsViewModel.clearAllUserData(
                         serviceLocator: locator,
-                        themeManager: .shared
+                        themeManager: .shared,
                     )
                 }
             }
@@ -276,7 +276,7 @@ private extension PulseSceneDelegate {
         let drainer = TopicExtractionDrainer(
             engagementService: engagement,
             extractionService: extraction,
-            profileService: profile
+            profileService: profile,
         )
         drainer.startObservingBackground()
         topicExtractionDrainer = drainer
@@ -298,7 +298,7 @@ private extension PulseSceneDelegate {
             settingsService: settingsService,
             briefingCacheService: briefingCacheService,
             notificationService: try? serviceLocator.retrieve(NotificationService.self),
-            storeKitService: try? serviceLocator.retrieve(StoreKitService.self)
+            storeKitService: try? serviceLocator.retrieve(StoreKitService.self),
         )
     }
 
@@ -429,8 +429,8 @@ private extension PulseSceneDelegate {
             instance: CachingNewsService(
                 wrapping: LiveNewsService(),
                 diskCacheStore: diskCacheStore,
-                networkMonitor: networkMonitor
-            )
+                networkMonitor: networkMonitor,
+            ),
         )
         serviceLocator.register(SearchService.self, instance: LiveSearchService())
         serviceLocator.register(
@@ -438,8 +438,8 @@ private extension PulseSceneDelegate {
             instance: CachingMediaService(
                 wrapping: LiveMediaService(),
                 diskCacheStore: diskCacheStore,
-                networkMonitor: networkMonitor
-            )
+                networkMonitor: networkMonitor,
+            ),
         )
         serviceLocator.register(StoreKitService.self, instance: LiveStoreKitService())
         serviceLocator.register(LLMService.self, instance: LiveLLMService())
@@ -462,19 +462,19 @@ private extension PulseSceneDelegate {
             instance: LivePlaybackQueueService(
                 ttsService: ttsService,
                 analyticsService: try? serviceLocator.retrieve(AnalyticsService.self),
-                engagementEventsService: try? serviceLocator.retrieve(EngagementEventsService.self)
-            )
+                engagementEventsService: try? serviceLocator.retrieve(EngagementEventsService.self),
+            ),
         )
         serviceLocator.register(NotificationService.self, instance: LiveNotificationService.shared)
         serviceLocator.register(SharedURLImportService.self, instance: LiveSharedURLImportService())
         serviceLocator.register(
             InterestProfileService.self,
-            instance: LiveInterestProfileService(modelContainer: storageService.modelContainer)
+            instance: LiveInterestProfileService(modelContainer: storageService.modelContainer),
         )
         if let llmService = try? serviceLocator.retrieve(LLMService.self) {
             serviceLocator.register(
                 TopicExtractionService.self,
-                instance: LiveTopicExtractionService(llmService: llmService)
+                instance: LiveTopicExtractionService(llmService: llmService),
             )
         }
         if let profileService = try? serviceLocator.retrieve(InterestProfileService.self) {
@@ -482,8 +482,8 @@ private extension PulseSceneDelegate {
                 ForYouService.self,
                 instance: LiveForYouService(
                     profileService: profileService,
-                    storageService: storageService
-                )
+                    storageService: storageService,
+                ),
             )
         }
         serviceLocator.register(BriefingCacheService.self, instance: LiveBriefingCacheService())
@@ -569,7 +569,7 @@ private extension PulseSceneDelegate {
                 animations: {
                     window.rootViewController = rootView
                 },
-                completion: nil
+                completion: nil,
             )
         }
     }

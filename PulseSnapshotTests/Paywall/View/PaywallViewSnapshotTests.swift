@@ -25,7 +25,7 @@ final class PaywallViewSnapshotTests: XCTestCase {
         assertSnapshot(
             of: controller,
             as: .image(on: SnapshotConfig.iPhoneAir, precision: SnapshotConfig.standardPrecision),
-            record: false
+            record: false,
         )
     }
 
@@ -61,7 +61,7 @@ final class PaywallViewSnapshotTests: XCTestCase {
         assertSnapshot(
             of: controller,
             as: SnapshotConfig.snapshotting(on: SnapshotConfig.iPhoneAir),
-            record: false
+            record: false,
         )
     }
 
@@ -96,7 +96,7 @@ final class PaywallViewSnapshotTests: XCTestCase {
         assertSnapshot(
             of: controller,
             as: .image(on: SnapshotConfig.iPhoneAir, precision: SnapshotConfig.standardPrecision),
-            record: false
+            record: false,
         )
     }
 

@@ -13,7 +13,7 @@ struct CachingNewsServiceBreakingNewsTests {
         mockNewsService = MockNewsService()
         mockCacheStore = MockNewsCacheStore()
         sut = CachingNewsService(
-            wrapping: mockNewsService, cacheStore: mockCacheStore, diskCacheStore: nil, networkResilienceEnabled: false
+            wrapping: mockNewsService, cacheStore: mockCacheStore, diskCacheStore: nil, networkResilienceEnabled: false,
         )
     }
 
@@ -33,7 +33,7 @@ struct CachingNewsServiceBreakingNewsTests {
                 receiveCompletion: { _ in },
                 receiveValue: { articles in
                     receivedArticles = articles
-                }
+                },
             )
             .store(in: &cancellables)
 
@@ -56,7 +56,7 @@ struct CachingNewsServiceBreakingNewsTests {
                 receiveCompletion: { _ in },
                 receiveValue: { articles in
                     receivedArticles = articles
-                }
+                },
             )
             .store(in: &cancellables)
 
@@ -88,7 +88,7 @@ struct CachingNewsServiceBreakingNewsTests {
                 receiveCompletion: { _ in },
                 receiveValue: { articles in
                     receivedArticles = articles
-                }
+                },
             )
             .store(in: &cancellables)
 

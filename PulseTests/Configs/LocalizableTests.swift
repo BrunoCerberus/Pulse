@@ -887,7 +887,7 @@ struct AccessibilityLocalizationTests {
                 #expect(value != nil, "Missing key '\(key)' in \(languageCode).lproj/Localizable.strings")
                 #expect(
                     !(value?.isEmpty ?? true),
-                    "Empty value for key '\(key)' in \(languageCode).lproj/Localizable.strings"
+                    "Empty value for key '\(key)' in \(languageCode).lproj/Localizable.strings",
                 )
             }
         }
@@ -901,11 +901,11 @@ struct AccessibilityLocalizationTests {
 
             #expect(
                 value != nil,
-                "Missing key 'accessibility.search_results_count' in \(languageCode).lproj/Localizable.strings"
+                "Missing key 'accessibility.search_results_count' in \(languageCode).lproj/Localizable.strings",
             )
             #expect(
                 value?.contains("%d") == true,
-                "Expected '%d' in \(languageCode).lproj/Localizable.strings key search_results_count"
+                "Expected '%d' in \(languageCode).lproj/Localizable.strings key search_results_count",
             )
         }
     }
@@ -926,7 +926,7 @@ struct AccessibilityLocalizationTests {
                 code: 1,
                 userInfo: [
                     NSLocalizedDescriptionKey: "Unable to load Localizable.strings at \(stringsFileURL.path)",
-                ]
+                ],
             )
         }
 

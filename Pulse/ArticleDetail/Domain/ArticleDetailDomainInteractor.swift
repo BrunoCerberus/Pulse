@@ -19,7 +19,6 @@ import UIKit
 /// ## Dependencies
 /// - `StorageService`: Manages bookmarks and reading history
 @MainActor
-// swiftlint:disable:next type_body_length
 final class ArticleDetailDomainInteractor: CombineInteractor {
     typealias DomainState = ArticleDetailDomainState
     typealias DomainAction = ArticleDetailDomainAction
@@ -234,10 +233,10 @@ final class ArticleDetailDomainInteractor: CombineInteractor {
                     let related = Array(
                         articles
                             .filter { $0.id != currentArticleId && !$0.isMedia }
-                            .prefix(5)
+                            .prefix(5),
                     )
                     self?.dispatch(action: .relatedArticlesLoaded(related))
-                }
+                },
             )
             .store(in: &cancellables)
     }

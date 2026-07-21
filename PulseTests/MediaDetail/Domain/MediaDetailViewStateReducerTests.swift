@@ -15,7 +15,7 @@ struct MediaDetailViewStateReducerTests {
             url: "https://youtube.com/watch?v=1",
             publishedAt: Date(),
             category: .technology,
-            mediaType: .video
+            mediaType: .video,
         )
     }
 

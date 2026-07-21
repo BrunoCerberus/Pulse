@@ -33,7 +33,7 @@ struct ForYouSettingsViewModelTests {
     func topicsMapToRows() async throws {
         try await mockProfile.upsert(
             topicID: "ai", displayName: "AI", weightDelta: 2.4,
-            source: .extracted, category: nil
+            source: .extracted, category: nil,
         )
         let sut = ForYouSettingsViewModel(serviceLocator: serviceLocator)
 
@@ -63,7 +63,7 @@ struct ForYouSettingsViewModelTests {
     func emptyDisplayNameFallsBackToHumanizer() async throws {
         try await mockProfile.upsert(
             topicID: "artificial-intelligence", displayName: "", weightDelta: 1,
-            source: .extracted, category: nil
+            source: .extracted, category: nil,
         )
         let sut = ForYouSettingsViewModel(serviceLocator: serviceLocator)
         sut.handle(event: .onAppear)
@@ -88,7 +88,7 @@ struct ForYouSettingsViewModelTests {
     func confirmResetWipesRows() async throws {
         try await mockProfile.upsert(
             topicID: "ai", displayName: "AI", weightDelta: 1,
-            source: .seed, category: nil
+            source: .seed, category: nil,
         )
         let sut = ForYouSettingsViewModel(serviceLocator: serviceLocator)
         sut.handle(event: .onAppear)
@@ -111,11 +111,11 @@ struct ForYouSettingsViewModelTests {
     func removeTopicRemovesRow() async throws {
         try await mockProfile.upsert(
             topicID: "ai", displayName: "AI", weightDelta: 1,
-            source: .seed, category: nil
+            source: .seed, category: nil,
         )
         try await mockProfile.upsert(
             topicID: "climate", displayName: "Climate", weightDelta: 1,
-            source: .seed, category: nil
+            source: .seed, category: nil,
         )
         let sut = ForYouSettingsViewModel(serviceLocator: serviceLocator)
         sut.handle(event: .onAppear)

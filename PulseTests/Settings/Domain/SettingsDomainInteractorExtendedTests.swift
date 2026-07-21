@@ -24,7 +24,7 @@ struct SettingsNotificationEdgeTests {
     }
 
     private func createSUT(
-        notificationStatus: NotificationAuthorizationStatus = .authorized
+        notificationStatus: NotificationAuthorizationStatus = .authorized,
     ) -> SettingsDomainInteractor {
         mockNotificationService.authorizationStatusResult = notificationStatus
         return SettingsDomainInteractor(serviceLocator: serviceLocator)
@@ -77,7 +77,7 @@ struct SettingsNotificationEdgeTests {
     func toggleNotificationsAuthError() async throws {
         let sut = createSUT(notificationStatus: .notDetermined)
         mockNotificationService.requestAuthorizationResult = .failure(
-            NSError(domain: "test", code: 1, userInfo: [NSLocalizedDescriptionKey: "Auth failed"])
+            NSError(domain: "test", code: 1, userInfo: [NSLocalizedDescriptionKey: "Auth failed"]),
         )
         mockSettingsService.preferences = .default
         sut.dispatch(action: .loadPreferences)
@@ -123,7 +123,7 @@ struct SettingsNotificationEdgeTests {
         let sut = createSUT()
         mockSettingsService.preferences = UserPreferences(
             followedTopics: [], mutedSources: [], mutedKeywords: [],
-            preferredLanguage: "en", notificationsEnabled: true, breakingNewsNotifications: true
+            preferredLanguage: "en", notificationsEnabled: true, breakingNewsNotifications: true,
         )
         sut.dispatch(action: .loadPreferences)
         try await waitForStateUpdate(duration: TestWaitDuration.long)
@@ -142,7 +142,7 @@ struct SettingsNotificationEdgeTests {
         let sut = createSUT(notificationStatus: .denied)
         mockSettingsService.preferences = UserPreferences(
             followedTopics: [], mutedSources: [], mutedKeywords: [],
-            preferredLanguage: "en", notificationsEnabled: true, breakingNewsNotifications: true
+            preferredLanguage: "en", notificationsEnabled: true, breakingNewsNotifications: true,
         )
         sut.dispatch(action: .loadPreferences)
         try await waitForStateUpdate(duration: TestWaitDuration.long)
@@ -156,7 +156,7 @@ struct SettingsNotificationEdgeTests {
         let sut = createSUT(notificationStatus: .authorized)
         mockSettingsService.preferences = UserPreferences(
             followedTopics: [], mutedSources: [], mutedKeywords: [],
-            preferredLanguage: "en", notificationsEnabled: true, breakingNewsNotifications: true
+            preferredLanguage: "en", notificationsEnabled: true, breakingNewsNotifications: true,
         )
         sut.dispatch(action: .loadPreferences)
         try await waitForStateUpdate(duration: TestWaitDuration.long)

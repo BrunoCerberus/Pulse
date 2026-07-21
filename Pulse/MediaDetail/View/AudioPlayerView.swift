@@ -151,7 +151,7 @@ struct AudioPlayerView: View {
             LinearGradient(
                 colors: [Color.Accent.secondary.opacity(0.6), Color.Accent.secondary.opacity(0.3)],
                 startPoint: .topLeading,
-                endPoint: .bottomTrailing
+                endPoint: .bottomTrailing,
             )
 
             Image(systemName: "headphones")
@@ -215,7 +215,7 @@ struct AudioPlayerView: View {
                             let finalProgress = min(max(value.location.x / geometry.size.width, 0), 1)
                             playerManager.seek(to: finalProgress)
                             isDragging = false
-                        }
+                        },
                 )
             }
             .frame(height: 20)
@@ -359,8 +359,8 @@ struct AudioPlayerView: View {
             publishedAt: Date(),
             mediaType: .podcast,
             mediaURL: "https://example.com/audio.mp3",
-            mediaDuration: 3600
-        )
+            mediaDuration: 3600,
+        ),
     )
     .background(Color(.systemBackground))
     .preferredColorScheme(.dark)

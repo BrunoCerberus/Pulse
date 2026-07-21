@@ -13,7 +13,7 @@ struct FeedDomainActionTests {
             source: ArticleSource(id: "test-source", name: "Test Source"),
             url: "https://example.com/article",
             publishedAt: Self.referenceDate,
-            category: .technology
+            category: .technology,
         )
     }
 
@@ -140,7 +140,7 @@ struct FeedDomainActionTests {
             id: "digest-1",
             summary: "Test summary",
             sourceArticles: [testArticle],
-            generatedAt: Date()
+            generatedAt: Date(),
         )
         let action = FeedDomainAction.digestCompleted(digest)
 
@@ -270,7 +270,7 @@ extension FeedDomainActionTests {
     func modelStatusChangedSameStatusAreEqual() {
         #expect(
             FeedDomainAction.modelStatusChanged(.ready) ==
-                FeedDomainAction.modelStatusChanged(.ready)
+                FeedDomainAction.modelStatusChanged(.ready),
         )
     }
 
@@ -278,7 +278,7 @@ extension FeedDomainActionTests {
     func modelStatusChangedDifferentStatusAreNotEqual() {
         #expect(
             FeedDomainAction.modelStatusChanged(.ready) !=
-                FeedDomainAction.modelStatusChanged(.notLoaded)
+                FeedDomainAction.modelStatusChanged(.notLoaded),
         )
     }
 
@@ -286,7 +286,7 @@ extension FeedDomainActionTests {
     func latestArticlesLoadedSameArticlesAreEqual() {
         #expect(
             FeedDomainAction.latestArticlesLoaded([testArticle]) ==
-                FeedDomainAction.latestArticlesLoaded([testArticle])
+                FeedDomainAction.latestArticlesLoaded([testArticle]),
         )
     }
 
@@ -297,11 +297,11 @@ extension FeedDomainActionTests {
             title: "Different",
             source: ArticleSource(id: "source", name: "Source"),
             url: "https://example.com",
-            publishedAt: Date()
+            publishedAt: Date(),
         )
         #expect(
             FeedDomainAction.latestArticlesLoaded([testArticle]) !=
-                FeedDomainAction.latestArticlesLoaded([article2])
+                FeedDomainAction.latestArticlesLoaded([article2]),
         )
     }
 
@@ -309,7 +309,7 @@ extension FeedDomainActionTests {
     func latestArticlesFailedSameMessageAreEqual() {
         #expect(
             FeedDomainAction.latestArticlesFailed("Error", isOffline: false) ==
-                FeedDomainAction.latestArticlesFailed("Error", isOffline: false)
+                FeedDomainAction.latestArticlesFailed("Error", isOffline: false),
         )
     }
 
@@ -317,7 +317,7 @@ extension FeedDomainActionTests {
     func latestArticlesFailedDifferentMessagesAreNotEqual() {
         #expect(
             FeedDomainAction.latestArticlesFailed("Error 1", isOffline: false) !=
-                FeedDomainAction.latestArticlesFailed("Error 2", isOffline: false)
+                FeedDomainAction.latestArticlesFailed("Error 2", isOffline: false),
         )
     }
 
@@ -325,7 +325,7 @@ extension FeedDomainActionTests {
     func digestTokenReceivedSameTokenAreEqual() {
         #expect(
             FeedDomainAction.digestTokenReceived("token") ==
-                FeedDomainAction.digestTokenReceived("token")
+                FeedDomainAction.digestTokenReceived("token"),
         )
     }
 
@@ -333,7 +333,7 @@ extension FeedDomainActionTests {
     func digestTokenReceivedDifferentTokensAreNotEqual() {
         #expect(
             FeedDomainAction.digestTokenReceived("token1") !=
-                FeedDomainAction.digestTokenReceived("token2")
+                FeedDomainAction.digestTokenReceived("token2"),
         )
     }
 
@@ -341,7 +341,7 @@ extension FeedDomainActionTests {
     func digestFailedSameMessageAreEqual() {
         #expect(
             FeedDomainAction.digestFailed("Error") ==
-                FeedDomainAction.digestFailed("Error")
+                FeedDomainAction.digestFailed("Error"),
         )
     }
 
@@ -349,7 +349,7 @@ extension FeedDomainActionTests {
     func digestFailedDifferentMessagesAreNotEqual() {
         #expect(
             FeedDomainAction.digestFailed("Error 1") !=
-                FeedDomainAction.digestFailed("Error 2")
+                FeedDomainAction.digestFailed("Error 2"),
         )
     }
 
@@ -357,7 +357,7 @@ extension FeedDomainActionTests {
     func generationStateChangedSameStateAreEqual() {
         #expect(
             FeedDomainAction.generationStateChanged(.completed) ==
-                FeedDomainAction.generationStateChanged(.completed)
+                FeedDomainAction.generationStateChanged(.completed),
         )
     }
 
@@ -365,7 +365,7 @@ extension FeedDomainActionTests {
     func generationStateChangedDifferentStateAreNotEqual() {
         #expect(
             FeedDomainAction.generationStateChanged(.idle) !=
-                FeedDomainAction.generationStateChanged(.generating)
+                FeedDomainAction.generationStateChanged(.generating),
         )
     }
 
@@ -373,7 +373,7 @@ extension FeedDomainActionTests {
     func selectArticleSameArticleAreEqual() {
         #expect(
             FeedDomainAction.selectArticle(testArticle) ==
-                FeedDomainAction.selectArticle(testArticle)
+                FeedDomainAction.selectArticle(testArticle),
         )
     }
 }
@@ -388,11 +388,11 @@ extension FeedDomainActionTests {
             title: "Different",
             source: ArticleSource(id: "source", name: "Source"),
             url: "https://example.com",
-            publishedAt: Date()
+            publishedAt: Date(),
         )
         #expect(
             FeedDomainAction.selectArticle(testArticle) !=
-                FeedDomainAction.selectArticle(article2)
+                FeedDomainAction.selectArticle(article2),
         )
     }
 }

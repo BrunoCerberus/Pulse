@@ -30,7 +30,7 @@ final class MediaDetailViewModel: CombineViewModel, ObservableObject {
         article: Article,
         serviceLocator: ServiceLocator,
         eventActionMap: MediaDetailEventActionMap = MediaDetailEventActionMap(),
-        viewStateReducer: MediaDetailViewStateReducer = MediaDetailViewStateReducer()
+        viewStateReducer: MediaDetailViewStateReducer = MediaDetailViewStateReducer(),
     ) {
         self.eventActionMap = eventActionMap
         self.viewStateReducer = viewStateReducer

@@ -28,7 +28,7 @@ final class QuickActionsUITests: BaseUITestCase {
         let tabBar = app.tabBars.firstMatch
         XCTAssertTrue(
             safeWaitForExistence(tabBar, timeout: Self.launchTimeout),
-            "App should launch and reach the tab bar after registering quick actions"
+            "App should launch and reach the tab bar after registering quick actions",
         )
     }
 
@@ -53,7 +53,7 @@ final class QuickActionsUITests: BaseUITestCase {
 
         XCTAssertTrue(
             safeWaitForExistence(app.navigationBars["Search"], timeout: Self.defaultTimeout),
-            "Launching with PULSE_SIMULATE_QUICK_ACTION=search should land on the Search tab"
+            "Launching with PULSE_SIMULATE_QUICK_ACTION=search should land on the Search tab",
         )
     }
 
@@ -78,7 +78,7 @@ final class QuickActionsUITests: BaseUITestCase {
 
         XCTAssertTrue(
             safeWaitForExistence(app.navigationBars["Bookmarks"], timeout: Self.defaultTimeout),
-            "Launching with PULSE_SIMULATE_QUICK_ACTION=bookmarks should land on the Bookmarks tab"
+            "Launching with PULSE_SIMULATE_QUICK_ACTION=bookmarks should land on the Bookmarks tab",
         )
     }
 }

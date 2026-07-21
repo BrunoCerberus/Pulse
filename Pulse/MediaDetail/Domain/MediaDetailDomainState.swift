@@ -51,7 +51,7 @@ struct MediaDetailDomainState: Equatable {
             isLoading: true,
             error: nil,
             showShareSheet: false,
-            isBookmarked: false
+            isBookmarked: false,
         )
     }
 }

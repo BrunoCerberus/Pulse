@@ -80,7 +80,7 @@ struct HomeDomainState: Equatable {
             isEditingTopics: false,
             isOfflineError: false,
             readArticleIDs: [],
-            recentlyRead: []
+            recentlyRead: [],
         )
     }
 }

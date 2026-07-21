@@ -87,7 +87,7 @@ extension HomeView {
         ContentUnavailableView(
             Constants.emptyTitle,
             systemImage: "newspaper",
-            description: Text(Constants.emptyMessage)
+            description: Text(Constants.emptyMessage),
         )
     }
 
@@ -139,7 +139,7 @@ extension HomeView {
                         imageURL: item.imageURL,
                         onTap: {
                             viewModel.handle(event: .onRecentlyReadTapped(articleId: item.id))
-                        }
+                        },
                     )
                     .fadeIn(delay: Double(item.animationIndex) * 0.05)
                 }
@@ -156,7 +156,7 @@ extension HomeView {
                             imageURL: item.imageURL,
                             onTap: {
                                 viewModel.handle(event: .onRecentlyReadTapped(articleId: item.id))
-                            }
+                            },
                         )
                         .frame(width: recentlyReadCardWidth)
                         .fadeIn(delay: Double(item.animationIndex) * 0.05)
@@ -178,7 +178,7 @@ extension HomeView {
         guard endIndex > currentIndex else { return }
 
         let upcomingURLs = articles[currentIndex ..< endIndex]
-            .compactMap { $0.imageURL }
+            .compactMap(\.imageURL)
 
         guard !upcomingURLs.isEmpty else { return }
         Task {

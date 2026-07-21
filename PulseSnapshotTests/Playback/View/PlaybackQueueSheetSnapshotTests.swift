@@ -9,13 +9,13 @@ final class PlaybackQueueSheetSnapshotTests: XCTestCase {
     private let sheetConfig = ViewImageConfig(
         safeArea: UIEdgeInsets(top: 0, left: 0, bottom: 0, right: 0),
         size: CGSize(width: 393, height: 500),
-        traits: UITraitCollection(userInterfaceStyle: .dark)
+        traits: UITraitCollection(userInterfaceStyle: .dark),
     )
 
     private let sheetLightConfig = ViewImageConfig(
         safeArea: UIEdgeInsets(top: 0, left: 0, bottom: 0, right: 0),
         size: CGSize(width: 393, height: 500),
-        traits: UITraitCollection(userInterfaceStyle: .light)
+        traits: UITraitCollection(userInterfaceStyle: .light),
     )
 
     private func makeBriefingState() -> PlaybackQueueState {
@@ -26,7 +26,7 @@ final class PlaybackQueueSheetSnapshotTests: XCTestCase {
                 title: "Today's Digest",
                 sourceName: "Pulse",
                 speechText: "Digest narration",
-                language: "en"
+                language: "en",
             ),
         ]
         let titles = [
@@ -43,8 +43,8 @@ final class PlaybackQueueSheetSnapshotTests: XCTestCase {
                     title: titles[index],
                     sourceName: sources[index],
                     speechText: "Article narration",
-                    language: "en"
-                )
+                    language: "en",
+                ),
             )
         }
 
@@ -76,7 +76,7 @@ final class PlaybackQueueSheetSnapshotTests: XCTestCase {
         assertSnapshot(
             of: viewController,
             as: SnapshotConfig.snapshotting(on: sheetConfig),
-            record: false
+            record: false,
         )
     }
 
@@ -86,7 +86,7 @@ final class PlaybackQueueSheetSnapshotTests: XCTestCase {
         assertSnapshot(
             of: viewController,
             as: SnapshotConfig.snapshotting(on: sheetLightConfig),
-            record: false
+            record: false,
         )
     }
 }

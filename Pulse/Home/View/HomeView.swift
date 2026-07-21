@@ -3,8 +3,6 @@ import SwiftUI
 
 // MARK: - HomeView
 
-// swiftlint:disable type_body_length
-
 /// Main home screen displaying breaking news and headline feeds.
 ///
 /// This view follows the generic router pattern for testability, accepting any type
@@ -70,7 +68,7 @@ struct HomeView<R: HomeNavigationRouter>: View {
         router: R,
         viewModel: HomeViewModel,
         forYouViewModel: ForYouViewModel,
-        smartBriefingViewModel: SmartBriefingViewModel
+        smartBriefingViewModel: SmartBriefingViewModel,
     ) {
         self.router = router
         self.viewModel = viewModel
@@ -121,13 +119,13 @@ struct HomeView<R: HomeNavigationRouter>: View {
         }
         .sheet(item: Binding(
             get: { viewModel.viewState.articleToShare },
-            set: { _ in viewModel.handle(event: .onShareDismissed) }
+            set: { _ in viewModel.handle(event: .onShareDismissed) },
         )) { article in
             ShareSheet(activityItems: ShareItemsBuilder.activityItems(for: article))
         }
         .sheet(isPresented: Binding(
             get: { viewModel.viewState.isEditingTopics },
-            set: { _ in viewModel.handle(event: .onEditTopicsDismissed) }
+            set: { _ in viewModel.handle(event: .onEditTopicsDismissed) },
         )) {
             TopicEditorSheet(
                 allTopics: viewModel.viewState.allTopics,
@@ -137,7 +135,7 @@ struct HomeView<R: HomeNavigationRouter>: View {
                 },
                 onDismiss: {
                     viewModel.handle(event: .onEditTopicsDismissed)
-                }
+                },
             )
         }
         .task {
@@ -151,9 +149,9 @@ struct HomeView<R: HomeNavigationRouter>: View {
             }
         }
         .onChange(of: viewModel.viewState.isRefreshing) { oldValue, newValue in
-            if oldValue && !newValue {
+            if oldValue, !newValue {
                 AccessibilityNotification.Announcement(
-                    Constants.refreshComplete
+                    Constants.refreshComplete,
                 ).post()
             }
         }
@@ -177,7 +175,7 @@ struct HomeView<R: HomeNavigationRouter>: View {
                 categoryChip(
                     title: Constants.allCategory,
                     color: Color.Accent.primary,
-                    isSelected: viewModel.viewState.selectedCategory == nil
+                    isSelected: viewModel.viewState.selectedCategory == nil,
                 ) {
                     viewModel.handle(event: .onCategorySelected(nil))
                 }
@@ -187,7 +185,7 @@ struct HomeView<R: HomeNavigationRouter>: View {
                     categoryChip(
                         title: category.displayName,
                         color: category.color,
-                        isSelected: viewModel.viewState.selectedCategory == category
+                        isSelected: viewModel.viewState.selectedCategory == category,
                     ) {
                         viewModel.handle(event: .onCategorySelected(category))
                     }
@@ -204,7 +202,7 @@ struct HomeView<R: HomeNavigationRouter>: View {
         title: String,
         color: Color,
         isSelected: Bool,
-        action: @escaping () -> Void
+        action: @escaping () -> Void,
     ) -> some View {
         Button {
             HapticManager.shared.selectionChanged()
@@ -228,7 +226,7 @@ struct HomeView<R: HomeNavigationRouter>: View {
                             .fill(color.opacity(0.12))
                             .overlay(
                                 Capsule()
-                                    .stroke(color.opacity(0.25), lineWidth: 0.5)
+                                    .stroke(color.opacity(0.25), lineWidth: 0.5),
                             )
                     }
                 }
@@ -287,15 +285,15 @@ struct HomeView<R: HomeNavigationRouter>: View {
                 // For You carousel — only when on "All" tab AND
                 // ForYouViewModel has decided it's worth showing
                 // (feature flag on, has cards or loading).
-                if viewModel.viewState.selectedCategory == nil
-                    && forYouViewModel.viewState.isVisible
+                if viewModel.viewState.selectedCategory == nil,
+                   forYouViewModel.viewState.isVisible
                 {
                     Section {
                         ForYouCarouselView(
                             viewState: forYouViewModel.viewState,
                             onArticleTapped: { articleId in
                                 viewModel.handle(event: .onArticleTapped(articleId: articleId))
-                            }
+                            },
                         )
                     } header: {
                         GlassSectionHeader(ForYouCarouselView.Constants.sectionTitle)
@@ -304,8 +302,8 @@ struct HomeView<R: HomeNavigationRouter>: View {
 
                 // Smart Briefing card — Premium only, hidden entirely
                 // otherwise (the Feed tab is the canonical upsell surface).
-                if viewModel.viewState.selectedCategory == nil
-                    && smartBriefingViewModel.viewState.isVisible
+                if viewModel.viewState.selectedCategory == nil,
+                   smartBriefingViewModel.viewState.isVisible
                 {
                     Section {
                         SmartBriefingCardView(
@@ -315,15 +313,15 @@ struct HomeView<R: HomeNavigationRouter>: View {
                             },
                             onStartFreshTapped: {
                                 smartBriefingViewModel.handle(event: .onStartFreshTapped)
-                            }
+                            },
                         )
                     } header: {
                         GlassSectionHeader(SmartBriefingCardView.Constants.sectionTitle)
                     }
                 }
 
-                if viewModel.viewState.selectedCategory == nil
-                    && !viewModel.viewState.recentlyRead.isEmpty
+                if viewModel.viewState.selectedCategory == nil,
+                   !viewModel.viewState.recentlyRead.isEmpty
                 {
                     Section {
                         recentlyReadCarousel
@@ -364,7 +362,7 @@ struct HomeView<R: HomeNavigationRouter>: View {
         if horizontalSizeClass == .regular {
             LazyVGrid(
                 columns: [GridItem(.adaptive(minimum: 360), spacing: Spacing.md)],
-                spacing: Spacing.md
+                spacing: Spacing.md,
             ) {
                 ForEach(headlines) { item in
                     headlineCard(for: item, lastItemId: lastItemId, headlines: headlines)
@@ -382,7 +380,7 @@ struct HomeView<R: HomeNavigationRouter>: View {
     private func headlineCard(
         for item: ArticleViewItem,
         lastItemId: String?,
-        headlines: [ArticleViewItem]
+        headlines: [ArticleViewItem],
     ) -> some View {
         GlassArticleCard(
             item: item,
@@ -394,7 +392,7 @@ struct HomeView<R: HomeNavigationRouter>: View {
             },
             onShare: {
                 viewModel.handle(event: .onShareTapped(articleId: item.id))
-            }
+            },
         )
         .fadeIn(delay: Double(item.animationIndex) * 0.03)
         .onAppear {
@@ -413,15 +411,13 @@ struct HomeView<R: HomeNavigationRouter>: View {
     }
 }
 
-// swiftlint:enable type_body_length
-
 #Preview {
     NavigationStack {
         HomeView(
             router: HomeNavigationRouter(),
             viewModel: HomeViewModel(serviceLocator: .preview),
             forYouViewModel: ForYouViewModel(serviceLocator: .preview),
-            smartBriefingViewModel: SmartBriefingViewModel(serviceLocator: .preview)
+            smartBriefingViewModel: SmartBriefingViewModel(serviceLocator: .preview),
         )
     }
 }

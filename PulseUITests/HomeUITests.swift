@@ -19,11 +19,11 @@ final class HomeUITests: BaseUITestCase {
 
         // Verify topics are displayed
         let technologyTopic = app.buttons.matching(
-            NSPredicate(format: "label CONTAINS[c] 'Technology'")
+            NSPredicate(format: "label CONTAINS[c] 'Technology'"),
         ).firstMatch
         XCTAssertTrue(
             safeWaitForExistence(technologyTopic, timeout: Self.shortTimeout),
-            "Technology topic should be visible"
+            "Technology topic should be visible",
         )
 
         // Toggle a topic
@@ -37,7 +37,7 @@ final class HomeUITests: BaseUITestCase {
         // Verify sheet is dismissed and we're back on Home
         XCTAssertTrue(
             safeWaitForExistence(app.navigationBars["News"], timeout: Self.shortTimeout),
-            "Should return to Home after dismissing sheet"
+            "Should return to Home after dismissing sheet",
         )
     }
 
@@ -160,14 +160,14 @@ final class HomeUITests: BaseUITestCase {
         // Verify navigation title
         XCTAssertTrue(
             safeWaitForExistence(app.navigationBars["News"], timeout: Self.shortTimeout),
-            "Navigation title 'News' should exist"
+            "Navigation title 'News' should exist",
         )
 
         // Verify gear button
         let gearButton = app.navigationBars.buttons["gearshape"]
         XCTAssertTrue(
             safeWaitForExistence(gearButton, timeout: Self.shortTimeout),
-            "Gear button should exist in navigation bar"
+            "Gear button should exist in navigation bar",
         )
 
         // Verify content loads (use longer timeout for CI environments)
@@ -233,7 +233,7 @@ final class HomeUITests: BaseUITestCase {
         }
         XCTAssertTrue(
             safeWaitForExistence(app.navigationBars["News"], timeout: Self.defaultTimeout),
-            "Should return to Home"
+            "Should return to Home",
         )
 
         // Only test article interactions if content loaded successfully and isn't an error/empty state
@@ -259,7 +259,7 @@ final class HomeUITests: BaseUITestCase {
                     navigateBack(waitForNavBar: "News")
                     XCTAssertTrue(
                         safeWaitForExistence(app.navigationBars["News"], timeout: Self.defaultTimeout),
-                        "Should return to Home"
+                        "Should return to Home",
                     )
                 }
 
@@ -276,7 +276,7 @@ final class HomeUITests: BaseUITestCase {
                 wait(for: 1.0)
                 XCTAssertTrue(
                     safeWaitForExistence(app.navigationBars["News"], timeout: Self.defaultTimeout),
-                    "App should remain responsive after scrolling"
+                    "App should remain responsive after scrolling",
                 )
 
                 // Horizontal carousel scroll (if Breaking News exists)

@@ -28,7 +28,7 @@ struct ReadingHistoryViewState: Equatable {
             errorMessage: nil,
             showEmptyState: false,
             selectedArticle: nil,
-            articleToShare: nil
+            articleToShare: nil,
         )
     }
 }

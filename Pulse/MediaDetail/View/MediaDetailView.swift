@@ -4,11 +4,10 @@ import SwiftUI
 
 // MARK: - MediaDetailView
 
-// Detail view for video and podcast media playback.
-//
-// - Videos are displayed using an embedded WKWebView (YouTube, etc.)
-// - Podcasts are played using AVPlayer with custom controls
-// swiftlint:disable:next type_body_length
+// Detail view for video and podcast media playback:
+// - Videos use embedded WKWebView (YouTube, etc.)
+// - Podcasts use AVPlayer with custom controls
+
 struct MediaDetailView: View {
     @StateObject private var viewModel: MediaDetailViewModel
     @Environment(\.dismiss) private var dismiss
@@ -20,7 +19,7 @@ struct MediaDetailView: View {
         self.serviceLocator = serviceLocator
         _viewModel = StateObject(wrappedValue: MediaDetailViewModel(
             article: article,
-            serviceLocator: serviceLocator
+            serviceLocator: serviceLocator,
         ))
     }
 
@@ -64,7 +63,7 @@ struct MediaDetailView: View {
                     .accessibilityLabel(
                         viewModel.viewState.isBookmarked
                             ? Constants.removeBookmark
-                            : Constants.addBookmark
+                            : Constants.addBookmark,
                     )
 
                     Button("", systemImage: "square.and.arrow.up") {
@@ -81,7 +80,7 @@ struct MediaDetailView: View {
                 if !$0 {
                     viewModel.handle(event: .onShareDismissed)
                 }
-            }
+            },
         )) {
             if let safeURL = SafeMediaURL.validated(viewModel.viewState.article.url) {
                 ShareSheet(activityItems: [safeURL])
@@ -100,7 +99,7 @@ struct MediaDetailView: View {
                 if mediaURL.contains("youtube.com") || mediaURL.contains("youtu.be") {
                     YouTubeThumbnailView(
                         urlString: mediaURL,
-                        articleImageURL: viewModel.viewState.article.imageURL
+                        articleImageURL: viewModel.viewState.article.imageURL,
                     )
                 } else if let url = SafeMediaURL.validated(mediaURL) {
                     // Direct video files: use VideoPlayerView
@@ -114,7 +113,7 @@ struct MediaDetailView: View {
                         },
                         onError: { error in
                             viewModel.handle(event: .onError(error))
-                        }
+                        },
                     )
                     .aspectRatio(16 / 9, contentMode: .fit)
                     .clipShape(RoundedRectangle(cornerRadius: CornerRadius.lg))
@@ -162,7 +161,7 @@ struct MediaDetailView: View {
                 if isPlaying != viewModel.viewState.isPlaying {
                     viewModel.handle(event: .onPlayPauseTapped)
                 }
-            }
+            },
         )
     }
 
@@ -243,8 +242,8 @@ struct MediaDetailView: View {
                 topLeadingRadius: CornerRadius.xl,
                 bottomLeadingRadius: 0,
                 bottomTrailingRadius: 0,
-                topTrailingRadius: CornerRadius.xl
-            )
+                topTrailingRadius: CornerRadius.xl,
+            ),
         )
         .offset(y: -Spacing.lg)
     }
@@ -338,9 +337,9 @@ private extension MediaDetailView {
                 publishedAt: Date(),
                 mediaType: .video,
                 mediaURL: "https://www.youtube.com/watch?v=example",
-                mediaDuration: 1800
+                mediaDuration: 1800,
             ),
-            serviceLocator: .preview
+            serviceLocator: .preview,
         )
     }
     .preferredColorScheme(.dark)
@@ -360,9 +359,9 @@ private extension MediaDetailView {
                 publishedAt: Date(),
                 mediaType: .podcast,
                 mediaURL: "https://example.com/audio.mp3",
-                mediaDuration: 3600
+                mediaDuration: 3600,
             ),
-            serviceLocator: .preview
+            serviceLocator: .preview,
         )
     }
     .preferredColorScheme(.dark)

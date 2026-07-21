@@ -5,7 +5,7 @@ import Foundation
 struct OpenPulseSettingsIntent: AppIntent {
     static let title: LocalizedStringResource = "Open Pulse Settings"
     static let description = IntentDescription(
-        "Opens the Pulse Settings screen to manage topics, notifications, and preferences."
+        "Opens the Pulse Settings screen to manage topics, notifications, and preferences.",
     )
 
     static let openAppWhenRun: Bool = true

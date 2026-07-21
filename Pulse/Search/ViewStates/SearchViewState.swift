@@ -59,7 +59,7 @@ struct SearchViewState: Equatable {
             sortOption: .relevancy,
             selectedArticle: nil,
             isOfflineError: false,
-            articleToShare: nil
+            articleToShare: nil,
         )
     }
 }

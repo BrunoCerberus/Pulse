@@ -10,14 +10,14 @@ final class SourceArticlesSectionSnapshotTests: XCTestCase {
     private let iPhoneAirConfig = ViewImageConfig(
         safeArea: UIEdgeInsets(top: 59, left: 0, bottom: 34, right: 0),
         size: CGSize(width: 393, height: 852),
-        traits: UITraitCollection(userInterfaceStyle: .dark)
+        traits: UITraitCollection(userInterfaceStyle: .dark),
     )
 
     /// Light mode config for additional coverage
     private let iPhoneAirLightConfig = ViewImageConfig(
         safeArea: UIEdgeInsets(top: 59, left: 0, bottom: 34, right: 0),
         size: CGSize(width: 393, height: 852),
-        traits: UITraitCollection(userInterfaceStyle: .light)
+        traits: UITraitCollection(userInterfaceStyle: .light),
     )
 
     /// Fixed date articles for snapshot stability
@@ -33,7 +33,7 @@ final class SourceArticlesSectionSnapshotTests: XCTestCase {
                 url: "https://example.com/1",
                 imageURL: nil,
                 publishedAt: Date(timeIntervalSince1970: 1_672_531_200),
-                category: .technology
+                category: .technology,
             )),
             FeedSourceArticle(from: Article(
                 id: "snapshot-2",
@@ -45,7 +45,7 @@ final class SourceArticlesSectionSnapshotTests: XCTestCase {
                 url: "https://example.com/2",
                 imageURL: nil,
                 publishedAt: Date(timeIntervalSince1970: 1_672_534_800),
-                category: .business
+                category: .business,
             )),
             FeedSourceArticle(from: Article(
                 id: "snapshot-3",
@@ -57,7 +57,7 @@ final class SourceArticlesSectionSnapshotTests: XCTestCase {
                 url: "https://example.com/3",
                 imageURL: nil,
                 publishedAt: Date(timeIntervalSince1970: 1_672_538_400),
-                category: .health
+                category: .health,
             )),
         ]
     }
@@ -65,7 +65,7 @@ final class SourceArticlesSectionSnapshotTests: XCTestCase {
     func testSourceArticlesSectionCollapsed() {
         let view = SourceArticlesSection(
             articles: snapshotArticles,
-            onArticleTapped: { _ in }
+            onArticleTapped: { _ in },
         )
         .padding()
         .frame(width: 375)
@@ -75,14 +75,14 @@ final class SourceArticlesSectionSnapshotTests: XCTestCase {
         assertSnapshot(
             of: controller,
             as: SnapshotConfig.snapshotting(on: iPhoneAirConfig),
-            record: false
+            record: false,
         )
     }
 
     func testSourceArticlesSectionSingleArticle() {
         let view = SourceArticlesSection(
             articles: [snapshotArticles[0]],
-            onArticleTapped: { _ in }
+            onArticleTapped: { _ in },
         )
         .padding()
         .frame(width: 375)
@@ -92,7 +92,7 @@ final class SourceArticlesSectionSnapshotTests: XCTestCase {
         assertSnapshot(
             of: controller,
             as: SnapshotConfig.snapshotting(on: iPhoneAirConfig),
-            record: false
+            record: false,
         )
     }
 
@@ -101,7 +101,7 @@ final class SourceArticlesSectionSnapshotTests: XCTestCase {
     func testSourceArticlesSectionCollapsedLightMode() {
         let view = SourceArticlesSection(
             articles: snapshotArticles,
-            onArticleTapped: { _ in }
+            onArticleTapped: { _ in },
         )
         .padding()
         .frame(width: 375)
@@ -111,7 +111,7 @@ final class SourceArticlesSectionSnapshotTests: XCTestCase {
         assertSnapshot(
             of: controller,
             as: SnapshotConfig.snapshotting(on: iPhoneAirLightConfig),
-            record: false
+            record: false,
         )
     }
 
@@ -131,7 +131,7 @@ final class SourceArticlesSectionSnapshotTests: XCTestCase {
                 url: "https://example.com/1",
                 imageURL: nil,
                 publishedAt: Date(timeIntervalSince1970: 1_672_531_200),
-                category: .technology
+                category: .technology,
             )),
             FeedSourceArticle(from: Article(
                 id: "long-2",
@@ -143,13 +143,13 @@ final class SourceArticlesSectionSnapshotTests: XCTestCase {
                 url: "https://example.com/2",
                 imageURL: nil,
                 publishedAt: Date(timeIntervalSince1970: 1_672_534_800),
-                category: .business
+                category: .business,
             )),
         ]
 
         let view = SourceArticlesSection(
             articles: longTitleArticles,
-            onArticleTapped: { _ in }
+            onArticleTapped: { _ in },
         )
         .padding()
         .frame(width: 375)
@@ -159,7 +159,7 @@ final class SourceArticlesSectionSnapshotTests: XCTestCase {
         assertSnapshot(
             of: controller,
             as: SnapshotConfig.snapshotting(on: iPhoneAirConfig),
-            record: false
+            record: false,
         )
     }
 
@@ -178,13 +178,13 @@ final class SourceArticlesSectionSnapshotTests: XCTestCase {
                 url: "https://example.com/\(index)",
                 imageURL: nil,
                 publishedAt: Date(timeIntervalSince1970: 1_672_531_200 + Double(index * 3600)),
-                category: NewsCategory.allCases[index % NewsCategory.allCases.count]
+                category: NewsCategory.allCases[index % NewsCategory.allCases.count],
             )))
         }
 
         let view = SourceArticlesSection(
             articles: manyArticles,
-            onArticleTapped: { _ in }
+            onArticleTapped: { _ in },
         )
         .padding()
         .frame(width: 375)
@@ -194,7 +194,7 @@ final class SourceArticlesSectionSnapshotTests: XCTestCase {
         assertSnapshot(
             of: controller,
             as: SnapshotConfig.snapshotting(on: iPhoneAirConfig),
-            record: false
+            record: false,
         )
     }
 }

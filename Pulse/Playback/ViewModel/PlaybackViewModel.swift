@@ -63,9 +63,9 @@ final class PlaybackViewModel: CombineViewModel, ObservableObject {
                             title: item.title,
                             sourceName: item.sourceName,
                             isCurrent: index == queue.currentIndex,
-                            isDigest: item.kind == .digest
+                            isDigest: item.kind == .digest,
                         )
-                    }
+                    },
                 )
             }
             .removeDuplicates()
@@ -115,7 +115,7 @@ struct PlaybackViewState: Equatable {
         hasPrevious: false,
         queuePositionLabel: nil,
         isQueueSheetPresented: false,
-        queueItems: []
+        queueItems: [],
     )
 }
 

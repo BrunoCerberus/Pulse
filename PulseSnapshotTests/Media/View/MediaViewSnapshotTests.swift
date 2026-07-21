@@ -14,14 +14,14 @@ final class MediaViewSnapshotTests: XCTestCase {
     private let iPhoneAirConfig = ViewImageConfig(
         safeArea: UIEdgeInsets(top: 59, left: 0, bottom: 34, right: 0),
         size: CGSize(width: 393, height: 852),
-        traits: UITraitCollection(userInterfaceStyle: .dark)
+        traits: UITraitCollection(userInterfaceStyle: .dark),
     )
 
     /// Light mode config for additional coverage
     private let iPhoneAirLightConfig = ViewImageConfig(
         safeArea: UIEdgeInsets(top: 59, left: 0, bottom: 34, right: 0),
         size: CGSize(width: 393, height: 852),
-        traits: UITraitCollection(userInterfaceStyle: .light)
+        traits: UITraitCollection(userInterfaceStyle: .light),
     )
 
     /// Fixed date for snapshot stability (Jan 1, 2023 - consistent relative time)
@@ -45,7 +45,7 @@ final class MediaViewSnapshotTests: XCTestCase {
             mediaType: .video,
             mediaURL: "https://example.com/video/test123",
             mediaDuration: 1845,
-            mediaMimeType: "video/mp4"
+            mediaMimeType: "video/mp4",
         )
     }
 
@@ -65,7 +65,7 @@ final class MediaViewSnapshotTests: XCTestCase {
             mediaType: .podcast,
             mediaURL: "https://audio.example.com/podcast.mp3",
             mediaDuration: 2700,
-            mediaMimeType: "audio/mpeg"
+            mediaMimeType: "audio/mpeg",
         )
     }
 
@@ -87,7 +87,7 @@ final class MediaViewSnapshotTests: XCTestCase {
             mediaType: .video,
             mediaURL: "https://example.com/video/long",
             mediaDuration: 7200,
-            mediaMimeType: "video/mp4"
+            mediaMimeType: "video/mp4",
         )
     }
 
@@ -119,7 +119,7 @@ final class MediaViewSnapshotTests: XCTestCase {
         assertSnapshot(
             of: controller,
             as: SnapshotConfig.snapshotting(on: SnapshotConfig.iPad),
-            record: false
+            record: false,
         )
     }
 
@@ -131,7 +131,7 @@ final class MediaViewSnapshotTests: XCTestCase {
             item: item,
             onTap: {},
             onPlay: {},
-            onShare: {}
+            onShare: {},
         )
         .frame(width: 375)
         .padding()
@@ -141,7 +141,7 @@ final class MediaViewSnapshotTests: XCTestCase {
         assertSnapshot(
             of: controller,
             as: SnapshotConfig.snapshotting(on: iPhoneAirConfig),
-            record: false
+            record: false,
         )
     }
 
@@ -151,7 +151,7 @@ final class MediaViewSnapshotTests: XCTestCase {
             item: item,
             onTap: {},
             onPlay: {},
-            onShare: {}
+            onShare: {},
         )
         .frame(width: 375)
         .padding()
@@ -165,7 +165,7 @@ final class MediaViewSnapshotTests: XCTestCase {
         assertSnapshot(
             of: controller,
             as: SnapshotConfig.snapshotting(on: iPhoneAirConfig, precision: 0.97),
-            record: false
+            record: false,
         )
     }
 
@@ -175,7 +175,7 @@ final class MediaViewSnapshotTests: XCTestCase {
             item: item,
             onTap: {},
             onPlay: {},
-            onShare: {}
+            onShare: {},
         )
         .frame(width: 375)
         .padding()
@@ -188,7 +188,7 @@ final class MediaViewSnapshotTests: XCTestCase {
         assertSnapshot(
             of: controller,
             as: SnapshotConfig.snapshotting(on: iPhoneAirConfig),
-            record: false
+            record: false,
         )
     }
 
@@ -198,7 +198,7 @@ final class MediaViewSnapshotTests: XCTestCase {
             item: item,
             onTap: {},
             onPlay: {},
-            onShare: {}
+            onShare: {},
         )
         .frame(width: 375)
         .padding()
@@ -211,7 +211,7 @@ final class MediaViewSnapshotTests: XCTestCase {
         assertSnapshot(
             of: controller,
             as: SnapshotConfig.snapshotting(on: iPhoneAirLightConfig),
-            record: false
+            record: false,
         )
     }
 
@@ -221,7 +221,7 @@ final class MediaViewSnapshotTests: XCTestCase {
         let item = MediaViewItem(from: videoArticle, index: 0)
         let view = FeaturedMediaCard(
             item: item,
-            onTap: {}
+            onTap: {},
         )
         .frame(width: 375)
         .padding()
@@ -234,7 +234,7 @@ final class MediaViewSnapshotTests: XCTestCase {
         assertSnapshot(
             of: controller,
             as: SnapshotConfig.snapshotting(on: iPhoneAirConfig),
-            record: false
+            record: false,
         )
     }
 
@@ -242,7 +242,7 @@ final class MediaViewSnapshotTests: XCTestCase {
         let item = MediaViewItem(from: podcastArticle, index: 0)
         let view = FeaturedMediaCard(
             item: item,
-            onTap: {}
+            onTap: {},
         )
         .frame(width: 375)
         .padding()
@@ -252,7 +252,7 @@ final class MediaViewSnapshotTests: XCTestCase {
         assertSnapshot(
             of: controller,
             as: SnapshotConfig.snapshotting(on: iPhoneAirConfig),
-            record: false
+            record: false,
         )
     }
 
@@ -260,7 +260,7 @@ final class MediaViewSnapshotTests: XCTestCase {
         let item = MediaViewItem(from: videoArticle, index: 0)
         let view = FeaturedMediaCard(
             item: item,
-            onTap: {}
+            onTap: {},
         )
         .frame(width: 375)
         .padding()
@@ -270,7 +270,7 @@ final class MediaViewSnapshotTests: XCTestCase {
         assertSnapshot(
             of: controller,
             as: SnapshotConfig.snapshotting(on: iPhoneAirLightConfig),
-            record: false
+            record: false,
         )
     }
 
@@ -286,7 +286,7 @@ final class MediaViewSnapshotTests: XCTestCase {
         assertSnapshot(
             of: controller,
             as: SnapshotConfig.snapshotting(on: iPhoneAirConfig),
-            record: false
+            record: false,
         )
     }
 
@@ -300,7 +300,7 @@ final class MediaViewSnapshotTests: XCTestCase {
         assertSnapshot(
             of: controller,
             as: SnapshotConfig.snapshotting(on: iPhoneAirConfig),
-            record: false
+            record: false,
         )
     }
 
@@ -314,7 +314,7 @@ final class MediaViewSnapshotTests: XCTestCase {
         assertSnapshot(
             of: controller,
             as: SnapshotConfig.snapshotting(on: iPhoneAirConfig),
-            record: false
+            record: false,
         )
     }
 
@@ -328,7 +328,7 @@ final class MediaViewSnapshotTests: XCTestCase {
         assertSnapshot(
             of: controller,
             as: SnapshotConfig.snapshotting(on: iPhoneAirLightConfig),
-            record: false
+            record: false,
         )
     }
 
@@ -346,7 +346,7 @@ final class MediaViewSnapshotTests: XCTestCase {
                     item: item,
                     onTap: {},
                     onPlay: {},
-                    onShare: {}
+                    onShare: {},
                 )
             }
         }
@@ -360,7 +360,7 @@ final class MediaViewSnapshotTests: XCTestCase {
         assertSnapshot(
             of: controller,
             as: SnapshotConfig.snapshotting(on: iPhoneAirConfig, precision: 0.97),
-            record: false
+            record: false,
         )
     }
 
@@ -375,7 +375,7 @@ final class MediaViewSnapshotTests: XCTestCase {
         assertSnapshot(
             of: controller,
             as: SnapshotConfig.snapshotting(on: iPhoneAirConfig),
-            record: false
+            record: false,
         )
     }
 
@@ -388,7 +388,7 @@ final class MediaViewSnapshotTests: XCTestCase {
         assertSnapshot(
             of: controller,
             as: SnapshotConfig.snapshotting(on: iPhoneAirLightConfig),
-            record: false
+            record: false,
         )
     }
 }
@@ -405,7 +405,7 @@ private struct MediaSegmentedControlPreview: View {
 
             MediaSegmentedControl(
                 selectedType: selectedType,
-                onSelect: { _ in }
+                onSelect: { _ in },
             )
         }
     }

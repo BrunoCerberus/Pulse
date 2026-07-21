@@ -111,7 +111,7 @@ final class SearchViewModel: CombineViewModel, ObservableObject {
                     sortOption: state.sortBy,
                     selectedArticle: state.selectedArticle,
                     isOfflineError: state.isOfflineError,
-                    articleToShare: state.articleToShare
+                    articleToShare: state.articleToShare,
                 )
             }
             .removeDuplicates()

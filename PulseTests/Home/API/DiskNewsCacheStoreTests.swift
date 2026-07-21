@@ -180,7 +180,7 @@ struct DiskNewsCacheStoreTests {
 
         try FileManager.default.createDirectory(
             at: migrationDirectory,
-            withIntermediateDirectories: true
+            withIntermediateDirectories: true,
         )
 
         let legacyFile = migrationDirectory.appendingPathComponent("legacy.json")

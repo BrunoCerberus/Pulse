@@ -15,7 +15,7 @@ struct QuickActionTypeTests {
             (QuickActionType.dailyDigest, "com.bruno.Pulse-News.quickaction.dailyDigest"),
             (QuickActionType.bookmarks, "com.bruno.Pulse-News.quickaction.bookmarks"),
             (QuickActionType.breakingNews, "com.bruno.Pulse-News.quickaction.breakingNews"),
-        ]
+        ],
     )
     func shortcutType(type: QuickActionType, expected: String) {
         #expect(type.shortcutType == expected)
@@ -30,7 +30,7 @@ struct QuickActionTypeTests {
             (QuickActionType.dailyDigest, "text.document"),
             (QuickActionType.bookmarks, "bookmark.fill"),
             (QuickActionType.breakingNews, "bolt.fill"),
-        ]
+        ],
     )
     func systemImageName(type: QuickActionType, expected: String) {
         #expect(type.systemImageName == expected)
@@ -53,7 +53,7 @@ struct QuickActionTypeTests {
     func unknownShortcutItemReturnsNil() {
         let unknown = UIApplicationShortcutItem(
             type: "other.type",
-            localizedTitle: "Other"
+            localizedTitle: "Other",
         )
         #expect(QuickActionType(shortcutItem: unknown) == nil)
     }

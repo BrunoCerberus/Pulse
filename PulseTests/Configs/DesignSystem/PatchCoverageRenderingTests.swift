@@ -13,9 +13,9 @@ struct PatchCoverageRenderingTests {
         Self.render(
             HeroNewsCard(
                 item: ArticleViewItem(from: Self.article),
-                onTap: {}
+                onTap: {},
             )
-            .frame(width: 320, height: 240)
+            .frame(width: 320, height: 240),
         )
     }
 
@@ -24,9 +24,9 @@ struct PatchCoverageRenderingTests {
         Self.render(
             FeaturedMediaCard(
                 item: MediaViewItem(from: Self.article),
-                onTap: {}
+                onTap: {},
             )
-            .frame(width: 320, height: 220)
+            .frame(width: 320, height: 220),
         )
     }
 
@@ -34,7 +34,7 @@ struct PatchCoverageRenderingTests {
     func featuredMediaSkeletonRendersGlassOverlay() {
         Self.render(
             FeaturedMediaCardSkeleton()
-                .frame(width: 320, height: 220)
+                .frame(width: 320, height: 220),
         )
     }
 
@@ -68,14 +68,14 @@ struct PatchCoverageRenderingTests {
             NavigationStack {
                 SearchView(router: SearchNavigationRouter(), viewModel: viewModel)
             },
-            size: CGSize(width: 393, height: 852)
+            size: CGSize(width: 393, height: 852),
         )
         searchService.completeDelayedSearch()
     }
 
-    private static func render<Content: View>(
-        _ view: Content,
-        size: CGSize = CGSize(width: 393, height: 260)
+    private static func render(
+        _ view: some View,
+        size: CGSize = CGSize(width: 393, height: 260),
     ) {
         guard let windowScene = UIApplication.shared.connectedScenes.compactMap({ $0 as? UIWindowScene }).first else {
             Issue.record("Expected an active window scene for rendering")
@@ -109,7 +109,7 @@ struct PatchCoverageRenderingTests {
             publishedAt: Date(timeIntervalSince1970: 1_700_000_000),
             category: .technology,
             mediaType: .video,
-            mediaDuration: 180
+            mediaDuration: 180,
         )
     }
 }

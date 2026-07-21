@@ -37,7 +37,7 @@ struct MediaSegmentedControl: View {
                 MediaTypeChip(
                     type: type,
                     isSelected: selectedType == type,
-                    namespace: animation
+                    namespace: animation,
                 ) {
                     HapticManager.shared.selectionChanged()
                     withAnimation(AnimationTiming.springSmooth) {
@@ -92,7 +92,7 @@ private struct MediaTypeChip: View {
                         .fill(chipColor.opacity(0.12))
                         .overlay(
                             Capsule()
-                                .stroke(chipColor.opacity(0.25), lineWidth: 0.5)
+                                .stroke(chipColor.opacity(0.25), lineWidth: 0.5),
                         )
                 }
             }
@@ -120,7 +120,7 @@ private struct MediaTypeChip: View {
                 VStack(spacing: Spacing.xl) {
                     MediaSegmentedControl(
                         selectedType: selectedType,
-                        onSelect: { selectedType = $0 }
+                        onSelect: { selectedType = $0 },
                     )
 
                     Text("Selected: \(selectedType?.displayName ?? "All")")
@@ -135,21 +135,21 @@ private struct MediaTypeChip: View {
                         HStack(spacing: Spacing.sm) {
                             MediaSegmentedControl(
                                 selectedType: nil,
-                                onSelect: { _ in }
+                                onSelect: { _ in },
                             )
                         }
 
                         HStack(spacing: Spacing.sm) {
                             MediaSegmentedControl(
                                 selectedType: .video,
-                                onSelect: { _ in }
+                                onSelect: { _ in },
                             )
                         }
 
                         HStack(spacing: Spacing.sm) {
                             MediaSegmentedControl(
                                 selectedType: .podcast,
-                                onSelect: { _ in }
+                                onSelect: { _ in },
                             )
                         }
                     }

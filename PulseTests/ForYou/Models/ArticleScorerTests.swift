@@ -17,14 +17,14 @@ struct ArticleScorerTests {
             url: "https://example.com",
             imageURL: nil,
             publishedAt: Self.baseDate,
-            category: category
+            category: category,
         )
     }
 
     private func makeTopic(
         topicID: String,
         weight: Double,
-        lastReinforcedAt: Date = Self.baseDate
+        lastReinforcedAt: Date = Self.baseDate,
     ) -> InterestTopic {
         InterestTopic(
             topicID: topicID,
@@ -33,7 +33,7 @@ struct ArticleScorerTests {
             category: nil,
             lastReinforcedAt: lastReinforcedAt,
             createdAt: lastReinforcedAt,
-            source: .extracted
+            source: .extracted,
         )
     }
 
@@ -42,7 +42,7 @@ struct ArticleScorerTests {
         let result = ArticleScorer.score(
             article: makeArticle(),
             articleTags: ["technology"],
-            profile: []
+            profile: [],
         )
         #expect(result.score == 0)
         #expect(result.matchedTopics.isEmpty)
@@ -80,7 +80,7 @@ struct ArticleScorerTests {
         let result = ArticleScorer.score(
             article: makeArticle(),
             articleTags: ["ai", "climate"],
-            profile: profile
+            profile: profile,
         )
         #expect(abs(result.score - 1.0) < 0.0001)
         #expect(Set(result.matchedTopics) == ["ai", "climate"])
@@ -97,7 +97,7 @@ struct ArticleScorerTests {
         let result = ArticleScorer.score(
             article: makeArticle(),
             articleTags: ["ai", "climate"],
-            profile: profile
+            profile: profile,
         )
         #expect(abs(result.score - (2.0 / 3.0)) < 0.0001)
         #expect(Set(result.matchedTopics) == ["ai", "climate"])
@@ -113,7 +113,7 @@ struct ArticleScorerTests {
         let result = ArticleScorer.score(
             article: makeArticle(),
             articleTags: ["ai"],
-            profile: profile
+            profile: profile,
         )
         #expect(abs(result.score - 0.9) < 0.0001)
     }
@@ -124,7 +124,7 @@ struct ArticleScorerTests {
         let result = ArticleScorer.score(
             article: makeArticle(),
             articleTags: ["AI"],
-            profile: profile
+            profile: profile,
         )
         #expect(result.score == 1.0)
     }
@@ -145,7 +145,7 @@ struct ArticleScorerTests {
             articleTags: ["ai"],
             profile: profile,
             now: Self.baseDate,
-            halfLifeDays: 30
+            halfLifeDays: 30,
         )
         #expect(abs(result.score - 0.5) < 0.01)
     }
@@ -156,7 +156,7 @@ struct ArticleScorerTests {
         let result = ArticleScorer.score(
             article: makeArticle(),
             articleTags: ["ai"],
-            profile: profile
+            profile: profile,
         )
         #expect(result.score >= 0)
         #expect(result.score <= 1)

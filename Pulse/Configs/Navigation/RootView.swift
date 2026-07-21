@@ -65,7 +65,7 @@ struct RootView: View {
             authState: authManager.authState,
             scenePhase: scenePhase,
             isAppLockEnabled: lockManager.isAppLockEnabled,
-            isAuthenticating: lockManager.isAuthenticating
+            isAuthenticating: lockManager.isAuthenticating,
         )
     }
 
@@ -93,7 +93,7 @@ struct RootView: View {
         authState: AuthenticationManager.AuthState,
         scenePhase: ScenePhase,
         isAppLockEnabled: Bool,
-        isAuthenticating: Bool
+        isAuthenticating: Bool,
     ) -> Bool {
         guard isAppLockEnabled else { return false }
         guard case .authenticated = authState else { return false }

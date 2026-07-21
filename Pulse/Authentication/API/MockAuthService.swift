@@ -93,7 +93,7 @@ extension AuthUser {
             email: "test@example.com",
             displayName: "Test User",
             photoURL: URL(string: "https://example.com/avatar.png"),
-            provider: .google
+            provider: .google,
         )
     }
 }

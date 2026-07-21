@@ -51,7 +51,7 @@ final class PendingEngagementEvent {
             categoryRaw: categoryRaw,
             kind: kind,
             weight: weight,
-            occurredAt: occurredAt
+            occurredAt: occurredAt,
         )
     }
 }

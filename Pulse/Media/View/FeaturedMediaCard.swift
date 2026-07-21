@@ -111,7 +111,7 @@ struct FeaturedMediaCard: View {
                 Color.blue.opacity(0.4),
             ],
             startPoint: .topLeading,
-            endPoint: .bottomTrailing
+            endPoint: .bottomTrailing,
         )
     }
 
@@ -156,8 +156,8 @@ struct FeaturedMediaCard: View {
             LinearGradient(
                 colors: [.clear, .black.opacity(0.6)],
                 startPoint: .top,
-                endPoint: .bottom
-            )
+                endPoint: .bottom,
+            ),
         )
     }
 
@@ -213,10 +213,10 @@ struct FeaturedMediaCard: View {
                             imageURL: "https://picsum.photos/400/300",
                             publishedAt: Date(),
                             mediaType: .video,
-                            mediaDuration: 1245
-                        )
+                            mediaDuration: 1245,
+                        ),
                     ),
-                    onTap: {}
+                    onTap: {},
                 )
 
                 FeaturedMediaCard(
@@ -229,10 +229,10 @@ struct FeaturedMediaCard: View {
                             imageURL: "https://picsum.photos/401/301",
                             publishedAt: Date().addingTimeInterval(-3600),
                             mediaType: .podcast,
-                            mediaDuration: 7200
-                        )
+                            mediaDuration: 7200,
+                        ),
                     ),
-                    onTap: {}
+                    onTap: {},
                 )
 
                 FeaturedMediaCard(
@@ -244,10 +244,10 @@ struct FeaturedMediaCard: View {
                             url: "https://example.com",
                             publishedAt: Date(),
                             mediaType: .video,
-                            mediaDuration: 100
-                        )
+                            mediaDuration: 100,
+                        ),
                     ),
-                    onTap: {}
+                    onTap: {},
                 )
             }
             .padding()

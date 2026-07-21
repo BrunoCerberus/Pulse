@@ -22,9 +22,9 @@ enum MemoryTier: String {
     /// Human-readable description for logging
     var description: String {
         switch self {
-        case .constrained: return "constrained (<4GB)"
-        case .standard: return "standard (4-6GB)"
-        case .high: return "high (>6GB)"
+        case .constrained: "constrained (<4GB)"
+        case .standard: "standard (4-6GB)"
+        case .high: "high (>6GB)"
         }
     }
 }
@@ -55,8 +55,8 @@ enum LLMConfiguration {
     /// Note: Gemma 3 supports up to 32K context but we cap for on-device inference speed
     static var contextSize: Int {
         switch MemoryTier.current {
-        case .constrained: return 4096
-        case .standard, .high: return 8192
+        case .constrained: 4096
+        case .standard, .high: 8192
         }
     }
 
@@ -74,9 +74,9 @@ enum LLMConfiguration {
     /// - High: 1.0GB (more permissive for high-memory devices)
     static var minimumAvailableMemory: UInt64 {
         switch MemoryTier.current {
-        case .constrained: return 1_500_000_000 // 1.5GB
-        case .standard: return 1_200_000_000 // 1.2GB
-        case .high: return 1_000_000_000 // 1.0GB
+        case .constrained: 1_500_000_000 // 1.5GB
+        case .standard: 1_200_000_000 // 1.2GB
+        case .high: 1_000_000_000 // 1.0GB
         }
     }
 
@@ -84,9 +84,9 @@ enum LLMConfiguration {
     /// Inference requires less headroom since model is already loaded
     static var minimumInferenceMemory: UInt64 {
         switch MemoryTier.current {
-        case .constrained: return 800_000_000 // 800MB
-        case .standard: return 600_000_000 // 600MB
-        case .high: return 500_000_000 // 500MB
+        case .constrained: 800_000_000 // 800MB
+        case .standard: 600_000_000 // 600MB
+        case .high: 500_000_000 // 500MB
         }
     }
 
@@ -107,16 +107,16 @@ enum LLMConfiguration {
     /// Higher caps give the model more material per category for richer summaries
     static var maxArticlesForDigest: Int {
         switch MemoryTier.current {
-        case .constrained: return 15
-        case .standard, .high: return 25
+        case .constrained: 15
+        case .standard, .high: 25
         }
     }
 
     /// Maximum articles to include per category for balanced digest coverage
     static var maxArticlesPerCategory: Int {
         switch MemoryTier.current {
-        case .constrained: return 3
-        case .standard, .high: return 4
+        case .constrained: 3
+        case .standard, .high: 4
         }
     }
 
@@ -131,8 +131,8 @@ enum LLMConfiguration {
     /// Gemma 3 1B handles longer outputs well with its 32K context window
     static var maxOutputTokens: Int {
         switch MemoryTier.current {
-        case .constrained: return 1024
-        case .standard, .high: return 2048
+        case .constrained: 1024
+        case .standard, .high: 2048
         }
     }
 

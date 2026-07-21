@@ -61,7 +61,7 @@ struct ReadingHistoryDomainActionTests {
     func selectArticleSameIdAreEqual() {
         #expect(
             ReadingHistoryDomainAction.selectArticle(articleId: "article-123") ==
-                ReadingHistoryDomainAction.selectArticle(articleId: "article-123")
+                ReadingHistoryDomainAction.selectArticle(articleId: "article-123"),
         )
     }
 
@@ -69,7 +69,7 @@ struct ReadingHistoryDomainActionTests {
     func selectArticleDifferentIdsAreNotEqual() {
         #expect(
             ReadingHistoryDomainAction.selectArticle(articleId: "article-123") !=
-                ReadingHistoryDomainAction.selectArticle(articleId: "article-456")
+                ReadingHistoryDomainAction.selectArticle(articleId: "article-456"),
         )
     }
 

@@ -13,7 +13,7 @@ extension HomeDomainInteractor {
         category: NewsCategory,
         country: String,
         page: Int,
-        isRefreshing _: Bool = false
+        isRefreshing _: Bool = false,
     ) -> AnyPublisher<Void, Never> {
         newsService.fetchTopHeadlines(category: category, language: preferredLanguage, country: country, page: page)
             .receive(on: DispatchQueue.main)
@@ -44,7 +44,7 @@ extension HomeDomainInteractor {
                             state.isOfflineError = error.isOfflineError
                         }
                     }
-                }
+                },
             )
             .map { _ in () }
             .replaceError(with: ())
@@ -57,7 +57,7 @@ extension HomeDomainInteractor {
     func fetchAllHeadlines(country: String, page: Int, isRefreshing _: Bool = false) -> AnyPublisher<Void, Never> {
         Publishers.Zip(
             newsService.fetchBreakingNews(language: preferredLanguage, country: country),
-            newsService.fetchTopHeadlines(language: preferredLanguage, country: country, page: page)
+            newsService.fetchTopHeadlines(language: preferredLanguage, country: country, page: page),
         )
         .receive(on: DispatchQueue.main)
         .handleEvents(
@@ -66,8 +66,8 @@ extension HomeDomainInteractor {
                 // Filter out media items (videos/podcasts) - they belong in MediaView
                 let filteredBreaking = breaking.filter { !$0.isMedia }
                 let filteredHeadlines = headlines.filter { !$0.isMedia }
-                let deduplicated = self.deduplicateArticles(filteredHeadlines, excluding: filteredBreaking)
-                self.updateState { state in
+                let deduplicated = deduplicateArticles(filteredHeadlines, excluding: filteredBreaking)
+                updateState { state in
                     state.breakingNews = filteredBreaking
                     state.headlines = deduplicated
                     state.isLoading = false
@@ -93,7 +93,7 @@ extension HomeDomainInteractor {
                         state.isOfflineError = error.isOfflineError
                     }
                 }
-            }
+            },
         )
         .map { _, _ in () }
         .replaceError(with: ())
@@ -117,7 +117,7 @@ extension HomeDomainInteractor {
                     language: language,
                     category: category,
                     country: country,
-                    page: 1
+                    page: 1,
                 ))
             }
             cachingService.invalidateCache(for: keysToInvalidate)
@@ -151,7 +151,7 @@ extension HomeDomainInteractor {
 
     /// Removes articles that already exist in the exclusion list.
     func deduplicateArticles(_ articles: [Article], excluding: [Article]) -> [Article] {
-        let excludeIDs = Set(excluding.map { $0.id })
+        let excludeIDs = Set(excluding.map(\.id))
         return articles.filter { !excludeIDs.contains($0.id) }
     }
 
@@ -175,11 +175,11 @@ extension HomeDomainInteractor {
                 },
                 receiveValue: { [weak self] preferences in
                     guard let self else { return }
-                    self.preferredLanguage = preferences.preferredLanguage
-                    self.updateState { state in
+                    preferredLanguage = preferences.preferredLanguage
+                    updateState { state in
                         state.followedTopics = preferences.followedTopics
                     }
-                }
+                },
             )
             .store(in: &cancellables)
     }
@@ -197,19 +197,19 @@ extension HomeDomainInteractor {
                 },
                 receiveValue: { [weak self] preferences in
                     guard let self else { return }
-                    self.preferredLanguage = preferences.preferredLanguage
-                    self.updateState { state in
+                    preferredLanguage = preferences.preferredLanguage
+                    updateState { state in
                         state.followedTopics = preferences.followedTopics
                     }
                     // If language changed, invalidate cache and do a full reload
-                    if previousLanguage != self.preferredLanguage {
-                        if let cachingService = self.newsService as? CachingNewsService {
+                    if previousLanguage != preferredLanguage {
+                        if let cachingService = newsService as? CachingNewsService {
                             cachingService.invalidateCache()
                         }
-                        self.resetStateForCategoryChange(to: self.currentState.selectedCategory)
-                        self.fetchHeadlinesForCurrentCategory(page: 1)
+                        resetStateForCategoryChange(to: currentState.selectedCategory)
+                        fetchHeadlinesForCurrentCategory(page: 1)
                     }
-                }
+                },
             )
             .store(in: &cancellables)
     }
@@ -231,11 +231,11 @@ extension HomeDomainInteractor {
                     } else {
                         updatedPreferences.followedTopics.append(topic)
                     }
-                    self.updateState { state in
+                    updateState { state in
                         state.followedTopics = updatedPreferences.followedTopics
                     }
-                    self.savePreferences(updatedPreferences)
-                }
+                    savePreferences(updatedPreferences)
+                },
             )
             .store(in: &cancellables)
     }
@@ -255,7 +255,7 @@ extension HomeDomainInteractor {
                     // `self` so our own observer skips the redundant re-fetch (state.followedTopics
                     // was already updated above), while foreign posters still trigger it.
                     NotificationCenter.default.post(name: .userPreferencesDidChange, object: self)
-                }
+                },
             )
             .store(in: &cancellables)
     }

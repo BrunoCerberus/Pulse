@@ -12,14 +12,14 @@ final class RootViewSnapshotTests: XCTestCase {
     private let iPhoneAirConfig = ViewImageConfig(
         safeArea: UIEdgeInsets(top: 59, left: 0, bottom: 34, right: 0),
         size: CGSize(width: 393, height: 852),
-        traits: UITraitCollection(userInterfaceStyle: .dark)
+        traits: UITraitCollection(userInterfaceStyle: .dark),
     )
 
     /// Light mode config for additional coverage
     private let iPhoneAirLightConfig = ViewImageConfig(
         safeArea: UIEdgeInsets(top: 59, left: 0, bottom: 34, right: 0),
         size: CGSize(width: 393, height: 852),
-        traits: UITraitCollection(userInterfaceStyle: .light)
+        traits: UITraitCollection(userInterfaceStyle: .light),
     )
 
     override func setUp() async throws {
@@ -46,7 +46,7 @@ final class RootViewSnapshotTests: XCTestCase {
         assertSnapshot(
             of: controller,
             as: SnapshotConfig.snapshotting(on: iPhoneAirConfig),
-            record: false
+            record: false,
         )
     }
 
@@ -64,7 +64,7 @@ final class RootViewSnapshotTests: XCTestCase {
         assertSnapshot(
             of: controller,
             as: SnapshotConfig.snapshotting(on: iPhoneAirLightConfig),
-            record: false
+            record: false,
         )
     }
 
@@ -78,7 +78,7 @@ final class RootViewSnapshotTests: XCTestCase {
         assertSnapshot(
             of: controller,
             as: SnapshotConfig.snapshotting(on: iPhoneAirConfig),
-            record: false
+            record: false,
         )
     }
 
@@ -89,7 +89,7 @@ final class RootViewSnapshotTests: XCTestCase {
         assertSnapshot(
             of: controller,
             as: SnapshotConfig.snapshotting(on: iPhoneAirLightConfig),
-            record: false
+            record: false,
         )
     }
 
@@ -103,7 +103,7 @@ final class RootViewSnapshotTests: XCTestCase {
         assertSnapshot(
             of: controller,
             as: SnapshotConfig.snapshotting(on: iPhoneAirConfig),
-            record: false
+            record: false,
         )
     }
 
@@ -116,7 +116,7 @@ final class RootViewSnapshotTests: XCTestCase {
         assertSnapshot(
             of: controller,
             as: SnapshotConfig.snapshotting(on: SnapshotConfig.iPad),
-            record: false
+            record: false,
         )
     }
 
@@ -137,7 +137,7 @@ final class RootViewSnapshotTests: XCTestCase {
         assertSnapshot(
             of: renderAdaptiveDetailStack(selectedTab: .home),
             as: SnapshotConfig.snapshotting(on: SnapshotConfig.iPad),
-            record: false
+            record: false,
         )
     }
 
@@ -145,7 +145,7 @@ final class RootViewSnapshotTests: XCTestCase {
         assertSnapshot(
             of: renderAdaptiveDetailStack(selectedTab: .media),
             as: SnapshotConfig.snapshotting(on: SnapshotConfig.iPad),
-            record: false
+            record: false,
         )
     }
 
@@ -153,7 +153,7 @@ final class RootViewSnapshotTests: XCTestCase {
         assertSnapshot(
             of: renderAdaptiveDetailStack(selectedTab: .feed),
             as: SnapshotConfig.snapshotting(on: SnapshotConfig.iPad),
-            record: false
+            record: false,
         )
     }
 
@@ -161,7 +161,7 @@ final class RootViewSnapshotTests: XCTestCase {
         assertSnapshot(
             of: renderAdaptiveDetailStack(selectedTab: .bookmarks),
             as: SnapshotConfig.snapshotting(on: SnapshotConfig.iPad),
-            record: false
+            record: false,
         )
     }
 
@@ -169,7 +169,7 @@ final class RootViewSnapshotTests: XCTestCase {
         assertSnapshot(
             of: renderAdaptiveDetailStack(selectedTab: .search),
             as: SnapshotConfig.snapshotting(on: SnapshotConfig.iPad),
-            record: false
+            record: false,
         )
     }
 }

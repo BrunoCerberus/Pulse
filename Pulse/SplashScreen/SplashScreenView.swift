@@ -84,7 +84,7 @@ struct SplashScreenView: View {
                     Color.black,
                 ],
                 startPoint: .topLeading,
-                endPoint: .bottomTrailing
+                endPoint: .bottomTrailing,
             )
         }
     }

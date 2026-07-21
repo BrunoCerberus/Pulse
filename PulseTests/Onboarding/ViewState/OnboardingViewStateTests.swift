@@ -29,7 +29,7 @@ struct OnboardingViewStateTests {
             currentPage: .getStarted,
             isLastPage: false,
             selectedTopics: [],
-            isCompleted: false
+            isCompleted: false,
         )
 
         #expect(state1 != state2)
@@ -41,13 +41,13 @@ struct OnboardingViewStateTests {
             currentPage: .getStarted,
             isLastPage: true,
             selectedTopics: [],
-            isCompleted: false
+            isCompleted: false,
         )
         let state2 = OnboardingViewState(
             currentPage: .getStarted,
             isLastPage: false,
             selectedTopics: [],
-            isCompleted: false
+            isCompleted: false,
         )
 
         #expect(state1 != state2)
@@ -60,7 +60,7 @@ struct OnboardingViewStateTests {
             currentPage: .welcome,
             isLastPage: false,
             selectedTopics: [.technology],
-            isCompleted: false
+            isCompleted: false,
         )
 
         #expect(state1 != state2)
@@ -73,7 +73,7 @@ struct OnboardingViewStateTests {
             currentPage: .welcome,
             isLastPage: false,
             selectedTopics: [],
-            isCompleted: true
+            isCompleted: true,
         )
 
         #expect(state1 != state2)

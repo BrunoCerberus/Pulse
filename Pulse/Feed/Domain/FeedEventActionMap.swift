@@ -19,21 +19,21 @@ struct FeedEventActionMap: DomainEventActionMap {
     func map(event: FeedViewEvent) -> FeedDomainAction? {
         switch event {
         case .onAppear:
-            return .loadInitialData
+            .loadInitialData
         case .onGenerateDigestTapped:
-            return .generateDigest
+            .generateDigest
         case .onListenBriefingTapped:
-            return .startAudioBriefing
+            .startAudioBriefing
         case .onMorningBriefingTapped:
-            return .startMorningBriefing
+            .startMorningBriefing
         case let .onArticleTapped(article):
-            return .selectArticle(article)
+            .selectArticle(article)
         case .onArticleNavigated:
-            return .clearSelectedArticle
+            .clearSelectedArticle
         case .onRetryTapped:
-            return .retryAfterError
+            .retryAfterError
         case .onDismissError:
-            return .clearError
+            .clearError
         }
     }
 }

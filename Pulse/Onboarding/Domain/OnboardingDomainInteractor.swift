@@ -63,7 +63,7 @@ final class OnboardingDomainInteractor: CombineInteractor {
                     if !userHasTouchedTopics, !preferences.followedTopics.isEmpty {
                         updateState { $0.selectedTopics = Set(preferences.followedTopics) }
                     }
-                }
+                },
             )
             .store(in: &cancellables)
     }
@@ -102,8 +102,8 @@ final class OnboardingDomainInteractor: CombineInteractor {
             analyticsService?.logEvent(
                 .onboardingTopicsSelected(
                     count: selected.count,
-                    topics: selected.map(\.rawValue).sorted()
-                )
+                    topics: selected.map(\.rawValue).sorted(),
+                ),
             )
         }
         analyticsService?.logEvent(.onboardingCompleted(page: currentState.currentPage.rawValue))
@@ -126,7 +126,7 @@ final class OnboardingDomainInteractor: CombineInteractor {
                 } catch {
                     Logger.shared.service(
                         "Failed to seed interest profile during onboarding: \(error)",
-                        level: .warning
+                        level: .warning,
                     )
                 }
             }
@@ -150,11 +150,11 @@ final class OnboardingDomainInteractor: CombineInteractor {
                         self?.analyticsService?.recordError(error)
                         Logger.shared.service(
                             "Failed to persist onboarding topic selection: \(error)",
-                            level: .warning
+                            level: .warning,
                         )
                     }
                 },
-                receiveValue: { _ in }
+                receiveValue: { _ in },
             )
             .store(in: &cancellables)
     }

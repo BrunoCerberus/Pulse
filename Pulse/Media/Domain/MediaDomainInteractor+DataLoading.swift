@@ -7,7 +7,7 @@ import Foundation
 /// Extension containing data loading and language helpers to reduce body length in MediaDomainInteractor.
 extension MediaDomainInteractor {
     func deduplicateMedia(_ media: [Article], excluding: [Article]) -> [Article] {
-        let excludeIDs = Set(excluding.map { $0.id })
+        let excludeIDs = Set(excluding.map(\.id))
         return media.filter { !excludeIDs.contains($0.id) }
     }
 
@@ -27,13 +27,13 @@ extension MediaDomainInteractor {
                     if case let .failure(error) = completion {
                         Logger.shared.service(
                             "MediaDomainInteractor: Failed to load preferences: \(error)",
-                            level: .warning
+                            level: .warning,
                         )
                     }
                 },
                 receiveValue: { [weak self] preferences in
                     self?.preferredLanguage = preferences.preferredLanguage
-                }
+                },
             )
             .store(in: &cancellables)
     }
@@ -46,10 +46,10 @@ extension MediaDomainInteractor {
                 receiveCompletion: { _ in },
                 receiveValue: { [weak self] preferences in
                     guard let self else { return }
-                    self.preferredLanguage = preferences.preferredLanguage
-                    guard previousLanguage != self.preferredLanguage else { return }
-                    self.reloadMediaForLanguageChange()
-                }
+                    preferredLanguage = preferences.preferredLanguage
+                    guard previousLanguage != preferredLanguage else { return }
+                    reloadMediaForLanguageChange()
+                },
             )
             .store(in: &cancellables)
     }
@@ -73,7 +73,7 @@ extension MediaDomainInteractor {
         mediaFetchCancellable?.cancel()
         mediaFetchCancellable = Publishers.Zip(
             mediaService.fetchFeaturedMedia(type: selectedType, language: language),
-            mediaService.fetchMedia(type: selectedType, language: language, page: 1)
+            mediaService.fetchMedia(type: selectedType, language: language, page: 1),
         )
         .receive(on: DispatchQueue.main)
         .sink { [weak self] completion in

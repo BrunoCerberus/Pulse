@@ -40,7 +40,7 @@ struct MediaDetailViewState: Equatable {
             isLoading: true,
             errorMessage: nil,
             showShareSheet: false,
-            isBookmarked: false
+            isBookmarked: false,
         )
     }
 }

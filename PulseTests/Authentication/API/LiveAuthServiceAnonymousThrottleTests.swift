@@ -18,7 +18,7 @@ struct LiveAuthServiceAnonymousThrottleTests {
         let throttled = LiveAuthService.isAnonymousSignInThrottled(
             now: 1000,
             defaults: defaults,
-            throttleSeconds: 60
+            throttleSeconds: 60,
         )
         #expect(throttled == false)
     }
@@ -31,7 +31,7 @@ struct LiveAuthServiceAnonymousThrottleTests {
         let throttled = LiveAuthService.isAnonymousSignInThrottled(
             now: 1030,
             defaults: defaults,
-            throttleSeconds: 60
+            throttleSeconds: 60,
         )
         #expect(throttled == true)
     }
@@ -44,7 +44,7 @@ struct LiveAuthServiceAnonymousThrottleTests {
         let throttled = LiveAuthService.isAnonymousSignInThrottled(
             now: 1061, // 61s later, throttle is 60s
             defaults: defaults,
-            throttleSeconds: 60
+            throttleSeconds: 60,
         )
         #expect(throttled == false)
     }
@@ -57,7 +57,7 @@ struct LiveAuthServiceAnonymousThrottleTests {
         _ = LiveAuthService.isAnonymousSignInThrottled(
             now: 1500,
             defaults: defaults,
-            throttleSeconds: 60
+            throttleSeconds: 60,
         )
         // Confirms the throttle check is a pure read — a transient Firebase
         // failure in the caller won't burn the reviewer's window.
@@ -69,7 +69,7 @@ struct LiveAuthServiceAnonymousThrottleTests {
         let defaults = freshDefaults()
         LiveAuthService.recordAnonymousSignInAttempt(
             at: 2000,
-            defaults: defaults
+            defaults: defaults,
         )
         #expect(defaults.double(forKey: LiveAuthService.anonymousSignInLastAttemptKey) == 2000)
     }
@@ -79,12 +79,12 @@ struct LiveAuthServiceAnonymousThrottleTests {
         let defaults = freshDefaults()
         LiveAuthService.recordAnonymousSignInAttempt(
             at: 1000,
-            defaults: defaults
+            defaults: defaults,
         )
         let throttled = LiveAuthService.isAnonymousSignInThrottled(
             now: 1030,
             defaults: defaults,
-            throttleSeconds: 60
+            throttleSeconds: 60,
         )
         #expect(throttled == true)
     }

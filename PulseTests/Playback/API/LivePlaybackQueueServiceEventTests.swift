@@ -26,7 +26,7 @@ struct LivePlaybackQueueServiceEventTests {
         sut = LivePlaybackQueueService(
             ttsService: mockTTSService,
             analyticsService: mockAnalyticsService,
-            notificationCenter: notificationCenter
+            notificationCenter: notificationCenter,
         )
     }
 
@@ -38,7 +38,7 @@ struct LivePlaybackQueueServiceEventTests {
                 title: "Title \(index)",
                 sourceName: "Source \(index)",
                 speechText: "Speech text \(index)",
-                language: "en"
+                language: "en",
             )
         }
     }
@@ -84,7 +84,7 @@ struct LivePlaybackQueueServiceEventTests {
         notificationCenter.post(
             name: AVAudioSession.interruptionNotification,
             object: nil,
-            userInfo: userInfo
+            userInfo: userInfo,
         )
     }
 
@@ -155,7 +155,7 @@ struct LivePlaybackQueueServiceEventTests {
             userInfo: [
                 AVAudioSessionRouteChangeReasonKey:
                     AVAudioSession.RouteChangeReason.oldDeviceUnavailable.rawValue,
-            ]
+            ],
         )
         try await waitForStateUpdate(duration: TestWaitDuration.short)
 
@@ -173,7 +173,7 @@ struct LivePlaybackQueueServiceEventTests {
             userInfo: [
                 AVAudioSessionRouteChangeReasonKey:
                     AVAudioSession.RouteChangeReason.newDeviceAvailable.rawValue,
-            ]
+            ],
         )
         try await waitForStateUpdate(duration: TestWaitDuration.short)
 
@@ -238,12 +238,12 @@ struct LivePlaybackQueueServiceEventTests {
         sut.next()
         sut.previous()
 
-        let skippedCount = mockAnalyticsService.loggedEvents.filter { event in
+        let skippedCount = mockAnalyticsService.loggedEvents.count(where: { event in
             if case .briefingItemSkipped = event {
                 return true
             }
             return false
-        }.count
+        })
         #expect(skippedCount == 2)
     }
 }

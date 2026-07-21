@@ -37,7 +37,7 @@ final class CachingMediaService: MediaService {
         cacheStore: NewsCacheStore = LiveNewsCacheStore(),
         diskCacheStore: NewsCacheStore? = DiskNewsCacheStore(),
         networkMonitor: NetworkMonitorService? = nil,
-        networkResilienceEnabled: Bool = true
+        networkResilienceEnabled: Bool = true,
     ) {
         self.wrapped = wrapped
         memoryCacheStore = cacheStore
@@ -52,7 +52,7 @@ final class CachingMediaService: MediaService {
         let cacheKey = NewsCacheKey.media(language: language, type: type?.rawValue, page: page)
         return fetchWithTieredCache(
             key: cacheKey,
-            label: "media (lang: \(language), type: \(type?.rawValue ?? "all"), page: \(page))"
+            label: "media (lang: \(language), type: \(type?.rawValue ?? "all"), page: \(page))",
         ) {
             self.wrapped.fetchMedia(type: type, language: language, page: page)
         }
@@ -62,7 +62,7 @@ final class CachingMediaService: MediaService {
         let cacheKey = NewsCacheKey.featuredMedia(language: language, type: type?.rawValue)
         return fetchWithTieredCache(
             key: cacheKey,
-            label: "featured media (lang: \(language), type: \(type?.rawValue ?? "all"))"
+            label: "featured media (lang: \(language), type: \(type?.rawValue ?? "all"))",
         ) {
             self.wrapped.fetchFeaturedMedia(type: type, language: language)
         }
@@ -104,7 +104,7 @@ final class CachingMediaService: MediaService {
     private func fetchWithTieredCache<T>(
         key: NewsCacheKey,
         label: String,
-        networkFetch: @escaping () -> AnyPublisher<T, Error>
+        networkFetch: @escaping () -> AnyPublisher<T, Error>,
     ) -> AnyPublisher<T, Error> {
         // 1. Check L1 (memory) cache
         if let cached: CacheEntry<T> = memoryCacheStore.get(for: key),
@@ -150,7 +150,7 @@ final class CachingMediaService: MediaService {
                 {
                     Logger.shared.service(
                         "Network error, serving bounded-stale L2 for \(label): \(error)",
-                        level: .warning
+                        level: .warning,
                     )
                     return Just(staleL2.data)
                         .setFailureType(to: Error.self)

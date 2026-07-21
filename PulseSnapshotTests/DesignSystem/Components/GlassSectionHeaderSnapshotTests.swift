@@ -18,14 +18,14 @@ final class GlassSectionHeaderSnapshotTests: XCTestCase {
         assertSnapshot(
             of: controller,
             as: SnapshotConfig.snapshotting(on: SnapshotConfig.iPhoneAir),
-            record: false
+            record: false,
         )
     }
 
     func testGlassSectionHeaderWithSubtitle() {
         let view = GlassSectionHeader(
             "Top Stories",
-            subtitle: "Updated 5 minutes ago"
+            subtitle: "Updated 5 minutes ago",
         )
         .frame(width: 393)
         .background(LinearGradient.meshFallback)
@@ -35,7 +35,7 @@ final class GlassSectionHeaderSnapshotTests: XCTestCase {
         assertSnapshot(
             of: controller,
             as: SnapshotConfig.snapshotting(on: SnapshotConfig.iPhoneAir),
-            record: false
+            record: false,
         )
     }
 
@@ -43,7 +43,7 @@ final class GlassSectionHeaderSnapshotTests: XCTestCase {
         let view = GlassSectionHeader(
             "Top Stories",
             subtitle: "Updated 5 minutes ago",
-            actionTitle: "See All"
+            actionTitle: "See All",
         ) {}
             .frame(width: 393)
             .background(LinearGradient.meshFallback)
@@ -53,7 +53,7 @@ final class GlassSectionHeaderSnapshotTests: XCTestCase {
         assertSnapshot(
             of: controller,
             as: SnapshotConfig.snapshotting(on: SnapshotConfig.iPhoneAir),
-            record: false
+            record: false,
         )
     }
 
@@ -69,7 +69,7 @@ final class GlassSectionHeaderSnapshotTests: XCTestCase {
         assertSnapshot(
             of: controller,
             as: SnapshotConfig.snapshotting(on: SnapshotConfig.iPhoneAir),
-            record: false
+            record: false,
         )
     }
 
@@ -83,7 +83,7 @@ final class GlassSectionHeaderSnapshotTests: XCTestCase {
         assertSnapshot(
             of: controller,
             as: SnapshotConfig.snapshotting(on: SnapshotConfig.iPhoneAir),
-            record: false
+            record: false,
         )
     }
 }

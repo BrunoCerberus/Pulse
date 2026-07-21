@@ -21,7 +21,7 @@ struct LivePlaybackQueueServiceExtendedTests {
         sut = LivePlaybackQueueService(
             ttsService: mockTTSService,
             analyticsService: mockAnalyticsService,
-            notificationCenter: notificationCenter
+            notificationCenter: notificationCenter,
         )
     }
 
@@ -33,7 +33,7 @@ struct LivePlaybackQueueServiceExtendedTests {
                 title: "Title \(index)",
                 sourceName: "Source \(index)",
                 speechText: "Speech text \(index)",
-                language: "en"
+                language: "en",
             )
         }
     }

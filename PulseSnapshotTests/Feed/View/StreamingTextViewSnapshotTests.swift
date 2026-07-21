@@ -10,13 +10,13 @@ final class StreamingTextViewSnapshotTests: XCTestCase {
     private let iPhoneAirConfig = ViewImageConfig(
         safeArea: UIEdgeInsets(top: 59, left: 0, bottom: 34, right: 0),
         size: CGSize(width: 393, height: 852),
-        traits: UITraitCollection(userInterfaceStyle: .dark)
+        traits: UITraitCollection(userInterfaceStyle: .dark),
     )
 
     func testStreamingTextViewWithContent() {
         let view = StreamingTextView(
             text: "Today's reading focused on technology and business topics. "
-                + "You explored developments in AI and market trends."
+                + "You explored developments in AI and market trends.",
         )
         .padding()
         .frame(width: 375)
@@ -26,13 +26,13 @@ final class StreamingTextViewSnapshotTests: XCTestCase {
         assertSnapshot(
             of: controller,
             as: SnapshotConfig.snapshotting(on: iPhoneAirConfig),
-            record: false
+            record: false,
         )
     }
 
     func testStreamingTextViewShortText() {
         let view = StreamingTextView(
-            text: "Today's reading focused on technology"
+            text: "Today's reading focused on technology",
         )
         .padding()
         .frame(width: 375)
@@ -42,13 +42,13 @@ final class StreamingTextViewSnapshotTests: XCTestCase {
         assertSnapshot(
             of: controller,
             as: SnapshotConfig.snapshotting(on: iPhoneAirConfig),
-            record: false
+            record: false,
         )
     }
 
     func testStreamingTextViewEmpty() {
         let view = StreamingTextView(
-            text: ""
+            text: "",
         )
         .padding()
         .frame(width: 375)
@@ -58,7 +58,7 @@ final class StreamingTextViewSnapshotTests: XCTestCase {
         assertSnapshot(
             of: controller,
             as: SnapshotConfig.snapshotting(on: iPhoneAirConfig),
-            record: false
+            record: false,
         )
     }
 
@@ -71,7 +71,7 @@ final class StreamingTextViewSnapshotTests: XCTestCase {
         """
 
         let view = StreamingTextView(
-            text: longText
+            text: longText,
         )
         .padding()
         .frame(width: 375)
@@ -81,7 +81,7 @@ final class StreamingTextViewSnapshotTests: XCTestCase {
         assertSnapshot(
             of: controller,
             as: SnapshotConfig.snapshotting(on: iPhoneAirConfig),
-            record: false
+            record: false,
         )
     }
 }

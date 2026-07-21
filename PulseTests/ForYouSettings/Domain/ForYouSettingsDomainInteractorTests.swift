@@ -34,11 +34,11 @@ struct ForYouSettingsDomainInteractorTests {
     func loadProfilePopulatesTopics() async throws {
         try await mockProfile.upsert(
             topicID: "ai", displayName: "AI", weightDelta: 2,
-            source: .extracted, category: nil
+            source: .extracted, category: nil,
         )
         try await mockProfile.upsert(
             topicID: "climate", displayName: "Climate", weightDelta: 1,
-            source: .seed, category: "world"
+            source: .seed, category: "world",
         )
         let sut = ForYouSettingsDomainInteractor(serviceLocator: serviceLocator)
 
@@ -73,11 +73,11 @@ struct ForYouSettingsDomainInteractorTests {
     func removeTopicDeletesRow() async throws {
         try await mockProfile.upsert(
             topicID: "ai", displayName: "AI", weightDelta: 1,
-            source: .seed, category: nil
+            source: .seed, category: nil,
         )
         try await mockProfile.upsert(
             topicID: "climate", displayName: "Climate", weightDelta: 1,
-            source: .seed, category: nil
+            source: .seed, category: nil,
         )
         let sut = ForYouSettingsDomainInteractor(serviceLocator: serviceLocator)
         sut.dispatch(action: .loadProfile)
@@ -113,7 +113,7 @@ struct ForYouSettingsDomainInteractorTests {
     func confirmResetWipesProfile() async throws {
         try await mockProfile.upsert(
             topicID: "ai", displayName: "AI", weightDelta: 1,
-            source: .seed, category: nil
+            source: .seed, category: nil,
         )
         let sut = ForYouSettingsDomainInteractor(serviceLocator: serviceLocator)
         sut.dispatch(action: .loadProfile)
@@ -142,7 +142,7 @@ struct ForYouSettingsDomainInteractorTests {
 
         try await mockProfile.upsert(
             topicID: "external", displayName: "External", weightDelta: 1,
-            source: .extracted, category: nil
+            source: .extracted, category: nil,
         )
         // The mock posts the notification on upsert; the interactor should
         // pick it up and refetch.
@@ -187,7 +187,7 @@ struct ForYouSettingsDomainInteractorTests {
         }
         try await mockProfile.upsert(
             topicID: "ai", displayName: "AI", weightDelta: 1,
-            source: .seed, category: nil
+            source: .seed, category: nil,
         )
         mockProfile.removeError = Boom()
         let sut = ForYouSettingsDomainInteractor(serviceLocator: serviceLocator)

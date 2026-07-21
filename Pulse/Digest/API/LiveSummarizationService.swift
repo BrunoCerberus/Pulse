@@ -57,7 +57,7 @@ extension LLMInferenceConfig {
             maxTokens: 1024,
             temperature: 0.5,
             topP: 0.9,
-            stopSequences: ["</summary>", "\n\n\n"]
+            stopSequences: ["</summary>", "\n\n\n"],
         )
     }
 }

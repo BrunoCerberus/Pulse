@@ -48,7 +48,7 @@ struct FeedMorningBriefingTests {
         gated.dispatch(action: .startMorningBriefing)
 
         let played = await waitForCondition(timeout: 300_000_000) { @MainActor in
-            self.mockPlaybackQueueService.playCallCount > 0
+            mockPlaybackQueueService.playCallCount > 0
         }
         #expect(!played, "Premium gate should block the Morning Briefing before any playback")
     }
@@ -60,13 +60,13 @@ struct FeedMorningBriefingTests {
         mockBriefingCacheService.fetchResult = PregeneratedBriefing(
             digest: cachedDigest,
             queueArticles: [cachedArticle],
-            generatedAt: Date()
+            generatedAt: Date(),
         )
 
         sut.dispatch(action: .startMorningBriefing)
 
         let played = await waitForCondition { @MainActor in
-            self.mockPlaybackQueueService.playCallCount > 0
+            mockPlaybackQueueService.playCallCount > 0
         }
         #expect(played)
         #expect(mockFeedService.loadModelCallCount == 0, "Cached path must not trigger LLM generation")
@@ -83,7 +83,7 @@ struct FeedMorningBriefingTests {
         sut.dispatch(action: .startMorningBriefing)
 
         let played = await waitForCondition { @MainActor in
-            self.mockPlaybackQueueService.playCallCount > 0
+            mockPlaybackQueueService.playCallCount > 0
         }
         #expect(played)
         #expect(mockBriefingCacheService.storedBriefing == nil, "No cache write should occur on this path")
@@ -101,7 +101,7 @@ struct FeedMorningBriefingTests {
         sut.dispatch(action: .startMorningBriefing)
 
         let played = await waitForCondition(timeout: 3_000_000_000) { @MainActor in
-            self.mockPlaybackQueueService.playCallCount > 0
+            mockPlaybackQueueService.playCallCount > 0
         }
         #expect(played, "Fallback generation should complete and auto-play")
         #expect(mockFeedService.loadModelCallCount > 0, "Fallback path must go through LLM generation")
@@ -111,13 +111,13 @@ struct FeedMorningBriefingTests {
 
     private func makeDigest(
         id: String = "digest-id",
-        summary: String = "World news summary."
+        summary: String = "World news summary.",
     ) -> DailyDigest {
         DailyDigest(
             id: id,
             summary: summary,
             sourceArticles: [],
-            generatedAt: Date()
+            generatedAt: Date(),
         )
     }
 
@@ -129,7 +129,7 @@ struct FeedMorningBriefingTests {
             content: "Content",
             source: ArticleSource(id: nil, name: "Source"),
             url: "https://example.com/\(id)",
-            publishedAt: Date()
+            publishedAt: Date(),
         )
     }
 }

@@ -60,7 +60,7 @@ final class LiveFeedService: FeedService {
         return llmService.generateStream(
             prompt: prompt,
             systemPrompt: systemPrompt,
-            config: config
+            config: config,
         )
     }
 
@@ -89,7 +89,7 @@ extension LLMInferenceConfig {
             maxTokens: cappedTokens,
             temperature: 0.7,
             topP: 0.9,
-            stopSequences: ["</digest>", "---"]
+            stopSequences: ["</digest>", "---"],
         )
     }
 }

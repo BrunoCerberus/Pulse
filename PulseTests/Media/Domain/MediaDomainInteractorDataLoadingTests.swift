@@ -69,7 +69,7 @@ struct MediaDomainInteractorDataLoadingTests {
             url: "https://example.com/unrelated",
             imageURL: nil,
             publishedAt: Date(),
-            category: nil
+            category: nil,
         )
         let result = sut.deduplicateMedia(media, excluding: [unrelatedArticle])
         #expect(result.count == media.count)
@@ -86,7 +86,7 @@ struct MediaDomainInteractorDataLoadingTests {
             mutedKeywords: [],
             preferredLanguage: "en",
             notificationsEnabled: true,
-            breakingNewsNotifications: true
+            breakingNewsNotifications: true,
         )
 
         sut.dispatch(action: .loadInitialData)
@@ -102,7 +102,7 @@ struct MediaDomainInteractorDataLoadingTests {
             mutedKeywords: [],
             preferredLanguage: "pt",
             notificationsEnabled: true,
-            breakingNewsNotifications: true
+            breakingNewsNotifications: true,
         )
 
         // Trigger language check via notification
@@ -122,7 +122,7 @@ struct MediaDomainInteractorDataLoadingTests {
             mutedKeywords: [],
             preferredLanguage: "en",
             notificationsEnabled: true,
-            breakingNewsNotifications: true
+            breakingNewsNotifications: true,
         )
 
         sut.dispatch(action: .loadInitialData)
@@ -148,7 +148,7 @@ struct MediaDomainInteractorDataLoadingTests {
             mutedKeywords: [],
             preferredLanguage: "en",
             notificationsEnabled: true,
-            breakingNewsNotifications: true
+            breakingNewsNotifications: true,
         )
 
         sut.dispatch(action: .loadInitialData)
@@ -164,7 +164,7 @@ struct MediaDomainInteractorDataLoadingTests {
             mutedKeywords: [],
             preferredLanguage: "es",
             notificationsEnabled: true,
-            breakingNewsNotifications: true
+            breakingNewsNotifications: true,
         )
 
         NotificationCenter.default.post(name: .userPreferencesDidChange, object: nil)
@@ -184,7 +184,7 @@ struct MediaDomainInteractorDataLoadingTests {
             mutedKeywords: [],
             preferredLanguage: "en",
             notificationsEnabled: true,
-            breakingNewsNotifications: true
+            breakingNewsNotifications: true,
         )
 
         sut.dispatch(action: .loadInitialData)
@@ -198,7 +198,7 @@ struct MediaDomainInteractorDataLoadingTests {
             mutedKeywords: [],
             preferredLanguage: "pt",
             notificationsEnabled: true,
-            breakingNewsNotifications: true
+            breakingNewsNotifications: true,
         )
 
         NotificationCenter.default.post(name: .userPreferencesDidChange, object: nil)

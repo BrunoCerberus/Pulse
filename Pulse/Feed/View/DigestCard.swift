@@ -38,10 +38,10 @@ struct DigestCard: View {
                     LinearGradient(
                         colors: [Color.Accent.primary.opacity(0.3), Color.Accent.primary.opacity(0.1)],
                         startPoint: .topLeading,
-                        endPoint: .bottomTrailing
+                        endPoint: .bottomTrailing,
                     ),
-                    lineWidth: 1
-                )
+                    lineWidth: 1,
+                ),
         )
     }
 
@@ -72,7 +72,7 @@ struct DigestCard: View {
                 Color.Accent.primary.opacity(0.03),
             ],
             startPoint: .topLeading,
-            endPoint: .bottomTrailing
+            endPoint: .bottomTrailing,
         )
     }
 
@@ -117,8 +117,8 @@ struct DigestCard: View {
                     LinearGradient(
                         colors: [Color.Accent.primary, Color.Accent.primary.opacity(0.5)],
                         startPoint: .top,
-                        endPoint: .bottom
-                    )
+                        endPoint: .bottom,
+                    ),
                 )
                 .frame(width: 3)
                 .padding(.trailing, Spacing.md)
@@ -168,9 +168,9 @@ struct DigestCard: View {
                 id: "1",
                 summary: previewSummary,
                 sourceArticles: [],
-                generatedAt: Date()
-            )
-        )
+                generatedAt: Date(),
+            ),
+        ),
     )
     .padding()
     .preferredColorScheme(.dark)

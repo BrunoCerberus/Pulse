@@ -26,7 +26,7 @@ struct ReadingHistoryDomainState: Equatable {
             isLoading: false,
             error: nil,
             selectedArticle: nil,
-            articleToShare: nil
+            articleToShare: nil,
         )
     }
 }

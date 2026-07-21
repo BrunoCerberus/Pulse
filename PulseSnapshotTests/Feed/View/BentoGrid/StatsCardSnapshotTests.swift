@@ -20,7 +20,7 @@ final class StatsCardSnapshotTests: XCTestCase {
         assertSnapshot(
             of: controller,
             as: SnapshotConfig.snapshotting(on: darkConfig),
-            record: false
+            record: false,
         )
     }
 
@@ -35,7 +35,7 @@ final class StatsCardSnapshotTests: XCTestCase {
         assertSnapshot(
             of: controller,
             as: SnapshotConfig.snapshotting(on: lightConfig),
-            record: false
+            record: false,
         )
     }
 
@@ -50,7 +50,7 @@ final class StatsCardSnapshotTests: XCTestCase {
         assertSnapshot(
             of: controller,
             as: SnapshotConfig.snapshotting(on: darkConfig),
-            record: false
+            record: false,
         )
     }
 
@@ -65,7 +65,7 @@ final class StatsCardSnapshotTests: XCTestCase {
         assertSnapshot(
             of: controller,
             as: SnapshotConfig.snapshotting(on: darkConfig),
-            record: false
+            record: false,
         )
     }
 }

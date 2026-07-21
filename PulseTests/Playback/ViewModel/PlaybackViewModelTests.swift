@@ -25,7 +25,7 @@ struct PlaybackViewModelTests {
             title: "Title",
             sourceName: "Source",
             speechText: "Speech",
-            language: "en"
+            language: "en",
         )
     }
 
@@ -61,19 +61,19 @@ struct PlaybackViewModelTests {
         // force-dismisses it whenever the queue goes inactive.
         mockPlaybackQueueService.play(items: [makeItem()], mode: .singleArticle)
         let visible = await waitForCondition { @MainActor in
-            self.sut.viewState.isVisible
+            sut.viewState.isVisible
         }
         #expect(visible)
 
         sut.handle(event: .onExpandTapped)
         let presented = await waitForCondition { @MainActor in
-            self.sut.viewState.isQueueSheetPresented
+            sut.viewState.isQueueSheetPresented
         }
         #expect(presented)
 
         sut.handle(event: .onQueueSheetDismissed)
         let dismissed = await waitForCondition { @MainActor in
-            !self.sut.viewState.isQueueSheetPresented
+            !sut.viewState.isQueueSheetPresented
         }
         #expect(dismissed)
     }
@@ -91,7 +91,7 @@ struct PlaybackViewModelTests {
         mockPlaybackQueueService.simulateState(state)
 
         let visible = await waitForCondition { @MainActor in
-            self.sut.viewState.isVisible
+            sut.viewState.isVisible
         }
         #expect(visible)
         #expect(sut.viewState.title == "Title")
@@ -108,13 +108,13 @@ struct PlaybackViewModelTests {
     func inactiveQueueHidesPlayer() async {
         mockPlaybackQueueService.play(items: [makeItem()], mode: .singleArticle)
         let visible = await waitForCondition { @MainActor in
-            self.sut.viewState.isVisible
+            sut.viewState.isVisible
         }
         #expect(visible)
 
         mockPlaybackQueueService.stop()
         let hidden = await waitForCondition { @MainActor in
-            !self.sut.viewState.isVisible
+            !sut.viewState.isVisible
         }
         #expect(hidden)
     }

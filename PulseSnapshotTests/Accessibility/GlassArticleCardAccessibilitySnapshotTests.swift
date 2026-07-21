@@ -20,7 +20,7 @@ final class GlassArticleCardAccessibilitySnapshotTests: XCTestCase {
             url: "https://example.com/1",
             imageURL: nil,
             publishedAt: Date(timeIntervalSince1970: 1_672_531_200),
-            category: .technology
+            category: .technology,
         )
     }
 
@@ -33,7 +33,7 @@ final class GlassArticleCardAccessibilitySnapshotTests: XCTestCase {
             isBookmarked: false,
             onTap: {},
             onBookmark: {},
-            onShare: {}
+            onShare: {},
         )
         .frame(width: 375)
         .padding()
@@ -44,7 +44,7 @@ final class GlassArticleCardAccessibilitySnapshotTests: XCTestCase {
         assertSnapshot(
             of: controller,
             as: SnapshotConfig.snapshotting(on: SnapshotConfig.iPhoneAirAccessibility),
-            record: false
+            record: false,
         )
     }
 
@@ -55,7 +55,7 @@ final class GlassArticleCardAccessibilitySnapshotTests: XCTestCase {
             isBookmarked: false,
             onTap: {},
             onBookmark: {},
-            onShare: {}
+            onShare: {},
         )
         .frame(width: 375)
         .padding()
@@ -66,7 +66,7 @@ final class GlassArticleCardAccessibilitySnapshotTests: XCTestCase {
         assertSnapshot(
             of: controller,
             as: SnapshotConfig.snapshotting(on: SnapshotConfig.iPhoneAirExtraExtraLarge),
-            record: false
+            record: false,
         )
     }
 
@@ -77,7 +77,7 @@ final class GlassArticleCardAccessibilitySnapshotTests: XCTestCase {
             title: "Quick Update on Markets Today With Some Extra Text",
             sourceName: "Bloomberg",
             imageURL: nil,
-            onTap: {}
+            onTap: {},
         )
         .frame(width: 375)
         .padding()
@@ -88,7 +88,7 @@ final class GlassArticleCardAccessibilitySnapshotTests: XCTestCase {
         assertSnapshot(
             of: controller,
             as: SnapshotConfig.snapshotting(on: SnapshotConfig.iPhoneAirAccessibility),
-            record: false
+            record: false,
         )
     }
 }

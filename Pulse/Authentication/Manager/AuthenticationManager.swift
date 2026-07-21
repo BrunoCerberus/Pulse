@@ -44,10 +44,10 @@ final class AuthenticationManager: ObservableObject {
 
         static func == (lhs: AuthState, rhs: AuthState) -> Bool {
             switch (lhs, rhs) {
-            case (.loading, .loading): return true
-            case (.unauthenticated, .unauthenticated): return true
-            case let (.authenticated(lhsUser), .authenticated(rhsUser)): return lhsUser == rhsUser
-            default: return false
+            case (.loading, .loading): true
+            case (.unauthenticated, .unauthenticated): true
+            case let (.authenticated(lhsUser), .authenticated(rhsUser)): lhsUser == rhsUser
+            default: false
             }
         }
     }
@@ -73,19 +73,19 @@ final class AuthenticationManager: ObservableObject {
             .receive(on: DispatchQueue.main)
             .sink { [weak self] user in
                 guard let self else { return }
-                let wasAuthenticated = self.isAuthenticated
+                let wasAuthenticated = isAuthenticated
                 if let user {
-                    self.authState = .authenticated(user)
-                    self.currentUser = user
+                    authState = .authenticated(user)
+                    currentUser = user
                 } else {
-                    self.authState = .unauthenticated
-                    self.currentUser = nil
+                    authState = .unauthenticated
+                    currentUser = nil
                     // Only a genuine authenticated → unauthenticated transition
                     // triggers cleanup. A cold-launch `loading → unauthenticated`
                     // or a redundant unauthenticated emission must NOT wipe — that
                     // would erase a returning (or still signed-in) user's data.
                     if wasAuthenticated {
-                        self.runSessionCleanup()
+                        runSessionCleanup()
                     }
                 }
             }

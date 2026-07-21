@@ -52,7 +52,7 @@ struct ArticleDetailDomainState: Equatable {
             showShareSheet: false,
             showSummarizationSheet: false,
             relatedArticles: [],
-            isLoadingRelatedArticles: false
+            isLoadingRelatedArticles: false,
         )
     }
 }

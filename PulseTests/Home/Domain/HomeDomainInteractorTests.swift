@@ -72,7 +72,7 @@ struct HomeDomainInteractorTests {
             mutedKeywords: [],
             preferredLanguage: "pt",
             notificationsEnabled: true,
-            breakingNewsNotifications: true
+            breakingNewsNotifications: true,
         )
         mockSettingsService.preferences = preferences
         mockNewsService.topHeadlinesResult = .success(Article.mockArticles)
@@ -335,7 +335,7 @@ extension HomeDomainInteractorTests {
             mutedKeywords: [],
             preferredLanguage: "en",
             notificationsEnabled: true,
-            breakingNewsNotifications: true
+            breakingNewsNotifications: true,
         )
 
         sut.dispatch(action: .toggleTopic(.technology))

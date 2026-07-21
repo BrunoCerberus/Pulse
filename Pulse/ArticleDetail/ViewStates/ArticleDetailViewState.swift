@@ -51,7 +51,7 @@ struct ArticleDetailViewState: Equatable {
             showShareSheet: false,
             showSummarizationSheet: false,
             relatedArticles: [],
-            relatedArticleModels: []
+            relatedArticleModels: [],
         )
     }
 }

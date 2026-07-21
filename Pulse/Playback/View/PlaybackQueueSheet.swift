@@ -57,7 +57,7 @@ struct PlaybackQueueSheet: View {
                     .foregroundStyle(
                         item.isCurrent
                             ? AnyShapeStyle(Color.Accent.gradient)
-                            : AnyShapeStyle(.secondary)
+                            : AnyShapeStyle(.secondary),
                     )
                     .frame(width: 24)
 

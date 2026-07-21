@@ -40,7 +40,7 @@ final class LiveAnalyticsService: AnalyticsService {
     /// enrichment behaviour without mocking the Crashlytics singleton.
     static func buildSanitizedUserInfo(
         error: Error,
-        userInfo: [String: Any]?
+        userInfo: [String: Any]?,
     ) -> [String: Any] {
         let nsError = error as NSError
         var enrichedInfo = userInfo ?? [:]

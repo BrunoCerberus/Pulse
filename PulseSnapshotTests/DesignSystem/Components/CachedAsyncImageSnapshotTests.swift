@@ -10,14 +10,14 @@ final class CachedAsyncImageSnapshotTests: XCTestCase {
     private let iPhoneAirConfig = ViewImageConfig(
         safeArea: UIEdgeInsets(top: 59, left: 0, bottom: 34, right: 0),
         size: CGSize(width: 393, height: 852),
-        traits: UITraitCollection(userInterfaceStyle: .dark)
+        traits: UITraitCollection(userInterfaceStyle: .dark),
     )
 
     /// Light mode config for additional coverage
     private let iPhoneAirLightConfig = ViewImageConfig(
         safeArea: UIEdgeInsets(top: 59, left: 0, bottom: 34, right: 0),
         size: CGSize(width: 393, height: 852),
-        traits: UITraitCollection(userInterfaceStyle: .light)
+        traits: UITraitCollection(userInterfaceStyle: .light),
     )
 
     // MARK: - Loading State Tests
@@ -25,7 +25,7 @@ final class CachedAsyncImageSnapshotTests: XCTestCase {
     func testCachedAsyncImageLoading() {
         let view = CachedAsyncImage(
             url: URL(string: "https://example.com/image.jpg"),
-            accessibilityLabel: "Test image"
+            accessibilityLabel: "Test image",
         ) { image in
             image
                 .resizable()
@@ -41,14 +41,14 @@ final class CachedAsyncImageSnapshotTests: XCTestCase {
         assertSnapshot(
             of: controller,
             as: SnapshotConfig.snapshotting(on: iPhoneAirConfig),
-            record: false
+            record: false,
         )
     }
 
     func testCachedAsyncImageLoadingLightMode() {
         let view = CachedAsyncImage(
             url: URL(string: "https://example.com/image.jpg"),
-            accessibilityLabel: "Test image"
+            accessibilityLabel: "Test image",
         ) { image in
             image
                 .resizable()
@@ -64,7 +64,7 @@ final class CachedAsyncImageSnapshotTests: XCTestCase {
         assertSnapshot(
             of: controller,
             as: SnapshotConfig.snapshotting(on: iPhoneAirLightConfig),
-            record: false
+            record: false,
         )
     }
 
@@ -73,7 +73,7 @@ final class CachedAsyncImageSnapshotTests: XCTestCase {
     func testCachedAsyncImageWithPlaceholder() {
         let view = CachedAsyncImage(
             url: URL(string: "https://example.com/slow-loading-image.jpg"),
-            accessibilityLabel: "Placeholder test"
+            accessibilityLabel: "Placeholder test",
         ) { image in
             image
                 .resizable()
@@ -94,7 +94,7 @@ final class CachedAsyncImageSnapshotTests: XCTestCase {
         assertSnapshot(
             of: controller,
             as: SnapshotConfig.snapshotting(on: iPhoneAirConfig),
-            record: false
+            record: false,
         )
     }
 
@@ -103,7 +103,7 @@ final class CachedAsyncImageSnapshotTests: XCTestCase {
     func testCachedAsyncImageNilURL() {
         let view = CachedAsyncImage(
             url: nil,
-            accessibilityLabel: "Nil URL test"
+            accessibilityLabel: "Nil URL test",
         ) { image in
             image
                 .resizable()
@@ -125,14 +125,14 @@ final class CachedAsyncImageSnapshotTests: XCTestCase {
         assertSnapshot(
             of: controller,
             as: SnapshotConfig.snapshotting(on: iPhoneAirConfig),
-            record: false
+            record: false,
         )
     }
 
     func testCachedAsyncImageNilURLLightMode() {
         let view = CachedAsyncImage(
             url: nil,
-            accessibilityLabel: "Nil URL light mode test"
+            accessibilityLabel: "Nil URL light mode test",
         ) { image in
             image
                 .resizable()
@@ -153,7 +153,7 @@ final class CachedAsyncImageSnapshotTests: XCTestCase {
         assertSnapshot(
             of: controller,
             as: SnapshotConfig.snapshotting(on: iPhoneAirLightConfig),
-            record: false
+            record: false,
         )
     }
 
@@ -163,7 +163,7 @@ final class CachedAsyncImageSnapshotTests: XCTestCase {
         // Test the convenience initializer that uses ProgressView as default placeholder
         let view = CachedAsyncImage(
             url: URL(string: "https://example.com/image.jpg"),
-            accessibilityLabel: "Convenience init test"
+            accessibilityLabel: "Convenience init test",
         ) { image in
             image
                 .resizable()
@@ -176,7 +176,7 @@ final class CachedAsyncImageSnapshotTests: XCTestCase {
         assertSnapshot(
             of: controller,
             as: SnapshotConfig.snapshotting(on: iPhoneAirConfig),
-            record: false
+            record: false,
         )
     }
 
@@ -187,7 +187,7 @@ final class CachedAsyncImageSnapshotTests: XCTestCase {
         let view = VStack(spacing: 12) {
             CachedAsyncImage(
                 url: URL(string: "https://example.com/article-image.jpg"),
-                accessibilityLabel: "Article thumbnail"
+                accessibilityLabel: "Article thumbnail",
             ) { image in
                 image
                     .resizable()
@@ -223,7 +223,7 @@ final class CachedAsyncImageSnapshotTests: XCTestCase {
         assertSnapshot(
             of: controller,
             as: SnapshotConfig.snapshotting(on: iPhoneAirConfig),
-            record: false
+            record: false,
         )
     }
 }

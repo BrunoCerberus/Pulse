@@ -17,7 +17,7 @@ struct SmartBriefingCardViewTests {
         let view = SmartBriefingCardView(
             viewState: .initial,
             onBuildBriefingTapped: {},
-            onStartFreshTapped: {}
+            onStartFreshTapped: {},
         )
         _ = view.body
     }
@@ -29,10 +29,10 @@ struct SmartBriefingCardViewTests {
                 isVisible: true,
                 isBuilding: false,
                 lastServedAt: .now.addingTimeInterval(-3 * 3600),
-                statusMessage: nil
+                statusMessage: nil,
             ),
             onBuildBriefingTapped: {},
-            onStartFreshTapped: {}
+            onStartFreshTapped: {},
         )
         _ = view.body
     }
@@ -44,10 +44,10 @@ struct SmartBriefingCardViewTests {
                 isVisible: true,
                 isBuilding: true,
                 lastServedAt: nil,
-                statusMessage: nil
+                statusMessage: nil,
             ),
             onBuildBriefingTapped: {},
-            onStartFreshTapped: {}
+            onStartFreshTapped: {},
         )
         _ = view.body
     }
@@ -59,10 +59,10 @@ struct SmartBriefingCardViewTests {
                 isVisible: true,
                 isBuilding: false,
                 lastServedAt: .now,
-                statusMessage: "Queued 12 articles"
+                statusMessage: "Queued 12 articles",
             ),
             onBuildBriefingTapped: {},
-            onStartFreshTapped: {}
+            onStartFreshTapped: {},
         )
         _ = view.body
     }
@@ -76,10 +76,10 @@ struct SmartBriefingCardViewTests {
                 isVisible: true,
                 isBuilding: false,
                 lastServedAt: .now,
-                statusMessage: nil
+                statusMessage: nil,
             ),
             onBuildBriefingTapped: { buildTapped = true },
-            onStartFreshTapped: { startFreshTapped = true }
+            onStartFreshTapped: { startFreshTapped = true },
         )
         view.onBuildBriefingTapped()
         view.onStartFreshTapped()
@@ -100,10 +100,10 @@ struct SmartBriefingCardViewTests {
                 isVisible: true,
                 isBuilding: false,
                 lastServedAt: .now,
-                statusMessage: nil
+                statusMessage: nil,
             ),
             onBuildBriefingTapped: {},
-            onStartFreshTapped: {}
+            onStartFreshTapped: {},
         )
         Self.render(view.environment(\.dynamicTypeSize, .accessibility3))
     }

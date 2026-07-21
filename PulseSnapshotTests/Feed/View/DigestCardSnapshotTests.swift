@@ -10,14 +10,14 @@ final class DigestCardSnapshotTests: XCTestCase {
     private let iPhoneAirConfig = ViewImageConfig(
         safeArea: UIEdgeInsets(top: 59, left: 0, bottom: 34, right: 0),
         size: CGSize(width: 393, height: 852),
-        traits: UITraitCollection(userInterfaceStyle: .dark)
+        traits: UITraitCollection(userInterfaceStyle: .dark),
     )
 
     /// Light mode config for additional coverage
     private let iPhoneAirLightConfig = ViewImageConfig(
         safeArea: UIEdgeInsets(top: 59, left: 0, bottom: 34, right: 0),
         size: CGSize(width: 393, height: 852),
-        traits: UITraitCollection(userInterfaceStyle: .light)
+        traits: UITraitCollection(userInterfaceStyle: .light),
     )
 
     func testDigestCardDefault() {
@@ -27,8 +27,8 @@ final class DigestCardSnapshotTests: XCTestCase {
                 summary: "Today's reading focused on technology and business. "
                     + "You explored developments in AI, market trends, and startup news.",
                 sourceArticles: [],
-                generatedAt: Date(timeIntervalSince1970: 1_672_531_200)
-            )
+                generatedAt: Date(timeIntervalSince1970: 1_672_531_200),
+            ),
         )
 
         let view = DigestCard(digest: digest)
@@ -40,7 +40,7 @@ final class DigestCardSnapshotTests: XCTestCase {
         assertSnapshot(
             of: controller,
             as: SnapshotConfig.snapshotting(on: iPhoneAirConfig),
-            record: false
+            record: false,
         )
     }
 
@@ -58,8 +58,8 @@ final class DigestCardSnapshotTests: XCTestCase {
                 id: "2",
                 summary: longSummary,
                 sourceArticles: [],
-                generatedAt: Date(timeIntervalSince1970: 1_672_531_200)
-            )
+                generatedAt: Date(timeIntervalSince1970: 1_672_531_200),
+            ),
         )
 
         let view = DigestCard(digest: digest)
@@ -71,7 +71,7 @@ final class DigestCardSnapshotTests: XCTestCase {
         assertSnapshot(
             of: controller,
             as: SnapshotConfig.snapshotting(on: iPhoneAirConfig),
-            record: false
+            record: false,
         )
     }
 
@@ -81,8 +81,8 @@ final class DigestCardSnapshotTests: XCTestCase {
                 id: "3",
                 summary: "Quick read today. Tech news dominated.",
                 sourceArticles: [],
-                generatedAt: Date(timeIntervalSince1970: 1_672_531_200)
-            )
+                generatedAt: Date(timeIntervalSince1970: 1_672_531_200),
+            ),
         )
 
         let view = DigestCard(digest: digest)
@@ -94,7 +94,7 @@ final class DigestCardSnapshotTests: XCTestCase {
         assertSnapshot(
             of: controller,
             as: SnapshotConfig.snapshotting(on: iPhoneAirConfig),
-            record: false
+            record: false,
         )
     }
 
@@ -107,8 +107,8 @@ final class DigestCardSnapshotTests: XCTestCase {
                 summary: "Today's reading focused on technology and business. "
                     + "You explored developments in AI, market trends, and startup news.",
                 sourceArticles: [],
-                generatedAt: Date(timeIntervalSince1970: 1_672_531_200)
-            )
+                generatedAt: Date(timeIntervalSince1970: 1_672_531_200),
+            ),
         )
 
         let view = DigestCard(digest: digest)
@@ -120,7 +120,7 @@ final class DigestCardSnapshotTests: XCTestCase {
         assertSnapshot(
             of: controller,
             as: SnapshotConfig.snapshotting(on: iPhoneAirLightConfig),
-            record: false
+            record: false,
         )
     }
 
@@ -136,8 +136,8 @@ final class DigestCardSnapshotTests: XCTestCase {
                 id: "5",
                 summary: longSummary,
                 sourceArticles: [],
-                generatedAt: Date(timeIntervalSince1970: 1_672_531_200)
-            )
+                generatedAt: Date(timeIntervalSince1970: 1_672_531_200),
+            ),
         )
 
         let view = DigestCard(digest: digest)
@@ -149,7 +149,7 @@ final class DigestCardSnapshotTests: XCTestCase {
         assertSnapshot(
             of: controller,
             as: SnapshotConfig.snapshotting(on: iPhoneAirLightConfig),
-            record: false
+            record: false,
         )
     }
 
@@ -168,7 +168,7 @@ final class DigestCardSnapshotTests: XCTestCase {
                 url: "https://example.com/1",
                 imageURL: nil,
                 publishedAt: Date(timeIntervalSince1970: 1_672_531_200),
-                category: .technology
+                category: .technology,
             ),
             Article(
                 id: "2",
@@ -180,7 +180,7 @@ final class DigestCardSnapshotTests: XCTestCase {
                 url: "https://example.com/2",
                 imageURL: nil,
                 publishedAt: Date(timeIntervalSince1970: 1_672_531_200),
-                category: .business
+                category: .business,
             ),
             Article(
                 id: "3",
@@ -192,7 +192,7 @@ final class DigestCardSnapshotTests: XCTestCase {
                 url: "https://example.com/3",
                 imageURL: nil,
                 publishedAt: Date(timeIntervalSince1970: 1_672_531_200),
-                category: .science
+                category: .science,
             ),
         ]
 
@@ -201,8 +201,8 @@ final class DigestCardSnapshotTests: XCTestCase {
                 id: "6",
                 summary: "Today's reading focused on technology and business.",
                 sourceArticles: articles,
-                generatedAt: Date(timeIntervalSince1970: 1_672_531_200)
-            )
+                generatedAt: Date(timeIntervalSince1970: 1_672_531_200),
+            ),
         )
 
         let view = DigestCard(digest: digest)
@@ -214,7 +214,7 @@ final class DigestCardSnapshotTests: XCTestCase {
         assertSnapshot(
             of: controller,
             as: SnapshotConfig.snapshotting(on: iPhoneAirConfig),
-            record: false
+            record: false,
         )
     }
 }

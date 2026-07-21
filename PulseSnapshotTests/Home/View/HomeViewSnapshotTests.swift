@@ -14,14 +14,14 @@ final class HomeViewSnapshotTests: XCTestCase {
     private let iPhoneAirConfig = ViewImageConfig(
         safeArea: UIEdgeInsets(top: 59, left: 0, bottom: 34, right: 0),
         size: CGSize(width: 393, height: 852),
-        traits: UITraitCollection(userInterfaceStyle: .dark)
+        traits: UITraitCollection(userInterfaceStyle: .dark),
     )
 
     /// Light mode config for additional coverage
     private let iPhoneAirLightConfig = ViewImageConfig(
         safeArea: UIEdgeInsets(top: 59, left: 0, bottom: 34, right: 0),
         size: CGSize(width: 393, height: 852),
-        traits: UITraitCollection(userInterfaceStyle: .light)
+        traits: UITraitCollection(userInterfaceStyle: .light),
     )
 
     /// Fixed date for snapshot stability (Jan 1, 2023 - consistent relative time)
@@ -39,7 +39,7 @@ final class HomeViewSnapshotTests: XCTestCase {
             url: "https://example.com/1",
             imageURL: nil,
             publishedAt: fixedDate,
-            category: .technology
+            category: .technology,
         )
     }
 
@@ -58,7 +58,7 @@ final class HomeViewSnapshotTests: XCTestCase {
             url: "https://example.com/2",
             imageURL: nil,
             publishedAt: fixedDate,
-            category: .business
+            category: .business,
         )
     }
 
@@ -74,7 +74,7 @@ final class HomeViewSnapshotTests: XCTestCase {
             url: "https://example.com/3",
             imageURL: nil,
             publishedAt: fixedDate,
-            category: .world
+            category: .world,
         )
     }
 
@@ -90,7 +90,7 @@ final class HomeViewSnapshotTests: XCTestCase {
             url: "https://example.com/4",
             imageURL: "https://picsum.photos/200/200",
             publishedAt: fixedDate,
-            category: .science
+            category: .science,
         )
     }
 
@@ -113,14 +113,14 @@ final class HomeViewSnapshotTests: XCTestCase {
             router: HomeNavigationRouter(),
             viewModel: HomeViewModel(serviceLocator: serviceLocator),
             forYouViewModel: ForYouViewModel(serviceLocator: serviceLocator),
-            smartBriefingViewModel: SmartBriefingViewModel(serviceLocator: serviceLocator)
+            smartBriefingViewModel: SmartBriefingViewModel(serviceLocator: serviceLocator),
         )
         let controller = UIHostingController(rootView: view)
 
         assertSnapshot(
             of: controller,
             as: SnapshotConfig.snapshotting(on: iPhoneAirConfig),
-            record: false
+            record: false,
         )
     }
 
@@ -136,7 +136,7 @@ final class HomeViewSnapshotTests: XCTestCase {
                 router: HomeNavigationRouter(),
                 viewModel: viewModel,
                 forYouViewModel: ForYouViewModel(serviceLocator: serviceLocator),
-                smartBriefingViewModel: SmartBriefingViewModel(serviceLocator: serviceLocator)
+                smartBriefingViewModel: SmartBriefingViewModel(serviceLocator: serviceLocator),
             )
         }
         let controller = UIHostingController(rootView: view)
@@ -144,7 +144,7 @@ final class HomeViewSnapshotTests: XCTestCase {
         assertSnapshot(
             of: controller,
             as: SnapshotConfig.snapshotting(on: SnapshotConfig.iPad),
-            record: false
+            record: false,
         )
     }
 
@@ -156,7 +156,7 @@ final class HomeViewSnapshotTests: XCTestCase {
             item: item,
             onTap: {},
             onBookmark: {},
-            onShare: {}
+            onShare: {},
         )
         .frame(width: 375)
 
@@ -165,7 +165,7 @@ final class HomeViewSnapshotTests: XCTestCase {
         assertSnapshot(
             of: controller,
             as: SnapshotConfig.snapshotting(on: iPhoneAirConfig),
-            record: false
+            record: false,
         )
     }
 
@@ -175,7 +175,7 @@ final class HomeViewSnapshotTests: XCTestCase {
             item: item,
             onTap: {},
             onBookmark: {},
-            onShare: {}
+            onShare: {},
         )
         .frame(width: 375)
 
@@ -184,7 +184,7 @@ final class HomeViewSnapshotTests: XCTestCase {
         assertSnapshot(
             of: controller,
             as: SnapshotConfig.snapshotting(on: iPhoneAirLightConfig),
-            record: false
+            record: false,
         )
     }
 
@@ -194,7 +194,7 @@ final class HomeViewSnapshotTests: XCTestCase {
             item: item,
             onTap: {},
             onBookmark: {},
-            onShare: {}
+            onShare: {},
         )
         .frame(width: 375)
 
@@ -203,7 +203,7 @@ final class HomeViewSnapshotTests: XCTestCase {
         assertSnapshot(
             of: controller,
             as: SnapshotConfig.snapshotting(on: iPhoneAirConfig),
-            record: false
+            record: false,
         )
     }
 
@@ -213,7 +213,7 @@ final class HomeViewSnapshotTests: XCTestCase {
             item: item,
             onTap: {},
             onBookmark: {},
-            onShare: {}
+            onShare: {},
         )
         .frame(width: 375)
 
@@ -222,7 +222,7 @@ final class HomeViewSnapshotTests: XCTestCase {
         assertSnapshot(
             of: controller,
             as: SnapshotConfig.snapshotting(on: iPhoneAirConfig),
-            record: false
+            record: false,
         )
     }
 
@@ -233,7 +233,7 @@ final class HomeViewSnapshotTests: XCTestCase {
             item: item,
             onTap: {},
             onBookmark: {},
-            onShare: {}
+            onShare: {},
         )
         .frame(width: 375)
 
@@ -242,7 +242,7 @@ final class HomeViewSnapshotTests: XCTestCase {
         assertSnapshot(
             of: controller,
             as: SnapshotConfig.snapshotting(on: iPhoneAirConfig),
-            record: false
+            record: false,
         )
     }
 
@@ -259,13 +259,13 @@ final class HomeViewSnapshotTests: XCTestCase {
                 url: "https://example.com",
                 imageURL: nil,
                 publishedAt: fixedDate,
-                category: category
+                category: category,
             )
             return ArticleRowView(
                 item: ArticleViewItem(from: article),
                 onTap: {},
                 onBookmark: {},
-                onShare: {}
+                onShare: {},
             )
         }
 
@@ -281,7 +281,7 @@ final class HomeViewSnapshotTests: XCTestCase {
         assertSnapshot(
             of: controller,
             as: SnapshotConfig.snapshotting(on: iPhoneAirConfig),
-            record: false
+            record: false,
         )
     }
 
@@ -297,7 +297,7 @@ final class HomeViewSnapshotTests: XCTestCase {
         assertSnapshot(
             of: controller,
             as: SnapshotConfig.snapshotting(on: iPhoneAirConfig),
-            record: false
+            record: false,
         )
     }
 
@@ -311,7 +311,7 @@ final class HomeViewSnapshotTests: XCTestCase {
         assertSnapshot(
             of: controller,
             as: SnapshotConfig.snapshotting(on: iPhoneAirConfig),
-            record: false
+            record: false,
         )
     }
 
@@ -325,7 +325,7 @@ final class HomeViewSnapshotTests: XCTestCase {
         assertSnapshot(
             of: controller,
             as: SnapshotConfig.snapshotting(on: iPhoneAirLightConfig),
-            record: false
+            record: false,
         )
     }
 
@@ -340,7 +340,7 @@ final class HomeViewSnapshotTests: XCTestCase {
         assertSnapshot(
             of: controller,
             as: SnapshotConfig.snapshotting(on: iPhoneAirConfig),
-            record: false
+            record: false,
         )
     }
 
@@ -353,7 +353,7 @@ final class HomeViewSnapshotTests: XCTestCase {
         assertSnapshot(
             of: controller,
             as: SnapshotConfig.snapshotting(on: iPhoneAirLightConfig),
-            record: false
+            record: false,
         )
     }
 
@@ -370,7 +370,7 @@ final class HomeViewSnapshotTests: XCTestCase {
         assertSnapshot(
             of: controller,
             as: SnapshotConfig.snapshotting(on: iPhoneAirConfig),
-            record: false
+            record: false,
         )
     }
 
@@ -385,7 +385,7 @@ final class HomeViewSnapshotTests: XCTestCase {
         assertSnapshot(
             of: controller,
             as: SnapshotConfig.snapshotting(on: iPhoneAirConfig),
-            record: false
+            record: false,
         )
     }
 
@@ -398,7 +398,7 @@ final class HomeViewSnapshotTests: XCTestCase {
         assertSnapshot(
             of: controller,
             as: SnapshotConfig.snapshotting(on: iPhoneAirLightConfig),
-            record: false
+            record: false,
         )
     }
 
@@ -413,7 +413,7 @@ final class HomeViewSnapshotTests: XCTestCase {
         assertSnapshot(
             of: controller,
             as: SnapshotConfig.snapshotting(on: iPhoneAirConfig),
-            record: false
+            record: false,
         )
     }
 
@@ -423,7 +423,7 @@ final class HomeViewSnapshotTests: XCTestCase {
         let view = NavigationStack {
             CategoryTabsPreview(
                 followedTopics: [.technology, .business, .science],
-                selectedCategory: nil
+                selectedCategory: nil,
             )
         }
         let controller = UIHostingController(rootView: view)
@@ -431,7 +431,7 @@ final class HomeViewSnapshotTests: XCTestCase {
         assertSnapshot(
             of: controller,
             as: SnapshotConfig.snapshotting(on: iPhoneAirConfig),
-            record: false
+            record: false,
         )
     }
 
@@ -439,7 +439,7 @@ final class HomeViewSnapshotTests: XCTestCase {
         let view = NavigationStack {
             CategoryTabsPreview(
                 followedTopics: [.technology, .business, .science],
-                selectedCategory: .technology
+                selectedCategory: .technology,
             )
         }
         let controller = UIHostingController(rootView: view)
@@ -447,7 +447,7 @@ final class HomeViewSnapshotTests: XCTestCase {
         assertSnapshot(
             of: controller,
             as: SnapshotConfig.snapshotting(on: iPhoneAirConfig),
-            record: false
+            record: false,
         )
     }
 
@@ -455,7 +455,7 @@ final class HomeViewSnapshotTests: XCTestCase {
         let view = NavigationStack {
             CategoryTabsPreview(
                 followedTopics: [.technology, .business],
-                selectedCategory: nil
+                selectedCategory: nil,
             )
         }
         let controller = UIHostingController(rootView: view)
@@ -463,7 +463,7 @@ final class HomeViewSnapshotTests: XCTestCase {
         assertSnapshot(
             of: controller,
             as: SnapshotConfig.snapshotting(on: iPhoneAirLightConfig),
-            record: false
+            record: false,
         )
     }
 
@@ -471,7 +471,7 @@ final class HomeViewSnapshotTests: XCTestCase {
         let view = NavigationStack {
             CategoryTabsPreview(
                 followedTopics: NewsCategory.allCases,
-                selectedCategory: .health
+                selectedCategory: .health,
             )
         }
         let controller = UIHostingController(rootView: view)
@@ -479,7 +479,7 @@ final class HomeViewSnapshotTests: XCTestCase {
         assertSnapshot(
             of: controller,
             as: SnapshotConfig.snapshotting(on: iPhoneAirConfig),
-            record: false
+            record: false,
         )
     }
 
@@ -487,7 +487,7 @@ final class HomeViewSnapshotTests: XCTestCase {
         let view = NavigationStack {
             CategoryTabsPreview(
                 followedTopics: [.technology],
-                selectedCategory: nil
+                selectedCategory: nil,
             )
         }
         let controller = UIHostingController(rootView: view)
@@ -495,7 +495,7 @@ final class HomeViewSnapshotTests: XCTestCase {
         assertSnapshot(
             of: controller,
             as: SnapshotConfig.snapshotting(on: iPhoneAirConfig),
-            record: false
+            record: false,
         )
     }
 
@@ -503,7 +503,7 @@ final class HomeViewSnapshotTests: XCTestCase {
         let view = NavigationStack {
             CategoryTabsPreview(
                 followedTopics: [],
-                selectedCategory: nil
+                selectedCategory: nil,
             )
         }
         let controller = UIHostingController(rootView: view)
@@ -511,7 +511,7 @@ final class HomeViewSnapshotTests: XCTestCase {
         assertSnapshot(
             of: controller,
             as: SnapshotConfig.snapshotting(on: iPhoneAirConfig),
-            record: false
+            record: false,
         )
     }
 }
@@ -632,7 +632,7 @@ private struct CategoryTabsPreview: View {
                                 .fill(
                                     selectedCategory == nil
                                         ? Color.Accent.primary
-                                        : Color.Accent.primary.opacity(0.15)
+                                        : Color.Accent.primary.opacity(0.15),
                                 )
                         }
                 }

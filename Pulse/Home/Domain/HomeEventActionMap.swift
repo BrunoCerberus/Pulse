@@ -27,21 +27,21 @@ struct HomeEventActionMap: DomainEventActionMap {
     private func mapSimpleEvent(_ event: HomeViewEvent) -> HomeDomainAction? {
         switch event {
         case .onAppear:
-            return .loadInitialData
+            .loadInitialData
         case .onRefresh:
-            return .refresh
+            .refresh
         case .onLoadMore:
-            return .loadMoreHeadlines
+            .loadMoreHeadlines
         case .onArticleNavigated:
-            return .clearSelectedArticle
+            .clearSelectedArticle
         case .onShareDismissed:
-            return .clearArticleToShare
+            .clearArticleToShare
         case .onEditTopicsTapped:
-            return .setEditingTopics(true)
+            .setEditingTopics(true)
         case .onEditTopicsDismissed:
-            return .setEditingTopics(false)
+            .setEditingTopics(false)
         default:
-            return nil
+            nil
         }
     }
 
@@ -51,19 +51,19 @@ struct HomeEventActionMap: DomainEventActionMap {
     private func mapPayloadEvent(_ event: HomeViewEvent) -> HomeDomainAction? {
         switch event {
         case let .onArticleTapped(articleId):
-            return .selectArticle(articleId: articleId)
+            .selectArticle(articleId: articleId)
         case let .onBookmarkTapped(articleId):
-            return .bookmarkArticle(articleId: articleId)
+            .bookmarkArticle(articleId: articleId)
         case let .onShareTapped(articleId):
-            return .shareArticle(articleId: articleId)
+            .shareArticle(articleId: articleId)
         case let .onCategorySelected(category):
-            return .selectCategory(category)
+            .selectCategory(category)
         case let .onToggleTopic(topic):
-            return .toggleTopic(topic)
+            .toggleTopic(topic)
         case let .onRecentlyReadTapped(articleId):
-            return .selectRecentlyRead(articleId: articleId)
+            .selectRecentlyRead(articleId: articleId)
         default:
-            return nil
+            nil
         }
     }
 }

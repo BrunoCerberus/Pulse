@@ -28,7 +28,7 @@ struct ArticleTests {
             url: "https://example.com/article",
             imageURL: "https://example.com/image.jpg",
             publishedAt: fixedDate,
-            category: .technology
+            category: .technology,
         )
 
         #expect(article.id == "custom-id")
@@ -49,7 +49,7 @@ struct ArticleTests {
             title: "Test Article",
             source: testSource,
             url: "https://example.com/article",
-            publishedAt: fixedDate
+            publishedAt: fixedDate,
         )
 
         // ID should be a valid UUID string
@@ -63,7 +63,7 @@ struct ArticleTests {
             title: "Test Article",
             source: testSource,
             url: "https://example.com/article",
-            publishedAt: fixedDate
+            publishedAt: fixedDate,
         )
 
         #expect(article.description == nil)
@@ -84,7 +84,7 @@ struct ArticleTests {
             title: "Recent Article",
             source: testSource,
             url: "https://example.com/article",
-            publishedAt: recentDate
+            publishedAt: recentDate,
         )
 
         let formattedDate = article.formattedDate
@@ -101,7 +101,7 @@ struct ArticleTests {
             title: "Old Article",
             source: testSource,
             url: "https://example.com/article",
-            publishedAt: oldDate
+            publishedAt: oldDate,
         )
 
         let formattedDate = article.formattedDate
@@ -118,7 +118,7 @@ struct ArticleTests {
             title: "Same Title",
             source: testSource,
             url: "https://example.com/article",
-            publishedAt: fixedDate
+            publishedAt: fixedDate,
         )
 
         let article2 = Article(
@@ -126,7 +126,7 @@ struct ArticleTests {
             title: "Same Title",
             source: testSource,
             url: "https://example.com/article",
-            publishedAt: fixedDate
+            publishedAt: fixedDate,
         )
 
         let article3 = Article(
@@ -134,7 +134,7 @@ struct ArticleTests {
             title: "Same Title",
             source: testSource,
             url: "https://example.com/article",
-            publishedAt: fixedDate
+            publishedAt: fixedDate,
         )
 
         #expect(article1 == article2)
@@ -155,7 +155,7 @@ struct ArticleTests {
             url: "https://example.com/article",
             imageURL: "https://example.com/image.jpg",
             publishedAt: fixedDate,
-            category: .technology
+            category: .technology,
         )
 
         let encoder = JSONEncoder()
@@ -183,7 +183,7 @@ struct ArticleTests {
             title: "Minimal Article",
             source: testSource,
             url: "https://example.com/article",
-            publishedAt: fixedDate
+            publishedAt: fixedDate,
         )
 
         let encoder = JSONEncoder()
@@ -208,7 +208,7 @@ struct ArticleTests {
             title: "Test",
             source: testSource,
             url: "https://example.com",
-            publishedAt: fixedDate
+            publishedAt: fixedDate,
         )
 
         let article2 = Article(
@@ -216,7 +216,7 @@ struct ArticleTests {
             title: "Test",
             source: testSource,
             url: "https://example.com",
-            publishedAt: fixedDate
+            publishedAt: fixedDate,
         )
 
         var set = Set<Article>()
@@ -236,7 +236,7 @@ struct ArticleTests {
             title: "Test",
             source: testSource,
             url: "https://example.com",
-            publishedAt: fixedDate
+            publishedAt: fixedDate,
         )
 
         #expect(article.id == "identifiable-test")
@@ -263,7 +263,7 @@ struct ArticleImageURLTests {
             title: "Test Article",
             source: testSource,
             url: "https://www.nytimes.com/2024/01/01/article",
-            publishedAt: fixedDate
+            publishedAt: fixedDate,
         )
 
         #expect(article.sourceFaviconURL == "https://www.google.com/s2/favicons?domain=www.nytimes.com&sz=128")
@@ -275,7 +275,7 @@ struct ArticleImageURLTests {
             title: "Test Article",
             source: testSource,
             url: "https://techcrunch.com/article",
-            publishedAt: fixedDate
+            publishedAt: fixedDate,
         )
 
         #expect(article.sourceFaviconURL == "https://www.google.com/s2/favicons?domain=techcrunch.com&sz=128")
@@ -287,7 +287,7 @@ struct ArticleImageURLTests {
             title: "Test Article",
             source: testSource,
             url: "not a valid url",
-            publishedAt: fixedDate
+            publishedAt: fixedDate,
         )
 
         #expect(article.sourceFaviconURL == nil)
@@ -299,7 +299,7 @@ struct ArticleImageURLTests {
             title: "Test Article",
             source: testSource,
             url: "",
-            publishedAt: fixedDate
+            publishedAt: fixedDate,
         )
 
         #expect(article.sourceFaviconURL == nil)

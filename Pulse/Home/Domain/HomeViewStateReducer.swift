@@ -41,7 +41,7 @@ struct HomeViewStateReducer: ViewStateReducing {
             isOfflineError: domainState.isOfflineError,
             recentlyRead: domainState.recentlyRead.enumerated().map { index, article in
                 ArticleViewItem(from: article, index: index, isRead: true)
-            }
+            },
         )
     }
 }

@@ -9,7 +9,7 @@ struct OnboardingDomainState: Equatable {
         OnboardingDomainState(
             currentPage: .welcome,
             selectedTopics: [],
-            isCompleted: false
+            isCompleted: false,
         )
     }
 }

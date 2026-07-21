@@ -24,7 +24,7 @@ struct ArticleDetailDomainInteractorTests {
     func createSUT(article: Article? = nil) -> ArticleDetailDomainInteractor {
         ArticleDetailDomainInteractor(
             article: article ?? testArticle,
-            serviceLocator: serviceLocator
+            serviceLocator: serviceLocator,
         )
     }
 
@@ -195,12 +195,12 @@ struct ArticleDetailTextProcessingTests {
             url: "https://example.com",
             imageURL: nil,
             publishedAt: Date(),
-            category: .world
+            category: .world,
         )
 
         let sut = ArticleDetailDomainInteractor(
             article: articleWithHTML,
-            serviceLocator: serviceLocator
+            serviceLocator: serviceLocator,
         )
 
         try await waitForStateUpdate(duration: TestWaitDuration.long)
@@ -228,12 +228,12 @@ struct ArticleDetailTextProcessingTests {
             url: "https://example.com",
             imageURL: nil,
             publishedAt: Date(),
-            category: .world
+            category: .world,
         )
 
         let sut = ArticleDetailDomainInteractor(
             article: articleWithTruncation,
-            serviceLocator: serviceLocator
+            serviceLocator: serviceLocator,
         )
 
         try await waitForStateUpdate(duration: TestWaitDuration.long)
@@ -260,12 +260,12 @@ struct ArticleDetailTextProcessingTests {
             url: "https://example.com",
             imageURL: nil,
             publishedAt: Date(),
-            category: .world
+            category: .world,
         )
 
         let sut = ArticleDetailDomainInteractor(
             article: articleWithEntities,
-            serviceLocator: serviceLocator
+            serviceLocator: serviceLocator,
         )
 
         try await waitForStateUpdate(duration: TestWaitDuration.long)

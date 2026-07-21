@@ -57,10 +57,10 @@ enum NewsAPI: APIFetcher {
 
         case let .sources(category, country):
             components.path += "/top-headlines/sources"
-            if let category = category {
+            if let category {
                 queryItems.append(URLQueryItem(name: "category", value: category))
             }
-            if let country = country {
+            if let country {
                 queryItems.append(URLQueryItem(name: "country", value: country))
             }
         }

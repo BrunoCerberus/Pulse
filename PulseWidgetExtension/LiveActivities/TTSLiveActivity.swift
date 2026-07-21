@@ -82,7 +82,7 @@ struct TTSLiveActivity: Widget {
 #Preview(
     "TTS Live Activity",
     as: .content,
-    using: TTSActivityAttributes()
+    using: TTSActivityAttributes(),
 ) {
     TTSLiveActivity()
 } contentStates: {
@@ -92,7 +92,7 @@ struct TTSLiveActivity: Widget {
         speedLabel: "1x",
         currentTitle: "SwiftUI 6.0 Brings Revolutionary New Features",
         currentSource: "TechCrunch",
-        queuePosition: "2/11"
+        queuePosition: "2/11",
     )
     TTSActivityAttributes.ContentState(
         isPlaying: false,
@@ -100,6 +100,6 @@ struct TTSLiveActivity: Widget {
         speedLabel: "1.25x",
         currentTitle: "Markets Rally on Economic News",
         currentSource: "Financial Times",
-        queuePosition: nil
+        queuePosition: nil,
     )
 }

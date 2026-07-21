@@ -9,7 +9,7 @@ import Testing
 // swiftlint:disable large_tuple
 @MainActor
 private func createSUT(
-    notificationStatus: NotificationAuthorizationStatus = .authorized
+    notificationStatus: NotificationAuthorizationStatus = .authorized,
 ) -> (SettingsDomainInteractor, MockSettingsService, MockAnalyticsService, MockNotificationService) {
     // swiftlint:enable large_tuple
     let mockSettingsService = MockSettingsService()
@@ -22,7 +22,7 @@ private func createSUT(
     serviceLocator.register(NotificationService.self, instance: mockNotificationService)
     return (
         SettingsDomainInteractor(serviceLocator: serviceLocator),
-        mockSettingsService, mockAnalyticsService, mockNotificationService
+        mockSettingsService, mockAnalyticsService, mockNotificationService,
     )
 }
 
@@ -46,7 +46,7 @@ struct SettingsInteractorStateTests {
         let (sut, mock, _, _) = createSUT()
         mock.preferences = UserPreferences(
             followedTopics: [.technology, .science], mutedSources: ["Spam"], mutedKeywords: ["clickbait"],
-            preferredLanguage: "en", notificationsEnabled: true, breakingNewsNotifications: false
+            preferredLanguage: "en", notificationsEnabled: true, breakingNewsNotifications: false,
         )
         sut.dispatch(action: .loadPreferences)
         try await Task.sleep(nanoseconds: 300_000_000)
@@ -77,7 +77,7 @@ struct SettingsInteractorStateTests {
             mutedKeywords: [],
             preferredLanguage: "pt",
             notificationsEnabled: false,
-            breakingNewsNotifications: false
+            breakingNewsNotifications: false,
         )
 
         var cancellables = Set<AnyCancellable>()
@@ -105,7 +105,7 @@ struct SettingsInteractorNotifyTests {
         let (sut, mock, _, _) = createSUT()
         mock.preferences = UserPreferences(
             followedTopics: [], mutedSources: [], mutedKeywords: [],
-            preferredLanguage: "en", notificationsEnabled: false, breakingNewsNotifications: true
+            preferredLanguage: "en", notificationsEnabled: false, breakingNewsNotifications: true,
         )
         sut.dispatch(action: .loadPreferences)
         try await Task.sleep(nanoseconds: 300_000_000)
@@ -130,7 +130,7 @@ struct SettingsInteractorNotifyTests {
         let (sut, mock, _, _) = createSUT()
         mock.preferences = UserPreferences(
             followedTopics: [], mutedSources: [], mutedKeywords: [],
-            preferredLanguage: "en", notificationsEnabled: true, breakingNewsNotifications: false
+            preferredLanguage: "en", notificationsEnabled: true, breakingNewsNotifications: false,
         )
         sut.dispatch(action: .loadPreferences)
         try await Task.sleep(nanoseconds: 300_000_000)
@@ -232,7 +232,7 @@ struct SettingsInteractorMutedTests {
         let (sut, mock, _, _) = createSUT()
         mock.preferences = UserPreferences(
             followedTopics: [], mutedSources: ["Existing"],
-            mutedKeywords: [], preferredLanguage: "en", notificationsEnabled: true, breakingNewsNotifications: true
+            mutedKeywords: [], preferredLanguage: "en", notificationsEnabled: true, breakingNewsNotifications: true,
         )
         sut.dispatch(action: .loadPreferences)
         try await Task.sleep(nanoseconds: 300_000_000)
@@ -247,7 +247,7 @@ struct SettingsInteractorMutedTests {
         let (sut, mock, _, _) = createSUT()
         mock.preferences = UserPreferences(
             followedTopics: [], mutedSources: ["Source 1", "Source 2"],
-            mutedKeywords: [], preferredLanguage: "en", notificationsEnabled: true, breakingNewsNotifications: true
+            mutedKeywords: [], preferredLanguage: "en", notificationsEnabled: true, breakingNewsNotifications: true,
         )
         sut.dispatch(action: .loadPreferences)
         try await Task.sleep(nanoseconds: 300_000_000)
@@ -273,7 +273,7 @@ struct SettingsInteractorMutedTests {
         let (sut, mock, _, _) = createSUT()
         mock.preferences = UserPreferences(
             followedTopics: [], mutedSources: [], mutedKeywords: ["existing"],
-            preferredLanguage: "en", notificationsEnabled: true, breakingNewsNotifications: true
+            preferredLanguage: "en", notificationsEnabled: true, breakingNewsNotifications: true,
         )
         sut.dispatch(action: .loadPreferences)
         try await Task.sleep(nanoseconds: 300_000_000)
@@ -288,7 +288,7 @@ struct SettingsInteractorMutedTests {
         let (sut, mock, _, _) = createSUT()
         mock.preferences = UserPreferences(
             followedTopics: [], mutedSources: [], mutedKeywords: ["keyword1", "keyword2"],
-            preferredLanguage: "en", notificationsEnabled: true, breakingNewsNotifications: true
+            preferredLanguage: "en", notificationsEnabled: true, breakingNewsNotifications: true,
         )
         sut.dispatch(action: .loadPreferences)
         try await Task.sleep(nanoseconds: 300_000_000)
@@ -478,7 +478,7 @@ struct SettingsInteractorPublisherTests {
         let token = NotificationCenter.default.addObserver(
             forName: .userPreferencesDidChange,
             object: nil,
-            queue: .main
+            queue: .main,
         ) { _ in notificationReceived = true }
 
         sut.dispatch(action: .toggleNotifications(false))

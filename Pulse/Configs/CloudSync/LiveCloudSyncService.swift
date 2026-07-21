@@ -58,7 +58,7 @@ final class LiveCloudSyncService: CloudSyncService, @unchecked Sendable {
     init(
         containerIdentifier: String = "iCloud.com.bruno.Pulse-News",
         notificationCenter: NotificationCenter = .default,
-        accountStatusProvider: AccountStatusProvider? = nil
+        accountStatusProvider: AccountStatusProvider? = nil,
     ) {
         self.notificationCenter = notificationCenter
         self.accountStatusProvider = accountStatusProvider

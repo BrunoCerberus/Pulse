@@ -81,7 +81,7 @@ final class LiveAppLockService: AppLockService {
         do {
             return try await context.evaluatePolicy(
                 .deviceOwnerAuthentication,
-                localizedReason: reason
+                localizedReason: reason,
             )
         } catch let laError as LAError {
             switch laError.code {

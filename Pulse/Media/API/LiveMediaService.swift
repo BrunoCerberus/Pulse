@@ -24,7 +24,7 @@ final class LiveMediaService: APIRequest, MediaService {
         let categorySlug = type?.categorySlug
         return fetchRequest(
             target: SupabaseAPI.media(language: language, type: categorySlug, page: page, pageSize: 20),
-            dataType: [SupabaseArticle].self
+            dataType: [SupabaseArticle].self,
         )
         .map { $0.map { $0.toArticle() } }
         .handleEvents(receiveOutput: { articles in
@@ -46,7 +46,7 @@ final class LiveMediaService: APIRequest, MediaService {
         let categorySlug = type?.categorySlug
         return fetchRequest(
             target: SupabaseAPI.featuredMedia(language: language, type: categorySlug, limit: 10),
-            dataType: [SupabaseArticle].self
+            dataType: [SupabaseArticle].self,
         )
         .map { $0.map { $0.toArticle() } }
         .handleEvents(receiveOutput: { articles in

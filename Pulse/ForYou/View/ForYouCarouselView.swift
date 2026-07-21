@@ -68,7 +68,7 @@ struct ForYouCarouselView: View {
                 title: card.articleViewItem.title,
                 sourceName: card.articleViewItem.sourceName,
                 imageURL: card.articleViewItem.imageURL,
-                onTap: { onArticleTapped(card.id) }
+                onTap: { onArticleTapped(card.id) },
             )
 
             if !card.explanation.isEmpty {

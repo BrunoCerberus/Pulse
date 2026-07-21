@@ -39,7 +39,7 @@ struct FeedViewStateReducer: ViewStateReducing {
             sourceArticles: sourceArticles,
             errorMessage: errorMessage,
             selectedArticle: domainState.selectedArticle,
-            isOfflineError: domainState.isOfflineError
+            isOfflineError: domainState.isOfflineError,
         )
     }
 
@@ -53,7 +53,7 @@ struct FeedViewStateReducer: ViewStateReducing {
     private func mapToDisplayState(_ domainState: FeedDomainState) -> FeedDisplayState {
         switch domainState.generationState {
         case .idle:
-            if domainState.latestArticles.isEmpty && domainState.hasLoadedInitialData {
+            if domainState.latestArticles.isEmpty, domainState.hasLoadedInitialData {
                 return .empty
             }
             return .idle

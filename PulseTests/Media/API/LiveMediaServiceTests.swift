@@ -88,7 +88,7 @@ struct MockMediaServiceTests {
                 receiveCompletion: { _ in },
                 receiveValue: { articles in
                     result = articles
-                }
+                },
             )
             .store(in: &cancellables)
 
@@ -110,7 +110,7 @@ struct MockMediaServiceTests {
                 receiveCompletion: { _ in },
                 receiveValue: { articles in
                     result = articles
-                }
+                },
             )
             .store(in: &cancellables)
 
@@ -132,7 +132,7 @@ struct MockMediaServiceTests {
                 receiveCompletion: { _ in },
                 receiveValue: { articles in
                     result = articles
-                }
+                },
             )
             .store(in: &cancellables)
 
@@ -154,7 +154,7 @@ struct MockMediaServiceTests {
                 receiveCompletion: { _ in },
                 receiveValue: { articles in
                     result = articles
-                }
+                },
             )
             .store(in: &cancellables)
 
@@ -180,7 +180,7 @@ struct MockMediaServiceTests {
                         receivedError = error
                     }
                 },
-                receiveValue: { _ in }
+                receiveValue: { _ in },
             )
             .store(in: &cancellables)
 
@@ -204,7 +204,7 @@ struct MockMediaServiceTests {
                 receiveCompletion: { _ in },
                 receiveValue: { articles in
                     result = articles
-                }
+                },
             )
             .store(in: &cancellables)
 

@@ -38,7 +38,7 @@ extension PlaybackItem {
             title: article.title,
             sourceName: article.source.name,
             speechText: SpeechTextBuilder.speechText(for: article),
-            language: language
+            language: language,
         )
     }
 
@@ -53,7 +53,7 @@ extension PlaybackItem {
             title: article.title,
             sourceName: article.source.name,
             speechText: SpeechTextBuilder.briefingSpeechText(for: article),
-            language: language
+            language: language,
         )
     }
 
@@ -65,7 +65,7 @@ extension PlaybackItem {
             title: AppLocalization.localized("briefing.digest_item_title"),
             sourceName: "Pulse",
             speechText: SpeechTextBuilder.speechText(forDigestSummary: digest.summary),
-            language: language
+            language: language,
         )
     }
 }
@@ -116,7 +116,7 @@ struct PlaybackQueueState: Equatable {
         playbackState: .idle,
         itemProgress: 0.0,
         speedPreset: .normal,
-        mode: .singleArticle
+        mode: .singleArticle,
     )
 }
 

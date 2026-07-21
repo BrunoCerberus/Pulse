@@ -18,6 +18,6 @@ struct CloudSyncDomainState: Equatable {
     static let initial = CloudSyncDomainState(
         accountStatus: .couldNotDetermine,
         syncState: .idle,
-        lastSyncedAt: nil
+        lastSyncedAt: nil,
     )
 }

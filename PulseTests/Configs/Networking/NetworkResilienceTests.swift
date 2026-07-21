@@ -132,7 +132,7 @@ struct NetworkResilienceTests {
     // MARK: - Helpers
 
     private func awaitPublisher<P: Publisher>(
-        _ publisher: P
+        _ publisher: P,
     ) async throws -> P.Output {
         try await withCheckedThrowingContinuation { continuation in
             var cancellable: AnyCancellable?
@@ -161,7 +161,7 @@ struct NetworkResilienceTests {
                         resumed = true
                         nonisolated(unsafe) let value = value
                         continuation.resume(returning: value)
-                    }
+                    },
                 )
         }
     }

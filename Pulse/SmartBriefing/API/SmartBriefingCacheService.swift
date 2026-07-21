@@ -71,7 +71,7 @@ final class LiveSmartBriefingCacheService: SmartBriefingCacheService {
         guard let stored = fetchStoredRecord() else { return nil }
         return SmartBriefingServedRecord(
             servedAt: stored.servedAt,
-            servedArticleIDs: Set(stored.orderedServedArticleIDs)
+            servedArticleIDs: Set(stored.orderedServedArticleIDs),
         )
     }
 

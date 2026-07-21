@@ -10,7 +10,7 @@ final class HeroNewsCardSnapshotTests: XCTestCase {
     private let iPhoneAirConfig = ViewImageConfig(
         safeArea: UIEdgeInsets(top: 59, left: 0, bottom: 34, right: 0),
         size: CGSize(width: 393, height: 852),
-        traits: UITraitCollection(userInterfaceStyle: .dark)
+        traits: UITraitCollection(userInterfaceStyle: .dark),
     )
 
     /// Fixed date for snapshot stability
@@ -26,8 +26,8 @@ final class HeroNewsCardSnapshotTests: XCTestCase {
                 url: "https://example.com",
                 imageURL: nil,
                 publishedAt: fixedDate,
-                category: .world
-            )
+                category: .world,
+            ),
         )
     }
 
@@ -41,8 +41,8 @@ final class HeroNewsCardSnapshotTests: XCTestCase {
                 url: "https://example.com",
                 imageURL: nil,
                 publishedAt: fixedDate,
-                category: .technology
-            )
+                category: .technology,
+            ),
         )
     }
 
@@ -57,8 +57,8 @@ final class HeroNewsCardSnapshotTests: XCTestCase {
                 url: "https://example.com",
                 imageURL: nil,
                 publishedAt: fixedDate,
-                category: .science
-            )
+                category: .science,
+            ),
         )
     }
 
@@ -74,7 +74,7 @@ final class HeroNewsCardSnapshotTests: XCTestCase {
         assertSnapshot(
             of: controller,
             as: SnapshotConfig.snapshotting(on: iPhoneAirConfig),
-            record: false
+            record: false,
         )
     }
 
@@ -88,7 +88,7 @@ final class HeroNewsCardSnapshotTests: XCTestCase {
         assertSnapshot(
             of: controller,
             as: SnapshotConfig.snapshotting(on: iPhoneAirConfig),
-            record: false
+            record: false,
         )
     }
 
@@ -102,7 +102,7 @@ final class HeroNewsCardSnapshotTests: XCTestCase {
         assertSnapshot(
             of: controller,
             as: SnapshotConfig.snapshotting(on: iPhoneAirConfig),
-            record: false
+            record: false,
         )
     }
 
@@ -119,7 +119,7 @@ final class HeroNewsCardSnapshotTests: XCTestCase {
         assertSnapshot(
             of: controller,
             as: SnapshotConfig.snapshotting(on: iPhoneAirConfig),
-            record: false
+            record: false,
         )
     }
 
@@ -134,7 +134,7 @@ final class HeroNewsCardSnapshotTests: XCTestCase {
         assertSnapshot(
             of: controller,
             as: SnapshotConfig.snapshotting(on: iPhoneAirConfig),
-            record: false
+            record: false,
         )
     }
 
@@ -159,7 +159,7 @@ final class HeroNewsCardSnapshotTests: XCTestCase {
         assertSnapshot(
             of: controller,
             as: SnapshotConfig.snapshotting(on: iPhoneAirConfig),
-            record: false
+            record: false,
         )
     }
 }

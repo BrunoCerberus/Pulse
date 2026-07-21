@@ -8,7 +8,7 @@ struct InterestTopicTests {
 
     private func makeTopic(
         weight: Double = 1.0,
-        lastReinforcedAt: Date = Self.referenceDate
+        lastReinforcedAt: Date = Self.referenceDate,
     ) -> InterestTopic {
         InterestTopic(
             topicID: "ai",
@@ -17,7 +17,7 @@ struct InterestTopicTests {
             category: nil,
             lastReinforcedAt: lastReinforcedAt,
             createdAt: lastReinforcedAt,
-            source: .extracted
+            source: .extracted,
         )
     }
 
@@ -66,7 +66,7 @@ struct InterestTopicTests {
             category: NewsCategory.technology.rawValue,
             lastReinforcedAt: Self.referenceDate,
             createdAt: Self.referenceDate.addingTimeInterval(-3600),
-            source: .extracted
+            source: .extracted,
         )
         let data = try JSONEncoder().encode(topic)
         let decoded = try JSONDecoder().decode(InterestTopic.self, from: data)

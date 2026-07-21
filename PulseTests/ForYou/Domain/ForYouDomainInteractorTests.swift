@@ -34,7 +34,7 @@ struct ForYouDomainInteractorTests {
             url: "https://example.com/\(id)",
             imageURL: nil,
             publishedAt: Self.baseDate,
-            category: .technology
+            category: .technology,
         )
     }
 

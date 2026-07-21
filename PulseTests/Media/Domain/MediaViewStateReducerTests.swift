@@ -26,7 +26,7 @@ struct MediaViewStateReducerTests {
             mediaType: mediaType,
             mediaURL: "https://example.com/media",
             mediaDuration: 3600,
-            mediaMimeType: mediaType == .podcast ? "audio/mpeg" : "video/mp4"
+            mediaMimeType: mediaType == .podcast ? "audio/mpeg" : "video/mp4",
         )
     }
 

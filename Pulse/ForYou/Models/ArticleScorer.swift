@@ -38,7 +38,7 @@ enum ArticleScorer {
         articleTags: [String]? = nil,
         profile: [InterestTopic],
         now: Date = .now,
-        halfLifeDays: Double = 30.0
+        halfLifeDays: Double = 30.0,
     ) -> ScoredArticle {
         let tags: Set<String> = {
             if let articleTags, !articleTags.isEmpty {

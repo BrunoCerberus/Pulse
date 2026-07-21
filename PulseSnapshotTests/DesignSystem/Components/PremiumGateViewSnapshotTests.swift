@@ -27,7 +27,7 @@ final class PremiumGateViewSnapshotTests: XCTestCase {
     func testPremiumGateViewDailyDigest() {
         let view = PremiumGateView(
             feature: .dailyDigest,
-            serviceLocator: serviceLocator
+            serviceLocator: serviceLocator,
         )
 
         let controller = UIHostingController(rootView: view)
@@ -35,7 +35,7 @@ final class PremiumGateViewSnapshotTests: XCTestCase {
         assertSnapshot(
             of: controller,
             as: .image(on: SnapshotConfig.iPhoneAir, precision: SnapshotConfig.standardPrecision),
-            record: false
+            record: false,
         )
     }
 
@@ -44,7 +44,7 @@ final class PremiumGateViewSnapshotTests: XCTestCase {
     func testPremiumGateViewArticleSummarization() {
         let view = PremiumGateView(
             feature: .articleSummarization,
-            serviceLocator: serviceLocator
+            serviceLocator: serviceLocator,
         )
 
         let controller = UIHostingController(rootView: view)
@@ -52,7 +52,7 @@ final class PremiumGateViewSnapshotTests: XCTestCase {
         assertSnapshot(
             of: controller,
             as: .image(on: SnapshotConfig.iPhoneAir, precision: SnapshotConfig.standardPrecision),
-            record: false
+            record: false,
         )
     }
 
@@ -61,7 +61,7 @@ final class PremiumGateViewSnapshotTests: XCTestCase {
     func testPremiumGateViewAudioBriefing() {
         let view = PremiumGateView(
             feature: .audioBriefing,
-            serviceLocator: serviceLocator
+            serviceLocator: serviceLocator,
         )
 
         let controller = UIHostingController(rootView: view)
@@ -69,7 +69,7 @@ final class PremiumGateViewSnapshotTests: XCTestCase {
         assertSnapshot(
             of: controller,
             as: .image(on: SnapshotConfig.iPhoneAir, precision: SnapshotConfig.standardPrecision),
-            record: false
+            record: false,
         )
     }
 
@@ -78,7 +78,7 @@ final class PremiumGateViewSnapshotTests: XCTestCase {
     func testPremiumGateViewDailyDigestLightMode() {
         let view = PremiumGateView(
             feature: .dailyDigest,
-            serviceLocator: serviceLocator
+            serviceLocator: serviceLocator,
         )
 
         let controller = UIHostingController(rootView: view)
@@ -86,7 +86,7 @@ final class PremiumGateViewSnapshotTests: XCTestCase {
         assertSnapshot(
             of: controller,
             as: .image(on: SnapshotConfig.iPhoneAirLight, precision: SnapshotConfig.standardPrecision),
-            record: false
+            record: false,
         )
     }
 }

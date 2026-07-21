@@ -59,7 +59,7 @@ struct ShareRootView: View {
         .padding(16)
         .background(
             RoundedRectangle(cornerRadius: 14, style: .continuous)
-                .fill(Color(uiColor: .secondarySystemBackground))
+                .fill(Color(uiColor: .secondarySystemBackground)),
         )
         .accessibilityElement(children: .combine)
         .accessibilityLabel("Shared link from \(url.host ?? "the web").")
@@ -89,7 +89,7 @@ struct ShareRootView: View {
         ShareRootView(
             url: URL(string: "https://www.theguardian.com/technology/2026/apr/08/example-article")!,
             onSummarize: {},
-            onCancel: {}
+            onCancel: {},
         )
     }
 #endif

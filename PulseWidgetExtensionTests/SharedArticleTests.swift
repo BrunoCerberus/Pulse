@@ -10,7 +10,7 @@ struct SharedArticleTests {
             id: "1",
             title: "Test Article",
             source: "Test Source",
-            imageURL: "https://example.com/image.jpg"
+            imageURL: "https://example.com/image.jpg",
         )
         #expect(article.id == "1")
     }
@@ -21,7 +21,7 @@ struct SharedArticleTests {
             id: "1",
             title: "Test Article",
             source: "Test Source",
-            imageURL: nil
+            imageURL: nil,
         )
         #expect(article.displayTitle == "Test Article")
     }
@@ -32,7 +32,7 @@ struct SharedArticleTests {
             id: "1",
             title: "",
             source: "Test Source",
-            imageURL: nil
+            imageURL: nil,
         )
         #expect(article.displayTitle == "Untitled")
     }
@@ -43,7 +43,7 @@ struct SharedArticleTests {
             id: "1",
             title: "Test Article",
             source: "Test Source",
-            imageURL: "https://example.com/image.jpg"
+            imageURL: "https://example.com/image.jpg",
         )
 
         let encoder = JSONEncoder()

@@ -112,7 +112,7 @@ struct HomeDomainActionTests {
     func selectArticleSameIdAreEqual() {
         #expect(
             HomeDomainAction.selectArticle(articleId: "article-123") ==
-                HomeDomainAction.selectArticle(articleId: "article-123")
+                HomeDomainAction.selectArticle(articleId: "article-123"),
         )
     }
 
@@ -120,7 +120,7 @@ struct HomeDomainActionTests {
     func selectArticleDifferentIdsAreNotEqual() {
         #expect(
             HomeDomainAction.selectArticle(articleId: "article-123") !=
-                HomeDomainAction.selectArticle(articleId: "article-456")
+                HomeDomainAction.selectArticle(articleId: "article-456"),
         )
     }
 
@@ -128,7 +128,7 @@ struct HomeDomainActionTests {
     func bookmarkArticleSameIdAreEqual() {
         #expect(
             HomeDomainAction.bookmarkArticle(articleId: "article-123") ==
-                HomeDomainAction.bookmarkArticle(articleId: "article-123")
+                HomeDomainAction.bookmarkArticle(articleId: "article-123"),
         )
     }
 
@@ -136,7 +136,7 @@ struct HomeDomainActionTests {
     func bookmarkArticleDifferentIdsAreNotEqual() {
         #expect(
             HomeDomainAction.bookmarkArticle(articleId: "article-123") !=
-                HomeDomainAction.bookmarkArticle(articleId: "article-456")
+                HomeDomainAction.bookmarkArticle(articleId: "article-456"),
         )
     }
 
@@ -144,7 +144,7 @@ struct HomeDomainActionTests {
     func shareArticleSameIdAreEqual() {
         #expect(
             HomeDomainAction.shareArticle(articleId: "article-123") ==
-                HomeDomainAction.shareArticle(articleId: "article-123")
+                HomeDomainAction.shareArticle(articleId: "article-123"),
         )
     }
 
@@ -152,7 +152,7 @@ struct HomeDomainActionTests {
     func shareArticleDifferentIdsAreNotEqual() {
         #expect(
             HomeDomainAction.shareArticle(articleId: "article-123") !=
-                HomeDomainAction.shareArticle(articleId: "article-456")
+                HomeDomainAction.shareArticle(articleId: "article-456"),
         )
     }
 
@@ -160,7 +160,7 @@ struct HomeDomainActionTests {
     func selectCategorySameCategoryAreEqual() {
         #expect(
             HomeDomainAction.selectCategory(.technology) ==
-                HomeDomainAction.selectCategory(.technology)
+                HomeDomainAction.selectCategory(.technology),
         )
     }
 
@@ -168,7 +168,7 @@ struct HomeDomainActionTests {
     func selectCategoryDifferentCategoriesAreNotEqual() {
         #expect(
             HomeDomainAction.selectCategory(.technology) !=
-                HomeDomainAction.selectCategory(.business)
+                HomeDomainAction.selectCategory(.business),
         )
     }
 
@@ -176,7 +176,7 @@ struct HomeDomainActionTests {
     func selectCategoryNilAndNonNilAreNotEqual() {
         #expect(
             HomeDomainAction.selectCategory(nil) !=
-                HomeDomainAction.selectCategory(.technology)
+                HomeDomainAction.selectCategory(.technology),
         )
     }
 
@@ -184,7 +184,7 @@ struct HomeDomainActionTests {
     func differentActionTypesNotEqual() {
         #expect(
             HomeDomainAction.selectArticle(articleId: "id") !=
-                HomeDomainAction.bookmarkArticle(articleId: "id")
+                HomeDomainAction.bookmarkArticle(articleId: "id"),
         )
     }
 }

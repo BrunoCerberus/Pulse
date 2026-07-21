@@ -29,7 +29,7 @@ struct RootViewTests {
         email: "test@example.com",
         displayName: nil,
         photoURL: nil,
-        provider: .google
+        provider: .google,
     )
 
     @Test("Privacy overlay hidden when App Lock is disabled")
@@ -38,7 +38,7 @@ struct RootViewTests {
             authState: .authenticated(stubUser),
             scenePhase: .background,
             isAppLockEnabled: false,
-            isAuthenticating: false
+            isAuthenticating: false,
         )
         #expect(result == false)
     }
@@ -49,7 +49,7 @@ struct RootViewTests {
             authState: .unauthenticated,
             scenePhase: .background,
             isAppLockEnabled: true,
-            isAuthenticating: false
+            isAuthenticating: false,
         )
         #expect(result == false)
     }
@@ -60,7 +60,7 @@ struct RootViewTests {
             authState: .authenticated(stubUser),
             scenePhase: .active,
             isAppLockEnabled: true,
-            isAuthenticating: false
+            isAuthenticating: false,
         )
         #expect(result == false)
     }
@@ -71,7 +71,7 @@ struct RootViewTests {
             authState: .authenticated(stubUser),
             scenePhase: .inactive,
             isAppLockEnabled: true,
-            isAuthenticating: true
+            isAuthenticating: true,
         )
         #expect(result == false)
     }
@@ -82,7 +82,7 @@ struct RootViewTests {
             authState: .authenticated(stubUser),
             scenePhase: .inactive,
             isAppLockEnabled: true,
-            isAuthenticating: false
+            isAuthenticating: false,
         )
         #expect(result == true)
     }
@@ -93,7 +93,7 @@ struct RootViewTests {
             authState: .authenticated(stubUser),
             scenePhase: .background,
             isAppLockEnabled: true,
-            isAuthenticating: false
+            isAuthenticating: false,
         )
         #expect(result == true)
     }
@@ -104,7 +104,7 @@ struct RootViewTests {
             authState: .loading,
             scenePhase: .background,
             isAppLockEnabled: true,
-            isAuthenticating: false
+            isAuthenticating: false,
         )
         #expect(result == false)
     }

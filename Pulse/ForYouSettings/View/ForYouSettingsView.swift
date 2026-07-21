@@ -39,8 +39,8 @@ struct ForYouSettingsView: View {
                     if !newValue {
                         viewModel.handle(event: .onResetCancelled)
                     }
-                }
-            )
+                },
+            ),
         ) {
             Button(Constants.resetCancelAction, role: .cancel) {
                 viewModel.handle(event: .onResetCancelled)
@@ -113,7 +113,7 @@ struct ForYouSettingsView: View {
         ContentUnavailableView(
             Constants.emptyTitle,
             systemImage: "sparkles",
-            description: Text(Constants.emptyMessage)
+            description: Text(Constants.emptyMessage),
         )
     }
 }

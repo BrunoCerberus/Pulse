@@ -149,7 +149,7 @@ struct ReadingHistoryDomainInteractorExtendedTests {
         let observer = NotificationCenter.default.addObserver(
             forName: .readingHistoryDidClear,
             object: nil,
-            queue: .main
+            queue: .main,
         ) { _ in
             notificationReceived = true
         }

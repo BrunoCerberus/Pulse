@@ -25,13 +25,13 @@ struct ArticleDetailView: View {
     init(
         article: Article,
         serviceLocator: ServiceLocator,
-        onRelatedArticleTapped: ((Article) -> Void)? = nil
+        onRelatedArticleTapped: ((Article) -> Void)? = nil,
     ) {
         self.serviceLocator = serviceLocator
         self.onRelatedArticleTapped = onRelatedArticleTapped
         _viewModel = StateObject(wrappedValue: ArticleDetailViewModel(
             article: article,
-            serviceLocator: serviceLocator
+            serviceLocator: serviceLocator,
         ))
         _paywallViewModel = StateObject(wrappedValue: PaywallViewModel(serviceLocator: serviceLocator))
     }
@@ -110,7 +110,7 @@ struct ArticleDetailView: View {
                     .accessibilityHint(
                         isPremium
                             ? Constants.summarizeHint
-                            : Constants.premiumHint
+                            : Constants.premiumHint,
                     )
 
                     Button("", systemImage: viewModel.viewState.isBookmarked ? "bookmark.fill" : "bookmark") {
@@ -120,7 +120,7 @@ struct ArticleDetailView: View {
                     .accessibilityLabel(
                         viewModel.viewState.isBookmarked
                             ? Constants.removeBookmark
-                            : Constants.addBookmark
+                            : Constants.addBookmark,
                     )
                     .accessibilityHint(Constants.saveHint)
 
@@ -139,7 +139,7 @@ struct ArticleDetailView: View {
                 if !$0 {
                     viewModel.handle(event: .onShareSheetDismissed)
                 }
-            }
+            },
         )) {
             ShareSheet(activityItems: ShareItemsBuilder.activityItems(for: viewModel.viewState.article))
         }
@@ -149,13 +149,13 @@ struct ArticleDetailView: View {
                 if !$0 {
                     viewModel.handle(event: .onSummarizationSheetDismissed)
                 }
-            }
+            },
         )) {
             SummarizationSheet(
                 viewModel: SummarizationViewModel(
                     article: viewModel.viewState.article,
-                    serviceLocator: serviceLocator
-                )
+                    serviceLocator: serviceLocator,
+                ),
             )
         }
         .onAppear {
@@ -176,7 +176,7 @@ struct ArticleDetailView: View {
             onDismiss: {
                 Task { await refreshPremiumStatus() }
             },
-            content: { PaywallView(viewModel: paywallViewModel) }
+            content: { PaywallView(viewModel: paywallViewModel) },
         )
         .onChange(of: viewModel.viewState.isBookmarked) { _, isBookmarked in
             let announcement = isBookmarked
@@ -229,7 +229,7 @@ struct ArticleDetailView: View {
         StretchyHeader(baseHeight: heroBaseHeight) {
             CachedAsyncImage(
                 url: url,
-                accessibilityLabel: viewModel.viewState.article.title
+                accessibilityLabel: viewModel.viewState.article.title,
             ) { image in
                 GeometryReader { geo in
                     // geo.size.height grows past baseHeight while the header is
@@ -321,8 +321,8 @@ struct ArticleDetailView: View {
                 topLeadingRadius: CornerRadius.xl,
                 bottomLeadingRadius: 0,
                 bottomTrailingRadius: 0,
-                topTrailingRadius: CornerRadius.xl
-            )
+                topTrailingRadius: CornerRadius.xl,
+            ),
         )
         .offset(y: -Spacing.lg)
     }
@@ -418,7 +418,7 @@ struct ArticleDetailView: View {
                 {
                     onRelatedArticleTapped?(article)
                 }
-            }
+            },
         )
     }
 
@@ -431,7 +431,7 @@ struct ArticleDetailView: View {
 
             Text(String(
                 format: Constants.contentAttributionFormat,
-                viewModel.viewState.article.source.name
+                viewModel.viewState.article.source.name,
             ))
             .font(Typography.captionSmall)
             .foregroundStyle(.secondary)
@@ -464,7 +464,7 @@ struct ArticleDetailView: View {
     NavigationStack {
         ArticleDetailView(
             article: Article.mockArticles[0],
-            serviceLocator: .preview
+            serviceLocator: .preview,
         )
     }
     .preferredColorScheme(.dark)

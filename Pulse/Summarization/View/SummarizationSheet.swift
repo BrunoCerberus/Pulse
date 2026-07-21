@@ -3,7 +3,6 @@ import SwiftUI
 
 // MARK: - SummarizationSheet
 
-// swiftlint:disable:next type_body_length
 struct SummarizationSheet: View {
     @StateObject var viewModel: SummarizationViewModel
     @Environment(\.accessibilityReduceMotion) private var reduceMotion
@@ -52,7 +51,7 @@ struct SummarizationSheet: View {
             case .completed:
                 isSummaryFocused = true
                 AccessibilityNotification.Announcement(
-                    Constants.summarizationComplete
+                    Constants.summarizationComplete,
                 ).post()
             case .error:
                 isSummaryFocused = true
@@ -97,7 +96,7 @@ struct SummarizationSheet: View {
                 idleContent
                     .transition(.asymmetric(
                         insertion: .opacity.combined(with: .scale(scale: 0.95)),
-                        removal: .opacity.combined(with: .scale(scale: 1.05))
+                        removal: .opacity.combined(with: .scale(scale: 1.05)),
                     ))
             case let .loadingModel(progress):
                 loadingModelContent(progress: progress)
@@ -109,7 +108,7 @@ struct SummarizationSheet: View {
                 completedContent
                     .transition(.asymmetric(
                         insertion: .opacity.combined(with: .scale(scale: 0.9)).combined(with: .move(edge: .bottom)),
-                        removal: .opacity
+                        removal: .opacity,
                     ))
             case let .error(message):
                 errorContent(message: message)
@@ -270,7 +269,7 @@ struct SummarizationSheet: View {
         .padding(Spacing.md)
         .overlay(
             RoundedRectangle(cornerRadius: CornerRadius.lg, style: .continuous)
-                .stroke(Color.Accent.primary.opacity(0.2), lineWidth: 1)
+                .stroke(Color.Accent.primary.opacity(0.2), lineWidth: 1),
         )
         .glassBackground(style: .thin, cornerRadius: CornerRadius.lg)
         .accessibilityFocused($isSummaryFocused)
@@ -363,7 +362,7 @@ private struct GenerateButton: View {
                     if !reduceMotion {
                         ShimmerOverlay()
                     }
-                }
+                },
             )
             .clipShape(RoundedRectangle(cornerRadius: CornerRadius.md, style: .continuous))
             .shadow(color: Color.Accent.primary.opacity(0.3), radius: 8, y: 4)
@@ -386,14 +385,14 @@ private struct ShimmerOverlay: View {
                     .clear,
                 ],
                 startPoint: .leading,
-                endPoint: .trailing
+                endPoint: .trailing,
             )
             .frame(width: geometry.size.width * 0.5)
             .offset(x: -geometry.size.width * 0.5 + phase * geometry.size.width * 1.5)
             .onAppear {
                 withAnimation(
                     .linear(duration: SummarizationSheet.AnimationConstants.shimmerDuration)
-                        .repeatForever(autoreverses: false)
+                        .repeatForever(autoreverses: false),
                 ) {
                     phase = 1
                 }
@@ -415,7 +414,7 @@ private struct TypingIndicator: View {
                     .fill(Color.Accent.primary)
                     .frame(
                         width: SummarizationSheet.AnimationConstants.typingDotSize,
-                        height: SummarizationSheet.AnimationConstants.typingDotSize
+                        height: SummarizationSheet.AnimationConstants.typingDotSize,
                     )
                     .scaleEffect(animatingDot == index ? 1.3 : 0.8)
                     .opacity(animatingDot == index ? 1 : 0.5)
@@ -459,7 +458,7 @@ private struct FormattedSummaryText: View {
                             .fill(Color.Accent.primary)
                             .frame(
                                 width: SummarizationSheet.AnimationConstants.bulletPointSize,
-                                height: SummarizationSheet.AnimationConstants.bulletPointSize
+                                height: SummarizationSheet.AnimationConstants.bulletPointSize,
                             )
                             .padding(.top, SummarizationSheet.AnimationConstants.bulletPointTopPadding)
 
@@ -512,8 +511,8 @@ private struct BlinkingCursor: View {
     SummarizationSheet(
         viewModel: SummarizationViewModel(
             article: Article.mockArticles[0],
-            serviceLocator: .preview
-        )
+            serviceLocator: .preview,
+        ),
     )
     .preferredColorScheme(.dark)
 }

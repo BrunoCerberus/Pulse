@@ -35,12 +35,12 @@ enum AuthError: Error, LocalizedError {
 
     var errorDescription: String? {
         switch self {
-        case .signInCancelled: return "Sign in was cancelled"
-        case .invalidCredential: return "Invalid credentials"
-        case .networkError: return "Network error occurred"
-        case .noCurrentUser: return "No user is currently signed in"
-        case .anonymousSignInThrottled: return "Reviewer sign-in throttled"
-        case let .unknown(message): return message
+        case .signInCancelled: "Sign in was cancelled"
+        case .invalidCredential: "Invalid credentials"
+        case .networkError: "Network error occurred"
+        case .noCurrentUser: "No user is currently signed in"
+        case .anonymousSignInThrottled: "Reviewer sign-in throttled"
+        case let .unknown(message): message
         }
     }
 }

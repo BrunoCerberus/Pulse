@@ -31,19 +31,19 @@ struct GlassTabItem: Identifiable {
         [
             GlassTabItem(
                 id: .home, title: Constants.tabHome,
-                icon: "newspaper", selectedIcon: "newspaper.fill"
+                icon: "newspaper", selectedIcon: "newspaper.fill",
             ),
             GlassTabItem(
                 id: .feed, title: Constants.tabFeed,
-                icon: "text.document", selectedIcon: "text.document.fill"
+                icon: "text.document", selectedIcon: "text.document.fill",
             ),
             GlassTabItem(
                 id: .bookmarks, title: Constants.tabBookmarks,
-                icon: "bookmark", selectedIcon: "bookmark.fill"
+                icon: "bookmark", selectedIcon: "bookmark.fill",
             ),
             GlassTabItem(
                 id: .search, title: Constants.tabSearch,
-                icon: "magnifyingglass", selectedIcon: "magnifyingglass"
+                icon: "magnifyingglass", selectedIcon: "magnifyingglass",
             ),
         ]
     }
@@ -99,7 +99,7 @@ struct GlassTabBar: View {
                             .frame(width: 48, height: 32)
                             .glassEffect(
                                 .regular.tint(Color.Accent.primary).interactive(),
-                                in: .circle
+                                in: .circle,
                             )
                             .glassEffectID("tabIndicator", in: tabAnimation)
                     }

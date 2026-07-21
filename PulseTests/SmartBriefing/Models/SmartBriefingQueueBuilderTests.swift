@@ -12,7 +12,7 @@ struct SmartBriefingQueueBuilderTests {
             pool,
             scope: .unreadSinceLastBriefing,
             lastServedAt: cutoff,
-            servedArticleIDs: []
+            servedArticleIDs: [],
         )
 
         #expect(result.allSatisfy { $0.publishedAt > cutoff })
@@ -28,13 +28,13 @@ struct SmartBriefingQueueBuilderTests {
             pool,
             scope: .unreadSinceLastBriefing,
             lastServedAt: nil,
-            servedArticleIDs: served
+            servedArticleIDs: served,
         )
         let allUnreadResult = SmartBriefingQueueBuilder.filterPool(
             pool,
             scope: .allUnread,
             lastServedAt: nil,
-            servedArticleIDs: served
+            servedArticleIDs: served,
         )
 
         #expect(!unreadResult.contains { served.contains($0.id) })
@@ -50,7 +50,7 @@ struct SmartBriefingQueueBuilderTests {
             pool,
             scope: .allUnread,
             lastServedAt: farFutureCutoff,
-            servedArticleIDs: []
+            servedArticleIDs: [],
         )
 
         #expect(result.count == pool.count)
@@ -64,7 +64,7 @@ struct SmartBriefingQueueBuilderTests {
             pool,
             scope: .unreadSinceLastBriefing,
             lastServedAt: nil,
-            servedArticleIDs: []
+            servedArticleIDs: [],
         )
 
         #expect(result.count == pool.count)

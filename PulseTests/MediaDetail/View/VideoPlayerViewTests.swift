@@ -15,7 +15,7 @@ struct VideoPlayerViewTests {
             ("ftp://example.com/clip.mp4", false),
             ("javascript:alert(1)", false),
             ("data:text/html,<script>alert(1)</script>", false),
-        ]
+        ],
     )
     func gateAllowsOnlyHTTPS(urlString: String, expected: Bool) throws {
         let url = try #require(URL(string: urlString))
@@ -33,7 +33,7 @@ struct VideoPlayerViewTests {
             // Non-HTTPS navigation → cancelled even if host matches
             ("http://cdn.example.com/clip.mp4", "cdn.example.com", false),
             ("file:///etc/passwd", "cdn.example.com", false),
-        ]
+        ],
     )
     func directVideoNavigationIsHostPinned(urlString: String, host: String, expected: Bool) {
         let url = URL(string: urlString)

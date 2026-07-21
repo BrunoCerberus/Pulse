@@ -21,7 +21,7 @@ struct SupabaseSearchResultTests {
             mediaType: nil,
             mediaUrl: nil,
             mediaDuration: nil,
-            mediaMimeType: nil
+            mediaMimeType: nil,
         )
 
         let article = searchResult.toArticle()
@@ -51,7 +51,7 @@ struct SupabaseSearchResultTests {
             mediaType: nil,
             mediaUrl: nil,
             mediaDuration: nil,
-            mediaMimeType: nil
+            mediaMimeType: nil,
         )
 
         let article = searchResult.toArticle()
@@ -79,7 +79,7 @@ struct SupabaseSearchResultTests {
             mediaType: nil,
             mediaUrl: nil,
             mediaDuration: nil,
-            mediaMimeType: nil
+            mediaMimeType: nil,
         )
 
         let article = searchResult.toArticle()
@@ -103,7 +103,7 @@ struct SupabaseSearchResultTests {
             mediaType: nil,
             mediaUrl: nil,
             mediaDuration: nil,
-            mediaMimeType: nil
+            mediaMimeType: nil,
         )
 
         let article = searchResult.toArticle()

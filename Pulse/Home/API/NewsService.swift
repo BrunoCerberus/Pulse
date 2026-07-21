@@ -31,7 +31,7 @@ protocol NewsService {
         category: NewsCategory,
         language: String,
         country: String,
-        page: Int
+        page: Int,
     ) -> AnyPublisher<[Article], Error>
 
     /// Fetches the latest breaking news articles.

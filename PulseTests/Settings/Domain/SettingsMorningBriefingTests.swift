@@ -10,7 +10,7 @@ import Testing
 @MainActor
 private func createMorningBriefingSUT(
     isPremium: Bool = true,
-    notificationStatus: NotificationAuthorizationStatus = .authorized
+    notificationStatus: NotificationAuthorizationStatus = .authorized,
 ) -> (SettingsDomainInteractor, MockSettingsService, MockNotificationService) {
     let mockSettingsService = MockSettingsService()
     let mockNotificationService = MockNotificationService()
@@ -22,7 +22,7 @@ private func createMorningBriefingSUT(
     serviceLocator.register(StoreKitService.self, instance: MockStoreKitService(isPremium: isPremium))
     return (
         SettingsDomainInteractor(serviceLocator: serviceLocator),
-        mockSettingsService, mockNotificationService
+        mockSettingsService, mockNotificationService,
     )
 }
 
@@ -82,7 +82,7 @@ struct SettingsMorningBriefingTests {
         mock.preferences = UserPreferences(
             followedTopics: [], mutedSources: [], mutedKeywords: [],
             preferredLanguage: "en", notificationsEnabled: true, breakingNewsNotifications: true,
-            morningBriefingEnabled: true, morningBriefingHour: 7, morningBriefingMinute: 0
+            morningBriefingEnabled: true, morningBriefingHour: 7, morningBriefingMinute: 0,
         )
         sut.dispatch(action: .loadPreferences)
         try await Task.sleep(nanoseconds: 200_000_000)
@@ -100,7 +100,7 @@ struct SettingsMorningBriefingTests {
         mock.preferences = UserPreferences(
             followedTopics: [], mutedSources: [], mutedKeywords: [],
             preferredLanguage: "en", notificationsEnabled: true, breakingNewsNotifications: true,
-            morningBriefingEnabled: true, morningBriefingHour: 7, morningBriefingMinute: 0
+            morningBriefingEnabled: true, morningBriefingHour: 7, morningBriefingMinute: 0,
         )
         sut.dispatch(action: .loadPreferences)
         try await Task.sleep(nanoseconds: 200_000_000)
@@ -136,7 +136,7 @@ struct SettingsMorningBriefingTests {
             followedTopics: [], mutedSources: [], mutedKeywords: [],
             preferredLanguage: "en", notificationsEnabled: true, breakingNewsNotifications: true,
             morningBriefingEnabled: true, morningBriefingHour: 7, morningBriefingMinute: 0,
-            morningBriefingArticleCount: 10
+            morningBriefingArticleCount: 10,
         )
         sut.dispatch(action: .loadPreferences)
         try await Task.sleep(nanoseconds: 200_000_000)

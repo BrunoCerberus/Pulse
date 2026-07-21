@@ -16,7 +16,7 @@ final class OnboardingViewModel: CombineViewModel, ObservableObject {
     init(
         serviceLocator: ServiceLocator,
         reducer: OnboardingViewStateReducer = OnboardingViewStateReducer(),
-        eventMap: OnboardingEventActionMap = OnboardingEventActionMap()
+        eventMap: OnboardingEventActionMap = OnboardingEventActionMap(),
     ) {
         interactor = OnboardingDomainInteractor(serviceLocator: serviceLocator)
         self.reducer = reducer

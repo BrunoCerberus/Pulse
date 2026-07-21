@@ -27,7 +27,7 @@ struct ArticleDetailViewStateReducer: ViewStateReducing {
             relatedArticles: domainState.relatedArticles.enumerated().map { index, article in
                 ArticleViewItem(from: article, index: index)
             },
-            relatedArticleModels: domainState.relatedArticles
+            relatedArticleModels: domainState.relatedArticles,
         )
     }
 }

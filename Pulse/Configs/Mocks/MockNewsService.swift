@@ -30,7 +30,7 @@ final class MockNewsService: NewsService {
         category: NewsCategory,
         language: String,
         country _: String,
-        page _: Int
+        page _: Int,
     ) -> AnyPublisher<[Article], Error> {
         // Use categoryHeadlinesResult if set, otherwise fall back to topHeadlinesResult
         let result = withLock {
@@ -54,7 +54,7 @@ final class MockNewsService: NewsService {
                         mediaType: article.mediaType,
                         mediaURL: article.mediaURL,
                         mediaDuration: article.mediaDuration,
-                        mediaMimeType: article.mediaMimeType
+                        mediaMimeType: article.mediaMimeType,
                     )
                 }
             }
@@ -113,11 +113,11 @@ final class MockBookmarksService: BookmarksService {
     var shouldFailRemove: Bool = false
     var fetchError: Error = NSError(
         domain: "MockBookmarksService", code: 1,
-        userInfo: [NSLocalizedDescriptionKey: "Fetch failed"]
+        userInfo: [NSLocalizedDescriptionKey: "Fetch failed"],
     )
     var removeError: Error = NSError(
         domain: "MockBookmarksService", code: 2,
-        userInfo: [NSLocalizedDescriptionKey: "Remove failed"]
+        userInfo: [NSLocalizedDescriptionKey: "Remove failed"],
     )
 
     func fetchBookmarks() -> AnyPublisher<[Article], Error> {
@@ -262,7 +262,7 @@ final class MockStorageService: StorageService {
 final class MockSummarizationService: SummarizationService, @unchecked Sendable {
     private nonisolated(unsafe) let modelStatusSubject = CurrentValueSubject<LLMModelStatus, Never>(.notLoaded)
     var generateResult: Result<String, Error> = .success(
-        "This is a mock AI-generated summary of the article providing key insights and main points."
+        "This is a mock AI-generated summary of the article providing key insights and main points.",
     )
     var loadDelay: TimeInterval = 0.1
     var generateDelay: TimeInterval = 0.1
@@ -319,7 +319,7 @@ final class MockSummarizationService: SummarizationService, @unchecked Sendable 
 final class MockLLMService: LLMService, @unchecked Sendable {
     var modelStatus: LLMModelStatus = .notLoaded
     var generateResult: Result<String, Error> = .success(
-        "Mock AI digest content with enough words to trigger progress updates during generation."
+        "Mock AI digest content with enough words to trigger progress updates during generation.",
     )
     var loadDelay: TimeInterval = 0.1
     var generateDelay: TimeInterval = 0.1
@@ -371,7 +371,7 @@ final class MockLLMService: LLMService, @unchecked Sendable {
     func generate(
         prompt _: String,
         systemPrompt _: String?,
-        config _: LLMInferenceConfig
+        config _: LLMInferenceConfig,
     ) -> AnyPublisher<String, Error> {
         Just(())
             .delay(for: .seconds(generateDelay), scheduler: DispatchQueue.main)
@@ -384,7 +384,7 @@ final class MockLLMService: LLMService, @unchecked Sendable {
     func generateStream(
         prompt _: String,
         systemPrompt _: String?,
-        config _: LLMInferenceConfig
+        config _: LLMInferenceConfig,
     ) -> AsyncThrowingStream<String, Error> {
         let generateDelay = generateDelay
         let generateResult = generateResult
@@ -426,7 +426,7 @@ final class MockNewsCacheStore: NewsCacheStore {
         return storage[key.stringKey] as? CacheEntry<T>
     }
 
-    func set<T>(_ entry: CacheEntry<T>, for key: NewsCacheKey) {
+    func set(_ entry: CacheEntry<some Any>, for key: NewsCacheKey) {
         setCallCount += 1
         storage[key.stringKey] = entry
     }
@@ -554,7 +554,7 @@ extension Article {
                 url: "https://example.com/1",
                 imageURL: "https://picsum.photos/400/300",
                 publishedAt: mockReferenceDate,
-                category: .technology
+                category: .technology,
             ),
             Article(
                 id: "2",
@@ -566,7 +566,7 @@ extension Article {
                 url: "https://example.com/2",
                 imageURL: "https://picsum.photos/400/301",
                 publishedAt: mockReferenceDate.addingTimeInterval(-3600),
-                category: .business
+                category: .business,
             ),
             Article(
                 id: "3",
@@ -578,7 +578,7 @@ extension Article {
                 url: "https://example.com/3",
                 imageURL: "https://picsum.photos/400/302",
                 publishedAt: mockReferenceDate.addingTimeInterval(-7200),
-                category: .health
+                category: .health,
             ),
             Article(
                 id: "4",
@@ -590,7 +590,7 @@ extension Article {
                 url: "https://example.com/4",
                 imageURL: "https://picsum.photos/400/303",
                 publishedAt: mockReferenceDate.addingTimeInterval(-10800),
-                category: .sports
+                category: .sports,
             ),
             Article(
                 id: "5",
@@ -602,7 +602,7 @@ extension Article {
                 url: "https://example.com/5",
                 imageURL: "https://picsum.photos/400/304",
                 publishedAt: mockReferenceDate.addingTimeInterval(-14400),
-                category: .science
+                category: .science,
             ),
         ]
     }

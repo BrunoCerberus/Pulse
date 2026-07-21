@@ -10,7 +10,7 @@ struct SupabaseArticleMappingTests {
     func contentAndSummaryMappedCorrectly() {
         let article = createSupabaseArticle(
             summary: "Short summary for preview",
-            content: "Full article content with lots of details..."
+            content: "Full article content with lots of details...",
         )
 
         let mapped = article.toArticle()
@@ -23,7 +23,7 @@ struct SupabaseArticleMappingTests {
     func onlySummaryUsedAsContent() {
         let article = createSupabaseArticle(
             summary: "This is the only text from RSS feed",
-            content: nil
+            content: nil,
         )
 
         let mapped = article.toArticle()
@@ -36,7 +36,7 @@ struct SupabaseArticleMappingTests {
     func emptyContentUsesSummary() {
         let article = createSupabaseArticle(
             summary: "Summary text here",
-            content: ""
+            content: "",
         )
 
         let mapped = article.toArticle()
@@ -49,7 +49,7 @@ struct SupabaseArticleMappingTests {
     func noContentOrSummary() {
         let article = createSupabaseArticle(
             summary: nil,
-            content: nil
+            content: nil,
         )
 
         let mapped = article.toArticle()
@@ -61,7 +61,7 @@ struct SupabaseArticleMappingTests {
     @Test("Image URL maps correctly")
     func imageURLMapsCorrectly() {
         let article = createSupabaseArticle(
-            imageUrl: "https://example.com/full.jpg"
+            imageUrl: "https://example.com/full.jpg",
         )
 
         let mapped = article.toArticle()
@@ -73,7 +73,7 @@ struct SupabaseArticleMappingTests {
     @Test("Nil image URL results in nil values")
     func nilImageURLResultsInNilValues() {
         let article = createSupabaseArticle(
-            imageUrl: nil
+            imageUrl: nil,
         )
 
         let mapped = article.toArticle()
@@ -85,7 +85,7 @@ struct SupabaseArticleMappingTests {
     @Test("Parses ISO8601 date with fractional seconds")
     func parsesDateWithFractionalSeconds() throws {
         let article = createSupabaseArticle(
-            publishedAt: "2024-01-15T10:30:00.000Z"
+            publishedAt: "2024-01-15T10:30:00.000Z",
         )
 
         let mapped = article.toArticle()
@@ -104,7 +104,7 @@ struct SupabaseArticleMappingTests {
     @Test("Parses ISO8601 date without fractional seconds")
     func parsesDateWithoutFractionalSeconds() throws {
         let article = createSupabaseArticle(
-            publishedAt: "2024-06-20T14:45:00Z"
+            publishedAt: "2024-06-20T14:45:00Z",
         )
 
         let mapped = article.toArticle()
@@ -122,7 +122,7 @@ struct SupabaseArticleMappingTests {
     func sourceMapsCorrectly() {
         let article = createSupabaseArticle(
             sourceName: "TechCrunch",
-            sourceSlug: "techcrunch"
+            sourceSlug: "techcrunch",
         )
 
         let mapped = article.toArticle()
@@ -135,7 +135,7 @@ struct SupabaseArticleMappingTests {
     func missingSourceUsesUnknown() {
         let article = createSupabaseArticle(
             sourceName: nil,
-            sourceSlug: nil
+            sourceSlug: nil,
         )
 
         let mapped = article.toArticle()
@@ -146,7 +146,7 @@ struct SupabaseArticleMappingTests {
     @Test("Category maps to NewsCategory when slug matches")
     func categoryMapsWhenSlugMatches() {
         let article = createSupabaseArticle(
-            categorySlug: "technology"
+            categorySlug: "technology",
         )
 
         let mapped = article.toArticle()
@@ -157,7 +157,7 @@ struct SupabaseArticleMappingTests {
     @Test("Category is nil when slug does not match NewsCategory")
     func categoryNilWhenNoMatch() {
         let article = createSupabaseArticle(
-            categorySlug: "random-category"
+            categorySlug: "random-category",
         )
 
         let mapped = article.toArticle()
@@ -168,7 +168,7 @@ struct SupabaseArticleMappingTests {
     @Test("Category is nil when slug is nil")
     func categoryNilWhenSlugNil() {
         let article = createSupabaseArticle(
-            categorySlug: nil
+            categorySlug: nil,
         )
 
         let mapped = article.toArticle()
@@ -191,7 +191,7 @@ struct SupabaseArticleMappingTests {
         mediaType: String? = nil,
         mediaUrl: String? = nil,
         mediaDuration: Int? = nil,
-        mediaMimeType: String? = nil
+        mediaMimeType: String? = nil,
     ) -> SupabaseArticle {
         SupabaseArticle(
             id: id,
@@ -208,7 +208,7 @@ struct SupabaseArticleMappingTests {
             mediaType: mediaType,
             mediaUrl: mediaUrl,
             mediaDuration: mediaDuration,
-            mediaMimeType: mediaMimeType
+            mediaMimeType: mediaMimeType,
         )
     }
 }

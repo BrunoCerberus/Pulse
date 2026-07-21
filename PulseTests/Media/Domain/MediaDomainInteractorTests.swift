@@ -83,7 +83,7 @@ struct MediaDomainInteractorTests {
             mutedKeywords: [],
             preferredLanguage: "es",
             notificationsEnabled: true,
-            breakingNewsNotifications: true
+            breakingNewsNotifications: true,
         )
         mockSettingsService.preferences = preferences
         mockMediaService.fetchedMediaLanguages = []
@@ -259,7 +259,7 @@ struct MediaDomainInteractorTests {
         sut.dispatch(action: .loadInitialData)
 
         let loaded = await waitForCondition(timeout: 500_000_000) { @MainActor in
-            let state = self.sut.currentState
+            let state = sut.currentState
             guard state.hasLoadedInitialData else { return false }
             if !state.mediaItems.isEmpty {
                 return true

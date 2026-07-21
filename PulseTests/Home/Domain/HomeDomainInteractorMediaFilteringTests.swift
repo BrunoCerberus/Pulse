@@ -13,14 +13,14 @@ extension HomeDomainInteractorTests {
             source: ArticleSource(id: "test", name: "Test"),
             url: "https://example.com",
             publishedAt: Date(),
-            mediaType: .video
+            mediaType: .video,
         )
         let regularArticle = Article(
             id: "article-1",
             title: "Test Article",
             source: ArticleSource(id: "test", name: "Test"),
             url: "https://example.com",
-            publishedAt: Date()
+            publishedAt: Date(),
         )
 
         mockNewsService.topHeadlinesResult = .success([videoArticle, regularArticle])
@@ -43,14 +43,14 @@ extension HomeDomainInteractorTests {
             source: ArticleSource(id: "test", name: "Test"),
             url: "https://example.com",
             publishedAt: Date(),
-            mediaType: .podcast
+            mediaType: .podcast,
         )
         let regularArticle = Article(
             id: "article-1",
             title: "Test Article",
             source: ArticleSource(id: "test", name: "Test"),
             url: "https://example.com",
-            publishedAt: Date()
+            publishedAt: Date(),
         )
 
         mockNewsService.breakingNewsResult = .success([podcastArticle, regularArticle])
@@ -75,7 +75,7 @@ extension HomeDomainInteractorTests {
                 title: "Initial Article \(index)",
                 source: ArticleSource(id: "test", name: "Test"),
                 url: "https://example.com",
-                publishedAt: Date()
+                publishedAt: Date(),
             ))
         }
         mockNewsService.topHeadlinesResult = .success(initialArticles)
@@ -92,14 +92,14 @@ extension HomeDomainInteractorTests {
             source: ArticleSource(id: "test", name: "Test"),
             url: "https://example.com",
             publishedAt: Date(),
-            mediaType: .video
+            mediaType: .video,
         )
         let newArticle = Article(
             id: "article-new",
             title: "New Article",
             source: ArticleSource(id: "test", name: "Test"),
             url: "https://example.com",
-            publishedAt: Date()
+            publishedAt: Date(),
         )
         mockNewsService.topHeadlinesResult = .success([videoArticle, newArticle])
 
@@ -120,7 +120,7 @@ extension HomeDomainInteractorTests {
             url: "https://example.com",
             publishedAt: Date(),
             category: .technology,
-            mediaType: .video
+            mediaType: .video,
         )
         let regularArticle = Article(
             id: "article-1",
@@ -128,7 +128,7 @@ extension HomeDomainInteractorTests {
             source: ArticleSource(id: "test", name: "Test"),
             url: "https://example.com",
             publishedAt: Date(),
-            category: .technology
+            category: .technology,
         )
 
         mockNewsService.categoryHeadlinesResult = .success([videoArticle, regularArticle])

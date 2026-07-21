@@ -15,7 +15,7 @@ struct UserPreferencesModelConversionTests {
             mutedKeywords: [],
             preferredLanguage: "en",
             notificationsEnabled: true,
-            breakingNewsNotifications: true
+            breakingNewsNotifications: true,
         )
         let sut = UserPreferencesModel(from: preferences)
 
@@ -33,7 +33,7 @@ struct UserPreferencesModelConversionTests {
             mutedKeywords: [],
             preferredLanguage: "en",
             notificationsEnabled: true,
-            breakingNewsNotifications: true
+            breakingNewsNotifications: true,
         )
         let sut = UserPreferencesModel(from: preferences)
 
@@ -51,7 +51,7 @@ struct UserPreferencesModelConversionTests {
             mutedKeywords: ["keyword1", "keyword2"],
             preferredLanguage: "en",
             notificationsEnabled: true,
-            breakingNewsNotifications: true
+            breakingNewsNotifications: true,
         )
         let sut = UserPreferencesModel(from: preferences)
 
@@ -69,7 +69,7 @@ struct UserPreferencesModelConversionTests {
             mutedKeywords: [],
             preferredLanguage: "fr",
             notificationsEnabled: true,
-            breakingNewsNotifications: true
+            breakingNewsNotifications: true,
         )
         let sut = UserPreferencesModel(from: preferences)
 
@@ -87,7 +87,7 @@ struct UserPreferencesModelConversionTests {
             mutedKeywords: [],
             preferredLanguage: "en",
             notificationsEnabled: false,
-            breakingNewsNotifications: true
+            breakingNewsNotifications: true,
         )
         let sut = UserPreferencesModel(from: preferences)
 
@@ -105,7 +105,7 @@ struct UserPreferencesModelConversionTests {
             mutedKeywords: [],
             preferredLanguage: "en",
             notificationsEnabled: true,
-            breakingNewsNotifications: false
+            breakingNewsNotifications: false,
         )
         let sut = UserPreferencesModel(from: preferences)
 
@@ -124,7 +124,7 @@ struct UserPreferencesModelConversionTests {
             mutedKeywords: ["clickbait", "sponsored"],
             preferredLanguage: "es",
             notificationsEnabled: false,
-            breakingNewsNotifications: true
+            breakingNewsNotifications: true,
         )
 
         let model = UserPreferencesModel(from: original)
@@ -149,7 +149,7 @@ struct UserPreferencesModelConversionTests {
             mutedKeywords: [],
             preferredLanguage: "en",
             notificationsEnabled: true,
-            breakingNewsNotifications: true
+            breakingNewsNotifications: true,
         )
         let model = UserPreferencesModel(from: preferences)
 

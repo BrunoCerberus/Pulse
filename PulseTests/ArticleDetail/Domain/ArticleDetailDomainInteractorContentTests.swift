@@ -18,7 +18,7 @@ extension ArticleDetailDomainInteractorTests {
             url: "https://example.com",
             imageURL: nil,
             publishedAt: Date(),
-            category: .world
+            category: .world,
         )
         let sut = createSUT(article: articleWithContent)
 
@@ -42,7 +42,7 @@ extension ArticleDetailDomainInteractorTests {
             url: "https://example.com",
             imageURL: nil,
             publishedAt: Date(),
-            category: .world
+            category: .world,
         )
         let sut = createSUT(article: articleWithoutContent)
 
@@ -77,7 +77,7 @@ extension ArticleDetailDomainInteractorTests {
 
         sut.dispatch(action: .contentProcessingCompleted(
             content: testContent,
-            description: testDescription
+            description: testDescription,
         ))
 
         #expect(sut.currentState.isProcessingContent == false)
@@ -104,7 +104,7 @@ extension ArticleDetailDomainInteractorTests {
             url: "https://example.com",
             imageURL: nil,
             publishedAt: Date(),
-            category: .world
+            category: .world,
         )
         let sut = createSUT(article: articleWithErrorContent)
 
@@ -133,7 +133,7 @@ extension ArticleDetailDomainInteractorTests {
             url: "https://example.com",
             imageURL: nil,
             publishedAt: Date(),
-            category: .world
+            category: .world,
         )
         let sut = createSUT(article: articleWithRealContent)
 
@@ -162,7 +162,7 @@ extension ArticleDetailDomainInteractorTests {
             url: "https://example.com",
             imageURL: nil,
             publishedAt: Date(),
-            category: .world
+            category: .world,
         )
         let sut = createSUT(article: articleWithMixedContent)
 

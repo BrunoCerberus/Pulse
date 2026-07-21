@@ -29,7 +29,7 @@ struct QuickActionHandlerTests {
             (QuickActionType.dailyDigest, Deeplink.feed),
             (QuickActionType.bookmarks, Deeplink.bookmarks),
             (QuickActionType.breakingNews, Deeplink.home),
-        ]
+        ],
     )
     func routesToExpectedDeeplink(type: QuickActionType, expected: Deeplink) {
         defer { resetSingleton() }
@@ -82,7 +82,7 @@ struct QuickActionHandlerTests {
 
         let unknown = UIApplicationShortcutItem(
             type: "not.a.real.quick.action",
-            localizedTitle: "Nope"
+            localizedTitle: "Nope",
         )
         let handled = sut.handle(shortcutItem: unknown)
 

@@ -70,7 +70,7 @@ final class AppLockManager: ObservableObject {
 
         do {
             let success = try await boxedService.value.authenticate(
-                reason: AppLocalization.localized("applock.auth_reason")
+                reason: AppLocalization.localized("applock.auth_reason"),
             )
             if success {
                 isLocked = false
@@ -99,7 +99,7 @@ final class AppLockManager: ObservableObject {
 
         do {
             let success = try await boxedService.value.authenticate(
-                reason: AppLocalization.localized("applock.enable_reason")
+                reason: AppLocalization.localized("applock.enable_reason"),
             )
             if success {
                 service.isEnabled = true
@@ -143,7 +143,7 @@ final class AppLockManager: ObservableObject {
 
             do {
                 let success = try await boxedService.value.authenticate(
-                    reason: AppLocalization.localized("applock.enable_reason")
+                    reason: AppLocalization.localized("applock.enable_reason"),
                 )
                 if success {
                     service.isEnabled = true

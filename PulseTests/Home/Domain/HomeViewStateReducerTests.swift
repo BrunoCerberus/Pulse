@@ -25,7 +25,7 @@ struct HomeViewStateReducerTests {
         isEditingTopics: Bool = false,
         isOfflineError: Bool = false,
         readArticleIDs: Set<String> = [],
-        recentlyRead: [Article] = []
+        recentlyRead: [Article] = [],
     ) -> HomeDomainState {
         HomeDomainState(
             breakingNews: breakingNews,
@@ -45,7 +45,7 @@ struct HomeViewStateReducerTests {
             isEditingTopics: isEditingTopics,
             isOfflineError: isOfflineError,
             readArticleIDs: readArticleIDs,
-            recentlyRead: recentlyRead
+            recentlyRead: recentlyRead,
         )
     }
 
@@ -55,7 +55,7 @@ struct HomeViewStateReducerTests {
     func reduceTransformsArticlesToViewItems() {
         let domainState = makeDomainState(
             breakingNews: Article.mockArticles,
-            headlines: Article.mockArticles
+            headlines: Article.mockArticles,
         )
 
         let viewState = sut.reduce(domainState: domainState)
@@ -149,7 +149,7 @@ struct HomeViewStateReducerTests {
     func selectedCategoryPassedThrough() {
         let stateWithCategory = makeDomainState(
             selectedCategory: .technology,
-            followedTopics: [.technology, .science]
+            followedTopics: [.technology, .science],
         )
         let viewState = sut.reduce(domainState: stateWithCategory)
 
@@ -160,7 +160,7 @@ struct HomeViewStateReducerTests {
     func selectedCategoryNilRepresentsAllTab() {
         let stateAllTab = makeDomainState(
             selectedCategory: nil,
-            followedTopics: [.technology, .science]
+            followedTopics: [.technology, .science],
         )
         let viewState = sut.reduce(domainState: stateAllTab)
 
@@ -195,7 +195,7 @@ struct HomeViewStateReducerTests {
         let readIDs: Set<String> = [articles[0].id]
         let state = makeDomainState(
             headlines: articles,
-            readArticleIDs: readIDs
+            readArticleIDs: readIDs,
         )
         let viewState = sut.reduce(domainState: state)
 
@@ -207,7 +207,7 @@ struct HomeViewStateReducerTests {
     func isReadFlagDefaultsFalse() {
         let state = makeDomainState(
             headlines: Article.mockArticles,
-            readArticleIDs: []
+            readArticleIDs: [],
         )
         let viewState = sut.reduce(domainState: state)
 

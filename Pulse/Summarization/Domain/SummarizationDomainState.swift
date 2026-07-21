@@ -53,7 +53,7 @@ struct SummarizationDomainState: Equatable {
             article: article,
             summarizationState: .idle,
             generatedSummary: "",
-            modelStatus: .notLoaded
+            modelStatus: .notLoaded,
         )
     }
 }

@@ -40,14 +40,14 @@ enum FeedArticlePoolBuilder {
                                     },
                                     receiveValue: { articles in
                                         continuation.resume(returning: articles)
-                                    }
+                                    },
                                 )
                         }
                         return Array(articles.prefix(10))
                     } catch {
                         Logger.shared.warning(
                             "Failed to fetch \(category.displayName): \(error)",
-                            category: "FeedArticlePoolBuilder"
+                            category: "FeedArticlePoolBuilder",
                         )
                         return []
                     }

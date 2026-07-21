@@ -13,7 +13,7 @@ struct LLMInferenceConfig: Equatable {
             maxTokens: 1024,
             temperature: 0.7,
             topP: 0.9,
-            stopSequences: ["</digest>", "\n\n\n"]
+            stopSequences: ["</digest>", "\n\n\n"],
         )
     }
 }
@@ -45,23 +45,23 @@ enum LLMError: Error, LocalizedError, Equatable {
     var errorDescription: String? {
         switch self {
         case .modelNotLoaded:
-            return AppLocalization.localized("llm.error.model_not_loaded")
+            AppLocalization.localized("llm.error.model_not_loaded")
         case let .modelLoadFailed(reason):
-            return AppLocalization.localized("llm.error.model_load_failed") + " " + reason
+            AppLocalization.localized("llm.error.model_load_failed") + " " + reason
         case .inferenceTimeout:
-            return AppLocalization.localized("llm.error.inference_timeout")
+            AppLocalization.localized("llm.error.inference_timeout")
         case .memoryPressure:
-            return AppLocalization.localized("llm.error.memory_pressure")
+            AppLocalization.localized("llm.error.memory_pressure")
         case .generationCancelled:
-            return AppLocalization.localized("llm.error.generation_cancelled")
+            AppLocalization.localized("llm.error.generation_cancelled")
         case .serviceUnavailable:
-            return AppLocalization.localized("llm.error.service_unavailable")
+            AppLocalization.localized("llm.error.service_unavailable")
         case .tokenizationFailed:
-            return AppLocalization.localized("llm.error.tokenization_failed")
+            AppLocalization.localized("llm.error.tokenization_failed")
         case let .generationFailed(reason):
-            return AppLocalization.localized("llm.error.generation_failed") + " " + reason
+            AppLocalization.localized("llm.error.generation_failed") + " " + reason
         case .busy:
-            return AppLocalization.localized("llm.error.busy")
+            AppLocalization.localized("llm.error.busy")
         }
     }
 
@@ -72,9 +72,9 @@ enum LLMError: Error, LocalizedError, Equatable {
     var isTransient: Bool {
         switch self {
         case .memoryPressure, .busy:
-            return true
+            true
         default:
-            return false
+            false
         }
     }
 }
@@ -97,14 +97,14 @@ protocol LLMService {
     func generate(
         prompt: String,
         systemPrompt: String?,
-        config: LLMInferenceConfig
+        config: LLMInferenceConfig,
     ) -> AnyPublisher<String, Error>
 
     /// Stream generation token by token
     func generateStream(
         prompt: String,
         systemPrompt: String?,
-        config: LLMInferenceConfig
+        config: LLMInferenceConfig,
     ) -> AsyncThrowingStream<String, Error>
 
     /// Cancel ongoing generation

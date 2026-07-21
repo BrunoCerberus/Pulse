@@ -24,7 +24,7 @@ extension FirebaseAuth.User {
             email: email,
             displayName: displayName,
             photoURL: photoURL,
-            provider: provider
+            provider: provider,
         )
     }
 }

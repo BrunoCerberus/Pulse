@@ -22,13 +22,13 @@ struct StatsCard: View {
                 statRow(
                     value: animatedArticleCount,
                     label: Constants.articlesLabel,
-                    icon: "doc.text"
+                    icon: "doc.text",
                 )
 
                 statRow(
                     value: animatedTopicsCount,
                     label: Constants.topicsLabel,
-                    icon: "tag"
+                    icon: "tag",
                 )
 
                 HStack(spacing: Spacing.xs) {
@@ -115,7 +115,7 @@ struct StatsCard: View {
             from: 0,
             to: articleCount,
             duration: 0.6,
-            update: { animatedArticleCount = $0 }
+            update: { animatedArticleCount = $0 },
         )
 
         // Animate topics count (runs after article count completes)
@@ -123,7 +123,7 @@ struct StatsCard: View {
             from: 0,
             to: topicsCount,
             duration: 0.5,
-            update: { animatedTopicsCount = $0 }
+            update: { animatedTopicsCount = $0 },
         )
     }
 
@@ -132,7 +132,7 @@ struct StatsCard: View {
         from start: Int,
         to end: Int,
         duration: Double,
-        update: (Int) -> Void
+        update: (Int) -> Void,
     ) async {
         let steps = min(end - start, 20)
         guard steps > 0 else {

@@ -240,7 +240,7 @@ struct BookmarksDomainInteractorTests {
             url: "https://example.com",
             imageURL: nil,
             publishedAt: Date(),
-            category: nil
+            category: nil,
         )
 
         let initialCount = sut.currentState.bookmarks.count

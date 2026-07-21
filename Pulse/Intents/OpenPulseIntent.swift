@@ -8,7 +8,7 @@ import Foundation
 struct OpenPulseIntent: AppIntent {
     static let title: LocalizedStringResource = "Open Pulse"
     static let description = IntentDescription(
-        "Opens the Pulse app on the Home tab so you can browse the latest news."
+        "Opens the Pulse app on the Home tab so you can browse the latest news.",
     )
 
     static let openAppWhenRun: Bool = true

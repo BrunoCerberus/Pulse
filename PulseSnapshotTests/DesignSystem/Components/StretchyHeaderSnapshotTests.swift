@@ -15,7 +15,7 @@ final class StretchyHeaderSnapshotTests: XCTestCase {
                     LinearGradient(
                         colors: [.blue, .purple],
                         startPoint: .topLeading,
-                        endPoint: .bottomTrailing
+                        endPoint: .bottomTrailing,
                     )
                 }
 
@@ -34,7 +34,7 @@ final class StretchyHeaderSnapshotTests: XCTestCase {
         assertSnapshot(
             of: controller,
             as: SnapshotConfig.snapshotting(on: SnapshotConfig.iPhoneAir),
-            record: false
+            record: false,
         )
     }
 
@@ -43,7 +43,7 @@ final class StretchyHeaderSnapshotTests: XCTestCase {
             VStack(spacing: 0) {
                 StretchyHeader(
                     baseHeight: 200,
-                    showGradientOverlay: false
+                    showGradientOverlay: false,
                 ) {
                     Color.orange
                 }
@@ -61,7 +61,7 @@ final class StretchyHeaderSnapshotTests: XCTestCase {
         assertSnapshot(
             of: controller,
             as: SnapshotConfig.snapshotting(on: SnapshotConfig.iPhoneAir),
-            record: false
+            record: false,
         )
     }
 
@@ -70,12 +70,12 @@ final class StretchyHeaderSnapshotTests: XCTestCase {
             VStack(spacing: 0) {
                 StretchyHeader(
                     baseHeight: 150,
-                    gradientHeight: 60
+                    gradientHeight: 60,
                 ) {
                     LinearGradient(
                         colors: [.green, .teal],
                         startPoint: .top,
-                        endPoint: .bottom
+                        endPoint: .bottom,
                     )
                 }
 
@@ -92,7 +92,7 @@ final class StretchyHeaderSnapshotTests: XCTestCase {
         assertSnapshot(
             of: controller,
             as: SnapshotConfig.snapshotting(on: SnapshotConfig.iPhoneAir),
-            record: false
+            record: false,
         )
     }
 
@@ -104,7 +104,7 @@ final class StretchyHeaderSnapshotTests: XCTestCase {
             VStack(spacing: 0) {
                 StretchyAsyncImage(
                     url: nil,
-                    baseHeight: 280
+                    baseHeight: 280,
                 )
 
                 Text("Article Content")
@@ -122,7 +122,7 @@ final class StretchyHeaderSnapshotTests: XCTestCase {
         assertSnapshot(
             of: controller,
             as: SnapshotConfig.snapshotting(on: SnapshotConfig.iPhoneAir),
-            record: false
+            record: false,
         )
     }
 }

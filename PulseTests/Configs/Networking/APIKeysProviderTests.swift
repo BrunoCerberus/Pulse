@@ -10,7 +10,7 @@ struct APIKeysProviderTests {
     /// Creates a fresh mock remote config for testing
     private func createMockRemoteConfig(
         newsKey: String? = nil,
-        gnewsKey: String? = nil
+        gnewsKey: String? = nil,
     ) -> MockRemoteConfigService {
         let mock = MockRemoteConfigService()
         mock.newsAPIKeyValue = newsKey

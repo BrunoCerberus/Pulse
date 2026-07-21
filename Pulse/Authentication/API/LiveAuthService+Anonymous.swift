@@ -24,7 +24,7 @@ extension LiveAuthService {
     static func isAnonymousSignInThrottled(
         now: TimeInterval = Date().timeIntervalSince1970,
         defaults: UserDefaults = .standard,
-        throttleSeconds: TimeInterval = anonymousSignInThrottleSeconds
+        throttleSeconds: TimeInterval = anonymousSignInThrottleSeconds,
     ) -> Bool {
         let lastAttempt = defaults.double(forKey: anonymousSignInLastAttemptKey)
         guard lastAttempt > 0 else { return false }
@@ -36,7 +36,7 @@ extension LiveAuthService {
     /// `throttleSeconds` seconds.
     static func recordAnonymousSignInAttempt(
         at now: TimeInterval = Date().timeIntervalSince1970,
-        defaults: UserDefaults = .standard
+        defaults: UserDefaults = .standard,
     ) {
         defaults.set(now, forKey: anonymousSignInLastAttemptKey)
     }

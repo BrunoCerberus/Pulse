@@ -66,7 +66,7 @@ struct PaywallDomainStateTests {
         let copy = original.copy(
             isPremium: true,
             isPurchasing: true,
-            error: "Test error"
+            error: "Test error",
         )
 
         #expect(copy.isPremium == true)

@@ -17,8 +17,8 @@ final class BentoDigestGridAccessibilitySnapshotTests: XCTestCase {
                     + "**Business** Markets rally on strong earnings. "
                     + "**Health** New study on sleep quality.",
                 sourceArticles: Article.mockArticles,
-                generatedAt: Date(timeIntervalSince1970: 1_672_531_200)
-            )
+                generatedAt: Date(timeIntervalSince1970: 1_672_531_200),
+            ),
         )
     }
 
@@ -31,7 +31,7 @@ final class BentoDigestGridAccessibilitySnapshotTests: XCTestCase {
             BentoDigestGrid(
                 digest: snapshotDigest,
                 sourceArticles: snapshotSourceArticles,
-                onArticleTapped: { _ in }
+                onArticleTapped: { _ in },
             )
         }
         .frame(width: 375)
@@ -43,7 +43,7 @@ final class BentoDigestGridAccessibilitySnapshotTests: XCTestCase {
         assertSnapshot(
             of: controller,
             as: SnapshotConfig.snapshotting(on: SnapshotConfig.iPhoneAirAccessibility),
-            record: false
+            record: false,
         )
     }
 
@@ -52,7 +52,7 @@ final class BentoDigestGridAccessibilitySnapshotTests: XCTestCase {
             BentoDigestGrid(
                 digest: snapshotDigest,
                 sourceArticles: snapshotSourceArticles,
-                onArticleTapped: { _ in }
+                onArticleTapped: { _ in },
             )
         }
         .frame(width: 375)
@@ -64,7 +64,7 @@ final class BentoDigestGridAccessibilitySnapshotTests: XCTestCase {
         assertSnapshot(
             of: controller,
             as: SnapshotConfig.snapshotting(on: SnapshotConfig.iPhoneAirExtraExtraLarge),
-            record: false
+            record: false,
         )
     }
 }
