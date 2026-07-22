@@ -58,10 +58,14 @@ struct VideoPlayerView: UIViewRepresentable {
         // Check if it's a YouTube video
         if let videoID = extractYouTubeVideoID(from: url.absoluteString) {
             // Trusted in-app embed HTML, constrained by a strict CSP to YouTube
-            // origins. JavaScript stays on for the IFrame Player API.
+            // origins. JavaScript stays on for the IFrame Player API. The wrapper
+            // document uses a neutral origin (baseURL: nil) so it is cross-origin
+            // with respect to the YouTube iframe; this prevents the classic
+            // allow-same-origin sandbox-escape where a same-origin framed script
+            // could reach window.parent and manipulate the wrapper document.
             context.coordinator.loadMode = .youTube
             let html = createYouTubeEmbedHTML(videoID: videoID)
-            webView.loadHTMLString(html, baseURL: URL(string: "https://www.youtube.com"))
+            webView.loadHTMLString(html, baseURL: nil)
         } else if Self.isSafeInlineVideoURL(url) {
             // Non-YouTube direct video: load only over HTTPS. `url` originates from
             // `article.mediaURL` (untrusted third-party RSS), so the coordinator
@@ -90,8 +94,8 @@ struct VideoPlayerView: UIViewRepresentable {
     private func createYouTubeEmbedHTML(videoID: String) -> String {
         let src = "https://www.youtube.com/embed/\(videoID)?playsinline=1" +
             "&enablejsapi=1&rel=0&modestbranding=1&fs=1"
-        let allow = "accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; " +
-            "picture-in-picture; web-share"
+        // `clipboard-write` removed: YouTube playback does not require clipboard access.
+        let allow = "accelerometer; autoplay; encrypted-media; gyroscope; picture-in-picture; web-share"
 
         let ytDomains = "https://www.youtube.com https://www.youtube-nocookie.com"
         let scriptDomains = "\(ytDomains) https://www.google.com"
@@ -128,6 +132,7 @@ struct VideoPlayerView: UIViewRepresentable {
                 <iframe
                     src="\(src)"
                     allow="\(allow)"
+                    sandbox="allow-scripts allow-same-origin"
                     allowfullscreen
                     referrerpolicy="strict-origin-when-cross-origin">
                 </iframe>
