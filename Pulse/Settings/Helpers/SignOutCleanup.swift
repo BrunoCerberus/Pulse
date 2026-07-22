@@ -42,6 +42,9 @@ enum SignOutCleanup {
                 let className = switch keychainClass {
                 case kSecClassGenericPassword: "genericPassword"
                 case kSecClassInternetPassword: "internetPassword"
+                case kSecClassCertificate: "certificate"
+                case kSecClassIdentity: "identity"
+                case kSecClassKey: "key"
                 default: "(unknown)"
                 }
                 Logger.shared.service(
