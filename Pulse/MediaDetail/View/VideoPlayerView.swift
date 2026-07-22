@@ -90,8 +90,8 @@ struct VideoPlayerView: UIViewRepresentable {
     private func createYouTubeEmbedHTML(videoID: String) -> String {
         let src = "https://www.youtube.com/embed/\(videoID)?playsinline=1" +
             "&enablejsapi=1&rel=0&modestbranding=1&fs=1"
-        let allow = "accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; " +
-            "picture-in-picture; web-share"
+        // `clipboard-write` removed: YouTube playback does not require clipboard access.
+        let allow = "accelerometer; autoplay; encrypted-media; gyroscope; picture-in-picture; web-share"
 
         let ytDomains = "https://www.youtube.com https://www.youtube-nocookie.com"
         let scriptDomains = "\(ytDomains) https://www.google.com"
@@ -128,6 +128,7 @@ struct VideoPlayerView: UIViewRepresentable {
                 <iframe
                     src="\(src)"
                     allow="\(allow)"
+                    sandbox="allow-scripts allow-same-origin"
                     allowfullscreen
                     referrerpolicy="strict-origin-when-cross-origin">
                 </iframe>

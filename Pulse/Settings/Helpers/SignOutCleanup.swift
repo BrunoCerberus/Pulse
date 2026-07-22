@@ -15,18 +15,21 @@ enum SignOutCleanup {
     /// `errSecItemNotFound` is a benign "nothing to delete" outcome and
     /// is ignored. Any other non-success status is logged.
     ///
-    /// Only iterates over `kSecClassGenericPassword` and
-    /// `kSecClassInternetPassword` — those are the only two classes that
-    /// support `kSecAttrService` in a SecItemDelete query.  Using the service
-    /// attribute with `kSecClassCertificate`, `kSecClassIdentity`, or
-    /// `kSecClassKey` silently returns `errSecItemNotFound`, giving false
-    /// assurance that those classes are cleaned up.  If the app ever needs to
-    /// delete items in those other classes, class-appropriate query attributes
-    /// (e.g. `kSecAttrSubject` for certificates) must be used instead.
+    /// Covers all five keychain classes so the wipe stays comprehensive if
+    /// future code stores items in Certificate, Identity, or Key classes.
+    /// Only `kSecClassGenericPassword` and `kSecClassInternetPassword` support
+    /// service-based deletion — the other three classes silently return
+    /// `errSecItemNotFound` when queried by service name.  If the app ever
+    /// needs to delete items in those classes, class-appropriate query attributes
+    /// (e.g. `kSecAttrSubject` for certificates) must be used instead; this
+    /// stub prevents the false assurance that a service-only query provides.
     static func wipeKeychain(services: [String]) {
         let classes: [CFString] = [
             kSecClassGenericPassword,
             kSecClassInternetPassword,
+            kSecClassCertificate,
+            kSecClassIdentity,
+            kSecClassKey,
         ]
         for service in services {
             for keychainClass in classes {
