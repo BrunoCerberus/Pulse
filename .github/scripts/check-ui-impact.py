@@ -68,21 +68,50 @@ UI_IMPACTING_PATHS = [
 ]
 
 
-def get_changed_files(base_sha: str, head_sha: str) -> list[str]:
-    """Return the list of file paths changed between base and head."""
+def get_changed_files(
+    base_sha: str, head_sha: str, fallback_run_tests: list[str] | None = None
+) -> list[str]:
+    """Return the list of file paths changed by the PR (merge-base diff).
+
+    Uses a three-dot (``...``) merge-base diff to isolate only the PR's
+    own commits — a two-dot (``..``) diff would also include unrelated
+    churn on the base branch if ``master`` advanced after this PR was
+    created, skewing the impact decision.
+
+    *fallback_run_tests* is used when git fails — if provided, those
+    paths are returned so the caller can run UI tests as a safe default.
+    """
     try:
+        mb = subprocess.run(
+            ["git", "merge-base", base_sha, head_sha],
+            capture_output=True, text=True,
+        )
+        if mb.returncode != 0:
+            print(
+                f"::warning::merge-base failed ({mb.stderr.strip().splitlines()[0]}); "
+                f"defaulting to full diff"
+            )
+            merge_base = base_sha
+        else:
+            merge_base = mb.stdout.strip()
+
         result = subprocess.run(
-            ["git", "diff", "--name-only", f"{base_sha}..{head_sha}"],
-            capture_output=True,
-            text=True,
+            ["git", "diff", "--name-only", f"{merge_base}..{head_sha}"],
+            capture_output=True, text=True,
         )
         if result.returncode != 0:
             print(f"::error::git diff failed: {result.stderr.strip()}")
+            if fallback_run_tests:
+                return fallback_run_tests
             sys.exit(1)
+
         files = [f for f in result.stdout.strip().splitlines() if f]
     except Exception as exc:
         print(f"::error::Failed to list changed files: {exc}")
+        if fallback_run_tests:
+            return fallback_run_tests
         sys.exit(1)
+
     return files
 
 
@@ -125,7 +154,12 @@ def main():
         set_output("true")
         return
 
-    changed_files = get_changed_files(base_sha, head_sha)
+    # Pass a fallback list that is guaranteed to trigger the "run tests"
+    # decision.  If git diff/merge-base fails, we return these paths so the
+    # caller runs UI tests — consistent with the missing-SHA safety net.
+    changed_files = get_changed_files(
+        base_sha, head_sha, fallback_run_tests=UI_IMPACTING_PATHS
+    )
     print(f"Changed files: {len(changed_files)}")
 
     impacting = [f for f in changed_files if is_ui_impacting(f, UI_IMPACTING_PATHS)]
