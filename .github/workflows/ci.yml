@@ -128,6 +128,46 @@ jobs:
         echo "Checking Localizable.strings key parity across en/pt/es..."
         python3 scripts/check-localization-parity.py .
 
+  # Decide whether this PR's diff touches any UI-impacting paths so we can
+  # skip the expensive (180min) UI Tests matrix on non-UI PRs.  The analysis
+  # only needs the list of changed files — no build, no Xcode.
+
+  ui-impact:
+    name: Check UI Impact
+    runs-on: macos-26
+    needs: code-quality
+    timeout-minutes: 5
+
+    permissions:
+      contents: read
+
+    outputs:
+      run_ui_tests: ${{ steps.check.outputs.run_ui_tests }}
+
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@9c091bb21b7c1c1d1991bb908d89e4e9dddfe3e0 # v7.0.0
+      with:
+        persist-credentials: false
+
+    - name: Check if UI tests are needed
+      id: check
+      env:
+        GITHUB_BASE_SHA: ${{ github.event.pull_request.base.sha }}
+        GITHUB_HEAD_SHA: ${{ github.event.pull_request.head.sha }}
+      run: |
+        echo "PR #${{ github.event.pull_request.number }} — base ${{ github.event.pull_request.base.sha }} → head ${{ github.event.pull_request.head.sha }}"
+
+        if [ -z "$GITHUB_BASE_SHA" ] || [ -z "$GITHUB_HEAD_SHA" ]; then
+          # Push to master (not a PR) — always run UI tests.
+          echo "Not a PR event; running UI tests."
+          echo "run_ui_tests=true" >> "$GITHUB_OUTPUT"
+        else
+          python3 .github/scripts/check-ui-impact.py \
+            --base-sha "$GITHUB_BASE_SHA" \
+            --head-sha "$GITHUB_HEAD_SHA"
+        fi
+
   # Shared audit body lives in reusable-security-audit.yml (also called by the
   # nightly with tool-channel: latest). Pinned tools here for reproducible PR
   # gating. The required check context is "Security Audit / Checks".
@@ -434,8 +474,10 @@ jobs:
 
   ui-tests:
     name: ${{ matrix.test-name }}
+    # Only run when the impact analysis says UI-affecting files changed.
+    if: ${{ needs.ui-impact.outputs.run_ui_tests == 'true' }}
     runs-on: macos-26
-    needs: build
+    needs: [build, ui-impact]
     # Ceiling above the per-leg step timeout (180) plus setup. The real
     # per-run bound is the matrix `timeout` step-level value below; this is
     # just runaway insurance for the setup/download steps.
@@ -756,6 +798,8 @@ jobs:
     name: Test Results Summary
     # Pure bookkeeping (download artifacts + shell) — no Xcode/xcrun, so it runs
     # on ubuntu (10x cheaper than a macOS runner).
+    # When ui-impact says no UI changes, the ui-tests job is skipped (not
+    # failed), so we must treat "skipped" as success below.
     runs-on: ubuntu-latest
     needs: [unit-tests, snapshot-tests, ui-tests]
     if: always()
@@ -794,7 +838,8 @@ jobs:
     - name: Check test job results
       id: check-results
       run: |
-        # Check the outcome of the unit/snapshot/UI test jobs
+        # Treat "skipped" the same as "success" — UI tests are intentionally
+        # skipped when no UI-impacting files changed (ui-impact gate).
         UNIT_RESULT="${{ needs.unit-tests.result }}"
         SNAPSHOT_RESULT="${{ needs.snapshot-tests.result }}"
         UI_RESULT="${{ needs.ui-tests.result }}"
@@ -802,13 +847,21 @@ jobs:
         echo "Snapshot Tests job result: $SNAPSHOT_RESULT"
         echo "UI Tests job result: $UI_RESULT"
 
-        if [ "$UNIT_RESULT" == "success" ] && [ "$SNAPSHOT_RESULT" == "success" ] && [ "$UI_RESULT" == "success" ]; then
+        ui_ok=true
+        if [ "$UNIT_RESULT" != "success" ]; then ui_ok=false; fi
+        if [ "$SNAPSHOT_RESULT" != "success" ]; then ui_ok=false; fi
+        # UI tests: success OR skipped (skipped = no UI changes)
+        if [ "$UI_RESULT" != "success" ] && [ "$UI_RESULT" != "skipped" ]; then ui_ok=false; fi
+
+        if $ui_ok; then
           echo "status=success" >> $GITHUB_OUTPUT
         else
           echo "status=failure" >> $GITHUB_OUTPUT
         fi
 
     - name: Display Test Results Summary
+      env:
+        UI_RESULT: ${{ needs.ui-tests.result }}
       run: |
         echo "Test Results Summary"
         echo "===================="
@@ -825,7 +878,10 @@ jobs:
           UNIT_STATUS="Failed or Missing"
         fi
 
-        if [ -d "ui-test-results" ]; then
+        # UI tests may be skipped (no UI changes per ui-impact gate).
+        if [ "$UI_RESULT" == "skipped" ]; then
+          UI_STATUS="Skipped (no UI changes)"
+        elif [ -d "ui-test-results" ]; then
           UI_STATUS="Completed"
         else
           UI_STATUS="Failed or Missing"
