@@ -134,9 +134,10 @@ jobs:
 
   ui-impact:
     name: Check UI Impact
-    runs-on: macos-26
-    needs: code-quality
-    timeout-minutes: 5
+    # Pure git diff + Python — no Xcode or Apple SDK. Runs on ubuntu to save
+    # macOS runner minutes (same rationale as `test-results` below).
+    runs-on: ubuntu-latest
+    timeout-minutes: 2
 
     permissions:
       contents: read
