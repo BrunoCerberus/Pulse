@@ -49,19 +49,19 @@ UI_IMPACTING_PATHS = [
     # transitively affect how views present data.
     "Pulse/",
     "PulseShareExtension/",
-    "PulseWidgetExtension/PulseWidgets/",
+    "PulseWidgetExtension/",
 
     # UI test targets themselves (test authors added a new test = UI changed).
     "PulseUITests/",
     "PulseSnapshotTests/",
 
     # Localization strings directly affect label text and layout.
-    "Pulse/Resources/en.lproj/",
-    "Pulse/Resources/pt.lproj/",
-    "Pulse/Resources/es.lproj/",
+    "Pulse/en.lproj/",
+    "Pulse/pt.lproj/",
+    "Pulse/es.lproj/",
 
     # Assets: images, color assets, accent colors drive visuals.
-    "Pulse/Resources/Assets.xcassets",
+    "Pulse/Assets.xcassets",
 
     # Core Data model changes affect data displayed on screen.
     ".xcdatamodeld",
