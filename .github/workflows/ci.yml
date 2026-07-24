@@ -170,14 +170,25 @@ jobs:
     permissions:
       contents: read
 
+    # Fail OPEN, not closed: this job must never be the reason tests get
+    # skipped. Both steps below carry continue-on-error, so an infra hiccup
+    # here (checkout flake, paths-filter error) can never fail this job —
+    # which matters because a failed `changes` job would make the downstream
+    # `success() && ...` gate on unit-tests/snapshot-tests/ui-tests evaluate
+    # false, and those three are GitHub *required* checks that report
+    # "skipped" as passing. A `changes` job that quietly failed would
+    # therefore let a PR merge with zero tests run. Falling back to "run
+    # everything" when detection itself is broken avoids that; only a
+    # confirmed, successful path-filter result is allowed to skip a suite.
     outputs:
-      unit: ${{ github.event_name != 'pull_request' || steps.filter.outputs.unit == 'true' }}
-      snapshot: ${{ github.event_name != 'pull_request' || steps.filter.outputs.snapshot == 'true' }}
-      ui: ${{ github.event_name != 'pull_request' || steps.filter.outputs.ui == 'true' }}
+      unit: ${{ github.event_name != 'pull_request' || steps.filter.outcome != 'success' || steps.filter.outputs.unit == 'true' }}
+      snapshot: ${{ github.event_name != 'pull_request' || steps.filter.outcome != 'success' || steps.filter.outputs.snapshot == 'true' }}
+      ui: ${{ github.event_name != 'pull_request' || steps.filter.outcome != 'success' || steps.filter.outputs.ui == 'true' }}
 
     steps:
     - name: Checkout code
       uses: actions/checkout@9c091bb21b7c1c1d1991bb908d89e4e9dddfe3e0 # v7.0.0
+      continue-on-error: true
       with:
         fetch-depth: 0
         persist-credentials: false
@@ -187,6 +198,7 @@ jobs:
     - name: Filter changed paths
       id: filter
       if: github.event_name == 'pull_request'
+      continue-on-error: true
       uses: dorny/paths-filter@7b450fff21473bca461d4b92ce414b9d0420d706 # v4.0.2
       with:
         base: ${{ github.event.pull_request.base.sha }}
@@ -216,9 +228,9 @@ jobs:
 
     - name: Summarize decision
       env:
-        RUN_UNIT: ${{ github.event_name != 'pull_request' || steps.filter.outputs.unit == 'true' }}
-        RUN_SNAPSHOT: ${{ github.event_name != 'pull_request' || steps.filter.outputs.snapshot == 'true' }}
-        RUN_UI: ${{ github.event_name != 'pull_request' || steps.filter.outputs.ui == 'true' }}
+        RUN_UNIT: ${{ github.event_name != 'pull_request' || steps.filter.outcome != 'success' || steps.filter.outputs.unit == 'true' }}
+        RUN_SNAPSHOT: ${{ github.event_name != 'pull_request' || steps.filter.outcome != 'success' || steps.filter.outputs.snapshot == 'true' }}
+        RUN_UI: ${{ github.event_name != 'pull_request' || steps.filter.outcome != 'success' || steps.filter.outputs.ui == 'true' }}
       run: |
         {
           echo "## Test Plan"
