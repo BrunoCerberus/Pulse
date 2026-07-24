@@ -363,7 +363,7 @@ jobs:
     name: Unit Tests
     runs-on: macos-26
     needs: [build, changes]
-    if: needs.changes.outputs.unit == 'true'
+    if: success() && needs.changes.outputs.unit == 'true'
     timeout-minutes: 75
 
     permissions:
@@ -441,7 +441,7 @@ jobs:
     name: Snapshot Tests
     runs-on: macos-26
     needs: [build, changes]
-    if: needs.changes.outputs.snapshot == 'true'
+    if: success() && needs.changes.outputs.snapshot == 'true'
     timeout-minutes: 75
 
     permissions:
@@ -527,7 +527,7 @@ jobs:
     name: ${{ matrix.test-name }}
     runs-on: macos-26
     needs: [build, changes]
-    if: needs.changes.outputs.ui == 'true'
+    if: success() && needs.changes.outputs.ui == 'true'
     # Ceiling above the per-leg step timeout (180) plus setup. The real
     # per-run bound is the matrix `timeout` step-level value below; this is
     # just runaway insurance for the setup/download steps.
