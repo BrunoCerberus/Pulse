@@ -198,6 +198,7 @@ jobs:
             - '.github/workflows/ci.yml'
             - '.github/actions/**'
             - 'Makefile'
+            - 'scripts/**'
           unit:
             - *shared
             - 'Pulse/**'
