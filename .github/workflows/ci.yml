@@ -184,6 +184,13 @@ jobs:
       unit: ${{ github.event_name != 'pull_request' || steps.filter.outcome != 'success' || steps.filter.outputs.unit == 'true' }}
       snapshot: ${{ github.event_name != 'pull_request' || steps.filter.outcome != 'success' || steps.filter.outputs.snapshot == 'true' }}
       ui: ${{ github.event_name != 'pull_request' || steps.filter.outcome != 'success' || steps.filter.outputs.ui == 'true' }}
+      # Gates the two compile jobs. Deliberately the OR of the three suite
+      # flags rather than its own filter: `build` exists only to produce the
+      # build-products artifact the test jobs consume, so it must run whenever
+      # ANY suite runs and is pure waste when none do. Deriving it from the
+      # same flags makes disagreement impossible — build can never skip while
+      # a test job that needs its artifact still wants to run.
+      compile: ${{ github.event_name != 'pull_request' || steps.filter.outcome != 'success' || steps.filter.outputs.unit == 'true' || steps.filter.outputs.snapshot == 'true' || steps.filter.outputs.ui == 'true' }}
 
     steps:
     - name: Checkout code
@@ -211,6 +218,12 @@ jobs:
             - '.github/actions/**'
             - 'Makefile'
             - 'scripts/**'
+            # Not run by any CI job, but it IS in PulseDev's test.targets, so
+            # `build-for-testing -scheme PulseDev` compiles it — and the build
+            # job is gated on these filters. Without this entry a compile break
+            # here would escape PR gating entirely (PulseProd doesn't build any
+            # test target, so release-build wouldn't catch it either).
+            - 'PulseWidgetExtensionTests/**'
           unit:
             - *shared
             - 'Pulse/**'
@@ -231,12 +244,15 @@ jobs:
         RUN_UNIT: ${{ github.event_name != 'pull_request' || steps.filter.outcome != 'success' || steps.filter.outputs.unit == 'true' }}
         RUN_SNAPSHOT: ${{ github.event_name != 'pull_request' || steps.filter.outcome != 'success' || steps.filter.outputs.snapshot == 'true' }}
         RUN_UI: ${{ github.event_name != 'pull_request' || steps.filter.outcome != 'success' || steps.filter.outputs.ui == 'true' }}
+        RUN_COMPILE: ${{ github.event_name != 'pull_request' || steps.filter.outcome != 'success' || steps.filter.outputs.unit == 'true' || steps.filter.outputs.snapshot == 'true' || steps.filter.outputs.ui == 'true' }}
       run: |
         {
           echo "## Test Plan"
           echo ""
-          echo "| Suite | Will run |"
-          echo "|-------|----------|"
+          echo "| Job | Will run |"
+          echo "|-----|----------|"
+          echo "| Build Project | $RUN_COMPILE |"
+          echo "| Release Build | $RUN_COMPILE |"
           echo "| Unit Tests | $RUN_UNIT |"
           echo "| Snapshot Tests | $RUN_SNAPSHOT |"
           echo "| UI Tests | $RUN_UI |"
@@ -245,7 +261,8 @@ jobs:
   build:
     name: Build Project
     runs-on: macos-26
-    needs: code-quality
+    needs: [code-quality, changes]
+    if: success() && needs.changes.outputs.compile == 'true'
     timeout-minutes: 45
 
     permissions:
@@ -328,7 +345,8 @@ jobs:
   release-build:
     name: Release Build
     runs-on: macos-26
-    needs: code-quality
+    needs: [code-quality, changes]
+    if: success() && needs.changes.outputs.compile == 'true'
     timeout-minutes: 45
 
     permissions:
