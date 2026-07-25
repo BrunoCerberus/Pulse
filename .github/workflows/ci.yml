@@ -224,15 +224,25 @@ jobs:
             # here would escape PR gating entirely (PulseProd doesn't build any
             # test target, so release-build wouldn't catch it either).
             - 'PulseWidgetExtensionTests/**'
+          # `unit` and `snapshot` must BOTH stay supersets of diff-cover's
+          # --include net (Pulse, PulseShareExtension, PulseWidgetExtension).
+          # patch-coverage needs both jobs, so if either one skips, the whole
+          # coverage gate skips — and it is a *required* check, so a skip reads
+          # as passing. An extension-only PR would otherwise land with its
+          # changed lines silently exempt from the 75% floor. Running snapshot
+          # tests for an extension-only change is mild waste; losing the gate
+          # is not. Keep these two in sync with the --include list below.
           unit:
             - *shared
             - 'Pulse/**'
-            - 'PulseTests/**'
             - 'PulseShareExtension/**'
             - 'PulseWidgetExtension/**'
+            - 'PulseTests/**'
           snapshot:
             - *shared
             - 'Pulse/**'
+            - 'PulseShareExtension/**'
+            - 'PulseWidgetExtension/**'
             - 'PulseSnapshotTests/**'
           ui:
             - *shared
