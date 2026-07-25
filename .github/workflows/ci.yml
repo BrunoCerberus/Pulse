@@ -140,6 +140,108 @@ jobs:
       tool-channel: pinned
       run-dependency-review: true
 
+  # Decides which of the three test jobs actually need to run, based on which
+  # paths changed in the PR. Deterministic path-glob matching only (no
+  # heuristics, no LLM) so the same diff always produces the same decision.
+  #
+  # Fail-safe by construction, not by exception handling:
+  #   - Any change under Pulse/** (the shared app source all three suites
+  #     exercise) turns ALL three test jobs on — we don't try to prove a
+  #     narrower blast radius from the diff alone.
+  #   - Shared build/tooling config (project.yml, Package.swift/.resolved,
+  #     this workflow file, composite actions, Makefile) also turns all three
+  #     on — a broken package or scheme touches every test target.
+  #   - Only edits confined to one suite's *own* test directory
+  #     (PulseTests/PulseSnapshotTests/PulseUITests) skip the other two.
+  #   - `push` events (post-merge validation on master, see header comment)
+  #     always run all three regardless of the diff — that job's whole
+  #     purpose is catching semantic conflicts between PRs, so it must not
+  #     be short-circuited by path filtering.
+  #   - "Skipped" is a real job conclusion, not a failure: the required-status
+  #     contexts (Unit Tests / Snapshot Tests / UI Tests) still post, GitHub
+  #     treats a skipped required check as passing, and downstream jobs that
+  #     `needs:` a skipped job are skipped in turn (not failed) by default —
+  #     nothing here can wedge a PR.
+  changes:
+    name: Detect Changes
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+
+    permissions:
+      contents: read
+
+    # Fail OPEN, not closed: this job must never be the reason tests get
+    # skipped. Both steps below carry continue-on-error, so an infra hiccup
+    # here (checkout flake, paths-filter error) can never fail this job —
+    # which matters because a failed `changes` job would make the downstream
+    # `success() && ...` gate on unit-tests/snapshot-tests/ui-tests evaluate
+    # false, and those three are GitHub *required* checks that report
+    # "skipped" as passing. A `changes` job that quietly failed would
+    # therefore let a PR merge with zero tests run. Falling back to "run
+    # everything" when detection itself is broken avoids that; only a
+    # confirmed, successful path-filter result is allowed to skip a suite.
+    outputs:
+      unit: ${{ github.event_name != 'pull_request' || steps.filter.outcome != 'success' || steps.filter.outputs.unit == 'true' }}
+      snapshot: ${{ github.event_name != 'pull_request' || steps.filter.outcome != 'success' || steps.filter.outputs.snapshot == 'true' }}
+      ui: ${{ github.event_name != 'pull_request' || steps.filter.outcome != 'success' || steps.filter.outputs.ui == 'true' }}
+
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@9c091bb21b7c1c1d1991bb908d89e4e9dddfe3e0 # v7.0.0
+      continue-on-error: true
+      with:
+        fetch-depth: 0
+        persist-credentials: false
+
+    # Only meaningful (and only run) for pull_request: push always forces all
+    # three on above, so there's no diff to compute for that event.
+    - name: Filter changed paths
+      id: filter
+      if: github.event_name == 'pull_request'
+      continue-on-error: true
+      uses: dorny/paths-filter@7b450fff21473bca461d4b92ce414b9d0420d706 # v4.0.2
+      with:
+        base: ${{ github.event.pull_request.base.sha }}
+        filters: |
+          shared: &shared
+            - 'project.yml'
+            - 'Package.swift'
+            - 'Package.resolved'
+            - '.github/workflows/ci.yml'
+            - '.github/actions/**'
+            - 'Makefile'
+            - 'scripts/**'
+          unit:
+            - *shared
+            - 'Pulse/**'
+            - 'PulseTests/**'
+            - 'PulseShareExtension/**'
+            - 'PulseWidgetExtension/**'
+          snapshot:
+            - *shared
+            - 'Pulse/**'
+            - 'PulseSnapshotTests/**'
+          ui:
+            - *shared
+            - 'Pulse/**'
+            - 'PulseUITests/**'
+
+    - name: Summarize decision
+      env:
+        RUN_UNIT: ${{ github.event_name != 'pull_request' || steps.filter.outcome != 'success' || steps.filter.outputs.unit == 'true' }}
+        RUN_SNAPSHOT: ${{ github.event_name != 'pull_request' || steps.filter.outcome != 'success' || steps.filter.outputs.snapshot == 'true' }}
+        RUN_UI: ${{ github.event_name != 'pull_request' || steps.filter.outcome != 'success' || steps.filter.outputs.ui == 'true' }}
+      run: |
+        {
+          echo "## Test Plan"
+          echo ""
+          echo "| Suite | Will run |"
+          echo "|-------|----------|"
+          echo "| Unit Tests | $RUN_UNIT |"
+          echo "| Snapshot Tests | $RUN_SNAPSHOT |"
+          echo "| UI Tests | $RUN_UI |"
+        } >> "$GITHUB_STEP_SUMMARY"
+
   build:
     name: Build Project
     runs-on: macos-26
@@ -273,7 +375,8 @@ jobs:
   unit-tests:
     name: Unit Tests
     runs-on: macos-26
-    needs: build
+    needs: [build, changes]
+    if: success() && needs.changes.outputs.unit == 'true'
     timeout-minutes: 75
 
     permissions:
@@ -350,7 +453,8 @@ jobs:
   snapshot-tests:
     name: Snapshot Tests
     runs-on: macos-26
-    needs: build
+    needs: [build, changes]
+    if: success() && needs.changes.outputs.snapshot == 'true'
     timeout-minutes: 75
 
     permissions:
@@ -435,7 +539,8 @@ jobs:
   ui-tests:
     name: ${{ matrix.test-name }}
     runs-on: macos-26
-    needs: build
+    needs: [build, changes]
+    if: success() && needs.changes.outputs.ui == 'true'
     # Ceiling above the per-leg step timeout (180) plus setup. The real
     # per-run bound is the matrix `timeout` step-level value below; this is
     # just runaway insurance for the setup/download steps.
@@ -802,7 +907,13 @@ jobs:
         echo "Snapshot Tests job result: $SNAPSHOT_RESULT"
         echo "UI Tests job result: $UI_RESULT"
 
-        if [ "$UNIT_RESULT" == "success" ] && [ "$SNAPSHOT_RESULT" == "success" ] && [ "$UI_RESULT" == "success" ]; then
+        # "skipped" is a deliberate outcome from the changes-detection job
+        # (path filtering decided this suite didn't need to run) and must be
+        # treated the same as "success" here, or every PR that skips a suite
+        # would fail this required check.
+        is_ok() { [ "$1" == "success" ] || [ "$1" == "skipped" ]; }
+
+        if is_ok "$UNIT_RESULT" && is_ok "$SNAPSHOT_RESULT" && is_ok "$UI_RESULT"; then
           echo "status=success" >> $GITHUB_OUTPUT
         else
           echo "status=failure" >> $GITHUB_OUTPUT
@@ -821,18 +932,24 @@ jobs:
 
         if [ -d "unit-test-results" ]; then
           UNIT_STATUS="Completed"
+        elif [ "${{ needs.unit-tests.result }}" == "skipped" ]; then
+          UNIT_STATUS="Skipped (no relevant changes)"
         else
           UNIT_STATUS="Failed or Missing"
         fi
 
         if [ -d "ui-test-results" ]; then
           UI_STATUS="Completed"
+        elif [ "${{ needs.ui-tests.result }}" == "skipped" ]; then
+          UI_STATUS="Skipped (no relevant changes)"
         else
           UI_STATUS="Failed or Missing"
         fi
 
         if [ -d "snapshot-test-results" ]; then
           SNAPSHOT_STATUS="Completed"
+        elif [ "${{ needs.snapshot-tests.result }}" == "skipped" ]; then
+          SNAPSHOT_STATUS="Skipped (no relevant changes)"
         else
           SNAPSHOT_STATUS="Failed or Missing"
         fi
