@@ -184,6 +184,13 @@ jobs:
       unit: ${{ github.event_name != 'pull_request' || steps.filter.outcome != 'success' || steps.filter.outputs.unit == 'true' }}
       snapshot: ${{ github.event_name != 'pull_request' || steps.filter.outcome != 'success' || steps.filter.outputs.snapshot == 'true' }}
       ui: ${{ github.event_name != 'pull_request' || steps.filter.outcome != 'success' || steps.filter.outputs.ui == 'true' }}
+      # Gates the two compile jobs. Deliberately the OR of the three suite
+      # flags rather than its own filter: `build` exists only to produce the
+      # build-products artifact the test jobs consume, so it must run whenever
+      # ANY suite runs and is pure waste when none do. Deriving it from the
+      # same flags makes disagreement impossible — build can never skip while
+      # a test job that needs its artifact still wants to run.
+      compile: ${{ github.event_name != 'pull_request' || steps.filter.outcome != 'success' || steps.filter.outputs.unit == 'true' || steps.filter.outputs.snapshot == 'true' || steps.filter.outputs.ui == 'true' }}
 
     steps:
     - name: Checkout code
@@ -211,15 +218,31 @@ jobs:
             - '.github/actions/**'
             - 'Makefile'
             - 'scripts/**'
+            # Not run by any CI job, but it IS in PulseDev's test.targets, so
+            # `build-for-testing -scheme PulseDev` compiles it — and the build
+            # job is gated on these filters. Without this entry a compile break
+            # here would escape PR gating entirely (PulseProd doesn't build any
+            # test target, so release-build wouldn't catch it either).
+            - 'PulseWidgetExtensionTests/**'
+          # `unit` and `snapshot` must BOTH stay supersets of diff-cover's
+          # --include net (Pulse, PulseShareExtension, PulseWidgetExtension).
+          # patch-coverage needs both jobs, so if either one skips, the whole
+          # coverage gate skips — and it is a *required* check, so a skip reads
+          # as passing. An extension-only PR would otherwise land with its
+          # changed lines silently exempt from the 75% floor. Running snapshot
+          # tests for an extension-only change is mild waste; losing the gate
+          # is not. Keep these two in sync with the --include list below.
           unit:
             - *shared
             - 'Pulse/**'
-            - 'PulseTests/**'
             - 'PulseShareExtension/**'
             - 'PulseWidgetExtension/**'
+            - 'PulseTests/**'
           snapshot:
             - *shared
             - 'Pulse/**'
+            - 'PulseShareExtension/**'
+            - 'PulseWidgetExtension/**'
             - 'PulseSnapshotTests/**'
           ui:
             - *shared
@@ -231,12 +254,15 @@ jobs:
         RUN_UNIT: ${{ github.event_name != 'pull_request' || steps.filter.outcome != 'success' || steps.filter.outputs.unit == 'true' }}
         RUN_SNAPSHOT: ${{ github.event_name != 'pull_request' || steps.filter.outcome != 'success' || steps.filter.outputs.snapshot == 'true' }}
         RUN_UI: ${{ github.event_name != 'pull_request' || steps.filter.outcome != 'success' || steps.filter.outputs.ui == 'true' }}
+        RUN_COMPILE: ${{ github.event_name != 'pull_request' || steps.filter.outcome != 'success' || steps.filter.outputs.unit == 'true' || steps.filter.outputs.snapshot == 'true' || steps.filter.outputs.ui == 'true' }}
       run: |
         {
           echo "## Test Plan"
           echo ""
-          echo "| Suite | Will run |"
-          echo "|-------|----------|"
+          echo "| Job | Will run |"
+          echo "|-----|----------|"
+          echo "| Build Project | $RUN_COMPILE |"
+          echo "| Release Build | $RUN_COMPILE |"
           echo "| Unit Tests | $RUN_UNIT |"
           echo "| Snapshot Tests | $RUN_SNAPSHOT |"
           echo "| UI Tests | $RUN_UI |"
@@ -245,7 +271,8 @@ jobs:
   build:
     name: Build Project
     runs-on: macos-26
-    needs: code-quality
+    needs: [code-quality, changes]
+    if: success() && needs.changes.outputs.compile == 'true'
     timeout-minutes: 45
 
     permissions:
@@ -328,7 +355,8 @@ jobs:
   release-build:
     name: Release Build
     runs-on: macos-26
-    needs: code-quality
+    needs: [code-quality, changes]
+    if: success() && needs.changes.outputs.compile == 'true'
     timeout-minutes: 45
 
     permissions:
@@ -536,38 +564,27 @@ jobs:
         path: PulseSnapshotTests/**/__Snapshots__/**/*.png
         if-no-files-found: ignore
 
+  # NOTE: these two jobs were deliberately de-matrixed. A `name:` containing
+  # `${{ matrix.* }}` is NOT interpolated when the job is skipped by a
+  # job-level `if:` — the matrix never expands, so GitHub posts a single
+  # check run under the literal string "matrix.test-name". That left the
+  # *required* "UI Tests" context permanently "Expected" and blocked every
+  # PR the path filter skipped (observed on #437). Static job names are the
+  # only way to guarantee the required context is posted in both the run and
+  # the skip case, so the iPhone and iPad legs are spelled out separately.
+  # Keep their steps in sync when editing.
   ui-tests:
-    name: ${{ matrix.test-name }}
+    name: UI Tests
     runs-on: macos-26
     needs: [build, changes]
     if: success() && needs.changes.outputs.ui == 'true'
     # Ceiling above the per-leg step timeout (180) plus setup. The real
-    # per-run bound is the matrix `timeout` step-level value below; this is
-    # just runaway insurance for the setup/download steps.
+    # per-run bound is the step-level timeout below; this is just runaway
+    # insurance for the setup/download steps.
     timeout-minutes: 210
 
     permissions:
       contents: read
-
-    strategy:
-      fail-fast: false
-      matrix:
-        include:
-          - test-target: PulseUITests
-            test-name: UI Tests
-            scheme: PulseDev
-            artifact-name: ui-test-results
-            timeout: 180
-          # iPad = regular size class, where the adaptive paths live
-          # (NavigationSplitView, LazyVGrid vs LazyVStack, the 720pt detail cap).
-          # The iPhone matrix entry only ever exercises compact width. Reuses
-          # the same simulator build products (test-without-building).
-          - test-target: PulseUITests
-            test-name: UI Tests (iPad)
-            scheme: PulseDev
-            artifact-name: ui-test-results-ipad
-            timeout: 180
-            ipad: "true"
 
     steps:
     - name: Checkout code
@@ -586,30 +603,19 @@ jobs:
         name: build-products
         path: ./DerivedData/Build/Products
 
-    - name: Run ${{ matrix.test-name }}
-      timeout-minutes: ${{ matrix.timeout }}
+    - name: Run UI Tests
+      timeout-minutes: 180
       env:
-        SCHEME: ${{ matrix.scheme }}
-        TEST_TARGET: ${{ matrix.test-target }}
-        ARTIFACT_NAME: ${{ matrix.artifact-name }}
-        TEST_NAME: ${{ matrix.test-name }}
-        IPAD: ${{ matrix.ipad }}
+        SCHEME: PulseDev
+        TEST_TARGET: PulseUITests
+        ARTIFACT_NAME: ui-test-results
+        TEST_NAME: UI Tests
       run: |
         mkdir -p test-results
         set -o pipefail
 
-        # Resolve the simulator. iPad entries (matrix.ipad) run on a
-        # dynamically-discovered iPad so the destination survives runner-image
-        # changes; everything else targets iPhone Air, matching the build job.
-        if [ -n "$IPAD" ]; then
-          DEVICE=$(xcrun simctl list devices available --json \
-            | jq -r '[.devices[][] | select(.isAvailable and (.name | startswith("iPad"))) | .name]
-                     | (map(select(test("Pro"))) + .)[0] // empty')
-          [ -z "$DEVICE" ] && DEVICE="iPad Pro 13-inch (M4)"
-        else
-          DEVICE="iPhone Air"
-        fi
-        DEST="platform=iOS Simulator,name=$DEVICE,OS=latest"
+        # iPhone Air, matching the build job's simulator.
+        DEST="platform=iOS Simulator,name=iPhone Air,OS=latest"
         echo "Test destination: $DEST"
 
         # No -enableCodeCoverage here: patch-coverage only consumes the unit +
@@ -640,15 +646,102 @@ jobs:
       if: failure()
       run: python3 scripts/extract-test-failures.py
       env:
-        RESULT_BUNDLE: test-results/${{ matrix.artifact-name }}.xcresult
-        TEST_NAME: ${{ matrix.test-name }}
+        RESULT_BUNDLE: test-results/ui-test-results.xcresult
+        TEST_NAME: UI Tests
 
     - name: Upload test results
       uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
       if: always()
       with:
-        name: ${{ matrix.artifact-name }}
-        path: test-results/${{ matrix.artifact-name }}.xcresult
+        name: ui-test-results
+        path: test-results/ui-test-results.xcresult
+        if-no-files-found: warn
+
+  # iPad = regular size class, where the adaptive paths live
+  # (NavigationSplitView, LazyVGrid vs LazyVStack, the 720pt detail cap).
+  # The iPhone job above only ever exercises compact width. Reuses the same
+  # simulator build products (test-without-building).
+  ui-tests-ipad:
+    name: UI Tests (iPad)
+    runs-on: macos-26
+    needs: [build, changes]
+    if: success() && needs.changes.outputs.ui == 'true'
+    timeout-minutes: 210
+
+    permissions:
+      contents: read
+
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@9c091bb21b7c1c1d1991bb908d89e4e9dddfe3e0 # v7.0.0
+      with:
+        persist-credentials: false
+
+    - name: Set up iOS build environment
+      uses: ./.github/actions/setup-ios
+      with:
+        install-runtime: "true"
+
+    - name: Download build artifacts
+      uses: actions/download-artifact@3e5f45b2cfb9172054b4087a40e8e0b5a5461e7c # v8.0.1
+      with:
+        name: build-products
+        path: ./DerivedData/Build/Products
+
+    - name: Run UI Tests (iPad)
+      timeout-minutes: 180
+      env:
+        SCHEME: PulseDev
+        TEST_TARGET: PulseUITests
+        ARTIFACT_NAME: ui-test-results-ipad
+        TEST_NAME: UI Tests (iPad)
+      run: |
+        mkdir -p test-results
+        set -o pipefail
+
+        # Dynamically-discovered iPad so the destination survives runner-image
+        # changes, preferring a Pro model.
+        DEVICE=$(xcrun simctl list devices available --json \
+          | jq -r '[.devices[][] | select(.isAvailable and (.name | startswith("iPad"))) | .name]
+                   | (map(select(test("Pro"))) + .)[0] // empty')
+        [ -z "$DEVICE" ] && DEVICE="iPad Pro 13-inch (M4)"
+        DEST="platform=iOS Simulator,name=$DEVICE,OS=latest"
+        echo "Test destination: $DEST"
+
+        xcodebuild test-without-building \
+          -project Pulse.xcodeproj \
+          -scheme "$SCHEME" \
+          -only-testing:"$TEST_TARGET" \
+          -destination "$DEST" \
+          -derivedDataPath ./DerivedData \
+          -resultBundlePath "test-results/${ARTIFACT_NAME}.xcresult" \
+          -disableAutomaticPackageResolution \
+          -retry-tests-on-failure \
+          2>&1 | tee /tmp/test_output.log
+
+        TEST_EXIT_CODE=${PIPESTATUS[0]}
+
+        echo ""
+        echo "============================================"
+        echo "              TEST SUMMARY"
+        echo "============================================"
+        grep -E "(Test Suite.*started|Test Suite.*passed|Test Suite.*failed|Executed [0-9]+ test)" /tmp/test_output.log | tail -10 || echo "$TEST_NAME completed"
+
+        exit $TEST_EXIT_CODE
+
+    - name: Extract and display test failures
+      if: failure()
+      run: python3 scripts/extract-test-failures.py
+      env:
+        RESULT_BUNDLE: test-results/ui-test-results-ipad.xcresult
+        TEST_NAME: UI Tests (iPad)
+
+    - name: Upload test results
+      uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
+      if: always()
+      with:
+        name: ui-test-results-ipad
+        path: test-results/ui-test-results-ipad.xcresult
         if-no-files-found: warn
 
   patch-coverage:
@@ -862,7 +955,7 @@ jobs:
     # Pure bookkeeping (download artifacts + shell) — no Xcode/xcrun, so it runs
     # on ubuntu (10x cheaper than a macOS runner).
     runs-on: ubuntu-latest
-    needs: [unit-tests, snapshot-tests, ui-tests]
+    needs: [unit-tests, snapshot-tests, ui-tests, ui-tests-ipad]
     if: always()
     timeout-minutes: 10
 
@@ -889,6 +982,13 @@ jobs:
         name: ui-test-results
         path: ui-test-results
 
+    - name: Download UI test results (iPad)
+      uses: actions/download-artifact@3e5f45b2cfb9172054b4087a40e8e0b5a5461e7c # v8.0.1
+      continue-on-error: true
+      with:
+        name: ui-test-results-ipad
+        path: ui-test-results-ipad
+
     - name: Download snapshot test results
       uses: actions/download-artifact@3e5f45b2cfb9172054b4087a40e8e0b5a5461e7c # v8.0.1
       continue-on-error: true
@@ -903,9 +1003,11 @@ jobs:
         UNIT_RESULT="${{ needs.unit-tests.result }}"
         SNAPSHOT_RESULT="${{ needs.snapshot-tests.result }}"
         UI_RESULT="${{ needs.ui-tests.result }}"
+        UI_IPAD_RESULT="${{ needs.ui-tests-ipad.result }}"
         echo "Unit Tests job result: $UNIT_RESULT"
         echo "Snapshot Tests job result: $SNAPSHOT_RESULT"
         echo "UI Tests job result: $UI_RESULT"
+        echo "UI Tests (iPad) job result: $UI_IPAD_RESULT"
 
         # "skipped" is a deliberate outcome from the changes-detection job
         # (path filtering decided this suite didn't need to run) and must be
@@ -913,7 +1015,7 @@ jobs:
         # would fail this required check.
         is_ok() { [ "$1" == "success" ] || [ "$1" == "skipped" ]; }
 
-        if is_ok "$UNIT_RESULT" && is_ok "$SNAPSHOT_RESULT" && is_ok "$UI_RESULT"; then
+        if is_ok "$UNIT_RESULT" && is_ok "$SNAPSHOT_RESULT" && is_ok "$UI_RESULT" && is_ok "$UI_IPAD_RESULT"; then
           echo "status=success" >> $GITHUB_OUTPUT
         else
           echo "status=failure" >> $GITHUB_OUTPUT
@@ -928,6 +1030,7 @@ jobs:
         # Check if artifacts exist and display status
         UNIT_STATUS="Unknown"
         UI_STATUS="Unknown"
+        UI_IPAD_STATUS="Unknown"
         SNAPSHOT_STATUS="Unknown"
 
         if [ -d "unit-test-results" ]; then
@@ -946,6 +1049,14 @@ jobs:
           UI_STATUS="Failed or Missing"
         fi
 
+        if [ -d "ui-test-results-ipad" ]; then
+          UI_IPAD_STATUS="Completed"
+        elif [ "${{ needs.ui-tests-ipad.result }}" == "skipped" ]; then
+          UI_IPAD_STATUS="Skipped (no relevant changes)"
+        else
+          UI_IPAD_STATUS="Failed or Missing"
+        fi
+
         if [ -d "snapshot-test-results" ]; then
           SNAPSHOT_STATUS="Completed"
         elif [ "${{ needs.snapshot-tests.result }}" == "skipped" ]; then
@@ -956,11 +1067,13 @@ jobs:
 
         echo "Unit Tests: $UNIT_STATUS"
         echo "UI Tests: $UI_STATUS"
+        echo "UI Tests (iPad): $UI_IPAD_STATUS"
         echo "Snapshot Tests: $SNAPSHOT_STATUS"
         echo ""
         echo "Test artifacts downloaded:"
         ls -la unit-test-results/ 2>/dev/null || echo "  No unit test artifacts found"
         ls -la ui-test-results/ 2>/dev/null || echo "  No UI test artifacts found"
+        ls -la ui-test-results-ipad/ 2>/dev/null || echo "  No UI test (iPad) artifacts found"
         ls -la snapshot-test-results/ 2>/dev/null || echo "  No snapshot test artifacts found"
         echo ""
 
