@@ -1,0 +1,76 @@
+name: OSSF Scorecard
+
+# Grades the repo's supply-chain posture against the OpenSSF checks (pinned
+# dependencies, token permissions, branch protection, dangerous workflow
+# patterns, CI tests, code review, …). This repo already does most of what
+# Scorecard rewards — every action is SHA-pinned, every workflow starts from
+# `permissions: {}`, master is behind a ruleset with 20 required checks — so
+# this is mostly about making that posture visible and catching regressions.
+#
+# Advisory: results are uploaded to the Security → Code scanning tab. Nothing
+# here gates a merge.
+
+on:
+  branch_protection_rule:
+  schedule:
+    # Mondays 07:00 UTC — offset from the Sunday-midnight CodeQL cron so the
+    # two security scans don't contend for the same queue window.
+    - cron: '0 7 * * 1'
+  push:
+    branches: [master]
+  workflow_dispatch:
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+permissions: {}
+
+jobs:
+  analysis:
+    name: Scorecard analysis
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+
+    permissions:
+      # Upload the SARIF result to the code-scanning dashboard.
+      security-events: write
+      # Scorecard's "Branch-Protection" and "Dangerous-Workflow" checks read
+      # workflow run and branch metadata.
+      id-token: write
+      contents: read
+      actions: read
+
+    steps:
+    - name: Harden runner
+      uses: step-security/harden-runner@bf7454d06d71f1098171f2acdf0cd4708d7b5920 # v2.20.0
+      with:
+        egress-policy: audit
+
+    - name: Checkout code
+      uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+      with:
+        persist-credentials: false
+
+    - name: Run analysis
+      uses: ossf/scorecard-action@2d1146689b8cda280b9bc96326124645441f03bc # v2.4.4
+      with:
+        results_file: results.sarif
+        results_format: sarif
+        # publish_results uploads to the public OpenSSF API so the repo can show
+        # a Scorecard badge. Left off — the findings stay in this repo's
+        # Security tab. Flip to true (and add the badge to the README) if you
+        # want the public score.
+        publish_results: false
+
+    - name: Upload SARIF artifact
+      uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
+      with:
+        name: scorecard-sarif
+        path: results.sarif
+        retention-days: 5
+
+    - name: Upload to code scanning
+      uses: github/codeql-action/upload-sarif@e4fba868fa4b1b91e1fdab776edc8cfbe6e9fb81 # v4.37.3
+      with:
+        sarif_file: results.sarif

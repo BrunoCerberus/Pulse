@@ -2,9 +2,17 @@
 # See: https://docs.github.com/en/code-security/dependabot/dependabot-version-updates
 version: 2
 updates:
-  # Keep GitHub Actions pinned to latest SHA
+  # Keep GitHub Actions pinned to latest SHA.
+  #
+  # `directories` (not `directory`) is load-bearing: for the github-actions
+  # ecosystem, "/" only covers .github/workflows/*. Composite actions under
+  # .github/actions/** are invisible to Dependabot unless their directory is
+  # listed explicitly, which is how .github/actions/setup-ios drifted to
+  # actions/cache v6.0.0 while every workflow call site moved to v6.1.0.
   - package-ecosystem: "github-actions"
-    directory: "/"
+    directories:
+      - "/"
+      - "/.github/actions/setup-ios"
     schedule:
       interval: "weekly"
     commit-message:
