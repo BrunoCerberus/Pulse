@@ -339,4 +339,21 @@ struct SearchDomainInteractorExtendedTests {
 
         #expect(!sut.currentState.isLoadingMore)
     }
+
+    // MARK: - Content Language
+
+    @Test("Search passes the app's content language, not the device locale")
+    func searchPassesAppLanguage() async throws {
+        let original = AppLocalization.shared.language
+        AppLocalization.shared.updateLanguage("pt")
+        defer { AppLocalization.shared.updateLanguage(original) }
+
+        mockSearchService.searchResult = .success(Article.mockArticles)
+
+        sut.dispatch(action: .updateQuery("eleicoes"))
+        sut.dispatch(action: .search)
+        try await waitForStateUpdate(duration: TestWaitDuration.long)
+
+        #expect(mockSearchService.lastSearchLanguage == "pt")
+    }
 }

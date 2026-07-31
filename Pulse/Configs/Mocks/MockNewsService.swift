@@ -10,6 +10,7 @@ final class MockNewsService: NewsService {
     var fetchedTopHeadlinesLanguages: [String] = []
     var fetchedCategoryHeadlinesLanguages: [String] = []
     var fetchedBreakingNewsLanguages: [String] = []
+    var fetchedArticleIDs: [String] = []
     private let accessLock = NSLock()
 
     private func withLock<T>(_ operation: () -> T) -> T {
@@ -70,6 +71,8 @@ final class MockNewsService: NewsService {
     }
 
     func fetchArticle(id: String) -> AnyPublisher<Article, Error> {
+        withLock { fetchedArticleIDs.append(id) }
+
         // Use custom result if set, otherwise find article by ID in mock articles
         if let result = fetchArticleResult {
             return result.publisher.eraseToAnyPublisher()
@@ -92,9 +95,11 @@ final class MockSearchService: SearchService {
     var searchResult: Result<[Article], Error> = .success(Article.mockArticles)
     var suggestionsResult: [String] = ["Swift", "iOS", "Apple", "Technology"]
     var clearRecentSearchesCallCount = 0
+    var lastSearchLanguage: String?
 
-    func search(query _: String, page _: Int, sortBy _: String) -> AnyPublisher<[Article], Error> {
-        searchResult.publisher.eraseToAnyPublisher()
+    func search(query _: String, language: String, page _: Int, sortBy _: String) -> AnyPublisher<[Article], Error> {
+        lastSearchLanguage = language
+        return searchResult.publisher.eraseToAnyPublisher()
     }
 
     func getSuggestions(for query: String) -> AnyPublisher<[String], Never> {

@@ -120,7 +120,7 @@ private final class ControlledSearchService: SearchService {
     private var delayedSearch: PassthroughSubject<[Article], Error>?
     private let results = Array(Article.mockArticles.prefix(3))
 
-    func search(query _: String, page _: Int, sortBy _: String) -> AnyPublisher<[Article], Error> {
+    func search(query _: String, language _: String, page _: Int, sortBy _: String) -> AnyPublisher<[Article], Error> {
         if delayNextSearch {
             let subject = PassthroughSubject<[Article], Error>()
             delayedSearch = subject

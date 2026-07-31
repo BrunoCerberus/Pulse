@@ -115,4 +115,46 @@ struct LiveEngagementEventsServiceTests {
         let remaining = try await sut.pendingEvents(limit: 10)
         #expect(remaining.isEmpty)
     }
+
+    // MARK: - Store Isolation
+
+    @Test("Engagement events live in their own store file, not LiveStorageService's")
+    func usesDedicatedStoreFile() {
+        // `ModelConfiguration` defaults to `default.store`, which
+        // `LiveStorageService` owns. Pointing this service's disjoint schema at
+        // that file made SwiftData migrate the store down to a single entity,
+        // dropping bookmarks / preferences / reading history and leaving the
+        // other container unable to open it.
+        let defaultStore = URL.applicationSupportDirectory.appending(path: "default.store")
+        #expect(LiveEngagementEventsService.storeURL != defaultStore)
+    }
+
+    @Test("The on-disk store opens at the dedicated URL and round-trips")
+    func onDiskStoreOpensAtDedicatedURL() async throws {
+        // The `inMemory: false` branch is the one that actually ships, and the
+        // URL comparison above can't prove the container opens there — only
+        // exercising it does. A failure to open is swallowed (the service
+        // no-ops by design), so the round-trip is what distinguishes a working
+        // store from a nil container.
+        //
+        // The file has to be cleared first: it survives between runs, so
+        // asserting its mere existence would pass even against a container
+        // pointed back at `default.store`.
+        let storeURL = LiveEngagementEventsService.storeURL
+        for path in [storeURL.path, storeURL.path + "-wal", storeURL.path + "-shm"] {
+            try? FileManager.default.removeItem(atPath: path)
+        }
+        #expect(!FileManager.default.fileExists(atPath: storeURL.path))
+
+        let onDisk = LiveEngagementEventsService()
+        let event = makeEvent(articleID: "on-disk-\(UUID().uuidString)")
+
+        await onDisk.record(event)
+        let pending = try await onDisk.pendingEvents(limit: 100)
+
+        #expect(pending.contains { $0.id == event.id })
+        #expect(FileManager.default.fileExists(atPath: storeURL.path))
+
+        try await onDisk.clearAll()
+    }
 }

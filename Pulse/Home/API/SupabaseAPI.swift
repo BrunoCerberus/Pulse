@@ -12,7 +12,7 @@ enum SupabaseAPI: APIFetcher {
     case articlesByCategory(language: String, category: String, page: Int, pageSize: Int)
     case breakingNews(language: String, limit: Int)
     case article(id: String)
-    case search(query: String, page: Int, pageSize: Int)
+    case search(query: String, language: String, page: Int, pageSize: Int)
     case categories
     case sources
     case media(language: String, type: String?, page: Int, pageSize: Int)
@@ -23,11 +23,19 @@ enum SupabaseAPI: APIFetcher {
     }
 
     /// Fields to select for article list views (optimized for feed display)
-    /// Includes media fields for podcasts/videos support
+    /// Includes media fields for podcasts/videos support.
+    ///
+    /// Deliberately no `content`: the full body belongs only to the by-id
+    /// detail fetch (`ArticleDetailDomainInteractor.loadFullArticle`), and a
+    /// page of rows each carrying it would dominate the payload.
+    ///
+    /// Note the backend discards the client's `select` outright and applies its
+    /// own projection per endpoint, so these lists document the shape we expect
+    /// back rather than control it.
     private static let listFields = [
         "id", "title", "url", "image_url", "published_at",
         "source_name", "source_slug", "category_name", "category_slug",
-        "summary", "content",
+        "summary",
         "media_type", "media_url", "media_duration", "media_mime_type",
     ].joined(separator: ",")
 
@@ -79,10 +87,13 @@ enum SupabaseAPI: APIFetcher {
             queryItems.append(URLQueryItem(name: "id", value: "eq.\(id)"))
             queryItems.append(URLQueryItem(name: "limit", value: "1"))
 
-        case let .search(query, page, pageSize):
+        case let .search(query, language, page, pageSize):
             endpoint = "/api-search"
             let offset = (page - 1) * pageSize
             queryItems.append(URLQueryItem(name: "q", value: query))
+            // `/api-search` is not PostgREST-shaped: it takes a bare ISO 639-1
+            // code, not a `eq.<code>` filter expression like `/api-articles`.
+            queryItems.append(URLQueryItem(name: "language", value: language))
             queryItems.append(URLQueryItem(name: "limit", value: String(pageSize)))
             if offset > 0 {
                 queryItems.append(URLQueryItem(name: "offset", value: String(offset)))

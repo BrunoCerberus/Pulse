@@ -70,7 +70,7 @@ struct SupabaseAPITests {
 
     @Test("SupabaseAPI search uses dedicated search endpoint with pagination")
     func searchUsesSearchEndpoint() {
-        let api = SupabaseAPI.search(query: "swift", page: 1, pageSize: 20)
+        let api = SupabaseAPI.search(query: "swift", language: "pt", page: 1, pageSize: 20)
 
         let path = api.path
 
@@ -78,11 +78,14 @@ struct SupabaseAPITests {
         #expect(path.contains("q=swift"))
         #expect(path.contains("limit=20"))
         #expect(!path.contains("offset="))
+        // Bare ISO 639-1 code — `/api-search` is not PostgREST-shaped, so no `eq.` prefix.
+        #expect(path.contains("language=pt"))
+        #expect(!path.contains("language=eq."))
     }
 
     @Test("SupabaseAPI search page 2 includes offset")
     func searchPage2IncludesOffset() {
-        let api = SupabaseAPI.search(query: "swift", page: 2, pageSize: 20)
+        let api = SupabaseAPI.search(query: "swift", language: "pt", page: 2, pageSize: 20)
 
         let path = api.path
 
@@ -116,7 +119,7 @@ struct SupabaseAPITests {
         let categoryAPI = SupabaseAPI.articlesByCategory(language: "en", category: "tech", page: 1, pageSize: 20)
         let breakingAPI = SupabaseAPI.breakingNews(language: "en", limit: 10)
         let articleAPI = SupabaseAPI.article(id: "test")
-        let searchAPI = SupabaseAPI.search(query: "test", page: 1, pageSize: 20)
+        let searchAPI = SupabaseAPI.search(query: "test", language: "en", page: 1, pageSize: 20)
         let categoriesAPI = SupabaseAPI.categories
         let sourcesAPI = SupabaseAPI.sources
 

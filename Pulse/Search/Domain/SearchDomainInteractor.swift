@@ -178,6 +178,7 @@ final class SearchDomainInteractor: CombineInteractor {
 
         searchCancellable = searchService.search(
             query: query,
+            language: AppLocalization.shared.language,
             page: 1,
             sortBy: currentState.sortBy.rawValue,
         )
@@ -217,6 +218,7 @@ final class SearchDomainInteractor: CombineInteractor {
         // the query invalidates pagination.
         searchCancellable = searchService.search(
             query: currentState.query,
+            language: AppLocalization.shared.language,
             page: nextPage,
             sortBy: currentState.sortBy.rawValue,
         )
@@ -276,6 +278,7 @@ final class SearchDomainInteractor: CombineInteractor {
 
         searchCancellable = searchService.search(
             query: query,
+            language: AppLocalization.shared.language,
             page: 1,
             sortBy: currentState.sortBy.rawValue,
         )

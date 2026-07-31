@@ -6,8 +6,10 @@ import Foundation
 /// The detail view displays the full article content with support for bookmarking,
 /// sharing, and AI summarization (Premium).
 struct ArticleDetailDomainState: Equatable {
-    /// The article being displayed.
-    let article: Article
+    /// The article being displayed. Starts as the row handed over by the
+    /// originating list — which carries only the short `summary` — and is
+    /// replaced once the detail endpoint returns the full body.
+    var article: Article
 
     // MARK: - Content Processing
 

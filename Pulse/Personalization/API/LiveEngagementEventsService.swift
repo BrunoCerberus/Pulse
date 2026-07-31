@@ -15,13 +15,23 @@ import SwiftData
 final class LiveEngagementEventsService: EngagementEventsService {
     private let modelContainer: ModelContainer?
 
+    /// Dedicated store file. `ModelConfiguration` defaults to
+    /// `Application Support/default.store`, which `LiveStorageService` already
+    /// owns — pointing a second, disjoint schema at that file makes SwiftData
+    /// lightweight-migrate the store down to *this* schema, dropping the
+    /// bookmark / preferences / reading-history tables and leaving the other
+    /// container with an unopenable store.
+    static let storeURL = URL.applicationSupportDirectory
+        .appending(path: "engagement.store")
+
     init(inMemory: Bool = false) {
         do {
             let schema = Schema([PendingEngagementEvent.self])
-            let configuration = ModelConfiguration(
-                schema: schema,
-                isStoredInMemoryOnly: inMemory,
-            )
+            let configuration = if inMemory {
+                ModelConfiguration(schema: schema, isStoredInMemoryOnly: true)
+            } else {
+                ModelConfiguration(schema: schema, url: Self.storeURL)
+            }
             modelContainer = try ModelContainer(for: schema, configurations: [configuration])
         } catch {
             Logger.shared.service(

@@ -36,6 +36,13 @@ final class ArticleDetailDomainInteractor: CombineInteractor {
     /// article view, don't reschedule even if `onAppear` fires twice.
     private var hasScheduledRead30sCapture = false
 
+    /// Same guard for the by-id body fetch: `onAppear` can fire more than once
+    /// per presentation.
+    private var hasRequestedFullArticle = false
+
+    /// The in-flight content-processing pass, so a newer one can supersede it.
+    private var contentProcessingTask: Task<Void, Never>?
+
     var statePublisher: AnyPublisher<DomainState, Never> {
         stateSubject.eraseToAnyPublisher()
     }
@@ -80,6 +87,15 @@ final class ArticleDetailDomainInteractor: CombineInteractor {
             updateState { $0.showShareSheet = false }
         case .openInBrowser:
             openInBrowser()
+        case let .fullArticleLoaded(article):
+            updateState { state in
+                state.article = article
+                // The first pass already flipped this to `false`; a second one
+                // is now in flight, so the flag has to go back up or the state
+                // claims idle while work is running.
+                state.isProcessingContent = true
+            }
+            startContentProcessing()
         case let .contentProcessingCompleted(content, description):
             updateState { state in
                 state.processedContent = content
@@ -110,7 +126,39 @@ final class ArticleDetailDomainInteractor: CombineInteractor {
         analyticsService?.logEvent(.screenView(screen: .articleDetail))
         checkBookmarkStatus()
         markAsRead()
+        loadFullArticle()
         loadRelatedArticles()
+    }
+
+    // MARK: - Full Article
+
+    /// Pulls the article's body from the detail endpoint.
+    ///
+    /// List responses deliberately omit `content` — it's the full extracted
+    /// body and would balloon every feed payload — so the row this screen is
+    /// opened with only carries the source's short summary. The body arrives
+    /// only from a by-id fetch, which the caching layer serves from L1/L2 on
+    /// repeat visits. A failure (or an article whose body has been pruned
+    /// server-side) leaves the summary on screen, which is the fallback the
+    /// backend's retention policy expects.
+    private func loadFullArticle() {
+        guard let newsService, !hasRequestedFullArticle else { return }
+        hasRequestedFullArticle = true
+
+        newsService.fetchArticle(id: currentState.article.id)
+            .receive(on: DispatchQueue.main)
+            .sink(
+                receiveCompletion: { completion in
+                    if case let .failure(error) = completion {
+                        Logger.shared.service("Failed to load full article: \(error)", level: .debug)
+                    }
+                },
+                receiveValue: { [weak self] article in
+                    guard let self, article.content != currentState.article.content else { return }
+                    dispatch(action: .fullArticleLoaded(article))
+                },
+            )
+            .store(in: &cancellables)
     }
 
     // MARK: - Reading History
@@ -262,6 +310,13 @@ final class ArticleDetailDomainInteractor: CombineInteractor {
     private func startContentProcessing() {
         let article = currentState.article
 
+        // Supersede the pass started for the previous article. `init` kicks one
+        // off for the summary-only row and `.fullArticleLoaded` starts another
+        // for the full body; without this, a delayed first pass could complete
+        // last and stomp `processedContent` back to the summary-derived version
+        // while `state.article` already holds the body.
+        contentProcessingTask?.cancel()
+
         let task = Task { [weak self] in
             guard let self else { return }
 
@@ -279,6 +334,7 @@ final class ArticleDetailDomainInteractor: CombineInteractor {
                 self?.dispatch(action: .contentProcessingCompleted(content: content, description: description))
             }
         }
+        contentProcessingTask = task
         trackBackgroundTask(task)
     }
 
