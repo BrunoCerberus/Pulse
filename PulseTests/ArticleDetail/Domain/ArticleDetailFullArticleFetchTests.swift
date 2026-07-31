@@ -121,6 +121,41 @@ struct ArticleDetailFullArticleFetchTests {
         #expect(mockNewsService.fetchedArticleIDs.first == Self.summaryOnly.id)
     }
 
+    /// Covers the observable outcome — the newest article's body is what ends
+    /// up rendered. It does *not* pin the cancellation in
+    /// `startContentProcessing`: this passes either way, because the completion
+    /// order it depends on can't be forced from here. The cancellation guards a
+    /// scheduling window (a delayed first pass landing last), which is why it's
+    /// written as a defensive ordering guarantee rather than a tested one.
+    @Test("The newest article's body is what ends up rendered")
+    func newestArticleBodyWins() async {
+        let sut = createSUT()
+
+        let revised = Article(
+            id: "article-1",
+            title: "Headline",
+            description: "Short summary from the feed.",
+            content: "Revised body sentence. Another revised sentence.",
+            source: ArticleSource(id: nil, name: "Test Source"),
+            url: "https://example.com",
+            publishedAt: Date(),
+            category: .world,
+        )
+
+        // Back-to-back, so the first pass is still running when the second starts.
+        sut.dispatch(action: .fullArticleLoaded(Self.withBody))
+        sut.dispatch(action: .fullArticleLoaded(revised))
+
+        let settled = await waitForCondition(timeout: TestWaitDuration.long) { @MainActor in
+            !sut.currentState.isProcessingContent
+        }
+        #expect(settled)
+
+        #expect(sut.currentState.article.content == revised.content)
+        let rendered = sut.currentState.processedContent.map { String($0.characters) } ?? ""
+        #expect(rendered.contains("Revised body sentence"))
+    }
+
     @Test("Reprocessing the swapped-in body reports work in flight")
     func reprocessingFlagsProcessing() async {
         let sut = createSUT()

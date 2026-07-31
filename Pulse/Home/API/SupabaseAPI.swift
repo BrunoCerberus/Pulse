@@ -23,11 +23,19 @@ enum SupabaseAPI: APIFetcher {
     }
 
     /// Fields to select for article list views (optimized for feed display)
-    /// Includes media fields for podcasts/videos support
+    /// Includes media fields for podcasts/videos support.
+    ///
+    /// Deliberately no `content`: the full body belongs only to the by-id
+    /// detail fetch (`ArticleDetailDomainInteractor.loadFullArticle`), and a
+    /// page of rows each carrying it would dominate the payload.
+    ///
+    /// Note the backend discards the client's `select` outright and applies its
+    /// own projection per endpoint, so these lists document the shape we expect
+    /// back rather than control it.
     private static let listFields = [
         "id", "title", "url", "image_url", "published_at",
         "source_name", "source_slug", "category_name", "category_slug",
-        "summary", "content",
+        "summary",
         "media_type", "media_url", "media_duration", "media_mime_type",
     ].joined(separator: ",")
 

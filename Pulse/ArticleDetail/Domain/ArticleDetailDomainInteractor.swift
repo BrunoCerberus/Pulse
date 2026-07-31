@@ -40,6 +40,9 @@ final class ArticleDetailDomainInteractor: CombineInteractor {
     /// per presentation.
     private var hasRequestedFullArticle = false
 
+    /// The in-flight content-processing pass, so a newer one can supersede it.
+    private var contentProcessingTask: Task<Void, Never>?
+
     var statePublisher: AnyPublisher<DomainState, Never> {
         stateSubject.eraseToAnyPublisher()
     }
@@ -307,6 +310,13 @@ final class ArticleDetailDomainInteractor: CombineInteractor {
     private func startContentProcessing() {
         let article = currentState.article
 
+        // Supersede the pass started for the previous article. `init` kicks one
+        // off for the summary-only row and `.fullArticleLoaded` starts another
+        // for the full body; without this, a delayed first pass could complete
+        // last and stomp `processedContent` back to the summary-derived version
+        // while `state.article` already holds the body.
+        contentProcessingTask?.cancel()
+
         let task = Task { [weak self] in
             guard let self else { return }
 
@@ -324,6 +334,7 @@ final class ArticleDetailDomainInteractor: CombineInteractor {
                 self?.dispatch(action: .contentProcessingCompleted(content: content, description: description))
             }
         }
+        contentProcessingTask = task
         trackBackgroundTask(task)
     }
 
