@@ -33,6 +33,10 @@ enum ArticleDetailDomainAction: Equatable {
     /// Open the article's original URL in the system browser.
     case openInBrowser
 
+    /// The full article (including body content) came back from the detail
+    /// endpoint and should replace the list row this screen was opened with.
+    case fullArticleLoaded(Article)
+
     // MARK: - Content Processing
 
     /// Article content has been processed into attributed strings.

@@ -92,9 +92,11 @@ final class MockSearchService: SearchService {
     var searchResult: Result<[Article], Error> = .success(Article.mockArticles)
     var suggestionsResult: [String] = ["Swift", "iOS", "Apple", "Technology"]
     var clearRecentSearchesCallCount = 0
+    var lastSearchLanguage: String?
 
-    func search(query _: String, page _: Int, sortBy _: String) -> AnyPublisher<[Article], Error> {
-        searchResult.publisher.eraseToAnyPublisher()
+    func search(query _: String, language: String, page _: Int, sortBy _: String) -> AnyPublisher<[Article], Error> {
+        lastSearchLanguage = language
+        return searchResult.publisher.eraseToAnyPublisher()
     }
 
     func getSuggestions(for query: String) -> AnyPublisher<[String], Never> {

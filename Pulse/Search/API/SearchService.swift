@@ -12,10 +12,14 @@ protocol SearchService {
     /// Searches for articles matching the given query.
     /// - Parameters:
     ///   - query: The search query string.
+    ///   - language: ISO 639-1 content language to restrict results to. Passed
+    ///     explicitly (rather than read from `AppLocalization` inside the
+    ///     service) so search matches the language the rest of the app fetches
+    ///     with, instead of whatever the backend infers from the request.
     ///   - page: Page number for pagination (1-indexed).
     ///   - sortBy: Sort order for results (e.g., "relevance", "newest", "oldest").
     /// - Returns: Publisher emitting matching articles or an error.
-    func search(query: String, page: Int, sortBy: String) -> AnyPublisher<[Article], Error>
+    func search(query: String, language: String, page: Int, sortBy: String) -> AnyPublisher<[Article], Error>
 
     /// Fetches search suggestions for autocomplete.
     /// - Parameter query: The partial query to get suggestions for.

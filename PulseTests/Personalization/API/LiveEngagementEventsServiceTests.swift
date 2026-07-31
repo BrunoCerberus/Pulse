@@ -115,4 +115,17 @@ struct LiveEngagementEventsServiceTests {
         let remaining = try await sut.pendingEvents(limit: 10)
         #expect(remaining.isEmpty)
     }
+
+    // MARK: - Store Isolation
+
+    @Test("Engagement events live in their own store file, not LiveStorageService's")
+    func usesDedicatedStoreFile() {
+        // `ModelConfiguration` defaults to `default.store`, which
+        // `LiveStorageService` owns. Pointing this service's disjoint schema at
+        // that file made SwiftData migrate the store down to a single entity,
+        // dropping bookmarks / preferences / reading history and leaving the
+        // other container unable to open it.
+        let defaultStore = URL.applicationSupportDirectory.appending(path: "default.store")
+        #expect(LiveEngagementEventsService.storeURL != defaultStore)
+    }
 }

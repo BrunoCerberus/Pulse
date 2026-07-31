@@ -29,7 +29,7 @@ struct LiveServicesProtocolTests {
     @Test("LiveSearchService search returns correct publisher type")
     func searchServiceSearchType() {
         let service = LiveSearchService()
-        let publisher = service.search(query: "test", page: 1, sortBy: "relevance")
+        let publisher = service.search(query: "test", language: "en", page: 1, sortBy: "relevance")
         let _: AnyPublisher<[Article], Error> = publisher
     }
 }

@@ -16,14 +16,14 @@ final class LiveSearchService: APIRequest, SearchService {
         SupabaseConfig.isConfigured
     }
 
-    func search(query: String, page: Int, sortBy: String) -> AnyPublisher<[Article], Error> {
+    func search(query: String, language: String, page: Int, sortBy: String) -> AnyPublisher<[Article], Error> {
         guard isConfigured else {
             return Fail(error: URLError(.badURL, userInfo: [
                 NSLocalizedDescriptionKey: "Supabase backend not configured",
             ])).eraseToAnyPublisher()
         }
         saveRecentSearch(query)
-        return searchSupabase(query: query, page: page, sortBy: sortBy)
+        return searchSupabase(query: query, language: language, page: page, sortBy: sortBy)
     }
 
     func getSuggestions(for query: String) -> AnyPublisher<[String], Never> {
@@ -36,10 +36,15 @@ final class LiveSearchService: APIRequest, SearchService {
 
     // MARK: - Supabase Search
 
-    private func searchSupabase(query: String, page: Int, sortBy _: String) -> AnyPublisher<[Article], Error> {
+    private func searchSupabase(
+        query: String,
+        language: String,
+        page: Int,
+        sortBy _: String,
+    ) -> AnyPublisher<[Article], Error> {
         let pageSize = 20
         return fetchRequest(
-            target: SupabaseAPI.search(query: query, page: page, pageSize: pageSize),
+            target: SupabaseAPI.search(query: query, language: language, page: page, pageSize: pageSize),
             dataType: [SupabaseSearchResult].self,
         )
         .map { results in

@@ -12,7 +12,7 @@ enum SupabaseAPI: APIFetcher {
     case articlesByCategory(language: String, category: String, page: Int, pageSize: Int)
     case breakingNews(language: String, limit: Int)
     case article(id: String)
-    case search(query: String, page: Int, pageSize: Int)
+    case search(query: String, language: String, page: Int, pageSize: Int)
     case categories
     case sources
     case media(language: String, type: String?, page: Int, pageSize: Int)
@@ -79,10 +79,13 @@ enum SupabaseAPI: APIFetcher {
             queryItems.append(URLQueryItem(name: "id", value: "eq.\(id)"))
             queryItems.append(URLQueryItem(name: "limit", value: "1"))
 
-        case let .search(query, page, pageSize):
+        case let .search(query, language, page, pageSize):
             endpoint = "/api-search"
             let offset = (page - 1) * pageSize
             queryItems.append(URLQueryItem(name: "q", value: query))
+            // `/api-search` is not PostgREST-shaped: it takes a bare ISO 639-1
+            // code, not a `eq.<code>` filter expression like `/api-articles`.
+            queryItems.append(URLQueryItem(name: "language", value: language))
             queryItems.append(URLQueryItem(name: "limit", value: String(pageSize)))
             if offset > 0 {
                 queryItems.append(URLQueryItem(name: "offset", value: String(offset)))
