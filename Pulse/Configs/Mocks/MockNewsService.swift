@@ -10,6 +10,7 @@ final class MockNewsService: NewsService {
     var fetchedTopHeadlinesLanguages: [String] = []
     var fetchedCategoryHeadlinesLanguages: [String] = []
     var fetchedBreakingNewsLanguages: [String] = []
+    var fetchedArticleIDs: [String] = []
     private let accessLock = NSLock()
 
     private func withLock<T>(_ operation: () -> T) -> T {
@@ -70,6 +71,8 @@ final class MockNewsService: NewsService {
     }
 
     func fetchArticle(id: String) -> AnyPublisher<Article, Error> {
+        withLock { fetchedArticleIDs.append(id) }
+
         // Use custom result if set, otherwise find article by ID in mock articles
         if let result = fetchArticleResult {
             return result.publisher.eraseToAnyPublisher()

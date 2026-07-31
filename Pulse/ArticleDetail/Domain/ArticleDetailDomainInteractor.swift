@@ -85,7 +85,13 @@ final class ArticleDetailDomainInteractor: CombineInteractor {
         case .openInBrowser:
             openInBrowser()
         case let .fullArticleLoaded(article):
-            updateState { $0.article = article }
+            updateState { state in
+                state.article = article
+                // The first pass already flipped this to `false`; a second one
+                // is now in flight, so the flag has to go back up or the state
+                // claims idle while work is running.
+                state.isProcessingContent = true
+            }
             startContentProcessing()
         case let .contentProcessingCompleted(content, description):
             updateState { state in
