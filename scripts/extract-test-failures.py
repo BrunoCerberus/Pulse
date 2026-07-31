@@ -16,27 +16,11 @@ job summary. Always exits 0 — the test step already failed the job; this is
 reporting only.
 """
 
-import json
 import os
 import re
-import subprocess
 import sys
 
-
-def parse_xcresult(result_bundle):
-    """Return parsed xcresult JSON, trying the new format then --legacy."""
-    for legacy_flag in ["", "--legacy"]:
-        try:
-            cmd = ["xcrun", "xcresulttool", "get", "object"]
-            if legacy_flag:
-                cmd.append(legacy_flag)
-            cmd.extend(["--path", result_bundle, "--format", "json"])
-            result = subprocess.run(cmd, capture_output=True, text=True)
-            if result.returncode == 0 and result.stdout.strip():
-                return json.loads(result.stdout)
-        except Exception:
-            continue
-    return None
+from xcresult_common import escape_cell, parse_xcresult, truncate
 
 
 def log_fallback(test_log):
@@ -97,8 +81,8 @@ def main():
         for f in failures:
             case = f.get("testCaseName", {}).get("_value", "Unknown Test")
             message = f.get("message", {}).get("_value", "No message")
-            message_short = message[:150] + "..." if len(message) > 150 else message
-            message_escaped = message_short.replace("|", "\\|").replace("\n", " ")
+            message_short = truncate(message)
+            message_escaped = escape_cell(message_short)
 
             print(f"❌ {case}")
             print(f"   {message_short}")

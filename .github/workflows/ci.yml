@@ -41,30 +41,15 @@ jobs:
       with:
         persist-credentials: false
 
-    - name: Select Xcode 26.5
-      run: |
-        XCODE_PATH=$(ls -d /Applications/Xcode_26.5*.app 2>/dev/null | head -1)
-        if [ -z "$XCODE_PATH" ]; then
-          echo "::error::Xcode 26.5 not found on runner"
-          ls -d /Applications/Xcode_26*.app || true
-          exit 1
-        fi
-        sudo xcode-select -s "$XCODE_PATH/Contents/Developer"
-        echo "DEVELOPER_DIR=$XCODE_PATH/Contents/Developer" >> "$GITHUB_ENV"
-        xcodebuild -version
-
-    # Cache Homebrew's download cache only. The old /usr/local/Homebrew entry
-    # was a no-op on the arm64 macos runners (brew lives in /opt/homebrew) and
-    # caching the whole prefix would be huge — key bumped to v2 so stale
-    # archives with the dead path aren't restored.
-    # Note: Static version key (brew-v2) - increment manually when brew dependencies change
-    - name: Cache Homebrew packages
-      uses: actions/cache@55cc8345863c7cc4c66a329aec7e433d2d1c52a9 # v6.1.0
+    # Shared setup (Select Xcode + brew/SPM caches + xcodegen + generate).
+    # install-runtime: false — linting never boots a simulator.
+    - name: Set up iOS build environment
+      uses: ./.github/actions/setup-ios
       with:
-        path: ~/Library/Caches/Homebrew
-        key: ${{ runner.os }}-brew-v2
+        install-runtime: "false"
 
-    # Cache Mint packages
+    # Mint is specific to this job (SwiftFormat) so its cache stays here rather
+    # than in the shared composite.
     # Note: Static version key (mint-v1) - increment manually when mint dependencies change
     - name: Cache Mint packages
       uses: actions/cache@55cc8345863c7cc4c66a329aec7e433d2d1c52a9 # v6.1.0
@@ -73,14 +58,6 @@ jobs:
         key: ${{ runner.os }}-mint-v1
         restore-keys: |
           ${{ runner.os }}-mint-
-
-    - name: Install XcodeGen
-      run: |
-        brew install xcodegen
-
-    - name: Generate Xcode project
-      run: |
-        make generate
 
     - name: Install Mint
       run: |
@@ -193,8 +170,17 @@ jobs:
       compile: ${{ github.event_name != 'pull_request' || steps.filter.outcome != 'success' || steps.filter.outputs.unit == 'true' || steps.filter.outputs.snapshot == 'true' || steps.filter.outputs.ui == 'true' }}
 
     steps:
+    # continue-on-error mirrors the two steps below: this job's fail-open
+    # contract outranks the hardening, so a harden-runner hiccup must not be
+    # what causes a suite to skip.
+    - name: Harden runner
+      continue-on-error: true
+      uses: step-security/harden-runner@bf7454d06d71f1098171f2acdf0cd4708d7b5920 # v2.20.0
+      with:
+        egress-policy: audit
+
     - name: Checkout code
-      uses: actions/checkout@9c091bb21b7c1c1d1991bb908d89e4e9dddfe3e0 # v7.0.0
+      uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
       continue-on-error: true
       with:
         fetch-depth: 0
@@ -470,6 +456,25 @@ jobs:
         RESULT_BUNDLE: test-results/unit-test-results.xcresult
         TEST_NAME: Unit Tests
 
+    # `if: success()` is the whole detection precondition — see the script
+    # docstring. A failure recorded in a bundle whose suite passed can only
+    # have been recovered by -retry-tests-on-failure.
+    - name: Detect flaky tests
+      if: success()
+      run: python3 scripts/detect-flaky-tests.py
+      env:
+        RESULT_BUNDLE: test-results/unit-test-results.xcresult
+        TEST_NAME: Unit Tests
+        FLAKY_JSON: flaky-unit.json
+
+    - name: Upload flaky test report
+      uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
+      if: success()
+      with:
+        name: flaky-unit
+        path: flaky-unit.json
+        if-no-files-found: ignore
+
     - name: Upload test results
       uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
       if: always()
@@ -487,6 +492,8 @@ jobs:
 
     permissions:
       contents: read
+      # For the sticky snapshot-failure comment posted at the end of this job.
+      pull-requests: write
 
     steps:
     - name: Checkout code
@@ -548,6 +555,22 @@ jobs:
         RESULT_BUNDLE: test-results/snapshot-test-results.xcresult
         TEST_NAME: Snapshot Tests
 
+    - name: Detect flaky tests
+      if: success()
+      run: python3 scripts/detect-flaky-tests.py
+      env:
+        RESULT_BUNDLE: test-results/snapshot-test-results.xcresult
+        TEST_NAME: Snapshot Tests
+        FLAKY_JSON: flaky-snapshot.json
+
+    - name: Upload flaky test report
+      uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
+      if: success()
+      with:
+        name: flaky-snapshot
+        path: flaky-snapshot.json
+        if-no-files-found: ignore
+
     - name: Upload test results
       uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
       if: always()
@@ -563,6 +586,37 @@ jobs:
         name: recorded-snapshots
         path: PulseSnapshotTests/**/__Snapshots__/**/*.png
         if-no-files-found: ignore
+
+    # Surfaces the failing cases on the PR itself with a direct link to the
+    # recorded-snapshots artifact, instead of making the reader dig through the
+    # run UI. Images are linked, not inlined — see the script docstring.
+    - name: Render snapshot failure report
+      id: snapshot-report
+      if: failure() && github.event_name == 'pull_request'
+      env:
+        RESULT_BUNDLE: test-results/snapshot-test-results.xcresult
+        OUTPUT: snapshot-failures.md
+        RUN_URL: ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}
+      run: python3 scripts/render-snapshot-failures.py
+
+    # `always() &&` is load-bearing: this step only ever runs after the test
+    # step has already failed, and a step whose `if:` omits always()/failure()
+    # is skipped once the job is in a failed state — so without it the comment
+    # would never post in the one case it exists for.
+    - name: Post snapshot failures as PR comment
+      if: always() && steps.snapshot-report.outputs.has_failures == 'true'
+      uses: marocchino/sticky-pull-request-comment@5770ad5eb8f42dd2c4f34da00c94c5381e49af88 # v3.0.5
+      with:
+        header: snapshot-failures
+        path: snapshot-failures.md
+
+    # A green snapshot run clears any comment left by an earlier red commit.
+    - name: Remove stale snapshot failure comment
+      if: success() && github.event_name == 'pull_request'
+      uses: marocchino/sticky-pull-request-comment@5770ad5eb8f42dd2c4f34da00c94c5381e49af88 # v3.0.5
+      with:
+        header: snapshot-failures
+        delete: true
 
   # NOTE: these two jobs were deliberately de-matrixed. A `name:` containing
   # `${{ matrix.* }}` is NOT interpolated when the job is skipped by a
@@ -649,6 +703,22 @@ jobs:
         RESULT_BUNDLE: test-results/ui-test-results.xcresult
         TEST_NAME: UI Tests
 
+    - name: Detect flaky tests
+      if: success()
+      run: python3 scripts/detect-flaky-tests.py
+      env:
+        RESULT_BUNDLE: test-results/ui-test-results.xcresult
+        TEST_NAME: UI Tests
+        FLAKY_JSON: flaky-ui.json
+
+    - name: Upload flaky test report
+      uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
+      if: success()
+      with:
+        name: flaky-ui
+        path: flaky-ui.json
+        if-no-files-found: ignore
+
     - name: Upload test results
       uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
       if: always()
@@ -673,7 +743,7 @@ jobs:
 
     steps:
     - name: Checkout code
-      uses: actions/checkout@9c091bb21b7c1c1d1991bb908d89e4e9dddfe3e0 # v7.0.0
+      uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
       with:
         persist-credentials: false
 
@@ -736,6 +806,22 @@ jobs:
         RESULT_BUNDLE: test-results/ui-test-results-ipad.xcresult
         TEST_NAME: UI Tests (iPad)
 
+    - name: Detect flaky tests
+      if: success()
+      run: python3 scripts/detect-flaky-tests.py
+      env:
+        RESULT_BUNDLE: test-results/ui-test-results-ipad.xcresult
+        TEST_NAME: UI Tests (iPad)
+        FLAKY_JSON: flaky-ui-ipad.json
+
+    - name: Upload flaky test report
+      uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
+      if: success()
+      with:
+        name: flaky-ui-ipad
+        path: flaky-ui-ipad.json
+        if-no-files-found: ignore
+
     - name: Upload test results
       uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
       if: always()
@@ -771,17 +857,13 @@ jobs:
     - name: Ensure base ref is present
       run: git fetch --no-tags --depth=200 origin "$BASE_SHA" || true
 
-    - name: Select Xcode 26.5
-      run: |
-        XCODE_PATH=$(ls -d /Applications/Xcode_26.5*.app 2>/dev/null | head -1)
-        if [ -z "$XCODE_PATH" ]; then
-          echo "::error::Xcode 26.5 not found on runner"
-          ls -d /Applications/Xcode_26*.app || true
-          exit 1
-        fi
-        sudo xcode-select -s "$XCODE_PATH/Contents/Developer"
-        echo "DEVELOPER_DIR=$XCODE_PATH/Contents/Developer" >> "$GITHUB_ENV"
-        xcodebuild -version
+    # Xcode is needed only for xcresulttool (via xcresult-to-cobertura.py) —
+    # no simulator, no project generation.
+    - name: Set up iOS build environment
+      uses: ./.github/actions/setup-ios
+      with:
+        install-runtime: "false"
+        generate-project: "false"
 
     - name: Download unit test results
       uses: actions/download-artifact@3e5f45b2cfb9172054b4087a40e8e0b5a5461e7c # v8.0.1
@@ -963,6 +1045,11 @@ jobs:
       contents: read
 
     steps:
+    - name: Harden runner
+      uses: step-security/harden-runner@bf7454d06d71f1098171f2acdf0cd4708d7b5920 # v2.20.0
+      with:
+        egress-policy: audit
+
     - name: Checkout code
       uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
       with:
@@ -1093,7 +1180,11 @@ jobs:
     name: Coverage Summary
     runs-on: macos-26
     needs: unit-tests
-    if: always()
+    # Only meaningful when unit-tests actually produced an xcresult. Previously
+    # `always()`, which booted a macOS runner just to print "no bundle
+    # available" on every PR the path filter skipped. Not a required check, so
+    # skipping it here is free.
+    if: needs.unit-tests.result == 'success'
     timeout-minutes: 10
 
     permissions:
@@ -1105,16 +1196,12 @@ jobs:
       with:
         persist-credentials: false
 
-    - name: Select Xcode 26.5
-      run: |
-        XCODE_PATH=$(ls -d /Applications/Xcode_26.5*.app 2>/dev/null | head -1)
-        if [ -z "$XCODE_PATH" ]; then
-          echo "::error::Xcode 26.5 not found on runner"
-          ls -d /Applications/Xcode_26*.app || true
-          exit 1
-        fi
-        sudo xcode-select -s "$XCODE_PATH/Contents/Developer"
-        echo "DEVELOPER_DIR=$XCODE_PATH/Contents/Developer" >> "$GITHUB_ENV"
+    # Xcode is needed only for `xcrun xccov` — no simulator, no project.
+    - name: Set up iOS build environment
+      uses: ./.github/actions/setup-ios
+      with:
+        install-runtime: "false"
+        generate-project: "false"
 
     - name: Download unit test results
       uses: actions/download-artifact@3e5f45b2cfb9172054b4087a40e8e0b5a5461e7c # v8.0.1
@@ -1162,3 +1249,63 @@ jobs:
         name: coverage-badge
         path: badges/coverage.svg
         if-no-files-found: ignore
+
+  # Aggregates the per-suite flake reports into one sticky PR comment. Pure
+  # JSON/text merging, so it runs on ubuntu. Never fails the build: a flake is
+  # a triage signal, not a broken build — the suites it summarizes all passed.
+  flaky-report:
+    name: Flaky Test Report
+    runs-on: ubuntu-latest
+    needs: [unit-tests, snapshot-tests, ui-tests, ui-tests-ipad]
+    if: always() && github.event_name == 'pull_request'
+    timeout-minutes: 10
+
+    permissions:
+      contents: read
+      pull-requests: write
+
+    steps:
+    - name: Harden runner
+      uses: step-security/harden-runner@bf7454d06d71f1098171f2acdf0cd4708d7b5920 # v2.20.0
+      with:
+        egress-policy: audit
+
+    - name: Checkout code
+      uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+      with:
+        persist-credentials: false
+
+    # Each suite uploads its own flaky-*.json; a skipped or failed suite simply
+    # contributes nothing. `pattern` + `merge-multiple` collapses them into one
+    # directory for the renderer to walk.
+    - name: Download flaky reports
+      uses: actions/download-artifact@3e5f45b2cfb9172054b4087a40e8e0b5a5461e7c # v8.0.1
+      continue-on-error: true
+      with:
+        pattern: flaky-*
+        merge-multiple: true
+        path: flaky-reports
+
+    - name: Render flaky report
+      id: render
+      env:
+        FLAKY_DIR: flaky-reports
+        OUTPUT: flaky-report.md
+      run: python3 scripts/render-flaky-report.py
+
+    # Posted when flakes exist, and actively DELETED when they don't — so a PR
+    # that fixes the last flaky test loses the warning comment instead of
+    # carrying a stale one forever.
+    - name: Post flaky report as PR comment
+      if: steps.render.outputs.has_flakes == 'true'
+      uses: marocchino/sticky-pull-request-comment@5770ad5eb8f42dd2c4f34da00c94c5381e49af88 # v3.0.5
+      with:
+        header: flaky-report
+        path: flaky-report.md
+
+    - name: Remove stale flaky report comment
+      if: steps.render.outputs.has_flakes == 'false'
+      uses: marocchino/sticky-pull-request-comment@5770ad5eb8f42dd2c4f34da00c94c5381e49af88 # v3.0.5
+      with:
+        header: flaky-report
+        delete: true

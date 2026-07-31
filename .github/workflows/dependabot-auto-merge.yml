@@ -1,0 +1,84 @@
+name: Dependabot Auto-merge
+
+# Dependabot opens the large majority of PRs on this repo (five of the last five
+# commits on master at the time of writing). Reviewing a SHA bump of
+# actions/checkout by hand adds no safety that CI doesn't already provide, so
+# patch- and minor-level bumps are queued for auto-merge here.
+#
+# This does NOT bypass any gate. `gh pr merge --auto` asks GitHub to merge the PR
+# only once every required status check in the master ruleset passes — the full
+# test suite, Patch Coverage, Security Audit / Checks, the privacy-conformance
+# jobs, CodeQL and the Claude reviews all still have to go green. If anything
+# fails, the PR just sits there like any other.
+#
+# MAJOR bumps are deliberately excluded: those are the ones that change action
+# inputs, drop runner support, or move a Swift package across a breaking
+# boundary, and they deserve a human read.
+
+on:
+  pull_request:
+    types: [opened, synchronize, reopened, ready_for_review]
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+permissions: {}
+
+jobs:
+  auto-merge:
+    name: Enable auto-merge
+    # `pull_request` (not `pull_request_target`) means this runs from the PR's
+    # own branch with a read-only default token — safe, because Dependabot PRs
+    # originate from same-repo branches. The write scopes below are granted
+    # explicitly to this job only.
+    if: github.actor == 'dependabot[bot]' && github.event.pull_request.draft == false
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+
+    permissions:
+      contents: write        # required to enable auto-merge on the PR
+      pull-requests: write   # required to approve + comment
+
+    steps:
+    - name: Harden runner
+      uses: step-security/harden-runner@bf7454d06d71f1098171f2acdf0cd4708d7b5920 # v2.20.0
+      with:
+        egress-policy: audit
+
+    # Parses the structured metadata Dependabot puts in the PR body, rather than
+    # regexing the title — the update type is authoritative there.
+    - name: Fetch Dependabot metadata
+      id: metadata
+      uses: dependabot/fetch-metadata@25dd0e34f4fe68f24cc83900b1fe3fe149efef98 # v3.1.0
+      with:
+        github-token: ${{ secrets.GITHUB_TOKEN }}
+
+    - name: Approve and enable auto-merge (patch + minor)
+      if: >-
+        steps.metadata.outputs.update-type == 'version-update:semver-patch' ||
+        steps.metadata.outputs.update-type == 'version-update:semver-minor'
+      env:
+        GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        PR_URL: ${{ github.event.pull_request.html_url }}
+      run: |
+        set -euo pipefail
+        # The ruleset requires an approving review; the Actions bot supplies it.
+        gh pr review --approve "$PR_URL"
+        gh pr merge --auto --squash "$PR_URL"
+        echo "Auto-merge enabled — will land once all required checks pass."
+
+    - name: Flag major bumps for manual review
+      if: steps.metadata.outputs.update-type == 'version-update:semver-major'
+      env:
+        GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        PR_URL: ${{ github.event.pull_request.html_url }}
+        DEP: ${{ steps.metadata.outputs.dependency-names }}
+      run: |
+        set -euo pipefail
+        echo "Major bump of ${DEP} — leaving for manual review."
+        {
+          echo "## Dependabot Auto-merge"
+          echo ""
+          echo "Major version bump of \`${DEP}\` — **not** auto-merged. Review manually."
+        } >> "$GITHUB_STEP_SUMMARY"

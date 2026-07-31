@@ -17,6 +17,14 @@ inputs:
       boot a simulator.
     required: false
     default: "true"
+  generate-project:
+    description: >
+      Restore the Homebrew/SPM caches, install XcodeGen and run `make generate`.
+      Set "false" for jobs that need a selected Xcode purely for its command-line
+      tools (xccov, xcresulttool) and never build — they have no .xcodeproj to
+      generate, so the whole chain is dead weight.
+    required: false
+    default: "true"
 
 runs:
   using: "composite"
@@ -65,7 +73,8 @@ runs:
     # was a no-op on the arm64 macos runners (brew lives in /opt/homebrew) —
     # key bumped to v2 so stale archives with the dead path aren't restored.
     - name: Cache Homebrew packages
-      uses: actions/cache@2c8a9bd7457de244a408f35966fab2fb45fda9c8 # v6.0.0
+      if: ${{ inputs.generate-project == 'true' }}
+      uses: actions/cache@55cc8345863c7cc4c66a329aec7e433d2d1c52a9 # v6.1.0
       with:
         path: ~/Library/Caches/Homebrew
         key: ${{ runner.os }}-brew-v2
@@ -76,7 +85,8 @@ runs:
     # in the resolve/build steps forces resolution from the checked-out
     # Package.resolved, so a partially-stale restore is corrected, not trusted.
     - name: Cache SPM dependencies
-      uses: actions/cache@2c8a9bd7457de244a408f35966fab2fb45fda9c8 # v6.0.0
+      if: ${{ inputs.generate-project == 'true' }}
+      uses: actions/cache@55cc8345863c7cc4c66a329aec7e433d2d1c52a9 # v6.1.0
       with:
         path: |
           Pulse.xcodeproj/project.xcworkspace/xcshareddata/swiftpm
@@ -86,9 +96,11 @@ runs:
           ${{ runner.os }}-spm-
 
     - name: Install XcodeGen
+      if: ${{ inputs.generate-project == 'true' }}
       shell: bash
       run: brew install xcodegen
 
     - name: Generate Xcode project
+      if: ${{ inputs.generate-project == 'true' }}
       shell: bash
       run: make generate
