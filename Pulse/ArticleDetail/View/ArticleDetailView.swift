@@ -304,9 +304,13 @@ struct ArticleDetailView: View {
                     bodyPlaceholder
                 }
             }
-            // Without this the `.transition` on the placeholder is inert and
+            // Without these the `.transition` on the placeholder is inert and
             // the body would pop in — the abruptness this PR set out to remove.
+            // Both keys are needed: the body can finish processing to `nil`
+            // (`filterKnownErrorContent` strips a scraper-error-only body), and
+            // then only `isProcessingContent` moves.
             .animation(.default, value: viewModel.viewState.processedContent)
+            .animation(.default, value: viewModel.viewState.isProcessingContent)
 
             Rectangle()
                 .fill(Color.Border.adaptive(for: colorScheme))

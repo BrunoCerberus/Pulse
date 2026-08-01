@@ -149,7 +149,7 @@ final class ArticleDetailDomainInteractor: CombineInteractor {
     ///
     /// Owns the body's first paint: nothing is rendered into the content slot
     /// until this settles, so the summary never appears as the article and
-    /// then get swapped out under the reader. Both dead ends — a failed fetch,
+    /// then gets swapped out under the reader. Both dead ends — a failed fetch,
     /// or an article whose body was pruned server-side — fall back to
     /// processing what we already have, which is the summary the backend's
     /// retention policy expects clients to show.
