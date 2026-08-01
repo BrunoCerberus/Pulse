@@ -23,6 +23,20 @@ struct MorningBriefingPrefetcherTests {
         mockNotificationService = MockNotificationService()
     }
 
+    /// Fixed "now" so eligibility never depends on the wall clock: the
+    /// prefetcher maps the scheduled hour/minute onto the current day, so a
+    /// late-evening run would otherwise wrap an "hours from now" time into
+    /// the past and silently invert every expectation.
+    private static let referenceNow: Date = {
+        var components = DateComponents()
+        components.year = 2026
+        components.month = 1
+        components.day = 15
+        components.hour = 12
+        components.minute = 0
+        return Calendar.current.date(from: components)!
+    }()
+
     private func makeSUT(
         isPremium: Bool? = true,
         preferences: UserPreferences,
@@ -36,11 +50,16 @@ struct MorningBriefingPrefetcherTests {
             briefingCacheService: mockBriefingCacheService,
             notificationService: mockNotificationService,
             storeKitService: isPremium.map { MockStoreKitService(isPremium: $0) },
+            now: { Self.referenceNow },
         )
     }
 
     private func enabledPreferences(hoursFromNow: Int) -> UserPreferences {
-        let scheduled = Calendar.current.date(byAdding: .hour, value: hoursFromNow, to: Date()) ?? Date()
+        let scheduled = Calendar.current.date(
+            byAdding: .hour,
+            value: hoursFromNow,
+            to: Self.referenceNow,
+        ) ?? Self.referenceNow
         let components = Calendar.current.dateComponents([.hour, .minute], from: scheduled)
         return UserPreferences(
             followedTopics: [], mutedSources: [], mutedKeywords: [],
