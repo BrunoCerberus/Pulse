@@ -221,6 +221,13 @@ private extension HomeDomainInteractor {
                     preferredLanguage = preferences.preferredLanguage
                     updateState { state in
                         state.followedTopics = preferences.followedTopics
+                        // Restore the last filter the user left the app on, as long as
+                        // it's still a followed topic.
+                        if let restored = persistedSelectedCategory,
+                           preferences.followedTopics.contains(restored)
+                        {
+                            state.selectedCategory = restored
+                        }
                     }
                     fetchHeadlinesForCurrentCategory(page: 1)
                 },
@@ -296,8 +303,7 @@ private extension HomeDomainInteractor {
         if let category {
             analyticsService?.logEvent(.categorySelected(category: category.rawValue))
         }
-        resetStateForCategoryChange(to: category)
-        fetchHeadlinesForCurrentCategory(page: 1)
+        applyCategorySelection(category)
     }
 }
 
