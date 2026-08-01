@@ -436,6 +436,9 @@ struct ArticleDetailView: View {
                     .frame(maxWidth: index == 5 ? 180 : .infinity, alignment: .leading)
             }
         }
+        // Collapse the six shapes into one element first, or VoiceOver can
+        // surface them individually alongside the label.
+        .accessibilityElement(children: .ignore)
         .accessibilityLabel(Constants.loadingArticleBody)
         .transition(.opacity)
     }
