@@ -102,11 +102,12 @@ extension HomeDomainInteractor {
 
     // MARK: - Category Selection
 
-    private static let selectedCategoryDefaultsKey = "pulse.home.selectedCategory"
+    /// Per-user key — must be wiped in `SettingsViewModel.clearAllUserData()`.
+    static let selectedCategoryDefaultsKey = "pulse.home.selectedCategory"
 
     /// The category filter the user last selected, restored on a cold launch.
     var persistedSelectedCategory: NewsCategory? {
-        guard let raw = UserDefaults.standard.string(forKey: Self.selectedCategoryDefaultsKey) else { return nil }
+        guard let raw = defaults.string(forKey: Self.selectedCategoryDefaultsKey) else { return nil }
         return NewsCategory(rawValue: raw)
     }
 
@@ -120,9 +121,9 @@ extension HomeDomainInteractor {
 
     private func persistSelectedCategory(_ category: NewsCategory?) {
         if let category {
-            UserDefaults.standard.set(category.rawValue, forKey: Self.selectedCategoryDefaultsKey)
+            defaults.set(category.rawValue, forKey: Self.selectedCategoryDefaultsKey)
         } else {
-            UserDefaults.standard.removeObject(forKey: Self.selectedCategoryDefaultsKey)
+            defaults.removeObject(forKey: Self.selectedCategoryDefaultsKey)
         }
     }
 

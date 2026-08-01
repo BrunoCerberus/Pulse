@@ -35,6 +35,9 @@ final class HomeDomainInteractor: CombineInteractor {
     /// Pagination uses `cancellables` instead, since load-more must coexist.
     var headlinesCancellable: AnyCancellable?
     var preferredLanguage: String = "en"
+    /// Backing store for the persisted category filter; injectable so tests
+    /// don't share `.standard` with the rest of the suite.
+    let defaults: UserDefaults
 
     var statePublisher: AnyPublisher<DomainState, Never> {
         stateSubject.eraseToAnyPublisher()
@@ -44,7 +47,9 @@ final class HomeDomainInteractor: CombineInteractor {
         stateSubject.value
     }
 
-    init(serviceLocator: ServiceLocator) {
+    init(serviceLocator: ServiceLocator, defaults: UserDefaults = .standard) {
+        self.defaults = defaults
+
         do {
             newsService = try serviceLocator.retrieve(NewsService.self)
         } catch {
