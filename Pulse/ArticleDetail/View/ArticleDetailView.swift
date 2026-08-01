@@ -295,13 +295,18 @@ struct ArticleDetailView: View {
                     }
             }
 
-            if let content = viewModel.viewState.processedContent {
-                Text(content)
-                    .foregroundStyle(.primary.opacity(0.85))
-                    .lineSpacing(6)
-            } else if viewModel.viewState.isProcessingContent {
-                bodyPlaceholder
+            Group {
+                if let content = viewModel.viewState.processedContent {
+                    Text(content)
+                        .foregroundStyle(.primary.opacity(0.85))
+                        .lineSpacing(6)
+                } else if viewModel.viewState.isProcessingContent {
+                    bodyPlaceholder
+                }
             }
+            // Without this the `.transition` on the placeholder is inert and
+            // the body would pop in — the abruptness this PR set out to remove.
+            .animation(.default, value: viewModel.viewState.processedContent)
 
             Rectangle()
                 .fill(Color.Border.adaptive(for: colorScheme))
