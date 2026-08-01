@@ -114,6 +114,7 @@
 
 "article.by_author" = "By %@";
 "article.read_full" = "Read Full Article";
+"article.loading_body" = "Loading article";
 "article.bookmark" = "Bookmark";
 "article.share" = "Share";
 "article.remove_bookmark" = "Remove Bookmark";

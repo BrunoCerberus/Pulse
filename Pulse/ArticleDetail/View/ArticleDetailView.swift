@@ -295,11 +295,22 @@ struct ArticleDetailView: View {
                     }
             }
 
-            if let content = viewModel.viewState.processedContent {
-                Text(content)
-                    .foregroundStyle(.primary.opacity(0.85))
-                    .lineSpacing(6)
+            Group {
+                if let content = viewModel.viewState.processedContent {
+                    Text(content)
+                        .foregroundStyle(.primary.opacity(0.85))
+                        .lineSpacing(6)
+                } else if viewModel.viewState.isProcessingContent {
+                    bodyPlaceholder
+                }
             }
+            // Without these the `.transition` on the placeholder is inert and
+            // the body would pop in — the abruptness this PR set out to remove.
+            // Both keys are needed: the body can finish processing to `nil`
+            // (`filterKnownErrorContent` strips a scraper-error-only body), and
+            // then only `isProcessingContent` moves.
+            .animation(.default, value: viewModel.viewState.processedContent)
+            .animation(.default, value: viewModel.viewState.isProcessingContent)
 
             Rectangle()
                 .fill(Color.Border.adaptive(for: colorScheme))
@@ -420,6 +431,25 @@ struct ArticleDetailView: View {
                 }
             },
         )
+    }
+
+    /// Stands in for the body while the by-id fetch is in flight. The row this
+    /// screen was opened with carries only the summary, so rendering that as
+    /// the article and replacing it a moment later reads as a glitch.
+    private var bodyPlaceholder: some View {
+        VStack(alignment: .leading, spacing: Spacing.sm) {
+            ForEach(0 ..< 6, id: \.self) { index in
+                RoundedRectangle(cornerRadius: CornerRadius.xs)
+                    .fill(.primary.opacity(0.08))
+                    .frame(height: 12)
+                    .frame(maxWidth: index == 5 ? 180 : .infinity, alignment: .leading)
+            }
+        }
+        // Collapse the six shapes into one element first, or VoiceOver can
+        // surface them individually alongside the label.
+        .accessibilityElement(children: .ignore)
+        .accessibilityLabel(Constants.loadingArticleBody)
+        .transition(.opacity)
     }
 
     private var contentAttribution: some View {
