@@ -66,8 +66,15 @@ final class ArticleDetailDomainInteractor: CombineInteractor {
         analyticsService = try? serviceLocator.retrieve(AnalyticsService.self)
         engagementEventsService = try? serviceLocator.retrieve(EngagementEventsService.self)
 
-        // Start content processing immediately on init
-        startContentProcessing()
+        // Only render what we already have when nothing better is coming. The
+        // row handed over by a list carries the source's short summary in
+        // `content`, so processing it here would paint it as the article body
+        // and then visibly replace it a moment later when the by-id fetch
+        // lands. When a fetch is possible, `loadFullArticle` owns the first
+        // paint instead — including its own failure fallbacks.
+        if newsService == nil {
+            startContentProcessing()
+        }
     }
 
     // swiftlint:disable:next cyclomatic_complexity
@@ -138,9 +145,14 @@ final class ArticleDetailDomainInteractor: CombineInteractor {
     /// body and would balloon every feed payload — so the row this screen is
     /// opened with only carries the source's short summary. The body arrives
     /// only from a by-id fetch, which the caching layer serves from L1/L2 on
-    /// repeat visits. A failure (or an article whose body has been pruned
-    /// server-side) leaves the summary on screen, which is the fallback the
-    /// backend's retention policy expects.
+    /// repeat visits.
+    ///
+    /// Owns the body's first paint: nothing is rendered into the content slot
+    /// until this settles, so the summary never appears as the article and
+    /// then get swapped out under the reader. Both dead ends — a failed fetch,
+    /// or an article whose body was pruned server-side — fall back to
+    /// processing what we already have, which is the summary the backend's
+    /// retention policy expects clients to show.
     private func loadFullArticle() {
         guard let newsService, !hasRequestedFullArticle else { return }
         hasRequestedFullArticle = true
@@ -148,13 +160,19 @@ final class ArticleDetailDomainInteractor: CombineInteractor {
         newsService.fetchArticle(id: currentState.article.id)
             .receive(on: DispatchQueue.main)
             .sink(
-                receiveCompletion: { completion in
+                receiveCompletion: { [weak self] completion in
                     if case let .failure(error) = completion {
                         Logger.shared.service("Failed to load full article: \(error)", level: .debug)
+                        self?.startContentProcessing()
                     }
                 },
                 receiveValue: { [weak self] article in
-                    guard let self, article.content != currentState.article.content else { return }
+                    guard let self else { return }
+                    guard article.content != currentState.article.content else {
+                        // Body was pruned server-side; the summary is all there is.
+                        startContentProcessing()
+                        return
+                    }
                     dispatch(action: .fullArticleLoaded(article))
                 },
             )

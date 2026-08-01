@@ -7,6 +7,8 @@ final class MockNewsService: NewsService {
     var breakingNewsResult: Result<[Article], Error> = .success(Array(Article.mockArticles.prefix(3)))
     var categoryHeadlinesResult: Result<[Article], Error>?
     var fetchArticleResult: Result<Article, Error>?
+    /// Set to hold a fetch open, so tests can observe the in-flight state.
+    var fetchArticlePublisher: PassthroughSubject<Article, Error>?
     var fetchedTopHeadlinesLanguages: [String] = []
     var fetchedCategoryHeadlinesLanguages: [String] = []
     var fetchedBreakingNewsLanguages: [String] = []
@@ -72,6 +74,10 @@ final class MockNewsService: NewsService {
 
     func fetchArticle(id: String) -> AnyPublisher<Article, Error> {
         withLock { fetchedArticleIDs.append(id) }
+
+        if let subject = fetchArticlePublisher {
+            return subject.eraseToAnyPublisher()
+        }
 
         // Use custom result if set, otherwise find article by ID in mock articles
         if let result = fetchArticleResult {

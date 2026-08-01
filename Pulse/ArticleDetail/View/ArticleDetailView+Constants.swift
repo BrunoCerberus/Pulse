@@ -12,6 +12,10 @@ extension ArticleDetailView {
             AppLocalization.localized("article.read_full")
         }
 
+        static var loadingArticleBody: String {
+            AppLocalization.localized("article.loading_body")
+        }
+
         static var summarize: String {
             AppLocalization.localized("summarization.button")
         }

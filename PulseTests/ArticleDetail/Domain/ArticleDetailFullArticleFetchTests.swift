@@ -158,11 +158,14 @@ struct ArticleDetailFullArticleFetchTests {
 
     @Test("Reprocessing the swapped-in body reports work in flight")
     func reprocessingFlagsProcessing() async {
+        // A failed fetch runs the summary fallback, which is the cheapest way
+        // to get one completed pass on the board. The flag starts `true` from
+        // `initial(article:)`, so asserting before a pass has finished would
+        // pass whether or not the handler raises it again.
+        mockNewsService.fetchArticleResult = .failure(URLError(.resourceUnavailable))
         let sut = createSUT()
+        sut.dispatch(action: .onAppear)
 
-        // The flag starts `true` from `initial(article:)`, so the first pass has
-        // to finish before this asserts anything — otherwise it passes whether
-        // or not the handler raises it again.
         let firstPassDone = await waitForCondition(timeout: TestWaitDuration.long) { @MainActor in
             !sut.currentState.isProcessingContent
         }
@@ -174,5 +177,20 @@ struct ArticleDetailFullArticleFetchTests {
 
         #expect(sut.currentState.isProcessingContent)
         #expect(sut.currentState.article.content == Self.withBody.content)
+    }
+
+    @Test("The summary is never painted as the body while the fetch is in flight")
+    func summaryIsNotPaintedBeforeFetchResolves() async {
+        // Never completes, so the screen stays in its pre-fetch state.
+        mockNewsService.fetchArticlePublisher = PassthroughSubject<Article, Error>()
+        let sut = createSUT()
+
+        sut.dispatch(action: .onAppear)
+        try? await Task.sleep(nanoseconds: TestWaitDuration.long)
+
+        // The list row's `content` is the summary; painting it here is the
+        // flash we're avoiding.
+        #expect(sut.currentState.processedContent == nil)
+        #expect(sut.currentState.isProcessingContent)
     }
 }

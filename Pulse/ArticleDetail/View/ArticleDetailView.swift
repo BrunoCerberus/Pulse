@@ -299,6 +299,8 @@ struct ArticleDetailView: View {
                 Text(content)
                     .foregroundStyle(.primary.opacity(0.85))
                     .lineSpacing(6)
+            } else if viewModel.viewState.isProcessingContent {
+                bodyPlaceholder
             }
 
             Rectangle()
@@ -420,6 +422,22 @@ struct ArticleDetailView: View {
                 }
             },
         )
+    }
+
+    /// Stands in for the body while the by-id fetch is in flight. The row this
+    /// screen was opened with carries only the summary, so rendering that as
+    /// the article and replacing it a moment later reads as a glitch.
+    private var bodyPlaceholder: some View {
+        VStack(alignment: .leading, spacing: Spacing.sm) {
+            ForEach(0 ..< 6, id: \.self) { index in
+                RoundedRectangle(cornerRadius: CornerRadius.xs)
+                    .fill(.primary.opacity(0.08))
+                    .frame(height: 12)
+                    .frame(maxWidth: index == 5 ? 180 : .infinity, alignment: .leading)
+            }
+        }
+        .accessibilityLabel(Constants.loadingArticleBody)
+        .transition(.opacity)
     }
 
     private var contentAttribution: some View {
