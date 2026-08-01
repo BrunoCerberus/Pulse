@@ -46,7 +46,7 @@ final class ArticleDetailViewSnapshotTests: XCTestCase {
         assertSnapshot(
             of: controller,
             as: SnapshotConfig.snapshotting(on: iPhoneAirConfig),
-            record: false,
+            record: true, // TEMP: record on CI, reverted in the next commit
         )
     }
 }
