@@ -82,10 +82,15 @@ struct LiveSmartBriefingCacheServiceTests {
 
         let fetched = try #require(sut.fetchLastServed())
         #expect(fetched.servedArticleIDs.count == 500)
-        // The earliest 5 runs (55 IDs) should have been evicted first.
-        for run in 0 ..< 5 {
+        // 550 recorded − 500 cap = 50 evictions, so runs 0...3 (44 IDs) are
+        // fully gone and run 4 is only partially evicted. Which 6 of run 4's
+        // 11 IDs go is unspecified — `recordServed` takes a Set, so order
+        // within a single run isn't defined — hence assert only on the runs
+        // that are wholly evicted.
+        for run in 0 ..< 4 {
             #expect(!fetched.servedArticleIDs.contains("run-\(run)-article-0"))
         }
+        #expect(fetched.servedArticleIDs.filter { $0.hasPrefix("run-4-") }.count == 5)
         // The most recent runs must still be present.
         for run in 45 ..< 50 {
             #expect(fetched.servedArticleIDs.contains("run-\(run)-article-0"))

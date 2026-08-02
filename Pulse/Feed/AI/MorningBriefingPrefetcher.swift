@@ -18,6 +18,10 @@ final class MorningBriefingPrefetcher {
     private let briefingCacheService: BriefingCacheService
     private let notificationService: NotificationService?
     private let storeKitService: StoreKitService?
+    /// Injectable clock: the scheduled hour/minute is mapped onto the current
+    /// day, so tests need a fixed "now" to pin eligibility instead of
+    /// offsetting from the wall clock (which flips around midnight).
+    private let now: () -> Date
 
     private var prefetchTask: Task<Void, Never>?
 
@@ -29,7 +33,9 @@ final class MorningBriefingPrefetcher {
         briefingCacheService: BriefingCacheService,
         notificationService: NotificationService?,
         storeKitService: StoreKitService?,
+        now: @escaping () -> Date = Date.init,
     ) {
+        self.now = now
         self.feedService = feedService
         self.newsService = newsService
         self.forYouService = forYouService
@@ -130,7 +136,7 @@ final class MorningBriefingPrefetcher {
     }
 
     private func isBeforeScheduledTime(hour: Int, minute: Int) -> Bool {
-        let now = Date()
+        let now = now()
         guard let scheduled = Calendar.current.date(
             bySettingHour: hour,
             minute: minute,

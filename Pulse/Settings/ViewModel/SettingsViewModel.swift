@@ -420,6 +420,9 @@ final class SettingsViewModel: CombineViewModel, ObservableObject {
         // Smart Briefing's "last served" record is likewise personalized
         // and device-local, not tied to sign-in state on shared devices.
         defaults.removeObject(forKey: LiveSmartBriefingCacheService.storageKey)
+        // The Home category filter is a per-user preference; leaving it would
+        // apply the previous account's filter on the next cold launch.
+        defaults.removeObject(forKey: HomeDomainInteractor.selectedCategoryDefaultsKey)
 
         // 6. Reset ThemeManager to system defaults
         themeManager.useSystemTheme = true

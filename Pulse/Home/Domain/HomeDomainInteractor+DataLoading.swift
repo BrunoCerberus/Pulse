@@ -100,6 +100,33 @@ extension HomeDomainInteractor {
         .eraseToAnyPublisher()
     }
 
+    // MARK: - Category Selection
+
+    /// Per-user key — must be wiped in `SettingsViewModel.clearAllUserData()`.
+    static let selectedCategoryDefaultsKey = "pulse.home.selectedCategory"
+
+    /// The category filter the user last selected, restored on a cold launch.
+    var persistedSelectedCategory: NewsCategory? {
+        guard let raw = defaults.string(forKey: Self.selectedCategoryDefaultsKey) else { return nil }
+        return NewsCategory(rawValue: raw)
+    }
+
+    /// Switches the active category filter, persists it, and reloads the feed.
+    func applyCategorySelection(_ category: NewsCategory?) {
+        guard category != currentState.selectedCategory else { return }
+        persistSelectedCategory(category)
+        resetStateForCategoryChange(to: category)
+        fetchHeadlinesForCurrentCategory(page: 1)
+    }
+
+    private func persistSelectedCategory(_ category: NewsCategory?) {
+        if let category {
+            defaults.set(category.rawValue, forKey: Self.selectedCategoryDefaultsKey)
+        } else {
+            defaults.removeObject(forKey: Self.selectedCategoryDefaultsKey)
+        }
+    }
+
     // MARK: - State Reset Helpers
 
     /// Resets state for a refresh operation.
@@ -226,13 +253,23 @@ extension HomeDomainInteractor {
                 receiveValue: { [weak self] preferences in
                     guard let self else { return }
                     var updatedPreferences = preferences
-                    if updatedPreferences.followedTopics.contains(topic) {
+                    let isUnfollowing = updatedPreferences.followedTopics.contains(topic)
+                    if isUnfollowing {
                         updatedPreferences.followedTopics.removeAll { $0 == topic }
                     } else {
                         updatedPreferences.followedTopics.append(topic)
                     }
                     updateState { state in
                         state.followedTopics = updatedPreferences.followedTopics
+                    }
+                    // Following a topic makes it the active filter; unfollowing the active
+                    // one falls back to "All".
+                    if isUnfollowing {
+                        if currentState.selectedCategory == topic {
+                            applyCategorySelection(nil)
+                        }
+                    } else {
+                        applyCategorySelection(topic)
                     }
                     savePreferences(updatedPreferences)
                 },
