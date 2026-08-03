@@ -56,8 +56,11 @@ struct ArticleDetailView: View {
 
                             HStack(spacing: 0) {
                                 Spacer(minLength: 0)
-                                contentCard(minHeight: contentCardMinHeight(in: proxy))
-                                    .frame(maxWidth: horizontalSizeClass == .regular ? readingMaxWidth : .infinity)
+                                contentCard(
+                                    minHeight: contentCardMinHeight(in: proxy, hasHero: url != nil),
+                                    bottomInset: proxy.safeAreaInsets.bottom,
+                                )
+                                .frame(maxWidth: horizontalSizeClass == .regular ? readingMaxWidth : .infinity)
                                 Spacer(minLength: 0)
                             }
                         }
@@ -66,8 +69,10 @@ struct ArticleDetailView: View {
                     // Anchor the scroll content at the physical top so StretchyHeader's
                     // global minY is 0 at rest — otherwise the hero loads pre-stretched
                     // by the safe-area inset. Without a hero, keep the safe area so the
-                    // content card doesn't slide under the toolbar.
-                    .ignoresSafeArea(edges: url != nil ? .top : [])
+                    // content card doesn't slide under the toolbar. The bottom is always
+                    // reclaimed so the card's material reaches the physical bottom edge;
+                    // `contentCard` pads its text back out of the inset.
+                    .ignoresSafeArea(edges: url != nil ? [.top, .bottom] : .bottom)
                     // The system adds a soft scrim once content extends under the
                     // status bar; hide it so the hero stays edge-to-edge clean.
                     .scrollEdgeEffectHidden(url != nil, for: .top)
@@ -218,42 +223,30 @@ struct ArticleDetailView: View {
     }
 
     /// Sizes the card to fill below the hero so `.regularMaterial` doesn't expose the gradient at the bottom.
-    private func contentCardMinHeight(in proxy: GeometryProxy) -> CGFloat {
-        max(proxy.size.height - heroBaseHeight + Spacing.lg, 0)
+    ///
+    /// The scroll view reclaims the safe area the geometry reader sits inside —
+    /// the top inset when there's a hero, the bottom inset always — so it is
+    /// taller than `proxy.size.height`. Sizing the card off the reader alone
+    /// leaves its material short of the bottom edge by those insets.
+    private func contentCardMinHeight(in proxy: GeometryProxy, hasHero: Bool) -> CGFloat {
+        let reclaimed = (hasHero ? proxy.safeAreaInsets.top : 0) + proxy.safeAreaInsets.bottom
+        let scrollHeight = proxy.size.height + reclaimed
+        return max(scrollHeight - (hasHero ? heroBaseHeight : 0) + Spacing.lg, 0)
     }
 
-    /// Shows the whole hero image (the backend's 40:21 og:image is wider than the
-    /// 280pt header) fitted inside the header, with a blurred copy filling the
-    /// space above and below so the header stays tall and edge-to-edge.
+    /// Fills the header edge-to-edge with the hero image, cropping whatever
+    /// doesn't fit. Fitting the whole image instead letterboxes it — the
+    /// backend's 40:21 og:image is wider than the 280pt header — which leaves
+    /// the top of the header showing a blurred stand-in rather than the photo.
     private func heroHeader(url: URL) -> some View {
         StretchyHeader(baseHeight: heroBaseHeight) {
             CachedAsyncImage(
                 url: url,
                 accessibilityLabel: viewModel.viewState.article.title,
             ) { image in
-                GeometryReader { geo in
-                    // geo.size.height grows past baseHeight while the header is
-                    // pulled down; zoom the photo by the same ratio so the
-                    // stretch reads as the classic hero zoom, not extra blur.
-                    let stretchScale = max(1, geo.size.height / heroBaseHeight)
-                    ZStack {
-                        image
-                            .resizable()
-                            .scaledToFill()
-                            .frame(width: geo.size.width, height: geo.size.height)
-                            .blur(radius: 24, opaque: true)
-                            .clipped()
-                            .accessibilityHidden(true)
-
-                        image
-                            .resizable()
-                            .scaledToFit()
-                            .frame(width: geo.size.width)
-                            .scaleEffect(stretchScale)
-                    }
-                    .frame(width: geo.size.width, height: geo.size.height)
-                    .clipped()
-                }
+                image
+                    .resizable()
+                    .scaledToFill()
             } placeholder: {
                 Rectangle()
                     .fill(Color.primary.opacity(0.05))
@@ -263,7 +256,7 @@ struct ArticleDetailView: View {
     }
 
     // swiftlint:disable:next function_body_length
-    private func contentCard(minHeight: CGFloat) -> some View {
+    private func contentCard(minHeight: CGFloat, bottomInset: CGFloat) -> some View {
         VStack(alignment: .leading, spacing: Spacing.md) {
             if let category = viewModel.viewState.article.category {
                 GlassCategoryChip(category: category, style: .medium, showIcon: true)
@@ -325,6 +318,7 @@ struct ArticleDetailView: View {
             }
         }
         .padding(Spacing.lg)
+        .padding(.bottom, bottomInset)
         .frame(maxWidth: .infinity, minHeight: minHeight, alignment: .top)
         .background(.regularMaterial)
         .clipShape(
@@ -335,7 +329,10 @@ struct ArticleDetailView: View {
                 topTrailingRadius: CornerRadius.xl,
             ),
         )
-        .offset(y: -Spacing.lg)
+        // Negative padding rather than `.offset`: an offset leaves the card's
+        // original height in the layout, so the overlap reappears as a gap of
+        // unpainted background at the very bottom of the scroll content.
+        .padding(.top, -Spacing.lg)
     }
 
     @ViewBuilder
