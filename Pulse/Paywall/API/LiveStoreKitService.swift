@@ -50,6 +50,10 @@ final class LiveStoreKitService: StoreKitService, @unchecked Sendable {
         var needsRerun = false
     }
 
+    /// Covers the lag between a purchase we verified ourselves and StoreKit reporting it in
+    /// `Transaction.currentEntitlements`. See `PendingPurchaseStore`.
+    private let pendingPurchase = PendingPurchaseStore()
+
     var subscriptionStatusPublisher: AnyPublisher<Bool, Never> {
         subscriptionStatusSubject.eraseToAnyPublisher()
     }
@@ -104,6 +108,7 @@ final class LiveStoreKitService: StoreKitService, @unchecked Sendable {
                     switch result {
                     case let .success(verification):
                         let transaction = try weakSelf.value.object?.checkVerified(verification)
+                        weakSelf.value.object?.recordPendingPurchase(transaction)
                         await transaction?.finish()
                         await weakSelf.value.object?.updateSubscriptionStatus()
                         promise.value(.success(true))
@@ -176,6 +181,7 @@ final class LiveStoreKitService: StoreKitService, @unchecked Sendable {
 
                 do {
                     let transaction = try checkVerified(result)
+                    recordPendingPurchase(transaction)
                     await updateSubscriptionStatus()
                     await transaction.finish()
                 } catch {
@@ -183,6 +189,18 @@ final class LiveStoreKitService: StoreKitService, @unchecked Sendable {
                 }
             }
         }
+    }
+
+    /// Records a transaction we verified ourselves so the entitlement scan can vouch for it while
+    /// `Transaction.currentEntitlements` catches up. See `pendingPurchase`.
+    private nonisolated func recordPendingPurchase(_ transaction: Transaction?) {
+        guard let transaction else { return }
+
+        pendingPurchase.record(
+            productType: transaction.productType,
+            revocationDate: transaction.revocationDate,
+            expirationDate: transaction.expirationDate,
+        )
     }
 
     private func checkVerified<T>(_ result: VerificationResult<T>) throws -> T {
@@ -238,7 +256,8 @@ final class LiveStoreKitService: StoreKitService, @unchecked Sendable {
     }
 
     /// Performs a single pass over `Transaction.currentEntitlements`, returning whether an
-    /// active (non-revoked) auto-renewable subscription is present.
+    /// active (non-revoked) auto-renewable subscription is present. Falls back to a purchase we
+    /// verified ourselves but that the entitlement view hasn't picked up yet (`pendingPurchase`).
     private func scanCurrentEntitlements() async -> Bool {
         var hasActiveSubscription = false
 
@@ -257,7 +276,7 @@ final class LiveStoreKitService: StoreKitService, @unchecked Sendable {
             }
         }
 
-        return hasActiveSubscription
+        return pendingPurchase.resolve(scanFoundActiveSubscription: hasActiveSubscription)
     }
 }
 
