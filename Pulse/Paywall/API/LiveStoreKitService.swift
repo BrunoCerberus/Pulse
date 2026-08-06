@@ -193,7 +193,7 @@ final class LiveStoreKitService: StoreKitService, @unchecked Sendable {
 
     /// Records a transaction we verified ourselves so the entitlement scan can vouch for it while
     /// `Transaction.currentEntitlements` catches up. See `pendingPurchase`.
-    private nonisolated func recordPendingPurchase(_ transaction: Transaction?) {
+    private func recordPendingPurchase(_ transaction: Transaction?) {
         guard let transaction else { return }
 
         pendingPurchase.record(

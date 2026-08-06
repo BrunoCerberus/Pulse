@@ -86,6 +86,19 @@ struct PendingPurchaseStoreTests {
         #expect(store.resolve(scanFoundActiveSubscription: false, now: now) == false)
     }
 
+    @Test("A refund after the purchase was recorded drops the recorded purchase")
+    func revocationAfterRecordingClearsPendingPurchase() {
+        let store = PendingPurchaseStore()
+        store.record(productType: .autoRenewable, revocationDate: nil, expirationDate: future)
+        #expect(store.resolve(scanFoundActiveSubscription: false, now: now) == true)
+
+        // The refund arrives via `Transaction.updates` as the same transaction, now revoked, and
+        // is already absent from the entitlement scan — this is the only chance to drop it.
+        store.record(productType: .autoRenewable, revocationDate: now, expirationDate: future)
+
+        #expect(store.resolve(scanFoundActiveSubscription: false, now: now) == false)
+    }
+
     @Test("A non-subscription product is never recorded", arguments: [
         Product.ProductType.consumable,
         .nonConsumable,

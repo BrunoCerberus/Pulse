@@ -17,9 +17,10 @@ import StoreKit
 /// publish `isPremium == false` to every premium gate even though the purchase succeeded, leaving
 /// the user locked out until something happened to re-check.
 ///
-/// The pending purchase only ever answers for a scan that found *nothing*, and it expires on the
-/// transaction's own `expirationDate`, so it cannot mask a revocation or a lapsed subscription.
-final nonisolated class PendingPurchaseStore: @unchecked Sendable {
+/// The pending purchase only ever answers for a scan that found *nothing*; it expires on the
+/// transaction's own `expirationDate`, and a revocation of that transaction drops it. So it cannot
+/// mask a lapsed or refunded subscription.
+final class PendingPurchaseStore: @unchecked Sendable {
     private struct PendingPurchase {
         /// `nil` when the transaction carries no expiry.
         let expirationDate: Date?
@@ -32,12 +33,19 @@ final nonisolated class PendingPurchaseStore: @unchecked Sendable {
 
     private let pending = OSAllocatedUnfairLock<PendingPurchase?>(initialState: nil)
 
-    /// Records a transaction we verified ourselves. Ignores anything that isn't an active
-    /// auto-renewable subscription, matching what the entitlement scan looks for.
+    /// Records a transaction we verified ourselves. Ignores anything that isn't an auto-renewable
+    /// subscription, matching what the entitlement scan looks for.
+    ///
+    /// A *revoked* transaction drops any record instead: a refund or chargeback arrives through
+    /// `Transaction.updates` as the same transaction with `revocationDate` set, and by then it is
+    /// already gone from `Transaction.currentEntitlements` — so nothing else would ever correct a
+    /// record still holding the pre-refund `expirationDate`.
     func record(productType: Product.ProductType, revocationDate: Date?, expirationDate: Date?) {
-        guard productType == .autoRenewable, revocationDate == nil else { return }
+        guard productType == .autoRenewable else { return }
 
-        pending.withLock { $0 = PendingPurchase(expirationDate: expirationDate) }
+        pending.withLock { pending in
+            pending = revocationDate == nil ? PendingPurchase(expirationDate: expirationDate) : nil
+        }
     }
 
     /// Resolves the subscription status for an entitlement scan, vouching for a recorded purchase
