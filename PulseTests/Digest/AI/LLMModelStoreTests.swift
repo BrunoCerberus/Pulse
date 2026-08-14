@@ -145,6 +145,7 @@ struct LLMModelStoreTests {
         defer { try? fileManager.removeItem(at: directoryURL) }
 
         let partialWasPresentDuringCapacityCheck = OSAllocatedUnfairLock(initialState: true)
+        let capacityCheckPath = OSAllocatedUnfairLock(initialState: "")
         let partialPath = partialURL.path
         let downloadURL = try #require(URL(string: "https://example.com/should-not-be-called"))
         let store = LiveLLMModelStore(
@@ -155,7 +156,8 @@ struct LLMModelStoreTests {
             expectedSizeBytes: 4,
             expectedSHA256: String(repeating: "0", count: SHA256.Digest.byteCount * 2),
             minimumFreeSpaceBytes: 5,
-            availableCapacityProvider: { _ in
+            availableCapacityProvider: { url in
+                capacityCheckPath.withLock { $0 = url.path }
                 partialWasPresentDuringCapacityCheck.withLock {
                     $0 = FileManager.default.fileExists(atPath: partialPath)
                 }
@@ -172,5 +174,6 @@ struct LLMModelStoreTests {
 
         #expect(!partialWasPresentDuringCapacityCheck.withLock { $0 })
         #expect(!fileManager.fileExists(atPath: partialURL.path))
+        #expect(capacityCheckPath.withLock { $0 } == directoryURL.path)
     }
 }

@@ -78,6 +78,15 @@ struct LiveSummarizationServiceTests {
         #expect(sut.isModelLoaded == true)
     }
 
+    @Test("isModelAvailable mirrors LLMService state")
+    func isModelAvailableMirrorsService() {
+        mockLLMService.modelAvailable = false
+        #expect(sut.isModelAvailable == false)
+
+        mockLLMService.modelAvailable = true
+        #expect(sut.isModelAvailable == true)
+    }
+
     // MARK: - loadModelIfNeeded Tests
 
     @Test("loadModelIfNeeded calls loadModel when not loaded")

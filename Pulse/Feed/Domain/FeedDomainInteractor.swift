@@ -165,11 +165,6 @@ final class FeedDomainInteractor: CombineInteractor {
 
 private extension FeedDomainInteractor {
     func loadInitialData() {
-        // A normal Feed visit must not inherit an abandoned Morning Briefing
-        // fallback after its fetch or generation failed.
-        if currentState.autoPlayBriefingOnCompletion {
-            updateState { $0.autoPlayBriefingOnCompletion = false }
-        }
         guard !currentState.hasLoadedInitialData else { return }
 
         analyticsService?.logEvent(.screenView(screen: .feed))
@@ -332,6 +327,7 @@ private extension FeedDomainInteractor {
             do {
                 // Ensure model is loaded
                 try await feedServiceBox.value.loadModelIfNeeded()
+                updateState { $0.modelAvailability = true }
 
                 guard !Task.isCancelled else { return }
 

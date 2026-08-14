@@ -124,6 +124,13 @@ struct SummarizationSheet: View {
         VStack(spacing: Spacing.lg) {
             articlePreview
 
+            if viewModel.viewState.modelAvailability != true {
+                Text(Constants.modelDownloadNotice)
+                    .font(Typography.captionLarge)
+                    .foregroundStyle(.secondary)
+                    .multilineTextAlignment(.center)
+            }
+
             GenerateButton {
                 HapticManager.shared.buttonPress()
                 viewModel.handle(event: .onSummarizationStarted)

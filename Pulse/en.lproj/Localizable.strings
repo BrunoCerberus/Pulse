@@ -79,6 +79,7 @@
 "summarization.generating" = "Generating...";
 "summarization.button" = "Summarize";
 "summarization.ai_summary" = "AI Summary";
+"summarization.model_download_notice" = "The first AI feature downloads about 806 MB once. The model stays on this device.";
 
 /* ==================== */
 /* MARK: - Search       */

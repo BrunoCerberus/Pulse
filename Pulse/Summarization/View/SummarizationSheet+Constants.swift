@@ -36,6 +36,10 @@ extension SummarizationSheet {
             AppLocalization.localized("summarization.ai_summary")
         }
 
+        static var modelDownloadNotice: String {
+            AppLocalization.localized("summarization.model_download_notice")
+        }
+
         static var summarizationComplete: String {
             AppLocalization.localized("accessibility.summarization_complete")
         }

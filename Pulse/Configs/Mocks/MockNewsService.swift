@@ -289,6 +289,10 @@ final class MockSummarizationService: SummarizationService, @unchecked Sendable 
         return false
     }
 
+    var isModelAvailable: Bool {
+        true
+    }
+
     func loadModelIfNeeded() async throws {
         guard !isModelLoaded else { return }
         await MainActor.run { modelStatusSubject.send(.loading(progress: 0.5)) }
@@ -335,6 +339,7 @@ final class MockLLMService: LLMService, @unchecked Sendable {
     var loadDelay: TimeInterval = 0.1
     var generateDelay: TimeInterval = 0.1
     var shouldSimulateMemoryPressure = false
+    var modelAvailable = true
 
     // Call tracking for tests
     var loadModelCallCount = 0
@@ -363,7 +368,7 @@ final class MockLLMService: LLMService, @unchecked Sendable {
     }
 
     var isModelAvailable: Bool {
-        true
+        modelAvailable
     }
 
     func loadModel() async throws {

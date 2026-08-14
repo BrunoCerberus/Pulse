@@ -173,6 +173,7 @@ struct FeedDomainInteractorTests {
             false
         }
         #expect(isInGenerationFlow, "Should be generating or completed")
+        #expect(state.modelAvailability == true)
     }
 
     @Test("Select article updates state")

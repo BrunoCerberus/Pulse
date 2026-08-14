@@ -35,6 +35,7 @@ struct SummarizationDomainInteractorTests {
         #expect(state.summarizationState == .idle)
         #expect(state.generatedSummary == "")
         #expect(state.modelStatus == .notLoaded)
+        #expect(state.modelAvailability == nil)
     }
 
     // MARK: - Premium Gate Tests
@@ -94,6 +95,7 @@ struct SummarizationDomainInteractorTests {
 
         #expect(completed, "Summarization should complete")
         #expect(!sut.currentState.generatedSummary.isEmpty)
+        #expect(sut.currentState.modelAvailability == true)
     }
 
     @Test("Start summarization handles error")

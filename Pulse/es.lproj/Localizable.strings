@@ -79,6 +79,7 @@
 "summarization.generating" = "Generando...";
 "summarization.button" = "Resumir";
 "summarization.ai_summary" = "Resumen con IA";
+"summarization.model_download_notice" = "La primera función de IA descarga unos 806 MB una vez. El modelo permanece en este dispositivo.";
 
 /* ==================== */
 /* MARK: - Search       */

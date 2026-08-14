@@ -132,6 +132,17 @@ struct FeedMorningBriefingTests {
         #expect(!sut.currentState.autoPlayBriefingOnCompletion)
     }
 
+    @Test("An initial-load dispatch preserves a requested briefing")
+    func initialLoadPreservesBriefingAutoplay() {
+        sut.dispatch(action: .latestArticlesLoaded([makeArticle(id: "existing")]))
+        sut.dispatch(action: .startMorningBriefing)
+        #expect(sut.currentState.autoPlayBriefingOnCompletion)
+
+        sut.dispatch(action: .loadInitialData)
+
+        #expect(sut.currentState.autoPlayBriefingOnCompletion)
+    }
+
     // MARK: - Helpers
 
     private func makeDigest(

@@ -219,7 +219,8 @@ final class LiveLLMModelStore: LLMModelStore, @unchecked Sendable {
     }
 
     private func ensureSufficientStorage() throws {
-        guard let availableCapacity = availableCapacityProvider(downloadedModelURL) else { return }
+        let storageURL = downloadedModelURL.deletingLastPathComponent()
+        guard let availableCapacity = availableCapacityProvider(storageURL) else { return }
         guard availableCapacity >= minimumFreeSpaceBytes else {
             throw LLMModelStoreError.insufficientStorage
         }
@@ -573,11 +574,19 @@ private final class LLMModelDownloadOperation: NSObject, URLSessionDownloadDeleg
 
     func urlSession(
         _: URLSession,
-        downloadTask _: URLSessionDownloadTask,
+        downloadTask: URLSessionDownloadTask,
         didWriteData _: Int64,
         totalBytesWritten: Int64,
         totalBytesExpectedToWrite: Int64,
     ) {
+        lock.lock()
+        guard task === downloadTask else {
+            lock.unlock()
+            return
+        }
+        let progressHandler = progressHandler
+        lock.unlock()
+
         let expectedBytes = totalBytesExpectedToWrite > 0
             ? totalBytesExpectedToWrite
             : Int64(min(expectedSizeBytes, UInt64(Int64.max)))
@@ -587,6 +596,13 @@ private final class LLMModelDownloadOperation: NSObject, URLSessionDownloadDeleg
     }
 
     func urlSession(_: URLSession, downloadTask: URLSessionDownloadTask, didFinishDownloadingTo location: URL) {
+        lock.lock()
+        guard task === downloadTask else {
+            lock.unlock()
+            return
+        }
+        lock.unlock()
+
         do {
             guard let response = downloadTask.response as? HTTPURLResponse else {
                 throw LLMModelStoreError.downloadFailed
@@ -614,8 +630,12 @@ private final class LLMModelDownloadOperation: NSObject, URLSessionDownloadDeleg
         }
     }
 
-    func urlSession(_: URLSession, task _: URLSessionTask, didCompleteWithError error: Error?) {
+    func urlSession(_: URLSession, task completedTask: URLSessionTask, didCompleteWithError error: Error?) {
         lock.lock()
+        guard task === completedTask else {
+            lock.unlock()
+            return
+        }
         let isPausing = pausingForBackground
         lock.unlock()
         guard !isPausing else { return }
