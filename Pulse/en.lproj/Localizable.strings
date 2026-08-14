@@ -352,6 +352,11 @@
 
 "feed.title" = "Daily Digest";
 "feed.header_title" = "Your Daily Digest";
+"feed.digest_ready.title" = "Your digest is ready to create";
+"feed.digest_ready.message" = "Pulse has fresh articles ready for your personalized daily digest.";
+"feed.model_download_notice" = "The first AI feature downloads about 806 MB once. The model stays on this device.";
+"feed.generate_digest" = "Generate Digest";
+"feed.generate_digest_hint" = "Starts the digest and downloads the on-device model if needed.";
 "feed.empty.title" = "No Recent Reading";
 "feed.empty.message" = "Read some articles to get your personalized daily digest.";
 "feed.error.title" = "Something went wrong";
@@ -558,6 +563,11 @@
 /* LLM errors */
 "llm.error.model_not_loaded" = "The on-device model isn't loaded yet. Please try again in a moment.";
 "llm.error.model_load_failed" = "The on-device model failed to load.";
+"llm.error.model_integrity" = "The on-device model failed its integrity check. Please try again.";
+"llm.error.model_http" = "The on-device model download returned HTTP error %d.";
+"llm.error.model_storage" = "There isn't enough free storage to download the on-device model.";
+"llm.error.model_network" = "The on-device model downloads only over Wi-Fi or an unconstrained connection.";
+"llm.error.model_download" = "The on-device model couldn't be downloaded. Check your connection and try again.";
 "llm.error.inference_timeout" = "The on-device model took too long to respond. Please try again.";
 "llm.error.memory_pressure" = "There isn't enough memory to run the on-device model. Try closing other apps.";
 "llm.error.generation_cancelled" = "Generation was cancelled.";

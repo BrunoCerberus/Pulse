@@ -13,8 +13,8 @@ enum FeedDomainAction: Equatable {
 
     // MARK: - Model Management
 
-    /// Preload the LLM model into memory for faster digest generation.
-    /// Should be called when the user is likely to generate a digest soon.
+    /// Preload an already-downloaded LLM model into memory for faster generation.
+    /// This action must not initiate the first-use model download.
     case preloadModel
 
     /// Update the current status of the LLM model.

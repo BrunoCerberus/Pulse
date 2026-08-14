@@ -132,8 +132,10 @@ struct FeedView<R: FeedNavigationRouter>: View {
     @ViewBuilder
     private var content: some View {
         switch viewModel.viewState.displayState {
-        case .idle, .loading:
-            // These states shouldn't occur - digest auto-generates on tab open
+        case .idle:
+            digestStartView
+                .transition(.opacity)
+        case .loading:
             processingView(phase: .generating)
                 .transition(.opacity)
         case let .processing(phase):
@@ -161,6 +163,53 @@ struct FeedView<R: FeedNavigationRouter>: View {
             phase: phase,
             streamingText: "",
         )
+    }
+
+    // MARK: - Digest Start
+
+    private var digestStartView: some View {
+        ScrollView {
+            VStack(spacing: Spacing.lg) {
+                Spacer(minLength: Spacing.xl)
+
+                GlassCard(style: .thin, shadowStyle: .medium, padding: Spacing.xl) {
+                    VStack(spacing: Spacing.md) {
+                        Image(systemName: "sparkles")
+                            .font(.system(size: IconSize.xxl))
+                            .foregroundStyle(Color.Accent.gradient)
+                            .accessibilityHidden(true)
+
+                        Text(Constants.digestReadyTitle)
+                            .font(Typography.titleMedium)
+                            .accessibilityAddTraits(.isHeader)
+
+                        Text(Constants.digestReadyMessage)
+                            .font(Typography.bodyMedium)
+                            .foregroundStyle(.secondary)
+                            .multilineTextAlignment(.center)
+
+                        Text(Constants.modelDownloadNotice)
+                            .font(Typography.captionLarge)
+                            .foregroundStyle(.secondary)
+                            .multilineTextAlignment(.center)
+
+                        Button {
+                            HapticManager.shared.buttonPress()
+                            viewModel.handle(event: .onGenerateDigestTapped)
+                        } label: {
+                            Label(Constants.generateDigest, systemImage: "wand.and.stars")
+                                .font(Typography.labelLarge)
+                        }
+                        .buttonStyle(.glassProminent)
+                        .accessibilityHint(Constants.generateDigestHint)
+                    }
+                    .frame(maxWidth: .infinity)
+                }
+                .padding(.horizontal, Spacing.md)
+
+                Spacer(minLength: Spacing.xl)
+            }
+        }
     }
 
     // MARK: - Digest Content

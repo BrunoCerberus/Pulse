@@ -184,8 +184,8 @@ private extension FeedDomainInteractor {
             return
         }
 
-        // No cached digest - preload model in background while fetching articles
-        // This parallelizes model loading with article fetch for faster generation
+        // No cached digest - fetch articles without starting an AI download.
+        // The user explicitly starts generation after the articles are ready.
         preloadModel()
 
         // Fetch latest news articles if no cached digest
@@ -247,11 +247,15 @@ private extension FeedDomainInteractor {
             state.latestArticles = articles
             state.hasLoadedInitialData = true
             state.isOfflineError = false
-            state.generationState = articles.isEmpty ? .idle : state.generationState
+            state.generationState = .idle
         }
 
-        // Auto-generate if we have articles and no digest
-        if !articles.isEmpty, currentState.currentDigest == nil {
+        // Morning Briefing was explicitly requested through its notification or
+        // deeplink, so it may continue into generation and auto-play.
+        if !articles.isEmpty,
+           currentState.currentDigest == nil,
+           currentState.autoPlayBriefingOnCompletion
+        {
             dispatch(action: .generateDigest)
         } else if articles.isEmpty {
             updateState { $0.generationState = .idle }
@@ -431,9 +435,9 @@ private extension FeedDomainInteractor {
         // No digest anywhere: fetch fresh articles directly (bypassing
         // `loadInitialData()`'s `hasLoadedInitialData` guard, since we've
         // already established above that there's no usable digest to show)
-        // and let the existing auto-generate-on-load path
-        // (`handleArticlesLoaded` → `.generateDigest`) kick off generation.
-        // `handleDigestCompleted` auto-plays once it finishes.
+        // Mark this as an explicitly requested briefing so the article fetch
+        // can continue into generation without making ordinary Feed visits do
+        // the same.
         updateState { $0.autoPlayBriefingOnCompletion = true }
         preloadModel()
         fetchLatestNews()

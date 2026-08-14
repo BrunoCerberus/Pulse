@@ -24,7 +24,7 @@ The app does not read this source directory in production. The command is only f
 
 ## Runtime behavior
 
-Production builds exclude this directory from the app target. When a user first starts an AI feature, Pulse downloads the pinned file into Application Support, verifies its size and SHA-256, and reuses it on later launches. Background preloaders never initiate this first-use download.
+Production builds exclude this directory from the app target. When a user explicitly starts an AI feature, Pulse downloads the pinned file into Application Support only over Wi-Fi or another unconstrained network. Before downloading, it checks for sufficient free storage. The transfer is resumable, and the completed file is verified against its expected size and SHA-256 before it is used. A small verification record avoids hashing the full 806 MB file on every cold launch. Background preloaders may warm a verified local copy, but never initiate the first-use download.
 
 ## Why Not Committed?
 
@@ -38,4 +38,4 @@ After downloading, verify the file exists:
 ls -lh Pulse/Resources/Models/*.gguf
 ```
 
-The app downloads the model when an AI feature is first used. If the download is interrupted or fails verification, the partial file is discarded and the user can retry the feature.
+The app downloads the model when an AI feature is explicitly started. If the download is interrupted, Pulse keeps resume data for a later retry; if the completed file fails verification, it is discarded and the user can retry the feature.

@@ -18,9 +18,9 @@ open Pulse.xcodeproj
 
 `make setup` runs `install-xcodegen` + `generate`. To bootstrap the full toolchain instead — Homebrew (if missing), XcodeGen, Mint, SwiftLint, SwiftFormat, and a `make lint` pre-commit git hook — run `make init`.
 
-### On-device LLM model (downloaded on first AI use)
+### On-device LLM model (downloaded on first explicit AI use)
 
-The Gemma 3 1B GGUF model (~806 MB) powers Daily Digest and Article Summarization. It is **not shipped in the app bundle**. Production and development builds download it into Application Support when an AI feature is first used, then verify and reuse the local copy. No manual model setup is required.
+The Gemma 3 1B GGUF model (~806 MB) powers Daily Digest and Article Summarization. It is **not shipped in the app bundle**. Production and development builds download it into Application Support only after the user starts an AI feature, then verify and reuse the local copy. Downloads are restricted to Wi-Fi/unconstrained networks, resume after interruption, and check available storage before starting. No manual model setup is required; ordinary Feed visits remain available without the model.
 
 See [`Pulse/Resources/Models/README.md`](../Pulse/Resources/Models/README.md) for the pinned checksum and a manual-download alternative.
 
@@ -73,4 +73,4 @@ New source files require `make generate` (folded into `make setup`) to land in t
 | Test timeouts | check async `Task.sleep` + `.sink` waits |
 | Snapshot mismatch | re-record references (never lower precision) |
 | Service not found | verify `PulseSceneDelegate.registerLiveServices()` |
-| AI model download fails | retry on a reliable connection; a partial or invalid file is discarded automatically |
+| AI model download fails | retry on Wi-Fi; interrupted downloads resume when possible, while invalid files are discarded automatically |
