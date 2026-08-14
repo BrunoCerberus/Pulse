@@ -87,6 +87,9 @@ protocol LLMService {
     /// Check if model is loaded and ready
     var isModelLoaded: Bool { get }
 
+    /// Check if a model file is already available locally without downloading it
+    var isModelAvailable: Bool { get }
+
     /// Load the model into memory
     func loadModel() async throws
 

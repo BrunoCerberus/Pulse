@@ -9,8 +9,6 @@ options:
   fileTypes:
     xcassets:
       buildPhase: resources
-    gguf:
-      buildPhase: resources
   createIntermediateGroups: true
 
 packages:
@@ -81,6 +79,7 @@ targets:
       - path: Pulse
         excludes:
           - "**/__Snapshots__/**"
+          - "Resources/Models/**"
       - path: PulseShareExtension/SharedURLQueue.swift
     settings:
       base:

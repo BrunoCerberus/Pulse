@@ -362,6 +362,10 @@ final class MockLLMService: LLMService, @unchecked Sendable {
         }
     }
 
+    var isModelAvailable: Bool {
+        true
+    }
+
     func loadModel() async throws {
         loadModelCallCount += 1
         await MainActor.run { modelStatusSubject.send(.loading(progress: 0.5)) }

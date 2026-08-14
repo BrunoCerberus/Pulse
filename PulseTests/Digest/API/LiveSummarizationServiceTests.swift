@@ -289,6 +289,10 @@ private final class FailingMockLLMService: LLMService {
         false
     }
 
+    var isModelAvailable: Bool {
+        true
+    }
+
     func loadModel() async throws {
         throw LoadError.alwaysFails
     }
@@ -325,6 +329,10 @@ private final class ErrorMockLLMService: LLMService {
     }
 
     var isModelLoaded: Bool {
+        true
+    }
+
+    var isModelAvailable: Bool {
         true
     }
 

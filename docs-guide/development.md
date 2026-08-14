@@ -18,17 +18,11 @@ open Pulse.xcodeproj
 
 `make setup` runs `install-xcodegen` + `generate`. To bootstrap the full toolchain instead — Homebrew (if missing), XcodeGen, Mint, SwiftLint, SwiftFormat, and a `make lint` pre-commit git hook — run `make init`.
 
-### On-device LLM model (required for AI features)
+### On-device LLM model (downloaded on first AI use)
 
-The Gemma 3 1B GGUF model (~756 MB) powers Daily Digest and Article Summarization. It is **gitignored** due to size, so each developer must download it before those features will work — the app surfaces an error if it is missing:
+The Gemma 3 1B GGUF model (~806 MB) powers Daily Digest and Article Summarization. It is **not shipped in the app bundle**. Production and development builds download it into Application Support when an AI feature is first used, then verify and reuse the local copy. No manual model setup is required.
 
-```bash
-huggingface-cli download bartowski/google_gemma-3-1b-it-GGUF \
-  --include "gemma-3-1b-it-Q4_K_M.gguf" \
-  --local-dir Pulse/Resources/Models/
-```
-
-See [`Pulse/Resources/Models/README.md`](../Pulse/Resources/Models/README.md) for details and a manual-download alternative.
+See [`Pulse/Resources/Models/README.md`](../Pulse/Resources/Models/README.md) for the pinned checksum and a manual-download alternative.
 
 ### API keys
 
@@ -79,4 +73,4 @@ New source files require `make generate` (folded into `make setup`) to land in t
 | Test timeouts | check async `Task.sleep` + `.sink` waits |
 | Snapshot mismatch | re-record references (never lower precision) |
 | Service not found | verify `PulseSceneDelegate.registerLiveServices()` |
-| AI features error out | confirm the Gemma GGUF model is downloaded (see Setup) |
+| AI model download fails | retry on a reliable connection; a partial or invalid file is discarded automatically |

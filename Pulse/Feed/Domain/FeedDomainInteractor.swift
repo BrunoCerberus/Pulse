@@ -195,6 +195,9 @@ private extension FeedDomainInteractor {
     func preloadModel() {
         // Skip if preload already in progress (task-based synchronization)
         guard preloadTask == nil else { return }
+        // A foreground preload must never trigger the first-use download.
+        // The model is downloaded only when digest generation is requested.
+        guard feedService.isModelAvailable else { return }
 
         let service = UncheckedSendableBox(value: feedService)
         preloadTask = Task { @MainActor [weak self] in

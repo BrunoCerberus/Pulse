@@ -82,6 +82,10 @@ final class MorningBriefingPrefetcher {
 
         guard briefingCacheService.fetchIfFreshToday() == nil else { return }
 
+        // Prefetch is a background optimization, so it must not initiate an
+        // 800 MB first-use download while the user is not waiting for AI.
+        guard feedService.isModelAvailable else { return }
+
         let newsServiceBox = UncheckedSendableBox(value: newsService)
         let pool = await FeedArticlePoolBuilder.fetchPool(
             newsService: newsServiceBox.value,

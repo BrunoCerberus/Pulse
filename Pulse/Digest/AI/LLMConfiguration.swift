@@ -33,8 +33,7 @@ enum MemoryTier: String {
 
 /// Configuration for the on-device LLM model
 enum LLMConfiguration {
-    /// Model file name without extension
-    /// Note: Download from https://huggingface.co/bartowski/google_gemma-3-1b-it-GGUF
+    /// Model file name without extension.
     static var modelFileName: String {
         "gemma-3-1b-it-Q4_K_M"
     }
@@ -44,9 +43,33 @@ enum LLMConfiguration {
         "gguf"
     }
 
-    /// Full model URL within app bundle
-    static var modelURL: URL? {
+    /// Model URL when an older development build bundled the model.
+    static var bundledModelURL: URL? {
         Bundle.main.url(forResource: modelFileName, withExtension: modelExtension)
+    }
+
+    /// URL used for the first-use model download.
+    static var modelDownloadURL: URL {
+        let urlString = "https://huggingface.co/bartowski/google_gemma-3-1b-it-GGUF/resolve/main/"
+            + "\(modelFileName).\(modelExtension)?download=true"
+        return URL(string: urlString)!
+    }
+
+    /// Expected size of the pinned Gemma quantization in bytes.
+    static var modelSizeBytes: UInt64 {
+        806_058_496
+    }
+
+    /// Expected SHA-256 for the pinned Gemma quantization.
+    static var modelSHA256: String {
+        "12bf0fff8815d5f73a3c9b586bd8fee8e7b248c935de70dec367679873d0f29d"
+    }
+
+    /// Persistent on-device location for the downloaded model.
+    static var downloadedModelURL: URL {
+        FileManager.default.urls(for: .applicationSupportDirectory, in: .userDomainMask)[0]
+            .appendingPathComponent("Pulse/Models", isDirectory: true)
+            .appendingPathComponent("\(modelFileName).\(modelExtension)")
     }
 
     /// Context window size (tokens) - memory-adaptive for device safety

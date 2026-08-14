@@ -83,9 +83,6 @@ final class PulseSceneDelegate: UIResponder, UIWindowSceneDelegate {
         // subsequent `sceneDidBecomeActive`.
         startMorningBriefingPrefetcher()
 
-        // Preload LLM model in background for faster digest generation
-        preloadLLMModelIfPremium()
-
         // Ensure we have a valid window scene
         guard let windowScene = scene as? UIWindowScene else { return }
 
@@ -300,27 +297,6 @@ private extension PulseSceneDelegate {
             notificationService: try? serviceLocator.retrieve(NotificationService.self),
             storeKitService: try? serviceLocator.retrieve(StoreKitService.self),
         )
-    }
-
-    func preloadLLMModelIfPremium() {
-        Task.detached(priority: .utility) { [serviceLocator] in
-            do {
-                // Check if user is premium before preloading
-                let storeKitService = try serviceLocator.retrieve(StoreKitService.self)
-                guard storeKitService.isPremium else {
-                    Logger.shared.service("Skipping LLM preload - not premium user")
-                    return
-                }
-
-                // Preload the model in background
-                let llmService = try serviceLocator.retrieve(LLMService.self)
-                try await llmService.loadModel()
-                Logger.shared.service("LLM model preloaded successfully")
-            } catch {
-                // Preload failure is non-critical - model will load on-demand
-                Logger.shared.service("LLM preload skipped: \(error)", level: .debug)
-            }
-        }
     }
 
     func fetchRemoteConfig(_ service: RemoteConfigService) {

@@ -42,6 +42,10 @@ final class LiveLLMService: LLMService, @unchecked Sendable {
         return false
     }
 
+    var isModelAvailable: Bool {
+        modelManager.modelIsAvailable
+    }
+
     init(modelManager: LLMModelManager = .shared) {
         self.modelManager = modelManager
     }

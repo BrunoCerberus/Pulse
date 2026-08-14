@@ -30,6 +30,9 @@ protocol FeedService {
     /// Check if model is loaded and ready
     var isModelReady: Bool { get }
 
+    /// Check if the model file is already available locally without downloading it
+    var isModelAvailable: Bool { get }
+
     /// Load the LLM model if not already loaded
     func loadModelIfNeeded() async throws
 

@@ -40,6 +40,10 @@ final class MockFeedService: FeedService, @unchecked Sendable {
         modelStatusSubject.value == .ready
     }
 
+    var isModelAvailable: Bool {
+        true
+    }
+
     func loadModelIfNeeded() async throws {
         loadModelCallCount += 1
         guard !isModelReady else { return }
