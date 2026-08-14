@@ -48,6 +48,10 @@ struct FeedDomainState: Equatable {
     /// Current status of the on-device LLM model.
     var modelStatus: LLMModelStatus
 
+    /// Whether a verified model is already available on disk. `nil` means the
+    /// background availability check has not completed yet.
+    var modelAvailability: Bool?
+
     /// Whether initial data has been loaded at least once.
     var hasLoadedInitialData: Bool
 
@@ -64,6 +68,30 @@ struct FeedDomainState: Equatable {
     /// "Listen" tap.
     var autoPlayBriefingOnCompletion: Bool = false
 
+    init(
+        generationState: FeedGenerationState,
+        latestArticles: [Article],
+        currentDigest: DailyDigest?,
+        streamingText: String,
+        modelStatus: LLMModelStatus,
+        modelAvailability: Bool? = nil,
+        hasLoadedInitialData: Bool,
+        selectedArticle: Article?,
+        isOfflineError: Bool,
+        autoPlayBriefingOnCompletion: Bool = false,
+    ) {
+        self.generationState = generationState
+        self.latestArticles = latestArticles
+        self.currentDigest = currentDigest
+        self.streamingText = streamingText
+        self.modelStatus = modelStatus
+        self.modelAvailability = modelAvailability
+        self.hasLoadedInitialData = hasLoadedInitialData
+        self.selectedArticle = selectedArticle
+        self.isOfflineError = isOfflineError
+        self.autoPlayBriefingOnCompletion = autoPlayBriefingOnCompletion
+    }
+
     /// Creates the default initial state.
     /// Starts with `.loadingArticles` to ensure processing animation shows immediately.
     static var initial: FeedDomainState {
@@ -73,6 +101,7 @@ struct FeedDomainState: Equatable {
             currentDigest: nil,
             streamingText: "",
             modelStatus: .notLoaded,
+            modelAvailability: nil,
             hasLoadedInitialData: false,
             selectedArticle: nil,
             isOfflineError: false,

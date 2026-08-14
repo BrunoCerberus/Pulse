@@ -105,7 +105,7 @@ final class LLMModelManager: @unchecked Sendable {
         let modelURL: URL
         do {
             modelURL = try await modelStore.prepareModel { progress in
-                progressHandler(0.1 + (progress * 0.2))
+                progressHandler(0.1 + (progress * 0.4))
             }
         } catch {
             logger.error("Failed to prepare model: \(error)", category: logCategory)
@@ -113,7 +113,7 @@ final class LLMModelManager: @unchecked Sendable {
         }
 
         logger.info("Loading model from: \(modelURL.path)", category: logCategory)
-        progressHandler(0.3)
+        progressHandler(0.5)
 
         do {
             let service = try await createAndWarmUpService(modelURL: modelURL, progressHandler: progressHandler)
@@ -142,7 +142,7 @@ final class LLMModelManager: @unchecked Sendable {
         modelURL: URL,
         progressHandler: @escaping @Sendable (Double) -> Void,
     ) async throws -> LlamaService {
-        progressHandler(0.5)
+        progressHandler(0.65)
 
         let useGPU: Bool
         #if targetEnvironment(simulator)
@@ -158,7 +158,7 @@ final class LLMModelManager: @unchecked Sendable {
         )
 
         let service = LlamaService(modelUrl: modelURL, config: config)
-        progressHandler(0.8)
+        progressHandler(0.85)
 
         // Warm up the service to trigger lazy model load
         let warmupMessages = [LlamaChatMessage(role: .system, content: "You are a helpful assistant.")]

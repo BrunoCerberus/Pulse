@@ -48,12 +48,47 @@ private struct ModelFileSignature: Equatable {
     let modificationTime: TimeInterval
 }
 
+final class LLMModelProgressBroadcaster: @unchecked Sendable {
+    private let lock = NSLock()
+    private var handlers: [UUID: @Sendable (Double) -> Void] = [:]
+    private var latestProgress: Double?
+
+    @discardableResult
+    func add(_ handler: @escaping @Sendable (Double) -> Void) -> UUID {
+        let id = UUID()
+        let latestProgress = lock.withLock {
+            handlers[id] = handler
+            return self.latestProgress
+        }
+        if let latestProgress {
+            handler(latestProgress)
+        }
+        return id
+    }
+
+    func remove(_ id: UUID) {
+        lock.withLock {
+            handlers[id] = nil
+        }
+    }
+
+    func send(_ progress: Double) {
+        let handlers = lock.withLock { () -> [@Sendable (Double) -> Void] in
+            latestProgress = progress
+            return Array(self.handlers.values)
+        }
+        handlers.forEach { $0(progress) }
+    }
+}
+
 private final class ActiveModelDownload: @unchecked Sendable {
     let id = UUID()
     let task: Task<URL, Error>
+    let progress: LLMModelProgressBroadcaster
 
-    init(task: Task<URL, Error>) {
+    init(task: Task<URL, Error>, progress: LLMModelProgressBroadcaster) {
         self.task = task
+        self.progress = progress
     }
 }
 
@@ -66,6 +101,7 @@ final class LiveLLMModelStore: LLMModelStore, @unchecked Sendable {
     private let downloadedModelURL: URL
     private let resumeDataURL: URL
     private let verificationURL: URL
+    private let partialModelURL: URL
     private let modelDownloadURL: URL
     private let expectedSizeBytes: UInt64
     private let expectedSHA256: String
@@ -73,6 +109,7 @@ final class LiveLLMModelStore: LLMModelStore, @unchecked Sendable {
     private let availableCapacityProvider: @Sendable (URL) -> UInt64?
     private let lock = OSAllocatedUnfairLock()
     private let verificationLock = NSLock()
+    private var bundledVerificationRecord: ModelVerificationRecord?
     private var activeDownload: ActiveModelDownload?
 
     init(
@@ -91,6 +128,7 @@ final class LiveLLMModelStore: LLMModelStore, @unchecked Sendable {
         self.downloadedModelURL = downloadedModelURL
         self.resumeDataURL = resumeDataURL ?? downloadedModelURL.appendingPathExtension("resume")
         verificationURL = downloadedModelURL.appendingPathExtension("verified")
+        partialModelURL = downloadedModelURL.appendingPathExtension("part")
         self.modelDownloadURL = modelDownloadURL
         self.expectedSizeBytes = expectedSizeBytes
         self.expectedSHA256 = expectedSHA256
@@ -110,13 +148,17 @@ final class LiveLLMModelStore: LLMModelStore, @unchecked Sendable {
     }
 
     func prepareModel(progressHandler: @escaping @Sendable (Double) -> Void) async throws -> URL {
-        if let existingURL = existingModelURL {
+        let existingURL = await Task.detached(priority: .utility) { [self] in
+            existingModelURL
+        }.value
+        if let existingURL {
             progressHandler(1.0)
             return existingURL
         }
 
         if lock.withLock({ activeDownload == nil }) {
             do {
+                try? fileManager.removeItem(at: partialModelURL)
                 try prepareDestinationDirectory()
                 try ensureSufficientStorage()
             } catch let error as LLMModelStoreError {
@@ -131,6 +173,7 @@ final class LiveLLMModelStore: LLMModelStore, @unchecked Sendable {
                 return activeDownload
             }
 
+            let progress = LLMModelProgressBroadcaster()
             let operation = LLMModelDownloadOperation(
                 sourceURL: modelDownloadURL,
                 destinationURL: downloadedModelURL,
@@ -140,14 +183,16 @@ final class LiveLLMModelStore: LLMModelStore, @unchecked Sendable {
                 expectedSHA256: expectedSHA256,
             )
             let task = Task {
-                try await operation.download(progressHandler: progressHandler)
+                try await operation.download(progressHandler: progress.send)
             }
-            let activeDownload = ActiveModelDownload(task: task)
+            let activeDownload = ActiveModelDownload(task: task, progress: progress)
             self.activeDownload = activeDownload
             return activeDownload
         }
 
+        let progressHandlerID = activeDownload.progress.add(progressHandler)
         defer {
+            activeDownload.progress.remove(progressHandlerID)
             lock.withLock {
                 if self.activeDownload?.id == activeDownload.id {
                     self.activeDownload = nil
@@ -184,8 +229,19 @@ final class LiveLLMModelStore: LLMModelStore, @unchecked Sendable {
         guard let signature = fileSignature(at: url) else {
             if url == downloadedModelURL {
                 removeVerificationRecord()
+            } else if url == bundledModelURL {
+                clearBundledVerificationRecord()
             }
             return false
+        }
+
+        if url == bundledModelURL,
+           let record = readBundledVerificationRecord(),
+           record.size == signature.size,
+           record.modificationTime == signature.modificationTime,
+           record.sha256 == expectedSHA256
+        {
+            return true
         }
 
         if url == downloadedModelURL,
@@ -200,14 +256,40 @@ final class LiveLLMModelStore: LLMModelStore, @unchecked Sendable {
         guard fileSHA256(at: url) == expectedSHA256 else {
             if url == downloadedModelURL {
                 removeVerificationRecord()
+            } else if url == bundledModelURL {
+                clearBundledVerificationRecord()
             }
             return false
         }
 
         if url == downloadedModelURL {
             writeVerificationRecord(for: signature)
+        } else if url == bundledModelURL {
+            cacheBundledVerificationRecord(for: signature)
         }
         return true
+    }
+
+    private func cacheBundledVerificationRecord(for signature: ModelFileSignature) {
+        verificationLock.lock()
+        bundledVerificationRecord = ModelVerificationRecord(
+            size: signature.size,
+            modificationTime: signature.modificationTime,
+            sha256: expectedSHA256,
+        )
+        verificationLock.unlock()
+    }
+
+    private func readBundledVerificationRecord() -> ModelVerificationRecord? {
+        verificationLock.lock()
+        defer { verificationLock.unlock() }
+        return bundledVerificationRecord
+    }
+
+    private func clearBundledVerificationRecord() {
+        verificationLock.lock()
+        bundledVerificationRecord = nil
+        verificationLock.unlock()
     }
 
     private func fileSignature(at url: URL) -> ModelFileSignature? {
@@ -301,6 +383,8 @@ private final class LLMModelDownloadOperation: NSObject, URLSessionDownloadDeleg
     private var didFinish = false
     private var cancellationRequested = false
     private var pausingForBackground = false
+    private var waitingForPauseCancellation = false
+    private var foregroundRequested = false
     private var progressHandler: (@Sendable (Double) -> Void)?
     private var observers: [NSObjectProtocol] = []
 
@@ -344,10 +428,15 @@ private final class LLMModelDownloadOperation: NSObject, URLSessionDownloadDeleg
     }
 
     private func startDownload() {
-        let resumeData = try? Data(contentsOf: resumeDataURL)
+        let resumeData = (try? Data(contentsOf: resumeDataURL)).flatMap { $0.isEmpty ? nil : $0 }
 
         lock.lock()
-        guard !didFinish, !cancellationRequested, !pausingForBackground, task == nil else {
+        guard !didFinish,
+              !cancellationRequested,
+              !pausingForBackground,
+              !waitingForPauseCancellation,
+              task == nil
+        else {
             lock.unlock()
             return
         }
@@ -370,6 +459,9 @@ private final class LLMModelDownloadOperation: NSObject, URLSessionDownloadDeleg
         cancellationRequested = true
         pausingForBackground = true
         let task = task
+        let session = session
+        self.task = nil
+        self.session = nil
         lock.unlock()
 
         guard let task else {
@@ -377,9 +469,11 @@ private final class LLMModelDownloadOperation: NSObject, URLSessionDownloadDeleg
             return
         }
 
-        task.cancel { [weak self] resumeData in
-            self?.persistResumeData(resumeData)
-            self?.finish(.failure(CancellationError()))
+        task.cancel { [weak self] _ in
+            guard let self else { return }
+            removeResumeData()
+            session?.finishTasksAndInvalidate()
+            finish(.failure(CancellationError()))
         }
     }
 
@@ -412,21 +506,39 @@ private final class LLMModelDownloadOperation: NSObject, URLSessionDownloadDeleg
                 return
             }
             pausingForBackground = true
+            waitingForPauseCancellation = true
+            foregroundRequested = false
+            let session = session
+            self.task = nil
+            self.session = nil
             lock.unlock()
 
             task.cancel { [weak self] resumeData in
                 guard let self else { return }
-                persistResumeData(resumeData)
-                lock.lock()
-                guard !didFinish else {
-                    lock.unlock()
-                    return
+                let shouldPersistResumeData = lock.withLock {
+                    !didFinish && !cancellationRequested
                 }
-                let session = session
-                self.session = nil
-                self.task = nil
-                lock.unlock()
+                if shouldPersistResumeData {
+                    replaceResumeData(with: resumeData)
+                } else {
+                    removeResumeData()
+                }
                 session?.finishTasksAndInvalidate()
+
+                lock.lock()
+                waitingForPauseCancellation = false
+                let shouldResume = foregroundRequested
+                    && !didFinish
+                    && !cancellationRequested
+                if shouldResume {
+                    foregroundRequested = false
+                    pausingForBackground = false
+                }
+                lock.unlock()
+
+                if shouldResume {
+                    startDownload()
+                }
             }
         }
 
@@ -436,16 +548,26 @@ private final class LLMModelDownloadOperation: NSObject, URLSessionDownloadDeleg
                 lock.unlock()
                 return
             }
-            pausingForBackground = false
+            foregroundRequested = true
+            let shouldStartImmediately = !waitingForPauseCancellation
+            if shouldStartImmediately {
+                foregroundRequested = false
+                pausingForBackground = false
+            }
             lock.unlock()
-            startDownload()
+            if shouldStartImmediately {
+                startDownload()
+            }
         }
     #else
         private func registerLifecycleObservers() {}
     #endif
 
-    private func persistResumeData(_ data: Data?) {
-        guard let data else { return }
+    private func replaceResumeData(with data: Data?) {
+        guard let data, !data.isEmpty else {
+            removeResumeData()
+            return
+        }
         try? data.write(to: resumeDataURL, options: .atomic)
     }
 
@@ -501,9 +623,10 @@ private final class LLMModelDownloadOperation: NSObject, URLSessionDownloadDeleg
         if let error {
             let nsError = error as NSError
             let resumeData = nsError.userInfo[NSURLSessionDownloadTaskResumeData] as? Data
-            persistResumeData(resumeData)
+            replaceResumeData(with: resumeData)
             finish(.failure(map(error: error)))
         } else {
+            removeResumeData()
             finish(.failure(LLMModelStoreError.downloadFailed))
         }
     }
@@ -542,6 +665,8 @@ private final class LLMModelDownloadOperation: NSObject, URLSessionDownloadDeleg
         let sessionToInvalidate = session
         session = nil
         task = nil
+        waitingForPauseCancellation = false
+        foregroundRequested = false
         let observersToRemove = observers
         observers.removeAll()
         lock.unlock()

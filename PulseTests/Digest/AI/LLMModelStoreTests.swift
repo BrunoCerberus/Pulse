@@ -6,6 +6,31 @@ import Testing
 
 @Suite("LLMModelStore Tests")
 struct LLMModelStoreTests {
+    @Test("Progress is delivered to every caller sharing a download")
+    func broadcastsProgressToAllCallers() {
+        let broadcaster = LLMModelProgressBroadcaster()
+        let firstValues = OSAllocatedUnfairLock(initialState: [Double]())
+        let secondValues = OSAllocatedUnfairLock(initialState: [Double]())
+
+        let firstID = broadcaster.add { progress in
+            firstValues.withLock { $0.append(progress) }
+        }
+        broadcaster.send(0.5)
+
+        _ = broadcaster.add { progress in
+            secondValues.withLock { $0.append(progress) }
+        }
+
+        #expect(firstValues.withLock { $0 } == [0.5])
+        #expect(secondValues.withLock { $0 } == [0.5])
+
+        broadcaster.remove(firstID)
+        broadcaster.send(0.75)
+
+        #expect(firstValues.withLock { $0 } == [0.5])
+        #expect(secondValues.withLock { $0 } == [0.5, 0.75])
+    }
+
     @Test("A verified local model is reused without downloading")
     func reusesVerifiedLocalModel() async throws {
         let fileManager = FileManager.default
@@ -106,5 +131,46 @@ struct LLMModelStoreTests {
         } catch let error as LLMModelStoreError {
             #expect(error == .insufficientStorage)
         }
+    }
+
+    @Test("An orphaned partial file is removed before the storage check")
+    func removesOrphanedPartialFileBeforeStorageCheck() async throws {
+        let fileManager = FileManager.default
+        let directoryURL = fileManager.temporaryDirectory
+            .appendingPathComponent("pulse-llm-store-\(UUID().uuidString)", isDirectory: true)
+        let modelURL = directoryURL.appendingPathComponent("model.gguf")
+        let partialURL = modelURL.appendingPathExtension("part")
+        try fileManager.createDirectory(at: directoryURL, withIntermediateDirectories: true)
+        try Data("orphaned partial".utf8).write(to: partialURL)
+        defer { try? fileManager.removeItem(at: directoryURL) }
+
+        let partialWasPresentDuringCapacityCheck = OSAllocatedUnfairLock(initialState: true)
+        let partialPath = partialURL.path
+        let downloadURL = try #require(URL(string: "https://example.com/should-not-be-called"))
+        let store = LiveLLMModelStore(
+            fileManager: fileManager,
+            bundledModelURL: nil,
+            downloadedModelURL: modelURL,
+            modelDownloadURL: downloadURL,
+            expectedSizeBytes: 4,
+            expectedSHA256: String(repeating: "0", count: SHA256.Digest.byteCount * 2),
+            minimumFreeSpaceBytes: 5,
+            availableCapacityProvider: { _ in
+                partialWasPresentDuringCapacityCheck.withLock {
+                    $0 = FileManager.default.fileExists(atPath: partialPath)
+                }
+                return 4
+            },
+        )
+
+        do {
+            _ = try await store.prepareModel { _ in }
+            Issue.record("Expected the storage check to fail before downloading")
+        } catch let error as LLMModelStoreError {
+            #expect(error == .insufficientStorage)
+        }
+
+        #expect(!partialWasPresentDuringCapacityCheck.withLock { $0 })
+        #expect(!fileManager.fileExists(atPath: partialURL.path))
     }
 }

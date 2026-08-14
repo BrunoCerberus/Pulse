@@ -50,7 +50,7 @@ struct FeedViewModelTests {
         #expect(success)
     }
 
-    @Test("onRetryTapped event triggers digest generation")
+    @Test("onRetryTapped reloads articles without starting generation")
     func onRetryRetries() async {
         mockNewsService.topHeadlinesResult = .success(Article.mockArticles)
         mockFeedService.loadDelay = 0.01
@@ -65,19 +65,13 @@ struct FeedViewModelTests {
         }
         #expect(articlesLoaded)
 
-        // Now retry should trigger generation
+        // Retry reloads the source pool; generation remains an explicit action
+        // after the deferred-model-download change.
         sut.handle(event: .onRetryTapped)
 
-        // Wait for generation to be in progress or completed
+        // Wait for the refreshed pool to settle back to the idle start screen.
         let success = await waitForCondition(timeout: 2_000_000_000) { @MainActor [sut] in
-            let state = sut.viewState.displayState
-            if case .processing = state {
-                return true
-            }
-            if case .completed = state {
-                return true
-            }
-            return false
+            !sut.viewState.sourceArticles.isEmpty && sut.viewState.displayState == .idle
         }
         #expect(success)
     }

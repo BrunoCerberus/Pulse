@@ -46,6 +46,25 @@ struct FeedViewStateReducerTests {
         #expect(viewState.sourceArticles.count == Article.mockArticles.count)
     }
 
+    @Test("Model availability is passed through to the view state")
+    func modelAvailabilityPassthrough() {
+        let domainState = FeedDomainState(
+            generationState: .idle,
+            latestArticles: Article.mockArticles,
+            currentDigest: nil,
+            streamingText: "",
+            modelStatus: .notLoaded,
+            modelAvailability: true,
+            hasLoadedInitialData: true,
+            selectedArticle: nil,
+            isOfflineError: false,
+        )
+
+        let viewState = sut.reduce(domainState: domainState)
+
+        #expect(viewState.modelAvailability == true)
+    }
+
     @Test("Loading articles maps to processing display state")
     func loadingArticles() {
         let domainState = FeedDomainState(

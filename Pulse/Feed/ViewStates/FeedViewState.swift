@@ -77,6 +77,9 @@ struct FeedViewState: Equatable {
     /// Whether the current error is due to being offline.
     var isOfflineError: Bool
 
+    /// Whether a verified model is already available on disk.
+    var modelAvailability: Bool?
+
     /// Creates the default initial state with generating phase active.
     static var initial: FeedViewState {
         FeedViewState(
@@ -88,6 +91,7 @@ struct FeedViewState: Equatable {
             errorMessage: nil,
             selectedArticle: nil,
             isOfflineError: false,
+            modelAvailability: nil,
         )
     }
 }

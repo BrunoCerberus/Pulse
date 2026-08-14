@@ -82,11 +82,17 @@ final class MorningBriefingPrefetcher {
 
         guard briefingCacheService.fetchIfFreshToday() == nil else { return }
 
+        let newsServiceBox = UncheckedSendableBox(value: newsService)
+        let feedServiceBox = UncheckedSendableBox(value: feedService)
         // Prefetch is a background optimization, so it must not initiate an
         // 800 MB first-use download while the user is not waiting for AI.
-        guard feedService.isModelAvailable else { return }
+        // Availability may verify an 806 MB file; keep that synchronous check
+        // off the MainActor as well.
+        let isModelAvailable = await Task.detached(priority: .utility) {
+            feedServiceBox.value.isModelAvailable
+        }.value
+        guard isModelAvailable else { return }
 
-        let newsServiceBox = UncheckedSendableBox(value: newsService)
         let pool = await FeedArticlePoolBuilder.fetchPool(
             newsService: newsServiceBox.value,
             language: AppLocalization.shared.language,
@@ -94,7 +100,6 @@ final class MorningBriefingPrefetcher {
         guard !pool.isEmpty else { return }
 
         let articlesToProcess = FeedDigestPromptBuilder.cappedArticles(from: pool)
-        let feedServiceBox = UncheckedSendableBox(value: feedService)
 
         do {
             try await feedServiceBox.value.loadModelIfNeeded()

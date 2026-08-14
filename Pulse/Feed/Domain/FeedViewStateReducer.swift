@@ -40,6 +40,7 @@ struct FeedViewStateReducer: ViewStateReducing {
             errorMessage: errorMessage,
             selectedArticle: domainState.selectedArticle,
             isOfflineError: domainState.isOfflineError,
+            modelAvailability: domainState.modelAvailability,
         )
     }
 

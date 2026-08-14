@@ -307,14 +307,14 @@ private extension PulseSceneDelegate {
         guard
             let storeKitService = try? serviceLocator.retrieve(StoreKitService.self),
             storeKitService.isPremium,
-            let llmService = try? serviceLocator.retrieve(LLMService.self),
-            llmService.isModelAvailable
+            let llmService = try? serviceLocator.retrieve(LLMService.self)
         else {
             return
         }
 
         let llmServiceBox = UncheckedSendableBox(value: llmService)
         Task.detached(priority: .utility) {
+            guard llmServiceBox.value.isModelAvailable else { return }
             do {
                 try await llmServiceBox.value.loadModel()
                 Logger.shared.service("LLM model preloaded successfully")

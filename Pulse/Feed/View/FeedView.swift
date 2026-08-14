@@ -188,10 +188,12 @@ struct FeedView<R: FeedNavigationRouter>: View {
                             .foregroundStyle(.secondary)
                             .multilineTextAlignment(.center)
 
-                        Text(Constants.modelDownloadNotice)
-                            .font(Typography.captionLarge)
-                            .foregroundStyle(.secondary)
-                            .multilineTextAlignment(.center)
+                        if viewModel.viewState.modelAvailability != true {
+                            Text(Constants.modelDownloadNotice)
+                                .font(Typography.captionLarge)
+                                .foregroundStyle(.secondary)
+                                .multilineTextAlignment(.center)
+                        }
 
                         Button {
                             HapticManager.shared.buttonPress()

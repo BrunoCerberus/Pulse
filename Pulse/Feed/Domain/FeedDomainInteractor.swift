@@ -92,6 +92,7 @@ final class FeedDomainInteractor: CombineInteractor {
             updateState { state in
                 state.generationState = .error(error)
                 state.isOfflineError = isOffline
+                state.autoPlayBriefingOnCompletion = false
             }
         case .generateDigest:
             generateDigest()
@@ -109,6 +110,7 @@ final class FeedDomainInteractor: CombineInteractor {
             analyticsService?.recordError(digestError)
             updateState { state in
                 state.generationState = .error(error)
+                state.autoPlayBriefingOnCompletion = false
             }
         case let .selectArticle(article):
             updateState { $0.selectedArticle = article }
@@ -128,6 +130,7 @@ final class FeedDomainInteractor: CombineInteractor {
                 state.hasLoadedInitialData = false
                 state.isOfflineError = false
                 state.generationState = .loadingArticles
+                state.autoPlayBriefingOnCompletion = false
             }
             fetchLatestNews()
         }
@@ -162,6 +165,11 @@ final class FeedDomainInteractor: CombineInteractor {
 
 private extension FeedDomainInteractor {
     func loadInitialData() {
+        // A normal Feed visit must not inherit an abandoned Morning Briefing
+        // fallback after its fetch or generation failed.
+        if currentState.autoPlayBriefingOnCompletion {
+            updateState { $0.autoPlayBriefingOnCompletion = false }
+        }
         guard !currentState.hasLoadedInitialData else { return }
 
         analyticsService?.logEvent(.screenView(screen: .feed))
@@ -195,13 +203,21 @@ private extension FeedDomainInteractor {
     func preloadModel() {
         // Skip if preload already in progress (task-based synchronization)
         guard preloadTask == nil else { return }
-        // A foreground preload must never trigger the first-use download.
-        // The model is downloaded only when digest generation is requested.
-        guard feedService.isModelAvailable else { return }
 
         let service = UncheckedSendableBox(value: feedService)
         preloadTask = Task { @MainActor [weak self] in
             defer { self?.preloadTask = nil }
+            // `isModelAvailable` may hash the model when its verification
+            // sidecar is missing. Keep that synchronous work off MainActor.
+            let isAvailable = await Task.detached(priority: .utility) {
+                service.value.isModelAvailable
+            }.value
+            guard isAvailable else {
+                self?.updateState { $0.modelAvailability = isAvailable }
+                return
+            }
+            guard let self else { return }
+            updateState { $0.modelAvailability = true }
             do {
                 try await service.value.loadModelIfNeeded()
             } catch {
@@ -248,6 +264,9 @@ private extension FeedDomainInteractor {
             state.hasLoadedInitialData = true
             state.isOfflineError = false
             state.generationState = .idle
+            if articles.isEmpty {
+                state.autoPlayBriefingOnCompletion = false
+            }
         }
 
         // Morning Briefing was explicitly requested through its notification or
@@ -282,7 +301,10 @@ private extension FeedDomainInteractor {
         }
 
         guard !currentState.latestArticles.isEmpty else {
-            updateState { $0.generationState = .error("No articles available") }
+            updateState {
+                $0.generationState = .error("No articles available")
+                $0.autoPlayBriefingOnCompletion = false
+            }
             return
         }
 
