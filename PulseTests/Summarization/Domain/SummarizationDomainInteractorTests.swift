@@ -28,14 +28,24 @@ struct SummarizationDomainInteractorTests {
     // MARK: - Initial State Tests
 
     @Test("Initial state is correct")
-    func initialState() {
-        let state = sut.currentState
+    func initialState() async {
+        // The interactor's init kicks off a background availability check that
+        // overwrites `modelAvailability` (nil -> Bool). Awaiting it on a fresh
+        // interactor makes the nil assertion deterministic; asserting against
+        // the shared `sut` raced its own init task on slow CI runners.
+        let locator = ServiceLocator()
+        locator.register(SummarizationService.self, instance: MockSummarizationService())
+        let freshSut = SummarizationDomainInteractor(article: article, serviceLocator: locator)
 
+        _ = await waitForCondition(timeout: 2_000_000_000) { @MainActor [freshSut] in
+            freshSut.currentState.modelAvailability != nil
+        }
+
+        let state = freshSut.currentState
         #expect(state.article == article)
         #expect(state.summarizationState == .idle)
         #expect(state.generatedSummary == "")
         #expect(state.modelStatus == .notLoaded)
-        #expect(state.modelAvailability == nil)
     }
 
     // MARK: - Premium Gate Tests
