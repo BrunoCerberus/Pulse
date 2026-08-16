@@ -107,6 +107,42 @@ struct FeedMorningBriefingTests {
         #expect(mockFeedService.loadModelCallCount > 0, "Fallback path must go through LLM generation")
     }
 
+    @Test("A failed fallback clears auto-play before the next Feed load")
+    func failedFallbackDoesNotAutoPlayLaterArticles() async {
+        sut.dispatch(action: .startMorningBriefing)
+        #expect(sut.currentState.autoPlayBriefingOnCompletion)
+
+        sut.dispatch(action: .latestArticlesFailed("Unable to fetch news", isOffline: false))
+        #expect(!sut.currentState.autoPlayBriefingOnCompletion)
+
+        sut.dispatch(action: .latestArticlesLoaded([makeArticle(id: "later")]))
+        try? await Task.sleep(nanoseconds: 100_000_000)
+
+        #expect(mockFeedService.generateDigestCallCount == 0)
+        #expect(!sut.currentState.autoPlayBriefingOnCompletion)
+    }
+
+    @Test("An empty fallback result clears auto-play")
+    func emptyFallbackClearsAutoPlay() {
+        sut.dispatch(action: .startMorningBriefing)
+        #expect(sut.currentState.autoPlayBriefingOnCompletion)
+
+        sut.dispatch(action: .latestArticlesLoaded([]))
+
+        #expect(!sut.currentState.autoPlayBriefingOnCompletion)
+    }
+
+    @Test("An initial-load dispatch preserves a requested briefing")
+    func initialLoadPreservesBriefingAutoplay() {
+        sut.dispatch(action: .latestArticlesLoaded([makeArticle(id: "existing")]))
+        sut.dispatch(action: .startMorningBriefing)
+        #expect(sut.currentState.autoPlayBriefingOnCompletion)
+
+        sut.dispatch(action: .loadInitialData)
+
+        #expect(sut.currentState.autoPlayBriefingOnCompletion)
+    }
+
     // MARK: - Helpers
 
     private func makeDigest(

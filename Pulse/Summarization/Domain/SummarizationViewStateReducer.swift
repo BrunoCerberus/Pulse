@@ -21,6 +21,7 @@ struct SummarizationViewStateReducer: ViewStateReducing {
             summarizationState: domainState.summarizationState,
             generatedSummary: domainState.generatedSummary,
             modelStatus: domainState.modelStatus,
+            modelAvailability: domainState.modelAvailability,
         )
     }
 }

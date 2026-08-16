@@ -79,6 +79,7 @@
 "summarization.generating" = "Generando...";
 "summarization.button" = "Resumir";
 "summarization.ai_summary" = "Resumen con IA";
+"summarization.model_download_notice" = "La primera función de IA descarga unos 806 MB una vez. El modelo permanece en este dispositivo.";
 
 /* ==================== */
 /* MARK: - Search       */
@@ -352,6 +353,11 @@
 
 "feed.title" = "Resumen Diario";
 "feed.header_title" = "Tu Resumen Diario";
+"feed.digest_ready.title" = "Tu resumen está listo para crear";
+"feed.digest_ready.message" = "Pulse tiene artículos nuevos listos para crear tu resumen diario personalizado.";
+"feed.model_download_notice" = "La primera función de IA descarga unos 806 MB una vez. El modelo permanece en este dispositivo.";
+"feed.generate_digest" = "Crear Resumen";
+"feed.generate_digest_hint" = "Inicia el resumen y descarga el modelo del dispositivo si es necesario.";
 "feed.empty.title" = "Sin Lecturas Recientes";
 "feed.empty.message" = "Lee algunos artículos para obtener tu resumen diario personalizado.";
 "feed.error.title" = "Algo salió mal";
@@ -558,6 +564,11 @@
 /* LLM errors */
 "llm.error.model_not_loaded" = "El modelo del dispositivo aún no se ha cargado. Inténtalo de nuevo en un momento.";
 "llm.error.model_load_failed" = "No se pudo cargar el modelo del dispositivo.";
+"llm.error.model_integrity" = "El modelo del dispositivo no superó la comprobación de integridad. Inténtalo de nuevo.";
+"llm.error.model_http" = "La descarga del modelo del dispositivo devolvió un error HTTP %d.";
+"llm.error.model_storage" = "No hay suficiente espacio libre para descargar el modelo del dispositivo.";
+"llm.error.model_network" = "El modelo del dispositivo solo se descarga por Wi-Fi o una conexión sin restricciones.";
+"llm.error.model_download" = "No se pudo descargar el modelo del dispositivo. Comprueba tu conexión e inténtalo de nuevo.";
 "llm.error.inference_timeout" = "El modelo del dispositivo tardó demasiado en responder. Inténtalo de nuevo.";
 "llm.error.memory_pressure" = "No hay memoria suficiente para ejecutar el modelo del dispositivo. Cierra otras apps.";
 "llm.error.generation_cancelled" = "Generación cancelada.";

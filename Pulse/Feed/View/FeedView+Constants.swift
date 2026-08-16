@@ -12,6 +12,26 @@ extension FeedView {
             AppLocalization.localized("feed.header_title")
         }
 
+        static var digestReadyTitle: String {
+            AppLocalization.localized("feed.digest_ready.title")
+        }
+
+        static var digestReadyMessage: String {
+            AppLocalization.localized("feed.digest_ready.message")
+        }
+
+        static var modelDownloadNotice: String {
+            AppLocalization.localized("feed.model_download_notice")
+        }
+
+        static var generateDigest: String {
+            AppLocalization.localized("feed.generate_digest")
+        }
+
+        static var generateDigestHint: String {
+            AppLocalization.localized("feed.generate_digest_hint")
+        }
+
         static var listenBriefing: String {
             AppLocalization.localized("feed.listen_briefing")
         }

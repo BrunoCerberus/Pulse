@@ -34,6 +34,10 @@ final class LiveSummarizationService: SummarizationService {
         llmService.isModelLoaded
     }
 
+    var isModelAvailable: Bool {
+        llmService.isModelAvailable
+    }
+
     func loadModelIfNeeded() async throws {
         guard !isModelLoaded else { return }
         try await llmService.loadModel()

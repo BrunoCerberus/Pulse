@@ -66,6 +66,14 @@ final class SummarizationDomainInteractor: CombineInteractor {
                 self?.dispatch(action: .modelStatusChanged(status))
             }
             .store(in: &cancellables)
+
+        let service = UncheckedSendableBox(value: summarizationService)
+        Task { @MainActor [weak self] in
+            let isAvailable = await Task.detached(priority: .utility) {
+                service.value.isModelAvailable
+            }.value
+            self?.updateState { $0.modelAvailability = isAvailable }
+        }
     }
 
     func dispatch(action: DomainAction) {
@@ -113,6 +121,10 @@ final class SummarizationDomainInteractor: CombineInteractor {
             do {
                 // loadModelIfNeeded is idempotent and handles concurrent calls
                 try await service.value.loadModelIfNeeded()
+
+                await MainActor.run { [weak self] in
+                    self?.updateState { $0.modelAvailability = true }
+                }
 
                 guard !Task.isCancelled else { return }
 

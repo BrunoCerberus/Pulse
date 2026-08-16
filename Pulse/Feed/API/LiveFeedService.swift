@@ -34,6 +34,10 @@ final class LiveFeedService: FeedService {
         llmService.isModelLoaded
     }
 
+    var isModelAvailable: Bool {
+        llmService.isModelAvailable
+    }
+
     func loadModelIfNeeded() async throws {
         guard !isModelReady else { return }
         try await llmService.loadModel()

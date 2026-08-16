@@ -40,13 +40,14 @@ struct FeedViewStateReducer: ViewStateReducing {
             errorMessage: errorMessage,
             selectedArticle: domainState.selectedArticle,
             isOfflineError: domainState.isOfflineError,
+            modelAvailability: domainState.modelAvailability,
         )
     }
 
     /// Maps the domain generation state to a display state for the UI.
     ///
-    /// Handles the nuanced mapping where `loadingArticles` shows the generating animation
-    /// because digest generation starts automatically after articles load.
+    /// Handles the nuanced mapping where `loadingArticles` reuses the generating animation
+    /// while the news pool is being fetched.
     ///
     /// - Parameter domainState: The current domain state.
     /// - Returns: The appropriate display state for the view.
@@ -59,7 +60,6 @@ struct FeedViewStateReducer: ViewStateReducing {
             return .idle
         case .loadingArticles:
             // Show processing animation while fetching articles
-            // Digest generation starts automatically after articles load
             return .processing(phase: .generating)
         case .generating:
             return .processing(phase: .generating)

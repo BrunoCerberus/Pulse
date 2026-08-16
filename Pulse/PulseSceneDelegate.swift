@@ -83,8 +83,9 @@ final class PulseSceneDelegate: UIResponder, UIWindowSceneDelegate {
         // subsequent `sceneDidBecomeActive`.
         startMorningBriefingPrefetcher()
 
-        // Preload LLM model in background for faster digest generation
-        preloadLLMModelIfPremium()
+        // Warm an already-downloaded model for personalization and faster AI
+        // features, but never make the first-use download a launch side effect.
+        preloadLLMModelIfPremiumAndAvailable()
 
         // Ensure we have a valid window scene
         guard let windowScene = scene as? UIWindowScene else { return }
@@ -302,22 +303,22 @@ private extension PulseSceneDelegate {
         )
     }
 
-    func preloadLLMModelIfPremium() {
-        Task.detached(priority: .utility) { [serviceLocator] in
-            do {
-                // Check if user is premium before preloading
-                let storeKitService = try serviceLocator.retrieve(StoreKitService.self)
-                guard storeKitService.isPremium else {
-                    Logger.shared.service("Skipping LLM preload - not premium user")
-                    return
-                }
+    func preloadLLMModelIfPremiumAndAvailable() {
+        guard
+            let storeKitService = try? serviceLocator.retrieve(StoreKitService.self),
+            storeKitService.isPremium,
+            let llmService = try? serviceLocator.retrieve(LLMService.self)
+        else {
+            return
+        }
 
-                // Preload the model in background
-                let llmService = try serviceLocator.retrieve(LLMService.self)
-                try await llmService.loadModel()
+        let llmServiceBox = UncheckedSendableBox(value: llmService)
+        Task.detached(priority: .utility) {
+            guard llmServiceBox.value.isModelAvailable else { return }
+            do {
+                try await llmServiceBox.value.loadModel()
                 Logger.shared.service("LLM model preloaded successfully")
             } catch {
-                // Preload failure is non-critical - model will load on-demand
                 Logger.shared.service("LLM preload skipped: \(error)", level: .debug)
             }
         }

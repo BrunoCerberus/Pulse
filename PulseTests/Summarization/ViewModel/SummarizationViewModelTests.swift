@@ -32,6 +32,7 @@ struct SummarizationViewModelTests {
         #expect(state.summarizationState == .idle)
         #expect(state.generatedSummary == "")
         #expect(state.modelStatus == .notLoaded)
+        #expect(state.modelAvailability == nil)
     }
 
     // MARK: - Event Handling Tests
@@ -138,6 +139,7 @@ struct SummarizationViewModelTests {
             summarizationState: .generating,
             generatedSummary: "Partial summary...",
             modelStatus: .ready,
+            modelAvailability: true,
         )
 
         let viewState = reducer.reduce(domainState: domainState)
@@ -146,6 +148,7 @@ struct SummarizationViewModelTests {
         #expect(viewState.summarizationState == .generating)
         #expect(viewState.generatedSummary == "Partial summary...")
         #expect(viewState.modelStatus == .ready)
+        #expect(viewState.modelAvailability == true)
     }
 
     // MARK: - Article Preservation

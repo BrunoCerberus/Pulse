@@ -79,6 +79,7 @@
 "summarization.generating" = "Gerando...";
 "summarization.button" = "Resumir";
 "summarization.ai_summary" = "Resumo por IA";
+"summarization.model_download_notice" = "O primeiro recurso de IA baixa cerca de 806 MB uma vez. O modelo fica neste dispositivo.";
 
 /* ==================== */
 /* MARK: - Search       */
@@ -352,6 +353,11 @@
 
 "feed.title" = "Resumo Diário";
 "feed.header_title" = "Seu Resumo Diário";
+"feed.digest_ready.title" = "Seu resumo está pronto para ser criado";
+"feed.digest_ready.message" = "O Pulse encontrou artigos novos para criar seu resumo diário personalizado.";
+"feed.model_download_notice" = "O primeiro recurso de IA baixa cerca de 806 MB uma vez. O modelo fica neste dispositivo.";
+"feed.generate_digest" = "Gerar Resumo";
+"feed.generate_digest_hint" = "Inicia o resumo e baixa o modelo no dispositivo se necessário.";
 "feed.empty.title" = "Nenhuma Leitura Recente";
 "feed.empty.message" = "Leia alguns artigos para obter seu resumo diário personalizado.";
 "feed.error.title" = "Algo deu errado";
@@ -558,6 +564,11 @@
 /* LLM errors */
 "llm.error.model_not_loaded" = "O modelo no dispositivo ainda não foi carregado. Tente novamente em instantes.";
 "llm.error.model_load_failed" = "Falha ao carregar o modelo no dispositivo.";
+"llm.error.model_integrity" = "O modelo no dispositivo falhou na verificação de integridade. Tente novamente.";
+"llm.error.model_http" = "O download do modelo no dispositivo retornou o erro HTTP %d.";
+"llm.error.model_storage" = "Não há espaço livre suficiente para baixar o modelo no dispositivo.";
+"llm.error.model_network" = "O modelo no dispositivo só é baixado por Wi-Fi ou uma conexão sem restrições.";
+"llm.error.model_download" = "Não foi possível baixar o modelo no dispositivo. Verifique sua conexão e tente novamente.";
 "llm.error.inference_timeout" = "O modelo no dispositivo demorou muito para responder. Tente novamente.";
 "llm.error.memory_pressure" = "Não há memória suficiente para executar o modelo no dispositivo. Tente fechar outros apps.";
 "llm.error.generation_cancelled" = "Geração cancelada.";

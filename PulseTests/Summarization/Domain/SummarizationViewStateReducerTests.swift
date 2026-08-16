@@ -12,12 +12,14 @@ struct SummarizationViewStateReducerTests {
         summarizationState: SummarizationState = .idle,
         generatedSummary: String = "",
         modelStatus: LLMModelStatus = .notLoaded,
+        modelAvailability: Bool? = nil,
     ) -> SummarizationDomainState {
         SummarizationDomainState(
             article: article,
             summarizationState: summarizationState,
             generatedSummary: generatedSummary,
             modelStatus: modelStatus,
+            modelAvailability: modelAvailability,
         )
     }
 
@@ -31,6 +33,7 @@ struct SummarizationViewStateReducerTests {
             summarizationState: .completed,
             generatedSummary: "Test summary",
             modelStatus: .ready,
+            modelAvailability: true,
         )
 
         let viewState = sut.reduce(domainState: domainState)
@@ -39,6 +42,7 @@ struct SummarizationViewStateReducerTests {
         #expect(viewState.summarizationState == .completed)
         #expect(viewState.generatedSummary == "Test summary")
         #expect(viewState.modelStatus == .ready)
+        #expect(viewState.modelAvailability == true)
     }
 
     // MARK: - Summarization State Tests
@@ -98,5 +102,6 @@ struct SummarizationViewStateReducerTests {
         #expect(viewState.summarizationState == .idle)
         #expect(viewState.generatedSummary == "")
         #expect(viewState.modelStatus == .notLoaded)
+        #expect(viewState.modelAvailability == nil)
     }
 }

@@ -56,13 +56,7 @@ open Pulse.xcodeproj
 
 **Requirements:** Xcode 26.5+ · iOS 26.5+ · Swift 6.2+.
 
-AI features need the on-device LLM model (gitignored, ~756 MB) downloaded first:
-
-```bash
-huggingface-cli download bartowski/google_gemma-3-1b-it-GGUF \
-  --include "gemma-3-1b-it-Q4_K_M.gguf" \
-  --local-dir Pulse/Resources/Models/
-```
+AI features download the on-device LLM model only when the user explicitly starts an AI feature (~806 MB). It is not shipped in the App Store binary, and no manual model setup is required. The download is Wi-Fi-only, resumable, integrity-checked, and requires free storage; ordinary Feed visits never start it.
 
 For DEBUG builds you can override the Supabase URL via `export SUPABASE_URL="..."`; all other keys come from Firebase Remote Config. See [Development](docs-guide/development.md) for the full setup, commands, and dependency list.
 

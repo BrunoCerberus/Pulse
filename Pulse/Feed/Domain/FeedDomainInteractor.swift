@@ -92,6 +92,7 @@ final class FeedDomainInteractor: CombineInteractor {
             updateState { state in
                 state.generationState = .error(error)
                 state.isOfflineError = isOffline
+                state.autoPlayBriefingOnCompletion = false
             }
         case .generateDigest:
             generateDigest()
@@ -109,6 +110,7 @@ final class FeedDomainInteractor: CombineInteractor {
             analyticsService?.recordError(digestError)
             updateState { state in
                 state.generationState = .error(error)
+                state.autoPlayBriefingOnCompletion = false
             }
         case let .selectArticle(article):
             updateState { $0.selectedArticle = article }
@@ -128,6 +130,7 @@ final class FeedDomainInteractor: CombineInteractor {
                 state.hasLoadedInitialData = false
                 state.isOfflineError = false
                 state.generationState = .loadingArticles
+                state.autoPlayBriefingOnCompletion = false
             }
             fetchLatestNews()
         }
@@ -184,8 +187,8 @@ private extension FeedDomainInteractor {
             return
         }
 
-        // No cached digest - preload model in background while fetching articles
-        // This parallelizes model loading with article fetch for faster generation
+        // No cached digest - fetch articles without starting an AI download.
+        // The user explicitly starts generation after the articles are ready.
         preloadModel()
 
         // Fetch latest news articles if no cached digest
@@ -199,6 +202,17 @@ private extension FeedDomainInteractor {
         let service = UncheckedSendableBox(value: feedService)
         preloadTask = Task { @MainActor [weak self] in
             defer { self?.preloadTask = nil }
+            // `isModelAvailable` may hash the model when its verification
+            // sidecar is missing. Keep that synchronous work off MainActor.
+            let isAvailable = await Task.detached(priority: .utility) {
+                service.value.isModelAvailable
+            }.value
+            guard isAvailable else {
+                self?.updateState { $0.modelAvailability = isAvailable }
+                return
+            }
+            guard let self else { return }
+            updateState { $0.modelAvailability = true }
             do {
                 try await service.value.loadModelIfNeeded()
             } catch {
@@ -244,14 +258,22 @@ private extension FeedDomainInteractor {
             state.latestArticles = articles
             state.hasLoadedInitialData = true
             state.isOfflineError = false
-            state.generationState = articles.isEmpty ? .idle : state.generationState
+            // A digest already on screen must survive a refresh rather than be
+            // replaced by the start card, and a successful load must clear any
+            // earlier error.
+            state.generationState = state.currentDigest == nil ? .idle : .completed
+            if articles.isEmpty {
+                state.autoPlayBriefingOnCompletion = false
+            }
         }
 
-        // Auto-generate if we have articles and no digest
-        if !articles.isEmpty, currentState.currentDigest == nil {
+        // Morning Briefing was explicitly requested through its notification or
+        // deeplink, so it may continue into generation and auto-play.
+        if !articles.isEmpty,
+           currentState.currentDigest == nil,
+           currentState.autoPlayBriefingOnCompletion
+        {
             dispatch(action: .generateDigest)
-        } else if articles.isEmpty {
-            updateState { $0.generationState = .idle }
         }
     }
 }
@@ -275,7 +297,10 @@ private extension FeedDomainInteractor {
         }
 
         guard !currentState.latestArticles.isEmpty else {
-            updateState { $0.generationState = .error("No articles available") }
+            updateState {
+                $0.generationState = .error("No articles available")
+                $0.autoPlayBriefingOnCompletion = false
+            }
             return
         }
 
@@ -303,6 +328,7 @@ private extension FeedDomainInteractor {
             do {
                 // Ensure model is loaded
                 try await feedServiceBox.value.loadModelIfNeeded()
+                updateState { $0.modelAvailability = true }
 
                 guard !Task.isCancelled else { return }
 
@@ -428,9 +454,9 @@ private extension FeedDomainInteractor {
         // No digest anywhere: fetch fresh articles directly (bypassing
         // `loadInitialData()`'s `hasLoadedInitialData` guard, since we've
         // already established above that there's no usable digest to show)
-        // and let the existing auto-generate-on-load path
-        // (`handleArticlesLoaded` → `.generateDigest`) kick off generation.
-        // `handleDigestCompleted` auto-plays once it finishes.
+        // Mark this as an explicitly requested briefing so the article fetch
+        // can continue into generation without making ordinary Feed visits do
+        // the same.
         updateState { $0.autoPlayBriefingOnCompletion = true }
         preloadModel()
         fetchLatestNews()

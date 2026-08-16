@@ -25,6 +25,7 @@ final class LLMModelManager: @unchecked Sendable {
     private var llamaService: LlamaService?
     private var generationTask: Task<Void, Never>?
     private var memoryWarningObserverToken: NSObjectProtocol?
+    private let modelStore: LLMModelStore
 
     /// Generation gate (H3): `true` while a generation holds the single shared
     /// LlamaService context. The underlying `LlamaService.streamCompletion`
@@ -58,7 +59,8 @@ final class LLMModelManager: @unchecked Sendable {
 
     private static let simulatorWarningLock = OSAllocatedUnfairLock(initialState: SimulatorWarningState())
 
-    private init() {
+    private init(modelStore: LLMModelStore = LiveLLMModelStore.shared) {
+        self.modelStore = modelStore
         setupMemoryWarningObserver()
     }
 
@@ -78,6 +80,11 @@ final class LLMModelManager: @unchecked Sendable {
         lock.withLock { llamaService != nil }
     }
 
+    /// Check if a verified-sized model file is already available locally.
+    var modelIsAvailable: Bool {
+        modelStore.existingModelURL != nil
+    }
+
     /// Load the GGUF model into memory
     func loadModel(progressHandler: @escaping @Sendable (Double) -> Void) async throws {
         let alreadyLoaded = lock.withLock { llamaService != nil }
@@ -95,15 +102,18 @@ final class LLMModelManager: @unchecked Sendable {
 
         progressHandler(0.1)
 
-        guard let modelURL = LLMConfiguration.modelURL,
-              FileManager.default.fileExists(atPath: modelURL.path)
-        else {
-            logger.warning("Model file not found", category: logCategory)
-            throw LLMError.modelLoadFailed("Model file not bundled. Please add the GGUF model to Resources/Models/")
+        let modelURL: URL
+        do {
+            modelURL = try await modelStore.prepareModel { progress in
+                progressHandler(0.1 + (progress * 0.4))
+            }
+        } catch {
+            logger.error("Failed to prepare model: \(error)", category: logCategory)
+            throw LLMError.modelLoadFailed(error.localizedDescription)
         }
 
         logger.info("Loading model from: \(modelURL.path)", category: logCategory)
-        progressHandler(0.3)
+        progressHandler(0.5)
 
         do {
             let service = try await createAndWarmUpService(modelURL: modelURL, progressHandler: progressHandler)
@@ -132,7 +142,7 @@ final class LLMModelManager: @unchecked Sendable {
         modelURL: URL,
         progressHandler: @escaping @Sendable (Double) -> Void,
     ) async throws -> LlamaService {
-        progressHandler(0.5)
+        progressHandler(0.65)
 
         let useGPU: Bool
         #if targetEnvironment(simulator)
@@ -148,7 +158,7 @@ final class LLMModelManager: @unchecked Sendable {
         )
 
         let service = LlamaService(modelUrl: modelURL, config: config)
-        progressHandler(0.8)
+        progressHandler(0.85)
 
         // Warm up the service to trigger lazy model load
         let warmupMessages = [LlamaChatMessage(role: .system, content: "You are a helpful assistant.")]

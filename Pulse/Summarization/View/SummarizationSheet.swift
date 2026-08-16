@@ -124,6 +124,15 @@ struct SummarizationSheet: View {
         VStack(spacing: Spacing.lg) {
             articlePreview
 
+            // `nil` means the availability check is still running; claiming a
+            // download is pending would be wrong.
+            if viewModel.viewState.modelAvailability == false {
+                Text(Constants.modelDownloadNotice)
+                    .font(Typography.captionLarge)
+                    .foregroundStyle(.secondary)
+                    .multilineTextAlignment(.center)
+            }
+
             GenerateButton {
                 HapticManager.shared.buttonPress()
                 viewModel.handle(event: .onSummarizationStarted)

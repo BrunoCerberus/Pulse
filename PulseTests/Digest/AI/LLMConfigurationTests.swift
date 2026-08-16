@@ -1,3 +1,4 @@
+import CryptoKit
 import Foundation
 @testable import Pulse
 import Testing
@@ -51,6 +52,24 @@ struct LLMConfigurationTests {
     @Test("LLMConfiguration modelExtension returns correct value")
     func modelExtensionReturnsCorrectValue() {
         #expect(LLMConfiguration.modelExtension == "gguf")
+    }
+
+    @Test("LLMConfiguration pins the first-use model download")
+    func modelDownloadIsPinned() {
+        #expect(LLMConfiguration.modelDownloadURL.host == "huggingface.co")
+        // The repository publishes the file under a different name than the one
+        // used on device, and the revision must be an immutable commit SHA.
+        #expect(LLMConfiguration.modelDownloadURL.lastPathComponent == "google_gemma-3-1b-it-Q4_K_M.gguf")
+        #expect(LLMConfiguration.modelDownloadURL.pathComponents.contains(LLMConfiguration.modelRepositoryRevision))
+        #expect(LLMConfiguration.modelRepositoryRevision != "main")
+        #expect(LLMConfiguration.modelSizeBytes == 806_058_496)
+        #expect(LLMConfiguration.modelSHA256.count == SHA256.Digest.byteCount * 2)
+    }
+
+    @Test("LLMConfiguration stores downloaded model outside the app bundle")
+    func downloadedModelLocationIsPersistent() {
+        #expect(LLMConfiguration.downloadedModelURL.path.contains("Application Support"))
+        #expect(LLMConfiguration.downloadedModelURL.lastPathComponent == "gemma-3-1b-it-Q4_K_M.gguf")
     }
 
     // MARK: - Context Size Tests

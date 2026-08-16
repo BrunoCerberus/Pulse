@@ -9,10 +9,12 @@ final class MockFeedService: FeedService, @unchecked Sendable {
     var generateDelay: TimeInterval = 0.05
     var mockDigest: DailyDigest?
     var mockModelStatus: LLMModelStatus = .notLoaded
+    var modelAvailable = true
 
     // MARK: - Call Tracking
 
     private(set) var loadModelCallCount = 0
+    private(set) var generateDigestCallCount = 0
 
     /// Alias for mockDigest for cleaner test code
     var cachedDigest: DailyDigest? {
@@ -40,6 +42,10 @@ final class MockFeedService: FeedService, @unchecked Sendable {
         modelStatusSubject.value == .ready
     }
 
+    var isModelAvailable: Bool {
+        modelAvailable
+    }
+
     func loadModelIfNeeded() async throws {
         loadModelCallCount += 1
         guard !isModelReady else { return }
@@ -63,6 +69,7 @@ final class MockFeedService: FeedService, @unchecked Sendable {
     }
 
     func generateDigest(from articles: [Article]) -> AsyncThrowingStream<String, Error> {
+        generateDigestCallCount += 1
         let shouldFail = shouldFail
         let streamTokens = streamTokens
         let generateDelay = generateDelay

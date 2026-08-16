@@ -45,6 +45,24 @@ struct SummarizationDomainState: Equatable {
     /// Current status of the on-device LLM model.
     var modelStatus: LLMModelStatus
 
+    /// Whether a verified model is already available on disk. `nil` means the
+    /// background availability check has not completed yet.
+    var modelAvailability: Bool?
+
+    init(
+        article: Article,
+        summarizationState: SummarizationState,
+        generatedSummary: String,
+        modelStatus: LLMModelStatus,
+        modelAvailability: Bool? = nil,
+    ) {
+        self.article = article
+        self.summarizationState = summarizationState
+        self.generatedSummary = generatedSummary
+        self.modelStatus = modelStatus
+        self.modelAvailability = modelAvailability
+    }
+
     /// Creates the initial state for a given article.
     /// - Parameter article: The article to summarize.
     /// - Returns: Initial state ready to begin summarization.
@@ -54,6 +72,7 @@ struct SummarizationDomainState: Equatable {
             summarizationState: .idle,
             generatedSummary: "",
             modelStatus: .notLoaded,
+            modelAvailability: nil,
         )
     }
 }
