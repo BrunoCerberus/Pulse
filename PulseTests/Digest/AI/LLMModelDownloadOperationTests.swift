@@ -1,7 +1,9 @@
 import CryptoKit
 import Foundation
+import os
 @testable import Pulse
 import Testing
+import UIKit
 
 /// Serves canned responses so the download path can be exercised without a network.
 final class StubModelDownloadProtocol: URLProtocol, @unchecked Sendable {
@@ -9,11 +11,16 @@ final class StubModelDownloadProtocol: URLProtocol, @unchecked Sendable {
         var statusCode: Int
         var body: Data
         var error: URLError?
+        /// Streams the body in chunks, pausing between them so the transfer can
+        /// be observed mid-flight (background pause, cancellation, progress).
+        var chunkCount = 1
+        var chunkDelay: TimeInterval = 0
     }
 
     private nonisolated(unsafe) static var response = Response(statusCode: 200, body: Data(), error: nil)
     private nonisolated(unsafe) static var requestedURLs: [URL] = []
     private static let lock = NSLock()
+    private let isStopped = OSAllocatedUnfairLock(initialState: false)
 
     static func configure(_ response: Response) {
         lock.withLock {
@@ -57,11 +64,26 @@ final class StubModelDownloadProtocol: URLProtocol, @unchecked Sendable {
             headerFields: ["Content-Length": String(response.body.count)],
         )!
         client?.urlProtocol(self, didReceive: httpResponse, cacheStoragePolicy: .notAllowed)
-        client?.urlProtocol(self, didLoad: response.body)
+
+        let chunkSize = max(1, response.body.count / max(1, response.chunkCount))
+        var offset = 0
+        while offset < response.body.count {
+            if isStopped.withLock({ $0 }) {
+                return
+            }
+            let end = min(offset + chunkSize, response.body.count)
+            client?.urlProtocol(self, didLoad: response.body[offset ..< end])
+            offset = end
+            if response.chunkDelay > 0, offset < response.body.count {
+                Thread.sleep(forTimeInterval: response.chunkDelay)
+            }
+        }
         client?.urlProtocolDidFinishLoading(self)
     }
 
-    override func stopLoading() {}
+    override func stopLoading() {
+        isStopped.withLock { $0 = true }
+    }
 }
 
 @Suite("LLMModelDownloadOperation Tests", .serialized)
@@ -164,6 +186,85 @@ struct LLMModelDownloadOperationTests {
         }
 
         #expect(resumeStore.load(for: fixture.sourceURL) == partial)
+    }
+
+    @Test("Backgrounding mid-transfer pauses and foregrounding completes the download")
+    func pausesOnBackgroundAndResumesOnForeground() async throws {
+        let fixture = try makeFixture()
+        defer { try? FileManager.default.removeItem(at: fixture.directoryURL) }
+        StubModelDownloadProtocol.configure(
+            .init(statusCode: 200, body: fixture.body, error: nil, chunkCount: 8, chunkDelay: 0.05),
+        )
+
+        let operation = makeOperation(fixture)
+        async let result = operation.download { _ in }
+
+        // Let the transfer start before driving the lifecycle notifications the
+        // operation observes.
+        try await Task.sleep(nanoseconds: 100_000_000)
+        NotificationCenter.default.post(name: UIApplication.didEnterBackgroundNotification, object: nil)
+        try await Task.sleep(nanoseconds: 150_000_000)
+        NotificationCenter.default.post(name: UIApplication.willEnterForegroundNotification, object: nil)
+
+        let url = try await result
+        let written = try Data(contentsOf: fixture.destinationURL)
+
+        #expect(url == fixture.destinationURL)
+        #expect(written == fixture.body)
+        #expect(!FileManager.default.fileExists(atPath: fixture.resumeDataURL.path))
+    }
+
+    @Test("Backgrounding after the payload arrives still commits the download")
+    func commitSurvivesBackgrounding() async throws {
+        let fixture = try makeFixture()
+        defer { try? FileManager.default.removeItem(at: fixture.directoryURL) }
+        StubModelDownloadProtocol.configure(.init(statusCode: 200, body: fixture.body, error: nil))
+
+        let operation = makeOperation(fixture)
+        async let result = operation.download { _ in }
+
+        // Verification runs asynchronously; a pause landing in that window must
+        // not restart the transfer or discard the finished file.
+        NotificationCenter.default.post(name: UIApplication.didEnterBackgroundNotification, object: nil)
+        NotificationCenter.default.post(name: UIApplication.willEnterForegroundNotification, object: nil)
+
+        let url = try await result
+        #expect(url == fixture.destinationURL)
+        #expect(try Data(contentsOf: fixture.destinationURL) == fixture.body)
+    }
+
+    @Test("Cancelling the download clears resume data and stops the transfer")
+    func cancellationDiscardsPartialState() async throws {
+        let fixture = try makeFixture()
+        defer { try? FileManager.default.removeItem(at: fixture.directoryURL) }
+        StubModelDownloadProtocol.configure(
+            .init(statusCode: 200, body: fixture.body, error: nil, chunkCount: 8, chunkDelay: 0.1),
+        )
+
+        let operation = makeOperation(fixture)
+        let task = Task { try await operation.download { _ in } }
+        try await Task.sleep(nanoseconds: 100_000_000)
+        task.cancel()
+
+        await #expect(throws: (any Error).self) { try await task.value }
+        #expect(!FileManager.default.fileExists(atPath: fixture.resumeDataURL.path))
+        #expect(!FileManager.default.fileExists(atPath: fixture.destinationURL.path))
+    }
+
+    @Test("Progress is throttled and never moves backwards")
+    func reportsMonotonicThrottledProgress() async throws {
+        let fixture = try makeFixture()
+        defer { try? FileManager.default.removeItem(at: fixture.directoryURL) }
+        StubModelDownloadProtocol.configure(
+            .init(statusCode: 200, body: fixture.body, error: nil, chunkCount: 8, chunkDelay: 0.01),
+        )
+
+        let progress = ProgressCollector()
+        _ = try await makeOperation(fixture).download { progress.append($0) }
+
+        let values = progress.value
+        #expect(values == values.sorted())
+        #expect(zip(values, values.dropFirst()).allSatisfy { $1 - $0 >= 0.01 - .ulpOfOne })
     }
 
     @Test("Resume data recorded for another source URL is discarded")

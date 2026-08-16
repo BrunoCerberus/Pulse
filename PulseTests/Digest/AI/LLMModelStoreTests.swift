@@ -134,6 +134,90 @@ struct LLMModelStoreTests {
         #expect(store.existingModelURL == nil)
     }
 
+    @Test("Every store error carries a localized description")
+    func errorsAreLocalized() {
+        let errors: [LLMModelStoreError] = [
+            .invalidModel,
+            .invalidResponse(503),
+            .insufficientStorage,
+            .networkRestricted,
+            .downloadFailed,
+        ]
+
+        for error in errors {
+            let description = error.errorDescription
+            #expect(description?.isEmpty == false)
+            // Localized copy resolves through AppLocalization, so a raw key
+            // leaking through means the strings files are missing an entry.
+            #expect(description?.hasPrefix("llm.error.") == false)
+        }
+        #expect(LLMModelStoreError.invalidResponse(503).errorDescription?.contains("503") == true)
+    }
+
+    @Test("A verified model writes a record that avoids rehashing")
+    func reusesVerificationRecordAcrossLookups() throws {
+        let fileManager = FileManager.default
+        let directoryURL = fileManager.temporaryDirectory
+            .appendingPathComponent("pulse-llm-store-\(UUID().uuidString)", isDirectory: true)
+        let modelURL = directoryURL.appendingPathComponent("model.gguf")
+        let modelData = Data("test model".utf8)
+        try fileManager.createDirectory(at: directoryURL, withIntermediateDirectories: true)
+        try modelData.write(to: modelURL)
+        defer { try? fileManager.removeItem(at: directoryURL) }
+
+        let checksum = SHA256.hash(data: modelData).map { String(format: "%02x", $0) }.joined()
+        let store = LiveLLMModelStore(
+            fileManager: fileManager,
+            bundledModelURL: nil,
+            downloadedModelURL: modelURL,
+            expectedSizeBytes: UInt64(modelData.count),
+            expectedSHA256: checksum,
+        )
+
+        #expect(store.existingModelURL == modelURL)
+        let recordURL = modelURL.appendingPathExtension("verified")
+        #expect(fileManager.fileExists(atPath: recordURL.path))
+
+        // Second lookup is served from the record rather than a fresh hash.
+        #expect(store.existingModelURL == modelURL)
+
+        // A record that no longer matches the file must not be trusted.
+        try Data("tampered!!".utf8).write(to: modelURL)
+        #expect(store.existingModelURL == nil)
+        #expect(!fileManager.fileExists(atPath: recordURL.path))
+    }
+
+    @Test("Concurrent callers share one download and each receives progress")
+    func sharesDownloadAcrossConcurrentCallers() async throws {
+        let fileManager = FileManager.default
+        let directoryURL = fileManager.temporaryDirectory
+            .appendingPathComponent("pulse-llm-store-\(UUID().uuidString)", isDirectory: true)
+        let modelURL = directoryURL.appendingPathComponent("model.gguf")
+        let modelData = Data("test model".utf8)
+        try fileManager.createDirectory(at: directoryURL, withIntermediateDirectories: true)
+        try modelData.write(to: modelURL)
+        defer { try? fileManager.removeItem(at: directoryURL) }
+
+        let checksum = SHA256.hash(data: modelData).map { String(format: "%02x", $0) }.joined()
+        let store = LiveLLMModelStore(
+            fileManager: fileManager,
+            bundledModelURL: nil,
+            downloadedModelURL: modelURL,
+            expectedSizeBytes: UInt64(modelData.count),
+            expectedSHA256: checksum,
+        )
+
+        let first = OSAllocatedUnfairLock(initialState: [Double]())
+        let second = OSAllocatedUnfairLock(initialState: [Double]())
+        async let firstURL = store.prepareModel { value in first.withLock { $0.append(value) } }
+        async let secondURL = store.prepareModel { value in second.withLock { $0.append(value) } }
+        let results = try await [firstURL, secondURL]
+
+        #expect(results == [modelURL, modelURL])
+        #expect(first.withLock { $0 }.last == 1.0)
+        #expect(second.withLock { $0 }.last == 1.0)
+    }
+
     @Test("Insufficient storage is reported before starting a download")
     func rejectsDownloadWhenStorageIsInsufficient() async throws {
         let fileManager = FileManager.default
