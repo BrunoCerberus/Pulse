@@ -31,6 +31,34 @@ struct LLMModelStoreTests {
         #expect(secondValues.withLock { $0 } == [0.5, 0.75])
     }
 
+    @Test("Resume data survives a failure that produces none")
+    func keepsResumeDataWhenFailureCarriesNone() throws {
+        let fileManager = FileManager.default
+        let directoryURL = fileManager.temporaryDirectory
+            .appendingPathComponent("pulse-llm-resume-\(UUID().uuidString)", isDirectory: true)
+        try fileManager.createDirectory(at: directoryURL, withIntermediateDirectories: true)
+        defer { try? fileManager.removeItem(at: directoryURL) }
+
+        let source = try #require(URL(string: "https://example.com/model.gguf"))
+        let store = LLMModelResumeDataStore(url: directoryURL.appendingPathComponent("model.resume"))
+        let partial = Data("partial download".utf8)
+        store.persist(partial, for: source)
+        #expect(store.load(for: source) == partial)
+
+        // A cellular rejection fails without resume data; discarding the
+        // existing sidecar would restart the whole download from zero.
+        store.persist(nil, for: source)
+        #expect(store.load(for: source) == partial)
+        store.persist(Data(), for: source)
+        #expect(store.load(for: source) == partial)
+
+        store.persist(Data("newer partial".utf8), for: source)
+        #expect(store.load(for: source) == Data("newer partial".utf8))
+
+        store.remove()
+        #expect(store.load(for: source) == nil)
+    }
+
     @Test("A verified local model is reused without downloading")
     func reusesVerifiedLocalModel() async throws {
         let fileManager = FileManager.default

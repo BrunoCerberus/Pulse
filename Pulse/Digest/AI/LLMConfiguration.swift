@@ -48,10 +48,23 @@ enum LLMConfiguration {
         Bundle.main.url(forResource: modelFileName, withExtension: modelExtension)
     }
 
+    /// File name as published in the Hugging Face repository, which differs
+    /// from the local ``modelFileName``.
+    static var remoteModelFileName: String {
+        "google_gemma-3-1b-it-Q4_K_M"
+    }
+
+    /// Repository revision the pinned size and hash were taken from. `main` is
+    /// mutable, so a re-upload there would fail integrity checks forever with
+    /// no client-side remedy; a commit SHA is immutable.
+    static var modelRepositoryRevision: String {
+        "116f76234503685a98f572982177b11d44ec8ff1"
+    }
+
     /// URL used for the first-use model download.
     static var modelDownloadURL: URL {
-        let urlString = "https://huggingface.co/bartowski/google_gemma-3-1b-it-GGUF/resolve/main/"
-            + "\(modelFileName).\(modelExtension)?download=true"
+        let urlString = "https://huggingface.co/bartowski/google_gemma-3-1b-it-GGUF/resolve/"
+            + "\(modelRepositoryRevision)/\(remoteModelFileName).\(modelExtension)?download=true"
         return URL(string: urlString)!
     }
 

@@ -127,6 +127,37 @@ struct FeedDomainInteractorTests {
         #expect(success, "Cached digest should be loaded")
         let state = sut.currentState
         #expect(state.currentDigest?.id == "cached")
+        // A cache hit must not trigger generation, which would download the model.
+        #expect(mockFeedService.generateDigestCallCount == 0)
+    }
+
+    @Test("Reloading articles keeps an existing digest on screen")
+    func reloadPreservesCompletedDigest() async {
+        let cachedDigest = DailyDigest(
+            id: "cached",
+            summary: "Cached summary",
+            sourceArticles: Article.mockArticles,
+            generatedAt: Date(),
+        )
+        mockFeedService.cachedDigest = cachedDigest
+        mockNewsService.topHeadlinesResult = .success(Article.mockArticles)
+
+        sut.dispatch(action: .loadInitialData)
+        _ = await waitForCondition(timeout: 2_000_000_000) { @MainActor [sut] in
+            sut.currentState.currentDigest != nil
+        }
+        // A refresh must not drop the reader back to the "Generate Digest"
+        // card, and it must clear any earlier error.
+        sut.dispatch(action: .retryAfterError)
+        // `retryAfterError` clears `hasLoadedInitialData`, so waiting on it
+        // settling avoids asserting while the refetch is still in flight.
+        let success = await waitForCondition(timeout: 2_000_000_000) { @MainActor [sut] in
+            sut.currentState.hasLoadedInitialData && !sut.currentState.latestArticles.isEmpty
+        }
+
+        #expect(success)
+        #expect(sut.currentState.currentDigest?.id == "cached")
+        #expect(sut.currentState.generationState == .completed)
     }
 
     @Test("Load data with API failure shows error state")

@@ -188,7 +188,9 @@ struct FeedView<R: FeedNavigationRouter>: View {
                             .foregroundStyle(.secondary)
                             .multilineTextAlignment(.center)
 
-                        if viewModel.viewState.modelAvailability != true {
+                        // `nil` means the availability check is still running;
+                        // claiming a download is pending would be wrong.
+                        if viewModel.viewState.modelAvailability == false {
                             Text(Constants.modelDownloadNotice)
                                 .font(Typography.captionLarge)
                                 .foregroundStyle(.secondary)

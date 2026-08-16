@@ -258,7 +258,10 @@ private extension FeedDomainInteractor {
             state.latestArticles = articles
             state.hasLoadedInitialData = true
             state.isOfflineError = false
-            state.generationState = .idle
+            // A digest already on screen must survive a refresh rather than be
+            // replaced by the start card, and a successful load must clear any
+            // earlier error.
+            state.generationState = state.currentDigest == nil ? .idle : .completed
             if articles.isEmpty {
                 state.autoPlayBriefingOnCompletion = false
             }
@@ -271,8 +274,6 @@ private extension FeedDomainInteractor {
            currentState.autoPlayBriefingOnCompletion
         {
             dispatch(action: .generateDigest)
-        } else if articles.isEmpty {
-            updateState { $0.generationState = .idle }
         }
     }
 }

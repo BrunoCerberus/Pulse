@@ -17,6 +17,17 @@ final class FeedViewSnapshotTests: XCTestCase {
         traits: UITraitCollection(userInterfaceStyle: .dark),
     )
 
+    /// Same device at an accessibility text size, to catch the download notice
+    /// truncating or pushing the primary button off-screen.
+    private let iPhoneAirAccessibilityConfig = ViewImageConfig(
+        safeArea: UIEdgeInsets(top: 59, left: 0, bottom: 34, right: 0),
+        size: CGSize(width: 393, height: 852),
+        traits: UITraitCollection { traits in
+            traits.userInterfaceStyle = .dark
+            traits.preferredContentSizeCategory = .accessibilityExtraExtraExtraLarge
+        },
+    )
+
     /// Fixed date article for snapshot stability
     private var snapshotArticle: Article {
         Article(
@@ -97,6 +108,63 @@ final class FeedViewSnapshotTests: XCTestCase {
         assertSnapshot(
             of: controller,
             as: SnapshotConfig.snapshotting(on: iPhoneAirConfig),
+            record: false,
+        )
+    }
+
+    /// Drives the idle "Digest Ready" start card: articles loaded, no cached digest.
+    private func makeStartStateViewModel() -> FeedViewModel {
+        mockFeedService.cachedDigest = nil
+        mockNewsService.topHeadlinesResult = .success(snapshotArticles)
+        let viewModel = FeedViewModel(serviceLocator: serviceLocator)
+        viewModel.handle(event: .onAppear)
+        return viewModel
+    }
+
+    func testFeedViewStartWithModelAvailable() {
+        mockFeedService.modelAvailable = true
+        let view = FeedView(
+            router: FeedNavigationRouter(),
+            viewModel: makeStartStateViewModel(),
+            serviceLocator: serviceLocator,
+        )
+        let controller = UIHostingController(rootView: view)
+
+        assertSnapshot(
+            of: controller,
+            as: SnapshotConfig.snapshotting(on: iPhoneAirConfig),
+            record: false,
+        )
+    }
+
+    func testFeedViewStartWithDownloadNotice() {
+        mockFeedService.modelAvailable = false
+        let view = FeedView(
+            router: FeedNavigationRouter(),
+            viewModel: makeStartStateViewModel(),
+            serviceLocator: serviceLocator,
+        )
+        let controller = UIHostingController(rootView: view)
+
+        assertSnapshot(
+            of: controller,
+            as: SnapshotConfig.snapshotting(on: iPhoneAirConfig),
+            record: false,
+        )
+    }
+
+    func testFeedViewStartWithDownloadNoticeAccessibilityXXXL() {
+        mockFeedService.modelAvailable = false
+        let view = FeedView(
+            router: FeedNavigationRouter(),
+            viewModel: makeStartStateViewModel(),
+            serviceLocator: serviceLocator,
+        )
+        let controller = UIHostingController(rootView: view)
+
+        assertSnapshot(
+            of: controller,
+            as: SnapshotConfig.snapshotting(on: iPhoneAirAccessibilityConfig),
             record: false,
         )
     }
