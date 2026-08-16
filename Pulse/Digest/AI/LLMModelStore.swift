@@ -141,7 +141,6 @@ final class LiveLLMModelStore: LLMModelStore, @unchecked Sendable {
     static let shared = LiveLLMModelStore()
 
     private let fileManager: FileManager
-    private let bundledModelURL: URL?
     private let downloadedModelURL: URL
     private let resumeDataURL: URL
     private let verificationURL: URL
@@ -153,12 +152,10 @@ final class LiveLLMModelStore: LLMModelStore, @unchecked Sendable {
     private let availableCapacityProvider: @Sendable (URL) -> UInt64?
     private let lock = OSAllocatedUnfairLock()
     private let verificationLock = NSLock()
-    private var bundledVerificationRecord: ModelVerificationRecord?
     private var activeDownload: ActiveModelDownload?
 
     init(
         fileManager: FileManager = .default,
-        bundledModelURL: URL? = LLMConfiguration.bundledModelURL,
         downloadedModelURL: URL = LLMConfiguration.downloadedModelURL,
         resumeDataURL: URL? = nil,
         modelDownloadURL: URL = LLMConfiguration.modelDownloadURL,
@@ -168,7 +165,6 @@ final class LiveLLMModelStore: LLMModelStore, @unchecked Sendable {
         availableCapacityProvider: @escaping @Sendable (URL) -> UInt64? = LiveLLMModelStore.availableCapacity,
     ) {
         self.fileManager = fileManager
-        self.bundledModelURL = bundledModelURL
         self.downloadedModelURL = downloadedModelURL
         self.resumeDataURL = resumeDataURL ?? downloadedModelURL.appendingPathExtension("resume")
         verificationURL = downloadedModelURL.appendingPathExtension("verified")
@@ -181,14 +177,7 @@ final class LiveLLMModelStore: LLMModelStore, @unchecked Sendable {
     }
 
     var existingModelURL: URL? {
-        if let bundledModelURL, isVerifiedModel(at: bundledModelURL) {
-            return bundledModelURL
-        }
-
-        if isVerifiedModel(at: downloadedModelURL) {
-            return downloadedModelURL
-        }
-        return nil
+        isVerifiedModel(at: downloadedModelURL) ? downloadedModelURL : nil
     }
 
     func prepareModel(progressHandler: @escaping @Sendable (Double) -> Void) async throws -> URL {
@@ -273,27 +262,15 @@ final class LiveLLMModelStore: LLMModelStore, @unchecked Sendable {
         }
     }
 
+    /// Verifies the downloaded model, hashing it only when the sidecar record
+    /// does not already vouch for this exact file.
     private func isVerifiedModel(at url: URL) -> Bool {
         guard let signature = fileSignature(at: url) else {
-            if url == downloadedModelURL {
-                removeVerificationRecord()
-            } else if url == bundledModelURL {
-                clearBundledVerificationRecord()
-            }
+            removeVerificationRecord()
             return false
         }
 
-        if url == bundledModelURL,
-           let record = readBundledVerificationRecord(),
-           record.size == signature.size,
-           record.modificationTime == signature.modificationTime,
-           record.sha256 == expectedSHA256
-        {
-            return true
-        }
-
-        if url == downloadedModelURL,
-           let record = readVerificationRecord(),
+        if let record = readVerificationRecord(),
            record.size == signature.size,
            record.modificationTime == signature.modificationTime,
            record.sha256 == expectedSHA256
@@ -302,42 +279,12 @@ final class LiveLLMModelStore: LLMModelStore, @unchecked Sendable {
         }
 
         guard llmModelFileSHA256(at: url) == expectedSHA256 else {
-            if url == downloadedModelURL {
-                removeVerificationRecord()
-            } else if url == bundledModelURL {
-                clearBundledVerificationRecord()
-            }
+            removeVerificationRecord()
             return false
         }
 
-        if url == downloadedModelURL {
-            writeVerificationRecord(for: signature)
-        } else if url == bundledModelURL {
-            cacheBundledVerificationRecord(for: signature)
-        }
+        writeVerificationRecord(for: signature)
         return true
-    }
-
-    private func cacheBundledVerificationRecord(for signature: ModelFileSignature) {
-        verificationLock.lock()
-        bundledVerificationRecord = ModelVerificationRecord(
-            size: signature.size,
-            modificationTime: signature.modificationTime,
-            sha256: expectedSHA256,
-        )
-        verificationLock.unlock()
-    }
-
-    private func readBundledVerificationRecord() -> ModelVerificationRecord? {
-        verificationLock.lock()
-        defer { verificationLock.unlock() }
-        return bundledVerificationRecord
-    }
-
-    private func clearBundledVerificationRecord() {
-        verificationLock.lock()
-        bundledVerificationRecord = nil
-        verificationLock.unlock()
     }
 
     private func fileSignature(at url: URL) -> ModelFileSignature? {

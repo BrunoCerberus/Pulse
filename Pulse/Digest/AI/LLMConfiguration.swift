@@ -43,11 +43,6 @@ enum LLMConfiguration {
         "gguf"
     }
 
-    /// Model URL when an older development build bundled the model.
-    static var bundledModelURL: URL? {
-        Bundle.main.url(forResource: modelFileName, withExtension: modelExtension)
-    }
-
     /// File name as published in the Hugging Face repository, which differs
     /// from the local ``modelFileName``.
     static var remoteModelFileName: String {

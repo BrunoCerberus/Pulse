@@ -6,9 +6,9 @@ This directory is reserved for local development copies of the GGUF model used b
 
 **Gemma 3 1B Instruct (Q4_K_M quantization)**
 
-- **Filename**: `gemma-3-1b-it-Q4_K_M.gguf`
+- **Filename**: `google_gemma-3-1b-it-Q4_K_M.gguf` upstream, stored on device as `gemma-3-1b-it-Q4_K_M.gguf`
 - **Size**: ~806 MB (806,058,496 bytes)
-- **Source**: [Hugging Face](https://huggingface.co/bartowski/google_gemma-3-1b-it-GGUF)
+- **Source**: [Hugging Face](https://huggingface.co/bartowski/google_gemma-3-1b-it-GGUF), pinned to revision `116f7623`
 
 Gemma is provided under and subject to the Gemma Terms of Use found at [ai.google.dev/gemma/terms](https://ai.google.dev/gemma/terms).
 
@@ -16,7 +16,8 @@ Gemma is provided under and subject to the Gemma Terms of Use found at [ai.googl
 
 ```bash
 huggingface-cli download bartowski/google_gemma-3-1b-it-GGUF \
-  --include "gemma-3-1b-it-Q4_K_M.gguf" \
+  --revision 116f76234503685a98f572982177b11d44ec8ff1 \
+  --include "google_gemma-3-1b-it-Q4_K_M.gguf" \
   --local-dir Pulse/Resources/Models/
 ```
 

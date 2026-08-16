@@ -74,7 +74,6 @@ struct LLMModelStoreTests {
         let modelDownloadURL = try #require(URL(string: "https://example.com/should-not-be-called"))
         let store = LiveLLMModelStore(
             fileManager: fileManager,
-            bundledModelURL: nil,
             downloadedModelURL: modelURL,
             modelDownloadURL: modelDownloadURL,
             expectedSizeBytes: UInt64(modelData.count),
@@ -102,7 +101,6 @@ struct LLMModelStoreTests {
 
         let store = LiveLLMModelStore(
             fileManager: fileManager,
-            bundledModelURL: nil,
             downloadedModelURL: modelURL,
             expectedSizeBytes: 999,
             expectedSHA256: String(repeating: "0", count: SHA256.Digest.byteCount * 2),
@@ -125,7 +123,6 @@ struct LLMModelStoreTests {
 
         let store = LiveLLMModelStore(
             fileManager: fileManager,
-            bundledModelURL: nil,
             downloadedModelURL: modelURL,
             expectedSizeBytes: UInt64(modelData.count),
             expectedSHA256: expectedChecksum,
@@ -168,7 +165,6 @@ struct LLMModelStoreTests {
         let checksum = SHA256.hash(data: modelData).map { String(format: "%02x", $0) }.joined()
         let store = LiveLLMModelStore(
             fileManager: fileManager,
-            bundledModelURL: nil,
             downloadedModelURL: modelURL,
             expectedSizeBytes: UInt64(modelData.count),
             expectedSHA256: checksum,
@@ -201,7 +197,6 @@ struct LLMModelStoreTests {
         let checksum = SHA256.hash(data: modelData).map { String(format: "%02x", $0) }.joined()
         let store = LiveLLMModelStore(
             fileManager: fileManager,
-            bundledModelURL: nil,
             downloadedModelURL: modelURL,
             expectedSizeBytes: UInt64(modelData.count),
             expectedSHA256: checksum,
@@ -228,7 +223,6 @@ struct LLMModelStoreTests {
 
         let store = try LiveLLMModelStore(
             fileManager: fileManager,
-            bundledModelURL: nil,
             downloadedModelURL: modelURL,
             modelDownloadURL: #require(URL(string: "https://example.com/should-not-be-called")),
             expectedSizeBytes: 4,
@@ -262,7 +256,6 @@ struct LLMModelStoreTests {
         let downloadURL = try #require(URL(string: "https://example.com/should-not-be-called"))
         let store = LiveLLMModelStore(
             fileManager: fileManager,
-            bundledModelURL: nil,
             downloadedModelURL: modelURL,
             modelDownloadURL: downloadURL,
             expectedSizeBytes: 4,
