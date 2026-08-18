@@ -20,6 +20,9 @@ import Foundation
 ///    as instruction boundaries.
 /// 4. Collapse whitespace runs and hard-cap the length so a single hostile
 ///    field can't dominate the prompt window.
+/// 5. Neutralize the data-boundary markers used by `wrapUntrusted` — an
+///    untrusted field must not be able to forge, close early, or reopen the
+///    boundary that wraps it in a prompt (same defense class as #1).
 ///
 /// **NOT a complete defense.** LLMs are inherently susceptible to prompt
 /// injection, and a small on-device model is more so. This raises the bar
@@ -29,6 +32,21 @@ import Foundation
 /// `TopicExtractionPromptBuilder.parseTags` for an example of output-side
 /// validation that complements this input-side sanitization.
 enum PromptSanitizer {
+    /// Data-boundary markers that wrap untrusted article content in LLM prompts.
+    /// The builders' system prompts instruct the model to treat text between them
+    /// as data only, never instructions. They are also stripped from untrusted
+    /// input (see `sanitize`) so a hostile RSS field can't forge, close early, or
+    /// reopen a boundary — same defense class as the Gemma special-token
+    /// neutralization below.
+    static let dataBoundaryStart = "<<<ARTICLE>>>"
+    static let dataBoundaryEnd = "<<<END_ARTICLE>>>"
+
+    /// Wraps untrusted content in explicit data-boundary markers so the model
+    /// treats it strictly as data to process, never as instructions.
+    static func wrapUntrusted(_ text: String) -> String {
+        "\(dataBoundaryStart)\n\(text)\n\(dataBoundaryEnd)"
+    }
+
     /// Sanitizes a string for safe interpolation into an LLM prompt.
     /// - Parameters:
     ///   - text: Untrusted input (article title, source name, etc).
@@ -59,6 +77,14 @@ enum PromptSanitizer {
         // angle-bracket text untouched: decoded HTML like "<script>" / "<div>",
         // "<3", and "<NEW>" are not Gemma tokens and tokenize as harmless text.
         for marker in ["<start_of_turn>", "<end_of_turn>", "<bos>", "<eos>", "<pad>", "<unk>", "<eot>"] {
+            result = result.replacingOccurrences(of: marker, with: " ")
+        }
+
+        // Strip data-boundary markers so untrusted text can't forge or close the
+        // boundary that `wrapUntrusted` uses around it in a prompt. Without this,
+        // a title ending in `<<<END_ARTICLE>>>` would place its remaining payload
+        // outside the "data" region the system prompt protects.
+        for marker in [dataBoundaryStart, dataBoundaryEnd] {
             result = result.replacingOccurrences(of: marker, with: " ")
         }
 

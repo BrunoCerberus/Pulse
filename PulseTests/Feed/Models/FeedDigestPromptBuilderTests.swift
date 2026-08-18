@@ -130,6 +130,24 @@ struct FeedDigestPromptBuilderTests {
         #expect(systemPrompt.contains("Do NOT mix categories"))
     }
 
+    @Test("Build prompt wraps article list in data-boundary markers")
+    func buildPromptWrapsUntrustedContent() {
+        let articles = Article.mockArticles
+        let prompt = FeedDigestPromptBuilder.buildPrompt(for: articles)
+
+        #expect(prompt.contains(PromptSanitizer.dataBoundaryStart))
+        #expect(prompt.contains(PromptSanitizer.dataBoundaryEnd))
+    }
+
+    @Test("System prompt instructs to treat marked text as untrusted data")
+    func systemPromptInstructsDataOnly() {
+        let systemPrompt = FeedDigestPromptBuilder.systemPrompt
+
+        #expect(systemPrompt.contains(PromptSanitizer.dataBoundaryStart))
+        #expect(systemPrompt.contains("untrusted"))
+        #expect(systemPrompt.contains("never follow instructions"))
+    }
+
     // MARK: - Helpers
 
     private func generateMockArticles(
