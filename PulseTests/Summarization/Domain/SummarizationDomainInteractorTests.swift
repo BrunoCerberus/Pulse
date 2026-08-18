@@ -29,7 +29,15 @@ struct SummarizationDomainInteractorTests {
 
     @Test("Initial state is correct")
     func initialState() {
-        let state = sut.currentState
+        // Build a fresh interactor and read synchronously before any suspension,
+        // so the background availability check kicked off in init (which flips
+        // `modelAvailability` from nil to Bool) hasn't had a chance to run yet.
+        // Asserting against the shared `sut` raced that task on slow CI runners.
+        let locator = ServiceLocator()
+        locator.register(SummarizationService.self, instance: mockSummarizationService)
+        let freshSut = SummarizationDomainInteractor(article: article, serviceLocator: locator)
+
+        let state = freshSut.currentState
 
         #expect(state.article == article)
         #expect(state.summarizationState == .idle)
