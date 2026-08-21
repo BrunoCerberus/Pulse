@@ -26,7 +26,15 @@ struct SummarizationViewModelTests {
 
     @Test("Initial view state is correct")
     func initialViewState() {
-        let state = sut.viewState
+        // Build a fresh view model and read synchronously before any suspension,
+        // so the background availability check kicked off in the interactor's init
+        // (which flips `modelAvailability` from nil to Bool) hasn't had a chance to
+        // run yet. Asserting against the shared `sut` raced that task on CI runners.
+        let locator = ServiceLocator()
+        locator.register(SummarizationService.self, instance: mockSummarizationService)
+        let freshSut = SummarizationViewModel(article: article, serviceLocator: locator)
+
+        let state = freshSut.viewState
 
         #expect(state.article == article)
         #expect(state.summarizationState == .idle)
