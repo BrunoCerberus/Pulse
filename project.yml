@@ -371,6 +371,10 @@ targets:
         INFOPLIST_FILE: PulseShareExtension/Info.plist
         CODE_SIGN_ENTITLEMENTS: PulseShareExtension/PulseShareExtension.entitlements
         CODE_SIGN_ALLOW_ENTITLEMENTS_MODIFICATION: YES
+        # Satisfies appintentsmetadataprocessor's precondition so it logs info instead of the
+        # "no AppIntents.framework dependency found" warning (same state as PulseWidgetExtension,
+        # which gets the dependency transitively via ActivityKit). System framework: not embedded.
+        OTHER_LDFLAGS: -framework AppIntents
       configs:
         Debug:
           ENABLE_TESTABILITY: YES
