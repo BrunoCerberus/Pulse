@@ -3,6 +3,7 @@ import Foundation
 import Testing
 
 @Suite("VideoPlayerView inline-URL gate")
+@MainActor
 struct VideoPlayerViewTests {
     @Test(
         "Only HTTPS media URLs are allowed into the inline web view",
