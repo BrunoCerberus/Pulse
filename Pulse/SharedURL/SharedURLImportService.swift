@@ -13,6 +13,15 @@ import Foundation
 protocol SharedURLImportService {
     /// Publisher emitting the next pending shared URL each time
     /// `processPendingItems()` finds an item in the App Group queue.
+    ///
+    /// **Sanitization contract for consumers:** emitted URLs are user-shared
+    /// web content from the Share Extension — untrusted third-party input. The
+    /// queue boundary (`SharedURLQueue.isAcceptable`) only guarantees the scheme
+    /// allowlist, length cap, and absence of path traversal / control
+    /// characters. A consumer that hands an emitted URL to a privileged loader
+    /// (`WKWebView`, `AVURLAsset`, `UIApplication.open`) must re-validate it with
+    /// `SafeMediaURL`, and one that interpolates it into an on-device LLM prompt
+    /// must run it through `PromptSanitizer` first (rule 16).
     var pendingURLPublisher: AnyPublisher<URL, Never> { get }
 
     /// Drains the App Group queue and publishes any pending URLs through

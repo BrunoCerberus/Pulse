@@ -66,7 +66,7 @@ enum SignOutCleanup {
     /// might add later (additional models, shared zones) without coupling
     /// this helper to Apple's internal naming.
     static func deletePrivateCloudKitZones(_ containerIdentifier: String) {
-        guard ProcessInfo.processInfo.environment["XCTestConfigurationFilePath"] == nil else {
+        guard !TestEnvironment.isRunningTests else {
             Logger.shared.service("Skipping CloudKit zone delete during unit tests", level: .info)
             return
         }

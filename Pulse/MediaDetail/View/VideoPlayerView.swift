@@ -212,6 +212,29 @@ struct VideoPlayerView: UIViewRepresentable {
             return url.host?.lowercased() == host
         }
 
+        /// YouTube embeds keep JavaScript on (required for the IFrame Player
+        /// API), so the wrapper document's CSP is the primary navigation
+        /// constraint. This pin is the defense-in-depth backstop in
+        /// `decidePolicyFor`: any frame (main or sub) navigating to an origin
+        /// that is not `about:` or a YouTube / Google domain is cancelled,
+        /// closing the theoretical JS-enabled redirect case the CSP enforces
+        /// only at the HTML level. Dot-anchored suffix matching so
+        /// `notyoutube.com` does not pass. Static so the policy is unit-testable
+        /// without a live `WKWebView`.
+        static func allowsYouTubeNavigation(to url: URL?) -> Bool {
+            guard let url else { return false }
+            if url.scheme == "about" {
+                return true
+            }
+            guard url.scheme?.lowercased() == "https", let host = url.host?.lowercased() else {
+                return false
+            }
+            let trustedDomains = ["youtube.com", "youtube-nocookie.com", "google.com"]
+            return trustedDomains.contains { domain in
+                host == domain || host.hasSuffix(".\(domain)")
+            }
+        }
+
         init(
             onLoadingStarted: (() -> Void)?,
             onLoadingFinished: (() -> Void)?,
@@ -269,7 +292,8 @@ extension VideoPlayerView.Coordinator {
         switch loadMode {
         case .youTube:
             preferences.allowsContentJavaScript = true
-            decisionHandler(.allow, preferences)
+            let allowed = Self.allowsYouTubeNavigation(to: navigationAction.request.url)
+            decisionHandler(allowed ? .allow : .cancel, preferences)
         case let .directVideo(host):
             preferences.allowsContentJavaScript = false
             let allowed = Self.allowsDirectVideoNavigation(
