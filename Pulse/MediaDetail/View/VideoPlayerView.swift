@@ -216,11 +216,15 @@ struct VideoPlayerView: UIViewRepresentable {
         /// API), so the wrapper document's CSP is the primary navigation
         /// constraint. This pin is the defense-in-depth backstop in
         /// `decidePolicyFor`: any frame (main or sub) navigating to an origin
-        /// that is not `about:` or a YouTube / Google domain is cancelled,
-        /// closing the theoretical JS-enabled redirect case the CSP enforces
-        /// only at the HTML level. Dot-anchored suffix matching so
-        /// `notyoutube.com` does not pass. Static so the policy is unit-testable
-        /// without a live `WKWebView`.
+        /// outside the trusted set is cancelled, closing the theoretical
+        /// JS-enabled redirect case the CSP enforces only at the HTML level.
+        /// `youtube.com` / `youtube-nocookie.com` are Google-controlled zones
+        /// (no third-party publishing), so a dot-anchored suffix match is safe.
+        /// `google.com` hosts third-party content (`sites.` / `script.` /
+        /// `drive.` — a known phishing-abuse vector for naive allowlists), so
+        /// only the exact embed-relevant origins are trusted, keeping the pin
+        /// no broader than the CSP behind it. Static so the policy is
+        /// unit-testable without a live `WKWebView`.
         static func allowsYouTubeNavigation(to url: URL?) -> Bool {
             guard let url else { return false }
             if url.scheme == "about" {
@@ -229,10 +233,13 @@ struct VideoPlayerView: UIViewRepresentable {
             guard url.scheme?.lowercased() == "https", let host = url.host?.lowercased() else {
                 return false
             }
-            let trustedDomains = ["youtube.com", "youtube-nocookie.com", "google.com"]
-            return trustedDomains.contains { domain in
-                host == domain || host.hasSuffix(".\(domain)")
+            if host == "youtube.com" || host.hasSuffix(".youtube.com") {
+                return true
             }
+            if host == "youtube-nocookie.com" || host.hasSuffix(".youtube-nocookie.com") {
+                return true
+            }
+            return ["www.google.com", "accounts.google.com"].contains(host)
         }
 
         init(

@@ -57,11 +57,15 @@ struct VideoPlayerViewTests {
             ("about:blank", true),
             ("https://www.youtube.com/embed/dQw4w9WgXcQ", true),
             ("https://www.youtube.com/", true),
-            ("https://m.youtube.com/watch?v=x", true),
+            ("https://m.youtube.com/watch?v=x", true), // Google-controlled zone: suffix OK
             ("https://www.YOUTUBE.com/embed/x", true), // host case-insensitive
             ("https://www.youtube-nocookie.com/embed/x", true),
+            // google.com hosts third-party content: exact-match origins only
             ("https://www.google.com/", true),
             ("https://accounts.google.com/", true),
+            ("https://sites.google.com/evil-page", false),
+            ("https://script.google.com/macros", false),
+            ("https://drive.google.com/file/d/x", false),
             // Redirect to an untrusted origin (JS on) → cancelled
             ("https://attacker.tld/fake-player.html", false),
             // Lookalike domain: dot-anchored suffix must not match

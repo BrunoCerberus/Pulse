@@ -48,10 +48,10 @@ enum SupabaseConfig {
         let candidate = configuredURL
         // Backstop: Remote Config is a trusted component (THREAT_MODEL §2) and
         // ATS makes `URLSession.shared` fail closed on non-HTTPS, but an
-        // operator misconfig or Firebase-account compromise that serves an
-        // `http://` value would otherwise pass `isConfigured` and reach the
-        // request builders. Refuse anything that is not a parseable `https`
-        // URL so `isConfigured` stays honest.
+        // operator misconfig or Firebase-account compromise serving a
+        // plaintext-HTTP value would otherwise pass `isConfigured` and reach
+        // the request builders. Refuse anything that is not a parseable
+        // `https` URL so `isConfigured` stays honest.
         guard isSecureSupabaseURL(candidate) else {
             Logger.shared.service(
                 "SUPABASE_URL is not a valid https URL — refusing to use it",

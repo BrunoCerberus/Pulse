@@ -64,9 +64,11 @@ architecture: `View → ViewModel → DomainInteractor → Service (Live/Mock) �
     host** (`Coordinator.decidePolicyFor`), so an attacker-controlled HTTPS page can't run
     scripts or redirect into in-WebView phishing. The trusted YouTube-embed branch keeps
     JavaScript on for the IFrame Player API, but `decidePolicyFor` now also **pins every
-    frame's navigations to YouTube / Google origins** (`allowsYouTubeNavigation`,
-    dot-anchored suffix match) as a defense-in-depth backstop behind the wrapper document's
-    CSP, closing the theoretical JS-enabled redirect case. (Inline-video HTTPS gate found by
+    frame's navigations to a trusted origin set** (`allowsYouTubeNavigation`: dot-anchored
+    suffix for the Google-controlled `youtube.com` / `youtube-nocookie.com` zones, exact
+    match for `www.` / `accounts.google.com` — `google.com` hosts third-party content, so no
+    wildcard) as a defense-in-depth backstop no broader than the wrapper document's CSP,
+    closing the theoretical JS-enabled redirect case. (Inline-video HTTPS gate found by
     the weekly sweep `SWEEP-2026-06-03-01`; the audio gap + JS/navigation hardening closed in
     the follow-up pass; the YouTube origin pin closed in the 2026-08 audit pass.)
 - `pulse://` + push → `DeeplinkManager.parse` / `NotificationDeeplinkParser` →
