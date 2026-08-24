@@ -31,7 +31,6 @@ FIRST_PARTY_DIRS = (
     "PulseTests",
     "PulseSnapshotTests",
     "PulseUITests",
-    "LocalPackages",
 )
 
 # Paths that live *under* the repo but hold generated or vendored code we do
