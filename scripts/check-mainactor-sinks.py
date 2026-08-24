@@ -40,13 +40,18 @@ INTERACTOR_GLOB = "*Interactor*.swift"
 # off-main mutation this gate exists to catch. Every `.receive(on:)` in the tree
 # today names `DispatchQueue.main`; the other two are accepted because they are
 # equally main-thread, not because anything uses them yet.
-MAIN_SCHEDULER = r"(?:DispatchQueue\.main|RunLoop\.main|\.main)\b"
+MAIN_SCHEDULER = re.compile(r"(?:DispatchQueue\.main|RunLoop\.main|\.main)\Z")
 
-# `.receive(on:)` is the canonical guard, but any operator that hops onto the
-# main queue via its `scheduler:` argument (`debounce`, `throttle`, `delay`)
-# delivers downstream on main just as effectively.
-GUARDED = re.compile(
-    rf"\.receive\s*\(\s*on:\s*{MAIN_SCHEDULER}|scheduler:\s*{MAIN_SCHEDULER}"
+# Operators that decide which queue everything *downstream* of them runs on:
+# `.receive(on:)` and the `scheduler:` argument of `debounce`/`throttle`/`delay`
+# /`timeout`. `.subscribe(on:)` is deliberately not here — it moves where the
+# subscription work happens, not where values are delivered.
+#
+# The scheduler expression is captured so the caller can look at *which* queue
+# was named, rather than merely that a hop exists.
+SCHEDULER_HOP = re.compile(
+    r"\.receive\s*\(\s*on:\s*(?P<a>[A-Za-z_.][A-Za-z0-9_.]*(?:\(\))?)"
+    r"|scheduler:\s*(?P<b>[A-Za-z_.][A-Za-z0-9_.]*(?:\(\))?)"
 )
 MAIN_ACTOR = re.compile(r"@MainActor")
 
@@ -83,6 +88,26 @@ def strip_noise(line: str) -> str:
         out.append(char)
         i += 1
     return "".join(out)
+
+
+def is_guarded(chain: str) -> bool:
+    """Whether the sink at the end of `chain` is delivered on the main queue.
+
+    Only the *last* scheduler-changing operator matters: each one re-schedules
+    everything downstream of it, so an earlier `.receive(on: DispatchQueue.main)`
+    is undone by a later `.debounce(scheduler: DispatchQueue.global())`. Asking
+    merely whether a main scheduler appears somewhere in the chain would call
+    that shape guarded while it delivers off-main — the crash this gate exists
+    to catch. The reverse order is genuinely fine, and stays passing.
+
+    An unrecognised scheduler expression (a variable, an injected scheduler)
+    counts as unguarded: this errs toward a reviewable false positive rather
+    than a silent false negative.
+    """
+    hops = [match.group("a") or match.group("b") for match in SCHEDULER_HOP.finditer(chain)]
+    if not hops:
+        return False
+    return MAIN_SCHEDULER.search(hops[-1]) is not None
 
 
 def chain_start(lines: list[str], sink_index: int) -> int:
@@ -134,7 +159,7 @@ def check_file(path: Path, repo_root: Path) -> list[str]:
 
         start = chain_start(lines, index)
         chain = " ".join(strip_noise(entry) for entry in lines[start : index + 1])
-        if GUARDED.search(chain):
+        if is_guarded(chain):
             continue
 
         relative = path.relative_to(repo_root)
@@ -232,6 +257,47 @@ final class GInteractor {
     }
 }""",
         0,
+    ),
+    (
+        "a later background hop undoes an earlier main hop",
+        """@MainActor
+final class IInteractor {
+    func setup() {
+        service.publisher
+            .receive(on: DispatchQueue.main)
+            .debounce(for: .milliseconds(300), scheduler: DispatchQueue.global())
+            .sink { [weak self] v in self?.stateSubject.value.x = v }
+            .store(in: &cancellables)
+    }
+}""",
+        1,
+    ),
+    (
+        "a later main hop rescues an earlier background hop",
+        """@MainActor
+final class JInteractor {
+    func setup() {
+        service.publisher
+            .debounce(for: .milliseconds(300), scheduler: DispatchQueue.global())
+            .receive(on: DispatchQueue.main)
+            .sink { [weak self] v in self?.stateSubject.value.x = v }
+            .store(in: &cancellables)
+    }
+}""",
+        0,
+    ),
+    (
+        "an unrecognised scheduler expression is not assumed to be main",
+        """@MainActor
+final class KInteractor {
+    func setup() {
+        service.publisher
+            .receive(on: injectedScheduler)
+            .sink { [weak self] v in self?.stateSubject.value.x = v }
+            .store(in: &cancellables)
+    }
+}""",
+        1,
     ),
     (
         "a non-@MainActor type is out of scope",
