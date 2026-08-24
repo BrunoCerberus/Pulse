@@ -105,6 +105,16 @@ jobs:
         echo "Checking Localizable.strings key parity across en/pt/es..."
         python3 scripts/check-localization-parity.py .
 
+    # AGENTS.md rule 19. An unguarded `.sink` in a @MainActor interactor crashes
+    # `_dispatch_assert_queue_fail` at runtime, on whichever timing-dependent
+    # path first delivers off-main — often an error path that no test exercises.
+    # Needs multi-line analysis of the publisher chain, so it is a script rather
+    # than a SwiftLint custom_rules regex (see the script's docstring).
+    - name: Check main-thread Combine sinks
+      run: |
+        echo "Checking @MainActor interactor sinks for a main-queue hop..."
+        python3 scripts/check-mainactor-sinks.py .
+
   # Shared audit body lives in reusable-security-audit.yml (also called by the
   # nightly with tool-channel: latest). Pinned tools here for reproducible PR
   # gating. The required check context is "Security Audit / Checks".
@@ -295,9 +305,13 @@ jobs:
           -onlyUsePackageVersionsFromResolvedFile
         echo "Package dependencies resolved successfully"
 
+    # Both build steps tee to build.log so the warning gate below can read the
+    # full diagnostic stream. `pipefail` keeps a compile failure fatal despite
+    # the pipe into tee.
     - name: Build for testing (PulseDev)
       run: |
         echo "Building PulseDev scheme for testing..."
+        set -o pipefail
         xcodebuild build-for-testing \
           -project Pulse.xcodeproj \
           -scheme PulseDev \
@@ -305,11 +319,12 @@ jobs:
           -derivedDataPath ./DerivedData \
           -enableCodeCoverage YES \
           -skipMacroValidation \
-          ENABLE_ONLY_ACTIVE_RESOURCES=NO
+          ENABLE_ONLY_ACTIVE_RESOURCES=NO | tee -a build.log
 
     - name: Build for testing (PulseSnapshotTests)
       run: |
         echo "Building PulseSnapshotTests scheme for testing..."
+        set -o pipefail
         xcodebuild build-for-testing \
           -project Pulse.xcodeproj \
           -scheme PulseSnapshotTests \
@@ -317,7 +332,14 @@ jobs:
           -derivedDataPath ./DerivedData \
           -enableCodeCoverage YES \
           -skipMacroValidation \
-          ENABLE_ONLY_ACTIVE_RESOURCES=NO
+          ENABLE_ONLY_ACTIVE_RESOURCES=NO | tee -a build.log
+
+    # The tree is warning-clean as of 57870746; this keeps it that way. Scoped
+    # to first-party paths rather than SWIFT_TREAT_WARNINGS_AS_ERRORS, which
+    # would also fail on warnings inside SwiftPM dependencies we cannot fix.
+    - name: Check for compiler warnings
+      run: |
+        python3 scripts/check-build-warnings.py build.log .
 
     # Only Build/Products is uploaded — that's all test-without-building needs
     # (the .xctestrun files and app/test bundles live there). The rest of
@@ -371,6 +393,7 @@ jobs:
     # keeps it credential-free — this validates the Release compile, not signing.
     - name: Build PulseProd (Release, simulator)
       run: |
+        set -o pipefail
         xcodebuild build \
           -project Pulse.xcodeproj \
           -scheme PulseProd \
@@ -378,7 +401,13 @@ jobs:
           -destination 'platform=iOS Simulator,name=iPhone Air,OS=latest' \
           -onlyUsePackageVersionsFromResolvedFile \
           -skipMacroValidation \
-          CODE_SIGNING_ALLOWED=NO
+          CODE_SIGNING_ALLOWED=NO | tee -a build-release.log
+
+    # Release compiles whole-module with dead-code stripping and drops the
+    # `#if DEBUG` branches, so it surfaces diagnostics the Debug build cannot.
+    - name: Check for compiler warnings
+      run: |
+        python3 scripts/check-build-warnings.py build-release.log .
 
   # Split into three independent jobs (rather than one Unit/UI/UI-iPad/Snapshot
   # matrix) so patch-coverage — which only consumes the unit + snapshot xcresults —
@@ -1189,6 +1218,9 @@ jobs:
 
     permissions:
       contents: read
+      # `gh run download` reads the coverage baseline artifact published by the
+      # last successful master run.
+      actions: read
 
     steps:
     - name: Checkout code
@@ -1211,8 +1243,8 @@ jobs:
         path: coverage-xcresult
 
     # Overall app-target line coverage — complements the Patch Coverage gate,
-    # which only measures *changed* lines. This is reported, not gated, so a
-    # PR that lowers overall coverage is visible without blocking on it.
+    # which only measures *changed* lines. Gated by the ratchet step below: a
+    # PR may not drop overall coverage more than 1pt under the master baseline.
     - name: Report overall coverage
       run: |
         BUNDLE=$(find coverage-xcresult -maxdepth 2 -name '*.xcresult' -type d 2>/dev/null | head -1)
@@ -1230,6 +1262,10 @@ jobs:
           | grep "Pulse.app" | head -1 | awk '{print $NF}' | tr -d '%')
         [ -z "$COVERAGE" ] && COVERAGE="0"
         echo "App-target coverage: ${COVERAGE}%"
+        echo "COVERAGE=${COVERAGE}" >> "$GITHUB_ENV"
+        # Published as an artifact so the next PR can ratchet against it.
+        mkdir -p coverage-value
+        echo "${COVERAGE}" > coverage-value/coverage.txt
         bash scripts/generate-coverage-badge.sh "$BUNDLE" || true
         {
           echo "## Coverage Summary"
@@ -1241,6 +1277,45 @@ jobs:
           echo "_Overall app-target coverage. Per-PR changed-line coverage is gated"
           echo "separately by the Patch Coverage job (75% floor)._"
         } >> "$GITHUB_STEP_SUMMARY"
+
+    # Baseline = overall coverage from the most recent successful master run.
+    # Pulled from that run's artifact rather than committed to the repo: no
+    # write permission, no bot commit on every merge, and nothing to conflict.
+    # Missing baseline is not a failure — see the script's `none` handling.
+    - name: Fetch master coverage baseline
+      if: github.event_name == 'pull_request'
+      env:
+        GH_TOKEN: ${{ github.token }}
+      run: |
+        BASELINE="none"
+        # Walk back a few runs: the newest master run may predate this artifact,
+        # or have skipped unit tests via the path filter.
+        for RUN_ID in $(gh run list --workflow=ci.yml --branch=master \
+              --status=success --event=push --limit=10 \
+              --json databaseId --jq '.[].databaseId'); do
+          if gh run download "$RUN_ID" --name coverage-value --dir baseline 2>/dev/null; then
+            BASELINE=$(tr -d '[:space:]' < baseline/coverage.txt)
+            echo "Baseline from master run $RUN_ID: ${BASELINE}%"
+            break
+          fi
+        done
+        [ -z "$BASELINE" ] && BASELINE="none"
+        echo "BASELINE=${BASELINE}" >> "$GITHUB_ENV"
+
+    - name: Enforce coverage ratchet
+      if: github.event_name == 'pull_request'
+      run: |
+        python3 scripts/check-coverage-ratchet.py "${COVERAGE:-none}" "${BASELINE:-none}"
+
+    # Uploaded on master too — that upload is what becomes the next baseline.
+    - name: Upload coverage value
+      uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
+      if: always()
+      with:
+        name: coverage-value
+        path: coverage-value/coverage.txt
+        retention-days: 90
+        if-no-files-found: ignore
 
     - name: Upload coverage badge
       uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
