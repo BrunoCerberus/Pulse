@@ -17,7 +17,7 @@ final class MockAuthService: AuthService {
     /// When running UI tests (UI_TESTING=1), starts in authenticated state.
     init() {
         // Auto-authenticate for UI tests so the tab bar appears immediately
-        let isUITesting = ProcessInfo.processInfo.environment["UI_TESTING"] == "1"
+        let isUITesting = TestEnvironment.isUITesting
         authStateSubject = CurrentValueSubject(isUITesting ? AuthUser.mock : nil)
     }
 

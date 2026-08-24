@@ -1,4 +1,5 @@
 import Combine
+import EntropyCore
 import Foundation
 
 /// Live implementation of `SharedURLImportService` backed by `SharedURLQueue`.
@@ -34,6 +35,13 @@ final class LiveSharedURLImportService: SharedURLImportService, @unchecked Senda
                   let url = URL(string: item.url)
             else { continue }
             pendingURLSubject.send(url)
+            // Import-boundary observability: drained items currently have no
+            // downstream consumer in the app, so without this line the Share
+            // Extension queue would empty into a silent void. Only the host is
+            // logged — the URL is untrusted user-shared content whose path /
+            // query can carry PII, and this log lands in the local unified log
+            // store, outside the analytics / Crashlytics PII-sanitizer scope.
+            Logger.shared.info("Imported shared URL from \(url.host ?? "unknown host")", category: "SharedURLImport")
         }
     }
 }

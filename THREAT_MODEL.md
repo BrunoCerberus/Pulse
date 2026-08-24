@@ -34,7 +34,7 @@ architecture: `View → ViewModel → DomainInteractor → Service (Live/Mock) �
 | Component | Identifier / note |
 |---|---|
 | Supabase backend | HTTPS only — no plaintext `http://` permitted in `Pulse/Configs/Networking/` (enforced by conformance jobs) |
-| Firebase Remote Config | Primary source of `SUPABASE_URL` (non-empty check) + NewsAPI / GNews keys (min 10 chars). No Supabase anon key exists — the Edge Functions API is public/unauthenticated. |
+| Firebase Remote Config | Primary source of `SUPABASE_URL` (non-empty + https-scheme backstop in `SupabaseConfig`, so an operator misconfig / account compromise serving `http://` fails `isConfigured` instead of reaching the request builders) + NewsAPI / GNews keys (min 10 chars). No Supabase anon key exists — the Edge Functions API is public/unauthenticated. |
 | Keychain | `com.bruno.Pulse.APIKeys` (user-provided keys), `com.pulse.applock`, APNs token — device-only accessibility |
 | CloudKit | `iCloud.com.bruno.Pulse-News` — **`.private`** database (per-user) |
 | App Lock | Biometric / passcode gate in front of sensitive flows |
@@ -55,16 +55,22 @@ architecture: `View → ViewModel → DomainInteractor → Service (Live/Mock) �
   in explicit data-boundary markers whose "data, never instructions" status each system
   prompt declares — see §3.
 - Article fields → `AVSpeechUtterance` (TTS) → `MPNowPlayingInfoCenter`.
-- Article `mediaURL` → inline `VideoPlayerView` `WKWebView` (video) **and**
-  `AudioPlayerView` `AVURLAsset` (podcast). Both sinks — and the open-in-browser gates
-  (`MediaDetailDomainInteractor.openInBrowser`, `ArticleDetailDomainInteractor.externalURL`)
-  — now route through the shared `SafeMediaURL` HTTPS-only gate so the scheme allowlist
-  can't drift apart between sinks (the audio sink was previously ungated). The direct-video
-  `WKWebView` branch additionally **disables JavaScript and pins navigation to the loaded
-  host** (`Coordinator.decidePolicyFor`), so an attacker-controlled HTTPS page can't run
-  scripts or redirect into in-WebView phishing. (Inline-video HTTPS gate found by the weekly
-  sweep `SWEEP-2026-06-03-01`; the audio gap + JS/navigation hardening closed in the
-  follow-up pass.)
+  - Article `mediaURL` → inline `VideoPlayerView` `WKWebView` (video) **and**
+    `AudioPlayerView` `AVURLAsset` (podcast). Both sinks — and the open-in-browser gates
+    (`MediaDetailDomainInteractor.openInBrowser`, `ArticleDetailDomainInteractor.externalURL`)
+    — now route through the shared `SafeMediaURL` HTTPS-only gate so the scheme allowlist
+    can't drift apart between sinks (the audio sink was previously ungated). The direct-video
+    `WKWebView` branch additionally **disables JavaScript and pins navigation to the loaded
+    host** (`Coordinator.decidePolicyFor`), so an attacker-controlled HTTPS page can't run
+    scripts or redirect into in-WebView phishing. The trusted YouTube-embed branch keeps
+    JavaScript on for the IFrame Player API, but `decidePolicyFor` now also **pins every
+    frame's navigations to a trusted origin set** (`allowsYouTubeNavigation`: dot-anchored
+    suffix for the Google-controlled `youtube.com` / `youtube-nocookie.com` zones, exact
+    match for `www.` / `accounts.google.com` — `google.com` hosts third-party content, so no
+    wildcard) as a defense-in-depth backstop no broader than the wrapper document's CSP,
+    closing the theoretical JS-enabled redirect case. (Inline-video HTTPS gate found by
+    the weekly sweep `SWEEP-2026-06-03-01`; the audio gap + JS/navigation hardening closed in
+    the follow-up pass; the YouTube origin pin closed in the 2026-08 audit pass.)
 - `pulse://` + push → `DeeplinkManager.parse` / `NotificationDeeplinkParser` →
   `DeeplinkRouter`. Article IDs are allowlist-validated; free-text params
   (search query, category name) are length-capped + control-char-stripped at the
@@ -103,10 +109,14 @@ defense or a known residual; look for **unfixed variants** of each.
    so a caller that constructs a `Deeplink` directly can't bypass `parse`'s validation.
    Verify push-payload fields stay covered in both `DeeplinkManager` and `NotificationDeeplinkParser`.
 3. **IPC tampering** via the Share Extension queue (App Group UnencryptedUserDefaults).
-   Defense is a URL scheme allowlist + length cap, applied on **both** the write side
-   (`enqueue`) and the read side (`readQueue` re-caps the decoded array to `maxQueueSize`,
-   and `LiveSharedURLImportService` re-validates each item's scheme). Never trust queue
-   contents as well-formed.
+    Defense is a URL scheme allowlist + length cap, applied on **both** the write side
+    (`enqueue`) and the read side (`readQueue` re-caps the decoded array to `maxQueueSize`,
+    and `LiveSharedURLImportService` re-validates each item's scheme). Never trust queue
+    contents as well-formed. Exported URLs are untrusted web content end-to-end: the
+    `SharedURLImportService.pendingURLPublisher` contract requires any consumer to
+    re-validate with `SafeMediaURL` before privileged loaders and `PromptSanitizer` before
+    LLM prompts. (Drained items currently have no downstream consumer — the import is
+    logged at the boundary; wire a consumer via that contract, never bypass it.)
 4. **Secret handling / leakage.** `#if DEBUG` env-var key fallback must never reach
    Release; analytics + Crashlytics must stay PII-sanitized — the recursive sanitizer is
    now applied on **both** the error path (`recordError`) AND the event path (`logEvent`
@@ -148,6 +158,15 @@ branches whose fixes are NOT in master; a `--all` SHA does not mean the fix ship
   re-check (classes §3.2 / §3.3 / §3.4 / §3.6)
 - Reviewer-only anonymous sign-in kept out of analytics (`setUserID(nil)` for the anonymous
   provider + suppressed throttle-failure events) + a 60s sign-in throttle (#353, class §3.4 / abuse)
+- TestEnvironment funnel extended to the remaining test-env affordance reads
+  (`XCTestConfigurationFilePath` in `PulseAppDelegate` / `SignOutCleanup`, `UI_TESTING` in
+  `MockAuthService`) so no env read exists outside the `#if DEBUG`-gated accessors (class §3.4)
+- YouTube-embed `WKWebView` navigations pinned to YouTube / Google origins in
+  `decidePolicyFor` (class §2 mediaURL flow)
+- `https`-scheme backstop on `SupabaseConfig.url` so a non-HTTPS operator value fails
+  `isConfigured` instead of reaching request builders (class §3.4)
+- Shared-URL import boundary observability + consumer sanitization contract
+  (class §3.3)
 
 > The repo still carries a family of stale `security/pr-*` branches
 > (`security/pr-1-atomic-cleanup`, `security/pr-2-url-hardening`, `security/audit-fixes`,

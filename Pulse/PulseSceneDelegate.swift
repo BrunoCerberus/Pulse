@@ -340,13 +340,7 @@ private extension PulseSceneDelegate {
 private extension PulseSceneDelegate {
     func setupServices() {
         #if DEBUG
-            // Check if running in test environment (unit tests or UI tests)
-            // XCTestConfigurationFilePath is set for unit tests
-            // UI_TESTING is set by UI tests via launchEnvironment
-            let isUnitTesting = ProcessInfo.processInfo.environment["XCTestConfigurationFilePath"] != nil
-            let isUITesting = ProcessInfo.processInfo.environment["UI_TESTING"] == "1"
-
-            if isUnitTesting || isUITesting {
+            if TestEnvironment.isRunningTests {
                 registerMockServices()
             } else {
                 // Use real services for debug builds

@@ -50,4 +50,22 @@ struct SupabaseConfigTests {
         SupabaseConfig.configure(with: mockRemoteConfig)
         #expect(SupabaseConfig.isConfigured == false)
     }
+
+    @Test("url rejects a non-https Remote Config value")
+    func urlRejectsNonHTTPSRemoteConfigValue() {
+        let mockRemoteConfig = MockRemoteConfigService()
+        mockRemoteConfig.supabaseURLValue = "http://insecure.supabase.co"
+        SupabaseConfig.configure(with: mockRemoteConfig)
+        #expect(SupabaseConfig.url.isEmpty)
+        #expect(SupabaseConfig.isConfigured == false)
+    }
+
+    @Test("url rejects an unparseable Remote Config value")
+    func urlRejectsUnparseableRemoteConfigValue() {
+        let mockRemoteConfig = MockRemoteConfigService()
+        mockRemoteConfig.supabaseURLValue = "not a url"
+        SupabaseConfig.configure(with: mockRemoteConfig)
+        #expect(SupabaseConfig.url.isEmpty)
+        #expect(SupabaseConfig.isConfigured == false)
+    }
 }

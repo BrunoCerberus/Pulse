@@ -31,7 +31,7 @@ final class PulseAppDelegate: UIResponder, UIApplicationDelegate {
         didFinishLaunchingWithOptions _: [UIApplication.LaunchOptionsKey: Any]? = nil,
     ) -> Bool {
         // Skip configuration during unit tests to prevent hanging
-        guard ProcessInfo.processInfo.environment["XCTestConfigurationFilePath"] == nil else {
+        guard !TestEnvironment.isRunningTests else {
             return true
         }
 
