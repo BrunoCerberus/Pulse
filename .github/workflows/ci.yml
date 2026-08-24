@@ -1252,7 +1252,19 @@ jobs:
     # PR may not drop overall coverage more than 1pt under the master baseline.
     - name: Report overall coverage
       run: |
-        BUNDLE=$(find coverage-xcresult -maxdepth 2 -name '*.xcresult' -type d 2>/dev/null | head -1)
+        # actions/upload-artifact drops the top-level directory name, so the
+        # download holds the bundle's *contents* (Data/ + Info.plist), not a
+        # `*.xcresult` directory — the shape patch-coverage already documents.
+        # The old `find` therefore never matched and this job silently reported
+        # "no bundle" on every run. xccov only accepts a path carrying the
+        # .xcresult extension, so restore one.
+        BUNDLE=""
+        if [ -f coverage-xcresult/Info.plist ]; then
+          mv coverage-xcresult unit-results.xcresult
+          BUNDLE="unit-results.xcresult"
+        else
+          BUNDLE=$(find coverage-xcresult -maxdepth 2 -name '*.xcresult' -type d 2>/dev/null | head -1)
+        fi
         if [ -z "$BUNDLE" ]; then
           echo "::warning::No xcresult found — skipping coverage summary"
           {
@@ -1263,8 +1275,12 @@ jobs:
           exit 0
         fi
         echo "Reading coverage from $BUNDLE"
+        # The target line is `Pulse.app  46.56% (20011/42975)`, so $NF is the
+        # ratio, not the percentage — the old awk yielded "(20011/42975)", which
+        # the ratchet rejects as non-numeric (exit 2, a blocking failure). Anchor
+        # to the target row and take the percentage field explicitly.
         COVERAGE=$(xcrun xccov view --report "$BUNDLE" 2>/dev/null \
-          | grep "Pulse.app" | head -1 | awk '{print $NF}' | tr -d '%')
+          | grep -E '^Pulse\.app ' | grep -oE '[0-9]+\.[0-9]+%' | head -1 | tr -d '%')
         # A failed parse (renamed target, changed xccov output) must not reach the
         # ratchet as a number. "0" is fine for the human-readable table, but the
         # gate has to see "none" and take its skip path — otherwise a scraping bug
