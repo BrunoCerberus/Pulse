@@ -92,13 +92,25 @@ def chain_start(lines: list[str], sink_index: int) -> int:
     it does not itself continue a chain (does not start with `.`) and every
     bracket opened below it has been closed — that rules out mistaking a
     multi-line argument list's closing `)` for the start of the statement.
+
+    The sink's own line can be the root: a whole chain written on one line
+    (`service.fetch().sink { ... }.store(in: &bag)`) is already balanced and
+    does not start with `.`, so the walk must be able to stop immediately.
+    Forcing it a line higher would splice in the preceding statement, and if
+    *that* statement happened to be a guarded sink, its `.receive(on:)` would
+    vouch for a chain it has nothing to do with — masking a real violation.
+    Two adjacent single-line subscriptions in one `setup()` is enough to hit
+    it, so this is not a corner case.
+
+    A multi-line chain is unaffected: its sink line starts with `.`, so the
+    walk keeps climbing to the real root.
     """
     depth = 0
     for index in range(sink_index, -1, -1):
         text = strip_noise(lines[index])
         depth += text.count(")") + text.count("]") - text.count("(") - text.count("[")
         stripped = text.strip()
-        if index < sink_index and not stripped.startswith(".") and depth <= 0 and stripped:
+        if stripped and not stripped.startswith(".") and depth <= 0:
             return index
     return 0
 
@@ -133,9 +145,136 @@ def check_file(path: Path, repo_root: Path) -> list[str]:
     return violations
 
 
+# (label, source, expected violation count). Two real bugs in this file were
+# caught in review rather than by the 22-file tree scan — a clean tree proves
+# no false positives, never the absence of false negatives, which are the
+# dangerous direction here. These pin the shapes that broke.
+SELF_TEST_CASES = (
+    (
+        "multi-line chain with a main hop is clean",
+        """@MainActor
+final class AInteractor {
+    func setup() {
+        service.publisher
+            .receive(on: DispatchQueue.main)
+            .sink { [weak self] v in self?.stateSubject.value.x = v }
+            .store(in: &cancellables)
+    }
+}""",
+        0,
+    ),
+    (
+        "multi-line chain with no hop is flagged",
+        """@MainActor
+final class BInteractor {
+    func setup() {
+        service.publisher
+            .map { $0 }
+            .sink { [weak self] v in self?.stateSubject.value.x = v }
+            .store(in: &cancellables)
+    }
+}""",
+        1,
+    ),
+    (
+        "a background scheduler is not a main hop",
+        """@MainActor
+final class CInteractor {
+    func setup() {
+        service.publisher
+            .receive(on: DispatchQueue.global())
+            .sink { [weak self] v in self?.stateSubject.value.x = v }
+            .store(in: &cancellables)
+    }
+}""",
+        1,
+    ),
+    (
+        "debounce onto the main queue counts as a hop",
+        """@MainActor
+final class DInteractor {
+    func setup() {
+        subject
+            .debounce(for: .milliseconds(300), scheduler: DispatchQueue.main)
+            .sink { [weak self] v in self?.stateSubject.value.x = v }
+            .store(in: &cancellables)
+    }
+}""",
+        0,
+    ),
+    (
+        "a trivial sink is exempt",
+        """@MainActor
+final class EInteractor {
+    func setup() {
+        service.publisher.sink { _ in }.store(in: &cancellables)
+    }
+}""",
+        0,
+    ),
+    (
+        "a single-line sink does not borrow the previous line's hop",
+        """@MainActor
+final class FInteractor {
+    func setup() {
+        a.fetch().receive(on: DispatchQueue.main).sink { _ in }.store(in: &cancellables)
+        b.fetch().sink { [weak self] v in self?.stateSubject.value.x = v }.store(in: &cancellables)
+    }
+}""",
+        1,
+    ),
+    (
+        "a self-contained single-line chain with a hop is clean",
+        """@MainActor
+final class GInteractor {
+    func setup() {
+        b.fetch().receive(on: DispatchQueue.main).sink { [weak self] v in self?.stateSubject.value.x = v }
+    }
+}""",
+        0,
+    ),
+    (
+        "a non-@MainActor type is out of scope",
+        """final class HInteractor {
+    func setup() {
+        service.publisher.sink { [weak self] v in self?.stateSubject.value.x = v }
+    }
+}""",
+        0,
+    ),
+)
+
+
+def self_test() -> int:
+    """Run the shape fixtures above through check_file and report mismatches."""
+    import tempfile
+
+    failures = 0
+    with tempfile.TemporaryDirectory() as raw_root:
+        root = Path(raw_root)
+        for number, (label, source, expected) in enumerate(SELF_TEST_CASES):
+            path = root / f"Case{number}Interactor.swift"
+            path.write_text(source, encoding="utf-8")
+            actual = len(check_file(path, root))
+            status = "ok" if actual == expected else "FAILED"
+            if actual != expected:
+                failures += 1
+            print(f"  [{status}] {label} (expected {expected}, got {actual})")
+            path.unlink()
+
+    if failures:
+        print(f"\nSelf-test: {failures} of {len(SELF_TEST_CASES)} case(s) failed.")
+        return 1
+    print(f"\nSelf-test: all {len(SELF_TEST_CASES)} cases passed.")
+    return 0
+
+
 def main() -> int:
+    if len(sys.argv) == 2 and sys.argv[1] == "--self-test":
+        return self_test()
+
     if len(sys.argv) != 2:
-        print("usage: check-mainactor-sinks.py <repo-root>", file=sys.stderr)
+        print("usage: check-mainactor-sinks.py <repo-root> | --self-test", file=sys.stderr)
         return 2
 
     repo_root = Path(sys.argv[1]).resolve()

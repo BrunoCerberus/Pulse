@@ -112,6 +112,11 @@ jobs:
     # than a SwiftLint custom_rules regex (see the script's docstring).
     - name: Check main-thread Combine sinks
       run: |
+        # Self-test first: a clean tree proves the checker reports no false
+        # positives, never that it still catches anything. Two false negatives
+        # in this script were found in review, not by the tree scan.
+        echo "Running sink-checker self-test..."
+        python3 scripts/check-mainactor-sinks.py --self-test
         echo "Checking @MainActor interactor sinks for a main-queue hop..."
         python3 scripts/check-mainactor-sinks.py .
 
