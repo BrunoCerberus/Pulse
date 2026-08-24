@@ -85,6 +85,8 @@ Pulse ships a privacy manifest (`Pulse/PrivacyInfo.xcprivacy`) and gates every P
 
 Fork → branch → changes → `make lint && make test` → PR. Conventional Commit PR titles required.
 
+Beyond lint and tests, CI blocks a PR on any first-party compiler warning, on an unguarded main-thread Combine sink, and on overall coverage dropping more than 1pt below master. A nightly dead-code report is advisory. See [CI/CD → Quality gates](docs-guide/ci-cd.md#quality-gates).
+
 ## License
 
 MIT — see [LICENSE](LICENSE).
