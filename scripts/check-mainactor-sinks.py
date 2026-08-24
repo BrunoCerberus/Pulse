@@ -34,11 +34,19 @@ SOURCE_DIRS = ("Pulse", "PulseWidgetExtension", "PulseShareExtension")
 # Only files that look like interactors — the layer that owns `stateSubject`.
 INTERACTOR_GLOB = "*Interactor*.swift"
 
+# Schedulers that deliver on the main thread. Both guard forms below must name
+# one of these: `.receive(on: DispatchQueue.global())` hops to a *background*
+# queue, so accepting a bare `.receive(on:)` would wave through exactly the
+# off-main mutation this gate exists to catch. Every `.receive(on:)` in the tree
+# today names `DispatchQueue.main`; the other two are accepted because they are
+# equally main-thread, not because anything uses them yet.
+MAIN_SCHEDULER = r"(?:DispatchQueue\.main|RunLoop\.main|\.main)\b"
+
 # `.receive(on:)` is the canonical guard, but any operator that hops onto the
 # main queue via its `scheduler:` argument (`debounce`, `throttle`, `delay`)
 # delivers downstream on main just as effectively.
 GUARDED = re.compile(
-    r"\.receive\s*\(\s*on:|scheduler:\s*(DispatchQueue\.main|\.main)\b"
+    rf"\.receive\s*\(\s*on:\s*{MAIN_SCHEDULER}|scheduler:\s*{MAIN_SCHEDULER}"
 )
 MAIN_ACTOR = re.compile(r"@MainActor")
 

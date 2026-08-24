@@ -1260,12 +1260,27 @@ jobs:
         echo "Reading coverage from $BUNDLE"
         COVERAGE=$(xcrun xccov view --report "$BUNDLE" 2>/dev/null \
           | grep "Pulse.app" | head -1 | awk '{print $NF}' | tr -d '%')
-        [ -z "$COVERAGE" ] && COVERAGE="0"
+        # A failed parse (renamed target, changed xccov output) must not reach the
+        # ratchet as a number. "0" is fine for the human-readable table, but the
+        # gate has to see "none" and take its skip path — otherwise a scraping bug
+        # either blocks the PR as a fake 100pt regression, or, if master's baseline
+        # was recorded the same way, silently disables the gate at 0 >= 0 - 1.
+        if [ -z "$COVERAGE" ]; then
+          echo "::warning::Could not parse coverage from xccov — ratchet will skip"
+          COVERAGE="0"
+          RATCHET_INPUT="none"
+        else
+          RATCHET_INPUT="$COVERAGE"
+        fi
         echo "App-target coverage: ${COVERAGE}%"
-        echo "COVERAGE=${COVERAGE}" >> "$GITHUB_ENV"
-        # Published as an artifact so the next PR can ratchet against it.
-        mkdir -p coverage-value
-        echo "${COVERAGE}" > coverage-value/coverage.txt
+        echo "RATCHET_INPUT=${RATCHET_INPUT}" >> "$GITHUB_ENV"
+        # Published as an artifact so the next PR can ratchet against it. Skipped
+        # on a failed parse for the same reason: a "0" baseline poisons every
+        # later comparison, and no baseline is safer than a wrong one.
+        if [ "$RATCHET_INPUT" != "none" ]; then
+          mkdir -p coverage-value
+          echo "${COVERAGE}" > coverage-value/coverage.txt
+        fi
         bash scripts/generate-coverage-badge.sh "$BUNDLE" || true
         {
           echo "## Coverage Summary"
@@ -1305,7 +1320,7 @@ jobs:
     - name: Enforce coverage ratchet
       if: github.event_name == 'pull_request'
       run: |
-        python3 scripts/check-coverage-ratchet.py "${COVERAGE:-none}" "${BASELINE:-none}"
+        python3 scripts/check-coverage-ratchet.py "${RATCHET_INPUT:-none}" "${BASELINE:-none}"
 
     # Uploaded on master too — that upload is what becomes the next baseline.
     - name: Upload coverage value
