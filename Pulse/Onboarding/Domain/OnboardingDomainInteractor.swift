@@ -144,6 +144,10 @@ final class OnboardingDomainInteractor: CombineInteractor {
                 updated.followedTopics = orderedTopics
                 return settingsService.savePreferences(updated)
             }
+            // `fetchPreferences`/`savePreferences` deliver off the main queue, and this
+            // closure touches main-actor state on `self` — without the hop it trips
+            // `_dispatch_assert_queue_fail` on the failure path (AGENTS.md rule 19).
+            .receive(on: DispatchQueue.main)
             .sink(
                 receiveCompletion: { [weak self] completion in
                     if case let .failure(error) = completion {

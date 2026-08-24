@@ -92,6 +92,87 @@ jobs:
         path: ./DerivedData/Build/Products
         retention-days: 1
 
+  # Dead-code detection. NIGHTLY-ONLY BY NECESSITY: SwiftLint's analyzer rules
+  # need a full compiler log and re-run SourceKit over every invocation in it,
+  # which takes longer than the entire PR lint job — far too slow to gate a PR
+  # on. Self-contained (its own build) rather than reusing the Nightly Build
+  # artifacts because `unused_declaration` needs the DerivedData module outputs
+  # that the log's compile commands reference, not just the log.
+  #
+  # ADVISORY, NEVER BLOCKING — the same posture rule 38 takes for flaky tests.
+  # `unused_declaration` cannot see references originating outside the linted
+  # sources, so it reports genuine dead code (an unreferenced `SettingsCoordinator`)
+  # alongside unavoidable false positives (`var window: UIWindow?`, which UIKit
+  # assigns via UIWindowSceneDelegate). A gate on that mix would train people to
+  # ignore it. `notify-failure` keys off `test-results` only, so nothing here
+  # opens an issue.
+  dead-code:
+    name: Nightly Dead Code
+    runs-on: macos-26
+    timeout-minutes: 90
+
+    permissions:
+      contents: read
+
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+      with:
+        persist-credentials: false
+
+    - name: Set up iOS build environment
+      uses: ./.github/actions/setup-ios
+      with:
+        install-runtime: "true"
+
+    - name: Install SwiftLint
+      run: |
+        brew install swiftlint
+
+    - name: Resolve Package Dependencies
+      run: |
+        xcodebuild -resolvePackageDependencies \
+          -project Pulse.xcodeproj \
+          -scheme PulseDev \
+          -onlyUsePackageVersionsFromResolvedFile
+
+    # A clean build is required: the analyzer only sees files whose compile
+    # commands appear in the log, and an incremental build omits everything it
+    # skipped.
+    - name: Build with compiler log
+      run: |
+        set -o pipefail
+        xcodebuild build \
+          -project Pulse.xcodeproj \
+          -scheme PulseDev \
+          -destination 'platform=iOS Simulator,name=iPhone Air,OS=latest' \
+          -derivedDataPath ./DerivedData \
+          -skipMacroValidation \
+          CODE_SIGNING_ALLOWED=NO | tee analyze-build.log
+
+    - name: Run SwiftLint analyzer
+      continue-on-error: true
+      run: |
+        swiftlint analyze \
+          --config .swiftlint-analyzer.yml \
+          --compiler-log-path analyze-build.log \
+          --quiet > dead-code.txt 2>&1 || true
+        echo "Analyzer produced $(wc -l < dead-code.txt) line(s)"
+
+    - name: Render dead code report
+      if: always()
+      run: |
+        python3 scripts/render-dead-code-report.py dead-code.txt .
+
+    - name: Upload dead code report
+      uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
+      if: always()
+      with:
+        name: dead-code-report
+        path: dead-code.txt
+        retention-days: 14
+        if-no-files-found: ignore
+
   # Shared audit body lives in reusable-security-audit.yml (also called by
   # ci.yml with pinned tools). NIGHTLY-ONLY INCREMENTAL VALUE: latest scanner
   # releases re-scan already-merged code with newly-added detector rules the

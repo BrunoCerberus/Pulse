@@ -194,10 +194,10 @@ struct MediaTypeTests {
 
     // MARK: - Switch Tests
 
-    @Test("Can be used in switch statement")
-    func switchStatement() {
-        let type: MediaType = .video
-
+    /// The case comes in as a test argument rather than a local `let`: switching
+    /// on a literal enum case is a compile-time constant, which warns.
+    @Test("Can be used in switch statement", arguments: [MediaType.video])
+    func switchStatement(type: MediaType) {
         switch type {
         case .video:
             #expect(Bool(true))

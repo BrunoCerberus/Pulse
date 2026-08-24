@@ -12,9 +12,10 @@ struct MemoryOperationTests {
         #expect(allCases.count == 2)
     }
 
-    @Test("MemoryOperation modelLoad case exists")
-    func modelLoadCaseExists() {
-        let operation = MemoryOperation.modelLoad
+    /// Passed as a test argument, not a local `let` — switching on a literal enum
+    /// case is a compile-time constant, which warns.
+    @Test("MemoryOperation modelLoad case exists", arguments: [MemoryOperation.modelLoad])
+    func modelLoadCaseExists(operation: MemoryOperation) {
         // Should be able to switch on the case
         switch operation {
         case .modelLoad:
@@ -24,9 +25,8 @@ struct MemoryOperationTests {
         }
     }
 
-    @Test("MemoryOperation inference case exists")
-    func inferenceCaseExists() {
-        let operation = MemoryOperation.inference
+    @Test("MemoryOperation inference case exists", arguments: [MemoryOperation.inference])
+    func inferenceCaseExists(operation: MemoryOperation) {
         // Should be able to switch on the case
         switch operation {
         case .modelLoad:

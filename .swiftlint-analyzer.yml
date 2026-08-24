@@ -1,0 +1,26 @@
+# SwiftLint *analyzer* configuration — separate from .swiftlint.yml.
+#
+# Analyzer rules need a full compiler log (`swiftlint analyze
+# --compiler-log-path`), take far longer than a normal lint, and — unlike the
+# style rules — carry a real false-positive rate. Keeping them in their own
+# config means the fast PR lint stays fast and stays blocking, while dead-code
+# detection runs nightly as advisory triage signal (the same posture AGENTS.md
+# rule 38 takes for flaky tests).
+#
+# Known false-positive classes for unused_declaration, do not "fix" these:
+#   - Protocol/framework requirements assigned by the system rather than by our
+#     code (`var window: UIWindow?` on a UIWindowSceneDelegate).
+#   - Declarations referenced only from #Preview blocks or other targets.
+
+only_rules: []
+
+analyzer_rules:
+  - unused_import
+  - unused_declaration
+
+excluded:
+  - Pods
+  - .build
+  - build
+  - DerivedData
+  - .claude/worktrees

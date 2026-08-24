@@ -32,3 +32,34 @@ excluded:
   - build
   - DerivedData
   - .claude/worktrees
+
+# Custom rules encoding the two conventions in AGENTS.md that produce broken
+# builds or crashes rather than style noise. Rule 19 (main-thread Combine
+# sinks) is the third such convention, but it needs multi-line analysis of a
+# publisher chain, which a single regex cannot express — it lives in
+# scripts/check-mainactor-sinks.py and runs in the same CI job.
+custom_rules:
+  # AGENTS.md rule 21. `.ultraThinMaterial` has no sanctioned use anywhere in
+  # the app: floating UI uses `.glassEffect`, and the material exceptions the
+  # rule does allow are `.ultraThickMaterial` (privacy backdrops) and
+  # `.thinMaterial` (forced by the StoreKit subscription-store SDK surface).
+  liquid_glass_no_ultra_thin_material:
+    name: "Liquid Glass only"
+    regex: '\.ultraThinMaterial'
+    match_kinds:
+      - identifier
+    message: "Use Liquid Glass (.glassEffect / GlassEffectContainer / .buttonStyle(.glassProminent)) instead of .ultraThinMaterial — see AGENTS.md rule 21."
+    severity: error
+
+  # AGENTS.md rule 21 carve-out: `.regularMaterial` is allowed *only* on the
+  # two large content panels whose text disappears under Liquid Glass in
+  # static snapshot rendering. Anywhere else it is a regression to the legacy
+  # material look.
+  liquid_glass_no_regular_material:
+    name: "Liquid Glass only (regularMaterial)"
+    regex: '\.regularMaterial'
+    match_kinds:
+      - identifier
+    excluded: ".*/(ArticleDetailView|MediaDetailView)\\.swift"
+    message: "Use Liquid Glass instead of .regularMaterial — the only sanctioned uses are the ArticleDetailView/MediaDetailView content cards (AGENTS.md rule 21)."
+    severity: error
