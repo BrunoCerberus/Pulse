@@ -26,10 +26,12 @@ from pathlib import Path
 FIRST_PARTY_DIRS = (
     "Pulse",
     "PulseWidgetExtension",
+    "PulseWidgetExtensionTests",
     "PulseShareExtension",
     "PulseTests",
     "PulseSnapshotTests",
     "PulseUITests",
+    "LocalPackages",
 )
 
 # Paths that live *under* the repo but hold generated or vendored code we do
@@ -44,6 +46,18 @@ EXCLUDED_PARTS = (
 
 # `/path/File.swift:12:5: warning: message` — the shape both swiftc and clang
 # use. The column is optional; clang omits it for some diagnostics.
+#
+# KNOWN GAP: a diagnostic raised inside a macro expansion is attributed to a
+# synthetic buffer (`@__swiftmacro_…PulseWidgetExtensionTests….swift:1:37:`)
+# rather than to a path on disk, so the leading `/` here skips it. Those
+# warnings are real and do come from first-party code — swift-testing's
+# `#expect` expanding around main-actor-isolated members is the case that
+# occurs today. Attributing them would mean parsing length-prefixed mangled
+# names out of the buffer identifier, which is brittle enough that a wrong
+# guess would either miss warnings anyway or fail the build on a dependency's
+# macro. Left uncovered deliberately, and documented rather than silently
+# skipped: this gate keeps hand-written first-party sources clean, not macro
+# expansions.
 WARNING = re.compile(r"^(?P<path>/[^:]+):(?P<line>\d+):(?:(?P<col>\d+):)? warning: (?P<message>.*)$")
 
 
