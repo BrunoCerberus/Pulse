@@ -82,6 +82,8 @@ Pulse/
 - **Swift 6.2 concurrency** — every `.sink` in a `@MainActor` interactor mutating `stateSubject.value` **must** precede it with `.receive(on: DispatchQueue.main)` (services deliver off-main) or it crashes `_dispatch_assert_queue_fail`. `UncheckedSendableBox` / `WeakRef<T>` (in `CombineAsyncBridge.swift`) replace raw `Task` capture / `[weak self]` in `sending` closures.
 - **Liquid Glass only** — `.glassEffect`, `GlassEffectContainer`, `.buttonStyle(.glassProminent)`. No legacy `.ultraThinMaterial`/`.regularMaterial` (narrow exceptions in AGENTS.md #21).
 
+Both are enforced in CI and will fail a PR: the sink rule by `scripts/check-mainactor-sinks.py` (Code Quality job), the material bans by `custom_rules` in `.swiftlint.yml`. CI also blocks on any first-party compiler warning and on overall coverage dropping >1pt below master. Run them locally with `python3 scripts/check-mainactor-sinks.py .` and `make lint` — AGENTS.md rule 42 has the full picture.
+
 ## Key Files
 
 | Area | File | Purpose |
@@ -121,6 +123,8 @@ make bump-{patch,minor,major}
 ```
 
 New source files require `make generate` (or `/setup`) to land in the Xcode project.
+
+The CI-only gates have no `make` target — run them directly: `python3 scripts/check-mainactor-sinks.py .` (add `--self-test` to check the checker), `python3 scripts/check-localization-parity.py .`, and `python3 scripts/check-build-warnings.py <build.log> .` against a log from `xcodebuild build-for-testing` (plain `build` skips the test targets, where warnings hide).
 
 Slash commands: `/test*`, `/coverage`, `/build*`, `/run`, `/setup`, `/clean`, `/lint`, `/format`, `/fix-packages`, `/push`, `/reset`.
 
