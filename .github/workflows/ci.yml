@@ -105,6 +105,16 @@ jobs:
         echo "Checking Localizable.strings key parity across en/pt/es..."
         python3 scripts/check-localization-parity.py .
 
+    # The complement of key parity: *value* defects. Key parity is blind to an
+    # empty translation (renders a blank string) and to a format-placeholder
+    # mismatch (`%@` vs `%d` — String(format:) prints `?` at runtime, no crash,
+    # no build error). Values still identical to English only warn: brand
+    # names and "OK" are legitimately identical.
+    - name: Check localization value completeness
+      run: |
+        echo "Checking Localizable.strings values across en/pt/es..."
+        python3 scripts/check-localization-completeness.py .
+
     # AGENTS.md rule 19. An unguarded `.sink` in a @MainActor interactor crashes
     # `_dispatch_assert_queue_fail` at runtime, on whichever timing-dependent
     # path first delivers off-main — often an error path that no test exercises.
@@ -119,6 +129,26 @@ jobs:
         python3 scripts/check-mainactor-sinks.py --self-test
         echo "Checking @MainActor interactor sinks for a main-queue hop..."
         python3 scripts/check-mainactor-sinks.py .
+
+    # SnapshotTesting never deletes references when a test is renamed or
+    # removed — dead PNGs accumulate and a stale reference makes a future
+    # re-record session look like it repaired nothing. The self-test pins the
+    # detector's teeth (orphan classification on a synthetic tree) before the
+    # real scan, same contract as the sink checker above.
+    - name: Check snapshot references
+      run: |
+        echo "Running snapshot-reference self-test..."
+        python3 scripts/check-orphan-snapshots.py --self-test
+        echo "Scanning __Snapshots__ trees for orphaned references..."
+        python3 scripts/check-orphan-snapshots.py .
+
+    # Accessibility audits were maintained by memory — screens added later
+    # simply went unaudited. Mirror the audit suite against the canonical
+    # screen list (AppTab + Page cases) so a new screen ships with an audit,
+    # or an explicit `a11y-audit:exclude` on a genuinely transient case.
+    - name: Check accessibility audit coverage
+      run: |
+        python3 scripts/check-a11y-audit-coverage.py .
 
   # Shared audit body lives in reusable-security-audit.yml (also called by the
   # nightly with tool-channel: latest). Pinned tools here for reproducible PR
@@ -140,9 +170,10 @@ jobs:
   #   - Any change under Pulse/** (the shared app source all three suites
   #     exercise) turns ALL three test jobs on — we don't try to prove a
   #     narrower blast radius from the diff alone.
-  #   - Shared build/tooling config (project.yml, Package.swift/.resolved,
-  #     this workflow file, composite actions, Makefile) also turns all three
-  #     on — a broken package or scheme touches every test target.
+  #   - Shared build/tooling config (project.yml, the workspace
+  #     Package.resolved, this workflow file, composite actions, Makefile)
+  #     also turns all three on — a broken package or scheme touches every
+  #     test target.
   #   - Only edits confined to one suite's *own* test directory
   #     (PulseTests/PulseSnapshotTests/PulseUITests) skip the other two.
   #   - `push` events (post-merge validation on master, see header comment)
@@ -183,6 +214,10 @@ jobs:
       # same flags makes disagreement impossible — build can never skip while
       # a test job that needs its artifact still wants to run.
       compile: ${{ github.event_name != 'pull_request' || steps.filter.outcome != 'success' || steps.filter.outputs.unit == 'true' || steps.filter.outputs.snapshot == 'true' || steps.filter.outputs.ui == 'true' }}
+      # Gates the advisory SPM dependency review. Fail-open like the others —
+      # posting one extra comment is cheap; silently skipping a dependency
+      # change is not.
+      lockfile: ${{ github.event_name != 'pull_request' || steps.filter.outcome != 'success' || steps.filter.outputs.lockfile == 'true' }}
 
     steps:
     # continue-on-error mirrors the two steps below: this job's fail-open
@@ -213,8 +248,12 @@ jobs:
         filters: |
           shared: &shared
             - 'project.yml'
-            - 'Package.swift'
-            - 'Package.resolved'
+            # The committed lockfile lives in the workspace, not the repo root
+            # (the root file is gitignored; .gitignore un-ignores only this
+            # path). The old root-level 'Package.resolved' / 'Package.swift'
+            # entries matched nothing, so a lockfile-only PR skipped every
+            # test job — a dependency change could merge untested.
+            - 'Pulse.xcodeproj/project.xcworkspace/xcshareddata/swiftpm/Package.resolved'
             - '.github/workflows/ci.yml'
             - '.github/actions/**'
             - 'Makefile'
@@ -249,6 +288,13 @@ jobs:
             - *shared
             - 'Pulse/**'
             - 'PulseUITests/**'
+          # Advisory SPM dependency review only — not part of `shared`, because
+          # the review job is PR-only and never gates: a dependency change
+          # still triggers all test suites via `shared` (the lockfile entry
+          # above); this filter exists so the review comment can skip
+          # lockfile-untouched PRs.
+          lockfile:
+            - 'Pulse.xcodeproj/project.xcworkspace/xcshareddata/swiftpm/Package.resolved'
 
     - name: Summarize decision
       env:
@@ -374,6 +420,9 @@ jobs:
 
     permissions:
       contents: read
+      # `gh run download` reads the app-size baseline artifact published by the
+      # last successful master run.
+      actions: read
 
     steps:
     - name: Checkout code
@@ -404,6 +453,7 @@ jobs:
           -scheme PulseProd \
           -configuration Release \
           -destination 'platform=iOS Simulator,name=iPhone Air,OS=latest' \
+          -derivedDataPath ./DerivedData \
           -onlyUsePackageVersionsFromResolvedFile \
           -skipMacroValidation \
           CODE_SIGNING_ALLOWED=NO | tee -a build-release.log
@@ -413,6 +463,63 @@ jobs:
     - name: Check for compiler warnings
       run: |
         python3 scripts/check-build-warnings.py build-release.log .
+
+    # The App Store size limit is a cliff: nothing warns while the app sits
+    # well under it, so bloat (a bundled model, asset, or framework) accumulates
+    # invisibly until one PR trips the limit. Measure the Release Pulse.app
+    # (du includes its extension appexes in PlugIns) and ratchet it against
+    # master, the same artifact-baseline pattern as the coverage ratchet.
+    - name: Measure app size
+      id: appsize
+      run: |
+        APP=DerivedData/Build/Products/Release-iphonesimulator/Pulse.app
+        if [ -d "$APP" ]; then
+          SIZE=$(du -sk "$APP" | awk '{printf "%.1f", $1/1024}')
+          echo "APP_SIZE_MB=${SIZE}" >> "$GITHUB_ENV"
+          echo "Pulse.app (Release, with extensions): ${SIZE} MB"
+        else
+          echo "::warning::Pulse.app not found at $APP — skipping size ratchet"
+          echo "APP_SIZE_MB=none" >> "$GITHUB_ENV"
+        fi
+        if [ "${APP_SIZE_MB:-none}" != "none" ]; then
+          mkdir -p app-size-value
+          echo "${APP_SIZE_MB}" > app-size-value/app-size.txt
+        fi
+
+    # Baseline = app size from the most recent successful master run. Missing
+    # baseline is not a failure — the script records and moves on.
+    - name: Fetch master app-size baseline
+      if: github.event_name == 'pull_request'
+      env:
+        GH_TOKEN: ${{ github.token }}
+      run: |
+        BASELINE="none"
+        for RUN_ID in $(gh run list --workflow=ci.yml --branch=master \
+              --status=success --event=push --limit=10 \
+              --json databaseId --jq '.[].databaseId'); do
+          if gh run download "$RUN_ID" --name app-size-value --dir baseline 2>/dev/null; then
+            BASELINE=$(tr -d '[:space:]' < baseline/app-size.txt)
+            echo "Baseline from master run $RUN_ID: ${BASELINE} MB"
+            break
+          fi
+        done
+        [ -z "$BASELINE" ] && BASELINE="none"
+        echo "BASELINE=${BASELINE}" >> "$GITHUB_ENV"
+
+    - name: Enforce app-size ratchet
+      if: github.event_name == 'pull_request'
+      run: |
+        python3 scripts/check-app-size-ratchet.py "${APP_SIZE_MB:-none}" "${BASELINE:-none}"
+
+    # Uploaded on master too — that upload is what becomes the next baseline.
+    - name: Upload app size value
+      uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
+      if: always()
+      with:
+        name: app-size-value
+        path: app-size-value/app-size.txt
+        retention-days: 90
+        if-no-files-found: ignore
 
   # Split into three independent jobs (rather than one Unit/UI/UI-iPad/Snapshot
   # matrix) so patch-coverage — which only consumes the unit + snapshot xcresults —
@@ -451,7 +558,12 @@ jobs:
       timeout-minutes: 60
       env:
         SCHEME: PulseDev
-        TEST_TARGET: PulseTests
+        # Both unit test targets in one invocation: the widget tests shipped
+        # code (SharedURLQueue, widget data models) but were compiled — never
+        # run — in CI, so a break there could merge. The run step expands each
+        # target into its own -only-testing flag; the result bundle (and the
+        # coverage, flaky, and count reports built on it) then covers both.
+        TEST_TARGET: PulseTests,PulseWidgetExtensionTests
         ARTIFACT_NAME: unit-test-results
         TEST_NAME: Unit Tests
       run: |
@@ -461,10 +573,19 @@ jobs:
         DEST="platform=iOS Simulator,name=iPhone Air,OS=latest"
         echo "Test destination: $DEST"
 
+        # One -only-testing flag per target: a single comma-joined value is
+        # treated as one (nonexistent) target name, and xcodebuild then exits
+        # 0 after running zero tests — a silent no-op.
+        ONLY_TESTING_ARGS=()
+        IFS=',' read -r -a TEST_TARGETS <<< "$TEST_TARGET"
+        for TEST_TARGET_NAME in "${TEST_TARGETS[@]}"; do
+          ONLY_TESTING_ARGS+=("-only-testing:$TEST_TARGET_NAME")
+        done
+
         xcodebuild test-without-building \
           -project Pulse.xcodeproj \
           -scheme "$SCHEME" \
-          -only-testing:"$TEST_TARGET" \
+          "${ONLY_TESTING_ARGS[@]}" \
           -destination "$DEST" \
           -derivedDataPath ./DerivedData \
           -resultBundlePath "test-results/${ARTIFACT_NAME}.xcresult" \
@@ -560,10 +681,16 @@ jobs:
         DEST="platform=iOS Simulator,name=iPhone Air,OS=latest"
         echo "Test destination: $DEST"
 
+        ONLY_TESTING_ARGS=()
+        IFS=',' read -r -a TEST_TARGETS <<< "$TEST_TARGET"
+        for TEST_TARGET_NAME in "${TEST_TARGETS[@]}"; do
+          ONLY_TESTING_ARGS+=("-only-testing:$TEST_TARGET_NAME")
+        done
+
         xcodebuild test-without-building \
           -project Pulse.xcodeproj \
           -scheme "$SCHEME" \
-          -only-testing:"$TEST_TARGET" \
+          "${ONLY_TESTING_ARGS[@]}" \
           -destination "$DEST" \
           -derivedDataPath ./DerivedData \
           -resultBundlePath "test-results/${ARTIFACT_NAME}.xcresult" \
@@ -706,13 +833,21 @@ jobs:
         DEST="platform=iOS Simulator,name=iPhone Air,OS=latest"
         echo "Test destination: $DEST"
 
+        # Same per-target expansion as the unit job (single target today;
+        # a comma-joined value would silently run zero tests).
+        ONLY_TESTING_ARGS=()
+        IFS=',' read -r -a TEST_TARGETS <<< "$TEST_TARGET"
+        for TEST_TARGET_NAME in "${TEST_TARGETS[@]}"; do
+          ONLY_TESTING_ARGS+=("-only-testing:$TEST_TARGET_NAME")
+        done
+
         # No -enableCodeCoverage here: patch-coverage only consumes the unit +
         # snapshot xcresults, so collecting coverage on the slowest legs was
         # pure overhead.
         xcodebuild test-without-building \
           -project Pulse.xcodeproj \
           -scheme "$SCHEME" \
-          -only-testing:"$TEST_TARGET" \
+          "${ONLY_TESTING_ARGS[@]}" \
           -destination "$DEST" \
           -derivedDataPath ./DerivedData \
           -resultBundlePath "test-results/${ARTIFACT_NAME}.xcresult" \
@@ -812,10 +947,16 @@ jobs:
         DEST="platform=iOS Simulator,name=$DEVICE,OS=latest"
         echo "Test destination: $DEST"
 
+        ONLY_TESTING_ARGS=()
+        IFS=',' read -r -a TEST_TARGETS <<< "$TEST_TARGET"
+        for TEST_TARGET_NAME in "${TEST_TARGETS[@]}"; do
+          ONLY_TESTING_ARGS+=("-only-testing:$TEST_TARGET_NAME")
+        done
+
         xcodebuild test-without-building \
           -project Pulse.xcodeproj \
           -scheme "$SCHEME" \
-          -only-testing:"$TEST_TARGET" \
+          "${ONLY_TESTING_ARGS[@]}" \
           -destination "$DEST" \
           -derivedDataPath ./DerivedData \
           -resultBundlePath "test-results/${ARTIFACT_NAME}.xcresult" \
@@ -1314,6 +1455,40 @@ jobs:
           echo "separately by the Patch Coverage job (75% floor)._"
         } >> "$GITHUB_STEP_SUMMARY"
 
+    # Suite *size* erosion: deleting tests is the only way the count moves, and
+    # doing it incrementally ("for now", to green a build) is how a suite
+    # starves. The count covers both test targets in the unit result bundle
+    # (PulseTests + PulseWidgetExtensionTests). The bundle is resolved the same
+    # way as the coverage step above (shell variables don't cross steps).
+    - name: Report test count
+      run: |
+        BUNDLE=""
+        if [ -f unit-results.xcresult/Info.plist ]; then
+          BUNDLE="unit-results.xcresult"
+        else
+          BUNDLE=$(find coverage-xcresult -maxdepth 2 -name '*.xcresult' -type d 2>/dev/null | head -1)
+        fi
+        TEST_COUNT="none"
+        if [ -n "$BUNDLE" ] && python3 scripts/extract-test-count.py "$BUNDLE" > test-count.txt 2>/dev/null; then
+          TEST_COUNT=$(tr -d '[:space:]' < test-count.txt)
+        fi
+        echo "Unit-suite test count: ${TEST_COUNT}"
+        echo "TEST_COUNT=${TEST_COUNT}" >> "$GITHUB_ENV"
+        if [ "$TEST_COUNT" != "none" ]; then
+          mkdir -p test-count-value
+          echo "$TEST_COUNT" > test-count-value/test-count.txt
+        fi
+        {
+          echo "## Test Count"
+          echo ""
+          echo "| Unit suite tests |"
+          echo "|------------------|"
+          echo "| ${TEST_COUNT} |"
+          echo ""
+          echo "_Declared count of PulseTests + PulseWidgetExtensionTests from the unit_"
+          echo "_result bundle. Ratcheted against master below (2% tolerance)._"
+        } >> "$GITHUB_STEP_SUMMARY"
+
     # Baseline = overall coverage from the most recent successful master run.
     # Pulled from that run's artifact rather than committed to the repo: no
     # write permission, no bot commit on every merge, and nothing to conflict.
@@ -1350,6 +1525,40 @@ jobs:
       with:
         name: coverage-value
         path: coverage-value/coverage.txt
+        retention-days: 90
+        if-no-files-found: ignore
+
+    - name: Fetch master test-count baseline
+      if: github.event_name == 'pull_request'
+      env:
+        GH_TOKEN: ${{ github.token }}
+      run: |
+        COUNT_BASELINE="none"
+        # Same walk-back as the coverage baseline: the newest master run may
+        # predate this artifact or have skipped unit tests via the path filter.
+        for RUN_ID in $(gh run list --workflow=ci.yml --branch=master \
+              --status=success --event=push --limit=10 \
+              --json databaseId --jq '.[].databaseId'); do
+          if gh run download "$RUN_ID" --name test-count-value --dir count-baseline 2>/dev/null; then
+            COUNT_BASELINE=$(tr -d '[:space:]' < count-baseline/test-count.txt)
+            echo "Test-count baseline from master run $RUN_ID: ${COUNT_BASELINE}"
+            break
+          fi
+        done
+        [ -z "$COUNT_BASELINE" ] && COUNT_BASELINE="none"
+        echo "COUNT_BASELINE=${COUNT_BASELINE}" >> "$GITHUB_ENV"
+
+    - name: Enforce test-count ratchet
+      if: github.event_name == 'pull_request'
+      run: |
+        python3 scripts/check-test-count-ratchet.py "${TEST_COUNT:-none}" "${COUNT_BASELINE:-none}"
+
+    - name: Upload test count value
+      uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
+      if: always()
+      with:
+        name: test-count-value
+        path: test-count-value/test-count.txt
         retention-days: 90
         if-no-files-found: ignore
 
@@ -1419,4 +1628,68 @@ jobs:
       uses: marocchino/sticky-pull-request-comment@5770ad5eb8f42dd2c4f34da00c94c5381e49af88 # v3.0.5
       with:
         header: flaky-report
+        delete: true
+
+  # Advisory review of SwiftPM lockfile changes. Patch/minor bumps auto-merge
+  # (dependabot-auto-merge.yml) and the test suites re-run against them, so this
+  # deliberately never fails — it posts a sticky comment listing exactly which
+  # packages moved and by how much, so a human can spot a revision pin (an
+  # untagged branch pin that hides its version) or a surprising major. Pure
+  # JSON/text work, so it runs on ubuntu.
+  spm-dependency-review:
+    name: SPM Dependency Review
+    runs-on: ubuntu-latest
+    needs: [changes]
+    if: github.event_name == 'pull_request' && needs.changes.outputs.lockfile == 'true'
+    timeout-minutes: 10
+
+    permissions:
+      contents: read
+      pull-requests: write
+
+    steps:
+    - name: Harden runner
+      uses: step-security/harden-runner@05e31511f85b41b11d1cf0ef85d0992719546e2c # v2.21.0
+      with:
+        egress-policy: audit
+
+    - name: Checkout code
+      uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+      with:
+        persist-credentials: false
+
+    # The checkout holds the PR's (head) lockfile; the base version comes from
+    # the PR's base SHA via the contents API — no full history fetch needed.
+    - name: Fetch base lockfile
+      id: base-lock
+      env:
+        GH_TOKEN: ${{ github.token }}
+        BASE_SHA: ${{ github.event.pull_request.base.sha }}
+      run: |
+        gh api "repos/${GITHUB_REPOSITORY}/contents/Pulse.xcodeproj/project.xcworkspace/xcshareddata/swiftpm/Package.resolved?ref=${BASE_SHA}" \
+          --jq .content | base64 -d > base-Package.resolved
+        echo "Fetched base lockfile ($(wc -l < base-Package.resolved) lines)"
+
+    - name: Diff lockfiles
+      id: diff
+      run: |
+        python3 scripts/diff-package-resolved.py \
+          base-Package.resolved \
+          Pulse.xcodeproj/project.xcworkspace/xcshareddata/swiftpm/Package.resolved \
+          spm-dep-changes.md
+
+    - name: Post dependency review as PR comment
+      if: steps.diff.outputs.has_changes == 'true'
+      uses: marocchino/sticky-pull-request-comment@5770ad5eb8f42dd2c4f34da00c94c5381e49af88 # v3.0.5
+      with:
+        header: spm-dependency-review
+        path: spm-dep-changes.md
+
+    # The lockfile changed but no package version moved (formatting, a package
+    # added and removed, ...): drop a stale comment from an earlier revision.
+    - name: Remove stale dependency review comment
+      if: steps.diff.outputs.has_changes == 'false'
+      uses: marocchino/sticky-pull-request-comment@5770ad5eb8f42dd2c4f34da00c94c5381e49af88 # v3.0.5
+      with:
+        header: spm-dependency-review
         delete: true
