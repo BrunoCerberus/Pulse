@@ -31,8 +31,10 @@ final class AccessibilityAuditTests: BaseUITestCase {
         // the English value of audio_player.progress_label; UI tests force the
         // app to English via -AppleLanguages (BaseUITestCase), so the match is
         // locale-stable.
+        // `element` is `XCUIElement?` in the SDK CI builds with (Xcode 26.5)
+        // and non-optional in newer ones; optional chaining is valid in both.
         if description.contains("Hit area is too small"),
-            issue.element.label == "Playback progress" {
+            issue.element?.label == "Playback progress" {
             return true
         }
         return false
