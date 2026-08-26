@@ -40,11 +40,14 @@ final class AccessibilityAuditTests: BaseUITestCase {
         // the English value of audio_player.progress_label; UI tests force the
         // app to English via -AppleLanguages (BaseUITestCase), so the match is
         // locale-stable.
-        // `element` is `XCUIElement?` in the SDK CI builds with (Xcode 26.5)
-        // and non-optional in newer ones; optional chaining is valid in both.
+        // `safeLabel` reads via the exception-catching wrapper, so a snapshot
+        // timeout *inside* the audit (not just while the audit runs) can't throw
+        // an uncaught C++ exception and SIGABRT the runner. It takes the optional
+        // because `issue.element` is `XCUIElement?` in the SDK CI builds with
+        // (Xcode 26.5) and non-optional in newer ones.
         if exemptPlaybackProgress,
             description.contains("Hit area is too small"),
-            issue.element?.label == "Playback progress" {
+            safeLabel(issue.element) == "Playback progress" {
             return true
         }
         return false
