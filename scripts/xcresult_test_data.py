@@ -79,7 +79,9 @@ def fetch_test_tree(bundle: str) -> dict | None:
     """Fetch the referenced test tree for every action result, concatenated.
 
     Returns an object shaped `{"summaries": {"_values": [...]}}`; None when
-    the tool cannot produce it (callers treat that as "no data", not an error).
+    the tool cannot produce it — including when any single ref fails mid-loop,
+    so a partial tree is never returned as if complete (callers treat that as
+    "no data", not an error).
 
     `parse_xcresult` recovers the main object in whichever CLI shape this
     Xcode accepts, but does not say which one it used, so the `--id` fetch is
@@ -98,12 +100,18 @@ def fetch_test_tree(bundle: str) -> dict | None:
         return None
     for legacy in (False, True):
         trees = []
+        complete = True
         for ref_id in ids:
             tree = _xcresulttool_get(bundle, legacy, ["--id", ref_id])
             if tree is None:
+                # A mid-loop fetch failure must not read as a complete tree:
+                # returning the trees fetched so far would undercount the leaves
+                # and make the test-count ratchet see a phantom shrink. Fall
+                # through to the other flag variant, then to "no data".
+                complete = False
                 break
             trees.append(tree)
-        if trees:
+        if complete and trees:
             return {"summaries": {"_values": trees}}
     return None
 

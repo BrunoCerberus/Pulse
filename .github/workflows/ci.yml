@@ -473,17 +473,20 @@ jobs:
       id: appsize
       run: |
         APP=DerivedData/Build/Products/Release-iphonesimulator/Pulse.app
+        # Shell variables don't cross steps: GITHUB_ENV only surfaces in the
+        # *next* step, so the file write below keys off the local SIZE, while
+        # APP_SIZE_MB (for the ratchet step) is exported as usual.
+        SIZE="none"
         if [ -d "$APP" ]; then
           SIZE=$(du -sk "$APP" | awk '{printf "%.1f", $1/1024}')
-          echo "APP_SIZE_MB=${SIZE}" >> "$GITHUB_ENV"
           echo "Pulse.app (Release, with extensions): ${SIZE} MB"
         else
           echo "::warning::Pulse.app not found at $APP — skipping size ratchet"
-          echo "APP_SIZE_MB=none" >> "$GITHUB_ENV"
         fi
-        if [ "${APP_SIZE_MB:-none}" != "none" ]; then
+        echo "APP_SIZE_MB=${SIZE}" >> "$GITHUB_ENV"
+        if [ "$SIZE" != "none" ]; then
           mkdir -p app-size-value
-          echo "${APP_SIZE_MB}" > app-size-value/app-size.txt
+          echo "$SIZE" > app-size-value/app-size.txt
         fi
 
     # Baseline = app size from the most recent successful master run. Missing
@@ -1469,7 +1472,9 @@ jobs:
           BUNDLE=$(find coverage-xcresult -maxdepth 2 -name '*.xcresult' -type d 2>/dev/null | head -1)
         fi
         TEST_COUNT="none"
-        if [ -n "$BUNDLE" ] && python3 scripts/extract-test-count.py "$BUNDLE" > test-count.txt 2>/dev/null; then
+        # No 2>/dev/null: the script's ::warning:: diagnostics go to stderr so a
+        # failed parse is visible in the log (stdout alone carries the count).
+        if [ -n "$BUNDLE" ] && python3 scripts/extract-test-count.py "$BUNDLE" > test-count.txt; then
           TEST_COUNT=$(tr -d '[:space:]' < test-count.txt)
         fi
         echo "Unit-suite test count: ${TEST_COUNT}"

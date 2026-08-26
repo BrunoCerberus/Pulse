@@ -7,8 +7,9 @@ accumulate in the repo (each re-uploaded by the CI recorded-snapshots
 artifact, and a stale reference is exactly what makes a future re-record
 session look like it "repaired" nothing). This check closes the loop:
 
-  - for every class directory inside a ``__Snapshots__`` tree, the class must
-    still be declared (``class <Name>``) in the sources;
+  - for every test-type directory inside a ``__Snapshots__`` tree, that type
+    (an XCTest ``class`` or a Swift Testing ``@Suite struct``) must still be
+    declared in the sources;
   - for every reference file, the stem (after stripping the ``.N`` ordinal)
     must resolve to a ``func <name>(`` declared in that class's source file(s)
     — directly, via a ``-``-separated device/identifier segment, or as a
@@ -39,8 +40,12 @@ from pathlib import Path
 
 # ".claude" holds git worktree checkouts of this same repo — their copies of
 # __Snapshots__ are untracked and would double every finding.
-SKIP_DIRS = {"DerivedData", ".build", "git", ".claude"}
-CLASS_RE = re.compile(r"\b(?:final\s+)?class\s+(\w+)\b")
+SKIP_DIRS = {"DerivedData", ".build", ".git", ".claude"}
+# Snapshot test types: an XCTest ``class``/``final class`` or a Swift Testing
+# ``@Suite struct`` (the attribute sits on the prior line; only the declaration
+# keyword is matched). A struct suite that matched no declaration would read as
+# a dead class and its live references would be flagged for deletion.
+TYPE_RE = re.compile(r"\b(?:final\s+)?(?:class|struct)\s+(\w+)\b")
 METHOD_RE = re.compile(r"\bfunc\s+(\w+)\s*\(")
 ORDINAL_RE = re.compile(r"\.\d+$")
 # SnapshotTesting's `testName:` overrides the recorded name; an interpolated
@@ -70,7 +75,7 @@ class Index:
     name templates over the tree."""
 
     def __init__(self, root: Path):
-        self.class_files: dict[str, list[Path]] = {}
+        self.type_files: dict[str, list[Path]] = {}
         self.file_methods: dict[Path, set[str]] = {}
         self.file_templates: dict[Path, list[tuple[str, str]]] = {}
         for swift in root.rglob("*.swift"):
@@ -82,11 +87,11 @@ class Index:
                 continue
             self.file_methods[swift] = set(METHOD_RE.findall(text))
             self.file_templates[swift] = dynamic_name_templates(text)
-            for name in CLASS_RE.findall(text):
-                self.class_files.setdefault(name, []).append(swift)
+            for name in TYPE_RE.findall(text):
+                self.type_files.setdefault(name, []).append(swift)
 
-    def methods(self, class_name: str) -> set[str] | None:
-        files = self.class_files.get(class_name)
+    def methods(self, type_name: str) -> set[str] | None:
+        files = self.type_files.get(type_name)
         if not files:
             return None
         methods: set[str] = set()
@@ -94,8 +99,8 @@ class Index:
             methods |= self.file_methods.get(swift, set())
         return methods
 
-    def templates(self, class_name: str) -> list[tuple[str, str]]:
-        files = self.class_files.get(class_name)
+    def templates(self, type_name: str) -> list[tuple[str, str]]:
+        files = self.type_files.get(type_name)
         if not files:
             return []
         templates: list[tuple[str, str]] = []
@@ -172,7 +177,9 @@ def self_test() -> int:
         live_dir = root / "T" / "__Snapshots__" / "LiveTests"
         renamed_dir = root / "T" / "__Snapshots__" / "RenamedTests"
         dead_dir = root / "T" / "__Snapshots__" / "DeletedTests"
-        for d in (live_dir, renamed_dir, dead_dir):
+        struct_live_dir = root / "T" / "__Snapshots__" / "StructLiveTests"
+        struct_dead_dir = root / "T" / "__Snapshots__" / "StructDeletedTests"
+        for d in (live_dir, renamed_dir, dead_dir, struct_live_dir, struct_dead_dir):
             d.mkdir(parents=True)
         # testOldName was renamed to testRenamed — its old reference is an orphan.
         (root / "T" / "LiveTests.swift").write_text(
@@ -188,9 +195,18 @@ def self_test() -> int:
             "    func testNewName() {}\n"
             "}\n"
         )
+        # A Swift Testing suite is a struct, not a class — its live reference
+        # must not read as a dead class.
+        (root / "T" / "StructLiveTests.swift").write_text(
+            "@Suite\n"
+            "struct StructLiveTests {\n"
+            "    @Test\n"
+            "    func testLiveStruct() {}\n"
+            "}\n"
+        )
         # live method, identifier suffix, renamed-method orphan (x2),
         # dynamic testName suffix (live), rename that would mask via prefix (orphan),
-        # dead-class orphan
+        # dead-class orphan, live struct ref (not an orphan), dead-struct orphan
         (live_dir / "testLive.1.png").write_bytes(b"x")
         (live_dir / "testLive-dark.1.png").write_bytes(b"x")
         (live_dir / "testOldName.2.png").write_bytes(b"x")
@@ -198,6 +214,8 @@ def self_test() -> int:
         (live_dir / "testDynamicallyRenamed.1.png").write_bytes(b"x")
         (renamed_dir / "testOldName.1.png").write_bytes(b"x")
         (dead_dir / "testGone.1.png").write_bytes(b"x")
+        (struct_live_dir / "testLiveStruct.1.png").write_bytes(b"x")
+        (struct_dead_dir / "testStructGone.1.png").write_bytes(b"x")
 
         found = {str(ref.relative_to(root)): dead for ref, dead in find_orphans(root)}
         expected = {
@@ -205,6 +223,7 @@ def self_test() -> int:
             "T/__Snapshots__/LiveTests/testDynamicallyRenamed.1.png": False,
             "T/__Snapshots__/RenamedTests/testOldName.1.png": False,
             "T/__Snapshots__/DeletedTests/testGone.1.png": True,
+            "T/__Snapshots__/StructDeletedTests/testStructGone.1.png": True,
         }
         ok = True
         for rel, dead in found.items():

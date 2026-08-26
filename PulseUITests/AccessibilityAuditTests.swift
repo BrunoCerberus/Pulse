@@ -12,8 +12,17 @@ import XCTest
 /// so it doesn't block CI.
 @MainActor
 final class AccessibilityAuditTests: BaseUITestCase {
-    /// Common audit handler that filters out system component issues we don't control
-    private func auditIssueHandler(_ issue: XCUIAccessibilityAuditIssue) -> Bool {
+    /// Common audit handler that filters out system component issues we don't control.
+    ///
+    /// `exemptPlaybackProgress` additionally exempts the audio player's progress
+    /// row (known a11y debt, note below). The debt is media-detail-specific, so
+    /// only the media-detail audit opts in — leaving it in the shared handler
+    /// would silently exempt a same-labelled element on every audited screen
+    /// (the playback surface is app-lifetime).
+    private func auditIssueHandler(
+        _ issue: XCUIAccessibilityAuditIssue,
+        exemptPlaybackProgress: Bool,
+    ) -> Bool {
         let description = issue.debugDescription
         if description.contains("UITabBar") || description.contains("UINavigationBar")
             || description.contains("partially unsupported")
@@ -33,7 +42,8 @@ final class AccessibilityAuditTests: BaseUITestCase {
         // locale-stable.
         // `element` is `XCUIElement?` in the SDK CI builds with (Xcode 26.5)
         // and non-optional in newer ones; optional chaining is valid in both.
-        if description.contains("Hit area is too small"),
+        if exemptPlaybackProgress,
+            description.contains("Hit area is too small"),
             issue.element?.label == "Playback progress" {
             return true
         }
@@ -49,9 +59,13 @@ final class AccessibilityAuditTests: BaseUITestCase {
     /// into `XCTSkip`. The audit can time out on shared CI runners while traversing
     /// the accessibility hierarchy — that's a CI environment issue, not an
     /// accessibility regression, so we skip rather than fail the PR.
-    private func performAccessibilityAuditSkippingTimeouts() throws {
+    private func performAccessibilityAuditSkippingTimeouts(
+        exemptPlaybackProgress: Bool = false,
+    ) throws {
         do {
-            try app.performAccessibilityAudit(for: auditTypes, auditIssueHandler)
+            try app.performAccessibilityAudit(for: auditTypes) { issue in
+                self.auditIssueHandler(issue, exemptPlaybackProgress: exemptPlaybackProgress)
+            }
         } catch {
             let nsError = error as NSError
             let isAuditTimeout = nsError.domain == "com.apple.xcode.xctest.accessibilityAudit"
@@ -205,7 +219,9 @@ final class AccessibilityAuditTests: BaseUITestCase {
         wait(for: 3.0)
         try ensureAppRunning()
 
-        try performAccessibilityAuditSkippingTimeouts()
+        // The audio player's 12pt progress row is known hit-region debt (see
+        // `auditIssueHandler`); exempt it only here, not across every audit.
+        try performAccessibilityAuditSkippingTimeouts(exemptPlaybackProgress: true)
     }
 
     // MARK: - Reading History
@@ -226,7 +242,7 @@ final class AccessibilityAuditTests: BaseUITestCase {
             throw XCTSkip("Reading History row not found in Settings.")
         }
         let row = findSettingsRow("Reading History")
-        row?.tap()
+        if let row { safeTap(row) }
         guard safeWaitForExistence(app.navigationBars["Reading History"], timeout: Self.defaultTimeout) else {
             throw XCTSkip("Reading History screen did not appear.")
         }
@@ -254,7 +270,7 @@ final class AccessibilityAuditTests: BaseUITestCase {
             throw XCTSkip("For You row not found in Settings.")
         }
         let row = findSettingsRow("For You")
-        row?.tap()
+        if let row { safeTap(row) }
         // Navigation title is the localized "Personalization"
         // (for_you_settings.title).
         guard safeWaitForExistence(app.navigationBars["Personalization"], timeout: Self.defaultTimeout) else {
@@ -306,12 +322,13 @@ final class AccessibilityAuditTests: BaseUITestCase {
     }
 
     /// Settings renders as a table (List → UITableView); prefer it as the scroll
-    /// container, falling back to the generic scroll view.
+    /// container, falling back to the generic scroll view, then the app. Existence
+    /// checks go through `safeExists` so a snapshot timeout can't SIGABRT the runner.
     private func settingsScrollContainer() -> XCUIElement {
         let table = app.tables.firstMatch
-        if table.exists { return table }
+        if safeExists(table) { return table }
         let scrollView = app.scrollViews.firstMatch
-        if scrollView.exists { return scrollView }
+        if safeExists(scrollView) { return scrollView }
         return app
     }
 
@@ -328,13 +345,16 @@ final class AccessibilityAuditTests: BaseUITestCase {
         return nil
     }
 
-    /// Swipes the settings list until the row titled `title` is on screen.
+    /// Scrolls the settings list until the row titled `title` is on screen.
+    /// Uses a coordinate-based drag (`safeSwipeUp`) rather than `container.swipeUp()`:
+    /// the container falls back to the whole app, and `app`-level XCTest gestures
+    /// evaluate the full accessibility tree, which can hang for 30+ minutes.
     @discardableResult
     private func scrollToSettingsRow(_ title: String, maxSwipes: Int = 10) -> Bool {
         if findSettingsRow(title) != nil { return true }
         let container = settingsScrollContainer()
         for _ in 0 ..< maxSwipes {
-            container.swipeUp()
+            safeSwipeUp(container)
             wait(for: 0.3)
             if findSettingsRow(title) != nil { return true }
         }

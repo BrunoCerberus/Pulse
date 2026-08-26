@@ -47,6 +47,13 @@ NS_ASSUME_NONNULL_BEGIN
 /// when the accessibility framework is degraded. Coordinate-based gestures bypass this.
 + (void)safeSwipeLeftEdge:(XCUIApplication *)app;
 
+/// Scrolls `element` up via a coordinate-based drag (lower-middle to upper-middle),
+/// catching any C++ exception. Use this instead of element.swipeUp(): the XCTest
+/// gesture evaluates the accessibility tree to resolve endpoints and can hang for
+/// 30+ minutes when the framework is degraded — especially when `element` is the
+/// whole app. Coordinate-based drags bypass tree evaluation.
++ (void)safeSwipeUpInElement:(XCUIElement *)element;
+
 @end
 
 NS_ASSUME_NONNULL_END

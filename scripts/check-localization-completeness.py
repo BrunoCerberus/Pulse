@@ -27,7 +27,7 @@ import sys
 from pathlib import Path
 
 BASE_LANG = "en"
-SKIP_DIRS = {"DerivedData", ".build", "git"}
+SKIP_DIRS = {"DerivedData", ".build", ".git", ".claude"}
 # `"key" = "value";` on one line, honoring backslash escapes in both halves.
 ENTRY_RE = re.compile(r'^\s*"((?:[^"\\]|\\.)*)"\s*=\s*"((?:[^"\\]|\\.)*)"\s*;\s*(?://.*)?$')
 # printf-style specifiers, including %@ (objects) and positional ones like %1$d.

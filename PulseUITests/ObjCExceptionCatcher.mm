@@ -107,4 +107,18 @@
     }
 }
 
++ (void)safeSwipeUpInElement:(XCUIElement *)element {
+    // Coordinate-based drag up the middle of the element to scroll it. Unlike
+    // element.swipeUp(), this does NOT evaluate the accessibility tree to resolve
+    // gesture endpoints, so it cannot hang when the framework is degraded on
+    // Xcode 26 (the exact failure mode app-level gestures trigger).
+    @try {
+        XCUICoordinate *start = [element coordinateWithNormalizedOffset:CGVectorMake(0.5, 0.75)];
+        XCUICoordinate *end = [element coordinateWithNormalizedOffset:CGVectorMake(0.5, 0.25)];
+        [start pressForDuration:0 thenDragToCoordinate:end];
+    } @catch (...) {
+        // Scroll gesture failed due to C++ exception — skip this swipe
+    }
+}
+
 @end

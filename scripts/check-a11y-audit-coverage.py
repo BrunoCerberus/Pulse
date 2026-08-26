@@ -9,8 +9,8 @@ canonical screen list:
 
   - every case of ``AppTab`` (Coordinator.swift) and ``Page`` (Page.swift)
     is a reachable main screen and must be covered by an audit method whose
-    name contains the case name's camelCase words (so ``readingHistory`` is
-    covered by ``testReadingHistory`` or ``testReadingHistoryWithContent``);
+    name *begins with* the case name's camelCase words (so ``readingHistory``
+    is covered by ``testReadingHistory`` or ``testReadingHistoryWithContent``);
   - a case whose doc comment carries ``a11y-audit:exclude`` is skipped — the
     escape valve for genuinely transient pages (confirmations, alerts).
 
@@ -26,7 +26,7 @@ import re
 import sys
 from pathlib import Path
 
-SKIP_DIRS = {"DerivedData", ".build", "git", ".claude"}
+SKIP_DIRS = {"DerivedData", ".build", ".git", ".claude"}
 
 APP_TAB_FILE = "Pulse/Configs/Navigation/Coordinator.swift"
 PAGE_FILE = "Pulse/Configs/Navigation/Page.swift"
@@ -93,12 +93,19 @@ def enum_cases(root: Path, rel: str, enum_name: str) -> list[str] | None:
         depth += stripped.count("{") - stripped.count("}")
         if depth <= 0:
             break
-        case = re.match(r"case\s+(\w+)", stripped)
-        if case:
+        case_match = re.match(r"case\s+(.+)$", stripped)
+        if case_match:
             if EXCLUDE_MARKER in last_comment:
                 last_comment = ""
                 continue
-            cases.append(case.group(1))
+            # A single `case` line can declare several cases (`case a, b, c`);
+            # capture each, dropping associated values (`(Int)`) and raw values
+            # (`= "x"`). Switch patterns (`case .foo`) are skipped: they start
+            # with a dot, so no leading identifier is captured.
+            for part in case_match.group(1).split(","):
+                ident = re.match(r"\s*([A-Za-z_]\w*)", part)
+                if ident:
+                    cases.append(ident.group(1))
             last_comment = ""
     return cases if in_body else None
 
@@ -110,9 +117,48 @@ def audit_methods(root: Path) -> list[str] | None:
     return re.findall(r"\bfunc\s+(test\w+)\s*\(", path.read_text())
 
 
-def is_covered(screen: str, methods: list[str]) -> bool:
-    words = camel_words(screen)
-    return any(all(w in camel_words(m) for w in words) for m in methods)
+def method_words(method: str) -> list[str]:
+    """Camel words of the method's *screen* name. The leading ``test`` is the
+    XCTest convention, not part of the screen, so strip it before splitting."""
+    name = method
+    if name.startswith("test"):
+        name = name[len("test"):]
+    return camel_words(name)
+
+
+def is_word_prefix(prefix: list[str], words: list[str]) -> bool:
+    if len(prefix) > len(words):
+        return False
+    return words[: len(prefix)] == prefix
+
+
+def longest_prefix_case(method: str, cases: list[str]) -> str | None:
+    """The case whose camel words form the longest prefix of the method's words.
+
+    Matching the full ordered word prefix (rather than an unordered subset)
+    stops a short screen like ``media`` from being satisfied by a longer
+    screen's audit (``mediaDetail``) — the subset rule over-matched on shared
+    leading words. ``testReadingHistoryWithContent`` still covers
+    ``readingHistory``: the case words lead the method, the rest is a suffix."""
+    best: str | None = None
+    best_len = -1
+    words = method_words(method)
+    for case in cases:
+        case_words = camel_words(case)
+        if is_word_prefix(case_words, words) and len(case_words) > best_len:
+            best = case
+            best_len = len(case_words)
+    return best
+
+
+def covered_cases(methods: list[str], cases: list[str]) -> set[str]:
+    """Every case that some audit method names as its longest word prefix."""
+    covered: set[str] = set()
+    for method in methods:
+        case = longest_prefix_case(method, cases)
+        if case is not None:
+            covered.add(case)
+    return covered
 
 
 def main() -> int:
@@ -136,11 +182,15 @@ def main() -> int:
 
     screens = [("AppTab", tabs or []), ("Page", pages or [])]
     total = sum(len(cases) for _name, cases in screens)
+    # Disambiguate across the *whole* case list (tabs + pages): one method names
+    # exactly one screen — its longest word-prefix case — so compute the covered
+    # set once rather than re-testing each case against every method.
+    covered = covered_cases(methods, (tabs or []) + (pages or []))
     covered_count = 0
     for source, cases in screens:
         print(f"\n== {source} ({len(cases)} cases) ==")
         for case in cases:
-            if is_covered(case, methods):
+            if case in covered:
                 covered_count += 1
                 print(f"  {case}: covered")
             else:

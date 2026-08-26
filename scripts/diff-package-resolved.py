@@ -13,7 +13,9 @@ carries `identity`, `location`, and `state` (`version` for tagged releases,
 tagged and its version cannot be known without fetching).
 
 Usage: diff-package-resolved.py <base-lock> <head-lock> [output.md]
-Exit codes: 0 = rendered (or no changes), 2 = a lockfile is unreadable.
+Exit codes: 0 = rendered (or no changes), 2 = the *head* lockfile is
+unreadable. An absent *base* lockfile (the PR adds it for the first time) is a
+warning, not a failure — the advisory job must not redden on a first lockfile.
 
 Writes `has_changes=true|false` to the file named by the GITHUB_OUTPUT
 environment variable when set, so the calling step can gate a PR comment.
@@ -50,8 +52,13 @@ def version_of(pin: dict) -> str:
     return state.get("branch") or "?"
 
 
-def short_location(location: str) -> str:
-    """https://github.com/firebase/firebase-ios-sdk.git -> firebase/firebase-ios-sdk"""
+def short_location(location: str | None) -> str:
+    """https://github.com/firebase/firebase-ios-sdk.git -> firebase/firebase-ios-sdk.
+
+    Pins without a resolvable location (fileSystem references, some v1 shapes)
+    render as ``?`` rather than raising a KeyError that would redden the job."""
+    if not location:
+        return "?"
     trimmed = location.rstrip("/")
     if trimmed.endswith(".git"):
         trimmed = trimmed[: -4]
@@ -69,25 +76,33 @@ def main() -> int:
     base_path, head_path = Path(sys.argv[1]), Path(sys.argv[2])
     output = Path(sys.argv[3]) if len(sys.argv) > 3 else None
 
-    base = load_pins(base_path)
     head = load_pins(head_path)
-    if base is None or head is None:
-        missing = base_path if base is None else head_path
-        print(f"::error file={missing}::Could not read Package.resolved")
+    if head is None:
+        print(f"::error file={head_path}::Could not read Package.resolved")
         return 2
+    base = load_pins(base_path)
+    if base is None:
+        # No base lockfile — e.g. this PR adds Package.resolved for the first
+        # time, so the base-branch fetch 404s. This is an advisory job, so list
+        # every dependency as an addition rather than failing red.
+        print(f"::warning file={base_path}::No base Package.resolved — listing all dependencies as new")
+        base = {}
 
     lines = ["## SPM dependency changes", ""]
     changes: list[tuple[str, str, str, str]] = []
     for identity in sorted(set(base) | set(head)):
         base_v = version_of(base[identity]) if identity in base else None
         head_v = version_of(head[identity]) if identity in head else None
-        location = (head.get(identity) or base.get(identity))["location"]
+        source_pin = head.get(identity) or base.get(identity)
+        # `.get` not `["location"]`: fileSystem and some v1 pins carry no
+        # location, and an unguarded subscript would raise and redden the job.
+        repo = short_location(source_pin.get("location") if source_pin else None)
         if base_v is None:
-            changes.append((identity, "+", short_location(location), f"— → {head_v}"))
+            changes.append((identity, "+", repo, f"— → {head_v}"))
         elif head_v is None:
-            changes.append((identity, "−", short_location(location), f"{base_v} → —"))
+            changes.append((identity, "−", repo, f"{base_v} → —"))
         elif base_v != head_v:
-            changes.append((identity, "~", short_location(location), f"{base_v} → {head_v}"))
+            changes.append((identity, "~", repo, f"{base_v} → {head_v}"))
 
     if not changes:
         lines.append("No dependency version changes in this PR.")
