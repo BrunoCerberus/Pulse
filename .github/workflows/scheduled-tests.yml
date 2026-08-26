@@ -209,16 +209,27 @@ jobs:
             scheme: PulseDev
             artifact-name: scheduled-unit-test-results
             timeout: 60
+            slow-threshold: 30
           - test-target: PulseUITests
             test-name: UI Tests
             scheme: PulseDev
             artifact-name: scheduled-ui-test-results
             timeout: 180
+            slow-threshold: 120
           - test-target: PulseSnapshotTests
             test-name: Snapshot Tests
             scheme: PulseSnapshotTests
             artifact-name: scheduled-snapshot-test-results
             timeout: 60
+            slow-threshold: 30
+          # Widget tests were never run in CI at all — this leg gives the
+          # nightly the first full-suite signal for widget code.
+          - test-target: PulseWidgetExtensionTests
+            test-name: Widget Tests
+            scheme: PulseDev
+            artifact-name: scheduled-widget-test-results
+            timeout: 30
+            slow-threshold: 30
 
     steps:
     - name: Checkout code
@@ -248,10 +259,19 @@ jobs:
         mkdir -p test-results
         set -o pipefail
 
+        # One -only-testing flag per target: a single comma-joined value is
+        # treated as one (nonexistent) target name, and xcodebuild then exits
+        # 0 after running zero tests — a silent no-op.
+        ONLY_TESTING_ARGS=()
+        IFS=',' read -r -a TEST_TARGETS <<< "$TEST_TARGET"
+        for TEST_TARGET_NAME in "${TEST_TARGETS[@]}"; do
+          ONLY_TESTING_ARGS+=("-only-testing:$TEST_TARGET_NAME")
+        done
+
         xcodebuild test-without-building \
           -project Pulse.xcodeproj \
           -scheme "$SCHEME" \
-          -only-testing:"$TEST_TARGET" \
+          "${ONLY_TESTING_ARGS[@]}" \
           -destination 'platform=iOS Simulator,name=iPhone Air,OS=latest' \
           -derivedDataPath ./DerivedData \
           -resultBundlePath "test-results/${ARTIFACT_NAME}.xcresult" \
@@ -293,6 +313,25 @@ jobs:
       with:
         name: flaky-${{ matrix.test-target }}
         path: flaky-${{ matrix.test-target }}.json
+        if-no-files-found: ignore
+
+    # Advisory counterpart to flake detection: per-test durations for the
+    # slowest tests, so suite wall-clock drift is triage-able. Never fails.
+    - name: Detect slow tests
+      if: success()
+      run: python3 scripts/detect-slow-tests.py
+      env:
+        RESULT_BUNDLE: test-results/${{ matrix.artifact-name }}.xcresult
+        TEST_NAME: ${{ matrix.test-name }}
+        SLOW_JSON: slow-${{ matrix.test-target }}.json
+        SLOW_THRESHOLD: ${{ matrix.slow-threshold }}
+
+    - name: Upload slow test report
+      uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
+      if: success()
+      with:
+        name: slow-${{ matrix.test-target }}
+        path: slow-${{ matrix.test-target }}.json
         if-no-files-found: ignore
 
     - name: Upload test results
@@ -377,6 +416,25 @@ jobs:
     - name: Append flaky report to job summary
       if: steps.flaky.outputs.has_flakes == 'true'
       run: cat flaky-report.md >> "$GITHUB_STEP_SUMMARY"
+
+    - name: Download slow test reports
+      uses: actions/download-artifact@3e5f45b2cfb9172054b4087a40e8e0b5a5461e7c # v8.0.1
+      continue-on-error: true
+      with:
+        pattern: slow-*
+        merge-multiple: true
+        path: slow-reports
+
+    - name: Render slow test report
+      id: slow
+      env:
+        SLOW_DIR: slow-reports
+        OUTPUT: slow-report.md
+      run: python3 scripts/render-slow-report.py
+
+    - name: Append slow test report to job summary
+      if: steps.slow.outputs.has_slow == 'true'
+      run: cat slow-report.md >> "$GITHUB_STEP_SUMMARY"
 
     - name: Check test job results
       id: check-results

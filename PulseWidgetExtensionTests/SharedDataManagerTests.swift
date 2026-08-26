@@ -1,8 +1,22 @@
 import Foundation
 import Testing
 
-@Suite("SharedDataManager Tests")
+// .serialized: the tests below share one mutable external resource (the App
+// Group UserDefaults store). Swift Testing runs @Test functions concurrently
+// by default, and the per-instance init() cleanup only guarantees a clean
+// store at construction — concurrent tests would still interleave reads and
+// writes on the same key.
+@Suite("SharedDataManager Tests", .serialized)
 struct SharedDataManagerTests {
+    // SharedDataManager persists to the App Group UserDefaults container, which
+    // survives across tests and test runs. Start each test from a clean store or
+    // state written by an earlier test/run poisons the next one.
+    init() {
+        let manager = SharedDataManager()
+        UserDefaults(suiteName: manager.appGroupIdentifier)?
+            .removeObject(forKey: manager.articlesKey)
+    }
+
     @Test("shared returns singleton")
     func sharedReturnsSingleton() {
         let manager1 = SharedDataManager.shared

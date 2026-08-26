@@ -391,11 +391,22 @@ class BaseUITestCase: XCTestCase {
         ObjCExceptionCatcher.safeTap(element)
     }
 
+    /// Scrolls an element up via a coordinate-based drag (ObjC++ @try/@catch).
+    /// Use instead of `element.swipeUp()`, whose tree-evaluated endpoints can hang
+    /// for 30+ minutes on a degraded Xcode 26 accessibility framework.
+    func safeSwipeUp(_ element: XCUIElement) {
+        ObjCExceptionCatcher.safeSwipeUp(in: element)
+    }
+
     /// Reads `element.label` via ObjC++ @try/@catch. Returns "" if the underlying
     /// accessibility snapshot times out (which would otherwise throw an uncaught
-    /// C++ exception and SIGABRT the runner).
-    func safeLabel(_ element: XCUIElement) -> String {
-        ObjCExceptionCatcher.safeLabel(for: element)
+    /// C++ exception and SIGABRT the runner). Takes an optional because the audit
+    /// API's `issue.element` is `XCUIElement?` in the SDK CI builds with (Xcode
+    /// 26.5) but non-optional in newer ones, and a nil element also reads as "" —
+    /// so a single method serves both without an ObjC selector conflict.
+    func safeLabel(_ element: XCUIElement?) -> String {
+        guard let element else { return "" }
+        return ObjCExceptionCatcher.safeLabel(for: element)
     }
 
     /// Reads `element.identifier` via ObjC++ @try/@catch. Returns "" on snapshot timeout.
