@@ -127,11 +127,15 @@ def _contexts_from_rule(rule: object) -> list[str]:
 def load_raw_rules(path: Path) -> list[str] | None:
     """Extract required-check contexts from a raw ``rules/branches`` response.
 
-    ``gh api ... --paginate`` writes one JSON document per page, so the file is
-    a sequence of top-level arrays; every document is parsed and its
-    rule objects scanned. Any document that fails to parse, or that is not a
-    list of objects, returns None (fail closed): a partially-read response must
-    not masquerade as a complete rule set."""
+    The file is the raw output of ``gh api ... --paginate``. For array
+    responses, current gh merges the pages into a single top-level array
+    (verified against a genuinely paginated response: ``per_page=2`` over six
+    rules produced one 6-element document); the parser accepts any file of one
+    top-level JSON document per line and scans its rule objects. Any line that
+    fails to parse, or that is not a list of objects, returns None (fail
+    closed): if gh's pagination format ever changes to bare page concatenation
+    (``][`` with no separator) the check exits 2 loudly rather than silently
+    under-reporting the rule set."""
     try:
         with open(path, encoding="utf-8") as handle:
             text = handle.read()

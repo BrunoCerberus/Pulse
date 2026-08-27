@@ -5,6 +5,20 @@ on:
     # Run daily at 2 AM UTC
     - cron: '0 2 * * *'
   workflow_dispatch: # Allow manual triggering
+    inputs:
+      rebaseline:
+        description: >-
+          Re-anchor the duration baseline — run on master while the tests
+          pass. Skips the ratchet comparison so the run stays green; its
+          suite-duration uploads then become the next baseline. Use after a
+          legitimate permanent slowdown (new slow suite, runner change) has
+          left the nightly red.
+        required: false
+        default: "false"
+        type: choice
+        options:
+          - "false"
+          - "true"
 
 concurrency:
   group: ${{ github.workflow }}-${{ github.ref }}
@@ -563,6 +577,15 @@ jobs:
   # baseline is a pass, never a fabricated zero) with a looser per-suite 15%
   # tolerance: shared macOS runners vary far more run-to-run than app size.
   #
+  # The baseline has one asymmetry the PR ratchets in ci.yml don't: a red PR
+  # never merges, so a master baseline only advances past a change that passed
+  # the gate. The nightly has no merge — a legitimate permanent slowdown
+  # (a slow new suite, a runner-image change) fails this job, the run goes
+  # red, and the success-only walk-back keeps re-reading the pre-slowdown
+  # baseline, so the nightly stays red with no self-heal. The escape is the
+  # `rebaseline` dispatch input above: a green dispatch on master skips the
+  # comparison, and its uploads become the new baseline for the next nightly.
+  #
   # Advisory by necessity: notify-failure keys off `test-results` only, so a
   # duration regression makes the run red (visible in the Actions list) without
   # opening a tracking issue — the same posture as the dead-code job.
@@ -620,7 +643,16 @@ jobs:
         fi
 
     - name: Enforce CI duration ratchet
+      env:
+        REBASELINE: ${{ inputs.rebaseline }}
       run: |
+        # Re-baseline dispatch: no comparison. The run stays green, and the
+        # next nightly's success-only walk-back finds it first — its
+        # suite-duration uploads are the new baseline.
+        if [ "$REBASELINE" = "true" ]; then
+          echo "Re-baseline run: comparison skipped; the uploaded durations re-anchor the baseline."
+          exit 0
+        fi
         # Self-test first: a green nightly only proves this run was fast, never
         # that a regression would be caught.
         echo "Running duration-ratchet self-test..."
