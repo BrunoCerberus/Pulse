@@ -37,8 +37,10 @@ Direction matters, deliberately:
     verify must not report "all good" (fail-closed: an empty union means the
     ruleset was deleted or the fetch broke, and both are worth a red run).
 
-A missing-context failure also writes ``ruleset-drift-report.md`` in the
-current directory; the workflow uses it as the tracking-issue body.
+Every completed run writes ``ruleset-drift-report.md`` in the current
+directory, passes included (the workflow reads it when the job is red, and a
+warnings-only verdict is the most useful one to keep); the file is gitignored
+so local runs leave no untracked artifact.
 
 ``--self-test`` exercises all four classifications (match / missing / extra /
 empty) against synthetic inputs, because a green tree only proves the lists

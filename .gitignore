@@ -80,6 +80,7 @@ buildServer.json
 .claude/scheduled_tasks.lock
 .swift-version
 ci-pr-report-*.md
+ruleset-drift-report.md
 
 # Python bytecode from the CI reporting scripts in scripts/
 __pycache__/
