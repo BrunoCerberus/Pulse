@@ -38,11 +38,15 @@ jobs:
     runs-on: ubuntu-latest
     timeout-minutes: 10
 
-    # The rules API read needs a permission the `permissions` key cannot grant
-    # by name (metadata/administration are not in the assignable GITHUB_TOKEN
-    # list) — the probe workflow (tmp-rules-permission-probe.yml) is
-    # determining which token source works; until then this job keeps its
-    # current grants.
+    # `contents: read` is sufficient for the rules API: both rules/branches and
+    # rulesets reads work with a read-only GITHUB_TOKEN (verified in CI with a
+    # throwaway probe workflow — the fine-grained-PAT docs classify those reads
+    # under the unassignable "metadata" permission, which is not what GitHub
+    # actually enforces for app tokens). Do NOT "fix" this to administration:
+    # the legacy branch-protection endpoints are the ones that need it (they
+    # 403 even under read-all), and they are useless here anyway — master is
+    # protected by a ruleset, so the legacy endpoints report "Branch not
+    # protected".
     permissions:
       contents: read
       issues: write
