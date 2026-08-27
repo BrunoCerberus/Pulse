@@ -64,8 +64,10 @@ jobs:
 
     # Each build leg records its wall clock for the CI Duration Ratchet job
     # below: the build is the single largest cost in the nightly, so it gets
-    # ratcheted too. The exit code is captured and re-exited, so a failed
-    # build still fails the step exactly as before.
+    # ratcheted too. The `run:` shell is `set -e`, so a failed or timed-out
+    # build exits the step before the duration is written — only successful
+    # builds measure (the ratchet wants green-run drift; a failed leg is a
+    # missing leg, and the red build is visible in the run anyway).
     - name: Build for testing (PulseDev)
       run: |
         echo "Building PulseDev scheme for testing..."
@@ -76,11 +78,9 @@ jobs:
           -destination 'platform=iOS Simulator,name=iPhone Air,OS=latest' \
           -derivedDataPath ./DerivedData \
           -skipMacroValidation
-        BUILD_EXIT=$?
         SECS=$(( $(date +%s) - START_TS ))
         printf '{"suite":"build-PulseDev","seconds":%s}\n' "$SECS" > duration-build-PulseDev.json
         echo "PulseDev build took $(( SECS / 60 ))m$(( SECS % 60 ))s"
-        exit $BUILD_EXIT
 
     - name: Build for testing (PulseSnapshotTests)
       run: |
@@ -92,11 +92,9 @@ jobs:
           -destination 'platform=iOS Simulator,name=iPhone Air,OS=latest' \
           -derivedDataPath ./DerivedData \
           -skipMacroValidation
-        BUILD_EXIT=$?
         SECS=$(( $(date +%s) - START_TS ))
         printf '{"suite":"build-PulseSnapshotTests","seconds":%s}\n' "$SECS" > duration-build-PulseSnapshotTests.json
         echo "PulseSnapshotTests build took $(( SECS / 60 ))m$(( SECS % 60 ))s"
-        exit $BUILD_EXIT
 
     # Only Build/Products is uploaded — that's all test-without-building needs
     # (the .xctestrun files and app/test bundles live there); the rest of
@@ -316,13 +314,14 @@ jobs:
           -retry-tests-on-failure \
           2>&1 | tee /tmp/test_output.log
 
-        TEST_EXIT_CODE=${PIPESTATUS[0]}
-
-        # Wall clock for the CI Duration Ratchet job — recorded before the exit
-        # so a FAILED suite still measures (its duration is what we want to see
-        # drift on, not just the green runs).
+        # Wall clock for the CI Duration Ratchet job. The `run:` shell is
+        # `set -e` + `pipefail`, so a failed or timed-out suite exits the step
+        # at the pipeline above and uploads nothing — only green legs measure,
+        # and a missing leg is reported as such, never a regression. The file
+        # name carries the leg: every artifact is unpacked into one directory
+        # by `--merge-multiple`, and identical names would overwrite each other.
         SECS=$(( $(date +%s) - START_TS ))
-        printf '{"suite":"%s","seconds":%s}\n' "$TEST_TARGET" "$SECS" > suite-duration.json
+        printf '{"suite":"%s","seconds":%s}\n' "$TEST_TARGET" "$SECS" > "suite-duration-${TEST_TARGET}.json"
         echo "$TEST_NAME wall clock: $(( SECS / 60 ))m$(( SECS % 60 ))s"
 
         echo ""
@@ -330,8 +329,6 @@ jobs:
         echo "              TEST SUMMARY"
         echo "============================================"
         grep -E "(Test Suite.*started|Test Suite.*passed|Test Suite.*failed|Executed [0-9]+ test)" /tmp/test_output.log | tail -10 || echo "$TEST_NAME completed"
-
-        exit $TEST_EXIT_CODE
 
     - name: Extract and display test failures
       if: failure()
@@ -394,7 +391,7 @@ jobs:
       if: always()
       with:
         name: suite-duration-${{ matrix.test-target }}
-        path: suite-duration.json
+        path: "suite-duration-${{ matrix.test-target }}.json"
         if-no-files-found: ignore
         retention-days: 30
 
@@ -499,9 +496,9 @@ jobs:
         echo "Tests job result: $TEST_RESULT"
 
         if [ "$TEST_RESULT" == "success" ]; then
-          echo "status=success" >> $GITHUB_OUTPUT
+          echo "status=success" >> "$GITHUB_OUTPUT"
         else
-          echo "status=failure" >> $GITHUB_OUTPUT
+          echo "status=failure" >> "$GITHUB_OUTPUT"
         fi
 
     - name: Display Test Results Summary

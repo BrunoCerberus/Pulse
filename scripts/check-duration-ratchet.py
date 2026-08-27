@@ -78,7 +78,6 @@ def check(current: dict[str, float], baseline: dict[str, float] | None, toleranc
     all_suites = sorted(set(current) | set(baseline or {}))
     rows: list[str] = []
     regressions: list[str] = []
-    notes: list[str] = []
 
     for suite in all_suites:
         cur = current.get(suite)

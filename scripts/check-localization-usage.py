@@ -45,14 +45,18 @@ BASE_LANG = "en"
 SKIP_DIRS = {"DerivedData", ".build", ".git"}
 
 # Which top-level target directory owns which runtime bundle (and thus which
-# catalog a key must exist in). Test targets host or attach to the app, so
-# they resolve against the app's main bundle.
+# catalog a key must exist in). Test targets attach to the app and resolve
+# against its catalog; the widget's unit tests compile the widget's own sources
+# (project.yml), so they resolve against the widget's catalog — without an
+# entry, files under the directory are silently skipped by scan() instead of
+# checked.
 TARGET_CATALOG: dict[str, str | None] = {
     "Pulse": "Pulse",
     "PulseTests": "Pulse",
     "PulseUITests": "Pulse",
     "PulseSnapshotTests": "Pulse",
     "PulseWidgetExtension": "PulseWidgetExtension",
+    "PulseWidgetExtensionTests": "PulseWidgetExtension",
     "PulseShareExtension": None,
 }
 
@@ -336,6 +340,14 @@ def self_test() -> int:
             "PulseWidgetExtension/Widget.swift",
             'let w = String(localized: "widget.title")\n',
         )
+        # The widget's unit tests resolve the same way: a key in the widget
+        # catalog passes, a key missing from it must be reported (this directory
+        # is a real target dir — a missing TARGET_CATALOG entry would skip it).
+        write(
+            "PulseWidgetExtensionTests/WidgetTests.swift",
+            'let w1 = String(localized: "widget.title")\n'
+            'let w2 = String(localized: "never.added.widgettest.key")\n',
+        )
 
         # Fails: missing from every catalog.
         write(
@@ -368,6 +380,8 @@ def self_test() -> int:
         expect("PulseShareExtension/Share.swift" in text, "no-catalog target not reported")
         expect("PulseTests/Host.swift" not in text, "test-host key (app catalog) flagged")
         expect("PulseWidgetExtension/Widget.swift" not in text, "own-bundle key flagged")
+        expect("widget.title" not in text, "widget-tests key valid in the widget catalog flagged")
+        expect("never.added.widgettest.key" in text, "missing key in the widget's test target not reported")
         expect("Pulse/InstanceCaller.swift" not in text, "lowercase instance receiver with valid keys flagged")
         expect("Pulse/InstanceBad.swift" in text, "missing key via lowercase instance receiver not reported")
         # The multi-line literal's content is blanked: its example key must not
