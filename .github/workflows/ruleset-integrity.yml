@@ -1,0 +1,150 @@
+name: Ruleset Integrity
+
+# The merge model rests on ~20 required status checks in the master ruleset —
+# the privacy conformance jobs, the test suites, the ratchets, CodeQL, the
+# Claude reviews, the style gates. Nothing else observes that ruleset: if a
+# required check is removed or renamed (a ruleset edited in the UI, a rewrite,
+# a GitHub migration), the gate silently stops blocking and no workflow goes
+# red — a missing required check is absent, not failing. Scorecard's generic
+# "Branch-Protection" heuristic does not pin specific contexts, so it can't
+# catch this either.
+#
+# This job diffs the live ruleset's required-check contexts (committed expected
+# list in .github/required-checks.json) and fails on drift, opening a tracking
+# issue. Direction is asymmetric on purpose: a MISSING expected context fails
+# (a gate stopped blocking); an EXTRA context only warns (someone added a gate
+# deliberately — update the list to ratify it). Advisory posture: it is a
+# weekly cron, not a required check, so it can never wedge a PR.
+
+on:
+  schedule:
+    # Wednesdays 08:00 UTC — the slot between the Sunday CodeQL, Monday
+    # Scorecard / privacy / security-sweep, and Tuesday nightly crons.
+    - cron: '0 8 * * 3'
+  workflow_dispatch:
+
+concurrency:
+  group: ${{ github.workflow }}
+  cancel-in-progress: false
+
+permissions: {}
+
+env:
+  HOMEBREW_NO_AUTO_UPDATE: "1"
+
+jobs:
+  ruleset-integrity:
+    name: Ruleset Integrity
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+
+    permissions:
+      contents: read
+      issues: write
+
+    steps:
+    - name: Harden runner
+      uses: step-security/harden-runner@05e31511f85b41b11d1cf0ef85d0992719546e2c # v2.21.0
+      with:
+        egress-policy: audit
+
+    - name: Checkout code
+      uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+      with:
+        persist-credentials: false
+
+    # Pins the detector's teeth (missing / extra / empty classification) before
+    # the live scan — a green run only proves the lists agree today.
+    - name: Self-test the drift detector
+      run: python3 scripts/check-ruleset-integrity.py --self-test
+
+    - name: Fetch required status checks from the live ruleset
+      env:
+        GH_TOKEN: ${{ github.token }}
+      run: |
+        set -euo pipefail
+
+        # Every active ruleset that applies to master: repository-level ones
+        # (source_type=Repository cover all branches) plus branch-level ones
+        # targeting master. The list endpoint omits `rules`, so fetch each
+        # ruleset by id and union their required-status-check contexts.
+        gh api "repos/${GITHUB_REPOSITORY}/rulesets" --paginate \
+          --jq '.[] | select(.enforcement == "active") | select(.source_type == "Repository" or .target_name == "master") | .id' \
+          > ruleset-ids.txt
+
+        : > contexts.txt
+        while IFS= read -r id; do
+          [ -z "$id" ] && continue
+          # `.required_status_checks` (legacy shape) or `.parameters.required_status_checks`
+          # (current rulesets API shape) — accept both so an API rename is a
+          # loud empty-union failure, not a silent pass.
+          gh api "repos/${GITHUB_REPOSITORY}/rulesets/${id}" \
+            --jq '.rules[]? | select(.type == "required_status_checks") | (.required_status_checks // .parameters.required_status_checks)[]? | .context' \
+            >> contexts.txt || true
+        done < ruleset-ids.txt
+
+        sort -u contexts.txt | sed '/^$/d' > contexts-unique.txt
+        python3 -c 'import json, sys; print(json.dumps(sorted({l.strip() for l in sys.stdin if l.strip()})))' \
+          < contexts-unique.txt > actual-contexts.json
+        echo "Read $(wc -l < contexts-unique.txt) required-check context(s) from $(wc -l < ruleset-ids.txt) rule(s)."
+
+    - name: Check ruleset against the expected list
+      run: python3 scripts/check-ruleset-integrity.py --actual actual-contexts.json --expected .github/required-checks.json
+
+    # Same deduped tracking-issue pattern as the nightly and the runner-image
+    # watch: one issue per open drift, updated on each red run, closed by hand
+    # (there is no automatic "resolved" signal — the fix is a ruleset edit,
+    # which this job then confirms on the next run).
+    - name: Open or update the tracking issue
+      if: failure()
+      env:
+        GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        GH_REPO: ${{ github.repository }}
+        GH_SERVER_URL: ${{ github.server_url }}
+        GH_RUN_ID: ${{ github.run_id }}
+      run: |
+        set -euo pipefail
+
+        ISSUE_TITLE="Master ruleset no longer matches .github/required-checks.json"
+        ISSUE_LABEL="ruleset-drift"
+        RUN_URL="${GH_SERVER_URL}/${GH_REPO}/actions/runs/${GH_RUN_ID}"
+
+        if [ -f ruleset-drift-report.md ]; then
+          BODY_PREFIX=$(cat ruleset-drift-report.md)
+        else
+          BODY_PREFIX="The Ruleset Integrity check could not verify the master ruleset (the run failed before or during the check — see the run log)."
+        fi
+
+        BODY="${BODY_PREFIX}
+
+        ---
+        - Failing run: ${RUN_URL}
+        - Date: $(date -u +"%Y-%m-%d %H:%M UTC")
+
+        Fix by editing the master ruleset (or the expected list, if the ruleset change was deliberate) to restore agreement.
+
+        ---
+        _Auto-managed by the ruleset-integrity workflow; updated (not duplicated) on each red run. Close once the two agree._
+        "
+
+        gh label create "$ISSUE_LABEL" \
+          --description "Required status checks drifted between the master ruleset and .github/required-checks.json" \
+          --color B60205 2>/dev/null || true
+
+        EXISTING=$(gh issue list \
+          --state open \
+          --label "$ISSUE_LABEL" \
+          --search "in:title \"$ISSUE_TITLE\"" \
+          --json number,title \
+          --jq "map(select(.title == \"$ISSUE_TITLE\")) | .[0].number // empty")
+
+        if [ -n "$EXISTING" ]; then
+          echo "Updating existing tracking issue #$EXISTING"
+          printf '%s' "$BODY" | gh issue comment "$EXISTING" --body-file -
+        else
+          echo "Creating new tracking issue"
+          printf '%s' "$BODY" | gh issue create \
+            --title "$ISSUE_TITLE" \
+            --label "$ISSUE_LABEL" \
+            --body-file -
+        fi

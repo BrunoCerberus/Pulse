@@ -62,25 +62,41 @@ jobs:
           -onlyUsePackageVersionsFromResolvedFile
         echo "Package dependencies resolved successfully"
 
+    # Each build leg records its wall clock for the CI Duration Ratchet job
+    # below: the build is the single largest cost in the nightly, so it gets
+    # ratcheted too. The exit code is captured and re-exited, so a failed
+    # build still fails the step exactly as before.
     - name: Build for testing (PulseDev)
       run: |
         echo "Building PulseDev scheme for testing..."
+        START_TS=$(date +%s)
         xcodebuild build-for-testing \
           -project Pulse.xcodeproj \
           -scheme PulseDev \
           -destination 'platform=iOS Simulator,name=iPhone Air,OS=latest' \
           -derivedDataPath ./DerivedData \
           -skipMacroValidation
+        BUILD_EXIT=$?
+        SECS=$(( $(date +%s) - START_TS ))
+        printf '{"suite":"build-PulseDev","seconds":%s}\n' "$SECS" > duration-build-PulseDev.json
+        echo "PulseDev build took $(( SECS / 60 ))m$(( SECS % 60 ))s"
+        exit $BUILD_EXIT
 
     - name: Build for testing (PulseSnapshotTests)
       run: |
         echo "Building PulseSnapshotTests scheme for testing..."
+        START_TS=$(date +%s)
         xcodebuild build-for-testing \
           -project Pulse.xcodeproj \
           -scheme PulseSnapshotTests \
           -destination 'platform=iOS Simulator,name=iPhone Air,OS=latest' \
           -derivedDataPath ./DerivedData \
           -skipMacroValidation
+        BUILD_EXIT=$?
+        SECS=$(( $(date +%s) - START_TS ))
+        printf '{"suite":"build-PulseSnapshotTests","seconds":%s}\n' "$SECS" > duration-build-PulseSnapshotTests.json
+        echo "PulseSnapshotTests build took $(( SECS / 60 ))m$(( SECS % 60 ))s"
+        exit $BUILD_EXIT
 
     # Only Build/Products is uploaded — that's all test-without-building needs
     # (the .xctestrun files and app/test bundles live there); the rest of
@@ -91,6 +107,26 @@ jobs:
         name: scheduled-build-products
         path: ./DerivedData/Build/Products
         retention-days: 1
+
+    # `always()` so a SLOW-but-green build still seeds the baseline; a failed
+    # build simply leaves no file and the ratchet skips it.
+    - name: Upload build duration (PulseDev)
+      uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
+      if: always()
+      with:
+        name: suite-duration-build-PulseDev
+        path: duration-build-PulseDev.json
+        if-no-files-found: ignore
+        retention-days: 30
+
+    - name: Upload build duration (PulseSnapshotTests)
+      uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
+      if: always()
+      with:
+        name: suite-duration-build-PulseSnapshotTests
+        path: duration-build-PulseSnapshotTests.json
+        if-no-files-found: ignore
+        retention-days: 30
 
   # Dead-code detection. NIGHTLY-ONLY BY NECESSITY: SwiftLint's analyzer rules
   # need a full compiler log and re-run SourceKit over every invocation in it,
@@ -268,6 +304,7 @@ jobs:
           ONLY_TESTING_ARGS+=("-only-testing:$TEST_TARGET_NAME")
         done
 
+        START_TS=$(date +%s)
         xcodebuild test-without-building \
           -project Pulse.xcodeproj \
           -scheme "$SCHEME" \
@@ -280,6 +317,13 @@ jobs:
           2>&1 | tee /tmp/test_output.log
 
         TEST_EXIT_CODE=${PIPESTATUS[0]}
+
+        # Wall clock for the CI Duration Ratchet job — recorded before the exit
+        # so a FAILED suite still measures (its duration is what we want to see
+        # drift on, not just the green runs).
+        SECS=$(( $(date +%s) - START_TS ))
+        printf '{"suite":"%s","seconds":%s}\n' "$TEST_TARGET" "$SECS" > suite-duration.json
+        echo "$TEST_NAME wall clock: $(( SECS / 60 ))m$(( SECS % 60 ))s"
 
         echo ""
         echo "============================================"
@@ -342,6 +386,17 @@ jobs:
         path: test-results/${{ matrix.artifact-name }}.xcresult
         if-no-files-found: warn
         retention-days: 5
+
+    # Feeds the CI Duration Ratchet job below; `always()` + ignore so a red or
+    # cancelled leg contributes whatever it measured (or nothing).
+    - name: Upload suite duration
+      uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
+      if: always()
+      with:
+        name: suite-duration-${{ matrix.test-target }}
+        path: suite-duration.json
+        if-no-files-found: ignore
+        retention-days: 30
 
     - name: Upload recorded snapshots
       uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
@@ -501,6 +556,83 @@ jobs:
       run: |
         echo "::error::Test suite failed or was cancelled"
         exit 1
+
+  # Advisory wall-clock ratchet, the CI-cost counterpart of the app-size /
+  # coverage / test-count ratchets in ci.yml — those gate PRs, this one watches
+  # the nightly: the only unconditional full-suite run, and the cleanest place
+  # to see a runner-image slowdown, suite growth, or a new slow test before it
+  # collides with the 180/210-minute ceilings. Same baseline-by-artifact
+  # pattern (baseline = the most recent successful run's uploads; a missing
+  # baseline is a pass, never a fabricated zero) with a looser per-suite 15%
+  # tolerance: shared macOS runners vary far more run-to-run than app size.
+  #
+  # Advisory by necessity: notify-failure keys off `test-results` only, so a
+  # duration regression makes the run red (visible in the Actions list) without
+  # opening a tracking issue — the same posture as the dead-code job.
+  duration-ratchet:
+    name: CI Duration Ratchet
+    runs-on: ubuntu-latest
+    needs: [build, tests]
+    if: always()
+    timeout-minutes: 10
+
+    permissions:
+      contents: read
+      # `gh run list/download` reads the last successful run's duration artifacts.
+      actions: read
+
+    steps:
+    - name: Harden runner
+      uses: step-security/harden-runner@05e31511f85b41b11d1cf0ef85d0992719546e2c # v2.21.0
+      with:
+        egress-policy: audit
+
+    - name: Checkout code
+      uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+      with:
+        persist-credentials: false
+
+    - name: Download this run's duration reports
+      uses: actions/download-artifact@3e5f45b2cfb9172054b4087a40e8e0b5a5461e7c # v8.0.1
+      continue-on-error: true
+      with:
+        pattern: suite-duration-*
+        merge-multiple: true
+        path: duration-current
+
+    - name: Fetch baseline duration reports
+      id: baseline
+      env:
+        GH_TOKEN: ${{ github.token }}
+      run: |
+        mkdir -p duration-baseline
+        # Walk back a few successful runs: the newest may have been a manual
+        # dispatch that cancelled before the duration uploads, or predate the
+        # artifacts.
+        for RUN_ID in $(gh run list --workflow=scheduled-tests.yml --branch=master \
+              --status=success --limit=10 \
+              --json databaseId --jq '.[].databaseId'); do
+          gh run download "$RUN_ID" --pattern 'suite-duration-*' --merge-multiple \
+            --dir duration-baseline >/dev/null 2>&1 || true
+          [ -n "$(ls -A duration-baseline 2>/dev/null)" ] && break
+        done
+        if [ -n "$(ls -A duration-baseline 2>/dev/null)" ]; then
+          echo "baseline=duration-baseline" >> "$GITHUB_OUTPUT"
+        else
+          echo "baseline=none" >> "$GITHUB_OUTPUT"
+        fi
+
+    - name: Enforce CI duration ratchet
+      run: |
+        # Self-test first: a green nightly only proves this run was fast, never
+        # that a regression would be caught.
+        echo "Running duration-ratchet self-test..."
+        python3 scripts/check-duration-ratchet.py --self-test
+        if [ "${{ steps.baseline.outputs.baseline }}" = "none" ]; then
+          python3 scripts/check-duration-ratchet.py duration-current none
+        else
+          python3 scripts/check-duration-ratchet.py duration-current duration-baseline
+        fi
 
   notify-failure:
     name: Nightly Failure Notification
