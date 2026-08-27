@@ -38,6 +38,11 @@ jobs:
     runs-on: ubuntu-latest
     timeout-minutes: 10
 
+    # The rules API read needs a permission the `permissions` key cannot grant
+    # by name (metadata/administration are not in the assignable GITHUB_TOKEN
+    # list) — the probe workflow (tmp-rules-permission-probe.yml) is
+    # determining which token source works; until then this job keeps its
+    # current grants.
     permissions:
       contents: read
       issues: write
@@ -58,38 +63,29 @@ jobs:
     - name: Self-test the drift detector
       run: python3 scripts/check-ruleset-integrity.py --self-test
 
-    - name: Fetch required status checks from the live ruleset
+    - name: Fetch the active rules for master from the rules API
       env:
         GH_TOKEN: ${{ github.token }}
       run: |
         set -euo pipefail
 
-        # Every active ruleset that applies to master: repository-level ones
-        # (source_type=Repository cover all branches) plus branch-level ones
-        # targeting master. The list endpoint omits `rules`, so fetch each
-        # ruleset by id and union their required-status-check contexts.
-        gh api "repos/${GITHUB_REPOSITORY}/rulesets" --paginate \
-          --jq '.[] | select(.enforcement == "active") | select(.source_type == "Repository" or .target_name == "master") | .id' \
-          > ruleset-ids.txt
+        # The rules/branches endpoint answers "what actually blocks merges on
+        # master" in one call: every ACTIVE rule that applies to the branch at
+        # every level (repository and organization), with rulesets in evaluate
+        # or disabled enforcement excluded server-side. That replaces the old
+        # rulesets-list-then-per-id loop, which could not distinguish branch
+        # scoped rulesets from whole-repo ones (there is no target field on a
+        # ruleset in the list view) and missed organization-level rulesets.
+        # Hard-coded "master" on purpose: the committed manifest and the merge
+        # model are about the default branch; on a cron there is no checkout
+        # ref to derive it from.
+        gh api "repos/${GITHUB_REPOSITORY}/rules/branches/master" --paginate \
+          > rules-response.json
 
-        : > contexts.txt
-        while IFS= read -r id; do
-          [ -z "$id" ] && continue
-          # `.required_status_checks` (legacy shape) or `.parameters.required_status_checks`
-          # (current rulesets API shape) — accept both so an API rename is a
-          # loud empty-union failure, not a silent pass.
-          gh api "repos/${GITHUB_REPOSITORY}/rulesets/${id}" \
-            --jq '.rules[]? | select(.type == "required_status_checks") | (.required_status_checks // .parameters.required_status_checks)[]? | .context' \
-            >> contexts.txt || true
-        done < ruleset-ids.txt
-
-        sort -u contexts.txt | sed '/^$/d' > contexts-unique.txt
-        python3 -c 'import json, sys; print(json.dumps(sorted({l.strip() for l in sys.stdin if l.strip()})))' \
-          < contexts-unique.txt > actual-contexts.json
-        echo "Read $(wc -l < contexts-unique.txt) required-check context(s) from $(wc -l < ruleset-ids.txt) rule(s)."
+        echo "Fetched rules for master into rules-response.json ($(wc -c < rules-response.json) bytes)."
 
     - name: Check ruleset against the expected list
-      run: python3 scripts/check-ruleset-integrity.py --actual actual-contexts.json --expected .github/required-checks.json
+      run: python3 scripts/check-ruleset-integrity.py --raw-rules rules-response.json --expected .github/required-checks.json
 
     # Same deduped tracking-issue pattern as the nightly and the runner-image
     # watch: one issue per open drift, updated on each red run, closed by hand

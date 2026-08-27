@@ -9,8 +9,9 @@ new key that was never added to any ``.lproj`` — renders the raw key string
 (e.g. ``common.foo``) at runtime with no build error, no parity failure, and no
 value failure. This script closes that direction.
 
-It scans every ``.swift`` file for the two localization call shapes the repo
-uses — ``AppLocalization[.shared].localized("…")`` and
+It scans every ``.swift`` file for the localization call shapes the repo uses —
+``AppLocalization[.shared].localized("…")`` in either receiver case (views hold
+``@ObservedObject var appLocalization`` and call it on the instance) and
 ``String(localized: "…")`` — and requires each *literal* key to exist in the
 ``en`` catalog of the bundle that resolves it at runtime:
 
@@ -56,10 +57,14 @@ TARGET_CATALOG: dict[str, str | None] = {
 }
 
 # `AppLocalization.shared.localized("k")`, `AppLocalization.localized("k")`,
-# and `String(localized: "k"...)`. Escapes inside the literal are kept so the
-# captured text matches the catalog's KEY_RE representation.
+# `appLocalization.localized("k")` (the lowercase instance property views keep
+# in `@ObservedObject var appLocalization = AppLocalization.shared`), and
+# `String(localized: "k"...)`. Escapes inside the literal are kept so the
+# captured text matches the catalog's KEY_RE representation. Other receivers
+# (`instance.localized(key)` inside AppLocalization itself) are dynamic and
+# uncheckable — the literal-argument requirement already excludes them.
 CALL_RE = re.compile(
-    r'AppLocalization(?:\.shared)?\.localized\(\s*"'
+    r'[Aa]ppLocalization(?:\.shared)?\.localized\(\s*"'
     r'((?:[^"\\]|\\.)*)"'
     r'|String\(localized:\s*"((?:[^"\\]|\\.)*)"'
 )
@@ -115,18 +120,36 @@ def rel(path: Path, root: Path) -> str:
 
 
 def strip_comments(source: str) -> str:
-    """Replace comment content with spaces, preserving strings, layout, and line
-    numbers. Doc-comment examples (``AppLocalization.localized("key")`` in a
-    ``///`` block) are not call sites and must not count. ``//`` inside a string
-    literal (a URL) is not a comment opener; strings are kept intact because the
-    key being checked *is* a string literal."""
+    """Replace comment and multi-line-string content with spaces, preserving
+    single-line strings, layout, and line numbers. Doc-comment examples
+    (``AppLocalization.localized("key")`` in a ``///`` block) are not call sites
+    and must not count. ``//`` inside a string literal (a URL) is not a comment
+    opener; single-line strings are kept intact because the key being checked
+    *is* a string literal.
+
+    Multi-line strings are the one string kind that gets blanked like a comment
+    (newlines preserved): tokenizing their three quotes individually toggles the
+    single-quote state an odd number of times (plus once per inner quote),
+    leaving the scanner desynced past the literal — after which a real ``//``
+    comment is treated as string content or vice versa. Blanking also keeps a
+    call whose argument opens a multi-line string from matching as an empty
+    single-line key, and a key spanning lines could never match the per-line
+    scanner anyway."""
     out: list[str] = []
     i = 0
     size = len(source)
-    in_string = in_line_comment = in_block_comment = False
+    in_string = in_line_comment = in_block_comment = in_multiline = False
     while i < size:
         ch = source[i]
-        if in_line_comment:
+        if in_multiline:
+            if source[i : i + 3] == '"""':
+                in_multiline = False
+                out.append("   ")
+                i += 3
+            else:
+                out.append(ch if ch == "\n" else " ")
+                i += 1
+        elif in_line_comment:
             out.append(ch if ch == "\n" else " ")
             if ch == "\n":
                 in_line_comment = False
@@ -149,7 +172,11 @@ def strip_comments(source: str) -> str:
                     in_string = False
                 i += 1
         else:
-            if ch == '"':
+            if source[i : i + 3] == '"""':
+                in_multiline = True
+                out.append("   ")
+                i += 3
+            elif ch == '"':
                 in_string = True
                 out.append(ch)
                 i += 1
@@ -275,6 +302,35 @@ def self_test() -> int:
             "PulseTests/Host.swift",
             'let t = AppLocalization.localized("common.ok")\n',
         )
+        # Views keep the localization in an `@ObservedObject var appLocalization`
+        # and call `localized` on the lowercase instance — same type, must be
+        # checked against the same catalog.
+        write(
+            "Pulse/InstanceCaller.swift",
+            'let t = appLocalization.localized("common.ok")\n'
+            'let u = appLocalization.shared.localized("known.key")\n',
+        )
+        # Fails: missing key via the lowercase instance receiver.
+        write(
+            "Pulse/InstanceBad.swift",
+            'let v = appLocalization.localized("never.added.instance.key")\n',
+        )
+
+        # A `"""` multi-line string: the scanner must stay in sync across it.
+        # The content holds a lone `"` (odd inner-quote parity — the shape that
+        # desynced the old quote-by-quote toggling) plus `//` text that is
+        # string content, not a comment. The call *after* the literal must be
+        # checked; the example inside it must not.
+        write(
+            "Pulse/MultiLine.swift",
+            'let template = """\n'
+            'example: AppLocalization.localized("inside.multiline")\n'
+            'a // not-a-comment and a " quote inside\n'
+            '"""\n'
+            'let real = AppLocalization.localized("never.added.after.multiline")\n'
+            'let commented = AppLocalization.localized("commented.out.key") // real comment\n',
+        )
+
         # The widget resolves against its own bundle, not the app's.
         write(
             "PulseWidgetExtension/Widget.swift",
@@ -312,6 +368,12 @@ def self_test() -> int:
         expect("PulseShareExtension/Share.swift" in text, "no-catalog target not reported")
         expect("PulseTests/Host.swift" not in text, "test-host key (app catalog) flagged")
         expect("PulseWidgetExtension/Widget.swift" not in text, "own-bundle key flagged")
+        expect("Pulse/InstanceCaller.swift" not in text, "lowercase instance receiver with valid keys flagged")
+        expect("Pulse/InstanceBad.swift" in text, "missing key via lowercase instance receiver not reported")
+        # The multi-line literal's content is blanked: its example key must not
+        # be reported, but the call after the literal is real code and must be.
+        expect("inside.multiline" not in text, "key inside multi-line literal flagged")
+        expect("never.added.after.multiline" in text, "missing key after multi-line literal not reported")
 
     if failures:
         for failure in failures:
