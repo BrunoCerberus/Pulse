@@ -115,6 +115,21 @@ jobs:
         echo "Checking Localizable.strings values across en/pt/es..."
         python3 scripts/check-localization-completeness.py .
 
+    # The third direction, blind to both checks above: parity compares catalogs
+    # *against each other* and completeness checks values *within* catalogs, so
+    # a key referenced in code that is missing from **every** catalog (a typo'd
+    # key, or a new key never added) renders the raw key string at runtime with
+    # no signal from either. This checks code → catalog: every literal
+    # `AppLocalization…localized("…")` / `String(localized: "…")` key must exist
+    # in the owning target's `en` catalog (widgets resolve against their own
+    # bundle, not the app's). Doc-comment examples are stripped, not checked.
+    - name: Check localization key usage
+      run: |
+        echo "Running localization-usage self-test..."
+        python3 scripts/check-localization-usage.py --self-test
+        echo "Checking that every localized() key exists in its target's en catalog..."
+        python3 scripts/check-localization-usage.py .
+
     # AGENTS.md rule 19. An unguarded `.sink` in a @MainActor interactor crashes
     # `_dispatch_assert_queue_fail` at runtime, on whichever timing-dependent
     # path first delivers off-main — often an error path that no test exercises.
@@ -1360,8 +1375,9 @@ jobs:
     needs: unit-tests
     # Only meaningful when unit-tests actually produced an xcresult. Previously
     # `always()`, which booted a macOS runner just to print "no bundle
-    # available" on every PR the path filter skipped. Not a required check, so
-    # skipping it here is free.
+    # available" on every PR the path filter skipped. It IS a required check
+    # (.github/required-checks.json), but a *skipped* required check still
+    # reports as passing, so skipping here is free.
     if: needs.unit-tests.result == 'success'
     timeout-minutes: 10
 
