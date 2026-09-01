@@ -34,6 +34,12 @@ final class LiveSharedURLImportService: SharedURLImportService, @unchecked Senda
             guard SharedURLQueue.isAcceptable(urlString: item.url),
                   let url = URL(string: item.url)
             else { continue }
+
+            // Verify HMAC integrity (SEC-006). When the shared signing key is
+            // configured, only signed items are accepted; unsigned (legacy)
+            // items pass through for backward compatibility.
+            guard SharedURLQueue.verifyItem(item) else { continue }
+
             pendingURLSubject.send(url)
             // Import-boundary observability: drained items currently have no
             // downstream consumer in the app, so without this line the Share

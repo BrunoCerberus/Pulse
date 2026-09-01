@@ -464,7 +464,7 @@ private extension PulseSceneDelegate {
         serviceLocator.register(SharedURLImportService.self, instance: LiveSharedURLImportService())
         serviceLocator.register(
             InterestProfileService.self,
-            instance: LiveInterestProfileService(modelContainer: storageService.modelContainer),
+            instance: LiveInterestProfileService(deviceLocalContainer: storageService.deviceLocalContainer),
         )
         if let llmService = try? serviceLocator.retrieve(LLMService.self) {
             serviceLocator.register(

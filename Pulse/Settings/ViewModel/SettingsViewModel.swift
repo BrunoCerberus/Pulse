@@ -387,6 +387,13 @@ final class SettingsViewModel: CombineViewModel, ObservableObject {
             appLockService.hasPromptedFaceID = false
         }
 
+        // 3a. Invalidate premium state (SEC-001/SEC-003). Ensures `isPremium`
+        //     returns to `false` immediately upon sign-out, preventing a
+        //     subsequent account from inheriting stale entitlements.
+        if let storeKitService = try? serviceLocator.retrieve(StoreKitService.self) {
+            storeKitService.clearPremiumState()
+        }
+
         // 4. Clear recent searches
         if let searchService = try? serviceLocator.retrieve(SearchService.self) {
             searchService.clearRecentSearches()

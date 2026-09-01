@@ -48,6 +48,7 @@ final class LiveStoreKitService: StoreKitService, @unchecked Sendable {
     private struct EntitlementScanState {
         var isUpdating = false
         var needsRerun = false
+        var clearedBySignOut = false
     }
 
     /// Covers the lag between a purchase we verified ourselves and StoreKit reporting it in
@@ -168,6 +169,28 @@ final class LiveStoreKitService: StoreKitService, @unchecked Sendable {
         return isPremium
     }
 
+    // MARK: - Security: Premium State Invalidation (SEC-001/SEC-003)
+
+    /// Invalidates the cached subscription status, forcing `isPremium` to
+    /// `false` until the next `Transaction.currentEntitlements` scan.
+    ///
+    /// Called from `SettingsViewModel.clearAllUserData()` when the user signs
+    /// out or deletes their account. This prevents a subsequent account from
+    /// inheriting stale premium entitlements from the previous account's
+    /// `Transaction.updates` buffer (SEC-001).
+    ///
+    /// Also sets `clearedBySignOut = true` so that any in-flight
+    /// `scanCurrentEntitlements()` call will publish `false` instead of the
+    /// stale result from the outgoing account (SEC-001).
+    func clearPremiumState() {
+        entitlementScanState.withLock { state in
+            state.isUpdating = false
+            state.needsRerun = false
+            state.clearedBySignOut = true
+        }
+        subscriptionStatusSubject.send(false)
+    }
+
     // MARK: - Private Methods
 
     private func listenForTransactions() -> Task<Void, Never> {
@@ -178,6 +201,13 @@ final class LiveStoreKitService: StoreKitService, @unchecked Sendable {
             for await result in Transaction.updates {
                 // Terminate cleanly once the task is cancelled (deinit) or self is gone.
                 guard !Task.isCancelled, let self else { break }
+
+                // Gate: only process transactions for the currently authenticated
+                // user. If the user has signed out (explicitly or via token
+                // revocation), skip processing — this prevents a subsequent account
+                // from inheriting the previous account's stale `isPremium` status
+                // (SEC-001).
+                guard await AuthenticationManager.shared.isAuthenticated else { continue }
 
                 do {
                     let transaction = try checkVerified(result)
@@ -236,8 +266,18 @@ final class LiveStoreKitService: StoreKitService, @unchecked Sendable {
 
         while true {
             let finalStatus = await scanCurrentEntitlements()
+
+            // If sign-out cleared the state during the scan, publish `false`
+            // instead of a stale premium result from the outgoing account
+            // (SEC-001). Reset the flag so subsequent scans behave normally.
+            let wasCleared = entitlementScanState.withLock { state -> Bool in
+                let cleared = state.clearedBySignOut
+                state.clearedBySignOut = false
+                return cleared
+            }
+
             await MainActor.run {
-                subscriptionStatusSubject.send(finalStatus)
+                subscriptionStatusSubject.send(wasCleared ? false : finalStatus)
             }
 
             // Exit unless a request arrived mid-scan, in which case rerun exactly once more.

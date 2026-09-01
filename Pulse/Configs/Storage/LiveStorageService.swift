@@ -17,6 +17,17 @@ final class LiveStorageService: StorageService {
     /// reachable.
     let modelContainer: ModelContainer
 
+    /// Device-local-only SwiftData container for non-synced models.
+    ///
+    /// `ReadArticle` and `InterestTopicModel` are device-local personalization
+    /// data that must never reach CloudKit (SEC-002). This container has no
+    /// CloudKit mirror and is not shared with the CloudKit-synced services.
+    ///
+    /// Exposed via `deviceLocalContainer` so other services (e.g.
+    /// `LiveInterestProfileService`) can access the same non-synced store
+    /// without creating their own.
+    let deviceLocalContainer: ModelContainer
+
     /// - Parameters:
     ///   - inMemory: When `true`, uses an in-memory store (for tests). Forces
     ///     CloudKit off regardless of `enableCloudKit`.
@@ -35,22 +46,49 @@ final class LiveStorageService: StorageService {
     /// not by the file-protection class on a synced store.
     init(inMemory: Bool = false, enableCloudKit: Bool = true) {
         do {
-            let schema = Schema([
+            // CloudKit-synced models: bookmarks and user preferences.
+            let syncedSchema = Schema([
                 BookmarkedArticle.self,
                 UserPreferencesModel.self,
-                ReadArticle.self,
-                InterestTopicModel.self,
             ])
-            let modelConfiguration = if inMemory || !enableCloudKit {
-                ModelConfiguration(schema: schema, isStoredInMemoryOnly: inMemory)
+            let syncedConfiguration = if inMemory || !enableCloudKit {
+                ModelConfiguration(schema: syncedSchema, isStoredInMemoryOnly: inMemory)
             } else {
                 ModelConfiguration(
-                    schema: schema,
+                    schema: syncedSchema,
                     cloudKitDatabase: .private(Self.cloudKitContainerIdentifier),
                 )
             }
-            let container = try ModelContainer(for: schema, configurations: [modelConfiguration])
-            modelContainer = container
+            modelContainer = try ModelContainer(for: syncedSchema, configurations: [syncedConfiguration])
+
+            // Device-local-only models: reading history and personalization
+            // topics. These must never reach CloudKit (SEC-002).
+            // Uses a dedicated store URL to avoid the "two schemas on one file"
+            // pitfall that causes SwiftData to lightweight-migrate the store
+            // down to the newer schema, deleting tables owned by the other.
+            let deviceLocalSchema = Schema([
+                ReadArticle.self,
+                InterestTopicModel.self,
+            ])
+            let deviceLocalConfiguration: ModelConfiguration
+            if inMemory {
+                deviceLocalConfiguration = ModelConfiguration(
+                    schema: deviceLocalSchema,
+                    isStoredInMemoryOnly: true,
+                )
+            } else {
+                let storeURL = URL.applicationSupportDirectory.appending(
+                    path: "pulse_deviceLocal.store",
+                )
+                deviceLocalConfiguration = ModelConfiguration(
+                    schema: deviceLocalSchema,
+                    url: storeURL,
+                )
+            }
+            deviceLocalContainer = try ModelContainer(
+                for: deviceLocalSchema,
+                configurations: [deviceLocalConfiguration],
+            )
         } catch {
             fatalError("Failed to create ModelContainer: \(error)")
         }
@@ -123,7 +161,7 @@ final class LiveStorageService: StorageService {
 
     @MainActor
     func markArticleAsRead(_ article: Article) async throws {
-        let context = modelContainer.mainContext
+        let context = deviceLocalContainer.mainContext
         let articleID = article.id
         let descriptor = FetchDescriptor<ReadArticle>(
             predicate: #Predicate { $0.articleID == articleID },
@@ -138,7 +176,7 @@ final class LiveStorageService: StorageService {
 
     @MainActor
     func isRead(_ articleID: String) async -> Bool {
-        let context = modelContainer.mainContext
+        let context = deviceLocalContainer.mainContext
         let descriptor = FetchDescriptor<ReadArticle>(
             predicate: #Predicate { $0.articleID == articleID },
         )
@@ -147,7 +185,7 @@ final class LiveStorageService: StorageService {
 
     @MainActor
     func fetchReadArticleIDs() async throws -> Set<String> {
-        let context = modelContainer.mainContext
+        let context = deviceLocalContainer.mainContext
         let descriptor = FetchDescriptor<ReadArticle>()
         let readArticles = try context.fetch(descriptor)
         return Set(readArticles.map(\.articleID))
@@ -155,7 +193,7 @@ final class LiveStorageService: StorageService {
 
     @MainActor
     func fetchReadArticles() async throws -> [Article] {
-        let context = modelContainer.mainContext
+        let context = deviceLocalContainer.mainContext
         let descriptor = FetchDescriptor<ReadArticle>(
             sortBy: [SortDescriptor(\.readAt, order: .reverse)],
         )
@@ -165,7 +203,7 @@ final class LiveStorageService: StorageService {
 
     @MainActor
     func clearReadingHistory() async throws {
-        let context = modelContainer.mainContext
+        let context = deviceLocalContainer.mainContext
         try context.delete(model: ReadArticle.self)
         try context.save()
     }
@@ -209,6 +247,23 @@ final class LiveStorageService: StorageService {
     @MainActor
     @discardableResult
     func deduplicate() async throws -> Bool {
+        var changed = false
+
+        // Deduplicate bookmarks in the CloudKit-synced container.
+        if try await deduplicateBookmarks() {
+            changed = true
+        }
+
+        // Deduplicate reading history in the device-local container.
+        if try await deduplicateReadingHistory() {
+            changed = true
+        }
+
+        return changed
+    }
+
+    @MainActor
+    private func deduplicateBookmarks() async throws -> Bool {
         let context = modelContainer.mainContext
         var didChange = false
 
@@ -216,7 +271,6 @@ final class LiveStorageService: StorageService {
         var keptBookmarks: [String: BookmarkedArticle] = [:]
         for row in bookmarks {
             if let kept = keptBookmarks[row.articleID] {
-                // Keep the earliest `savedAt`; delete the newer duplicate.
                 let earlier = kept.savedAt <= row.savedAt ? kept : row
                 let later = kept.savedAt <= row.savedAt ? row : kept
                 context.delete(later)
@@ -227,11 +281,20 @@ final class LiveStorageService: StorageService {
             }
         }
 
+        guard didChange else { return false }
+        try context.save()
+        return true
+    }
+
+    @MainActor
+    private func deduplicateReadingHistory() async throws -> Bool {
+        let context = deviceLocalContainer.mainContext
+        var didChange = false
+
         let reads = try context.fetch(FetchDescriptor<ReadArticle>())
         var keptReads: [String: ReadArticle] = [:]
         for row in reads {
             if let kept = keptReads[row.articleID] {
-                // Keep the earliest `readAt`; delete the newer duplicate.
                 let earlier = kept.readAt <= row.readAt ? kept : row
                 let later = kept.readAt <= row.readAt ? row : kept
                 context.delete(later)

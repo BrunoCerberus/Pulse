@@ -44,4 +44,11 @@ protocol StoreKitService {
     /// premium features by mutating the in-memory cache.
     /// - Returns: The freshly-computed subscription status.
     func refreshSubscriptionStatus() async -> Bool
+
+    /// Invalidates the cached premium status, forcing `isPremium` to `false`
+    /// until the next entitlement scan.
+    ///
+    /// Called when the user signs out or deletes their account to prevent
+    /// stale premium entitlements from leaking between accounts (SEC-001/SEC-003).
+    func clearPremiumState()
 }

@@ -88,4 +88,8 @@ final class MockStoreKitService: StoreKitService {
     func refreshSubscriptionStatus() async -> Bool {
         isPremium
     }
+
+    func clearPremiumState() {
+        subscriptionStatusSubject.send(false)
+    }
 }

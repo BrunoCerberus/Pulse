@@ -56,7 +56,8 @@ final class ShareViewController: UIViewController {
             dismissWithError()
             return
         }
-        let item = SharedURLItem(url: sharedURL.absoluteString, sharedAt: Date())
+        let signature = SharedURLQueue.signURL(sharedURL.absoluteString)
+        let item = SharedURLItem.makingSigned(url: sharedURL.absoluteString, sharedAt: Date(), signature: signature)
         let queue = SharedURLQueue()
         // If the App Group is misconfigured (e.g. entitlement mismatch on a sideloaded
         // build), `enqueue` returns false rather than throwing. Bail out instead of

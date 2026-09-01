@@ -2,20 +2,20 @@ import Combine
 import Foundation
 import SwiftData
 
-/// Live implementation of `InterestProfileService` backed by SwiftData and
-/// CloudKit private-DB sync.
+/// Live implementation of `InterestProfileService` backed by device-local
+/// SwiftData (no CloudKit sync).
 ///
-/// Shares its `ModelContainer` with `LiveStorageService` so the profile rows
-/// live in the same store as bookmarks / preferences / reading history and
-/// participate in the existing CloudKit sync pipeline. We do **not** spin up
-/// a second CloudKit-mirrored container (Apple's `NSPersistentCloudKitContainer`
-/// is fragile around multiple instances pointing at the same iCloud zone).
+/// Uses the same device-local `ModelContainer` as reading history so both
+/// sets of topics are persisted in the same store and subject to the same
+/// `clearReadingHistory()` / `clearAllUserData()` boundary. This container
+/// has no CloudKit mirror, keeping personalization topics device-local only
+/// (SEC-002).
 final class LiveInterestProfileService: InterestProfileService {
-    private let modelContainer: ModelContainer
+    private let deviceLocalContainer: ModelContainer
     private let changeSubject = PassthroughSubject<Void, Never>()
 
-    init(modelContainer: ModelContainer) {
-        self.modelContainer = modelContainer
+    init(deviceLocalContainer: ModelContainer) {
+        self.deviceLocalContainer = deviceLocalContainer
     }
 
     var profileChangedPublisher: AnyPublisher<Void, Never> {
@@ -26,7 +26,7 @@ final class LiveInterestProfileService: InterestProfileService {
 
     @MainActor
     func fetchProfile() async throws -> [InterestTopic] {
-        let context = modelContainer.mainContext
+        let context = deviceLocalContainer.mainContext
         let descriptor = FetchDescriptor<InterestTopicModel>(
             sortBy: [SortDescriptor(\.weight, order: .reverse)],
         )
@@ -44,7 +44,7 @@ final class LiveInterestProfileService: InterestProfileService {
         source: InterestTopic.Source,
         category: String?,
     ) async throws {
-        let context = modelContainer.mainContext
+        let context = deviceLocalContainer.mainContext
         try upsertWithoutSave(
             in: context,
             topicID: topicID,
@@ -64,7 +64,7 @@ final class LiveInterestProfileService: InterestProfileService {
     @MainActor
     func upsertMany(_ topics: [InterestTopicUpsert]) async throws {
         guard !topics.isEmpty else { return }
-        let context = modelContainer.mainContext
+        let context = deviceLocalContainer.mainContext
         for topic in topics {
             try upsertWithoutSave(
                 in: context,
@@ -138,7 +138,7 @@ final class LiveInterestProfileService: InterestProfileService {
 
     @MainActor
     func remove(topicID: String) async throws {
-        let context = modelContainer.mainContext
+        let context = deviceLocalContainer.mainContext
         let id = topicID
         let descriptor = FetchDescriptor<InterestTopicModel>(
             predicate: #Predicate { $0.topicID == id },
@@ -152,7 +152,7 @@ final class LiveInterestProfileService: InterestProfileService {
 
     @MainActor
     func resetProfile() async throws {
-        let context = modelContainer.mainContext
+        let context = deviceLocalContainer.mainContext
         try context.delete(model: InterestTopicModel.self)
         try context.save()
         broadcastChange()
@@ -172,7 +172,7 @@ final class LiveInterestProfileService: InterestProfileService {
     @MainActor
     @discardableResult
     func deduplicate() async throws -> Bool {
-        let context = modelContainer.mainContext
+        let context = deviceLocalContainer.mainContext
         let rows = try context.fetch(FetchDescriptor<InterestTopicModel>())
 
         var survivors: [String: InterestTopicModel] = [:]

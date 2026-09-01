@@ -132,6 +132,15 @@ extension PulseAppDelegate: @preconcurrency UNUserNotificationCenterDelegate {
     ) async {
         let userInfo = response.notification.request.content.userInfo
 
+        // Verify payload integrity (SEC-004). When the backend is configured
+        // with a signing key, only verified payloads are processed;
+        // unverifiable payloads fall through silently to maintain backward
+        // compatibility.
+        guard NotificationPayloadVerifier.verify(userInfo: userInfo) else {
+            Logger.shared.warning("Push notification payload failed HMAC verification", category: "Navigation")
+            return
+        }
+
         // Parse deeplink from notification payload using extracted parser
         guard let deeplink = NotificationDeeplinkParser.parse(from: userInfo) else {
             Logger.shared.warning("Push notification received without valid deeplink payload", category: "Navigation")
