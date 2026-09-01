@@ -1,0 +1,154 @@
+name: "Run iOS test suite"
+description: >
+  Runs one or more XCTest selectors against prebuilt products, preserves the
+  xcresult on failure, detects retry-masked flakes, and uploads the suite's
+  reporting artifacts.
+
+inputs:
+  scheme:
+    description: Xcode scheme containing the requested tests.
+    required: true
+  test-selectors:
+    description: Comma-separated -only-testing selectors (target, class, or method).
+    required: true
+  test-name:
+    description: Human-readable suite name used in logs and reports.
+    required: true
+  artifact-name:
+    description: Artifact and xcresult base name.
+    required: true
+  device:
+    description: >-
+      Simulator family to run on: "iphone" (fixed model, matching the build
+      job) or "ipad" (discovered at run time, preferring an iPad Pro).
+    required: false
+    default: "iphone"
+  enable-code-coverage:
+    description: Pass -enableCodeCoverage YES when true.
+    required: false
+    default: "false"
+  flaky-json:
+    description: Output path for retry-masked flake metadata.
+    required: true
+  retention-days:
+    description: >-
+      Retention period for the xcresult artifact. Defaults to the repository
+      default (90) so a red PR can still be triaged days later; the nightly
+      overrides it, since its bundles are superseded every night.
+    required: false
+    default: "90"
+  slow-json:
+    description: Optional output path for slow-test metadata.
+    required: false
+    default: ""
+  slow-threshold:
+    description: Slow-test threshold in seconds; required when slow-json is set.
+    required: false
+    default: ""
+  duration-suite:
+    description: Optional stable suite identifier for duration-ratchet metadata.
+    required: false
+    default: ""
+  timeout-minutes:
+    description: Hard wall-clock timeout enforced by the test runner.
+    required: true
+
+runs:
+  using: composite
+  steps:
+    # continue-on-error + the "Propagate test failure" step at the end is not
+    # ceremony: a failing step inside a composite action aborts the rest of the
+    # composite, so without it the failure extraction and the xcresult upload —
+    # the two things that exist precisely for a red run — would be skipped.
+    # Swallow the failure here, do the reporting, then re-raise it last.
+    - name: Run tests
+      id: tests
+      continue-on-error: true
+      shell: bash
+      env:
+        SCHEME: ${{ inputs.scheme }}
+        TEST_SELECTORS: ${{ inputs.test-selectors }}
+        TEST_NAME: ${{ inputs.test-name }}
+        ARTIFACT_NAME: ${{ inputs.artifact-name }}
+        DEVICE: ${{ inputs.device }}
+        ENABLE_CODE_COVERAGE: ${{ inputs.enable-code-coverage }}
+        DURATION_SUITE: ${{ inputs.duration-suite }}
+        TIMEOUT_MINUTES: ${{ inputs.timeout-minutes }}
+      run: >-
+        python3 scripts/run-ios-test-suite.py
+        --scheme "$SCHEME"
+        --test-selectors "$TEST_SELECTORS"
+        --test-name "$TEST_NAME"
+        --artifact-name "$ARTIFACT_NAME"
+        --device "$DEVICE"
+        --timeout-minutes "$TIMEOUT_MINUTES"
+        --enable-code-coverage "$ENABLE_CODE_COVERAGE"
+        --duration-suite "$DURATION_SUITE"
+
+    - name: Extract and display test failures
+      if: always() && steps.tests.outcome == 'failure'
+      shell: bash
+      env:
+        RESULT_BUNDLE: test-results/${{ inputs.artifact-name }}.xcresult
+        TEST_NAME: ${{ inputs.test-name }}
+      run: python3 scripts/extract-test-failures.py
+
+    - name: Detect flaky tests
+      if: steps.tests.outcome == 'success'
+      shell: bash
+      env:
+        RESULT_BUNDLE: test-results/${{ inputs.artifact-name }}.xcresult
+        TEST_NAME: ${{ inputs.test-name }}
+        FLAKY_JSON: ${{ inputs.flaky-json }}
+      run: python3 scripts/detect-flaky-tests.py
+
+    - name: Upload flaky test report
+      if: steps.tests.outcome == 'success'
+      uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
+      with:
+        name: flaky-${{ inputs.artifact-name }}
+        path: ${{ inputs.flaky-json }}
+        if-no-files-found: ignore
+
+    - name: Detect slow tests
+      if: steps.tests.outcome == 'success' && inputs.slow-json != ''
+      shell: bash
+      env:
+        RESULT_BUNDLE: test-results/${{ inputs.artifact-name }}.xcresult
+        TEST_NAME: ${{ inputs.test-name }}
+        SLOW_JSON: ${{ inputs.slow-json }}
+        SLOW_THRESHOLD: ${{ inputs.slow-threshold }}
+      run: python3 scripts/detect-slow-tests.py
+
+    - name: Upload slow test report
+      if: steps.tests.outcome == 'success' && inputs.slow-json != ''
+      uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
+      with:
+        name: slow-${{ inputs.artifact-name }}
+        path: ${{ inputs.slow-json }}
+        if-no-files-found: ignore
+
+    - name: Upload test results
+      if: always()
+      uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
+      with:
+        name: ${{ inputs.artifact-name }}
+        path: test-results/${{ inputs.artifact-name }}.xcresult
+        if-no-files-found: warn
+        retention-days: ${{ inputs.retention-days }}
+
+    - name: Upload suite duration
+      if: always() && inputs.duration-suite != ''
+      uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
+      with:
+        name: suite-duration-${{ inputs.duration-suite }}
+        path: suite-duration-${{ inputs.duration-suite }}.json
+        if-no-files-found: ignore
+        retention-days: 30
+
+    # Must stay LAST: this is what turns the swallowed failure above back into
+    # a red job, after every reporting step has run.
+    - name: Propagate test failure
+      if: always() && steps.tests.outcome == 'failure'
+      shell: bash
+      run: exit 1

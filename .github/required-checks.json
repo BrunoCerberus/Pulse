@@ -1,26 +1,15 @@
 {
-  "description": "The status-check contexts the master ruleset must require. ruleset-integrity.yml diffs this list against the live ruleset weekly: a context MISSING from the live ruleset fails the check (a gate silently stopped blocking), while an EXTRA context only warns (a deliberately added gate — update this list to ratify it). Keep in sync when required checks are added or renamed. Bootstrapped from the live ruleset on 2026-08-26.",
+  "description": "The stable summary contexts the master ruleset must require. Detailed jobs remain visible but are intentionally not coupled to branch protection. ruleset-integrity.yml fails when an expected context is missing and warns when the live ruleset has extras. After this manifest changes, update the live ruleset only after the new contexts have run on a pushed commit.",
   "required_contexts": [
     "Actionlint",
     "Analyze",
     "Build DocC",
-    "Build Project",
+    "Build Results Summary",
     "Code Quality",
     "Conventional Commit title",
-    "Coverage Summary",
-    "Docs Presence",
-    "Operational Controls",
-    "PII Scan",
-    "Patch Coverage",
-    "Release Build",
+    "Coverage Results Summary",
+    "Privacy Conformance Summary",
     "Security Audit / Checks",
-    "Snapshot Tests",
-    "Structural Integrity",
-    "Test Results Summary",
-    "UI Tests",
-    "Unit Tests",
-    "claude-review",
-    "pr-discovery",
-    "pr-verify"
+    "Test Results Summary"
   ]
 }

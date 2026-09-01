@@ -1,8 +1,8 @@
 name: Ruleset Integrity
 
-# The merge model rests on ~20 required status checks in the master ruleset —
-# the privacy conformance jobs, the test suites, the ratchets, CodeQL, the
-# Claude reviews, the style gates. Nothing else observes that ruleset: if a
+# The merge model rests on a small set of stable summary checks in the master
+# ruleset. Detailed build, test, coverage, and privacy jobs feed aggregators;
+# advisory AI reviews remain outside branch protection. If a
 # required check is removed or renamed (a ruleset edited in the UI, a rewrite,
 # a GitHub migration), the gate silently stops blocking and no workflow goes
 # red — a missing required check is absent, not failing. Scorecard's generic

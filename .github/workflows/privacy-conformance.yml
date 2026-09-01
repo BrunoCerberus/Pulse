@@ -604,3 +604,32 @@ jobs:
             esac
             echo "| $name | $verdict |" >> "$GITHUB_STEP_SUMMARY"
           done
+
+  # Stable branch-protection surface for the four deterministic privacy jobs.
+  # Their individual contexts remain visible for diagnosis without coupling
+  # the live ruleset to each internal job name.
+  privacy-results:
+    name: Privacy Conformance Summary
+    runs-on: ubuntu-latest
+    needs: [pii-scan, docs-presence, operational-controls, structural-integrity]
+    if: always()
+    timeout-minutes: 5
+
+    # Only to reach scripts/check-job-results.py.
+    permissions:
+      contents: read
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+
+      - name: Check privacy results
+        env:
+          JOB_RESULTS: |
+            PII Scan=${{ needs.pii-scan.result }}
+            Docs Presence=${{ needs.docs-presence.result }}
+            Operational Controls=${{ needs.operational-controls.result }}
+            Structural Integrity=${{ needs.structural-integrity.result }}
+        run: python3 scripts/check-job-results.py

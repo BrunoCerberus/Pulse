@@ -7,9 +7,8 @@ name: Runner Image Watch
 #
 # That is the right behaviour — silently building on a different Xcode is worse
 # than stopping — but it means a GitHub runner-image rotation takes out every
-# macOS job at once, with no warning, usually mid-PR. There are 11 macOS jobs
-# across ci.yml, codeql.yml, docs.yml, release.yml and scheduled-tests.yml, so
-# the blast radius is the entire pipeline.
+# macOS job at once, with no warning, usually mid-PR. The blast radius spans
+# ci.yml, codeql.yml, docs.yml, release.yml and scheduled-tests.yml.
 #
 # This job boots one macos-26 runner a week purely to inventory the installed
 # Xcodes. It warns (and opens a tracking issue) when the pinned 26.5 disappears,

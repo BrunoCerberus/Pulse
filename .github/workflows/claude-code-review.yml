@@ -16,9 +16,8 @@ jobs:
     # Skip fork PRs and drafts. Repo secrets (incl. CLAUDE_CODE_OAUTH_TOKEN) are
     # NOT exposed to pull_request runs from forks, so the review can't run there;
     # same-repo PRs — including Dependabot's, which run from same-repo branches —
-    # still run. NOTE: `claude-review` is a required status check, so a skipped
-    # fork/draft PR leaves it pending. That is intentional for this solo-maintainer
-    # repo (external fork PRs are rare and handled manually).
+    # still run. `claude-review` is advisory and absent from branch protection,
+    # so fork and draft PRs can skip it without leaving a merge-blocking context.
     if: >-
       github.event.pull_request.draft == false &&
       github.event.pull_request.head.repo.full_name == github.repository
@@ -152,4 +151,3 @@ jobs:
             echo ""
             echo "Findings are posted as inline comments and a review verdict directly on the pull request."
           } >> "$GITHUB_STEP_SUMMARY"
-

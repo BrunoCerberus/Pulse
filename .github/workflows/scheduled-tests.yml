@@ -256,18 +256,35 @@ jobs:
             test-name: Unit Tests
             scheme: PulseDev
             artifact-name: scheduled-unit-test-results
+            device: iphone
+            duration-suite: PulseTests
             timeout: 60
             slow-threshold: 30
           - test-target: PulseUITests
             test-name: UI Tests
             scheme: PulseDev
             artifact-name: scheduled-ui-test-results
+            device: iphone
+            duration-suite: PulseUITests
+            timeout: 180
+            slow-threshold: 120
+          # The PR runs a focused regular-width smoke set; nightly retains the
+          # complete UI target on iPad so device-independent flows still get a
+          # periodic second-device pass without dominating every PR.
+          - test-target: PulseUITests
+            test-name: UI Tests (iPad)
+            scheme: PulseDev
+            artifact-name: scheduled-ui-ipad-test-results
+            device: ipad
+            duration-suite: PulseUITests-iPad
             timeout: 180
             slow-threshold: 120
           - test-target: PulseSnapshotTests
             test-name: Snapshot Tests
             scheme: PulseSnapshotTests
             artifact-name: scheduled-snapshot-test-results
+            device: iphone
+            duration-suite: PulseSnapshotTests
             timeout: 60
             slow-threshold: 30
           # Widget tests were never run in CI at all — this leg gives the
@@ -276,9 +293,10 @@ jobs:
             test-name: Widget Tests
             scheme: PulseDev
             artifact-name: scheduled-widget-test-results
+            device: iphone
+            duration-suite: PulseWidgetExtensionTests
             timeout: 30
             slow-threshold: 30
-
     steps:
     - name: Checkout code
       uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
@@ -297,117 +315,19 @@ jobs:
         path: ./DerivedData/Build/Products
 
     - name: Run ${{ matrix.test-name }}
-      timeout-minutes: ${{ matrix.timeout }}
-      env:
-        SCHEME: ${{ matrix.scheme }}
-        TEST_TARGET: ${{ matrix.test-target }}
-        ARTIFACT_NAME: ${{ matrix.artifact-name }}
-        TEST_NAME: ${{ matrix.test-name }}
-      run: |
-        mkdir -p test-results
-        set -o pipefail
-
-        # One -only-testing flag per target: a single comma-joined value is
-        # treated as one (nonexistent) target name, and xcodebuild then exits
-        # 0 after running zero tests — a silent no-op.
-        ONLY_TESTING_ARGS=()
-        IFS=',' read -r -a TEST_TARGETS <<< "$TEST_TARGET"
-        for TEST_TARGET_NAME in "${TEST_TARGETS[@]}"; do
-          ONLY_TESTING_ARGS+=("-only-testing:$TEST_TARGET_NAME")
-        done
-
-        START_TS=$(date +%s)
-        xcodebuild test-without-building \
-          -project Pulse.xcodeproj \
-          -scheme "$SCHEME" \
-          "${ONLY_TESTING_ARGS[@]}" \
-          -destination 'platform=iOS Simulator,name=iPhone Air,OS=latest' \
-          -derivedDataPath ./DerivedData \
-          -resultBundlePath "test-results/${ARTIFACT_NAME}.xcresult" \
-          -disableAutomaticPackageResolution \
-          -retry-tests-on-failure \
-          2>&1 | tee /tmp/test_output.log
-
-        # Wall clock for the CI Duration Ratchet job. The `run:` shell is
-        # `set -e` + `pipefail`, so a failed or timed-out suite exits the step
-        # at the pipeline above and uploads nothing — only green legs measure,
-        # and a missing leg is reported as such, never a regression. The file
-        # name carries the leg: every artifact is unpacked into one directory
-        # by `--merge-multiple`, and identical names would overwrite each other.
-        SECS=$(( $(date +%s) - START_TS ))
-        printf '{"suite":"%s","seconds":%s}\n' "$TEST_TARGET" "$SECS" > "suite-duration-${TEST_TARGET}.json"
-        echo "$TEST_NAME wall clock: $(( SECS / 60 ))m$(( SECS % 60 ))s"
-
-        echo ""
-        echo "============================================"
-        echo "              TEST SUMMARY"
-        echo "============================================"
-        grep -E "(Test Suite.*started|Test Suite.*passed|Test Suite.*failed|Executed [0-9]+ test)" /tmp/test_output.log | tail -10 || echo "$TEST_NAME completed"
-
-    - name: Extract and display test failures
-      if: failure()
-      run: python3 scripts/extract-test-failures.py
-      env:
-        RESULT_BUNDLE: test-results/${{ matrix.artifact-name }}.xcresult
-        TEST_NAME: ${{ matrix.test-name }}
-
-    # Same retry-masked flake detection as ci.yml. The nightly is the more
-    # valuable place for it: it runs the full suite unconditionally every night,
-    # so it builds a consistent signal rather than a per-PR sample.
-    - name: Detect flaky tests
-      if: success()
-      run: python3 scripts/detect-flaky-tests.py
-      env:
-        RESULT_BUNDLE: test-results/${{ matrix.artifact-name }}.xcresult
-        TEST_NAME: ${{ matrix.test-name }}
-        FLAKY_JSON: flaky-${{ matrix.test-target }}.json
-
-    - name: Upload flaky test report
-      uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
-      if: success()
+      uses: ./.github/actions/run-ios-tests
       with:
-        name: flaky-${{ matrix.test-target }}
-        path: flaky-${{ matrix.test-target }}.json
-        if-no-files-found: ignore
-
-    # Advisory counterpart to flake detection: per-test durations for the
-    # slowest tests, so suite wall-clock drift is triage-able. Never fails.
-    - name: Detect slow tests
-      if: success()
-      run: python3 scripts/detect-slow-tests.py
-      env:
-        RESULT_BUNDLE: test-results/${{ matrix.artifact-name }}.xcresult
-        TEST_NAME: ${{ matrix.test-name }}
-        SLOW_JSON: slow-${{ matrix.test-target }}.json
-        SLOW_THRESHOLD: ${{ matrix.slow-threshold }}
-
-    - name: Upload slow test report
-      uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
-      if: success()
-      with:
-        name: slow-${{ matrix.test-target }}
-        path: slow-${{ matrix.test-target }}.json
-        if-no-files-found: ignore
-
-    - name: Upload test results
-      uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
-      if: always()
-      with:
-        name: ${{ matrix.artifact-name }}
-        path: test-results/${{ matrix.artifact-name }}.xcresult
-        if-no-files-found: warn
+        scheme: ${{ matrix.scheme }}
+        test-selectors: ${{ matrix.test-target }}
+        test-name: ${{ matrix.test-name }}
+        artifact-name: ${{ matrix.artifact-name }}
+        device: ${{ matrix.device }}
+        flaky-json: flaky-${{ matrix.duration-suite }}.json
+        slow-json: slow-${{ matrix.duration-suite }}.json
+        slow-threshold: ${{ matrix.slow-threshold }}
+        duration-suite: ${{ matrix.duration-suite }}
         retention-days: 5
-
-    # Feeds the CI Duration Ratchet job below; `always()` + ignore so a red or
-    # cancelled leg contributes whatever it measured (or nothing).
-    - name: Upload suite duration
-      uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
-      if: always()
-      with:
-        name: suite-duration-${{ matrix.test-target }}
-        path: "suite-duration-${{ matrix.test-target }}.json"
-        if-no-files-found: ignore
-        retention-days: 30
+        timeout-minutes: ${{ matrix.timeout }}
 
     - name: Upload recorded snapshots
       uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1

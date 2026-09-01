@@ -13,6 +13,7 @@ updates:
     directories:
       - "/"
       - "/.github/actions/setup-ios"
+      - "/.github/actions/run-ios-tests"
     schedule:
       interval: "weekly"
     commit-message:
