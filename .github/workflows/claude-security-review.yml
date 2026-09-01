@@ -13,11 +13,11 @@ name: Claude Security Review
 # calls out: a discovery agent that self-verifies filters out true positives a separate
 # step would have confirmed.
 #
-# ADVISORY verdicts by design: verify only leaves comments — it never runs
-# `gh pr review` and sets no verdict. The pr-discovery / pr-verify JOBS are in the
-# master required-check ruleset (they must run, and their claude-code-action steps
-# are continue-on-error, so a flaky action doesn't block merges), but no finding
-# ever turns the check red. Scoped by THREAT_MODEL.md + SEVERITY_RUBRIC.md.
+# ADVISORY by design: verify only leaves comments — it never runs `gh pr review`
+# or sets a verdict. The pr-discovery / pr-verify jobs are intentionally absent
+# from branch protection, and their claude-code-action steps are continue-on-error,
+# so neither service availability nor a finding can block a merge. Scoped by
+# THREAT_MODEL.md + SEVERITY_RUBRIC.md.
 
 on:
   pull_request:

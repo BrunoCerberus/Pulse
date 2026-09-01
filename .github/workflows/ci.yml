@@ -165,6 +165,9 @@ jobs:
       run: |
         python3 scripts/check-a11y-audit-coverage.py .
 
+    - name: Test CI timing renderer
+      run: python3 scripts/render-ci-timing.py --self-test
+
   # Shared audit body lives in reusable-security-audit.yml (also called by the
   # nightly with tool-channel: latest). Pinned tools here for reproducible PR
   # gating. The required check context is "Security Audit / Checks".
@@ -195,11 +198,9 @@ jobs:
   #     always run all three regardless of the diff — that job's whole
   #     purpose is catching semantic conflicts between PRs, so it must not
   #     be short-circuited by path filtering.
-  #   - "Skipped" is a real job conclusion, not a failure: the required-status
-  #     contexts (Unit Tests / Snapshot Tests / UI Tests) still post, GitHub
-  #     treats a skipped required check as passing, and downstream jobs that
-  #     `needs:` a skipped job are skipped in turn (not failed) by default —
-  #     nothing here can wedge a PR.
+  #   - "Skipped" is a real job conclusion, not a failure. The required Test
+  #     Results Summary treats deliberate path-filter skips as healthy while
+  #     still failing on any suite failure or cancellation.
   changes:
     name: Detect Changes
     runs-on: ubuntu-latest
@@ -211,13 +212,9 @@ jobs:
     # Fail OPEN, not closed: this job must never be the reason tests get
     # skipped. Both steps below carry continue-on-error, so an infra hiccup
     # here (checkout flake, paths-filter error) can never fail this job —
-    # which matters because a failed `changes` job would make the downstream
-    # `success() && ...` gate on unit-tests/snapshot-tests/ui-tests evaluate
-    # false, and those three are GitHub *required* checks that report
-    # "skipped" as passing. A `changes` job that quietly failed would
-    # therefore let a PR merge with zero tests run. Falling back to "run
-    # everything" when detection itself is broken avoids that; only a
-    # confirmed, successful path-filter result is allowed to skip a suite.
+    # which matters because a failed `changes` job would skip all downstream
+    # suites. Falling back to "run everything" when detection itself is broken
+    # avoids a green Test Results Summary with zero tests executed.
     outputs:
       unit: ${{ github.event_name != 'pull_request' || steps.filter.outcome != 'success' || steps.filter.outputs.unit == 'true' }}
       snapshot: ${{ github.event_name != 'pull_request' || steps.filter.outcome != 'success' || steps.filter.outputs.snapshot == 'true' }}
@@ -539,6 +536,31 @@ jobs:
         retention-days: 90
         if-no-files-found: ignore
 
+  # Stable branch-protection surface for both compile variants. The detailed
+  # jobs remain visible, but the ruleset only needs this one context. A skipped
+  # build is deliberate path filtering; failures and cancellations still fail.
+  build-results:
+    name: Build Results Summary
+    runs-on: ubuntu-latest
+    needs: [build, release-build]
+    if: always()
+    timeout-minutes: 5
+
+    permissions: {}
+
+    steps:
+    - name: Check build results
+      env:
+        DEBUG_RESULT: ${{ needs.build.result }}
+        RELEASE_RESULT: ${{ needs.release-build.result }}
+      run: |
+        is_ok() { [ "$1" = "success" ] || [ "$1" = "skipped" ]; }
+        if ! is_ok "$DEBUG_RESULT" || ! is_ok "$RELEASE_RESULT"; then
+          echo "::error::Build Project=$DEBUG_RESULT, Release Build=$RELEASE_RESULT"
+          exit 1
+        fi
+        echo "Build Project=$DEBUG_RESULT, Release Build=$RELEASE_RESULT"
+
   # Split into three independent jobs (rather than one Unit/UI/UI-iPad/Snapshot
   # matrix) so patch-coverage — which only consumes the unit + snapshot xcresults —
   # can start as soon as those two finish, instead of waiting on the much longer
@@ -574,87 +596,16 @@ jobs:
 
     - name: Run Unit Tests
       timeout-minutes: 60
-      env:
-        SCHEME: PulseDev
-        # Both unit test targets in one invocation: the widget tests shipped
-        # code (SharedURLQueue, widget data models) but were compiled — never
-        # run — in CI, so a break there could merge. The run step expands each
-        # target into its own -only-testing flag; the result bundle (and the
-        # coverage, flaky, and count reports built on it) then covers both.
-        TEST_TARGET: PulseTests,PulseWidgetExtensionTests
-        ARTIFACT_NAME: unit-test-results
-        TEST_NAME: Unit Tests
-      run: |
-        mkdir -p test-results
-        set -o pipefail
-
-        DEST="platform=iOS Simulator,name=iPhone Air,OS=latest"
-        echo "Test destination: $DEST"
-
-        # One -only-testing flag per target: a single comma-joined value is
-        # treated as one (nonexistent) target name, and xcodebuild then exits
-        # 0 after running zero tests — a silent no-op.
-        ONLY_TESTING_ARGS=()
-        IFS=',' read -r -a TEST_TARGETS <<< "$TEST_TARGET"
-        for TEST_TARGET_NAME in "${TEST_TARGETS[@]}"; do
-          ONLY_TESTING_ARGS+=("-only-testing:$TEST_TARGET_NAME")
-        done
-
-        xcodebuild test-without-building \
-          -project Pulse.xcodeproj \
-          -scheme "$SCHEME" \
-          "${ONLY_TESTING_ARGS[@]}" \
-          -destination "$DEST" \
-          -derivedDataPath ./DerivedData \
-          -resultBundlePath "test-results/${ARTIFACT_NAME}.xcresult" \
-          -enableCodeCoverage YES \
-          -disableAutomaticPackageResolution \
-          -retry-tests-on-failure \
-          2>&1 | tee /tmp/test_output.log
-
-        TEST_EXIT_CODE=${PIPESTATUS[0]}
-
-        echo ""
-        echo "============================================"
-        echo "              TEST SUMMARY"
-        echo "============================================"
-        grep -E "(Test Suite.*started|Test Suite.*passed|Test Suite.*failed|Executed [0-9]+ test)" /tmp/test_output.log | tail -10 || echo "$TEST_NAME completed"
-
-        exit $TEST_EXIT_CODE
-
-    - name: Extract and display test failures
-      if: failure()
-      run: python3 scripts/extract-test-failures.py
-      env:
-        RESULT_BUNDLE: test-results/unit-test-results.xcresult
-        TEST_NAME: Unit Tests
-
-    # `if: success()` is the whole detection precondition — see the script
-    # docstring. A failure recorded in a bundle whose suite passed can only
-    # have been recovered by -retry-tests-on-failure.
-    - name: Detect flaky tests
-      if: success()
-      run: python3 scripts/detect-flaky-tests.py
-      env:
-        RESULT_BUNDLE: test-results/unit-test-results.xcresult
-        TEST_NAME: Unit Tests
-        FLAKY_JSON: flaky-unit.json
-
-    - name: Upload flaky test report
-      uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
-      if: success()
+      uses: ./.github/actions/run-ios-tests
       with:
-        name: flaky-unit
-        path: flaky-unit.json
-        if-no-files-found: ignore
-
-    - name: Upload test results
-      uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
-      if: always()
-      with:
-        name: unit-test-results
-        path: test-results/unit-test-results.xcresult
-        if-no-files-found: warn
+        scheme: PulseDev
+        # Both unit targets must run: the widget tests cover shipped code and
+        # contribute to the coverage and test-count ratchets.
+        test-selectors: PulseTests,PulseWidgetExtensionTests
+        test-name: Unit Tests
+        artifact-name: unit-test-results
+        enable-code-coverage: "true"
+        flaky-json: flaky-unit.json
 
   snapshot-tests:
     name: Snapshot Tests
@@ -687,76 +638,14 @@ jobs:
 
     - name: Run Snapshot Tests
       timeout-minutes: 60
-      env:
-        SCHEME: PulseSnapshotTests
-        TEST_TARGET: PulseSnapshotTests
-        ARTIFACT_NAME: snapshot-test-results
-        TEST_NAME: Snapshot Tests
-      run: |
-        mkdir -p test-results
-        set -o pipefail
-
-        DEST="platform=iOS Simulator,name=iPhone Air,OS=latest"
-        echo "Test destination: $DEST"
-
-        ONLY_TESTING_ARGS=()
-        IFS=',' read -r -a TEST_TARGETS <<< "$TEST_TARGET"
-        for TEST_TARGET_NAME in "${TEST_TARGETS[@]}"; do
-          ONLY_TESTING_ARGS+=("-only-testing:$TEST_TARGET_NAME")
-        done
-
-        xcodebuild test-without-building \
-          -project Pulse.xcodeproj \
-          -scheme "$SCHEME" \
-          "${ONLY_TESTING_ARGS[@]}" \
-          -destination "$DEST" \
-          -derivedDataPath ./DerivedData \
-          -resultBundlePath "test-results/${ARTIFACT_NAME}.xcresult" \
-          -enableCodeCoverage YES \
-          -disableAutomaticPackageResolution \
-          -retry-tests-on-failure \
-          2>&1 | tee /tmp/test_output.log
-
-        TEST_EXIT_CODE=${PIPESTATUS[0]}
-
-        echo ""
-        echo "============================================"
-        echo "              TEST SUMMARY"
-        echo "============================================"
-        grep -E "(Test Suite.*started|Test Suite.*passed|Test Suite.*failed|Executed [0-9]+ test)" /tmp/test_output.log | tail -10 || echo "$TEST_NAME completed"
-
-        exit $TEST_EXIT_CODE
-
-    - name: Extract and display test failures
-      if: failure()
-      run: python3 scripts/extract-test-failures.py
-      env:
-        RESULT_BUNDLE: test-results/snapshot-test-results.xcresult
-        TEST_NAME: Snapshot Tests
-
-    - name: Detect flaky tests
-      if: success()
-      run: python3 scripts/detect-flaky-tests.py
-      env:
-        RESULT_BUNDLE: test-results/snapshot-test-results.xcresult
-        TEST_NAME: Snapshot Tests
-        FLAKY_JSON: flaky-snapshot.json
-
-    - name: Upload flaky test report
-      uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
-      if: success()
+      uses: ./.github/actions/run-ios-tests
       with:
-        name: flaky-snapshot
-        path: flaky-snapshot.json
-        if-no-files-found: ignore
-
-    - name: Upload test results
-      uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
-      if: always()
-      with:
-        name: snapshot-test-results
-        path: test-results/snapshot-test-results.xcresult
-        if-no-files-found: warn
+        scheme: PulseSnapshotTests
+        test-selectors: PulseSnapshotTests
+        test-name: Snapshot Tests
+        artifact-name: snapshot-test-results
+        enable-code-coverage: "true"
+        flaky-json: flaky-snapshot.json
 
     - name: Upload recorded snapshots
       uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
@@ -797,15 +686,9 @@ jobs:
         header: snapshot-failures
         delete: true
 
-  # NOTE: these two jobs were deliberately de-matrixed. A `name:` containing
-  # `${{ matrix.* }}` is NOT interpolated when the job is skipped by a
-  # job-level `if:` — the matrix never expands, so GitHub posts a single
-  # check run under the literal string "matrix.test-name". That left the
-  # *required* "UI Tests" context permanently "Expected" and blocked every
-  # PR the path filter skipped (observed on #437). Static job names are the
-  # only way to guarantee the required context is posted in both the run and
-  # the skip case, so the iPhone and iPad legs are spelled out separately.
-  # Keep their steps in sync when editing.
+  # Keep iPhone and iPad as explicit jobs: they use different selectors,
+  # destinations, and time budgets, while Test Results Summary provides the
+  # single stable required context.
   ui-tests:
     name: UI Tests
     runs-on: macos-26
@@ -838,86 +721,18 @@ jobs:
 
     - name: Run UI Tests
       timeout-minutes: 180
-      env:
-        SCHEME: PulseDev
-        TEST_TARGET: PulseUITests
-        ARTIFACT_NAME: ui-test-results
-        TEST_NAME: UI Tests
-      run: |
-        mkdir -p test-results
-        set -o pipefail
-
-        # iPhone Air, matching the build job's simulator.
-        DEST="platform=iOS Simulator,name=iPhone Air,OS=latest"
-        echo "Test destination: $DEST"
-
-        # Same per-target expansion as the unit job (single target today;
-        # a comma-joined value would silently run zero tests).
-        ONLY_TESTING_ARGS=()
-        IFS=',' read -r -a TEST_TARGETS <<< "$TEST_TARGET"
-        for TEST_TARGET_NAME in "${TEST_TARGETS[@]}"; do
-          ONLY_TESTING_ARGS+=("-only-testing:$TEST_TARGET_NAME")
-        done
-
-        # No -enableCodeCoverage here: patch-coverage only consumes the unit +
-        # snapshot xcresults, so collecting coverage on the slowest legs was
-        # pure overhead.
-        xcodebuild test-without-building \
-          -project Pulse.xcodeproj \
-          -scheme "$SCHEME" \
-          "${ONLY_TESTING_ARGS[@]}" \
-          -destination "$DEST" \
-          -derivedDataPath ./DerivedData \
-          -resultBundlePath "test-results/${ARTIFACT_NAME}.xcresult" \
-          -disableAutomaticPackageResolution \
-          -retry-tests-on-failure \
-          2>&1 | tee /tmp/test_output.log
-
-        TEST_EXIT_CODE=${PIPESTATUS[0]}
-
-        echo ""
-        echo "============================================"
-        echo "              TEST SUMMARY"
-        echo "============================================"
-        grep -E "(Test Suite.*started|Test Suite.*passed|Test Suite.*failed|Executed [0-9]+ test)" /tmp/test_output.log | tail -10 || echo "$TEST_NAME completed"
-
-        exit $TEST_EXIT_CODE
-
-    - name: Extract and display test failures
-      if: failure()
-      run: python3 scripts/extract-test-failures.py
-      env:
-        RESULT_BUNDLE: test-results/ui-test-results.xcresult
-        TEST_NAME: UI Tests
-
-    - name: Detect flaky tests
-      if: success()
-      run: python3 scripts/detect-flaky-tests.py
-      env:
-        RESULT_BUNDLE: test-results/ui-test-results.xcresult
-        TEST_NAME: UI Tests
-        FLAKY_JSON: flaky-ui.json
-
-    - name: Upload flaky test report
-      uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
-      if: success()
+      uses: ./.github/actions/run-ios-tests
       with:
-        name: flaky-ui
-        path: flaky-ui.json
-        if-no-files-found: ignore
+        scheme: PulseDev
+        test-selectors: PulseUITests
+        test-name: UI Tests
+        artifact-name: ui-test-results
+        flaky-json: flaky-ui.json
 
-    - name: Upload test results
-      uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
-      if: always()
-      with:
-        name: ui-test-results
-        path: test-results/ui-test-results.xcresult
-        if-no-files-found: warn
-
-  # iPad = regular size class, where the adaptive paths live
-  # (NavigationSplitView, LazyVGrid vs LazyVStack, the 720pt detail cap).
-  # The iPhone job above only ever exercises compact width. Reuses the same
-  # simulator build products (test-without-building).
+  # PR-time iPad smoke suite: regular-width navigation plus accessibility
+  # audits for the adaptive root/detail surfaces. The complete PulseUITests
+  # target still runs on iPad nightly, so PR feedback catches high-risk layout
+  # regressions without repeating every device-independent flow twice.
   ui-tests-ipad:
     name: UI Tests (iPad)
     runs-on: macos-26
@@ -945,83 +760,31 @@ jobs:
         name: build-products
         path: ./DerivedData/Build/Products
 
-    - name: Run UI Tests (iPad)
-      timeout-minutes: 180
-      env:
-        SCHEME: PulseDev
-        TEST_TARGET: PulseUITests
-        ARTIFACT_NAME: ui-test-results-ipad
-        TEST_NAME: UI Tests (iPad)
+    - name: Select iPad destination
+      id: ipad
       run: |
-        mkdir -p test-results
-        set -o pipefail
-
-        # Dynamically-discovered iPad so the destination survives runner-image
-        # changes, preferring a Pro model.
         DEVICE=$(xcrun simctl list devices available --json \
           | jq -r '[.devices[][] | select(.isAvailable and (.name | startswith("iPad"))) | .name]
                    | (map(select(test("Pro"))) + .)[0] // empty')
         [ -z "$DEVICE" ] && DEVICE="iPad Pro 13-inch (M4)"
-        DEST="platform=iOS Simulator,name=$DEVICE,OS=latest"
-        echo "Test destination: $DEST"
+        echo "destination=platform=iOS Simulator,name=$DEVICE,OS=latest" >> "$GITHUB_OUTPUT"
 
-        ONLY_TESTING_ARGS=()
-        IFS=',' read -r -a TEST_TARGETS <<< "$TEST_TARGET"
-        for TEST_TARGET_NAME in "${TEST_TARGETS[@]}"; do
-          ONLY_TESTING_ARGS+=("-only-testing:$TEST_TARGET_NAME")
-        done
-
-        xcodebuild test-without-building \
-          -project Pulse.xcodeproj \
-          -scheme "$SCHEME" \
-          "${ONLY_TESTING_ARGS[@]}" \
-          -destination "$DEST" \
-          -derivedDataPath ./DerivedData \
-          -resultBundlePath "test-results/${ARTIFACT_NAME}.xcresult" \
-          -disableAutomaticPackageResolution \
-          -retry-tests-on-failure \
-          2>&1 | tee /tmp/test_output.log
-
-        TEST_EXIT_CODE=${PIPESTATUS[0]}
-
-        echo ""
-        echo "============================================"
-        echo "              TEST SUMMARY"
-        echo "============================================"
-        grep -E "(Test Suite.*started|Test Suite.*passed|Test Suite.*failed|Executed [0-9]+ test)" /tmp/test_output.log | tail -10 || echo "$TEST_NAME completed"
-
-        exit $TEST_EXIT_CODE
-
-    - name: Extract and display test failures
-      if: failure()
-      run: python3 scripts/extract-test-failures.py
-      env:
-        RESULT_BUNDLE: test-results/ui-test-results-ipad.xcresult
-        TEST_NAME: UI Tests (iPad)
-
-    - name: Detect flaky tests
-      if: success()
-      run: python3 scripts/detect-flaky-tests.py
-      env:
-        RESULT_BUNDLE: test-results/ui-test-results-ipad.xcresult
-        TEST_NAME: UI Tests (iPad)
-        FLAKY_JSON: flaky-ui-ipad.json
-
-    - name: Upload flaky test report
-      uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
-      if: success()
+    - name: Run UI Tests (iPad)
+      timeout-minutes: 75
+      uses: ./.github/actions/run-ios-tests
       with:
-        name: flaky-ui-ipad
-        path: flaky-ui-ipad.json
-        if-no-files-found: ignore
-
-    - name: Upload test results
-      uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
-      if: always()
-      with:
-        name: ui-test-results-ipad
-        path: test-results/ui-test-results-ipad.xcresult
-        if-no-files-found: warn
+        scheme: PulseDev
+        test-selectors: >-
+          PulseUITests/NavigationUITests/testNavigationFlow,
+          PulseUITests/AccessibilityAuditTests/testHomeAccessibilityAudit,
+          PulseUITests/AccessibilityAuditTests/testFeedAccessibilityAudit,
+          PulseUITests/AccessibilityAuditTests/testArticleDetailAccessibilityAudit,
+          PulseUITests/AccessibilityAuditTests/testMediaDetailAccessibilityAudit,
+          PulseUITests/AccessibilityAuditTests/testSettingsAccessibilityAudit
+        test-name: UI Tests (iPad)
+        artifact-name: ui-test-results-ipad
+        destination: ${{ steps.ipad.outputs.destination }}
+        flaky-json: flaky-ui-ipad.json
 
   patch-coverage:
     name: Patch Coverage
@@ -1236,6 +999,7 @@ jobs:
 
     permissions:
       contents: read
+      actions: read
 
     steps:
     - name: Harden runner
@@ -1296,9 +1060,9 @@ jobs:
         is_ok() { [ "$1" == "success" ] || [ "$1" == "skipped" ]; }
 
         if is_ok "$UNIT_RESULT" && is_ok "$SNAPSHOT_RESULT" && is_ok "$UI_RESULT" && is_ok "$UI_IPAD_RESULT"; then
-          echo "status=success" >> $GITHUB_OUTPUT
+          echo "status=success" >> "$GITHUB_OUTPUT"
         else
-          echo "status=failure" >> $GITHUB_OUTPUT
+          echo "status=failure" >> "$GITHUB_OUTPUT"
         fi
 
     - name: Display Test Results Summary
@@ -1363,6 +1127,17 @@ jobs:
           echo "Some tests failed or were cancelled"
         fi
 
+    - name: Report runner wait versus execution time
+      if: always()
+      env:
+        GH_TOKEN: ${{ github.token }}
+        RUN_ID: ${{ github.run_id }}
+      run: |
+        gh api "repos/${GITHUB_REPOSITORY}/actions/runs/${RUN_ID}" > ci-run.json
+        gh api "repos/${GITHUB_REPOSITORY}/actions/runs/${RUN_ID}/jobs?per_page=100" > ci-jobs.json
+        python3 scripts/render-ci-timing.py ci-run.json ci-jobs.json ci-timing.md
+        cat ci-timing.md >> "$GITHUB_STEP_SUMMARY"
+
     - name: Fail if tests failed
       if: steps.check-results.outputs.status == 'failure'
       run: |
@@ -1375,9 +1150,8 @@ jobs:
     needs: unit-tests
     # Only meaningful when unit-tests actually produced an xcresult. Previously
     # `always()`, which booted a macOS runner just to print "no bundle
-    # available" on every PR the path filter skipped. It IS a required check
-    # (.github/required-checks.json), but a *skipped* required check still
-    # reports as passing, so skipping here is free.
+    # available" on every PR the path filter skipped. Coverage Results Summary
+    # is the required context and treats this deliberate skip as healthy.
     if: needs.unit-tests.result == 'success'
     timeout-minutes: 10
 
@@ -1590,6 +1364,30 @@ jobs:
         name: coverage-badge
         path: badges/coverage.svg
         if-no-files-found: ignore
+
+  # One stable required context for changed-line coverage, overall coverage,
+  # and the test-count ratchet housed in Coverage Summary.
+  coverage-results:
+    name: Coverage Results Summary
+    runs-on: ubuntu-latest
+    needs: [patch-coverage, coverage-summary]
+    if: always()
+    timeout-minutes: 5
+
+    permissions: {}
+
+    steps:
+    - name: Check coverage results
+      env:
+        PATCH_RESULT: ${{ needs.patch-coverage.result }}
+        SUMMARY_RESULT: ${{ needs.coverage-summary.result }}
+      run: |
+        is_ok() { [ "$1" = "success" ] || [ "$1" = "skipped" ]; }
+        if ! is_ok "$PATCH_RESULT" || ! is_ok "$SUMMARY_RESULT"; then
+          echo "::error::Patch Coverage=$PATCH_RESULT, Coverage Summary=$SUMMARY_RESULT"
+          exit 1
+        fi
+        echo "Patch Coverage=$PATCH_RESULT, Coverage Summary=$SUMMARY_RESULT"
 
   # Aggregates the per-suite flake reports into one sticky PR comment. Pure
   # JSON/text merging, so it runs on ubuntu. Never fails the build: a flake is

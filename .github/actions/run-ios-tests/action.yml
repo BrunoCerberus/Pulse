@@ -1,0 +1,178 @@
+name: "Run iOS test suite"
+description: >
+  Runs one or more XCTest selectors against prebuilt products, preserves the
+  xcresult on failure, detects retry-masked flakes, and uploads the suite's
+  reporting artifacts.
+
+inputs:
+  scheme:
+    description: Xcode scheme containing the requested tests.
+    required: true
+  test-selectors:
+    description: Comma-separated -only-testing selectors (target, class, or method).
+    required: true
+  test-name:
+    description: Human-readable suite name used in logs and reports.
+    required: true
+  artifact-name:
+    description: Artifact and xcresult base name.
+    required: true
+  destination:
+    description: xcodebuild destination specifier.
+    required: false
+    default: "platform=iOS Simulator,name=iPhone Air,OS=latest"
+  enable-code-coverage:
+    description: Pass -enableCodeCoverage YES when true.
+    required: false
+    default: "false"
+  flaky-json:
+    description: Output path for retry-masked flake metadata.
+    required: true
+  retention-days:
+    description: Retention period for the xcresult artifact.
+    required: false
+    default: "1"
+  slow-json:
+    description: Optional output path for slow-test metadata.
+    required: false
+    default: ""
+  slow-threshold:
+    description: Slow-test threshold in seconds; required when slow-json is set.
+    required: false
+    default: ""
+  duration-suite:
+    description: Optional stable suite identifier for duration-ratchet metadata.
+    required: false
+    default: ""
+
+runs:
+  using: composite
+  steps:
+    - name: Run tests
+      id: tests
+      continue-on-error: true
+      shell: bash
+      env:
+        SCHEME: ${{ inputs.scheme }}
+        TEST_SELECTORS: ${{ inputs.test-selectors }}
+        TEST_NAME: ${{ inputs.test-name }}
+        ARTIFACT_NAME: ${{ inputs.artifact-name }}
+        DESTINATION: ${{ inputs.destination }}
+        ENABLE_CODE_COVERAGE: ${{ inputs.enable-code-coverage }}
+        DURATION_SUITE: ${{ inputs.duration-suite }}
+      run: |
+        mkdir -p test-results
+        set -o pipefail
+
+        ONLY_TESTING_ARGS=()
+        IFS=',' read -r -a SELECTORS <<< "$TEST_SELECTORS"
+        for SELECTOR in "${SELECTORS[@]}"; do
+          SELECTOR="${SELECTOR#"${SELECTOR%%[![:space:]]*}"}"
+          SELECTOR="${SELECTOR%"${SELECTOR##*[![:space:]]}"}"
+          ONLY_TESTING_ARGS+=("-only-testing:$SELECTOR")
+        done
+
+        COVERAGE_ARGS=()
+        if [ "$ENABLE_CODE_COVERAGE" = "true" ]; then
+          COVERAGE_ARGS+=("-enableCodeCoverage" "YES")
+        fi
+
+        echo "Test destination: $DESTINATION"
+        echo "Test selectors: ${SELECTORS[*]}"
+        START_TS=$(date +%s)
+
+        xcodebuild test-without-building \
+          -project Pulse.xcodeproj \
+          -scheme "$SCHEME" \
+          "${ONLY_TESTING_ARGS[@]}" \
+          -destination "$DESTINATION" \
+          -derivedDataPath ./DerivedData \
+          -resultBundlePath "test-results/${ARTIFACT_NAME}.xcresult" \
+          "${COVERAGE_ARGS[@]}" \
+          -disableAutomaticPackageResolution \
+          -retry-tests-on-failure \
+          2>&1 | tee /tmp/test_output.log
+
+        TEST_EXIT_CODE=${PIPESTATUS[0]}
+        SECS=$(( $(date +%s) - START_TS ))
+
+        if [ -n "$DURATION_SUITE" ]; then
+          printf '{"suite":"%s","seconds":%s}\n' "$DURATION_SUITE" "$SECS" \
+            > "suite-duration-${DURATION_SUITE}.json"
+          echo "$TEST_NAME wall clock: $(( SECS / 60 ))m$(( SECS % 60 ))s"
+        fi
+
+        echo ""
+        echo "============================================"
+        echo "              TEST SUMMARY"
+        echo "============================================"
+        grep -E "(Test Suite.*started|Test Suite.*passed|Test Suite.*failed|Executed [0-9]+ test)" \
+          /tmp/test_output.log | tail -10 || echo "$TEST_NAME completed"
+
+        exit "$TEST_EXIT_CODE"
+
+    - name: Extract and display test failures
+      if: always() && steps.tests.outcome == 'failure'
+      shell: bash
+      env:
+        RESULT_BUNDLE: test-results/${{ inputs.artifact-name }}.xcresult
+        TEST_NAME: ${{ inputs.test-name }}
+      run: python3 scripts/extract-test-failures.py
+
+    - name: Detect flaky tests
+      if: steps.tests.outcome == 'success'
+      shell: bash
+      env:
+        RESULT_BUNDLE: test-results/${{ inputs.artifact-name }}.xcresult
+        TEST_NAME: ${{ inputs.test-name }}
+        FLAKY_JSON: ${{ inputs.flaky-json }}
+      run: python3 scripts/detect-flaky-tests.py
+
+    - name: Upload flaky test report
+      if: steps.tests.outcome == 'success'
+      uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
+      with:
+        name: flaky-${{ inputs.artifact-name }}
+        path: ${{ inputs.flaky-json }}
+        if-no-files-found: ignore
+
+    - name: Detect slow tests
+      if: steps.tests.outcome == 'success' && inputs.slow-json != ''
+      shell: bash
+      env:
+        RESULT_BUNDLE: test-results/${{ inputs.artifact-name }}.xcresult
+        TEST_NAME: ${{ inputs.test-name }}
+        SLOW_JSON: ${{ inputs.slow-json }}
+        SLOW_THRESHOLD: ${{ inputs.slow-threshold }}
+      run: python3 scripts/detect-slow-tests.py
+
+    - name: Upload slow test report
+      if: steps.tests.outcome == 'success' && inputs.slow-json != ''
+      uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
+      with:
+        name: slow-${{ inputs.artifact-name }}
+        path: ${{ inputs.slow-json }}
+        if-no-files-found: ignore
+
+    - name: Upload test results
+      if: always()
+      uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
+      with:
+        name: ${{ inputs.artifact-name }}
+        path: test-results/${{ inputs.artifact-name }}.xcresult
+        if-no-files-found: warn
+        retention-days: ${{ inputs.retention-days }}
+
+    - name: Upload suite duration
+      if: always() && inputs.duration-suite != ''
+      uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
+      with:
+        name: suite-duration-${{ inputs.duration-suite }}
+        path: suite-duration-${{ inputs.duration-suite }}.json
+        if-no-files-found: ignore
+        retention-days: 30
+
+    - name: Propagate test failure
+      if: always() && steps.tests.outcome == 'failure'
+      shell: bash
+      run: exit 1
