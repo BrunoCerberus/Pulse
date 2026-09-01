@@ -168,6 +168,9 @@ jobs:
     - name: Test CI timing renderer
       run: python3 scripts/render-ci-timing.py --self-test
 
+    - name: Test iOS suite runner
+      run: python3 scripts/run-ios-test-suite.py --self-test
+
   # Shared audit body lives in reusable-security-audit.yml (also called by the
   # nightly with tool-channel: latest). Pinned tools here for reproducible PR
   # gating. The required check context is "Security Audit / Checks".
@@ -595,7 +598,6 @@ jobs:
         path: ./DerivedData/Build/Products
 
     - name: Run Unit Tests
-      timeout-minutes: 60
       uses: ./.github/actions/run-ios-tests
       with:
         scheme: PulseDev
@@ -606,6 +608,7 @@ jobs:
         artifact-name: unit-test-results
         enable-code-coverage: "true"
         flaky-json: flaky-unit.json
+        timeout-minutes: "60"
 
   snapshot-tests:
     name: Snapshot Tests
@@ -637,7 +640,6 @@ jobs:
         path: ./DerivedData/Build/Products
 
     - name: Run Snapshot Tests
-      timeout-minutes: 60
       uses: ./.github/actions/run-ios-tests
       with:
         scheme: PulseSnapshotTests
@@ -646,6 +648,7 @@ jobs:
         artifact-name: snapshot-test-results
         enable-code-coverage: "true"
         flaky-json: flaky-snapshot.json
+        timeout-minutes: "60"
 
     - name: Upload recorded snapshots
       uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
@@ -720,7 +723,6 @@ jobs:
         path: ./DerivedData/Build/Products
 
     - name: Run UI Tests
-      timeout-minutes: 180
       uses: ./.github/actions/run-ios-tests
       with:
         scheme: PulseDev
@@ -728,6 +730,7 @@ jobs:
         test-name: UI Tests
         artifact-name: ui-test-results
         flaky-json: flaky-ui.json
+        timeout-minutes: "180"
 
   # PR-time iPad smoke suite: regular-width navigation plus accessibility
   # audits for the adaptive root/detail surfaces. The complete PulseUITests
@@ -770,7 +773,6 @@ jobs:
         echo "destination=platform=iOS Simulator,name=$DEVICE,OS=latest" >> "$GITHUB_OUTPUT"
 
     - name: Run UI Tests (iPad)
-      timeout-minutes: 75
       uses: ./.github/actions/run-ios-tests
       with:
         scheme: PulseDev
@@ -785,6 +787,7 @@ jobs:
         artifact-name: ui-test-results-ipad
         destination: ${{ steps.ipad.outputs.destination }}
         flaky-json: flaky-ui-ipad.json
+        timeout-minutes: "75"
 
   patch-coverage:
     name: Patch Coverage

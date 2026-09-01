@@ -330,7 +330,6 @@ jobs:
         echo "value=platform=iOS Simulator,name=$DEVICE,OS=latest" >> "$GITHUB_OUTPUT"
 
     - name: Run ${{ matrix.test-name }}
-      timeout-minutes: ${{ matrix.timeout }}
       uses: ./.github/actions/run-ios-tests
       with:
         scheme: ${{ matrix.scheme }}
@@ -343,6 +342,7 @@ jobs:
         slow-threshold: ${{ matrix.slow-threshold }}
         duration-suite: ${{ matrix.duration-suite }}
         retention-days: 5
+        timeout-minutes: ${{ matrix.timeout }}
 
     - name: Upload recorded snapshots
       uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
