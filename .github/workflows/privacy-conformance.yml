@@ -615,21 +615,21 @@ jobs:
     if: always()
     timeout-minutes: 5
 
-    permissions: {}
+    # Only to reach scripts/check-job-results.py.
+    permissions:
+      contents: read
 
     steps:
+      - name: Checkout code
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+
       - name: Check privacy results
         env:
-          PII_RESULT: ${{ needs.pii-scan.result }}
-          DOCS_RESULT: ${{ needs.docs-presence.result }}
-          CONTROLS_RESULT: ${{ needs.operational-controls.result }}
-          STRUCTURE_RESULT: ${{ needs.structural-integrity.result }}
-        run: |
-          is_ok() { [ "$1" = "success" ] || [ "$1" = "skipped" ]; }
-          for result in "$PII_RESULT" "$DOCS_RESULT" "$CONTROLS_RESULT" "$STRUCTURE_RESULT"; do
-            if ! is_ok "$result"; then
-              echo "::error::PII=$PII_RESULT, Docs=$DOCS_RESULT, Controls=$CONTROLS_RESULT, Structure=$STRUCTURE_RESULT"
-              exit 1
-            fi
-          done
-          echo "PII=$PII_RESULT, Docs=$DOCS_RESULT, Controls=$CONTROLS_RESULT, Structure=$STRUCTURE_RESULT"
+          JOB_RESULTS: |
+            PII Scan=${{ needs.pii-scan.result }}
+            Docs Presence=${{ needs.docs-presence.result }}
+            Operational Controls=${{ needs.operational-controls.result }}
+            Structural Integrity=${{ needs.structural-integrity.result }}
+        run: python3 scripts/check-job-results.py

@@ -314,21 +314,6 @@ jobs:
         name: scheduled-build-products
         path: ./DerivedData/Build/Products
 
-    - name: Select test destination
-      id: destination
-      env:
-        DEVICE_KIND: ${{ matrix.device }}
-      run: |
-        if [ "$DEVICE_KIND" = "ipad" ]; then
-          DEVICE=$(xcrun simctl list devices available --json \
-            | jq -r '[.devices[][] | select(.isAvailable and (.name | startswith("iPad"))) | .name]
-                     | (map(select(test("Pro"))) + .)[0] // empty')
-          [ -z "$DEVICE" ] && DEVICE="iPad Pro 13-inch (M4)"
-        else
-          DEVICE="iPhone Air"
-        fi
-        echo "value=platform=iOS Simulator,name=$DEVICE,OS=latest" >> "$GITHUB_OUTPUT"
-
     - name: Run ${{ matrix.test-name }}
       uses: ./.github/actions/run-ios-tests
       with:
@@ -336,7 +321,7 @@ jobs:
         test-selectors: ${{ matrix.test-target }}
         test-name: ${{ matrix.test-name }}
         artifact-name: ${{ matrix.artifact-name }}
-        destination: ${{ steps.destination.outputs.value }}
+        device: ${{ matrix.device }}
         flaky-json: flaky-${{ matrix.duration-suite }}.json
         slow-json: slow-${{ matrix.duration-suite }}.json
         slow-threshold: ${{ matrix.slow-threshold }}

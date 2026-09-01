@@ -171,6 +171,17 @@ jobs:
     - name: Test iOS suite runner
       run: python3 scripts/run-ios-test-suite.py --self-test
 
+    - name: Test job-results gate
+      run: python3 scripts/check-job-results.py --self-test
+
+    # A dangling -only-testing selector runs zero tests and exits 0, so a
+    # renamed test would leave its leg green and empty. Seconds here versus
+    # discovering it after a 45-minute build (or never).
+    - name: Check workflow test selectors
+      run: |
+        python3 scripts/check-test-selectors.py --self-test
+        python3 scripts/check-test-selectors.py .
+
   # Shared audit body lives in reusable-security-audit.yml (also called by the
   # nightly with tool-channel: latest). Pinned tools here for reproducible PR
   # gating. The required check context is "Security Audit / Checks".
@@ -549,20 +560,22 @@ jobs:
     if: always()
     timeout-minutes: 5
 
-    permissions: {}
+    # Only to reach scripts/check-job-results.py.
+    permissions:
+      contents: read
 
     steps:
+    - name: Checkout code
+      uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+      with:
+        persist-credentials: false
+
     - name: Check build results
       env:
-        DEBUG_RESULT: ${{ needs.build.result }}
-        RELEASE_RESULT: ${{ needs.release-build.result }}
-      run: |
-        is_ok() { [ "$1" = "success" ] || [ "$1" = "skipped" ]; }
-        if ! is_ok "$DEBUG_RESULT" || ! is_ok "$RELEASE_RESULT"; then
-          echo "::error::Build Project=$DEBUG_RESULT, Release Build=$RELEASE_RESULT"
-          exit 1
-        fi
-        echo "Build Project=$DEBUG_RESULT, Release Build=$RELEASE_RESULT"
+        JOB_RESULTS: |
+          Build Project=${{ needs.build.result }}
+          Release Build=${{ needs.release-build.result }}
+      run: python3 scripts/check-job-results.py
 
   # Split into three independent jobs (rather than one Unit/UI/UI-iPad/Snapshot
   # matrix) so patch-coverage — which only consumes the unit + snapshot xcresults —
@@ -763,15 +776,6 @@ jobs:
         name: build-products
         path: ./DerivedData/Build/Products
 
-    - name: Select iPad destination
-      id: ipad
-      run: |
-        DEVICE=$(xcrun simctl list devices available --json \
-          | jq -r '[.devices[][] | select(.isAvailable and (.name | startswith("iPad"))) | .name]
-                   | (map(select(test("Pro"))) + .)[0] // empty')
-        [ -z "$DEVICE" ] && DEVICE="iPad Pro 13-inch (M4)"
-        echo "destination=platform=iOS Simulator,name=$DEVICE,OS=latest" >> "$GITHUB_OUTPUT"
-
     - name: Run UI Tests (iPad)
       uses: ./.github/actions/run-ios-tests
       with:
@@ -785,7 +789,7 @@ jobs:
           PulseUITests/AccessibilityAuditTests/testSettingsAccessibilityAudit
         test-name: UI Tests (iPad)
         artifact-name: ui-test-results-ipad
-        destination: ${{ steps.ipad.outputs.destination }}
+        device: ipad
         flaky-json: flaky-ui-ipad.json
         timeout-minutes: "75"
 
@@ -1043,30 +1047,20 @@ jobs:
         name: snapshot-test-results
         path: snapshot-test-results
 
+    # FAIL_ON_ERROR=false: this job renders its summary and the timing report
+    # before going red, so it gates on the `status` output and fails in the
+    # last step instead of here. The success/skipped rule itself is shared
+    # with the other three summary gates.
     - name: Check test job results
       id: check-results
-      run: |
-        # Check the outcome of the unit/snapshot/UI test jobs
-        UNIT_RESULT="${{ needs.unit-tests.result }}"
-        SNAPSHOT_RESULT="${{ needs.snapshot-tests.result }}"
-        UI_RESULT="${{ needs.ui-tests.result }}"
-        UI_IPAD_RESULT="${{ needs.ui-tests-ipad.result }}"
-        echo "Unit Tests job result: $UNIT_RESULT"
-        echo "Snapshot Tests job result: $SNAPSHOT_RESULT"
-        echo "UI Tests job result: $UI_RESULT"
-        echo "UI Tests (iPad) job result: $UI_IPAD_RESULT"
-
-        # "skipped" is a deliberate outcome from the changes-detection job
-        # (path filtering decided this suite didn't need to run) and must be
-        # treated the same as "success" here, or every PR that skips a suite
-        # would fail this required check.
-        is_ok() { [ "$1" == "success" ] || [ "$1" == "skipped" ]; }
-
-        if is_ok "$UNIT_RESULT" && is_ok "$SNAPSHOT_RESULT" && is_ok "$UI_RESULT" && is_ok "$UI_IPAD_RESULT"; then
-          echo "status=success" >> "$GITHUB_OUTPUT"
-        else
-          echo "status=failure" >> "$GITHUB_OUTPUT"
-        fi
+      env:
+        FAIL_ON_ERROR: "false"
+        JOB_RESULTS: |
+          Unit Tests=${{ needs.unit-tests.result }}
+          Snapshot Tests=${{ needs.snapshot-tests.result }}
+          UI Tests=${{ needs.ui-tests.result }}
+          UI Tests (iPad)=${{ needs.ui-tests-ipad.result }}
+      run: python3 scripts/check-job-results.py
 
     - name: Display Test Results Summary
       run: |
@@ -1130,15 +1124,18 @@ jobs:
           echo "Some tests failed or were cancelled"
         fi
 
+    # Advisory telemetry on a REQUIRED context, so it must never be the reason
+    # this job goes red: a rate-limited or 5xx `gh api` would otherwise fail a
+    # green test run and block the merge. Same rule as the flake report.
     - name: Report runner wait versus execution time
       if: always()
+      continue-on-error: true
       env:
         GH_TOKEN: ${{ github.token }}
         RUN_ID: ${{ github.run_id }}
       run: |
-        gh api "repos/${GITHUB_REPOSITORY}/actions/runs/${RUN_ID}" > ci-run.json
         gh api "repos/${GITHUB_REPOSITORY}/actions/runs/${RUN_ID}/jobs?per_page=100" > ci-jobs.json
-        python3 scripts/render-ci-timing.py ci-run.json ci-jobs.json ci-timing.md
+        python3 scripts/render-ci-timing.py ci-jobs.json ci-timing.md
         cat ci-timing.md >> "$GITHUB_STEP_SUMMARY"
 
     - name: Fail if tests failed
@@ -1377,20 +1374,22 @@ jobs:
     if: always()
     timeout-minutes: 5
 
-    permissions: {}
+    # Only to reach scripts/check-job-results.py.
+    permissions:
+      contents: read
 
     steps:
+    - name: Checkout code
+      uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+      with:
+        persist-credentials: false
+
     - name: Check coverage results
       env:
-        PATCH_RESULT: ${{ needs.patch-coverage.result }}
-        SUMMARY_RESULT: ${{ needs.coverage-summary.result }}
-      run: |
-        is_ok() { [ "$1" = "success" ] || [ "$1" = "skipped" ]; }
-        if ! is_ok "$PATCH_RESULT" || ! is_ok "$SUMMARY_RESULT"; then
-          echo "::error::Patch Coverage=$PATCH_RESULT, Coverage Summary=$SUMMARY_RESULT"
-          exit 1
-        fi
-        echo "Patch Coverage=$PATCH_RESULT, Coverage Summary=$SUMMARY_RESULT"
+        JOB_RESULTS: |
+          Patch Coverage=${{ needs.patch-coverage.result }}
+          Coverage Summary=${{ needs.coverage-summary.result }}
+      run: python3 scripts/check-job-results.py
 
   # Aggregates the per-suite flake reports into one sticky PR comment. Pure
   # JSON/text merging, so it runs on ubuntu. Never fails the build: a flake is

@@ -17,10 +17,12 @@ inputs:
   artifact-name:
     description: Artifact and xcresult base name.
     required: true
-  destination:
-    description: xcodebuild destination specifier.
+  device:
+    description: >-
+      Simulator family to run on: "iphone" (fixed model, matching the build
+      job) or "ipad" (discovered at run time, preferring an iPad Pro).
     required: false
-    default: "platform=iOS Simulator,name=iPhone Air,OS=latest"
+    default: "iphone"
   enable-code-coverage:
     description: Pass -enableCodeCoverage YES when true.
     required: false
@@ -29,9 +31,12 @@ inputs:
     description: Output path for retry-masked flake metadata.
     required: true
   retention-days:
-    description: Retention period for the xcresult artifact.
+    description: >-
+      Retention period for the xcresult artifact. Defaults to the repository
+      default (90) so a red PR can still be triaged days later; the nightly
+      overrides it, since its bundles are superseded every night.
     required: false
-    default: "1"
+    default: "90"
   slow-json:
     description: Optional output path for slow-test metadata.
     required: false
@@ -51,6 +56,11 @@ inputs:
 runs:
   using: composite
   steps:
+    # continue-on-error + the "Propagate test failure" step at the end is not
+    # ceremony: a failing step inside a composite action aborts the rest of the
+    # composite, so without it the failure extraction and the xcresult upload —
+    # the two things that exist precisely for a red run — would be skipped.
+    # Swallow the failure here, do the reporting, then re-raise it last.
     - name: Run tests
       id: tests
       continue-on-error: true
@@ -60,7 +70,7 @@ runs:
         TEST_SELECTORS: ${{ inputs.test-selectors }}
         TEST_NAME: ${{ inputs.test-name }}
         ARTIFACT_NAME: ${{ inputs.artifact-name }}
-        DESTINATION: ${{ inputs.destination }}
+        DEVICE: ${{ inputs.device }}
         ENABLE_CODE_COVERAGE: ${{ inputs.enable-code-coverage }}
         DURATION_SUITE: ${{ inputs.duration-suite }}
         TIMEOUT_MINUTES: ${{ inputs.timeout-minutes }}
@@ -70,7 +80,7 @@ runs:
         --test-selectors "$TEST_SELECTORS"
         --test-name "$TEST_NAME"
         --artifact-name "$ARTIFACT_NAME"
-        --destination "$DESTINATION"
+        --device "$DEVICE"
         --timeout-minutes "$TIMEOUT_MINUTES"
         --enable-code-coverage "$ENABLE_CODE_COVERAGE"
         --duration-suite "$DURATION_SUITE"
@@ -136,6 +146,8 @@ runs:
         if-no-files-found: ignore
         retention-days: 30
 
+    # Must stay LAST: this is what turns the swallowed failure above back into
+    # a red job, after every reporting step has run.
     - name: Propagate test failure
       if: always() && steps.tests.outcome == 'failure'
       shell: bash
