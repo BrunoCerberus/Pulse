@@ -36,10 +36,14 @@ import sys
 from xcresult_common import collect_failures, escape_cell, parse_xcresult, truncate
 
 
-def write_outputs(test_name, flaky, json_path, summary_file):
-    payload = {"suite": test_name, "flaky": flaky}
+def write_outputs(test_name, flaky, json_path, summary_file, available=True):
+    payload = {"suite": test_name, "flaky": flaky, "available": available}
     with open(json_path, "w") as fh:
         json.dump(payload, fh, indent=2)
+
+    if not available:
+        print(f"Flake data unavailable for {test_name}.")
+        return
 
     if not flaky:
         print(f"No retry-masked flakes in {test_name}.")
@@ -74,13 +78,13 @@ def main():
 
     if not os.path.isdir(result_bundle):
         print(f"::warning::No result bundle at {result_bundle} — skipping flake detection")
-        write_outputs(test_name, [], json_path, summary_file)
+        write_outputs(test_name, [], json_path, summary_file, available=False)
         return
 
     data = parse_xcresult(result_bundle)
     if data is None:
         print("::warning::Could not parse xcresult bundle — skipping flake detection")
-        write_outputs(test_name, [], json_path, summary_file)
+        write_outputs(test_name, [], json_path, summary_file, available=False)
         return
 
     write_outputs(test_name, collect_failures(data), json_path, summary_file)

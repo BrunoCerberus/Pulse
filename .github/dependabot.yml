@@ -13,6 +13,7 @@ updates:
     directories:
       - "/"
       - "/.github/actions/setup-ios"
+      - "/.github/actions/setup-swift-tools"
       - "/.github/actions/run-ios-tests"
     schedule:
       interval: "weekly"

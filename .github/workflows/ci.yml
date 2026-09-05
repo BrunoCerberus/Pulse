@@ -48,28 +48,10 @@ jobs:
       with:
         install-runtime: "false"
 
-    # Mint is specific to this job (SwiftFormat) so its cache stays here rather
-    # than in the shared composite.
-    # Note: Static version key (mint-v1) - increment manually when mint dependencies change
-    - name: Cache Mint packages
-      uses: actions/cache@55cc8345863c7cc4c66a329aec7e433d2d1c52a9 # v6.1.0
+    - name: Install pinned lint tools
+      uses: ./.github/actions/setup-swift-tools
       with:
-        path: ~/.mint
-        key: ${{ runner.os }}-mint-v1
-        restore-keys: |
-          ${{ runner.os }}-mint-
-
-    - name: Install Mint
-      run: |
-        brew install mint
-
-    - name: Install SwiftFormat via Mint
-      run: |
-        mint install nicklockwood/SwiftFormat
-
-    - name: Install SwiftLint
-      run: |
-        brew install swiftlint
+        tools: SwiftFormat SwiftLint
 
     # Lint scope includes the two shipped app extensions (PulseShareExtension,
     # PulseWidgetExtension) — they ship to users and are inside the patch-coverage
@@ -164,6 +146,12 @@ jobs:
     - name: Check accessibility audit coverage
       run: |
         python3 scripts/check-a11y-audit-coverage.py .
+
+    - name: Test CI regression fixtures
+      run: python3 -m unittest discover -s scripts/tests -v
+
+    - name: Test CI health reporter
+      run: python3 scripts/report-ci-health.py --self-test
 
     - name: Test CI timing renderer
       run: python3 scripts/render-ci-timing.py --self-test
@@ -283,6 +271,8 @@ jobs:
             - '.github/workflows/ci.yml'
             - '.github/actions/**'
             - 'Makefile'
+            - 'Mintfile'
+            - '.github/swiftlint.sha256'
             - 'scripts/**'
             # Not run by any CI job, but it IS in PulseDev's test.targets, so
             # `build-for-testing -scheme PulseDev` compiles it — and the build

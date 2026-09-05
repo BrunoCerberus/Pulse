@@ -83,6 +83,7 @@ targets:
       - path: PulseShareExtension/SharedURLQueue.swift
     settings:
       base:
+        OTHER_DOCC_FLAGS: "--warnings-as-errors"
         INFOPLIST_FILE: Pulse/Info.plist
         PRODUCT_BUNDLE_IDENTIFIER: com.bruno.Pulse-News
         MARKETING_VERSION: "1.0.0"
@@ -178,6 +179,11 @@ targets:
 
           if [ "${PLATFORM_NAME}" != "iphoneos" ]; then
             echo "Skipping Crashlytics dSYM upload for ${PLATFORM_NAME} ${CONFIGURATION} build"
+            exit 0
+          fi
+
+          # An unsigned CI archive exercises device slices without contacting Firebase.
+          if [ "${PULSE_ARCHIVE_SMOKE:-NO}" = "YES" ] && [ "${CODE_SIGNING_ALLOWED}" = "NO" ]; then
             exit 0
           fi
 

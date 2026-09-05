@@ -42,7 +42,13 @@ env:
   HOMEBREW_NO_AUTO_UPDATE: "1"
 
 jobs:
+  readiness:
+    uses: ./.github/workflows/release-readiness.yml
+    permissions:
+      contents: read
+
   release:
+    needs: readiness
     name: Build & Release
     runs-on: macos-26
     # Generous ceiling for the (dormant) device archive + upload path; the
@@ -200,7 +206,9 @@ jobs:
 
     - name: Install XcodeGen
       if: steps.creds.outputs.enabled == 'true'
-      run: brew install xcodegen
+      uses: ./.github/actions/setup-swift-tools
+      with:
+        tools: XcodeGen
 
     - name: Generate Xcode project
       if: steps.creds.outputs.enabled == 'true'

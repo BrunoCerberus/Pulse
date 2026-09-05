@@ -1,0 +1,52 @@
+name: Analysis change detection
+on:
+  workflow_call:
+    inputs:
+      kind:
+        type: string
+        required: true
+    outputs:
+      run:
+        value: ${{ jobs.changes.outputs.run }}
+permissions:
+  contents: read
+jobs:
+  changes:
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    outputs:
+      run: ${{ github.event_name != 'pull_request' || steps.filter.outcome != 'success' || steps.filter.outputs.shared == 'true' || (inputs.kind == 'docs' && steps.filter.outputs.docs == 'true') || (inputs.kind == 'codeql' && steps.filter.outputs.codeql == 'true') }}
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        continue-on-error: true
+        with:
+          persist-credentials: false
+          fetch-depth: 0
+      - uses: dorny/paths-filter@ceb8a2b8f2d89434be7ff52d3de7ec3738c5cc9d # v4.0.3
+        id: filter
+        if: github.event_name == 'pull_request'
+        continue-on-error: true
+        with:
+          base: ${{ github.event.pull_request.base.sha }}
+          filters: |
+            shared:
+              - '**/*.swift'
+              - 'project.yml'
+              - '**/Package.resolved'
+              - '**/Package.swift'
+              - 'Makefile'
+              - 'Mintfile'
+              - '.github/swiftlint.sha256'
+              - '.github/actions/**'
+              - '.github/workflows/reusable-analysis-changes.yml'
+              - 'scripts/**'
+              - '**/*.xcconfig'
+              - '**/*.plist'
+              - '**/*.entitlements'
+              - '**/*.xcassets/**'
+            docs:
+              - '**/*.docc/**'
+              - '.github/workflows/docs.yml'
+            codeql:
+              - '.github/codeql/**'
+              - '.github/workflows/codeql.yml'

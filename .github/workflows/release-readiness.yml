@@ -1,0 +1,117 @@
+name: Release Readiness
+on:
+  workflow_dispatch:
+    inputs:
+      signed-export:
+        description: Validate signed export with release secrets (master only; never uploads).
+        type: boolean
+        default: false
+  schedule:
+    - cron: '30 9 * * 5'
+  workflow_call:
+permissions: {}
+concurrency:
+  group: release-readiness-${{ github.ref }}
+  cancel-in-progress: false
+jobs:
+  archive:
+    name: Device Archive Smoke
+    runs-on: macos-26
+    timeout-minutes: 60
+    permissions:
+      contents: read
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+      - name: Provide inert Firebase resource for unsigned archive
+        run: |
+          python3 - <<'PYCODE'
+          import plistlib
+          with open('Pulse/GoogleService-Info.plist', 'wb') as stream:
+              plistlib.dump({'PULSE_ARCHIVE_SMOKE': True}, stream)
+          PYCODE
+      - uses: ./.github/actions/setup-ios
+        with:
+          install-runtime: 'false'
+      - name: Archive device build without signing or upload
+        run: |
+          set -o pipefail
+          xcodebuild archive -project Pulse.xcodeproj -scheme PulseProd \
+            -configuration Release -destination 'generic/platform=iOS' \
+            -archivePath build/Pulse.xcarchive -derivedDataPath ./DerivedData \
+            -onlyUsePackageVersionsFromResolvedFile -skipMacroValidation \
+            CODE_SIGNING_ALLOWED=NO PULSE_ARCHIVE_SMOKE=YES | tee archive.log
+          python3 scripts/check-release-archive.py build/Pulse.xcarchive
+      - name: Report scope
+        run: echo 'Device archive validated, including both extensions. Signing and export are not validated by the unsigned smoke check.' >> "$GITHUB_STEP_SUMMARY"
+      - uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
+        if: always()
+        with:
+          name: device-archive-log
+          path: archive.log
+          retention-days: 7
+  export:
+    name: Signed Export Validation
+    if: github.event_name == 'workflow_dispatch' && inputs.signed-export
+    runs-on: macos-26
+    timeout-minutes: 90
+    permissions:
+      contents: read
+    steps:
+      - name: Require trusted master ref
+        env:
+          REF: ${{ github.ref }}
+        run: test "$REF" = refs/heads/master
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+      - name: Require release credentials and provision Firebase
+        env:
+          GSI: ${{ secrets.GOOGLE_SERVICE_INFO_PLIST }}
+          ASC_KEY: ${{ secrets.APP_STORE_CONNECT_API_KEY }}
+          KEY_ID: ${{ secrets.APP_STORE_CONNECT_KEY_ID }}
+          ISSUER: ${{ secrets.APP_STORE_CONNECT_ISSUER_ID }}
+          TEAM: ${{ secrets.APPLE_TEAM_ID }}
+        run: |
+          for value in "$GSI" "$ASC_KEY" "$KEY_ID" "$ISSUER" "$TEAM"; do
+            if [ -z "$value" ]; then
+              echo '::error::Signed export requires all five documented release credentials'
+              exit 1
+            fi
+          done
+          printf '%s' "$GSI" | base64 --decode > Pulse/GoogleService-Info.plist
+      - uses: ./.github/actions/setup-ios
+        with:
+          install-runtime: 'false'
+      - name: Archive and export locally
+        env:
+          ASC_KEY: ${{ secrets.APP_STORE_CONNECT_API_KEY }}
+          KEY_ID: ${{ secrets.APP_STORE_CONNECT_KEY_ID }}
+          ISSUER: ${{ secrets.APP_STORE_CONNECT_ISSUER_ID }}
+          TEAM: ${{ secrets.APPLE_TEAM_ID }}
+        run: |
+          set -euo pipefail
+          KEY_PATH="$RUNNER_TEMP/AuthKey_${KEY_ID}.p8"
+          trap 'rm -f "$KEY_PATH"' EXIT
+          umask 077
+          printf '%s' "$ASC_KEY" > "$KEY_PATH"
+          xcodebuild archive -project Pulse.xcodeproj -scheme PulseProd \
+            -configuration Release -destination 'generic/platform=iOS' \
+            -archivePath build/Pulse.xcarchive -onlyUsePackageVersionsFromResolvedFile \
+            -skipMacroValidation -allowProvisioningUpdates \
+            -authenticationKeyPath "$KEY_PATH" -authenticationKeyID "$KEY_ID" \
+            -authenticationKeyIssuerID "$ISSUER"
+          python3 scripts/check-release-archive.py build/Pulse.xcarchive
+          python3 - <<'PY'
+          import os, plistlib
+          with open('build/ExportOptions.plist', 'wb') as stream:
+              plistlib.dump({'method': 'app-store-connect', 'destination': 'export',
+                            'signingStyle': 'automatic', 'teamID': os.environ['TEAM']}, stream)
+          PY
+          xcodebuild -exportArchive -archivePath build/Pulse.xcarchive \
+            -exportOptionsPlist build/ExportOptions.plist -exportPath build/export \
+            -allowProvisioningUpdates -authenticationKeyPath "$KEY_PATH" \
+            -authenticationKeyID "$KEY_ID" -authenticationKeyIssuerID "$ISSUER"
+          test -n "$(find build/export -name '*.ipa' -print -quit)"
+          echo 'Signed device archive and local IPA export validated. No App Store upload performed.' >> "$GITHUB_STEP_SUMMARY"

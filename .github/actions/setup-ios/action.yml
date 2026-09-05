@@ -95,10 +95,11 @@ runs:
         restore-keys: |
           ${{ runner.os }}-spm-
 
-    - name: Install XcodeGen
+    - name: Install pinned XcodeGen
       if: ${{ inputs.generate-project == 'true' }}
-      shell: bash
-      run: brew install xcodegen
+      uses: ./.github/actions/setup-swift-tools
+      with:
+        tools: XcodeGen
 
     - name: Generate Xcode project
       if: ${{ inputs.generate-project == 'true' }}

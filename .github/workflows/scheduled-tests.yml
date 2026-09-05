@@ -174,8 +174,9 @@ jobs:
         install-runtime: "true"
 
     - name: Install SwiftLint
-      run: |
-        brew install swiftlint
+      uses: ./.github/actions/setup-swift-tools
+      with:
+        tools: SwiftLint
 
     - name: Resolve Package Dependencies
       run: |

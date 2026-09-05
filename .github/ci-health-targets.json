@@ -1,0 +1,13 @@
+{
+  "window_days": 30,
+  "max_runs_per_workflow": 100,
+  "flake_nightlies": 10,
+  "recurring_flake_runs": 2,
+  "recurring_flake_budget": 0,
+  "workflows": {
+    "ci.yml": {"name": "CI Pipeline", "event": "pull_request", "median_minutes": 30, "p95_minutes": 45},
+    "codeql.yml": {"name": "CodeQL", "event": "pull_request", "median_minutes": 35, "p95_minutes": 45},
+    "docs.yml": {"name": "DocC", "event": "pull_request", "median_minutes": 10, "p95_minutes": 15},
+    "scheduled-tests.yml": {"name": "Scheduled Tests", "event": "schedule", "median_minutes": 90, "p95_minutes": 120}
+  }
+}
