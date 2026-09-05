@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Run a prebuilt XCTest suite with streaming output and a hard timeout."""
+"""Run a prebuilt XCTest or Swift Testing suite with streaming output and a hard timeout."""
 
 from __future__ import annotations
 
@@ -17,10 +17,10 @@ from pathlib import Path
 
 
 SUMMARY_PATTERN = re.compile(
-    r"Test Suite.*(?:started|passed|failed)|Executed [0-9]+ test",
+    r"Test Suite.*(?:started|passed|failed)|Executed [0-9]+ test|Test run with [0-9]+ test",
 )
 
-EXECUTED_PATTERN = re.compile(r"Executed ([0-9]+) test")
+EXECUTED_PATTERN = re.compile(r"(?:Executed|Test run with) ([0-9]+) test")
 
 # The iPhone leg is fixed (it must match the simulator the build job used); the
 # iPad model is discovered so the destination survives a runner-image rotation,
@@ -70,13 +70,43 @@ def resolve_destination(device_kind: str) -> str:
 
 
 def executed_test_count(summary_lines: list[str]) -> int | None:
-    """Total tests reported by xcodebuild, or None when it said nothing.
+    """Evidence that at least one test ran, never a retry-sensitive total.
 
-    Guards the silent no-op: `-only-testing` with a selector that matches
-    nothing runs zero tests and still exits 0, so a renamed test would leave a
-    suite green while covering nothing."""
+    XCTest can report zero before Swift Testing runs in the same process.
+    Taking the maximum avoids both that false zero and double-counting retries.
+    """
     counts = [int(match.group(1)) for line in summary_lines if (match := EXECUTED_PATTERN.search(line))]
     return max(counts) if counts else None
+
+
+def structured_execution_count(data: dict) -> int | None:
+    # totalTestCount includes skipped tests. A suite of disabled tests is not
+    # proof of execution, so use the explicit outcome counts instead.
+    keys = ("passedTests", "failedTests", "expectedFailures")
+    values = [data.get(key) for key in keys]
+    if any(type(value) is not int or value < 0 for value in values):
+        return None
+    return sum(values)
+
+
+def result_execution_count(bundle: Path) -> int | None:
+    try:
+        result = subprocess.run(
+            ["xcrun", "xcresulttool", "get", "test-results", "summary",
+             "--path", str(bundle), "--format", "json"],
+            capture_output=True, text=True, timeout=30, check=True,
+        )
+        data = json.loads(result.stdout)
+        return structured_execution_count(data) if isinstance(data, dict) else None
+    except (OSError, ValueError, subprocess.SubprocessError):
+        return None
+
+
+def validate_execution(status: int, structured: int | None, lines: list[str]) -> tuple[int, int | None]:
+    count = structured if structured is not None else executed_test_count(lines)
+    # Preserve xcodebuild's failure/timeout; missing evidence is only diagnosed
+    # when the command otherwise succeeded.
+    return (1 if status == 0 and (count is None or count == 0) else status), count
 
 
 def terminate_process_group(process: subprocess.Popen[str]) -> None:
@@ -236,6 +266,23 @@ def self_test() -> None:
     assert executed_test_count(["Executed 12 tests, with 0 failures", "Executed 3 tests, with 0 failures"]) == 12
     assert executed_test_count(["Test Suite 'All tests' passed"]) is None
 
+    swift = "✔ Test run with 30 tests in 8 suites passed after 0.152 seconds."
+    empty = "Executed 0 tests, with 0 failures"
+    assert executed_test_count([empty, swift]) == 30
+    assert executed_test_count([swift, swift]) == 30
+    assert executed_test_count(["Test run with 0 tests passed"]) == 0
+    assert SUMMARY_PATTERN.search(swift)
+    assert structured_execution_count({"passedTests": 30, "failedTests": 0, "expectedFailures": 0, "skippedTests": 9}) == 30
+    assert structured_execution_count({"passedTests": 0, "failedTests": 0, "expectedFailures": 0, "skippedTests": 9}) == 0
+    assert structured_execution_count({"totalTestCount": 30}) is None
+    assert structured_execution_count({"passedTests": "30", "failedTests": 0, "expectedFailures": 0}) is None
+    assert validate_execution(0, 30, [empty]) == (0, 30)
+    assert validate_execution(0, 0, [swift]) == (1, 0)
+    assert validate_execution(0, None, [empty, swift]) == (0, 30)
+    assert validate_execution(0, None, []) == (1, None)
+    assert validate_execution(65, None, []) == (65, None)
+    assert validate_execution(124, 0, []) == (124, 0)
+
     started = time.monotonic()
     status, _ = stream_command(
         [sys.executable, "-c", "import time; time.sleep(5)"],
@@ -307,10 +354,12 @@ def main() -> int:
     # zero tests and still exits 0, so a rename would leave the leg green while
     # covering nothing. Only assert this on an otherwise-passing run — a failed
     # run has its own, better error.
-    executed = executed_test_count(summary_lines)
-    if status == 0 and executed == 0:
-        print(f"::error::{args.test_name} executed 0 tests — check the -only-testing selectors: {', '.join(selectors)}")
-        status = 1
+    structured = result_execution_count(Path(f"test-results/{args.artifact_name}.xcresult")) if status == 0 else None
+    validated_status, executed = validate_execution(status, structured, summary_lines)
+    if status == 0 and validated_status != 0:
+        reason = "executed 0 tests" if executed == 0 else "has no verifiable executed-test count"
+        print(f"::error::{args.test_name} {reason} — inspect the xcresult and selectors: {', '.join(selectors)}")
+    status = validated_status
 
     # Only a completed run measures. A failed or timed-out leg would record a
     # truncated (or exactly-at-the-timeout) wall clock, and the duration ratchet

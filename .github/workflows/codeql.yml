@@ -24,8 +24,17 @@ env:
   HOMEBREW_NO_AUTO_UPDATE: "1"
 
 jobs:
+  changes:
+    uses: ./.github/workflows/reusable-analysis-changes.yml
+    permissions:
+      contents: read
+    with:
+      kind: codeql
+
   analyze:
-    name: Analyze
+    needs: changes
+    if: needs.changes.outputs.run == 'true'
+    name: Analyze execution
     runs-on: macos-26
     timeout-minutes: 120
     permissions:
@@ -53,7 +62,7 @@ jobs:
         languages: swift
         # security-extended adds the broader security query pack on top of the
         # default high-precision suite — more coverage for a low triage cost on
-        # an advisory (non-blocking) scan.
+        # the security scan.
         queries: security-extended
 
     - name: Build for CodeQL
@@ -63,6 +72,7 @@ jobs:
           -project Pulse.xcodeproj \
           -scheme PulseDev \
           -destination 'generic/platform=iOS Simulator' \
+          -onlyUsePackageVersionsFromResolvedFile \
           -skipMacroValidation \
           CODE_SIGNING_ALLOWED=NO \
           CODE_SIGNING_REQUIRED=NO
@@ -98,3 +108,25 @@ jobs:
         done
         echo "" >> "$GITHUB_STEP_SUMMARY"
         echo "Findings (if any) are reported under the repository's **Security → Code scanning** tab." >> "$GITHUB_STEP_SUMMARY"
+
+  result:
+    name: Analyze
+    runs-on: ubuntu-latest
+    needs: [changes, analyze]
+    if: always()
+    timeout-minutes: 5
+    permissions:
+      contents: read
+    steps:
+      - name: Verify planned analysis completed
+        env:
+          DETECTION: ${{ needs.changes.result }}
+          PLANNED: ${{ needs.changes.outputs.run }}
+          RESULT: ${{ needs.analyze.result }}
+        run: |
+          if [ "$DETECTION" = success ] && { { [ "$PLANNED" = true ] && [ "$RESULT" = success ]; } || { [ "$PLANNED" = false ] && [ "$RESULT" = skipped ]; }; }; then
+            echo "Analyze: $RESULT (planned: $PLANNED)" >> "$GITHUB_STEP_SUMMARY"
+          else
+            echo "::error::Analyze did not complete as planned: detection=$DETECTION planned=$PLANNED result=$RESULT"
+            exit 1
+          fi

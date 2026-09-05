@@ -22,8 +22,10 @@ final class SmartBriefingViewModel: CombineViewModel, ObservableObject {
     private var statusDismissalTask: Task<Void, Never>?
     private let statusDismissalDelay: Duration
 
-    /// - Parameter statusDismissalDelay: Overridable only so unit tests can
-    ///   shrink the wait; production call sites always use the default.
+    /// - Parameters:
+    ///   - serviceLocator: Dependencies used to construct the briefing interactor.
+    ///   - statusDismissalDelay: Overridable so unit tests can shrink the wait;
+    ///     production call sites use the default.
     init(serviceLocator: ServiceLocator, statusDismissalDelay: Duration = .seconds(4)) {
         interactor = SmartBriefingDomainInteractor(serviceLocator: serviceLocator)
         self.statusDismissalDelay = statusDismissalDelay

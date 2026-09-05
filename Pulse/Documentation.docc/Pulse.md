@@ -17,7 +17,7 @@ and personalized feeds using on-device LLM inference.
 - **Bookmarks**: Save articles for offline reading
 - **Summarization**: On-device AI article summarization (Premium)
 
-### Architecture
+### Data Flow
 
 Pulse uses a Unidirectional Data Flow (UDF) architecture based on Clean Architecture principles:
 
@@ -33,6 +33,10 @@ Service Layer (Protocol-based)
 Network/Storage
 ```
 
+The shared `CombineViewModel`, `CombineInteractor`, `ViewStateReducing`,
+`DomainEventActionMap`, `ServiceLocator`, and `NavigationRouter` types are defined
+in the EntropyCore dependency.
+
 ## Topics
 
 ### Essentials
@@ -40,19 +44,11 @@ Network/Storage
 - <doc:GettingStarted>
 - <doc:Architecture>
 
-### Core Protocols
-
-- ``CombineViewModel``
-- ``CombineInteractor``
-- ``ViewStateReducing``
-- ``DomainEventActionMap``
-- ``ServiceLocator``
-
 ### Navigation
 
 - ``Coordinator``
 - ``Page``
-- ``NavigationRouter``
+- ``HomeNavigationRouter``
 
 ### Services
 

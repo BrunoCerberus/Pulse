@@ -7,7 +7,7 @@
 help:
 	@echo "Available commands:"
 	@echo "  init              - Setup Mint, SwiftFormat, and SwiftLint"
-	@echo "  install-xcodegen  - Install XcodeGen using Homebrew"
+	@echo "  install-xcodegen  - Install pinned XcodeGen using Mint"
 	@echo "  generate          - Generate Xcode project from project.yml"
 	@echo "  setup             - install-xcodegen + generate"
 	@echo "  build             - Build for development (Debug)"
@@ -42,14 +42,12 @@ init:
 	else \
 		echo "Homebrew already installed"; \
 	fi
-	@echo "Installing XcodeGen..."
-	@brew install xcodegen || true
 	@echo "Installing Mint..."
 	@brew install mint || true
-	@echo "Installing SwiftLint..."
-	@brew install swiftlint || true
-	@echo "Installing SwiftFormat via Mint..."
+	@echo "Installing pinned Swift tools..."
 	@mint install nicklockwood/SwiftFormat
+	@mint install yonaskolb/XcodeGen
+	@bash scripts/swiftlint.sh version
 	@echo "Setting up git hooks..."
 	@mkdir -p .git/hooks
 	@echo '#!/bin/sh\nmake lint' > .git/hooks/pre-commit
@@ -63,7 +61,7 @@ lint:
 	@echo "SwiftFormat check passed"
 	@echo ""
 	@echo "Running SwiftLint..."
-	@swiftlint lint Pulse PulseTests PulseShareExtension PulseWidgetExtension
+	@bash scripts/swiftlint.sh lint Pulse PulseTests PulseShareExtension PulseWidgetExtension
 	@echo "SwiftLint check passed"
 
 # Auto-fix formatting with SwiftFormat
@@ -75,12 +73,13 @@ format:
 # Install XcodeGen
 install-xcodegen:
 	@echo "Installing XcodeGen..."
-	@brew install xcodegen
+	@command -v mint >/dev/null || brew install mint
+	@mint install yonaskolb/XcodeGen
 
 # Generate Xcode project
 generate:
 	@echo "Generating Xcode project..."
-	@xcodegen generate
+	@mint run XcodeGen xcodegen generate
 	@echo "Project generated successfully!"
 
 # Install and generate in one command

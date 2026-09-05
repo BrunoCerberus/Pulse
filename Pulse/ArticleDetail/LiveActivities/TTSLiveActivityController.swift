@@ -62,11 +62,8 @@ final class TTSLiveActivityController {
     /// Activities are unavailable; an already-active activity is ended first.
     ///
     /// - Parameters:
-    ///   - currentTitle: Title of the item being narrated.
-    ///   - currentSource: Source name shown above the title.
+    ///   - displayInfo: Title, source, and queue position for the narrated item.
     ///   - speedLabel: Initial speed preset label (e.g. `"1x"`).
-    ///   - queuePosition: Queue position label (e.g. `"1/11"`), or `nil` for
-    ///     single-article playback.
     func start(displayInfo: PlaybackDisplayInfo, speedLabel: String) {
         guard ActivityAuthorizationInfo().areActivitiesEnabled else {
             Logger.shared.service(

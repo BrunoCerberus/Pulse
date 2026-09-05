@@ -23,6 +23,7 @@ struct SidebarContentView: View {
             ForEach(AppTab.allCases, id: \.self) { tab in
                 Label(tab.title, systemImage: tab.symbolImage)
                     .tag(tab)
+                    .accessibilityIdentifier("sidebar.tab.\(tab.rawValue)")
             }
         }
         .navigationTitle("Pulse")

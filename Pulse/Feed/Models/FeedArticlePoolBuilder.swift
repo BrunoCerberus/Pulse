@@ -14,10 +14,10 @@ enum FeedArticlePoolBuilder {
     /// returns them flattened, sorted by `publishedAt` (most recent first).
     /// A category that fails to fetch contributes no articles rather than
     /// failing the whole pool.
-    /// - Parameter language: ISO 639-1 code matching the user's Content
-    ///   Language preference (`AppLocalization.shared.language`) — callers
-    ///   read this on `@MainActor` and pass it in, since this function
-    ///   itself isn't actor-isolated.
+    /// - Parameters:
+    ///   - newsService: Service supplying the category article pools.
+    ///   - language: ISO 639-1 code from the user's Content Language preference.
+    ///     Callers read it on `@MainActor` before entering this nonisolated function.
     static func fetchPool(newsService: NewsService, language: String = "en") async -> [Article] {
         let service = UncheckedSendableBox(value: newsService)
         var allArticles: [Article] = []

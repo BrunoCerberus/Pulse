@@ -1,0 +1,34 @@
+name: Set up pinned Swift tools
+description: Cache and install the requested tools from the committed Mintfile.
+inputs:
+  tools:
+    description: Space-separated Mintfile package names.
+    required: true
+runs:
+  using: composite
+  steps:
+    - id: toolchain
+      shell: bash
+      run: echo "version=$(xcodebuild -version | shasum -a 256 | cut -d ' ' -f 1)" >> "$GITHUB_OUTPUT"
+    - uses: actions/cache@55cc8345863c7cc4c66a329aec7e433d2d1c52a9 # v6.1.0
+      with:
+        path: ~/.mint
+        key: ${{ runner.os }}-${{ runner.arch }}-${{ steps.toolchain.outputs.version }}-mint-${{ hashFiles('Mintfile') }}-${{ inputs.tools }}
+    - shell: bash
+      env:
+        SWIFT_TOOLS: ${{ inputs.tools }}
+      run: |
+        command -v mint >/dev/null || brew install mint
+        echo "$HOME/.mint/bin" >> "$GITHUB_PATH"
+        for tool in $SWIFT_TOOLS; do
+          package=$(awk -F '[/@]' -v tool="$tool" '$2 == tool {print}' Mintfile)
+          if [ -z "$package" ]; then
+            echo "::error::No pin for $tool in Mintfile"
+            exit 1
+          fi
+          if [ "$tool" = SwiftLint ]; then
+            echo "$(bash scripts/swiftlint.sh --print-path)" >> "$GITHUB_PATH"
+          else
+            mint install "$package"
+          fi
+        done
