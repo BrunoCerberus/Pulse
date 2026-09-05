@@ -3,21 +3,15 @@ import XCTest
 final class NavigationUITests: BaseUITestCase {
     // MARK: - Combined Flow Test
 
-    // Tests tab bar existence, tab navigation, settings flow, and article detail navigation
+    // Tests root navigation, settings flow, and article detail navigation
     // Note: Search tab navigation is tested separately in PulseSearchUITests
     // swiftlint:disable:next function_body_length
     func testNavigationFlow() {
-        // --- Tab Bar Exists ---
-        let tabBar = app.tabBars.firstMatch
-        XCTAssertTrue(safeWaitForExistence(tabBar, timeout: Self.launchTimeout), "Tab bar should be visible after launch")
-
-        // --- All Tabs Accessible ---
-        let expectedTabs = ["Home", "Feed", "Bookmarks", "Search"]
+        let expectedTabs = ["Home", "Media", "Feed", "Bookmarks", "Search"]
         for tabName in expectedTabs {
-            let tab = tabBar.buttons[tabName]
             XCTAssertTrue(
-                safeWaitForExistence(tab, timeout: Self.defaultTimeout),
-                "Tab '\(tabName)' should exist in tab bar",
+                safeWaitForExistence(navigationItem(named: tabName), timeout: Self.defaultTimeout),
+                "Navigation item '\(tabName)' should exist in the tab bar or sidebar",
             )
         }
 

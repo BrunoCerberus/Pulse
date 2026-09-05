@@ -61,27 +61,31 @@ class BaseUITestCase: XCTestCase {
             _ = waitForElementToDisappear(loadingIndicator, timeout: Self.launchTimeout)
         }
 
-        // Wait for either tab bar (authenticated) or sign-in view (not authenticated)
+        // Regular-width navigation may start with the sidebar collapsed.
         let tabBar = app.tabBars.firstMatch
         let signInApple = app.buttons["Sign in with Apple"]
         let signInGoogle = app.buttons["Sign in with Google"]
 
-        let appReady = waitForAny([tabBar, signInApple, signInGoogle], timeout: Self.launchTimeout)
+        let sidebarHome = app.descendants(matching: .any).matching(identifier: "sidebar.tab.home").firstMatch
+        let homeNavigationBar = app.navigationBars["News"]
+        let appReady = waitForAny(
+            [tabBar, sidebarHome, homeNavigationBar, signInApple, signInGoogle],
+            timeout: Self.launchTimeout,
+        )
 
         guard appReady else {
             // Debug: log what's visible to help diagnose CI failures
             let hasActivityIndicator = ObjCExceptionCatcher.safeCount(for: app.activityIndicators) > 0
             let hasButtons = ObjCExceptionCatcher.safeCount(for: app.buttons) > 0
             let hasStaticTexts = ObjCExceptionCatcher.safeCount(for: app.staticTexts) > 0
-            let debugInfo = "App did not reach ready state - neither tab bar nor sign-in view appeared. " +
+            let debugInfo = "App did not reach ready state - neither root navigation nor sign-in view appeared. " +
                 "Debug: hasActivityIndicator=\(hasActivityIndicator), buttons=\(hasButtons), " +
                 "texts=\(hasStaticTexts)"
             print(debugInfo)
             throw XCTSkip("App not ready: \(debugInfo)")
         }
 
-        // Only reset to home tab if authenticated (tab bar was found)
-        if safeExists(tabBar) {
+        if safeExists(tabBar) || safeExists(sidebarHome) || safeExists(homeNavigationBar) {
             resetToHomeTab()
         }
     }
@@ -212,35 +216,37 @@ class BaseUITestCase: XCTestCase {
 
     // MARK: - Navigation Helpers
 
-    /// Reset to Home tab to start each test from a known state
-    func resetToHomeTab() {
-        guard app.state == .runningForeground else { return }
+    /// Resolves the rendered navigation control, including regular-width sidebars.
+    func navigationItem(named name: String) -> XCUIElement {
         let tabBar = app.tabBars.firstMatch
-
-        // Quick check - if tab bar not visible, try recovery
-        if !safeWaitForExistence(tabBar, timeout: Self.shortTimeout) {
-            let backButton = app.buttons["backButton"]
-            if safeExists(backButton) { safeTap(backButton) }
+        if safeExists(tabBar) {
+            return tabBar.buttons[name]
         }
 
-        // Select Home tab - use coordinate-based taps for iOS 26 Liquid Glass reliability
-        let homeTab = tabBar.buttons["Home"]
-        if safeExists(homeTab) {
-            wait(for: 0.3)
-            safeTap(homeTab)
-        } else {
-            // Fallback: try finding Home button directly (handles tabBar query issues on CI)
-            let homeButton = app.buttons["Home"]
-            if safeWaitForExistence(homeButton, timeout: 2) {
-                safeTap(homeButton)
-            } else if safeExists(tabBar) {
-                // Last resort: tap first tab (Home is always first)
-                let firstTab = tabBar.buttons.element(boundBy: 0)
-                if safeExists(firstTab) { safeTap(firstTab) }
+        let row = app.descendants(matching: .any)
+            .matching(identifier: "sidebar.tab.\(name.lowercased())").firstMatch
+        if !safeExists(row) {
+            // NavigationSplitView can hide its leading column in portrait.
+            let toggle = app.buttons["ToggleSidebar"]
+            if safeExists(toggle) {
+                safeTap(toggle)
+            } else {
+                let showSidebar = app.buttons["Show Sidebar"]
+                if safeExists(showSidebar) {
+                    safeTap(showSidebar)
+                }
             }
         }
+        return row
+    }
 
-        // Pop all navigation stack levels (handles deep navigation states)
+    func resetToHomeTab() {
+        guard app.state == .runningForeground else { return }
+        let home = navigationItem(named: "Home")
+        if safeWaitForExistence(home, timeout: Self.shortTimeout) {
+            safeTap(home)
+        }
+
         for _ in 0 ..< 3 {
             let backButton = app.buttons["backButton"]
             guard safeExists(backButton) else { break }
@@ -249,115 +255,38 @@ class BaseUITestCase: XCTestCase {
         }
     }
 
-    /// Navigate to a specific tab with recovery
-    ///
-    /// Avoids `waitForExistence` on tab bar buttons to prevent Xcode 26 C++ exception
-    /// crashes. The tab bar is already verified in setUp, so we use ObjC-wrapped `.exists`
-    /// checks and coordinate-based taps instead.
     func navigateToTab(_ tabName: String) {
         guard app.state == .runningForeground else { return }
-
-        let tab = app.tabBars.buttons[tabName]
-        if safeExists(tab) {
-            wait(for: 0.3)
-            safeTap(tab)
-        } else {
-            let tabButton = app.buttons[tabName]
-            if safeExists(tabButton) { safeTap(tabButton) }
+        let item = navigationItem(named: tabName)
+        guard safeWaitForExistence(item, timeout: Self.shortTimeout) else {
+            XCTFail("Navigation item '\(tabName)' should exist in the tab bar or sidebar")
+            return
         }
+        wait(for: 0.3)
+        safeTap(item)
 
-        wait(for: 0.5)
-        let navBarTitle = tabName == "Home" ? "News" : tabName
-        _ = safeWaitForExistence(app.navigationBars[navBarTitle], timeout: Self.shortTimeout)
+        let title: String = switch tabName {
+        case "Home": "News"
+        case "Feed": "Daily Digest"
+        default: tabName
+        }
+        _ = safeWaitForExistence(app.navigationBars[title], timeout: Self.defaultTimeout)
     }
 
-    /// Navigate to Search tab (handles role: .search accessibility)
     func navigateToSearchTab() {
-        guard app.state == .runningForeground else { return }
-        let searchTab = app.tabBars.buttons["Search"]
-        if safeExists(searchTab) {
-            wait(for: 0.3)
-            safeTap(searchTab)
-        } else {
-            let searchButton = app.buttons["Search"]
-            if safeExists(searchButton) { safeTap(searchButton) }
-        }
-        _ = safeWaitForExistence(app.navigationBars["Search"], timeout: Self.defaultTimeout)
+        navigateToTab("Search")
     }
 
-    /// Navigate to Feed tab and verify navigation bar appears
     func navigateToFeedTab() {
-        guard app.state == .runningForeground else { return }
-        let feedTab = app.tabBars.buttons["Feed"]
-        if safeExists(feedTab) {
-            wait(for: 0.3)
-            safeTap(feedTab)
-        } else {
-            let feedByImage = app.tabBars.buttons["text.document"]
-            if safeExists(feedByImage) {
-                wait(for: 0.3)
-                safeTap(feedByImage)
-            } else {
-                let feedButton = app.buttons["Feed"]
-                if safeExists(feedButton) {
-                    safeTap(feedButton)
-                } else {
-                    // Last resort: tap Feed by position (index 2, always Feed)
-                    let tabBar = app.tabBars.firstMatch
-                    if safeExists(tabBar) {
-                        let feedTabByIndex = tabBar.buttons.element(boundBy: 2)
-                        if safeExists(feedTabByIndex) { safeTap(feedTabByIndex) }
-                    }
-                }
-            }
-        }
-        _ = safeWaitForExistence(app.navigationBars["Daily Digest"], timeout: Self.defaultTimeout)
+        navigateToTab("Feed")
     }
 
-    /// Navigate to Media tab with recovery for CI
     func navigateToMediaTab() {
-        guard app.state == .runningForeground else { return }
-        let mediaTab = app.tabBars.buttons["Media"]
-
-        if safeExists(mediaTab) {
-            wait(for: 0.3)
-            safeTap(mediaTab)
-        } else {
-            let mediaByImage = app.tabBars.buttons["play.tv"]
-            if safeExists(mediaByImage) {
-                wait(for: 0.3)
-                safeTap(mediaByImage)
-            } else {
-                let mediaButton = app.buttons["Media"]
-                if safeExists(mediaButton) { safeTap(mediaButton) }
-            }
-        }
-
-        wait(for: 0.5)
-
-        var navBarVisible = safeWaitForExistence(app.navigationBars["Media"], timeout: Self.defaultTimeout)
-        if !navBarVisible {
-            let retryTab = safeExists(mediaTab) ? mediaTab : app.tabBars.buttons["play.tv"]
-            if safeExists(retryTab) {
-                safeTap(retryTab)
-                wait(for: 1.0)
-                navBarVisible = safeWaitForExistence(app.navigationBars["Media"], timeout: Self.defaultTimeout)
-            }
-        }
+        navigateToTab("Media")
     }
 
-    /// Navigate to Bookmarks tab and verify navigation bar appears
     func navigateToBookmarksTab() {
-        guard app.state == .runningForeground else { return }
-        let bookmarksTab = app.tabBars.buttons["Bookmarks"]
-        if safeExists(bookmarksTab) {
-            wait(for: 0.3)
-            safeTap(bookmarksTab)
-        } else {
-            let bookmarksButton = app.buttons["Bookmarks"]
-            if safeExists(bookmarksButton) { safeTap(bookmarksButton) }
-        }
-        _ = safeWaitForExistence(app.navigationBars["Bookmarks"], timeout: Self.defaultTimeout)
+        navigateToTab("Bookmarks")
     }
 
     /// Navigate to Settings via gear button
@@ -500,32 +429,32 @@ class BaseUITestCase: XCTestCase {
         return safeWaitForExistence(app.buttons["backButton"], timeout: 1)
     }
 
-    /// Navigate back from current view with post-navigation wait for CI stability
+    private func tapBackButton(destination: String?) -> Bool {
+        var candidates = [app.buttons["backButton"], app.navigationBars.buttons["Back"]]
+        if let destination {
+            candidates.append(app.navigationBars.buttons[destination])
+        }
+        guard let button = candidates.first(where: { safeExists($0) }) else { return false }
+        safeTap(button)
+        return true
+    }
+
+    /// Navigate back from current view with post-navigation wait for CI stability.
     func navigateBack(waitForNavBar navBarTitle: String? = nil, timeout: TimeInterval = 15) {
-        let backButton = app.buttons["backButton"]
-        if safeExists(backButton) {
-            safeTap(backButton)
-        } else {
-            // Use coordinate-based left-edge swipe instead of app.swipeRight().
-            // app.swipeRight() evaluates the full accessibility tree and hangs for 30+
-            // minutes when Xcode 26's accessibility framework is degraded, causing
-            // multi-hour test runs. Coordinate-based gestures bypass tree evaluation.
+        // The app's left edge belongs to the sidebar on regular width, so
+        // prefer the detail stack's native back button over an edge swipe.
+        if !tapBackButton(destination: navBarTitle) {
             ObjCExceptionCatcher.safeSwipeLeftEdge(app)
         }
-
         wait(for: 0.5)
 
-        if let navBarTitle {
-            if !safeWaitForExistence(app.navigationBars[navBarTitle], timeout: timeout) {
-                let retryBack = app.buttons["backButton"]
-                if safeExists(retryBack) {
-                    safeTap(retryBack)
-                    wait(for: 0.5)
-                } else {
-                    ObjCExceptionCatcher.safeSwipeLeftEdge(app)
-                    wait(for: 0.5)
-                }
+        if let navBarTitle,
+           !safeWaitForExistence(app.navigationBars[navBarTitle], timeout: timeout)
+        {
+            if !tapBackButton(destination: navBarTitle) {
+                ObjCExceptionCatcher.safeSwipeLeftEdge(app)
             }
+            wait(for: 0.5)
         }
     }
 
