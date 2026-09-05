@@ -113,8 +113,8 @@
       "kind" : "remoteSourceControl",
       "location" : "https://github.com/google/GTMAppAuth.git",
       "state" : {
-        "revision" : "56e0ccf09a6dd29dc7e68bdf729598240ca8aa16",
-        "version" : "5.0.0"
+        "revision" : "57094cd46bc8700d3a887e2a429f42b6e8ea3f0b",
+        "version" : "6.0.0"
       }
     },
     {
