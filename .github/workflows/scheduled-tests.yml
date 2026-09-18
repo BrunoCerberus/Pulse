@@ -110,6 +110,34 @@ jobs:
         printf '{"suite":"build-PulseSnapshotTests","seconds":%s}\n' "$SECS" > duration-build-PulseSnapshotTests.json
         echo "PulseSnapshotTests build took $(( SECS / 60 ))m$(( SECS % 60 ))s"
 
+    - name: Build for testing (PulseTests)
+      run: |
+        echo "Building PulseTests scheme for testing..."
+        START_TS=$(date +%s)
+        xcodebuild build-for-testing \
+          -project Pulse.xcodeproj \
+          -scheme PulseTests \
+          -destination 'platform=iOS Simulator,name=iPhone Air,OS=latest' \
+          -derivedDataPath ./DerivedData \
+          -skipMacroValidation
+        SECS=$(( $(date +%s) - START_TS ))
+        printf '{"suite":"build-PulseTests","seconds":%s}\n' "$SECS" > duration-build-PulseTests.json
+        echo "PulseTests build took $(( SECS / 60 ))m$(( SECS % 60 ))s"
+
+    - name: Build for testing (PulseWidgetExtensionTests)
+      run: |
+        echo "Building PulseWidgetExtensionTests scheme for testing..."
+        START_TS=$(date +%s)
+        xcodebuild build-for-testing \
+          -project Pulse.xcodeproj \
+          -scheme PulseWidgetExtensionTests \
+          -destination 'platform=iOS Simulator,name=iPhone Air,OS=latest' \
+          -derivedDataPath ./DerivedData \
+          -skipMacroValidation
+        SECS=$(( $(date +%s) - START_TS ))
+        printf '{"suite":"build-PulseWidgetExtensionTests","seconds":%s}\n' "$SECS" > duration-build-PulseWidgetExtensionTests.json
+        echo "PulseWidgetExtensionTests build took $(( SECS / 60 ))m$(( SECS % 60 ))s"
+
     # Only Build/Products is uploaded — that's all test-without-building needs
     # (the .xctestrun files and app/test bundles live there); the rest of
     # DerivedData is dead weight for the download. Mirrors ci.yml.
@@ -137,6 +165,24 @@ jobs:
       with:
         name: suite-duration-build-PulseSnapshotTests
         path: duration-build-PulseSnapshotTests.json
+        if-no-files-found: ignore
+        retention-days: 30
+
+    - name: Upload build duration (PulseTests)
+      uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
+      if: always()
+      with:
+        name: suite-duration-build-PulseTests
+        path: duration-build-PulseTests.json
+        if-no-files-found: ignore
+        retention-days: 30
+
+    - name: Upload build duration (PulseWidgetExtensionTests)
+      uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
+      if: always()
+      with:
+        name: suite-duration-build-PulseWidgetExtensionTests
+        path: duration-build-PulseWidgetExtensionTests.json
         if-no-files-found: ignore
         retention-days: 30
 
@@ -255,7 +301,7 @@ jobs:
         include:
           - test-target: PulseTests
             test-name: Unit Tests
-            scheme: PulseDev
+            scheme: PulseTests
             artifact-name: scheduled-unit-test-results
             device: iphone
             duration-suite: PulseTests
@@ -292,7 +338,7 @@ jobs:
           # nightly the first full-suite signal for widget code.
           - test-target: PulseWidgetExtensionTests
             test-name: Widget Tests
-            scheme: PulseDev
+            scheme: PulseWidgetExtensionTests
             artifact-name: scheduled-widget-test-results
             device: iphone
             duration-suite: PulseWidgetExtensionTests
