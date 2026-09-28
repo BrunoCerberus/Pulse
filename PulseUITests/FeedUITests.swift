@@ -120,7 +120,7 @@ final class FeedUITests: BaseUITestCase {
 
         // Read the tab buttons through ObjC++ exception-safe wrappers. Evaluating
         // `allElementsBoundByIndex`, `.count`, or `.label`/`.identifier` directly
-        // forces an accessibility snapshot that, on Xcode 26 CI shared runners,
+        // forces an accessibility snapshot that, on Xcode 27 CI shared runners,
         // can throw a "Timed out while evaluating UI query" C++ exception. Unlike
         // the rest of the suite, those raw reads were not wrapped, so the exception
         // SIGABRT'd the runner mid-test instead of surfacing as a clean assertion

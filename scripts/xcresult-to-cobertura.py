@@ -1,11 +1,11 @@
 #!/usr/bin/env python3
-"""Convert an Xcode 26 xcresult bundle to Cobertura XML.
+"""Convert an Xcode 27 xcresult bundle to Cobertura XML.
 
 Uses xcresulttool + xccov directly, because xcresultparser 2.0.1 is incompatible
-with the fileBacked2 storage format and coverage JSON schema that Xcode 26
+with the fileBacked2 storage format and coverage JSON schema that Xcode 27
 produces (it calls `xccov view --report --json <xcresult>`, which now fails with
 "unrecognized file format", and its Codable models expect `coveredLines` as an
-array where Xcode 26 emits a scalar count).
+array where Xcode 27 emits a scalar count).
 """
 
 from __future__ import annotations

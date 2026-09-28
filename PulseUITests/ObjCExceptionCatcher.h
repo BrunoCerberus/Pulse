@@ -4,7 +4,7 @@
 NS_ASSUME_NONNULL_BEGIN
 
 /// Wraps XCTest element queries in ObjC++ @try/@catch to catch C++ exceptions
-/// that Xcode 26 throws ("Timed out while evaluating UI query"). These exceptions
+/// that Xcode 27 throws ("Timed out while evaluating UI query"). These exceptions
 /// crash the Swift runtime with SIGABRT because Swift doesn't support C++ exceptions.
 ///
 /// By performing the actual XCTest API calls in ObjC++ code (not in Swift closures),
@@ -42,7 +42,7 @@ NS_ASSUME_NONNULL_BEGIN
 + (void)safeLongPressElement:(XCUIElement *)element duration:(NSTimeInterval)duration;
 
 /// Performs a left-edge swipe-back gesture using normalized coordinates, catching any C++ exception.
-/// Use this instead of app.swipeRight() to avoid Xcode 26 accessibility query hangs.
+/// Use this instead of app.swipeRight() to avoid Xcode 27 accessibility query hangs.
 /// app.swipeRight() evaluates the full accessibility tree and can hang for 30+ minutes
 /// when the accessibility framework is degraded. Coordinate-based gestures bypass this.
 + (void)safeSwipeLeftEdge:(XCUIApplication *)app;

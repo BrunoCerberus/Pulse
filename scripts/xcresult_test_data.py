@@ -5,7 +5,7 @@ slow-test and test-count reports additionally need the per-test *tree*, which
 lives behind the action result's `testsRef` and requires a second
 `xcresulttool` call. This module is the single copy of that logic.
 
-Format variance is handled the same way as in xcresult_common: Xcode 26
+Format variance is handled the same way as in xcresult_common: Xcode 27
 returns the tree for a bare `get object --id`, Xcode 27 requires `--legacy`
 for the same call, so both are tried. The leaf walker matches on `_type`
 name, making it indifferent to which wrapper representation it finds.

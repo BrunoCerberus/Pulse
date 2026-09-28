@@ -44,7 +44,7 @@ final class AccessibilityAuditTests: BaseUITestCase {
         // timeout *inside* the audit (not just while the audit runs) can't throw
         // an uncaught C++ exception and SIGABRT the runner. It takes the optional
         // because `issue.element` is `XCUIElement?` in the SDK CI builds with
-        // (Xcode 26.5) and non-optional in newer ones.
+        // (Xcode 27.0) and may be non-optional in newer ones.
         if exemptPlaybackProgress,
             description.contains("Hit area is too small"),
             safeLabel(issue.element) == "Playback progress" {
@@ -182,7 +182,7 @@ final class AccessibilityAuditTests: BaseUITestCase {
         try ensureAppRunning()
         waitForHomeContent()
 
-        // Querying a card on a home in its error state can hang the Xcode 26
+        // Querying a card on a home in its error state can hang the Xcode 27
         // accessibility framework, so bail instead of forcing a tap.
         guard !isHomeErrorState(),
               let card = firstExistingArticleCard()
