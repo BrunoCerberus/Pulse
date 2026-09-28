@@ -1,17 +1,17 @@
 name: Runner Image Watch
 
-# .github/actions/setup-ios hard-fails when /Applications/Xcode_26.5*.app is
+# .github/actions/setup-ios hard-fails when /Applications/Xcode_27.0*.app is
 # absent:
 #
-#     echo "::error::Xcode 26.5 not found on runner"; exit 1
+#     echo "::error::Xcode 27.0 not found on runner"; exit 1
 #
 # That is the right behaviour — silently building on a different Xcode is worse
 # than stopping — but it means a GitHub runner-image rotation takes out every
 # macOS job at once, with no warning, usually mid-PR. The blast radius spans
 # ci.yml, codeql.yml, docs.yml, release.yml and scheduled-tests.yml.
 #
-# This job boots one macos-26 runner a week purely to inventory the installed
-# Xcodes. It warns (and opens a tracking issue) when the pinned 26.5 disappears,
+# This job boots one xcode-27 runner a week purely to inventory the installed
+# Xcodes. It warns (and opens a tracking issue) when the pinned 27.0 disappears,
 # and notes when a newer Xcode shows up so the bump is a scheduled decision
 # rather than an emergency.
 
@@ -30,12 +30,12 @@ permissions: {}
 
 env:
   # Keep in sync with the glob in .github/actions/setup-ios/action.yml.
-  PINNED_XCODE: "26.5"
+  PINNED_XCODE: "27.0"
 
 jobs:
   inspect:
     name: Inspect runner image
-    runs-on: macos-26
+    runs-on: xcode-27
     timeout-minutes: 15
 
     permissions:
@@ -57,11 +57,11 @@ jobs:
           echo "Pinned Xcode ${PINNED_XCODE} is present."
         else
           echo "pinned_present=false" >> "$GITHUB_OUTPUT"
-          echo "::warning::Pinned Xcode ${PINNED_XCODE} is NOT on the macos-26 image."
+          echo "::warning::Pinned Xcode ${PINNED_XCODE} is NOT on the xcode-27 image."
         fi
 
-        # Highest installed version, from the directory names (Xcode_26.5.1.app
-        # -> 26.5.1). `sort -V` orders them semantically.
+        # Highest installed version, from the directory names (Xcode_27.0.1.app
+        # -> 27.0.1). `sort -V` orders them semantically.
         NEWEST=$(ls -d /Applications/Xcode_*.app 2>/dev/null \
           | sed -E 's|.*/Xcode_([0-9.]+)\.app|\1|' \
           | sort -V | tail -1)
@@ -105,12 +105,12 @@ jobs:
       run: |
         set -euo pipefail
 
-        ISSUE_TITLE="Pinned Xcode ${PINNED_XCODE} is gone from the macos-26 image"
+        ISSUE_TITLE="Pinned Xcode ${PINNED_XCODE} is gone from the xcode-27 image"
         ISSUE_LABEL="runner-drift"
 
         BODY=$(cat <<EOF
         The weekly runner-image check could not find \`/Applications/Xcode_${PINNED_XCODE}*.app\`
-        on the \`macos-26\` runner. Every macOS job fails at the "Select Xcode" step
+        on the \`xcode-27\` runner. Every macOS job fails at the "Select Xcode" step
         until the pin is updated.
 
         - Newest Xcode on the image: **${NEWEST}**

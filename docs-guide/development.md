@@ -4,8 +4,8 @@
 
 ## Requirements
 
-- Xcode 26.5+
-- iOS 26.5+
+- Xcode 27.0+
+- iOS 26.0+
 - Swift 6.2+
 
 ## Setup

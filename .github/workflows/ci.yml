@@ -29,7 +29,7 @@ env:
 jobs:
   code-quality:
     name: Code Quality
-    runs-on: macos-26
+    runs-on: xcode-27
     timeout-minutes: 20
 
     permissions:
@@ -333,7 +333,7 @@ jobs:
 
   build:
     name: Build Project
-    runs-on: macos-26
+    runs-on: xcode-27
     needs: [code-quality, changes]
     if: success() && needs.changes.outputs.compile == 'true'
     timeout-minutes: 45
@@ -429,7 +429,7 @@ jobs:
   # while still catching Release-only compile breaks. Mirrors `make build-release`.
   release-build:
     name: Release Build
-    runs-on: macos-26
+    runs-on: xcode-27
     needs: [code-quality, changes]
     if: success() && needs.changes.outputs.compile == 'true'
     timeout-minutes: 45
@@ -575,7 +575,7 @@ jobs:
   # any failing leg fails the whole thing).
   unit-tests:
     name: Unit Tests
-    runs-on: macos-26
+    runs-on: xcode-27
     needs: [build, changes]
     if: success() && needs.changes.outputs.unit == 'true'
     timeout-minutes: 75
@@ -615,7 +615,7 @@ jobs:
 
   snapshot-tests:
     name: Snapshot Tests
-    runs-on: macos-26
+    runs-on: xcode-27
     needs: [build, changes]
     if: success() && needs.changes.outputs.snapshot == 'true'
     timeout-minutes: 75
@@ -697,7 +697,7 @@ jobs:
   # single stable required context.
   ui-tests:
     name: UI Tests
-    runs-on: macos-26
+    runs-on: xcode-27
     needs: [build, changes]
     if: success() && needs.changes.outputs.ui == 'true'
     # Ceiling above the per-leg step timeout (180) plus setup. The real
@@ -741,7 +741,7 @@ jobs:
   # regressions without repeating every device-independent flow twice.
   ui-tests-ipad:
     name: UI Tests (iPad)
-    runs-on: macos-26
+    runs-on: xcode-27
     needs: [build, changes]
     if: success() && needs.changes.outputs.ui == 'true'
     timeout-minutes: 210
@@ -785,7 +785,7 @@ jobs:
 
   patch-coverage:
     name: Patch Coverage
-    runs-on: macos-26
+    runs-on: xcode-27
     needs: [unit-tests, snapshot-tests]
     if: github.event_name == 'pull_request'
     timeout-minutes: 15
@@ -1136,7 +1136,7 @@ jobs:
 
   coverage-summary:
     name: Coverage Summary
-    runs-on: macos-26
+    runs-on: xcode-27
     needs: unit-tests
     # Only meaningful when unit-tests actually produced an xcresult. Previously
     # `always()`, which booted a macOS runner just to print "no bundle
