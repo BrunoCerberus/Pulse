@@ -49,4 +49,3 @@ jobs:
               - '.github/workflows/docs.yml'
             codeql:
               - '.github/codeql/**'
-              - '.github/workflows/codeql.yml'
