@@ -184,7 +184,7 @@ final class PulseSettingsUITests: BaseUITestCase {
         let versionLabel = app.staticTexts["Version"]
         XCTAssertTrue(safeWaitForExistence(versionLabel, timeout: 5), "Version label should exist")
 
-        let githubLink = app.buttons["View on GitHub"]
+        let githubLink = app.links["View on GitHub"]
         XCTAssertTrue(safeWaitForExistence(githubLink, timeout: 5), "GitHub link should exist")
     }
 }
