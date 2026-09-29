@@ -454,11 +454,16 @@ jobs:
         run: |
           set -euo pipefail
           # PendingEngagementEvent must live in a separate non-CloudKit
-          # ModelContainer (per AGENTS.md item 26 + 31). If the file ever
-          # picks up a `cloudKitDatabase:` argument, the per-device guarantee
-          # for engagement signals is broken.
-          if rg -t swift -q 'cloudKitDatabase' Pulse/Personalization/API/LiveEngagementEventsService.swift 2>/dev/null; then
-            echo "::error file=Pulse/Personalization/API/LiveEngagementEventsService.swift::Engagement-events ModelContainer must NOT use cloudKitDatabase. Engagement signals are per-device by design (GDPR Art. 5(1)(c) / LGPD Art. 6 — data minimization)."
+          # ModelContainer (per AGENTS.md item 26 + 31). SwiftData's default
+          # `cloudKitDatabase: .automatic` mirrors to the entitlement's
+          # container, so every ModelConfiguration in the file must pass
+          # `.none` explicitly — omitting the argument syncs.
+          file=Pulse/Personalization/API/LiveEngagementEventsService.swift
+          configs=$(rg -c 'ModelConfiguration\(' "$file" || true)
+          opted_out=$(rg -c 'cloudKitDatabase:[[:space:]]*\.none\b' "$file" || true)
+          other=$(rg 'cloudKitDatabase' "$file" | rg -v 'cloudKitDatabase:[[:space:]]*\.none\b' || true)
+          if [ -n "$other" ] || [ "${configs:-0}" -eq 0 ] || [ "${opted_out:-0}" -lt "${configs:-0}" ]; then
+            echo "::error file=$file::Every engagement-events ModelConfiguration must pass cloudKitDatabase: .none (the default .automatic syncs). Engagement signals are per-device by design (GDPR Art. 5(1)(c) / LGPD Art. 6 — data minimization)."
             exit 1
           fi
           echo "OK: engagement-events container is non-CloudKit."

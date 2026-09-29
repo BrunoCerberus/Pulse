@@ -5,7 +5,7 @@
 + (BOOL)safeExistsForElement:(XCUIElement *)element {
     // Wrap .exists in @try/@catch on the calling thread (main thread for UI tests).
     // XCUIElement APIs are NOT thread-safe and must run on the main thread.
-    // The @try/@catch catches C++ exceptions from Xcode 26's accessibility framework
+    // The @try/@catch catches C++ exceptions from Xcode 27's accessibility framework
     // ("Timed out while evaluating UI query") before they reach the Swift runtime.
     @try {
         return element.exists;
@@ -44,7 +44,7 @@
 
 + (NSString *)safeLabelForElement:(XCUIElement *)element {
     // Reading .label forces an accessibility snapshot, which can throw the same
-    // "Timed out while evaluating UI query" C++ exception as .exists on Xcode 26.
+    // "Timed out while evaluating UI query" C++ exception as .exists on Xcode 27.
     // Catch it here so the raw property read cannot SIGABRT the Swift runtime.
     @try {
         return element.label ?: @"";
@@ -97,7 +97,7 @@
 + (void)safeSwipeLeftEdge:(XCUIApplication *)app {
     // Use coordinate-based drag from left edge to trigger back navigation.
     // Unlike app.swipeRight(), this does NOT evaluate the full accessibility tree,
-    // so it cannot hang when the accessibility framework is degraded on Xcode 26.
+    // so it cannot hang when the accessibility framework is degraded on Xcode 27.
     @try {
         XCUICoordinate *start = [app coordinateWithNormalizedOffset:CGVectorMake(0.01, 0.5)];
         XCUICoordinate *end = [app coordinateWithNormalizedOffset:CGVectorMake(0.6, 0.5)];
@@ -111,7 +111,7 @@
     // Coordinate-based drag up the middle of the element to scroll it. Unlike
     // element.swipeUp(), this does NOT evaluate the accessibility tree to resolve
     // gesture endpoints, so it cannot hang when the framework is degraded on
-    // Xcode 26 (the exact failure mode app-level gestures trigger).
+    // Xcode 27 (the exact failure mode app-level gestures trigger).
     @try {
         XCUICoordinate *start = [element coordinateWithNormalizedOffset:CGVectorMake(0.5, 0.75)];
         XCUICoordinate *end = [element coordinateWithNormalizedOffset:CGVectorMake(0.5, 0.25)];

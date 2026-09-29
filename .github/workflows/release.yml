@@ -50,7 +50,7 @@ jobs:
   release:
     needs: readiness
     name: Build & Release
-    runs-on: macos-26
+    runs-on: xcode-27
     # Generous ceiling for the (dormant) device archive + upload path; the
     # GitHub-Release-only path finishes in minutes.
     timeout-minutes: 90
@@ -67,12 +67,12 @@ jobs:
         # depends on the checkout-persisted credential being left in .git/config.
         persist-credentials: false
 
-    - name: Select Xcode 26.5
+    - name: Select Xcode 27.0
       run: |
-        XCODE_PATH=$(ls -d /Applications/Xcode_26.5*.app 2>/dev/null | head -1)
+        XCODE_PATH=$(ls -d /Applications/Xcode_27.0*.app 2>/dev/null | head -1)
         if [ -z "$XCODE_PATH" ]; then
-          echo "::error::Xcode 26.5 not found on runner"
-          ls -d /Applications/Xcode_26*.app || true
+          echo "::error::Xcode 27.0 not found on runner"
+          ls -d /Applications/Xcode_27*.app || true
           exit 1
         fi
         sudo xcode-select -s "$XCODE_PATH/Contents/Developer"

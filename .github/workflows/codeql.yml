@@ -35,7 +35,7 @@ jobs:
     needs: changes
     if: needs.changes.outputs.run == 'true'
     name: Analyze execution
-    runs-on: macos-26
+    runs-on: xcode-27
     timeout-minutes: 120
     permissions:
       security-events: write
@@ -65,6 +65,12 @@ jobs:
         # the security scan.
         queries: security-extended
 
+    # macOS 27 ships /usr/bin/sandbox-exec as arm64e-only. The CodeQL tracer
+    # re-spawns a re-signed copy of every SIP-protected binary it intercepts,
+    # and that copy can't run ("Bad CPU type in executable"). So this
+    # analysis-only build turns off everything that spawns sandbox-exec:
+    # SwiftPM manifest/plugin evaluation, sandboxed Run Script phases, and
+    # swift-frontend's macro-plugin sandbox.
     - name: Build for CodeQL
       id: codeql-build
       run: |
@@ -74,6 +80,10 @@ jobs:
           -destination 'generic/platform=iOS Simulator' \
           -onlyUsePackageVersionsFromResolvedFile \
           -skipMacroValidation \
+          -IDEPackageSupportDisableManifestSandbox=YES \
+          -IDEPackageSupportDisablePluginExecutionSandbox=YES \
+          ENABLE_USER_SCRIPT_SANDBOXING=NO \
+          OTHER_SWIFT_FLAGS="\$(inherited) -disable-sandbox" \
           CODE_SIGNING_ALLOWED=NO \
           CODE_SIGNING_REQUIRED=NO
 

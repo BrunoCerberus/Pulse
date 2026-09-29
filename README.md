@@ -54,7 +54,7 @@ make setup
 open Pulse.xcodeproj
 ```
 
-**Requirements:** Xcode 26.5+ · iOS 26.5+ · Swift 6.2+.
+**Requirements:** Xcode 27.0+ · iOS 26.0+ · Swift 6.2+.
 
 AI features download the on-device LLM model only when the user explicitly starts an AI feature (~806 MB). It is not shipped in the App Store binary, and no manual model setup is required. The download is Wi-Fi-only, resumable, integrity-checked, and requires free storage; ordinary Feed visits never start it.
 

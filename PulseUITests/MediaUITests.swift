@@ -51,7 +51,7 @@ final class MediaUITests: BaseUITestCase {
         navigateToMediaTab()
 
         // Wait for Media tab to fully render before querying UI elements.
-        // On CI shared runners, rapid .exists polling can trigger Xcode 26 C++ exception
+        // On CI shared runners, rapid .exists polling can trigger Xcode 27 C++ exception
         // crashes ("Timed out while evaluating UI query"), so we give the view enough time
         // to stabilize and then check a single element to minimize UI query pressure.
         wait(for: 3.0)
@@ -140,7 +140,7 @@ final class MediaUITests: BaseUITestCase {
 
         // Bail out if only error state loaded — no cards to interact with.
         // Querying .matching(identifier:) on a view with no matching elements can cause
-        // Xcode 26's accessibility framework to hang indefinitely on CI.
+        // Xcode 27's accessibility framework to hang indefinitely on CI.
         guard !isMediaErrorState() else { return }
 
         let mediaCards = app.buttons.matching(identifier: "mediaCard")

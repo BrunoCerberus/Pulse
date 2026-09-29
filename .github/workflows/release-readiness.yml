@@ -16,7 +16,7 @@ concurrency:
 jobs:
   archive:
     name: Device Archive Smoke
-    runs-on: macos-26
+    runs-on: xcode-27
     timeout-minutes: 60
     permissions:
       contents: read
@@ -54,7 +54,7 @@ jobs:
   export:
     name: Signed Export Validation
     if: github.event_name == 'workflow_dispatch' && inputs.signed-export
-    runs-on: macos-26
+    runs-on: xcode-27
     timeout-minutes: 90
     permissions:
       contents: read

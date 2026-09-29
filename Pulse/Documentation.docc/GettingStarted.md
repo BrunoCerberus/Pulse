@@ -9,8 +9,8 @@ its Unidirectional Data Flow (UDF) architecture.
 
 ## Prerequisites
 
-- Xcode 26.5 or later
-- iOS 26.5 SDK
+- Xcode 27.0 or later
+- iOS 27.0 SDK (deployment target iOS 26.0)
 - [XcodeGen](https://github.com/yonaskolb/XcodeGen) for project generation
 
 ## Setup

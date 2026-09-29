@@ -152,7 +152,7 @@ final class ArticleDetailUITests: BaseUITestCase {
 
         // --- Back Navigation ---
         // Poll for the back button to have a valid (non-zero) frame before tapping.
-        // Avoid XCTNSPredicateExpectation with isHittable — on Xcode 26 / iOS 26 shared
+        // Avoid XCTNSPredicateExpectation with isHittable — on Xcode 27 / iOS 26 shared
         // CI runners the predicate evaluation internally calls activationPoint on a
         // zero-frame element and XCTest records "Activation point invalid and no
         // suggested hit points based on element frame" as a test failure *before* the
@@ -175,7 +175,7 @@ final class ArticleDetailUITests: BaseUITestCase {
         } else {
             // Use coordinate-based left-edge swipe instead of app.swipeRight().
             // app.swipeRight() evaluates the full accessibility tree and hangs for 30+
-            // minutes when Xcode 26's accessibility framework is degraded, causing
+            // minutes when Xcode 27's accessibility framework is degraded, causing
             // multi-hour test runs. Coordinate-based gestures bypass tree evaluation.
             ObjCExceptionCatcher.safeSwipeLeftEdge(app)
         }

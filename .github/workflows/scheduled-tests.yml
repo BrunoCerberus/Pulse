@@ -39,7 +39,7 @@ env:
 jobs:
   build:
     name: Nightly Build
-    runs-on: macos-26
+    runs-on: xcode-27
     timeout-minutes: 45
 
     permissions:
@@ -156,7 +156,7 @@ jobs:
   # opens an issue.
   dead-code:
     name: Nightly Dead Code
-    runs-on: macos-26
+    runs-on: xcode-27
     timeout-minutes: 90
 
     permissions:
@@ -238,7 +238,7 @@ jobs:
 
   tests:
     name: Nightly ${{ matrix.test-name }}
-    runs-on: macos-26
+    runs-on: xcode-27
     needs: build
     # Ceiling above the largest per-leg step timeout (180) plus setup — mirrors
     # ci.yml. This was 25, which silently killed the UI-tests leg at the job

@@ -41,8 +41,11 @@ final class LiveStorageService: StorageService {
                 ReadArticle.self,
                 InterestTopicModel.self,
             ])
+            // `cloudKitDatabase` must be `.none` explicitly: the default
+            // `.automatic` mirrors to the entitlement's container, which on
+            // iOS 27 includes in-memory stores.
             let modelConfiguration = if inMemory || !enableCloudKit {
-                ModelConfiguration(schema: schema, isStoredInMemoryOnly: inMemory)
+                ModelConfiguration(schema: schema, isStoredInMemoryOnly: inMemory, cloudKitDatabase: .none)
             } else {
                 ModelConfiguration(
                     schema: schema,

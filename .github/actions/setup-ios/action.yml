@@ -1,6 +1,6 @@
 name: "Set up iOS build environment"
 description: >
-  Shared setup for the macOS jobs: selects Xcode 26.5, optionally installs the
+  Shared setup for the macOS jobs: selects Xcode 27.0, optionally installs the
   iOS simulator runtime (idempotently), restores the Homebrew + SPM caches,
   installs XcodeGen, and generates the Xcode project. Centralizes the chain
   that was previously copy-pasted across ci.yml (build/release-build/tests),
@@ -29,13 +29,13 @@ inputs:
 runs:
   using: "composite"
   steps:
-    - name: Select Xcode 26.5
+    - name: Select Xcode 27.0
       shell: bash
       run: |
-        XCODE_PATH=$(ls -d /Applications/Xcode_26.5*.app 2>/dev/null | head -1)
+        XCODE_PATH=$(ls -d /Applications/Xcode_27.0*.app 2>/dev/null | head -1)
         if [ -z "$XCODE_PATH" ]; then
-          echo "::error::Xcode 26.5 not found on runner"
-          ls -d /Applications/Xcode_26*.app || true
+          echo "::error::Xcode 27.0 not found on runner"
+          ls -d /Applications/Xcode_27*.app || true
           exit 1
         fi
         sudo xcode-select -s "$XCODE_PATH/Contents/Developer"
@@ -59,6 +59,13 @@ runs:
         if xcrun simctl list runtimes 2>/dev/null | grep -E '^iOS [0-9]' | grep -qiv 'unavailable'; then
           echo "An available iOS simulator runtime is already installed — skipping download."
           xcrun simctl list runtimes | grep -E '^iOS [0-9]' || true
+          # Surface an SDK/runtime mismatch (e.g. iOS 27 SDK on an iOS 26-only
+          # image) instead of silently testing on the older simulator.
+          SDK_VERSION=$(xcrun --sdk iphonesimulator --show-sdk-version)
+          echo "Selected iphonesimulator SDK: $SDK_VERSION"
+          if ! xcrun simctl list runtimes | grep -E "^iOS ${SDK_VERSION%%.*}\." | grep -qiv 'unavailable'; then
+            echo "::warning::No available iOS ${SDK_VERSION%%.*}.x simulator runtime; tests will run on an older iOS than the selected SDK."
+          fi
         else
           echo "No available iOS simulator runtime found — downloading..."
           # Initialize CoreSimulator service before downloading

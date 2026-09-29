@@ -22,7 +22,7 @@ class BaseUITestCase: XCTestCase {
     // MARK: - Instance-level Setup (runs before each test)
 
     override func setUp() async throws {
-        // Use continueAfterFailure = true to prevent Xcode 26 C++ exception crashes.
+        // Use continueAfterFailure = true to prevent Xcode 27 C++ exception crashes.
         // When set to false, XCTest throws a C++ exception on assertion failure, but
         // the Swift runtime is compiled without C++ exception support, causing SIGABRT
         // ("C++ exception handling detected but the Swift runtime was compiled with
@@ -153,7 +153,7 @@ class BaseUITestCase: XCTestCase {
         // test runner is in a bad state after a UI query timeout, crashing tearDown.
         ObjCExceptionCatcher.safeSetDeviceOrientation(.portrait)
         // Terminate the app using ObjC++ @try/@catch to prevent C++ exception crashes.
-        // Xcode 26 throws C++ exceptions during terminate() ("Failed to terminate")
+        // Xcode 27 throws C++ exceptions during terminate() ("Failed to terminate")
         // which crash the Swift runtime. Wrapping in ObjC++ catches these safely.
         if let app, app.state != .notRunning {
             ObjCExceptionCatcher.safeTerminateApp(app)
@@ -322,7 +322,7 @@ class BaseUITestCase: XCTestCase {
 
     /// Scrolls an element up via a coordinate-based drag (ObjC++ @try/@catch).
     /// Use instead of `element.swipeUp()`, whose tree-evaluated endpoints can hang
-    /// for 30+ minutes on a degraded Xcode 26 accessibility framework.
+    /// for 30+ minutes on a degraded Xcode 27 accessibility framework.
     func safeSwipeUp(_ element: XCUIElement) {
         ObjCExceptionCatcher.safeSwipeUp(in: element)
     }
@@ -345,7 +345,7 @@ class BaseUITestCase: XCTestCase {
 
     // MARK: - Wait Helpers
 
-    /// Safe alternative to XCTest's `waitForExistence` that avoids Xcode 26 C++ exception crashes.
+    /// Safe alternative to XCTest's `waitForExistence` that avoids Xcode 27 C++ exception crashes.
     /// All `.exists` calls are wrapped in ObjC `@try/@catch` to catch C++ exceptions
     /// that would otherwise SIGABRT the test runner.
     @discardableResult

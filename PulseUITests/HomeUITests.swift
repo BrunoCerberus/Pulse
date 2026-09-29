@@ -82,7 +82,7 @@ final class HomeUITests: BaseUITestCase {
         let allTabButton = app.buttons["All"]
         if safeWaitForExistence(allTabButton, timeout: Self.shortTimeout) {
             // Category tabs are visible - test interaction
-            // Use coordinate-based tap to avoid Xcode 26 C++ exception crash from element lookup
+            // Use coordinate-based tap to avoid Xcode 27 C++ exception crash from element lookup
             let center = allTabButton.coordinate(withNormalizedOffset: CGVector(dx: 0.5, dy: 0.5))
             center.tap()
 
@@ -210,7 +210,7 @@ final class HomeUITests: BaseUITestCase {
         } else {
             // Use coordinate-based left-edge swipe instead of app.swipeRight().
             // app.swipeRight() evaluates the full accessibility tree and hangs for 30+
-            // minutes when Xcode 26's accessibility framework is degraded.
+            // minutes when Xcode 27's accessibility framework is degraded.
             ObjCExceptionCatcher.safeSwipeLeftEdge(app)
         }
 
