@@ -27,10 +27,12 @@ final class LiveEngagementEventsService: EngagementEventsService {
     init(inMemory: Bool = false) {
         do {
             let schema = Schema([PendingEngagementEvent.self])
+            // Explicit `.none`: the default `.automatic` mirrors to the
+            // entitlement's CloudKit container.
             let configuration = if inMemory {
-                ModelConfiguration(schema: schema, isStoredInMemoryOnly: true)
+                ModelConfiguration(schema: schema, isStoredInMemoryOnly: true, cloudKitDatabase: .none)
             } else {
-                ModelConfiguration(schema: schema, url: Self.storeURL)
+                ModelConfiguration(schema: schema, url: Self.storeURL, cloudKitDatabase: .none)
             }
             modelContainer = try ModelContainer(for: schema, configurations: [configuration])
         } catch {
