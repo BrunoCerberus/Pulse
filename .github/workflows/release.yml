@@ -182,16 +182,16 @@ jobs:
         path: ~/Library/Caches/Homebrew
         key: ${{ runner.os }}-brew-v2
 
+    # Download cache only — never the project's swiftpm/ folder, which holds the
+    # tracked Package.resolved (see the setup-ios action for why).
     - name: Cache SPM dependencies
       if: steps.creds.outputs.enabled == 'true'
       uses: actions/cache@55cc8345863c7cc4c66a329aec7e433d2d1c52a9 # v6.1.0
       with:
-        path: |
-          Pulse.xcodeproj/project.xcworkspace/xcshareddata/swiftpm
-          ~/Library/Caches/org.swift.swiftpm
-        key: ${{ runner.os }}-spm-${{ hashFiles('Pulse.xcodeproj/project.xcworkspace/xcshareddata/swiftpm/Package.resolved') }}
+        path: ~/Library/Caches/org.swift.swiftpm
+        key: ${{ runner.os }}-spm-v2-${{ hashFiles('Pulse.xcodeproj/project.xcworkspace/xcshareddata/swiftpm/Package.resolved') }}
         restore-keys: |
-          ${{ runner.os }}-spm-
+          ${{ runner.os }}-spm-v2-
 
     # Decode the Firebase config into the source tree BEFORE `make generate`, so
     # XcodeGen includes it as a bundled resource and the Crashlytics build phase
@@ -213,6 +213,16 @@ jobs:
     - name: Generate Xcode project
       if: steps.creds.outputs.enabled == 'true'
       run: make generate
+
+    - name: Verify Package.resolved matches the checkout
+      if: steps.creds.outputs.enabled == 'true'
+      run: |
+        resolved=Pulse.xcodeproj/project.xcworkspace/xcshareddata/swiftpm/Package.resolved
+        if ! git diff --quiet -- "$resolved"; then
+          echo "::error file=$resolved::Package.resolved no longer matches the committed file after setup"
+          git diff -- "$resolved"
+          exit 1
+        fi
 
     # App Store Connect rejects re-uploading an existing (version, build) pair.
     # MARKETING_VERSION is bumped above; the build number must also be unique and
