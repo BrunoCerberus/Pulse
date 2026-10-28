@@ -1,8 +1,8 @@
 import XCTest
 
 /// Base class for UI tests that standardizes launch configuration and isolation.
-// swiftlint:disable:next type_body_length
 @MainActor
+// swiftlint:disable:next type_body_length
 class BaseUITestCase: XCTestCase {
     /// App instance - launched per test for isolation
     var app: XCUIApplication!
@@ -61,17 +61,10 @@ class BaseUITestCase: XCTestCase {
             _ = waitForElementToDisappear(loadingIndicator, timeout: Self.launchTimeout)
         }
 
-        // Regular-width navigation may start with the sidebar collapsed.
-        let tabBar = app.tabBars.firstMatch
+        let rootNavigation = rootNavigationElements()
         let signInApple = app.buttons["Sign in with Apple"]
         let signInGoogle = app.buttons["Sign in with Google"]
-
-        let sidebarHome = app.descendants(matching: .any).matching(identifier: "sidebar.tab.home").firstMatch
-        let homeNavigationBar = app.navigationBars["News"]
-        let appReady = waitForAny(
-            [tabBar, sidebarHome, homeNavigationBar, signInApple, signInGoogle],
-            timeout: Self.launchTimeout,
-        )
+        let appReady = waitForAny(rootNavigation + [signInApple, signInGoogle], timeout: Self.launchTimeout)
 
         guard appReady else {
             // Debug: log what's visible to help diagnose CI failures
@@ -85,7 +78,7 @@ class BaseUITestCase: XCTestCase {
             throw XCTSkip("App not ready: \(debugInfo)")
         }
 
-        if safeExists(tabBar) || safeExists(sidebarHome) || safeExists(homeNavigationBar) {
+        if rootNavigation.contains(where: { safeExists($0) }) {
             resetToHomeTab()
         }
     }
@@ -216,6 +209,62 @@ class BaseUITestCase: XCTestCase {
 
     // MARK: - Navigation Helpers
 
+    /// Elements proving the authenticated root rendered: the compact tab bar, the
+    /// regular-width sidebar, or Home's detail column while that sidebar is collapsed.
+    func rootNavigationElements() -> [XCUIElement] {
+        [
+            app.tabBars.firstMatch,
+            app.descendants(matching: .any).matching(identifier: "sidebar.tab.home").firstMatch,
+            app.navigationBars["News"],
+        ]
+    }
+
+    /// Root navigation item names in display order: tab bar left to right, or
+    /// sidebar top to bottom on regular width.
+    func navigationItemNames() -> [String] {
+        let tabBar = app.tabBars.firstMatch
+        if safeExists(tabBar) {
+            let buttons = tabBar.buttons
+            return (0 ..< ObjCExceptionCatcher.safeCount(for: buttons)).map { index in
+                let button = buttons.element(boundBy: index)
+                let label = safeLabel(button)
+                return label.isEmpty ? safeIdentifier(button) : label
+            }
+        }
+
+        // Resolving any item reveals a collapsed sidebar before its rows are read.
+        _ = safeWaitForExistence(navigationItem(named: "Home"), timeout: Self.shortTimeout)
+        let rows = app.descendants(matching: .any)
+            .matching(NSPredicate(format: "identifier BEGINSWITH %@", "sidebar.tab."))
+        var names: [String] = []
+        for index in 0 ..< ObjCExceptionCatcher.safeCount(for: rows) {
+            let name = safeIdentifier(rows.element(boundBy: index))
+                .replacingOccurrences(of: "sidebar.tab.", with: "")
+                .capitalized
+            // A row and its label can both carry the identifier.
+            if !name.isEmpty, names.last != name {
+                names.append(name)
+            }
+        }
+        return names
+    }
+
+    /// Navigation bar title each root tab shows in its stack.
+    func rootNavigationTitle(forTab tabName: String) -> String {
+        switch tabName {
+        case "Home": "News"
+        case "Feed": "Daily Digest"
+        default: tabName
+        }
+    }
+
+    /// Whether `tabName` became the active root destination. The detail navigation
+    /// bar is the signal on both layouts; `isSelected` is only reported by tab bar
+    /// buttons, and iOS 26+ can report it stale on CI.
+    func waitForActiveTab(_ tabName: String, timeout: TimeInterval = BaseUITestCase.defaultTimeout) -> Bool {
+        safeWaitForExistence(app.navigationBars[rootNavigationTitle(forTab: tabName)], timeout: timeout)
+    }
+
     /// Resolves the rendered navigation control, including regular-width sidebars.
     func navigationItem(named name: String) -> XCUIElement {
         let tabBar = app.tabBars.firstMatch
@@ -264,13 +313,7 @@ class BaseUITestCase: XCTestCase {
         }
         wait(for: 0.3)
         safeTap(item)
-
-        let title: String = switch tabName {
-        case "Home": "News"
-        case "Feed": "Daily Digest"
-        default: tabName
-        }
-        _ = safeWaitForExistence(app.navigationBars[title], timeout: Self.defaultTimeout)
+        _ = waitForActiveTab(tabName)
     }
 
     func navigateToSearchTab() {

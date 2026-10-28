@@ -97,14 +97,20 @@ final class ArticleDetailUITests: BaseUITestCase {
 
         XCTAssertTrue(shareSheetAppeared, "Share sheet should appear after tapping share button")
 
-        if safeExists(closeButton) {
-            closeButton.tap()
+        // Close can land after the sheet's content, and a swipe on the app doesn't
+        // reliably dismiss the sheet, so give Close a moment before falling back.
+        if safeWaitForExistence(closeButton, timeout: 3) {
+            safeTap(closeButton)
         } else {
             app.swipeDown()
         }
 
-        // Wait for share sheet to fully dismiss before continuing
-        wait(for: 2.0)
+        // The back button stays in the hierarchy behind the sheet, so confirm the
+        // sheet itself is gone; otherwise the back taps below land on it.
+        if !waitForElementToDisappear(copyButton, timeout: 5), safeExists(closeButton) {
+            safeTap(closeButton)
+            _ = waitForElementToDisappear(copyButton, timeout: 5)
+        }
 
         // Wait for share sheet to dismiss and back button to become available
         let backButtonAfterShare = app.buttons["backButton"]
@@ -180,19 +186,18 @@ final class ArticleDetailUITests: BaseUITestCase {
             ObjCExceptionCatcher.safeSwipeLeftEdge(app)
         }
 
-        // Wait for navigation to complete
+        // Wait for navigation to complete; a tap can be swallowed while the share
+        // sheet's dismissal settles, so retry through the shared back helper once.
         wait(for: 1.0)
-
-        let homeNavBar = app.navigationBars["News"]
-        let homeTab = app.tabBars.buttons["Home"]
+        if !waitForActiveTab("Home", timeout: 5) {
+            navigateBack(waitForNavBar: "News")
+        }
 
         // Check various indicators that we're back at home
         let topHeadlinesHeader = app.staticTexts["Top Headlines"]
         let breakingNewsHeader = app.staticTexts["Breaking News"]
-        let homeTabSelected = safeWaitForExistence(homeTab, timeout: 5) && homeTab.isSelected
 
-        let navigatedBack = safeWaitForExistence(homeNavBar, timeout: 10) ||
-            homeTabSelected ||
+        let navigatedBack = waitForActiveTab("Home", timeout: 10) ||
             safeWaitForExistence(topHeadlinesHeader, timeout: 3) ||
             safeWaitForExistence(breakingNewsHeader, timeout: 3)
 

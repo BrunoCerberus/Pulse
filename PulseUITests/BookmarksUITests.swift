@@ -7,7 +7,7 @@ final class BookmarksUITests: BaseUITestCase {
     // swiftlint:disable:next function_body_length cyclomatic_complexity
     func testBookmarksFlow() {
         // --- Tab Navigation ---
-        let bookmarksTab = app.tabBars.buttons["Bookmarks"]
+        let bookmarksTab = navigationItem(named: "Bookmarks")
         XCTAssertTrue(safeWaitForExistence(bookmarksTab, timeout: Self.shortTimeout), "Bookmarks tab should exist")
 
         navigateToBookmarksTab()

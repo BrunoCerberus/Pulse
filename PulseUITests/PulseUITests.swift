@@ -1,38 +1,32 @@
 import XCTest
 
 final class PulseUITests: BaseUITestCase {
-    /// Tests tab bar exists, tab navigation, and settings access
+    /// Tests root navigation exists, tab navigation, and settings access
     func testMainAppNavigationFlow() {
-        XCTAssertTrue(app.tabBars.firstMatch.exists)
-
-        let homeTab = app.tabBars.buttons["Home"]
-        XCTAssertTrue(homeTab.exists)
-        XCTAssertTrue(homeTab.isSelected)
+        XCTAssertTrue(
+            rootNavigationElements().contains { safeExists($0) },
+            "Tab bar or sidebar should exist",
+        )
+        XCTAssertTrue(waitForActiveTab("Home"), "Home should be the active tab")
 
         // --- Bookmarks Tab ---
-        let bookmarksTab = app.tabBars.buttons["Bookmarks"]
-        XCTAssertTrue(safeWaitForExistence(bookmarksTab, timeout: 5), "Bookmarks tab should exist")
-
-        bookmarksTab.tap()
-
-        XCTAssertTrue(bookmarksTab.isSelected, "Bookmarks tab should be selected")
+        XCTAssertTrue(
+            safeWaitForExistence(navigationItem(named: "Bookmarks"), timeout: 5),
+            "Bookmarks tab should exist",
+        )
+        navigateToBookmarksTab()
+        XCTAssertTrue(waitForActiveTab("Bookmarks"), "Bookmarks tab should be selected")
 
         // --- Feed Tab ---
-        let feedTab = app.tabBars.buttons["Feed"]
-        XCTAssertTrue(safeWaitForExistence(feedTab, timeout: 5), "Feed tab should exist")
-
-        feedTab.tap()
-
-        XCTAssertTrue(feedTab.isSelected, "Feed tab should be selected")
+        XCTAssertTrue(safeWaitForExistence(navigationItem(named: "Feed"), timeout: 5), "Feed tab should exist")
+        navigateToFeedTab()
+        XCTAssertTrue(waitForActiveTab("Feed"), "Feed tab should be selected")
 
         // --- Search Tab (verify exists) ---
-        let searchTab = app.tabBars.buttons.matching(
-            NSPredicate(format: "label CONTAINS[c] 'search' OR identifier CONTAINS[c] 'search'"),
-        ).firstMatch
-        XCTAssertTrue(safeWaitForExistence(searchTab, timeout: 5), "Search tab should exist")
+        XCTAssertTrue(safeWaitForExistence(navigationItem(named: "Search"), timeout: 5), "Search tab should exist")
 
         // Return to Home tab for settings test
-        homeTab.tap()
+        navigateToTab("Home")
 
         // Allow UI to fully settle after multi-tab navigation.
         // CI simulators need extra time to re-render the Home tab's NavigationStack.
@@ -45,7 +39,7 @@ final class PulseUITests: BaseUITestCase {
         let contentLoaded = waitForHomeContent(timeout: Self.launchTimeout)
         if !contentLoaded {
             // Recovery: try tapping Home tab again and wait longer
-            homeTab.tap()
+            navigateToTab("Home")
             wait(for: 2.0)
             let recovered = waitForHomeContent(timeout: Self.launchTimeout)
             XCTAssertTrue(recovered, "Home content should load after recovery attempt")

@@ -93,9 +93,8 @@ final class PulseSettingsUITests: BaseUITestCase {
 
         let toggledValue = isSwitchOn(notificationsToggle)
 
-        let backButton = app.navigationBars.buttons.firstMatch
-        XCTAssertTrue(backButton.exists, "Back button should exist")
-        backButton.tap()
+        // With a sidebar on regular width, the first navigation-bar button need not be Back.
+        navigateBack(waitForNavBar: "News")
 
         let homeNav = app.navigationBars["News"]
         XCTAssertTrue(safeWaitForExistence(homeNav, timeout: 5), "Should return to Home")

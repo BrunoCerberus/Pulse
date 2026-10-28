@@ -125,7 +125,7 @@ final class ReadingHistoryUITests: BaseUITestCase {
         }
 
         // --- Navigate back to Settings ---
-        navigateBack()
+        navigateBack(waitForNavBar: "Settings")
 
         let settingsNavAfter = app.navigationBars["Settings"]
         XCTAssertTrue(safeWaitForExistence(settingsNavAfter, timeout: Self.defaultTimeout), "Should return to Settings")
