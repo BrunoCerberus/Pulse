@@ -106,10 +106,14 @@ final class ArticleDetailUITests: BaseUITestCase {
         }
 
         // The back button stays in the hierarchy behind the sheet, so confirm the
-        // sheet itself is gone; otherwise the back taps below land on it.
-        if !waitForElementToDisappear(copyButton, timeout: 5), safeExists(closeButton) {
+        // sheet itself is gone; otherwise the back taps below land on it. Check every
+        // element that detected the sheet — any one of them may never have rendered.
+        let sheetElements = [copyButton, shareSheet]
+        if !sheetElements.allSatisfy({ waitForElementToDisappear($0, timeout: 5) }), safeExists(closeButton) {
             safeTap(closeButton)
-            _ = waitForElementToDisappear(copyButton, timeout: 5)
+            for element in sheetElements {
+                _ = waitForElementToDisappear(element, timeout: 5)
+            }
         }
 
         // Wait for share sheet to dismiss and back button to become available
@@ -187,9 +191,9 @@ final class ArticleDetailUITests: BaseUITestCase {
         }
 
         // A tap can be swallowed while the share sheet's dismissal settles, so retry
-        // once — but only while still on detail: a slow pop would otherwise leave
-        // `navigateBack` to swipe the left edge, which is the sidebar on iPad.
-        if !waitForActiveTab("Home", timeout: 5), safeExists(backButtonAfterShare) {
+        // once while the detail's back button is still up. Its disappearance proves the
+        // pop; Home's nav bar alone doesn't, if the tree keeps it behind the detail.
+        if !waitForElementToDisappear(backButtonAfterShare, timeout: 5) {
             safeTap(backButtonAfterShare)
         }
 
@@ -197,9 +201,10 @@ final class ArticleDetailUITests: BaseUITestCase {
         let topHeadlinesHeader = app.staticTexts["Top Headlines"]
         let breakingNewsHeader = app.staticTexts["Breaking News"]
 
-        let navigatedBack = waitForActiveTab("Home", timeout: 10) ||
-            safeWaitForExistence(topHeadlinesHeader, timeout: 3) ||
-            safeWaitForExistence(breakingNewsHeader, timeout: 3)
+        let navigatedBack = waitForElementToDisappear(backButtonAfterShare, timeout: 10) &&
+            (waitForActiveTab("Home", timeout: 10) ||
+                safeWaitForExistence(topHeadlinesHeader, timeout: 3) ||
+                safeWaitForExistence(breakingNewsHeader, timeout: 3))
 
         XCTAssertTrue(navigatedBack, "Should navigate back to Home")
 

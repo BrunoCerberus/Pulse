@@ -242,7 +242,7 @@ class BaseUITestCase: XCTestCase {
                 .replacingOccurrences(of: "sidebar.tab.", with: "")
                 .capitalized
             // A row and its label can both carry the identifier.
-            if !name.isEmpty, names.last != name {
+            if !name.isEmpty, !names.contains(name) {
                 names.append(name)
             }
         }
