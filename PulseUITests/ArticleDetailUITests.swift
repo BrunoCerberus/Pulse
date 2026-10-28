@@ -186,11 +186,11 @@ final class ArticleDetailUITests: BaseUITestCase {
             ObjCExceptionCatcher.safeSwipeLeftEdge(app)
         }
 
-        // Wait for navigation to complete; a tap can be swallowed while the share
-        // sheet's dismissal settles, so retry through the shared back helper once.
-        wait(for: 1.0)
-        if !waitForActiveTab("Home", timeout: 5) {
-            navigateBack(waitForNavBar: "News")
+        // A tap can be swallowed while the share sheet's dismissal settles, so retry
+        // once — but only while still on detail: a slow pop would otherwise leave
+        // `navigateBack` to swipe the left edge, which is the sidebar on iPad.
+        if !waitForActiveTab("Home", timeout: 5), safeExists(backButtonAfterShare) {
+            safeTap(backButtonAfterShare)
         }
 
         // Check various indicators that we're back at home
