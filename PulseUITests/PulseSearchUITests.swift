@@ -3,10 +3,16 @@ import XCTest
 final class PulseSearchUITests: BaseUITestCase {
     // MARK: - Helper Methods
 
-    /// Dismiss keyboard if visible
+    /// Dismiss keyboard if it is still visible. Submitting a search usually closes
+    /// it, so wait out that animation first: a key looked up on a keyboard that is
+    /// animating away fails the test with "No matches found for ... Keyboard".
     private func dismissKeyboard() {
-        if app.keyboards.element.exists {
-            app.keyboards.buttons["return"].tap()
+        let keyboard = app.keyboards.element
+        if waitForElementToDisappear(keyboard, timeout: 2) { return }
+
+        let dismissKeys = [keyboard.buttons["return"], keyboard.buttons["Hide keyboard"]]
+        if let key = dismissKeys.first(where: { safeExists($0) }) {
+            safeTap(key)
         }
     }
 
@@ -191,11 +197,10 @@ final class PulseSearchUITests: BaseUITestCase {
         if articleCardsForNavigation.count > 0 {
             articleCardsForNavigation.firstMatch.tap()
 
-            let backButton = app.navigationBars.buttons.firstMatch
-            let didNavigate = safeWaitForExistence(backButton, timeout: 5) && !searchField.exists
-
-            if didNavigate {
-                backButton.tap()
+            // Go back through the detail view's own back button: with a sidebar on
+            // regular width, the first navigation-bar button need not be Back.
+            if waitForArticleDetail() {
+                navigateBack(waitForNavBar: "Search")
                 XCTAssertTrue(safeWaitForExistence(searchField, timeout: 5), "Should return to Search")
             }
         }
@@ -249,8 +254,7 @@ final class PulseSearchUITests: BaseUITestCase {
         dismissKeyboard()
 
         // --- Tab Switching ---
-        let homeTab = app.tabBars.buttons["Home"]
-        homeTab.tap()
+        navigateToTab("Home")
 
         navigateToSearchTab()
 

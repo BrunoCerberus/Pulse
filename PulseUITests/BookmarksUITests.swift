@@ -7,20 +7,15 @@ final class BookmarksUITests: BaseUITestCase {
     // swiftlint:disable:next function_body_length cyclomatic_complexity
     func testBookmarksFlow() {
         // --- Tab Navigation ---
-        let bookmarksTab = app.tabBars.buttons["Bookmarks"]
+        let bookmarksTab = navigationItem(named: "Bookmarks")
         XCTAssertTrue(safeWaitForExistence(bookmarksTab, timeout: Self.shortTimeout), "Bookmarks tab should exist")
 
         navigateToBookmarksTab()
 
-        // Wait for nav bar to confirm we're on Bookmarks (more reliable than isSelected)
+        // The nav bar confirms Bookmarks is active on both layouts; `isSelected` is
+        // tab-bar-only and can be stale on iOS 26+.
         let navTitle = app.navigationBars["Bookmarks"]
-        XCTAssertTrue(
-            safeWaitForExistence(navTitle, timeout: Self.defaultTimeout),
-            "Navigation title 'Bookmarks' should exist",
-        )
-
-        // Verify tab is selected after navigation is confirmed
-        XCTAssertTrue(bookmarksTab.isSelected, "Bookmarks tab should be selected")
+        XCTAssertTrue(waitForActiveTab("Bookmarks"), "Bookmarks tab should be selected")
 
         // --- Content Loading ---
         let noBookmarksText = app.staticTexts["No Bookmarks"]

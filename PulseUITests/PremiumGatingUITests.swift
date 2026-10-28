@@ -10,7 +10,7 @@ final class PremiumGatingNonPremiumUITests: BaseUITestCase {
     /// Tests that non-premium users see the premium gate on Feed tab
     func testFeedTabShowsPremiumGateForNonPremiumUser() {
         // Navigate to Feed tab
-        let feedTab = app.tabBars.buttons["Feed"]
+        let feedTab = navigationItem(named: "Feed")
         XCTAssertTrue(safeWaitForExistence(feedTab, timeout: Self.launchTimeout), "Feed tab should exist")
 
         navigateToFeedTab()
@@ -30,8 +30,8 @@ final class PremiumGatingNonPremiumUITests: BaseUITestCase {
 
     /// Tests that tapping Unlock Premium on Feed shows paywall
     func testFeedUnlockButtonShowsPaywall() {
-        // Ensure tab bar is ready before navigation
-        let feedTab = app.tabBars.buttons["Feed"]
+        // Ensure root navigation is ready before navigating
+        let feedTab = navigationItem(named: "Feed")
         XCTAssertTrue(safeWaitForExistence(feedTab, timeout: Self.launchTimeout), "Feed tab should exist")
 
         navigateToFeedTab()
@@ -139,7 +139,7 @@ final class PremiumGatingPremiumUITests: BaseUITestCase {
     /// Tests that premium users see digest content on Feed tab
     func testFeedTabShowsContentForPremiumUser() {
         // Navigate to Feed tab
-        let feedTab = app.tabBars.buttons["Feed"]
+        let feedTab = navigationItem(named: "Feed")
         XCTAssertTrue(safeWaitForExistence(feedTab, timeout: Self.launchTimeout), "Feed tab should exist")
 
         navigateToFeedTab()

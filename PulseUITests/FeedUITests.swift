@@ -34,7 +34,7 @@ final class FeedUITests: BaseUITestCase {
     // swiftlint:disable:next function_body_length
     func testFeedFlow() {
         // --- Tab Navigation ---
-        let feedTab = app.tabBars.buttons["Feed"]
+        let feedTab = navigationItem(named: "Feed")
         let feedTabBySymbol = app.tabBars.buttons["text.document"]
         let feedTabExists = waitForAny([feedTab, feedTabBySymbol], timeout: Self.launchTimeout)
         XCTAssertTrue(feedTabExists, "Feed tab should exist")
@@ -86,12 +86,12 @@ final class FeedUITests: BaseUITestCase {
         }
 
         // --- Tab Switching ---
-        let homeTab = app.tabBars.buttons["Home"]
-        XCTAssertTrue(safeWaitForExistence(homeTab, timeout: Self.shortTimeout), "Home tab should exist")
-        safeTap(homeTab)
-
-        let homeNav = app.navigationBars["News"]
-        XCTAssertTrue(safeWaitForExistence(homeNav, timeout: Self.defaultTimeout), "Home should load")
+        XCTAssertTrue(
+            safeWaitForExistence(navigationItem(named: "Home"), timeout: Self.shortTimeout),
+            "Home tab should exist",
+        )
+        navigateToTab("Home")
+        XCTAssertTrue(waitForActiveTab("Home"), "Home should load")
 
         navigateToFeed()
         XCTAssertTrue(
@@ -112,35 +112,22 @@ final class FeedUITests: BaseUITestCase {
         )
     }
 
-    // MARK: - Tab Bar Position Test
+    // MARK: - Tab Position Test
 
     func testFeedTabPosition() {
-        let tabBar = app.tabBars.firstMatch
-        XCTAssertTrue(safeWaitForExistence(tabBar, timeout: Self.launchTimeout), "Tab bar should exist")
+        XCTAssertTrue(
+            waitForAny(rootNavigationElements(), timeout: Self.launchTimeout),
+            "Tab bar or sidebar should exist",
+        )
 
-        // Read the tab buttons through ObjC++ exception-safe wrappers. Evaluating
-        // `allElementsBoundByIndex`, `.count`, or `.label`/`.identifier` directly
-        // forces an accessibility snapshot that, on Xcode 27 CI shared runners,
-        // can throw a "Timed out while evaluating UI query" C++ exception. Unlike
-        // the rest of the suite, those raw reads were not wrapped, so the exception
-        // SIGABRT'd the runner mid-test instead of surfacing as a clean assertion
-        // failure (and cascaded to subsequent tests).
-        let tabButtons = tabBar.buttons
-        let tabCount = ObjCExceptionCatcher.safeCount(for: tabButtons)
-        XCTAssertGreaterThanOrEqual(tabCount, 5, "Tab bar should have at least 5 tabs")
-
-        // Find Feed tab index using exception-safe label/identifier reads.
-        var feedIndex = -1
-        for index in 0 ..< tabCount {
-            let button = tabButtons.element(boundBy: index)
-            if safeLabel(button) == "Feed" || safeIdentifier(button) == "Feed" {
-                feedIndex = index
-                break
-            }
-        }
+        // `navigationItemNames()` reads labels and identifiers through the ObjC++
+        // exception-safe wrappers: raw reads can throw "Timed out while evaluating
+        // UI query" on Xcode 27 CI runners and SIGABRT the runner mid-test.
+        let names = navigationItemNames()
+        XCTAssertGreaterThanOrEqual(names.count, 5, "Root navigation should have at least 5 tabs")
 
         // Feed should be at index 2 (after Home and Media, before Bookmarks)
-        XCTAssertEqual(feedIndex, 2, "Feed tab should be at index 2 (after Home and Media)")
+        XCTAssertEqual(names.firstIndex(of: "Feed"), 2, "Feed tab should be at index 2 (after Home and Media)")
     }
 
     // MARK: - Source Articles Navigation Test

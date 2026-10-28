@@ -8,7 +8,7 @@ final class MediaUITests: BaseUITestCase {
 
         // Use defaultTimeout — shortTimeout (10s) is insufficient on slow CI shared runners
         // where Liquid Glass tab bar rendering can delay accessibility element availability.
-        let mediaTab = app.tabBars.buttons["Media"]
+        let mediaTab = navigationItem(named: "Media")
         var found = safeWaitForExistence(mediaTab, timeout: Self.defaultTimeout)
 
         if !found {
@@ -23,7 +23,7 @@ final class MediaUITests: BaseUITestCase {
             found = safeWaitForExistence(mediaButton, timeout: 5)
         }
 
-        XCTAssertTrue(found, "Media tab should exist in tab bar")
+        XCTAssertTrue(found, "Media tab should exist in the tab bar or sidebar")
     }
 
     func testNavigateToMediaTab() {
@@ -35,7 +35,7 @@ final class MediaUITests: BaseUITestCase {
 
         if !navBarVisible {
             // Recovery: tap Media tab again
-            let mediaTab = app.tabBars.buttons["Media"]
+            let mediaTab = navigationItem(named: "Media")
             if safeWaitForExistence(mediaTab, timeout: 3) {
                 let center = mediaTab.coordinate(withNormalizedOffset: CGVector(dx: 0.5, dy: 0.5))
                 center.tap()
@@ -265,7 +265,7 @@ final class MediaUITests: BaseUITestCase {
         let mediaNavBar = app.navigationBars["Media"]
         var mediaReady = safeWaitForExistence(mediaNavBar, timeout: Self.defaultTimeout)
         if !mediaReady {
-            let mediaTab = app.tabBars.buttons["Media"]
+            let mediaTab = navigationItem(named: "Media")
             if safeWaitForExistence(mediaTab, timeout: 3) {
                 let center = mediaTab.coordinate(withNormalizedOffset: CGVector(dx: 0.5, dy: 0.5))
                 center.tap()
@@ -277,11 +277,10 @@ final class MediaUITests: BaseUITestCase {
 
         // Switch to Home
         navigateToTab("Home")
-        var homeReady = safeWaitForExistence(app.navigationBars["News"], timeout: Self.launchTimeout) ||
-            app.tabBars.buttons["Home"].isSelected
+        var homeReady = waitForActiveTab("Home", timeout: Self.launchTimeout)
         if !homeReady {
             // Recovery: tap Home directly
-            let homeTab = app.tabBars.buttons["Home"]
+            let homeTab = navigationItem(named: "Home")
             if safeWaitForExistence(homeTab, timeout: 3) {
                 let center = homeTab.coordinate(withNormalizedOffset: CGVector(dx: 0.5, dy: 0.5))
                 center.tap()
@@ -300,11 +299,7 @@ final class MediaUITests: BaseUITestCase {
 
         // Switch to Bookmarks
         navigateToTab("Bookmarks")
-        XCTAssertTrue(
-            safeWaitForExistence(app.navigationBars["Bookmarks"], timeout: Self.shortTimeout) ||
-                app.tabBars.buttons["Bookmarks"].isSelected,
-            "Bookmarks tab should be visible",
-        )
+        XCTAssertTrue(waitForActiveTab("Bookmarks", timeout: Self.shortTimeout), "Bookmarks tab should be visible")
     }
 
     // MARK: - Error State Tests

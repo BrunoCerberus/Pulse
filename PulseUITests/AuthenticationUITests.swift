@@ -5,23 +5,21 @@ final class AuthenticationUITests: BaseUITestCase {
 
     /// Tests authentication UI states and settings account section when authenticated
     func testAuthenticationFlow() throws {
-        let tabBar = app.tabBars.firstMatch
+        let rootNavigation = rootNavigationElements()
         let signInWithAppleButton = app.buttons["Sign in with Apple"]
         let signInWithGoogleButton = app.buttons["Sign in with Google"]
 
-        // Use waitForAny to check both elements concurrently, avoiding sequential timeout issues
-        let stateResolved = waitForAny([tabBar, signInWithAppleButton], timeout: Self.launchTimeout)
-        XCTAssertTrue(stateResolved, "Either tab bar or sign in button should appear")
+        // Use waitForAny to check both states concurrently, avoiding sequential timeout issues
+        let stateResolved = waitForAny(rootNavigation + [signInWithAppleButton], timeout: Self.launchTimeout)
+        XCTAssertTrue(stateResolved, "Either root navigation or sign in button should appear")
 
-        if safeExists(tabBar) {
+        if rootNavigation.contains(where: { safeExists($0) }) {
             // --- Authenticated State ---
-            XCTAssertTrue(safeExists(tabBar), "Tab bar should exist for authenticated user")
-
-            let homeTab = app.tabBars.buttons["Home"]
+            let homeTab = navigationItem(named: "Home")
             XCTAssertTrue(safeWaitForExistence(homeTab, timeout: Self.shortTimeout), "Home tab should exist")
 
-            if safeExists(homeTab), !homeTab.isSelected {
-                safeTap(homeTab)
+            if !waitForActiveTab("Home", timeout: Self.shortTimeout) {
+                navigateToTab("Home")
             }
 
             try ensureAppRunning()

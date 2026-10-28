@@ -25,10 +25,9 @@ final class QuickActionsUITests: BaseUITestCase {
     /// registration path would prevent the app from reaching `runningForeground`.
     func testQuickActionsRegistered() throws {
         try ensureAppRunning()
-        let tabBar = app.tabBars.firstMatch
         XCTAssertTrue(
-            safeWaitForExistence(tabBar, timeout: Self.launchTimeout),
-            "App should launch and reach the tab bar after registering quick actions",
+            waitForAny(rootNavigationElements(), timeout: Self.launchTimeout),
+            "App should launch and reach root navigation after registering quick actions",
         )
     }
 
