@@ -23,10 +23,10 @@ packages:
     from: 4.4.0
   firebase-ios-sdk:
     url: https://github.com/firebase/firebase-ios-sdk.git
-    from: 12.12.1
+    from: 13.0.0
   GoogleSignIn:
     url: https://github.com/google/GoogleSignIn-iOS.git
-    from: 8.0.0
+    from: 10.0.0
   swift-llama-cpp:
     url: https://github.com/BrunoCerberus/swift-llama-cpp.git
     revision: 7c1b13e18bbb913198153ff49602f28a333e14c7
