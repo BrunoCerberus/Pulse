@@ -87,20 +87,20 @@ runs:
         key: ${{ runner.os }}-brew-v2
 
     # Keyed on the git-tracked Package.resolved so the cache auto-invalidates
-    # when a dependency changes — no more manual version-key bumps. The
-    # restore-keys fallback is now safe: -onlyUsePackageVersionsFromResolvedFile
-    # in the resolve/build steps forces resolution from the checked-out
-    # Package.resolved, so a partially-stale restore is corrected, not trusted.
+    # when a dependency changes — no more manual version-key bumps. Only the
+    # SwiftPM download cache is stored, never the project's swiftpm/ folder:
+    # that folder holds the tracked Package.resolved itself, and restoring it
+    # overwrote the checkout with whatever copy was cached (CI built a months-old
+    # set of pins for every PR). v2 drops every entry saved with that folder.
+    # The restore-keys fallback is safe because the download cache holds no pins.
     - name: Cache SPM dependencies
       if: ${{ inputs.generate-project == 'true' }}
       uses: actions/cache@55cc8345863c7cc4c66a329aec7e433d2d1c52a9 # v6.1.0
       with:
-        path: |
-          Pulse.xcodeproj/project.xcworkspace/xcshareddata/swiftpm
-          ~/Library/Caches/org.swift.swiftpm
-        key: ${{ runner.os }}-spm-${{ hashFiles('Pulse.xcodeproj/project.xcworkspace/xcshareddata/swiftpm/Package.resolved') }}
+        path: ~/Library/Caches/org.swift.swiftpm
+        key: ${{ runner.os }}-spm-v2-${{ hashFiles('Pulse.xcodeproj/project.xcworkspace/xcshareddata/swiftpm/Package.resolved') }}
         restore-keys: |
-          ${{ runner.os }}-spm-
+          ${{ runner.os }}-spm-v2-
 
     - name: Install pinned XcodeGen
       if: ${{ inputs.generate-project == 'true' }}
@@ -112,3 +112,17 @@ runs:
       if: ${{ inputs.generate-project == 'true' }}
       shell: bash
       run: make generate
+
+    # The committed Package.resolved is the dependency pin set; nothing in this
+    # chain may rewrite it. Fail fast if a cache restore or generate step ever
+    # replaces it again, instead of silently building different versions.
+    - name: Verify Package.resolved matches the checkout
+      if: ${{ inputs.generate-project == 'true' }}
+      shell: bash
+      run: |
+        resolved=Pulse.xcodeproj/project.xcworkspace/xcshareddata/swiftpm/Package.resolved
+        if ! git diff --quiet -- "$resolved"; then
+          echo "::error file=$resolved::Package.resolved no longer matches the committed file after setup"
+          git diff -- "$resolved"
+          exit 1
+        fi
