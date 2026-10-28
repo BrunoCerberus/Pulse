@@ -88,8 +88,8 @@ runs:
 
     # Keyed on the git-tracked Package.resolved so the cache auto-invalidates
     # when a dependency changes; the vN prefix only changes when the cached
-    # paths do. Only the
-    # SwiftPM download cache is stored, never the project's swiftpm/ folder:
+    # paths do. Only the SwiftPM download cache is stored, never the project's
+    # swiftpm/ folder:
     # that folder holds the tracked Package.resolved itself, and restoring it
     # overwrote the checkout with whatever copy was cached (CI built a months-old
     # set of pins for every PR). v2 drops every entry saved with that folder.
