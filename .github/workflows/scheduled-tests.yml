@@ -114,7 +114,7 @@ jobs:
     # (the .xctestrun files and app/test bundles live there); the rest of
     # DerivedData is dead weight for the download. Mirrors ci.yml.
     - name: Upload build artifacts
-      uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
+      uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
       with:
         name: scheduled-build-products
         path: ./DerivedData/Build/Products
@@ -123,7 +123,7 @@ jobs:
     # `always()` so a SLOW-but-green build still seeds the baseline; a failed
     # build simply leaves no file and the ratchet skips it.
     - name: Upload build duration (PulseDev)
-      uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
+      uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
       if: always()
       with:
         name: suite-duration-build-PulseDev
@@ -132,7 +132,7 @@ jobs:
         retention-days: 30
 
     - name: Upload build duration (PulseSnapshotTests)
-      uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
+      uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
       if: always()
       with:
         name: suite-duration-build-PulseSnapshotTests
@@ -214,7 +214,7 @@ jobs:
         python3 scripts/render-dead-code-report.py dead-code.txt .
 
     - name: Upload dead code report
-      uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
+      uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
       if: always()
       with:
         name: dead-code-report
@@ -331,7 +331,7 @@ jobs:
         timeout-minutes: ${{ matrix.timeout }}
 
     - name: Upload recorded snapshots
-      uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
+      uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
       if: always() && matrix.test-target == 'PulseSnapshotTests'
       with:
         name: scheduled-recorded-snapshots
