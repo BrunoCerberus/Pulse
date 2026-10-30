@@ -413,7 +413,7 @@ jobs:
     # DerivedData (Intermediates.noindex, ModuleCache, SourcePackages) is the
     # bulk of the directory and dead weight for the four downstream downloads.
     - name: Upload build artifacts
-      uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
+      uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
       with:
         name: build-products
         path: ./DerivedData/Build/Products
@@ -532,7 +532,7 @@ jobs:
 
     # Uploaded on master too — that upload is what becomes the next baseline.
     - name: Upload app size value
-      uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
+      uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
       if: always()
       with:
         name: app-size-value
@@ -654,7 +654,7 @@ jobs:
         timeout-minutes: "60"
 
     - name: Upload recorded snapshots
-      uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
+      uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
       if: always()
       with:
         name: recorded-snapshots
@@ -978,7 +978,7 @@ jobs:
         path: patch-coverage.md
 
     - name: Upload patch coverage report
-      uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
+      uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
       if: always()
       with:
         name: patch-coverage-report
@@ -1305,7 +1305,7 @@ jobs:
 
     # Uploaded on master too — that upload is what becomes the next baseline.
     - name: Upload coverage value
-      uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
+      uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
       if: always()
       with:
         name: coverage-value
@@ -1339,7 +1339,7 @@ jobs:
         python3 scripts/check-test-count-ratchet.py "${TEST_COUNT:-none}" "${COUNT_BASELINE:-none}"
 
     - name: Upload test count value
-      uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
+      uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
       if: always()
       with:
         name: test-count-value
@@ -1348,7 +1348,7 @@ jobs:
         if-no-files-found: ignore
 
     - name: Upload coverage badge
-      uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
+      uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
       if: always()
       with:
         name: coverage-badge
