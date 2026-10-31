@@ -9,7 +9,7 @@
 - `release.yml` — version bump → Release archive → GitHub Release; App Store Connect upload dormant until secrets exist (see [Releasing](#releasing))
 - `docs.yml` — DocC build (broken-reference check) on PR + master
 - `pr-title.yml` — Conventional Commit PR-title lint
-- `claude-code-review.yml` — Claude review on PR open/sync; clears its own prior stale comments/verdicts before posting a fresh review on each push
+- `claude-code-review.yml` — Claude review on PR open/sync; clears its own prior stale comments/verdicts before posting a fresh review on each push; its summary also carries an advisory **Docs impact** section flagging doc updates the PR should have made (new subsystem, gate, deeplink, invariant, or a doc statement the diff makes false). It never affects the verdict; broken doc references are left to the blocking check in Code Quality
 - `claude-security-review.yml` — threat-model-guided security pass: two-stage `pr-discovery` → separate-context `pr-verify` on PRs + a weekly Monday 06:00 UTC full-repo sweep (`workflow_dispatch`-able); distinct from `claude-code-review.yml`. Each stage clears its own prior stale comments before reposting, tagged with an HTML marker so the two workflows don't delete each other's output. The jobs are required checks (they must run), but findings are advisory — verify never sets a review verdict
 - `codeql.yml` — CodeQL security analysis on PR + weekly
 - `privacy-conformance.yml` — LGPD (Brazil, Lei 13.709/2018) + GDPR (EU 2016/679) + CCPA / CPRA (California §1798.100 et seq.) PR gates
