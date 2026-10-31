@@ -1,15 +1,13 @@
 # Pulse Makefile
 # Build, test, and development automation
 
-.PHONY: help init install-xcodegen generate setup xcode test test-unit test-ui test-snapshot test-debug clean clean-packages coverage coverage-report coverage-badge deeplink-test lint format build build-release bump-patch bump-minor bump-major docs
+.PHONY: help init setup xcode test test-unit test-ui test-snapshot test-debug clean clean-packages coverage coverage-report coverage-badge deeplink-test lint format build build-release bump-patch bump-minor bump-major docs
 
 # Default target
 help:
 	@echo "Available commands:"
 	@echo "  init              - Setup Mint, SwiftFormat, and SwiftLint"
-	@echo "  install-xcodegen  - Install pinned XcodeGen using Mint"
-	@echo "  generate          - Generate Xcode project from project.yml"
-	@echo "  setup             - install-xcodegen + generate"
+	@echo "  setup             - Resolve Swift package dependencies"
 	@echo "  build             - Build for development (Debug)"
 	@echo "  build-release     - Build for release"
 	@echo "  lint              - Run SwiftLint and SwiftFormat checks"
@@ -19,13 +17,13 @@ help:
 	@echo "  test-ui           - Run only UI tests"
 	@echo "  test-snapshot     - Run only snapshot tests"
 	@echo "  test-debug        - Run tests with full verbose output for debugging"
-	@echo "  clean             - Remove generated Xcode project"
+	@echo "  clean             - Remove build artifacts"
 	@echo "  clean-packages    - Clean Swift Package Manager dependencies"
 	@echo "  coverage          - Run tests with coverage and show app %"
 	@echo "  coverage-report   - Show detailed per-file coverage report"
 	@echo "  coverage-badge    - Generate SVG badge at badges/coverage.svg"
 	@echo "  deeplink-test     - Test deeplink functionality specifically"
-	@echo "  xcode             - Generate project and open in Xcode"
+	@echo "  xcode             - Open the project in Xcode"
 	@echo "  bump-patch        - Increase patch version (0.0.x)"
 	@echo "  bump-minor        - Increase minor version (0.x.0)"
 	@echo "  bump-major        - Increase major version (x.0.0)"
@@ -46,7 +44,6 @@ init:
 	@brew install mint || true
 	@echo "Installing pinned Swift tools..."
 	@mint install nicklockwood/SwiftFormat
-	@mint install yonaskolb/XcodeGen
 	@bash scripts/swiftlint.sh version
 	@echo "Setting up git hooks..."
 	@mkdir -p .git/hooks
@@ -70,20 +67,9 @@ format:
 	@mint run nicklockwood/SwiftFormat swiftformat Pulse PulseTests PulseShareExtension PulseWidgetExtension
 	@echo "Formatting complete!"
 
-# Install XcodeGen
-install-xcodegen:
-	@echo "Installing XcodeGen..."
-	@command -v mint >/dev/null || brew install mint
-	@mint install yonaskolb/XcodeGen
-
-# Generate Xcode project
-generate:
-	@echo "Generating Xcode project..."
-	@mint run XcodeGen xcodegen generate
-	@echo "Project generated successfully!"
-
-# Install and generate in one command
-setup: install-xcodegen generate
+# Resolve Swift package dependencies from the committed Package.resolved
+setup:
+	@xcodebuild -resolvePackageDependencies -project Pulse.xcodeproj -scheme PulseDev -onlyUsePackageVersionsFromResolvedFile
 	@echo "Setup complete!"
 
 # Clean Swift Package Manager dependencies
@@ -233,47 +219,46 @@ deeplink-test:
 
 # Clean generated files
 clean:
-	@echo "Cleaning generated files..."
-	@rm -rf Pulse.xcodeproj
+	@echo "Cleaning build artifacts..."
 	@rm -rf build/TestResults.xcresult
 	@echo "Cleaned!"
 
-# Generate project and open in Xcode
-xcode: generate
+# Open in Xcode
+xcode:
 	@echo "Opening Xcode..."
 	@open Pulse.xcodeproj
 
 # Bump patch version (0.0.x)
 bump-patch:
 	@echo "Bumping patch version..."
-	@CURRENT=$$(grep 'MARKETING_VERSION:' project.yml | head -1 | sed 's/.*"\(.*\)"/\1/'); \
+	@CURRENT=$$(grep -o '"MARKETING_VERSION": "[^"]*"' Pulse.xcodeproj/project.xcproj | head -1 | cut -d'"' -f4); \
 	MAJOR=$$(echo $$CURRENT | cut -d. -f1); \
 	MINOR=$$(echo $$CURRENT | cut -d. -f2); \
 	PATCH=$$(echo $$CURRENT | cut -d. -f3); \
 	NEW_PATCH=$$((PATCH + 1)); \
 	NEW_VERSION="$$MAJOR.$$MINOR.$$NEW_PATCH"; \
-	sed -i '' "s/MARKETING_VERSION: \"$$CURRENT\"/MARKETING_VERSION: \"$$NEW_VERSION\"/g" project.yml; \
+	sed -i '' "s/\"MARKETING_VERSION\": \"$$CURRENT\"/\"MARKETING_VERSION\": \"$$NEW_VERSION\"/g" Pulse.xcodeproj/project.xcproj; \
 	echo "Version bumped: $$CURRENT -> $$NEW_VERSION"
 
 # Bump minor version (0.x.0)
 bump-minor:
 	@echo "Bumping minor version..."
-	@CURRENT=$$(grep 'MARKETING_VERSION:' project.yml | head -1 | sed 's/.*"\(.*\)"/\1/'); \
+	@CURRENT=$$(grep -o '"MARKETING_VERSION": "[^"]*"' Pulse.xcodeproj/project.xcproj | head -1 | cut -d'"' -f4); \
 	MAJOR=$$(echo $$CURRENT | cut -d. -f1); \
 	MINOR=$$(echo $$CURRENT | cut -d. -f2); \
 	NEW_MINOR=$$((MINOR + 1)); \
 	NEW_VERSION="$$MAJOR.$$NEW_MINOR.0"; \
-	sed -i '' "s/MARKETING_VERSION: \"$$CURRENT\"/MARKETING_VERSION: \"$$NEW_VERSION\"/g" project.yml; \
+	sed -i '' "s/\"MARKETING_VERSION\": \"$$CURRENT\"/\"MARKETING_VERSION\": \"$$NEW_VERSION\"/g" Pulse.xcodeproj/project.xcproj; \
 	echo "Version bumped: $$CURRENT -> $$NEW_VERSION"
 
 # Bump major version (x.0.0)
 bump-major:
 	@echo "Bumping major version..."
-	@CURRENT=$$(grep 'MARKETING_VERSION:' project.yml | head -1 | sed 's/.*"\(.*\)"/\1/'); \
+	@CURRENT=$$(grep -o '"MARKETING_VERSION": "[^"]*"' Pulse.xcodeproj/project.xcproj | head -1 | cut -d'"' -f4); \
 	MAJOR=$$(echo $$CURRENT | cut -d. -f1); \
 	NEW_MAJOR=$$((MAJOR + 1)); \
 	NEW_VERSION="$$NEW_MAJOR.0.0"; \
-	sed -i '' "s/MARKETING_VERSION: \"$$CURRENT\"/MARKETING_VERSION: \"$$NEW_VERSION\"/g" project.yml; \
+	sed -i '' "s/\"MARKETING_VERSION\": \"$$CURRENT\"/\"MARKETING_VERSION\": \"$$NEW_VERSION\"/g" Pulse.xcodeproj/project.xcproj; \
 	echo "Version bumped: $$CURRENT -> $$NEW_VERSION"
 
 # Generate DocC documentation

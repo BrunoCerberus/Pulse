@@ -66,3 +66,9 @@ paths = [
   '''\.github/workflows/lgpd-conformance\.yml''',
   '''\.github/workflows/gdpr-conformance\.yml''',
 ]
+# Xcode object IDs (24 uppercase hex chars, e.g. "CF79B1BAD3D70F54153FE0B3")
+# in the committed project and schemes match the IBAN shape.
+regexTarget = "line"
+regexes = [
+  '''(BlueprintIdentifier = |"id": )"[0-9A-F]{24}"''',
+]

@@ -45,7 +45,7 @@ jobs:
       with:
         persist-credentials: false
 
-    # Shared setup (Select Xcode + brew/SPM caches + xcodegen + generate).
+    # Shared setup (Select Xcode + brew/SPM caches).
     # install-runtime: false — docbuild targets a generic iOS destination and
     # never boots a simulator.
     - name: Set up iOS build environment
@@ -60,7 +60,7 @@ jobs:
           -scheme PulseDev \
           -onlyUsePackageVersionsFromResolvedFile
 
-    # Pulse alone sets --warnings-as-errors in project.yml; dependency
+    # Pulse alone sets --warnings-as-errors in its build settings; dependency
     # documentation is outside our control and retains its own settings.
     - name: Build DocC documentation
       run: |

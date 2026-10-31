@@ -198,11 +198,6 @@ jobs:
           fi
         done
 
-        if [ -f "project.yml" ] && grep -q "NSAllowsArbitraryLoads" project.yml 2>/dev/null; then
-          echo "::error::NSAllowsArbitraryLoads declared in project.yml"
-          FOUND=1
-        fi
-
         [ $FOUND -eq 0 ] && echo "No ATS exceptions found"
         [ $FOUND -gt 0 ] && exit 1
         true

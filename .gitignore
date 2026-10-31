@@ -1,6 +1,4 @@
 # Xcode
-*.xcodeproj
-*.xcworkspace
 xcuserdata/
 *.xcuserstate
 *.xccheckout
@@ -24,15 +22,6 @@ TestResults.xcresult
 # Coverage
 coverage/
 *.coverage
-
-# XcodeGen generated project
-Pulse.xcodeproj/
-
-# Exception: Commit Package.resolved for deterministic CI builds
-!Pulse.xcodeproj/project.xcworkspace/
-!Pulse.xcodeproj/project.xcworkspace/xcshareddata/
-!Pulse.xcodeproj/project.xcworkspace/xcshareddata/swiftpm/
-!Pulse.xcodeproj/project.xcworkspace/xcshareddata/swiftpm/Package.resolved
 
 # macOS
 .DS_Store

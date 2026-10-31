@@ -47,7 +47,7 @@ SKIP_DIRS = {"DerivedData", ".build", ".git"}
 # Which top-level target directory owns which runtime bundle (and thus which
 # catalog a key must exist in). Test targets attach to the app and resolve
 # against its catalog; the widget's unit tests compile the widget's own sources
-# (project.yml), so they resolve against the widget's catalog — without an
+# (Pulse.xcodeproj), so they resolve against the widget's catalog — without an
 # entry, files under the directory are silently skipped by scan() instead of
 # checked.
 TARGET_CATALOG: dict[str, str | None] = {
