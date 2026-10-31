@@ -42,6 +42,7 @@ import subprocess
 import sys
 import tempfile
 from pathlib import Path, PurePosixPath
+from urllib.parse import unquote
 
 SOURCE_EXTS = {
     ".swift", ".py", ".sh", ".yml", ".yaml", ".md", ".json", ".plist",
@@ -57,8 +58,11 @@ PATH_RE = re.compile(r"^[\w.+@-]+(?:/[\w.+@{},-]+)*/?$")
 BRACE_RE = re.compile(r"\{([^{}]*)\}")
 INLINE_CODE_RE = re.compile(r"(?<!`)`([^`\n]+)`(?!`)")
 LINK_RE = re.compile(r"\]\(([^)\s#]+)(?:#[^)]*)?\)")
-MAKE_RE = re.compile(r"(?:^|&&|\|\||;)\s*make\s+([a-z][\w{},-]*)")
-MAKE_TARGET_RE = re.compile(r"^([a-zA-Z][\w-]*)\s*:(?!=)", re.MULTILINE)
+MAKE_RE = re.compile(r"(?:^|&&|\|\||;|\|)\s*(?:\$\s*)?(?:sudo\s+)?make\s+([a-z][\w{},-]*)")
+# Explicit rules only, including multi-target `a b: dep`. Pattern rules and
+# targets from `include`d makefiles aren't parsed — none exist today; a doc
+# citing one would be reported broken, which is the safe direction.
+MAKE_TARGET_RE = re.compile(r"^([a-zA-Z][\w-]*(?:[ \t]+[a-zA-Z][\w-]*)*)[ \t]*:(?!=)", re.MULTILINE)
 SCRIPT = "scripts/check-doc-references.py"
 FENCE_RE = re.compile(r"^\s*(`{3,}|~{3,})(.*)$")
 
@@ -92,7 +96,13 @@ class Repo:
         }
         makefile = root / "Makefile"
         self.make_targets = (
-            set(MAKE_TARGET_RE.findall(makefile.read_text())) if makefile.is_file() else set()
+            {
+                name
+                for names in MAKE_TARGET_RE.findall(makefile.read_text())
+                for name in names.split()
+            }
+            if makefile.is_file()
+            else set()
         )
 
     def resolves(self, ref: str, doc: PurePosixPath) -> bool:
@@ -173,7 +183,8 @@ def check_doc(repo: Repo, doc: str) -> list[tuple[int, str, str]]:
                     repo.external_used.add(ref)
                 elif not repo.resolves(ref, doc_path):
                     broken.append((line_no, "path", ref))
-        for link in LINK_RE.findall(line):
+        # Link syntax quoted inside a code span is documentation, not a link.
+        for link in map(unquote, LINK_RE.findall(INLINE_CODE_RE.sub("", line))):
             if PLACEHOLDER_RE.search(link) or ":" in link:
                 continue
             if not repo.resolves_link(link, doc_path):
@@ -207,7 +218,7 @@ def find_broken(
     for ref in sorted(external_refs):
         if ref not in repo.external_used:
             broken.append((SCRIPT, 0, "allowlist", f"{ref} (no doc references it)"))
-        elif ref in repo.paths:
+        elif ref in repo.suffixes:
             broken.append((SCRIPT, 0, "allowlist", f"{ref} (now exists in the tree)"))
     return broken
 
@@ -216,8 +227,10 @@ def self_test() -> int:
     with tempfile.TemporaryDirectory() as tmp:
         root = Path(tmp)
         files = {
-            "Makefile": "build:\n\techo\nbump-patch:\n\techo\nvar := x\n",
+            "Makefile": "build:\n\techo\nbump-patch:\n\techo\nvar := x\nlint fmt: build\n\techo\n",
             "Pulse/Feed/API/LiveFeedService.swift": "",
+            "docs-guide/My Doc.md": "",
+            "vendor/pkg/Package.swift": "",
             "scripts/check-a.py": "",
             "scripts/check-b.py": "",
             "docs-guide/testing.md": "",
@@ -245,6 +258,9 @@ def self_test() -> int:
                 "[dead](missing.md), [moved](Makefile), [escape](../../Makefile), "
                 "`make nope`, `make bump-{patch,major}`, "
                 "`make var`.\n"
+                "Live: `make lint`, `make fmt`, [spaced](My%20Doc.md), "
+                "syntax `[text](not/a/real/link.md)`.\n"
+                "```sh\n$ make dollar-gone\nsudo make sudo-gone\n```\n"
             ),
             "docs-guide/unclosed.md": "Fine: `scripts/check-a.py`.\n```\ncode\n`Dead.swift` after the leak\n",
         }
@@ -271,6 +287,9 @@ def self_test() -> int:
             ("make target", "make var"),
             ("fence", "unterminated ``` code fence"),
             ("allowlist", "unused.json (no doc references it)"),
+            ("allowlist", "Package.swift (now exists in the tree)"),
+            ("make target", "make dollar-gone"),
+            ("make target", "make sudo-gone"),
             ("allowlist", "scripts/check-b.py (now exists in the tree)"),
         }
         ok = found == expected
