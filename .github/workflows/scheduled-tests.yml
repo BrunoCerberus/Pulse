@@ -310,7 +310,7 @@ jobs:
         install-runtime: "true"
 
     - name: Download build artifacts
-      uses: actions/download-artifact@3e5f45b2cfb9172054b4087a40e8e0b5a5461e7c # v8.0.1
+      uses: actions/download-artifact@9000827ccba6bdab643e8b6fd33ac0654aef8333 # v8.0.2
       with:
         name: scheduled-build-products
         path: ./DerivedData/Build/Products
@@ -362,21 +362,21 @@ jobs:
         persist-credentials: false
 
     - name: Download unit test results
-      uses: actions/download-artifact@3e5f45b2cfb9172054b4087a40e8e0b5a5461e7c # v8.0.1
+      uses: actions/download-artifact@9000827ccba6bdab643e8b6fd33ac0654aef8333 # v8.0.2
       continue-on-error: true
       with:
         name: scheduled-unit-test-results
         path: unit-test-results
 
     - name: Download UI test results
-      uses: actions/download-artifact@3e5f45b2cfb9172054b4087a40e8e0b5a5461e7c # v8.0.1
+      uses: actions/download-artifact@9000827ccba6bdab643e8b6fd33ac0654aef8333 # v8.0.2
       continue-on-error: true
       with:
         name: scheduled-ui-test-results
         path: ui-test-results
 
     - name: Download snapshot test results
-      uses: actions/download-artifact@3e5f45b2cfb9172054b4087a40e8e0b5a5461e7c # v8.0.1
+      uses: actions/download-artifact@9000827ccba6bdab643e8b6fd33ac0654aef8333 # v8.0.2
       continue-on-error: true
       with:
         name: scheduled-snapshot-test-results
@@ -386,7 +386,7 @@ jobs:
     # it the best flake signal available — but only if someone sees it. Rendered
     # into the job summary rather than a PR comment (there is no PR here).
     - name: Download flaky reports
-      uses: actions/download-artifact@3e5f45b2cfb9172054b4087a40e8e0b5a5461e7c # v8.0.1
+      uses: actions/download-artifact@9000827ccba6bdab643e8b6fd33ac0654aef8333 # v8.0.2
       continue-on-error: true
       with:
         pattern: flaky-*
@@ -405,7 +405,7 @@ jobs:
       run: cat flaky-report.md >> "$GITHUB_STEP_SUMMARY"
 
     - name: Download slow test reports
-      uses: actions/download-artifact@3e5f45b2cfb9172054b4087a40e8e0b5a5461e7c # v8.0.1
+      uses: actions/download-artifact@9000827ccba6bdab643e8b6fd33ac0654aef8333 # v8.0.2
       continue-on-error: true
       with:
         pattern: slow-*
@@ -534,7 +534,7 @@ jobs:
         persist-credentials: false
 
     - name: Download this run's duration reports
-      uses: actions/download-artifact@3e5f45b2cfb9172054b4087a40e8e0b5a5461e7c # v8.0.1
+      uses: actions/download-artifact@9000827ccba6bdab643e8b6fd33ac0654aef8333 # v8.0.2
       continue-on-error: true
       with:
         pattern: suite-duration-*
