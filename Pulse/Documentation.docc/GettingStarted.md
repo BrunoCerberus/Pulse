@@ -11,7 +11,6 @@ its Unidirectional Data Flow (UDF) architecture.
 
 - Xcode 27.0 or later
 - iOS 27.0 SDK (deployment target iOS 26.0)
-- [XcodeGen](https://github.com/yonaskolb/XcodeGen) for project generation
 
 ## Setup
 
@@ -22,7 +21,7 @@ its Unidirectional Data Flow (UDF) architecture.
 make setup
 ```
 
-This installs XcodeGen and generates the Xcode project.
+This resolves the Swift package dependencies.
 
 3. Open the project:
 

@@ -11,12 +11,11 @@
 ## Setup
 
 ```bash
-brew install xcodegen
 make setup
 open Pulse.xcodeproj
 ```
 
-`make setup` runs `install-xcodegen` + `generate`. To bootstrap the full toolchain instead — Homebrew (if missing), XcodeGen, Mint, SwiftLint, SwiftFormat, and a `make lint` pre-commit git hook — run `make init`.
+`make setup` resolves Swift packages from the committed `Package.resolved`. To bootstrap the full toolchain instead — Homebrew (if missing), Mint, SwiftLint, SwiftFormat, and a `make lint` pre-commit git hook — run `make init`.
 
 ### On-device LLM model (downloaded on first explicit AI use)
 
@@ -39,8 +38,8 @@ Release builds use Remote Config + Keychain only (env-var fallbacks are `#if DEB
 ## Commands
 
 ```bash
-make init                # bootstrap dev tooling (Homebrew/XcodeGen/Mint + SwiftFormat + SwiftLint) + git pre-commit hook
-make setup | xcode       # xcodegen setup / open in Xcode
+make init                # bootstrap dev tooling (Homebrew/Mint + SwiftFormat + SwiftLint) + git pre-commit hook
+make setup | xcode       # resolve packages / open in Xcode
 make build | build-release
 make test | test-unit | test-ui | test-snapshot | test-debug
 make coverage | coverage-report | coverage-badge
@@ -49,7 +48,7 @@ make bump-{patch,minor,major}
 make deeplink-test | clean | clean-packages | docs
 ```
 
-New source files require `make generate` (folded into `make setup`) to land in the Xcode project.
+New source files land in the target automatically: each target's directory is a synchronized folder in `Pulse.xcodeproj/project.xcproj` (Xcode 27 JSON format).
 
 ## Dependencies
 
@@ -68,7 +67,7 @@ New source files require `make generate` (folded into `make setup`) to land in t
 
 | Symptom | Fix |
 |---|---|
-| Build fails | `make clean && make generate` |
+| Build fails | `make clean && make build` |
 | Package resolution | `make clean-packages && make setup` |
 | Test timeouts | check async `Task.sleep` + `.sink` waits |
 | Snapshot mismatch | re-record references (never lower precision) |

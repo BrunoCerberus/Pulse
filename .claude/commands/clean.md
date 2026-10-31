@@ -1,5 +1,5 @@
-Clean build artifacts and regenerate the Xcode project:
+Clean build artifacts:
 
 ```bash
-make clean && make generate
+make clean
 ```

@@ -49,7 +49,6 @@ Core protocols come from **`EntropyCore`**; navigation is a size-class-adaptive 
 ## Quick start
 
 ```bash
-brew install xcodegen
 make setup
 open Pulse.xcodeproj
 ```

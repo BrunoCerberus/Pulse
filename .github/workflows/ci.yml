@@ -41,7 +41,7 @@ jobs:
       with:
         persist-credentials: false
 
-    # Shared setup (Select Xcode + brew/SPM caches + xcodegen + generate).
+    # Shared setup (Select Xcode + brew/SPM caches).
     # install-runtime: false — linting never boots a simulator.
     - name: Set up iOS build environment
       uses: ./.github/actions/setup-ios
@@ -190,7 +190,7 @@ jobs:
   #   - Any change under Pulse/** (the shared app source all three suites
   #     exercise) turns ALL three test jobs on — we don't try to prove a
   #     narrower blast radius from the diff alone.
-  #   - Shared build/tooling config (project.yml, the workspace
+  #   - Shared build/tooling config (the Xcode project, the workspace
   #     Package.resolved, this workflow file, composite actions, Makefile)
   #     also turns all three on — a broken package or scheme touches every
   #     test target.
@@ -261,7 +261,8 @@ jobs:
         base: ${{ github.event.pull_request.base.sha }}
         filters: |
           shared: &shared
-            - 'project.yml'
+            - 'Pulse.xcodeproj/project.xcproj'
+            - 'Pulse.xcodeproj/xcshareddata/**'
             # The committed lockfile lives in the workspace, not the repo root
             # (the root file is gitignored; .gitignore un-ignores only this
             # path). The old root-level 'Package.resolved' / 'Package.swift'
@@ -816,7 +817,7 @@ jobs:
       uses: ./.github/actions/setup-ios
       with:
         install-runtime: "false"
-        generate-project: "false"
+        prepare-build: "false"
 
     - name: Download unit test results
       uses: actions/download-artifact@3e5f45b2cfb9172054b4087a40e8e0b5a5461e7c # v8.0.1
@@ -1162,7 +1163,7 @@ jobs:
       uses: ./.github/actions/setup-ios
       with:
         install-runtime: "false"
-        generate-project: "false"
+        prepare-build: "false"
 
     - name: Download unit test results
       uses: actions/download-artifact@3e5f45b2cfb9172054b4087a40e8e0b5a5461e7c # v8.0.1

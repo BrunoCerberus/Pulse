@@ -113,7 +113,7 @@ Both are enforced in CI and will fail a PR: the sink rule by `scripts/check-main
 ## Commands
 
 ```bash
-make setup                              # install-xcodegen + generate
+make setup                              # resolve Swift packages
 make build | build-release
 make test | test-unit | test-ui | test-snapshot | test-debug
 make lint | format
@@ -122,7 +122,7 @@ make deeplink-test | clean | clean-packages | docs
 make bump-{patch,minor,major}
 ```
 
-New source files require `make generate` (or `/setup`) to land in the Xcode project.
+New source files land in the target automatically: each target's directory is a synchronized folder in `Pulse.xcodeproj/project.xcproj` (Xcode 27 JSON format).
 
 The CI-only gates have no `make` target — run them directly: `python3 scripts/check-mainactor-sinks.py .` (add `--self-test` to check the checker), `python3 scripts/check-localization-parity.py .`, `python3 scripts/check-localization-completeness.py .`, `python3 scripts/check-localization-usage.py .` (add `--self-test`), `python3 scripts/check-orphan-snapshots.py .` (add `--self-test`), `python3 scripts/check-a11y-audit-coverage.py .`, `python3 scripts/check-test-selectors.py .` (add `--self-test`), and `python3 scripts/check-build-warnings.py <build.log> .` against a log from `xcodebuild build-for-testing` (plain `build` skips the test targets, where warnings hide). Three CI helper scripts are self-testing only — `python3 scripts/{run-ios-test-suite,check-job-results,render-ci-timing}.py --self-test`. The coverage / app-size / test-count ratchets and the SPM dependency review run only in CI — they need the last successful master run's baseline artifacts.
 
@@ -156,7 +156,7 @@ Two independent providers:
 
 | Symptom | Fix |
 |---|---|
-| Build fails | `make clean && make generate` |
+| Build fails | `make clean && make build` |
 | Package resolution | `make clean-packages && make setup` |
 | Test timeouts | check async waits in `.sink` / `Task.sleep` |
 | Snapshot mismatch | re-record references; never lower precision |

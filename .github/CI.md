@@ -17,14 +17,14 @@ workflow-level path filters on a required context.
 
 ## Reproducible tools
 
-`Mintfile` pins SwiftFormat 0.63.0, SwiftLint 0.64.1, and XcodeGen 2.45.4 to the
+`Mintfile` pins SwiftFormat 0.63.0 and SwiftLint 0.64.1 to the
 versions observed in the last CI run before this change. `make init`, `make
 setup`, `make lint`, and `make format` use these pins locally. CI caches compiled
 tools by OS, architecture, Xcode version, Mintfile hash, and requested tool set.
-SwiftFormat and XcodeGen build once per new cache key. `scripts/swiftlint.sh` installs SwiftLint locally and on CI
+SwiftFormat builds once per new cache key. `scripts/swiftlint.sh` installs SwiftLint locally and on CI
 from its release zip, checked against `.github/swiftlint.sha256`, to avoid a
 cold SwiftSyntax build. Update that checksum alongside the SwiftLint pin.
-Update pins in a reviewed PR and run lint/project generation before merging.
+Update pins in a reviewed PR and run lint before merging.
 
 ## Test verdicts and flakes
 
@@ -86,10 +86,9 @@ python3 scripts/run-ios-test-suite.py --self-test
 python3 scripts/report-ci-health.py --self-test
 SHELLCHECK_OPTS=--severity=error actionlint
 make lint
-make generate
 make docs
 ```
 
-Pulse alone enables DocC warnings-as-errors in `project.yml`; dependencies keep
+Pulse alone enables DocC warnings-as-errors in its build settings; dependencies keep
 their own warning policy. DocC artifacts must resolve to `Pulse.doccarchive`,
 not whichever dependency archive happens to be found first.

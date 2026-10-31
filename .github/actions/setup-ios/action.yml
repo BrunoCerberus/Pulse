@@ -1,12 +1,12 @@
 name: "Set up iOS build environment"
 description: >
   Shared setup for the macOS jobs: selects Xcode 27.0, optionally installs the
-  iOS simulator runtime (idempotently), restores the Homebrew + SPM caches,
-  installs XcodeGen, and generates the Xcode project. Centralizes the chain
+  iOS simulator runtime (idempotently), and restores the Homebrew + SPM caches.
+  Centralizes the chain
   that was previously copy-pasted across ci.yml (build/release-build/tests),
   scheduled-tests.yml, codeql.yml and docs.yml. (release.yml keeps its own
-  inlined chain — it interleaves a Firebase-config provisioning step before
-  `make generate` that doesn't fit this action.) Assumes the caller has already
+  inlined chain — it interleaves a Firebase-config provisioning step that
+  doesn't fit this action.) Assumes the caller has already
   run actions/checkout.
 
 inputs:
@@ -17,12 +17,11 @@ inputs:
       boot a simulator.
     required: false
     default: "true"
-  generate-project:
+  prepare-build:
     description: >
-      Restore the Homebrew/SPM caches, install XcodeGen and run `make generate`.
+      Restore the Homebrew/SPM caches and verify Package.resolved.
       Set "false" for jobs that need a selected Xcode purely for its command-line
-      tools (xccov, xcresulttool) and never build — they have no .xcodeproj to
-      generate, so the whole chain is dead weight.
+      tools (xccov, xcresulttool) and never build, so the whole chain is dead weight.
     required: false
     default: "true"
 
@@ -80,7 +79,7 @@ runs:
     # was a no-op on the arm64 macos runners (brew lives in /opt/homebrew) —
     # key bumped to v2 so stale archives with the dead path aren't restored.
     - name: Cache Homebrew packages
-      if: ${{ inputs.generate-project == 'true' }}
+      if: ${{ inputs.prepare-build == 'true' }}
       uses: actions/cache@55cc8345863c7cc4c66a329aec7e433d2d1c52a9 # v6.1.0
       with:
         path: ~/Library/Caches/Homebrew
@@ -95,7 +94,7 @@ runs:
     # set of pins for every PR). v2 drops every entry saved with that folder.
     # The restore-keys fallback is safe because the download cache holds no pins.
     - name: Cache SPM dependencies
-      if: ${{ inputs.generate-project == 'true' }}
+      if: ${{ inputs.prepare-build == 'true' }}
       uses: actions/cache@55cc8345863c7cc4c66a329aec7e433d2d1c52a9 # v6.1.0
       with:
         path: ~/Library/Caches/org.swift.swiftpm
@@ -103,22 +102,11 @@ runs:
         restore-keys: |
           ${{ runner.os }}-spm-v2-
 
-    - name: Install pinned XcodeGen
-      if: ${{ inputs.generate-project == 'true' }}
-      uses: ./.github/actions/setup-swift-tools
-      with:
-        tools: XcodeGen
-
-    - name: Generate Xcode project
-      if: ${{ inputs.generate-project == 'true' }}
-      shell: bash
-      run: make generate
-
     # The committed Package.resolved is the dependency pin set; nothing in this
-    # chain may rewrite it. Fail fast if a cache restore or generate step ever
+    # chain may rewrite it. Fail fast if a cache restore ever
     # replaces it again, instead of silently building different versions.
     - name: Verify Package.resolved matches the checkout
-      if: ${{ inputs.generate-project == 'true' }}
+      if: ${{ inputs.prepare-build == 'true' }}
       shell: bash
       run: |
         resolved=Pulse.xcodeproj/project.xcworkspace/xcshareddata/swiftpm/Package.resolved

@@ -47,7 +47,7 @@ jobs:
       with:
         persist-credentials: false
 
-    # Shared setup (Select Xcode + brew/SPM caches + xcodegen + generate).
+    # Shared setup (Select Xcode + brew/SPM caches).
     # install-runtime: false — CodeQL builds against a generic simulator
     # destination and never boots a simulator, so it doesn't need the runtime.
     - name: Set up iOS build environment

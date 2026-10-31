@@ -2,7 +2,7 @@ name: Release
 
 # Cut a release without touching a terminal:
 #   • Manual run (workflow_dispatch) — pick patch/minor/major; this bumps
-#     MARKETING_VERSION in project.yml, commits, tags vX.Y.Z, and pushes.
+#     MARKETING_VERSION in Pulse.xcodeproj/project.xcproj, commits, tags vX.Y.Z, and pushes.
 #   • Tag push (vX.Y.Z) — releases an already-tagged commit as-is.
 #
 # Always: manage the version + publish a GitHub Release with auto-generated
@@ -119,7 +119,7 @@ jobs:
           VERSION="${REF_NAME#v}"
           TAG="$REF_NAME"
         else
-          CURRENT=$(grep 'MARKETING_VERSION:' project.yml | head -1 | sed 's/.*"\(.*\)"/\1/')
+          CURRENT=$(grep -o '"MARKETING_VERSION": "[^"]*"' Pulse.xcodeproj/project.xcproj | head -1 | cut -d'"' -f4)
           MAJOR=$(echo "$CURRENT" | cut -d. -f1)
           MINOR=$(echo "$CURRENT" | cut -d. -f2)
           PATCH=$(echo "$CURRENT" | cut -d. -f3)
@@ -165,9 +165,9 @@ jobs:
         # Value-agnostic: rewrite every MARKETING_VERSION regardless of its
         # current value, so the app + widget targets stay in lockstep even if
         # they ever drift (a value-matching sed would silently skip the stragglers).
-        sed -i '' -E 's/(MARKETING_VERSION:[[:space:]]*")[^"]+(")/\1'"$VERSION"'\2/g' project.yml
+        sed -i '' -E 's/("MARKETING_VERSION": ")[^"]+(")/\1'"$VERSION"'\2/g' Pulse.xcodeproj/project.xcproj
         echo "Set MARKETING_VERSION to $VERSION:"
-        grep -n 'MARKETING_VERSION:' project.yml
+        grep -n '"MARKETING_VERSION"' Pulse.xcodeproj/project.xcproj
 
     # ----- Device archive + App Store Connect upload (dormant until secrets) -----
     # Everything from here to the upload runs only when both credentials exist.
@@ -193,9 +193,10 @@ jobs:
         restore-keys: |
           ${{ runner.os }}-spm-v2-
 
-    # Decode the Firebase config into the source tree BEFORE `make generate`, so
-    # XcodeGen includes it as a bundled resource and the Crashlytics build phase
-    # finds it. Written to Pulse/ alongside Info.plist (the gitignored location).
+    # Decode the Firebase config into the source tree before building. Pulse/ is a
+    # synchronized folder, so the file is bundled as a resource automatically and
+    # the Crashlytics build phase finds it. Written to Pulse/ alongside Info.plist
+    # (the gitignored location).
     - name: Provision Firebase config
       if: steps.creds.outputs.enabled == 'true'
       env:
@@ -203,16 +204,6 @@ jobs:
       run: |
         printf '%s' "$GSI" | base64 --decode > Pulse/GoogleService-Info.plist
         echo "Wrote Pulse/GoogleService-Info.plist ($(wc -c < Pulse/GoogleService-Info.plist) bytes)"
-
-    - name: Install XcodeGen
-      if: steps.creds.outputs.enabled == 'true'
-      uses: ./.github/actions/setup-swift-tools
-      with:
-        tools: XcodeGen
-
-    - name: Generate Xcode project
-      if: steps.creds.outputs.enabled == 'true'
-      run: make generate
 
     - name: Verify Package.resolved matches the checkout
       if: steps.creds.outputs.enabled == 'true'
@@ -320,9 +311,9 @@ jobs:
         git config user.name "github-actions[bot]"
         git config user.email "github-actions[bot]@users.noreply.github.com"
         git remote set-url origin "https://x-access-token:${GITHUB_TOKEN}@github.com/${GH_REPO}.git"
-        # project.yml is the only tracked change; GoogleService-Info.plist is
+        # project.xcproj is the only tracked change; GoogleService-Info.plist is
         # gitignored so it won't be committed even when provisioned.
-        git add project.yml
+        git add Pulse.xcodeproj/project.xcproj
         git commit -m "chore: release ${TAG}"
         git tag -a "$TAG" -m "Release ${TAG}"
         git push origin HEAD:master

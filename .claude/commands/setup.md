@@ -1,4 +1,4 @@
-Install XcodeGen and generate the Xcode project:
+Resolve Swift package dependencies:
 
 ```bash
 make setup
