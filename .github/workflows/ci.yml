@@ -139,6 +139,14 @@ jobs:
         echo "Scanning __Snapshots__ trees for orphaned references..."
         python3 scripts/check-orphan-snapshots.py .
 
+    # CLAUDE.md / AGENTS.md / docs-guide are hand-maintained and a rename leaves
+    # their pointers dangling silently. Fails on a doc path, link or `make`
+    # target that no longer resolves; self-test first, same contract as above.
+    - name: Check doc references
+      run: |
+        python3 scripts/check-doc-references.py --self-test
+        python3 scripts/check-doc-references.py .
+
     # Accessibility audits were maintained by memory — screens added later
     # simply went unaudited. Mirror the audit suite against the canonical
     # screen list (AppTab + Page cases) so a new screen ships with an audit,
