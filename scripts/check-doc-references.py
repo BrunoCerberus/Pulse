@@ -59,6 +59,7 @@ INLINE_CODE_RE = re.compile(r"(?<!`)`([^`\n]+)`(?!`)")
 LINK_RE = re.compile(r"\]\(([^)\s#]+)(?:#[^)]*)?\)")
 MAKE_RE = re.compile(r"(?:^|&&|\|\||;)\s*make\s+([a-z][\w{},-]*)")
 MAKE_TARGET_RE = re.compile(r"^([a-zA-Z][\w-]*)\s*:(?!=)", re.MULTILINE)
+SCRIPT = "scripts/check-doc-references.py"
 FENCE_RE = re.compile(r"^\s*(`{3,}|~{3,})(.*)$")
 
 
@@ -75,12 +76,20 @@ def expand_braces(token: str) -> list[str]:
 
 
 class Repo:
-    def __init__(self, root: Path, files: list[str]):
+    def __init__(self, root: Path, files: list[str], external_refs: set[str]):
         self.root = root
-        self.files = set(files)
-        self.dirs = {str(p) for f in files for p in PurePosixPath(f).parents if str(p) != "."}
-        self.basenames = {PurePosixPath(f).name for f in files}
-        self.paths = self.files | self.dirs
+        self.external_refs = external_refs
+        self.external_used: set[str] = set()
+        dirs = {str(p) for f in files for p in PurePosixPath(f).parents if str(p) != "."}
+        self.paths = set(files) | dirs
+        # Every component-aligned suffix of every tracked path, so an
+        # abbreviated reference (`Feed/API/`, a bare filename) is one lookup.
+        self.suffixes = {
+            "/".join(parts[i:])
+            for path in self.paths
+            for parts in [path.split("/")]
+            for i in range(len(parts))
+        }
         makefile = root / "Makefile"
         self.make_targets = (
             set(MAKE_TARGET_RE.findall(makefile.read_text())) if makefile.is_file() else set()
@@ -92,12 +101,7 @@ class Repo:
             ref = ref[2:]
         if not ref:
             return True
-        if ref in self.paths or self.resolves_link(ref, doc):
-            return True
-        if "/" not in ref:
-            return ref in self.basenames or ref in {PurePosixPath(d).name for d in self.dirs}
-        suffix = "/" + ref
-        return any(p.endswith(suffix) for p in self.paths)
+        return ref in self.suffixes or self.resolves_link(ref, doc)
 
     def resolves_link(self, link: str, doc: PurePosixPath) -> bool:
         """Strict: only relative to the doc's directory, as a renderer resolves
@@ -139,12 +143,13 @@ def check_doc(repo: Repo, doc: str) -> list[tuple[int, str, str]]:
     broken = []
     doc_path = PurePosixPath(doc)
     fence: str | None = None
+    fence_line = 0
     for line_no, line in enumerate((repo.root / doc).read_text().splitlines(), 1):
         match = FENCE_RE.match(line)
         if match:
             marker, rest = match.groups()
             if fence is None:
-                fence = marker
+                fence, fence_line = marker, line_no
                 continue
             # CommonMark: only a bare run of the opening char, at least as
             # long, closes the block; anything else is content inside it.
@@ -164,30 +169,47 @@ def check_doc(repo: Repo, doc: str) -> list[tuple[int, str, str]]:
             if not looks_like_path(span):
                 continue
             for ref in expand_braces(span):
-                if ref not in EXTERNAL_REFS and not repo.resolves(ref, doc_path):
+                if ref in repo.external_refs:
+                    repo.external_used.add(ref)
+                elif not repo.resolves(ref, doc_path):
                     broken.append((line_no, "path", ref))
         for link in LINK_RE.findall(line):
             if PLACEHOLDER_RE.search(link) or ":" in link:
                 continue
             if not repo.resolves_link(link, doc_path):
                 broken.append((line_no, "link", link))
+    if fence is not None:
+        # Everything after an unclosed fence is read as code, which silently
+        # turns the path and link checks off for the rest of the doc.
+        broken.append((fence_line, "fence", f"unterminated {fence} code fence"))
     return broken
 
 
 def tracked_files(root: Path) -> list[str]:
+    # -z: without it git C-quotes non-ASCII paths, which then never match.
     out = subprocess.run(
-        ["git", "-C", str(root), "ls-files"], capture_output=True, text=True, check=True
+        ["git", "-C", str(root), "ls-files", "-z"], capture_output=True, text=True, check=True
     ).stdout
-    return [f for f in out.splitlines() if (root / f).exists()]
+    return [f for f in out.split("\0") if f and (root / f).exists()]
 
 
-def find_broken(root: Path, files: list[str]) -> list[tuple[str, int, str, str]]:
-    repo = Repo(root, files)
-    return [
+def find_broken(
+    root: Path, files: list[str], external_refs: set[str] = EXTERNAL_REFS
+) -> list[tuple[str, int, str, str]]:
+    repo = Repo(root, files, external_refs)
+    broken = [
         (doc, line_no, kind, ref)
         for doc in sorted(f for f in files if f.endswith(".md"))
         for line_no, kind, ref in check_doc(repo, doc)
     ]
+    # Keep the allowlist minimal: an entry no doc cites any more, or one that
+    # now exists in the tree, would silently exempt that string everywhere.
+    for ref in sorted(external_refs):
+        if ref not in repo.external_used:
+            broken.append((SCRIPT, 0, "allowlist", f"{ref} (no doc references it)"))
+        elif ref in repo.paths:
+            broken.append((SCRIPT, 0, "allowlist", f"{ref} (now exists in the tree)"))
+    return broken
 
 
 def self_test() -> int:
@@ -224,12 +246,15 @@ def self_test() -> int:
                 "`make nope`, `make bump-{patch,major}`, "
                 "`make var`.\n"
             ),
+            "docs-guide/unclosed.md": "Fine: `scripts/check-a.py`.\n```\ncode\n`Dead.swift` after the leak\n",
         }
         for rel, content in files.items():
             (root / rel).parent.mkdir(parents=True, exist_ok=True)
             (root / rel).write_text(content)
 
-        found = {(kind, ref) for _, _, kind, ref in find_broken(root, list(files))}
+        found = {(kind, ref) for _, _, kind, ref in find_broken(
+            root, list(files), {"Package.swift", "unused.json", "scripts/check-b.py"}
+        )}
         expected = {
             ("make target", "make missing-in-fence"),
             ("make target", "make nested-in-fence"),
@@ -244,6 +269,9 @@ def self_test() -> int:
             ("make target", "make nope"),
             ("make target", "make bump-major"),
             ("make target", "make var"),
+            ("fence", "unterminated ``` code fence"),
+            ("allowlist", "unused.json (no doc references it)"),
+            ("allowlist", "scripts/check-b.py (now exists in the tree)"),
         }
         ok = found == expected
         for item in sorted(found - expected):
