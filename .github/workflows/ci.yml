@@ -596,7 +596,7 @@ jobs:
         install-runtime: "true"
 
     - name: Download build artifacts
-      uses: actions/download-artifact@3e5f45b2cfb9172054b4087a40e8e0b5a5461e7c # v8.0.1
+      uses: actions/download-artifact@9000827ccba6bdab643e8b6fd33ac0654aef8333 # v8.0.2
       with:
         name: build-products
         path: ./DerivedData/Build/Products
@@ -638,7 +638,7 @@ jobs:
         install-runtime: "true"
 
     - name: Download build artifacts
-      uses: actions/download-artifact@3e5f45b2cfb9172054b4087a40e8e0b5a5461e7c # v8.0.1
+      uses: actions/download-artifact@9000827ccba6bdab643e8b6fd33ac0654aef8333 # v8.0.2
       with:
         name: build-products
         path: ./DerivedData/Build/Products
@@ -721,7 +721,7 @@ jobs:
         install-runtime: "true"
 
     - name: Download build artifacts
-      uses: actions/download-artifact@3e5f45b2cfb9172054b4087a40e8e0b5a5461e7c # v8.0.1
+      uses: actions/download-artifact@9000827ccba6bdab643e8b6fd33ac0654aef8333 # v8.0.2
       with:
         name: build-products
         path: ./DerivedData/Build/Products
@@ -762,7 +762,7 @@ jobs:
         install-runtime: "true"
 
     - name: Download build artifacts
-      uses: actions/download-artifact@3e5f45b2cfb9172054b4087a40e8e0b5a5461e7c # v8.0.1
+      uses: actions/download-artifact@9000827ccba6bdab643e8b6fd33ac0654aef8333 # v8.0.2
       with:
         name: build-products
         path: ./DerivedData/Build/Products
@@ -820,13 +820,13 @@ jobs:
         prepare-build: "false"
 
     - name: Download unit test results
-      uses: actions/download-artifact@3e5f45b2cfb9172054b4087a40e8e0b5a5461e7c # v8.0.1
+      uses: actions/download-artifact@9000827ccba6bdab643e8b6fd33ac0654aef8333 # v8.0.2
       with:
         name: unit-test-results
         path: artifacts/unit
 
     - name: Download snapshot test results
-      uses: actions/download-artifact@3e5f45b2cfb9172054b4087a40e8e0b5a5461e7c # v8.0.1
+      uses: actions/download-artifact@9000827ccba6bdab643e8b6fd33ac0654aef8333 # v8.0.2
       with:
         name: snapshot-test-results
         path: artifacts/snap
@@ -1011,28 +1011,28 @@ jobs:
         persist-credentials: false
 
     - name: Download unit test results
-      uses: actions/download-artifact@3e5f45b2cfb9172054b4087a40e8e0b5a5461e7c # v8.0.1
+      uses: actions/download-artifact@9000827ccba6bdab643e8b6fd33ac0654aef8333 # v8.0.2
       continue-on-error: true
       with:
         name: unit-test-results
         path: unit-test-results
 
     - name: Download UI test results
-      uses: actions/download-artifact@3e5f45b2cfb9172054b4087a40e8e0b5a5461e7c # v8.0.1
+      uses: actions/download-artifact@9000827ccba6bdab643e8b6fd33ac0654aef8333 # v8.0.2
       continue-on-error: true
       with:
         name: ui-test-results
         path: ui-test-results
 
     - name: Download UI test results (iPad)
-      uses: actions/download-artifact@3e5f45b2cfb9172054b4087a40e8e0b5a5461e7c # v8.0.1
+      uses: actions/download-artifact@9000827ccba6bdab643e8b6fd33ac0654aef8333 # v8.0.2
       continue-on-error: true
       with:
         name: ui-test-results-ipad
         path: ui-test-results-ipad
 
     - name: Download snapshot test results
-      uses: actions/download-artifact@3e5f45b2cfb9172054b4087a40e8e0b5a5461e7c # v8.0.1
+      uses: actions/download-artifact@9000827ccba6bdab643e8b6fd33ac0654aef8333 # v8.0.2
       continue-on-error: true
       with:
         name: snapshot-test-results
@@ -1166,7 +1166,7 @@ jobs:
         prepare-build: "false"
 
     - name: Download unit test results
-      uses: actions/download-artifact@3e5f45b2cfb9172054b4087a40e8e0b5a5461e7c # v8.0.1
+      uses: actions/download-artifact@9000827ccba6bdab643e8b6fd33ac0654aef8333 # v8.0.2
       continue-on-error: true
       with:
         name: unit-test-results
@@ -1411,7 +1411,7 @@ jobs:
     # contributes nothing. `pattern` + `merge-multiple` collapses them into one
     # directory for the renderer to walk.
     - name: Download flaky reports
-      uses: actions/download-artifact@3e5f45b2cfb9172054b4087a40e8e0b5a5461e7c # v8.0.1
+      uses: actions/download-artifact@9000827ccba6bdab643e8b6fd33ac0654aef8333 # v8.0.2
       continue-on-error: true
       with:
         pattern: flaky-*
