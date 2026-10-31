@@ -58,6 +58,12 @@ PATH_RE = re.compile(r"^[\w.+@-]+(?:/[\w.+@{},-]+)*/?$")
 BRACE_RE = re.compile(r"\{([^{}]*)\}")
 INLINE_CODE_RE = re.compile(r"(?<!`)`([^`\n]+)`(?!`)")
 LINK_RE = re.compile(r"\]\(([^)\s#]+)(?:#[^)]*)?\)")
+LINK_DEF_RE = re.compile(r"^\s{0,3}\[[^\]]+\]:\s*<?([^\s>#]+)")
+# Docs list alternatives as `make build | build-release`: a fenced line made
+# only of bare names joined by `|` is a target list, not a shell pipe —
+# except for a real pipe into a log/format tool.
+MAKE_LIST_RE = re.compile(r"^\s*make\s+([a-z][\w{},-]*(?:\s*\|\s*[a-z][\w{},-]*)+)\s*(?:#.*)?$")
+PIPE_TOOLS = {"tee", "xcpretty", "xcbeautify", "grep", "head", "tail", "less", "cat"}
 MAKE_RE = re.compile(r"(?:^|&&|\|\||;|\|)\s*(?:\$\s*)?(?:sudo\s+)?make\s+([a-z][\w{},-]*)")
 # Explicit rules only, including multi-target `a b: dep`. Pattern rules and
 # targets from `include`d makefiles aren't parsed — none exist today; a doc
@@ -98,7 +104,7 @@ class Repo:
         self.make_targets = (
             {
                 name
-                for names in MAKE_TARGET_RE.findall(makefile.read_text())
+                for names in MAKE_TARGET_RE.findall(makefile.read_text(encoding="utf-8"))
                 for name in names.split()
             }
             if makefile.is_file()
@@ -154,7 +160,7 @@ def check_doc(repo: Repo, doc: str) -> list[tuple[int, str, str]]:
     doc_path = PurePosixPath(doc)
     fence: str | None = None
     fence_line = 0
-    for line_no, line in enumerate((repo.root / doc).read_text().splitlines(), 1):
+    for line_no, line in enumerate((repo.root / doc).read_text(encoding="utf-8").splitlines(), 1):
         match = FENCE_RE.match(line)
         if match:
             marker, rest = match.groups()
@@ -169,7 +175,13 @@ def check_doc(repo: Repo, doc: str) -> list[tuple[int, str, str]]:
         in_fence = fence is not None
         code = [line] if in_fence else [s.strip() for s in INLINE_CODE_RE.findall(line)]
         for snippet in code:
-            for target in MAKE_RE.findall(snippet):
+            listed = MAKE_LIST_RE.match(snippet)
+            targets = (
+                [t.strip() for t in listed.group(1).split("|") if t.strip() not in PIPE_TOOLS]
+                if listed
+                else MAKE_RE.findall(snippet)
+            )
+            for target in targets:
                 for name in expand_braces(target):
                     if name not in repo.make_targets:
                         broken.append((line_no, "make target", f"make {name}"))
@@ -184,7 +196,8 @@ def check_doc(repo: Repo, doc: str) -> list[tuple[int, str, str]]:
                 elif not repo.resolves(ref, doc_path):
                     broken.append((line_no, "path", ref))
         # Link syntax quoted inside a code span is documentation, not a link.
-        for link in map(unquote, LINK_RE.findall(INLINE_CODE_RE.sub("", line))):
+        prose = INLINE_CODE_RE.sub("", line)
+        for link in map(unquote, LINK_RE.findall(prose) + LINK_DEF_RE.findall(prose)):
             if PLACEHOLDER_RE.search(link) or ":" in link:
                 continue
             if not repo.resolves_link(link, doc_path):
@@ -260,7 +273,12 @@ def self_test() -> int:
                 "`make var`.\n"
                 "Live: `make lint`, `make fmt`, [spaced](My%20Doc.md), "
                 "syntax `[text](not/a/real/link.md)`.\n"
-                "```sh\n$ make dollar-gone\nsudo make sudo-gone\n```\n"
+                "```sh\n$ make dollar-gone\nsudo make sudo-gone\n"
+                "make build | bump-patch | list-gone   # alternatives\n"
+                "make build | tee build.log\n"
+                "make build | xcpretty\n```\n"
+                "[ok-def]: testing.md\n"
+                "[dead-def]: ./gone.md\n"
             ),
             "docs-guide/unclosed.md": "Fine: `scripts/check-a.py`.\n```\ncode\n`Dead.swift` after the leak\n",
         }
@@ -290,6 +308,8 @@ def self_test() -> int:
             ("allowlist", "Package.swift (now exists in the tree)"),
             ("make target", "make dollar-gone"),
             ("make target", "make sudo-gone"),
+            ("make target", "make list-gone"),
+            ("link", "./gone.md"),
             ("allowlist", "scripts/check-b.py (now exists in the tree)"),
         }
         ok = found == expected
@@ -297,8 +317,20 @@ def self_test() -> int:
             print(f"self-test: false positive {item}")
         for item in sorted(expected - found):
             print(f"self-test: missed broken reference {item}")
+        escaped = _escape("a%b\nc", ",:") + _escape("x,y:z", ",:")
+        if escaped != "a%25b%0Acx%2Cy%3Az":
+            print(f"self-test: bad workflow-command escaping {escaped!r}")
+            ok = False
         print("self-test:", "passed" if ok else "FAILED")
         return 0 if ok else 2
+
+
+def _escape(value: str, extra: str = "") -> str:
+    """GitHub workflow-command escaping, so a hostile ref can't break the annotation."""
+    value = value.replace("%", "%25").replace("\r", "%0D").replace("\n", "%0A")
+    for char in extra:
+        value = value.replace(char, f"%{ord(char):02X}")
+    return value
 
 
 def main() -> int:
@@ -313,7 +345,8 @@ def main() -> int:
 
     print(f"Found {len(broken)} broken doc reference(s):")
     for doc, line_no, kind, ref in broken:
-        print(f"::error file={doc},line={line_no}::Broken {kind} reference: {ref}")
+        location = f"file={_escape(doc, ',:')}" + (f",line={line_no}" if line_no else "")
+        print(f"::error {location}::Broken {kind} reference: {_escape(ref)}")
     print(
         "\nDoc references FAILED the check.\n"
         "Update the doc to the new name/location, or drop the stale reference. A\n"
