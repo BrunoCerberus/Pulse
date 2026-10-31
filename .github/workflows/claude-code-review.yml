@@ -111,9 +111,36 @@ jobs:
               the summary — do not substitute prose for inline comments.
             - Only post GitHub comments — don't submit review text as chat messages.
 
+            DOCUMENTATION IMPACT (advisory, never affects the verdict):
+            The Code Quality job already fails on doc references to paths or make
+            targets that no longer exist, so skip broken links. Your job is the
+            judgment it can't make: does this PR change something the hand-written
+            docs (`CLAUDE.md`, `AGENTS.md`, `README.md`, `docs-guide/*.md`,
+            `.github/CI.md`) describe, or should describe, without updating them?
+            Flag it only for one of these triggers, after reading the relevant doc
+            section to confirm it is actually stale or missing:
+            - a new feature folder, `Live*Service`, Premium entitlement
+              (`PremiumFeature` case) or other new subsystem: the CLAUDE.md Project
+              Structure tree and Key Files table
+            - a new or renamed `make` target, CI gate, required check, or
+              `scripts/check-*.py`: CLAUDE.md Commands, AGENTS.md rule 42,
+              docs-guide/ci-cd.md
+            - a new deeplink, push-payload field, Remote Config key or env var:
+              CLAUDE.md Deeplinks / API Keys
+            - a new invariant enforced in code or CI that a future contributor
+              could break (concurrency, CloudKit, privacy, security): an AGENTS.md rule
+            - an existing doc statement the diff now makes false (behavior, file
+              location, default value, precedence order)
+            Ignore refactors, tests-only, dependency bumps, and anything already
+            covered by doc changes in this PR. Report in the summary comment under a
+            "Docs impact" heading: either "None" or one bullet per gap naming the
+            doc, the section, and the exact fact to add or correct. Cap it at 5
+            bullets; under-flag rather than pad.
+
             Approvals: if no significant issues, run `gh pr review --approve`.
             If significant issues, run `gh pr review --request-changes`.
             Never leave review verdicts only as prose.
+            Missing doc updates alone are never significant issues.
           claude_args: '--model "claude-sonnet-5-5" --allowedTools "mcp__github_inline_comment__create_inline_comment,Bash(gh pr comment:*),Bash(gh pr diff:*),Bash(gh pr view:*),Bash(gh pr review:*)"'
 
       # Surface the review outcome as both a GitHub annotation (visible on the
