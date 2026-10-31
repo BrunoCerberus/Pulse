@@ -12,7 +12,9 @@ covers the mechanically verifiable part of doc drift:
     tracked path (docs routinely abbreviate ``Feed/API/``);
   - bare filenames with a source extension (``LiveAuthService.swift``) must
     match a tracked file's basename;
-  - relative Markdown link targets must exist;
+  - relative Markdown link targets must exist relative to the doc itself,
+    as a renderer resolves them — no suffix fallback, and a link climbing
+    out of the repo is broken;
   - ``make <target>`` (inline or in fenced blocks) must be a Makefile target.
 
 Brace groups expand (``scripts/{a,b}.py``, ``bump-{patch,minor}``). Spans
@@ -55,9 +57,9 @@ PATH_RE = re.compile(r"^[\w.+@-]+(?:/[\w.+@{},-]+)*/?$")
 BRACE_RE = re.compile(r"\{([^{}]*)\}")
 INLINE_CODE_RE = re.compile(r"(?<!`)`([^`\n]+)`(?!`)")
 LINK_RE = re.compile(r"\]\(([^)\s#]+)(?:#[^)]*)?\)")
-MAKE_RE = re.compile(r"^\s*make\s+([a-z][\w{},-]*)")
+MAKE_RE = re.compile(r"(?:^|&&|\|\||;)\s*make\s+([a-z][\w{},-]*)")
 MAKE_TARGET_RE = re.compile(r"^([a-zA-Z][\w-]*)\s*:(?!=)", re.MULTILINE)
-FENCE_RE = re.compile(r"^\s*(```|~~~)")
+FENCE_RE = re.compile(r"^\s*(`{3,}|~{3,})(.*)$")
 
 
 def expand_braces(token: str) -> list[str]:
@@ -90,24 +92,30 @@ class Repo:
             ref = ref[2:]
         if not ref:
             return True
-        relative = str(PurePosixPath(*_normalize((doc.parent / ref).parts)))
-        if ref in self.paths or relative in self.paths:
+        if ref in self.paths or self.resolves_link(ref, doc):
             return True
         if "/" not in ref:
             return ref in self.basenames or ref in {PurePosixPath(d).name for d in self.dirs}
         suffix = "/" + ref
         return any(p.endswith(suffix) for p in self.paths)
 
+    def resolves_link(self, link: str, doc: PurePosixPath) -> bool:
+        """Strict: only relative to the doc's directory, as a renderer resolves
+        it. A link that climbs out of the repo is broken, not clamped to root."""
+        relative = _normalize((doc.parent / link.rstrip("/")).parts)
+        return relative is not None and relative in self.paths
 
-def _normalize(parts: tuple[str, ...]) -> list[str]:
+
+def _normalize(parts: tuple[str, ...]) -> str | None:
     out: list[str] = []
     for part in parts:
         if part == "..":
-            if out:
-                out.pop()
+            if not out:
+                return None
+            out.pop()
         elif part != ".":
             out.append(part)
-    return out or ["."]
+    return "/".join(out) or "."
 
 
 def looks_like_path(span: str) -> bool:
@@ -130,11 +138,20 @@ def check_doc(repo: Repo, doc: str) -> list[tuple[int, str, str]]:
     """Return [(line_no, kind, reference), ...] for every broken reference."""
     broken = []
     doc_path = PurePosixPath(doc)
-    in_fence = False
+    fence: str | None = None
     for line_no, line in enumerate((repo.root / doc).read_text().splitlines(), 1):
-        if FENCE_RE.match(line):
-            in_fence = not in_fence
-            continue
+        match = FENCE_RE.match(line)
+        if match:
+            marker, rest = match.groups()
+            if fence is None:
+                fence = marker
+                continue
+            # CommonMark: only a bare run of the opening char, at least as
+            # long, closes the block; anything else is content inside it.
+            if marker[0] == fence[0] and len(marker) >= len(fence) and not rest.strip():
+                fence = None
+                continue
+        in_fence = fence is not None
         code = [line] if in_fence else [s.strip() for s in INLINE_CODE_RE.findall(line)]
         for snippet in code:
             for target in MAKE_RE.findall(snippet):
@@ -152,7 +169,7 @@ def check_doc(repo: Repo, doc: str) -> list[tuple[int, str, str]]:
         for link in LINK_RE.findall(line):
             if PLACEHOLDER_RE.search(link) or ":" in link:
                 continue
-            if not repo.resolves(link, doc_path):
+            if not repo.resolves_link(link, doc_path):
                 broken.append((line_no, "link", link))
     return broken
 
@@ -195,9 +212,16 @@ def self_test() -> int:
                 "make missing-in-fence\n"
                 "`InFence.swift` is not checked inside fences\n"
                 "```\n"
+                "````md\n"
+                "```\n"
+                "make nested-in-fence\n"
+                "~~~\n"
+                "````\n"
+                "After the nested fence, prose again: make sure `make build && make chained`.\n"
                 "Broken: `Pulse/Feed/API/DeadService.swift`, `DeadView.swift`, "
                 "`scripts/{check-a,check-gone}.py`, `Feed/Gone/`, "
-                "[dead](missing.md), `make nope`, `make bump-{patch,major}`, "
+                "[dead](missing.md), [moved](Makefile), [escape](../../Makefile), "
+                "`make nope`, `make bump-{patch,major}`, "
                 "`make var`.\n"
             ),
         }
@@ -208,6 +232,10 @@ def self_test() -> int:
         found = {(kind, ref) for _, _, kind, ref in find_broken(root, list(files))}
         expected = {
             ("make target", "make missing-in-fence"),
+            ("make target", "make nested-in-fence"),
+            ("make target", "make chained"),
+            ("link", "Makefile"),
+            ("link", "../../Makefile"),
             ("path", "Pulse/Feed/API/DeadService.swift"),
             ("path", "DeadView.swift"),
             ("path", "scripts/check-gone.py"),
