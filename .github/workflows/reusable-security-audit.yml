@@ -98,7 +98,11 @@ jobs:
         if [ "$CHANNEL" = "latest" ]; then
           pip install --upgrade mobsfscan
         else
-          pip install 'mobsfscan>=0.3,<1.0'
+          # 0.x pins semgrep 1.86 -> pydantic 2.8, whose pydantic-core has no
+          # wheel for ubuntu-latest's Python 3.14 and fails to build from
+          # source (PyO3 0.22 caps at 3.13). 1.x is what the nightly `latest`
+          # channel already runs green.
+          pip install 'mobsfscan>=1.2,<2'
         fi
 
     - name: Run mobsfscan iOS security analysis
