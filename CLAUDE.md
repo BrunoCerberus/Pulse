@@ -159,5 +159,5 @@ Two independent providers:
 | Build fails | `make clean && make build` |
 | Package resolution | `make clean-packages && make setup` |
 | Test timeouts | check async waits in `.sink` / `Task.sleep` |
-| Snapshot mismatch | re-record references; never lower precision |
+| Snapshot mismatch | re-record from CI's xcresult renders (runtime pinned by `SNAPSHOT_OS` in `scripts/run-ios-test-suite.py`); never lower precision |
 | Service not found | verify `PulseSceneDelegate.registerLiveServices()` |

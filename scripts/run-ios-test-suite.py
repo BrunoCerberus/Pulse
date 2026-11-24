@@ -29,6 +29,19 @@ EXECUTED_PATTERN = re.compile(r"(?:Executed|Test run with) ([0-9]+) test")
 IPHONE_DEVICE = "iPhone Air"
 IPAD_FALLBACK_DEVICE = "iPad Pro 13-inch (M4)"
 
+# Snapshot references are pixel renders of one specific simulator runtime, so
+# the snapshot scheme is pinned rather than following OS=latest. With `latest`,
+# a runner host that gains a newer iOS runtime silently moves every snapshot
+# onto it: in Nov 2026 the hosts picked up iOS 27.2 next to 27.1, inset-grouped
+# List rows shifted ~12px, and 8 snapshots failed for 15 nights with no code
+# change. Pinned, a newly added runtime is ignored, and the pinned one leaving
+# the image fails the preflight in main() with instructions instead of as pixel
+# diffs. Bumping this is deliberate: re-record the references from the CI
+# renders on the new runtime in the same PR. Other suites assert behaviour, not
+# pixels, and stay on `latest`.
+SNAPSHOT_SCHEME = "PulseSnapshotTests"
+SNAPSHOT_OS = "27.2"
+
 
 def parse_selectors(value: str) -> list[str]:
     selectors = [selector.strip() for selector in value.split(",")]
@@ -55,9 +68,31 @@ def pick_ipad(devices_payload: dict) -> str:
     return (pro + names + [IPAD_FALLBACK_DEVICE])[0]
 
 
-def resolve_destination(device_kind: str) -> str:
+def destination_os(scheme: str) -> str:
+    return SNAPSHOT_OS if scheme == SNAPSHOT_SCHEME else "latest"
+
+
+def matching_runtimes(runtimes_payload: dict, os_version: str, device: str) -> list[str]:
+    """Available iOS runtimes of exactly `os_version` that can host `device`,
+    from `simctl list runtimes available --json`, as "27.2 (24B8117)".
+
+    The device check matters: hosts also carry hardware-specific runtimes such
+    as `iOS-27-2-iPhone19-4` that report the same version but cannot boot any
+    other model, so a version match alone would pass the preflight and then
+    fail in xcodebuild with a far less obvious error."""
+    return [
+        f"{runtime.get('version')} ({runtime.get('buildversion', '?')})"
+        for runtime in runtimes_payload.get("runtimes", [])
+        if runtime.get("platform") == "iOS"
+        and runtime.get("isAvailable")
+        and runtime.get("version") == os_version
+        and any(device_type.get("name") == device for device_type in runtime.get("supportedDeviceTypes", []))
+    ]
+
+
+def resolve_destination(device_kind: str, os_version: str = "latest") -> str:
     if device_kind == "iphone":
-        return f"platform=iOS Simulator,name={IPHONE_DEVICE},OS=latest"
+        return f"platform=iOS Simulator,name={IPHONE_DEVICE},OS={os_version}"
     payload = json.loads(
         subprocess.run(
             ["xcrun", "simctl", "list", "devices", "available", "--json"],
@@ -66,7 +101,7 @@ def resolve_destination(device_kind: str) -> str:
             text=True,
         ).stdout
     )
-    return f"platform=iOS Simulator,name={pick_ipad(payload)},OS=latest"
+    return f"platform=iOS Simulator,name={pick_ipad(payload)},OS={os_version}"
 
 
 def executed_test_count(summary_lines: list[str]) -> int | None:
@@ -259,6 +294,32 @@ def self_test() -> None:
     # An unavailable iPad must not be selected just because it is named Pro.
     assert pick_ipad({"devices": {"r": [{"name": "iPad Pro 11-inch", "isAvailable": False}]}}) == IPAD_FALLBACK_DEVICE
     assert resolve_destination("iphone") == f"platform=iOS Simulator,name={IPHONE_DEVICE},OS=latest"
+    assert resolve_destination("iphone", "27.2") == f"platform=iOS Simulator,name={IPHONE_DEVICE},OS=27.2"
+
+    # Only the snapshot scheme is pinned; behavioural suites follow `latest`.
+    assert destination_os(SNAPSHOT_SCHEME) == SNAPSHOT_OS != "latest"
+    assert destination_os("PulseDev") == "latest"
+
+    # Runtime preflight: exact version, available, and able to host the device.
+    # The hardware-specific runtime reports the same version but cannot boot
+    # the iPhone leg's model, so it must not satisfy the pin.
+    runtimes = {
+        "runtimes": [
+            {"platform": "iOS", "version": "27.1", "buildversion": "24A94425", "isAvailable": True,
+             "supportedDeviceTypes": [{"name": IPHONE_DEVICE}]},
+            {"platform": "iOS", "version": "27.2", "buildversion": "24B91016s", "isAvailable": True,
+             "supportedDeviceTypes": [{"name": "iPhone 19 Pro"}]},
+            {"platform": "iOS", "version": "27.2", "buildversion": "24B8117", "isAvailable": True,
+             "supportedDeviceTypes": [{"name": IPHONE_DEVICE}]},
+            {"platform": "watchOS", "version": "27.2", "buildversion": "24S100", "isAvailable": True,
+             "supportedDeviceTypes": [{"name": IPHONE_DEVICE}]},
+        ]
+    }
+    assert matching_runtimes(runtimes, "27.2", IPHONE_DEVICE) == ["27.2 (24B8117)"]
+    assert matching_runtimes(runtimes, "27.3", IPHONE_DEVICE) == []
+    unavailable = {"runtimes": [dict(runtimes["runtimes"][2], isAvailable=False)]}
+    assert matching_runtimes(unavailable, "27.2", IPHONE_DEVICE) == []
+    assert matching_runtimes({}, "27.2", IPHONE_DEVICE) == []
 
     # Zero-test detection: the silent no-op a renamed -only-testing selector
     # produces, versus a real run, versus output that said nothing at all.
@@ -335,7 +396,30 @@ def main() -> int:
         parser.error("--timeout-minutes must be greater than zero")
 
     selectors = parse_selectors(args.test_selectors)
-    destination = resolve_destination(args.device)
+    os_version = destination_os(args.scheme)
+    # The snapshot scheme only runs on the iPhone leg (iPad layouts are rendered
+    # through traits), so that is the only pinned destination to preflight.
+    if os_version != "latest" and args.device == "iphone":
+        runtimes = json.loads(
+            subprocess.run(
+                ["xcrun", "simctl", "list", "runtimes", "available", "--json"],
+                check=True,
+                capture_output=True,
+                text=True,
+            ).stdout
+        )
+        found = matching_runtimes(runtimes, os_version, IPHONE_DEVICE)
+        if not found:
+            print(
+                f"::error::{args.test_name} is pinned to iOS {os_version} (SNAPSHOT_OS in "
+                f"scripts/run-ios-test-suite.py), but this runner has no available iOS {os_version} "
+                f"runtime that can boot {IPHONE_DEVICE}. The runner image has changed: bump SNAPSHOT_OS to an "
+                "available runtime, let CI render on it, and commit the failure_*.png attachments from that "
+                "run's snapshot xcresult as the new references in the same PR."
+            )
+            return 1
+        print(f"Pinned simulator runtime: iOS {', '.join(found)}")
+    destination = resolve_destination(args.device, os_version)
     Path("test-results").mkdir(exist_ok=True)
     command = build_command(args, selectors, destination)
 

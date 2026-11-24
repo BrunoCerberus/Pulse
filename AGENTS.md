@@ -81,7 +81,7 @@ struct HomeDomainInteractorTests {
 
 - Fresh `ServiceLocator` per test (never shared). Mocks in `Configs/Mocks/` expose `Result` properties to pick success/failure.
 - **UI tests** — `performAccessibilityAudit()` on every main screen. `MOCK_PREMIUM=1` in launch env for premium flows.
-- **Snapshot tests** — cover loading/empty/error, Dynamic Type (`iPhoneAirAccessibility`, `iPhoneAirExtraExtraLarge`), and iPad (`iPad` 1024×768, `iPadPro13` 1032×1376 with `horizontalSizeClass: .regular` + `userInterfaceIdiom: .pad`). Never lower precision — re-record references if layout changed.
+- **Snapshot tests** — cover loading/empty/error, Dynamic Type (`iPhoneAirAccessibility`, `iPhoneAirExtraExtraLarge`), and iPad (`iPad` 1024×768, `iPadPro13` 1032×1376 with `horizontalSizeClass: .regular` + `userInterfaceIdiom: .pad`). Never lower precision — re-record references if layout changed. CI renders snapshots on one pinned simulator runtime (`SNAPSHOT_OS` in `scripts/run-ios-test-suite.py`), not `OS=latest`, so a runner host gaining a newer iOS runtime can't silently shift every reference; local Xcode/runtime builds differ from CI's, so take new references from the CI run's xcresult `failure_*.png` attachments (`xcrun xcresulttool export attachments`) rather than recording locally, and bump `SNAPSHOT_OS` in the same PR as the re-record.
 
 ## Architecture Rules
 
@@ -166,5 +166,5 @@ PR-body markers are NOT required by CI (the conformance workflows gate on determ
 | Build fails | `make clean && make build` |
 | Package resolution | `make clean-packages && make setup` |
 | Test timeouts | check async `Task.sleep` + `.sink` waits |
-| Snapshot mismatch | re-record references (never lower precision) |
+| Snapshot mismatch | re-record references from CI's xcresult renders (never lower precision); runtime pinned by `SNAPSHOT_OS` |
 | Service not found | verify `PulseSceneDelegate.registerLiveServices()` |
